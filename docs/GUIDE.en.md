@@ -37,6 +37,23 @@ Example for a priest: left click for Flash Heal, right click for Renew, Shift + 
 
 Your clicks are saved per class: each character keeps its own.
 
+### Macros: several actions in one click
+
+In the spell picker, click "Macro...". Three templates are ready, already filled in with the spell of your click:
+
+- **Trinket then heal**: uses your first trinket, then casts the heal.
+- **Stop cast then heal**: cancels the current cast to heal right away.
+- **Announce then heal**: warns the group, then casts the heal.
+
+Click a template, change whatever you like, then "Save the macro". You can also write everything yourself, like a game macro, one command per line. The word `{cible}` stands for the player of the frame you click:
+
+```
+/use 13
+/cast [{cible}] Rejuvenation
+```
+
+A macro also works on a hover key. It stays on your computer: it is never sent or received in a shared configuration. When a click holds a macro, automatic resurrection is not added to it.
+
 ## 3. Hover keys
 
 Prefer the keyboard, or does your mouse have many buttons? In the **Clicks** tab, "Hover keys" section:

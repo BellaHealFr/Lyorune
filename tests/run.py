@@ -200,6 +200,45 @@ step("clics, touches au survol", function()
   Z:SetClick("1", "Soins rapides")
 end)
 
+step("macros : modeles, saisie libre, jamais partagees", function()
+  local b = Z.buttons[1]
+  assert(Z.IsMacro("/cast x") and not Z.IsMacro("Soins") and not Z.IsMacro("@target") and not Z.IsMacro(nil))
+  assert(Z:MacroFromTemplate(1, "Soins rapides") == "/use 13\n/cast [{cible}] Soins rapides")
+  Z.db.autoRes = true
+  Z:SetClick("shift-4", "/stopcasting\n/cast [{cible}] Soins rapides")
+  assert(b:GetAttribute("shift-type4") == "macro")
+  assert(b:GetAttribute("shift-macrotext4") == "/stopcasting\n/cast [@mouseover] Soins rapides", b:GetAttribute("shift-macrotext4"))
+  Z:SetClick("shift-4", "/cast [@{cible},help] Soins") -- les deux écritures de {cible} donnent le même résultat
+  assert(b:GetAttribute("shift-macrotext4") == "/cast [@mouseover,help] Soins")
+  assert(Z.header:GetAttribute("z-count") > 0)
+  local keys = Z:GetHoverKeys()
+  keys[3] = { key = "G", spell = "/use 13\n/cast [{cible}] Soins" }
+  Z:ApplyClicks()
+  assert(b:GetAttribute("*type-zh3") == "macro" and b:GetAttribute("*macrotext-zh3") == "/use 13\n/cast [@mouseover] Soins")
+  -- éditeur : un modèle remplit la zone de texte, l'enregistrement pose la macro sur le clic
+  local saved
+  Z.OpenMacroEditor("Maj + Bouton 4", "Rénovation", function(text) saved = text end)
+  local m = LyoruneMacro
+  assert(m:IsShown() and m.edit:GetText() == "" and m.spell == "Rénovation")
+  m.edit:SetText("Rénovation") m.Save()
+  assert(saved == nil and m:IsShown() and m.warn:GetText() ~= "", "un texte sans barre oblique n'est pas une macro")
+  m.edit:SetText(Z:MacroFromTemplate(2, m.spell)) m.Save()
+  assert(saved == "/stopcasting\n/cast [{cible}] Rénovation" and not m:IsShown(), tostring(saved))
+  Z.OpenMacroEditor("Maj + Bouton 4", saved, function() end)
+  assert(m.edit:GetText() == saved, "l'editeur doit rouvrir la macro existante")
+  m:Hide()
+  local code = Z:Export()
+  assert(not code:find("%2F", 1, true), "une macro ne doit pas etre exportee")
+  -- un code reçu ne peut ni poser une macro ni glisser une commande dans un nom de sort
+  local before = Z:GetClicks()["1"]
+  local ok = Z:Import("Lyorune2;c." .. Z.class .. ".1=s%2Fgquit;c." .. Z.class .. ".2=sSoins%0A%2Fgquit;h." .. Z.class .. ".1=sF|%2Fgquit;width=n90")
+  assert(ok and Z:GetClicks()["1"] == before, "macro importee")
+  assert(not next(Z.db.clicks[Z.class]) or Z:GetClicks()["2"] ~= "Soins\n/gquit", "commande glissee dans un nom de sort")
+  table.remove(keys, 3)
+  Z:SetClick("shift-4", nil)
+  Z.db.autoRes = false Z.db.width = 86 Z:Refresh() Z:ApplyClicks()
+end)
+
 step("combat : report des changements", function()
   COMBAT = true
   Z:SetClick("1", "Soins")

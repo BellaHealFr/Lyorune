@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.5.0] - 2026-11-17
+
+### Added
+
+- Macros: when choosing a click or a hover key, the "Macro..." button offers three ready-made templates (trinket then heal, stop cast then heal, announce then heal) and free typing.
+
+### Improved
+
+- A configuration code received from another player can only hold spell names, never a command.
+
 ## [1.4.2] - 2026-11-17
 
 ### Added
@@ -90,6 +100,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.5.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/BellaHealFr/Lyorune/releases/tag/v1.4.0

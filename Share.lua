@@ -36,12 +36,16 @@ function Z:Export()
 	end
 	for class, binds in pairs(Z.db.clicks) do
 		for key, spell in pairs(binds) do
-			parts[#parts + 1] = "c." .. class .. "." .. Encode(key) .. "=s" .. Encode(spell)
+			if not Z.IsMacro(spell) then parts[#parts + 1] = "c." .. class .. "." .. Encode(key) .. "=s" .. Encode(spell) end
 		end
 	end
 	for class, list in pairs(Z.db.hoverKeys) do
-		for i, entry in ipairs(list) do
-			parts[#parts + 1] = "h." .. class .. "." .. i .. "=s" .. Encode(entry.key .. "|" .. entry.spell)
+		local index = 0
+		for _, entry in ipairs(list) do
+			if not Z.IsMacro(entry.spell) then
+				index = index + 1
+				parts[#parts + 1] = "h." .. class .. "." .. index .. "=s" .. Encode(entry.key .. "|" .. entry.spell)
+			end
 		end
 	end
 	for list in pairs(LISTS) do
@@ -78,6 +82,11 @@ local function Validate(key, kind, raw)
 	return nil
 end
 
+-- Un nom de sort reçu d'un autre joueur : jamais une macro, jamais de saut de ligne (il finirait dans une commande)
+local function SafeSpell(raw)
+	return #raw > 0 and #raw <= 80 and not Z.IsMacro(raw) and not raw:find("%c")
+end
+
 -- Renvoie true et un résumé, ou false et la raison du refus
 function Z:Import(code)
 	local L = Z.L
@@ -96,14 +105,14 @@ function Z:Import(code)
 			local list = key:match("^l%.(%a+)$")
 			if class then
 				click = Decode(click)
-				if kind == "s" and click:match("^%a*%-?[1-5]$") and #raw > 0 and #raw <= 80 then
+				if kind == "s" and click:match("^%a*%-?[1-5]$") and SafeSpell(raw) then
 					clicks[class] = clicks[class] or {}
 					clicks[class][click] = raw
 					count = count + 1
 				end
 			elseif hoverClass then
 				local hoverKey, spell = raw:match("^([%w%-]+)|(.+)$")
-				if kind == "s" and hoverKey and #spell <= 80 then
+				if kind == "s" and hoverKey and SafeSpell(spell) then
 					hovers[hoverClass] = hovers[hoverClass] or {}
 					table.insert(hovers[hoverClass], { key = hoverKey, spell = spell })
 					count = count + 1

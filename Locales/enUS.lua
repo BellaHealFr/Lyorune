@@ -82,7 +82,13 @@ Z.translations.enUS = {
 	["Touche"] = "Key", ["Sort"] = "Spell", ["Appuyez..."] = "Press a key...",
 	["Touches au survol"] = "Hover keys", ["Touche au survol"] = "Hover key", ["Comportement"] = "Behaviour",
 	["Ou tapez le nom exact d'un sort, puis Entrée :"] = "Or type a spell's exact name, then Enter:",
-	["Clics de souris : cliquez sur une cellule pour choisir le sort lancé sur la case d'un joueur. Enregistrés par classe."] = "Mouse clicks: click a cell to pick the spell cast on a player's frame. Saved per class.",
+	["Clics de souris : cliquez sur une cellule pour choisir le sort, ou une macro, lancé sur la case d'un joueur. Enregistrés par classe."] = "Mouse clicks: click a cell to pick the spell, or a macro, cast on a player's frame. Saved per class.",
+	["Macro"] = "Macro", ["Macro..."] = "Macro...", ["Annuler"] = "Cancel", ["Nom du sort"] = "Spell name",
+	["Enregistrer la macro"] = "Save the macro",
+	["Bijou puis soin"] = "Trinket then heal", ["Interrompre puis soigner"] = "Stop cast then heal", ["Annonce puis soin"] = "Announce then heal",
+	["Plusieurs actions en un clic : un bijou puis un soin, une annonce puis un sort..."] = "Several actions in one click: a trinket then a heal, an announcement then a spell...",
+	["Écrivez la macro comme dans le jeu, une commande par ligne. {cible} désigne le joueur de la case. Partez d'un modèle, puis changez ce que vous voulez."] = "Write the macro as you would in the game, one command per line. {cible} stands for the player of the frame. Start from a template, then change whatever you like.",
+	["Une macro commence par une barre oblique, par exemple /cast."] = "A macro starts with a slash, for example /cast.",
 	["Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. Cliquez sur « Touche », puis appuyez."] = "A keyboard key, an extra mouse button or the wheel casts a spell on the hovered frame. Click \"Key\", then press.",
 	["Lancer le sort dès l'appui (plus rapide)"] = "Cast on key press (faster)",
 	["Le même clic relève un joueur mort"] = "The same click resurrects a dead player",
@@ -217,11 +223,11 @@ Z.translations.enUS = {
 			.. "|cff33dd88Apparence|r : thème, couleurs, luminosité, texte.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
-			.. "|cff33dd88Clics|r : souris, touches au survol, résurrection.\n"
+			.. "|cff33dd88Clics|r : souris, touches au survol, macros, résurrection.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: theme, colours, brightness, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, resurrection.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: theme, colours, brightness, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, macros, resurrection.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -282,4 +288,6 @@ Z.translations.enUS = {
 	["Après le mode test, les vrais cadres reviennent dès le début du combat."] = "After test mode, the real frames come back as soon as the fight starts.",
 	["Plus d'erreur quand on relâche la poignée d'un cadre pendant un combat."] = "No more error when releasing a frame handle during a fight.",
 	["Les soins en route sont de nouveau accrochés au bout de la barre de vie."] = "Incoming heals are attached to the end of the health bar again.",
+	["Macros : dans le choix d'un clic ou d'une touche au survol, le bouton « Macro... » propose trois modèles prêts (bijou puis soin, interrompre puis soigner, annonce puis soin) et une saisie libre."] = "Macros: when choosing a click or a hover key, the \"Macro...\" button offers three ready-made templates (trinket then heal, stop cast then heal, announce then heal) and free typing.",
+	["Un code de configuration reçu d'un autre joueur ne peut contenir que des noms de sorts, jamais une commande."] = "A configuration code received from another player can only hold spell names, never a command.",
 }

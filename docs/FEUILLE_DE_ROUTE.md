@@ -25,9 +25,11 @@ a son interrupteur ; le tutoriel des joueurs est mis à jour à chaque changemen
 - Fait : opacité des cadres, opacité hors de portée, luminosité des barres, et depuis la 1.3.0 trois
   préréglages en un clic (discret, semi-transparent, bien visible).
 
-## 5. Macros : À faire
-- Proposition : dans le choix d'un clic, une entrée « Macro » avec des modèles prêts (bijou puis soin,
-  arrêt de l'incantation puis soin, annonce puis sort) et une saisie libre. `{cible}` désigne la case cliquée.
+## 5. Macros : Fait en 1.5.0, à essayer en jeu
+- Dans le choix d'un clic ou d'une touche au survol, le bouton « Macro... » ouvre un éditeur : trois modèles prêts
+  (bijou puis soin, interrompre puis soigner, annonce puis soin) et une saisie libre. `{cible}` désigne la case cliquée.
+- Une macro n'est jamais exportée ni importée (un code reçu ne peut pas faire lancer une commande).
+- À faire : une liste de macros nommées, réutilisables sur plusieurs clics, si l'auteur le souhaite.
 
 ## 6. Boutons et raccourcis : Partiel
 - Fait : 5 boutons de souris × 4 modificateurs ; 8 touches au survol qui acceptent le clavier,

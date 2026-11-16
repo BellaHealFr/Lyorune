@@ -36,6 +36,23 @@ Exemple pour un prêtre : clic gauche pour Soins rapides, clic droit pour Rénov
 
 Vos clics sont enregistrés par classe : chaque personnage garde les siens.
 
+### Les macros : plusieurs actions en un clic
+
+Dans la fenêtre de choix du sort, cliquez sur « Macro... ». Trois modèles sont prêts, déjà remplis avec le sort de votre clic :
+
+- **Bijou puis soin** : active votre premier bijou, puis lance le soin.
+- **Interrompre puis soigner** : coupe le sort en cours pour lancer le soin tout de suite.
+- **Annonce puis soin** : prévient le groupe, puis lance le soin.
+
+Cliquez sur un modèle, changez ce que vous voulez, puis « Enregistrer la macro ». Vous pouvez aussi tout écrire vous-même, comme une macro du jeu, une commande par ligne. Le mot `{cible}` désigne le joueur de la case sur laquelle vous cliquez :
+
+```
+/use 13
+/cast [{cible}] Récupération
+```
+
+Une macro fonctionne aussi sur une touche au survol. Elle reste sur votre ordinateur : elle n'est jamais envoyée ni reçue dans une configuration partagée. Quand un clic porte une macro, la résurrection automatique ne s'y ajoute pas.
+
 ## 3. Touches au survol
 
 Vous préférez le clavier, ou votre souris a beaucoup de boutons ? Dans l'onglet **Clics**, section « Touches au survol » :

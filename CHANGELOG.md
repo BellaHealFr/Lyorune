@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.5.0] - 2026-11-17
+
+### Ajouté
+
+- Macros : dans le choix d'un clic ou d'une touche au survol, le bouton « Macro... » propose trois modèles prêts (bijou puis soin, interrompre puis soigner, annonce puis soin) et une saisie libre.
+
+### Amélioré
+
+- Un code de configuration reçu d'un autre joueur ne peut contenir que des noms de sorts, jamais une commande.
+
 ## [1.4.2] - 2026-11-17
 
 ### Ajouté
@@ -90,6 +100,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.5.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/BellaHealFr/Lyorune/releases/tag/v1.4.0

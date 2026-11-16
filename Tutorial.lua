@@ -82,7 +82,7 @@ local steps = {
 			.. "|cff33dd88Apparence|r : thème, couleurs, luminosité, texte.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
-			.. "|cff33dd88Clics|r : souris, touches au survol, résurrection.\n"
+			.. "|cff33dd88Clics|r : souris, touches au survol, macros, résurrection.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite.",

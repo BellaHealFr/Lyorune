@@ -7,6 +7,9 @@
 --   La valeur est un nom de sort, ou "@target" (cibler), ou "@menu" (menu du joueur).
 -- TOUCHES AU SURVOL. Une touche du clavier lance un sort sur la case que survole la souris.
 --   Elle ne remplace la touche habituelle que pendant le survol d'une case.
+-- MACROS. Une valeur qui commence par « / » est une macro, écrite comme dans le jeu (une commande par ligne).
+--   {cible} y désigne le joueur de la case : « /cast [{cible}] Récupération ».
+--   Une macro n'est jamais partagée ni importée : chacun écrit les siennes (voir Share.lua).
 -- Les clics n'existent que sur les cases de Lyorune : impossible de lancer un sort en cliquant dans le décor.
 
 local _, Z = ...
@@ -52,6 +55,30 @@ function Z:ClickLabel(key)
 	return label
 end
 
+function Z.IsMacro(value)
+	return type(value) == "string" and value:sub(1, 1) == "/"
+end
+
+-- Texte envoyé au jeu : {cible} devient la case survolée (celle sur laquelle on clique)
+local function MacroText(value)
+	local text = value:gsub("@?{cible}", "@mouseover")
+	text = text:gsub("@?{target}", "@mouseover")
+	return text
+end
+
+-- Modèles proposés dans l'éditeur de macro. {sort} est remplacé par le sort du clic au moment du choix.
+Z.macroTemplates = {
+	{ "Bijou puis soin", "/use 13\n/cast [{cible}] {sort}" },
+	{ "Interrompre puis soigner", "/stopcasting\n/cast [{cible}] {sort}" },
+	{ "Annonce puis soin", "/p {sort} en cours !\n/cast [{cible}] {sort}" },
+}
+Z.MACRO_MAX = 240 -- le jeu refuse au-delà de 255 caractères ; on garde une marge pour {cible}
+
+function Z:MacroFromTemplate(index, spell)
+	local text = Z.macroTemplates[index][2]:gsub("{sort}", function() return spell end)
+	return text
+end
+
 -- Début de macro qui relève un joueur mort avec le même clic (option « résurrection automatique »)
 local function ResPrefix()
 	local res = Z.db.autoRes and Z.classRes[Z.class]
@@ -72,6 +99,9 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix)
 		attributes[prefix .. "type" .. suffix] = "target"
 	elseif value == "@menu" then
 		attributes[prefix .. "type" .. suffix] = "togglemenu"
+	elseif Z.IsMacro(value) then -- macro du joueur : envoyée telle quelle, sans la résurrection automatique
+		attributes[prefix .. "type" .. suffix] = "macro"
+		attributes[prefix .. "macrotext" .. suffix] = MacroText(value)
 	elseif resPrefix then
 		attributes[prefix .. "type" .. suffix] = "macro"
 		attributes[prefix .. "macrotext" .. suffix] = "/cast " .. resPrefix .. "[@mouseover] " .. value
