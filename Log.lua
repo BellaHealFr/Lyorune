@@ -152,13 +152,11 @@ function Z:CheckGame()
 	local missing = Z:MissingAPI()
 	if #missing > 0 then
 		Z:Log("Incompatibilité", "Fonctions du jeu manquantes : " .. table.concat(missing, ", "))
-		Z:Print("cette version du jeu n'est pas compatible (fonctions manquantes : " .. table.concat(missing, ", ")
-			.. "). Lyorune reste désactivé. Détails : /lyorune erreurs")
+		Z:Print(Z.L["cette version du jeu n'est pas compatible (fonctions manquantes : %s). Lyorune reste désactivé. Détails : /lyorune erreurs"]:format(table.concat(missing, ", ")))
 		return false
 	end
 	if interface ~= Z.testedInterface and Z.db.lastInterface ~= interface then
-		Z:Print(("le jeu est passé à l'interface %s (Lyorune a été testé pour %s). Tout semble compatible ; "
-			.. "en cas de souci, tapez /lyorune erreurs."):format(tostring(interface), Z.testedInterface))
+		Z:Print(Z.L["le jeu est passé à l'interface %s (Lyorune a été testé pour %s). Tout semble compatible ; en cas de souci, tapez /lyorune erreurs."]:format(tostring(interface), Z.testedInterface))
 	end
 	Z.db.lastInterface = interface
 	return true
@@ -166,13 +164,13 @@ end
 
 function Z:Diagnose()
 	local missing = Z:MissingAPI()
-	Z:Print("jeu " .. GameVersion() .. ", Lyorune " .. Z.version .. " testé pour l'interface " .. Z.testedInterface .. ".")
+	Z:Print(Z.L["jeu %s, Lyorune %s testé pour l'interface %s."]:format((GameVersion()), Z.version, Z.testedInterface))
 	if #missing == 0 then
-		Z:Print("compatibilité : toutes les fonctions nécessaires sont présentes.")
+		Z:Print(Z.L["compatibilité : toutes les fonctions nécessaires sont présentes."])
 	else
-		Z:Print("compatibilité : fonctions manquantes : " .. table.concat(missing, ", "))
+		Z:Print(Z.L["compatibilité : fonctions manquantes : %s"]:format(table.concat(missing, ", ")))
 	end
-	Z:Print(#(Z.db.errors or {}) .. " erreur(s) dans le journal (/lyorune erreurs).")
+	Z:Print(Z.L["%d erreur(s) dans le journal (/lyorune erreurs)."]:format(#(Z.db.errors or {})))
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -207,13 +205,13 @@ function Z:ShowLog()
 		scroll:SetScrollChild(edit)
 		window.edit = edit
 
-		local select = UI.Button(window, "Tout sélectionner", 140, 24, function()
+		local select = UI.Button(window, Z.L["Tout sélectionner"], 140, 24, function()
 			edit:SetFocus()
 			edit:HighlightText()
 		end)
 		select:SetPoint("BOTTOMLEFT", 14, 14)
 		select.label:SetJustifyH("CENTER")
-		local clear = UI.Button(window, "Vider le journal", 130, 24, function()
+		local clear = UI.Button(window, Z.L["Vider le journal"], 130, 24, function()
 			Z.db.errors = {}
 			edit:SetText(Z:LogText())
 		end)
@@ -222,7 +220,7 @@ function Z:ShowLog()
 		local hint = UI.Text(window, 11)
 		hint:SetPoint("LEFT", clear, "RIGHT", 12, 0)
 		hint:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
-		hint:SetText("Ctrl+C pour copier, puis collez le texte à la personne qui vous aide.")
+		hint:SetText(Z.L["Ctrl+C pour copier, puis collez le texte à la personne qui vous aide."])
 	end
 	window.edit:SetText(Z:LogText())
 	window:Show()

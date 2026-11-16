@@ -91,7 +91,7 @@ No group at hand? Type `/lyorune test`: a fake group appears, with its wounded p
 | `/lyorune verrou` | Lock or unlock the frames' position |
 | `/lyorune bug` | Report a problem |
 
-The full player guide is in [docs/GUIDE.en.md](docs/GUIDE.en.md). The options window is in English; the short in-game tour is still in French for now, and the guide covers everything it says.
+The full player guide is in [docs/GUIDE.en.md](docs/GUIDE.en.md). In game, everything is in English when your game is: options, guided tour, news and chat messages.
 
 ## Something wrong? Tell me
 
@@ -109,7 +109,7 @@ World of Warcraft: Forever, interface 16001. Languages: French and English. No d
 |---|---|
 | [Player guide](docs/GUIDE.en.md) | Using and tuning Lyorune |
 | [Reporting a bug](docs/SIGNALER_UN_BUG.md#reporting-a-bug-english) | Step by step, no technical knowledge needed |
-| [Changelog](CHANGELOG.md) | What changes in each version (in French) |
+| [Changelog](CHANGELOG.en.md) | What changes in each version |
 
 ## Who am I?
 

@@ -8,6 +8,8 @@
 #       4. régénère CHANGELOG.md à partir de Changes.lua
 #       5. crée dist/Lyorune-1.4.0.zip, prêt à diffuser
 #     Chaque rubrique est facultative, mais il en faut au moins une. « (#12) » renvoie à la demande GitHub n° 12.
+#     Pour les joueurs anglophones, faites suivre chaque changement de sa traduction : "Un réglage." --en "A setting."
+#     Elle est rangée dans Locales/enUS.lua (nouveautés en jeu) et sert au journal anglais CHANGELOG.en.md.
 #
 #   python outils/publier.py
 #       sans argument : refait seulement CHANGELOG.md et le zip de la version actuelle
@@ -25,6 +27,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 DEPOT = 'https://github.com/BellaHealFr/Lyorune'
 PREMIERE_PUBLIEE = (1, 4, 0)  # première version qui existe sur GitHub (les précédentes n'ont pas d'étiquette)
 RUBRIQUES = [('added', '--nouveau', 'Ajouté'), ('improved', '--ameliore', 'Amélioré'), ('fixed', '--corrige', 'Corrigé')]
+RUBRIQUES_EN = {'added': 'Added', 'improved': 'Improved', 'fixed': 'Fixed'}
 
 
 def read(name):
@@ -71,6 +74,24 @@ def changes():
     return entries
 
 
+def traductions():
+    """Lit Locales/enUS.lua : {texte français: texte anglais}, pour les entrées écrites sur une seule ligne."""
+    decode = lambda text: text.replace('\\"', '"').replace('\\\\', '\\')
+    pairs = re.findall(r'\["((?:[^"\\]|\\.)*)"\] = "((?:[^"\\]|\\.)*)"', read('Locales/enUS.lua'))
+    return {decode(french): decode(english) for french, english in pairs}
+
+
+def add_translations(english):
+    """Ajoute à la fin de Locales/enUS.lua la traduction des nouvelles notes."""
+    if not english:
+        return
+    text = read('Locales/enUS.lua').rstrip()
+    if not text.endswith('}'):
+        sys.exit('Locales/enUS.lua : accolade finale introuvable.')
+    lines = ''.join('\t[%s] = %s,\n' % (lua_string(french), lua_string(translation)) for french, translation in english.items())
+    write('Locales/enUS.lua', text[:-1].rstrip() + '\n' + lines + '}\n')
+
+
 def set_version(version, notes):
     if not re.fullmatch(r'\d+\.\d+\.\d+', version):
         sys.exit('Numéro de version attendu sous la forme 1.4.0')
@@ -94,32 +115,42 @@ def with_links(note):
     return re.sub(r'#(\d+)', r'[#\1](%s/issues/\1)' % DEPOT, note)
 
 
-def section(notes):
+def section(notes, english=None):
+    # english : la table des traductions pour écrire la version anglaise (une note sans traduction reste en français)
     lines = []
     for key, _, title in RUBRIQUES:
         if notes[key]:
-            lines += ['### ' + title, ''] + ['- ' + with_links(note) for note in notes[key]] + ['']
+            if english is not None:
+                title = RUBRIQUES_EN[key]
+            lines += ['### ' + title, ''] + ['- ' + with_links(note if english is None else english.get(note, note)) for note in notes[key]] + ['']
     return lines
 
 
-def write_changelog():
+def write_changelog(english=None):
     entries = changes()
     out = ['# Journal des versions', '',
-           'Tous les changements notables de Lyorune, version par version.',
+           'Tous les changements notables de Lyorune, version par version. [English version](CHANGELOG.en.md)', '',
            'Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; '
            'numérotation en [versions sémantiques](https://semver.org/lang/fr/).', '',
+           ] if english is None else [
+           '# Changelog', '',
+           'All notable changes to Lyorune, version by version. [Version française](CHANGELOG.md)', '',
+           'Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); '
+           'numbering follows [semantic versioning](https://semver.org/).', '',
+           ]
+    out += [
            '<!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->', '']
     links = []
     for index, (version, date, notes) in enumerate(entries):
         published = numero(version) >= PREMIERE_PUBLIEE
-        out += ['## %s - %s' % ('[%s]' % version if published else version, date), ''] + section(notes)
+        out += ['## %s - %s' % ('[%s]' % version if published else version, date), ''] + section(notes, english)
         if published:
             previous = entries[index + 1][0] if index + 1 < len(entries) else None
             if previous and numero(previous) >= PREMIERE_PUBLIEE:
                 links.append('[%s]: %s/compare/v%s...v%s' % (version, DEPOT, previous, version))
             else:
                 links.append('[%s]: %s/releases/tag/v%s' % (version, DEPOT, version))
-    write('CHANGELOG.md', '\n'.join(out + links) + '\n')
+    write('CHANGELOG.md' if english is None else 'CHANGELOG.en.md', '\n'.join(out + links) + '\n')
 
 
 def write_release_notes(version):
@@ -128,7 +159,13 @@ def write_release_notes(version):
             lines = ['# Lyorune %s' % entry_version, ''] + section(notes)
             lines += ["**Installation** : téléchargez l'archive `.zip` ci-dessous et décompressez-la dans `World of Warcraft\\_forever_\\Interface\\AddOns\\`.",
                       '', 'Un bug ? [Comment le signaler](%s/blob/main/docs/SIGNALER_UN_BUG.md)' % DEPOT,
-                      '','Journal complet : [CHANGELOG.md](%s/blob/main/CHANGELOG.md)' % DEPOT, '']
+                      '', 'Journal complet : [CHANGELOG.md](%s/blob/main/CHANGELOG.md)' % DEPOT, '']
+            english = traductions()
+            if all(note in english for key, _, _ in RUBRIQUES for note in notes[key]):
+                lines += ['---', '', '# Lyorune %s (English)' % entry_version, ''] + section(notes, english)
+                lines += ['**Installation**: download the `.zip` archive below and unzip it into `World of Warcraft\\_forever_\\Interface\\AddOns\\`.',
+                          '', 'A bug? [How to report it](%s/blob/main/docs/SIGNALER_UN_BUG.md#reporting-a-bug-english)' % DEPOT,
+                          '', 'Full changelog: [CHANGELOG.en.md](%s/blob/main/CHANGELOG.en.md)' % DEPOT, '']
             write('RELEASE.md', '\n'.join(lines))
             print('RELEASE.md écrit pour la version', entry_version)
             return
@@ -159,16 +196,24 @@ def parse(args):
     """1.4.0 --nouveau "a" "b" --corrige "c"  ->  version et notes par rubrique."""
     version, notes, current = args[0], {key: [] for key, _, _ in RUBRIQUES}, 'added'
     options = {option: key for key, option, _ in RUBRIQUES}
+    english, last, translate = {}, None, False
     for arg in args[1:]:
-        if arg in options:
+        if translate:
+            if last is None:
+                sys.exit('--en doit suivre le changement qu\'il traduit.')
+            english[last], translate = arg, False
+        elif arg == '--en':
+            translate = True
+        elif arg in options:
             current = options[arg]
         elif arg.startswith('--'):
-            sys.exit('Option inconnue : %s (attendu : --nouveau, --ameliore, --corrige)' % arg)
+            sys.exit('Option inconnue : %s (attendu : --nouveau, --ameliore, --corrige, --en)' % arg)
         else:
             notes[current].append(arg)
+            last = arg
     if not any(notes.values()):
         sys.exit('Indiquez au moins un changement : python outils/publier.py 1.4.0 --corrige "Ce qui est corrigé."')
-    return version, notes
+    return version, notes, english
 
 
 def main():
@@ -176,11 +221,18 @@ def main():
     if args and args[0] == '--notes':
         return write_release_notes(args[1] if len(args) > 1 else current_version())
     if args:
-        version, notes = parse(args)
+        version, notes, english = parse(args)
         run_tests()
         set_version(version, notes)
+        add_translations(english)
     run_tests()
     write_changelog()
+    write_changelog(traductions())
+    manquantes = [note for _, _, notes in changes() for key, _, _ in RUBRIQUES for note in notes[key] if note not in traductions()]
+    if manquantes:
+        print('Sans traduction anglaise (à ajouter dans Locales/enUS.lua, puis relancer cette commande sans argument) :')
+        for note in manquantes:
+            print('  -', note)
     version = current_version()
     print('Lyorune %s : CHANGELOG.md à jour, archive %s' % (version, make_zip(version)))
     if args:

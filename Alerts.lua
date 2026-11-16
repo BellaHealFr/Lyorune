@@ -77,7 +77,7 @@ local function CheckRes(target, spellID)
 	if not spell or not Z.resNames[spell] or GetTime() - lastRes < 3 then return end
 	if issecret(target) or not target or target == "" then
 		target = UnitName("mouseover")
-		if issecret(target) or not target then target = "un allié" end
+		if issecret(target) or not target then target = Z.L["un allié"] end
 	end
 	lastRes = GetTime()
 	Z:Announce(Z:ResText(target:match("^[^-]+") or target)) -- sans le nom du royaume

@@ -1,0 +1,77 @@
+# Changelog
+
+All notable changes to Lyorune, version by version. [Version française](CHANGELOG.md)
+
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); numbering follows [semantic versioning](https://semver.org/).
+
+<!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
+
+## [1.4.1] - 2026-11-16
+
+### Improved
+
+- Lyorune now speaks English everywhere: guided tour, news, chat messages and theme names.
+- On an English game client, the suggested announcements (mana, resurrection) are in English from the first install.
+- The /lyorune bug window gives a direct link to the report form, in your language.
+
+## [1.4.0] - 2026-11-16
+
+### Added
+
+- New name: Zenith becomes Lyorune. The commands are /lyorune and /lyo.
+- Minimap button: left click for the options, right click for test mode. It can be moved, and turned off in the Help tab.
+- Lyorune logo in the addon list.
+- Animated runic inscription at the bottom of the options window: hover it to translate it.
+
+## 1.3.0 - 2026-11-16
+
+### Added
+
+- Report a bug in three questions with /lyorune bug: a report ready to copy.
+- Three transparency presets: subtle, semi-transparent, clearly visible.
+- Position diagnostic with /lyorune position, in preparation for the direction arrow.
+
+### Improved
+
+- Specialization or talent changes are picked up without /reload.
+- A disconnected player stays visible, marked "Offline".
+- Adjustable error notification, only one per session.
+
+## 1.2.0 - 2026-11-16
+
+### Added
+
+- Test mode: a fake group of 5 to 40 players to tune the look (/lyorune test).
+- Separate frames for tanks and pets, role order of your choice.
+- Healer mana bar, low health visual alert, missing group buffs.
+- Heals over time as icons or thin bars, important debuffs shown large.
+- Hover keys, automatic resurrection on the heal click.
+- Personal lists: spells to track, debuffs to ignore or to highlight.
+- Brightness, opacity, high contrast, automatic frame shrinking in large raids.
+- Ready-made profiles, direct sending of your configuration to a player, reset everything.
+- English translation of the options.
+- Warning when a group member has a newer version.
+
+### Improved
+
+- Options sorted into eight tabs, with a search box.
+
+### Fixed
+
+- Your own frame is no longer faded as if you were out of range.
+
+## 1.1.0 - 2026-11-16
+
+### Added
+
+- Five themes, mana and resurrection announcements, configuration sharing by code.
+- Error log (/lyorune erreurs) and compatibility check (/lyorune diag).
+
+## 1.0.0 - 2026-11-16
+
+### Added
+
+- First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
+
+[1.4.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/BellaHealFr/Lyorune/releases/tag/v1.4.0

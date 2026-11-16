@@ -6,7 +6,11 @@
 
 local _, Z = ...
 
-Z.reportURL = "https://github.com/BellaHealFr/Lyorune/issues"
+-- Adresse du formulaire de signalement : en français, ou en anglais si Lyorune est en anglais
+function Z:ReportURL()
+	local english = Z.L["Mort"] ~= "Mort"
+	return "https://github.com/BellaHealFr/Lyorune/issues/new?template=" .. (english and "bug_en.yml" or "bug.yml")
+end
 
 local QUESTIONS = {
 	"Que faisais-tu quand c'est arrivé ?",
@@ -120,8 +124,8 @@ function Z:ShowBug()
 		where:SetText(L["Colle ton rapport ici :"])
 		local link = UI.Edit(window, 568)
 		link:SetPoint("BOTTOMLEFT", 16, 20)
-		link:SetText(Z.reportURL)
-		link:HookScript("OnTextChanged", function(self, byUser) if byUser then self:SetText(Z.reportURL) end end)
+		link:SetText(Z:ReportURL())
+		link:HookScript("OnTextChanged", function(self, byUser) if byUser then self:SetText(Z:ReportURL()) end end)
 	end
 	for _, edit in ipairs(window.answers) do edit:SetText("") end
 	local hasError = (Z.firstError or (Z.db.errors or {})[1]) ~= nil

@@ -23,6 +23,16 @@ Lyorune suit les [versions sémantiques](https://semver.org/lang/fr/) : `MAJEUR.
 
    La commande lance les tests, met le numéro dans `Lyorune.toc` et `Core.lua`, ajoute la version à `Changes.lua`
    (affichée en jeu), régénère `CHANGELOG.md` et crée l'archive dans `dist/`. `(#12)` devient un lien vers la demande.
+
+   Pour les joueurs anglophones, faites suivre chaque changement de sa traduction avec `--en` :
+
+   ```
+   python outils/publier.py 1.4.2 --corrige "Case vide après un changement de groupe." --en "Empty frame after a group change."
+   ```
+
+   La traduction est rangée dans `Locales/enUS.lua` (nouveautés affichées en jeu) et sert au journal anglais
+   `CHANGELOG.en.md` et à la partie anglaise des notes de publication. Si vous l'oubliez, la commande liste les
+   changements sans traduction : ajoutez-les dans `Locales/enUS.lua`, puis relancez `python outils/publier.py`.
 3. Essayer la version en jeu (`outils\installer.bat`, puis `/reload`).
 4. Enregistrer et étiqueter :
 

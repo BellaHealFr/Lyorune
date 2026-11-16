@@ -1,9 +1,18 @@
 # Journal des versions
 
-Tous les changements notables de Lyorune, version par version.
+Tous les changements notables de Lyorune, version par version. [English version](CHANGELOG.en.md)
+
 Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; numérotation en [versions sémantiques](https://semver.org/lang/fr/).
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
+
+## [1.4.1] - 2026-11-16
+
+### Amélioré
+
+- Lyorune parle anglais partout : visite guidée, nouveautés, messages du chat et noms des thèmes.
+- Sur un jeu en anglais, les annonces proposées (mana, résurrection) sont en anglais dès l'installation.
+- La fenêtre /lyorune bug donne le lien direct vers le formulaire de signalement, dans votre langue.
 
 ## [1.4.0] - 2026-11-16
 
@@ -64,4 +73,5 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.4.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/BellaHealFr/Lyorune/releases/tag/v1.4.0

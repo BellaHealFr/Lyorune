@@ -20,7 +20,7 @@ local function ClickSummary()
 		end
 	end
 	if #lines == 0 then
-		return "Aucun sort n'est encore attribué : vous les choisirez dans l'onglet Clics des options."
+		return Z.L["Aucun sort n'est encore attribué : vous les choisirez dans l'onglet Clics des options."]
 	end
 	return table.concat(lines, "\n")
 end
@@ -41,7 +41,7 @@ local steps = {
 	{
 		title = "Soigner d'un clic",
 		text = function()
-			return "Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler.\n\n" .. ClickSummary()
+			return Z.L["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] .. "\n\n" .. ClickSummary()
 		end,
 		target = function() return Z.buttons[1] end,
 	},
@@ -123,7 +123,7 @@ local function Show(index)
 	card.body:SetText(type(step.text) == "function" and step.text() or L[step.text])
 	card.progress:SetText(index .. " / " .. #steps)
 	card.back:SetShown(index > 1)
-	card.next.label:SetText(index == #steps and "Terminer" or "Suivant")
+	card.next.label:SetText(index == #steps and L["Terminer"] or L["Suivant"])
 	card:SetHeight(card.body:GetStringHeight() + 112)
 
 	-- Encadre l'élément dont parle l'étape et place la carte à côté
@@ -163,14 +163,14 @@ local function Build()
 	card.progress:SetPoint("BOTTOMLEFT", 16, 20)
 	card.progress:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
 
-	card.next = UI.Button(card, "Suivant", 96, 26, function()
+	card.next = UI.Button(card, Z.L["Suivant"], 96, 26, function()
 		if current == #steps then Finish() else Show(current + 1) end
 	end)
 	card.next:SetPoint("BOTTOMRIGHT", -14, 14)
 	card.next.label:SetJustifyH("CENTER")
 	card.next.bg:SetVertexColor(UI.accent[1] * 0.45, UI.accent[2] * 0.45, UI.accent[3] * 0.45)
 
-	card.back = UI.Button(card, "Précédent", 96, 26, function() Show(current - 1) end)
+	card.back = UI.Button(card, Z.L["Précédent"], 96, 26, function() Show(current - 1) end)
 	card.back:SetPoint("RIGHT", card.next, "LEFT", -6, 0)
 	card.back.label:SetJustifyH("CENTER")
 

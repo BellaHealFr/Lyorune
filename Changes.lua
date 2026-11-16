@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.4.1", date = "2026-11-16",
+		added = {
+		},
+		improved = {
+			"Lyorune parle anglais partout : visite guidée, nouveautés, messages du chat et noms des thèmes.",
+			"Sur un jeu en anglais, les annonces proposées (mana, résurrection) sont en anglais dès l'installation.",
+			"La fenêtre /lyorune bug donne le lien direct vers le formulaire de signalement, dans votre langue.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.4.0", date = "2026-11-16",
 		added = {
 			"Nouveau nom : Zenith devient Lyorune. Les commandes sont /lyorune et /lyo.",
@@ -93,7 +105,7 @@ function Z:NewsText()
 			local notes = entry[section[1]]
 			if notes and #notes > 0 then
 				lines[#lines + 1] = "  |cffffd24d" .. L[section[2]] .. "|r"
-				for _, note in ipairs(notes) do lines[#lines + 1] = "    - " .. note end
+				for _, note in ipairs(notes) do lines[#lines + 1] = "    - " .. L[note] end
 			end
 		end
 		lines[#lines + 1] = ""

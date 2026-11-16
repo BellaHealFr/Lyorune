@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.4.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.4.1"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -189,9 +189,21 @@ local function FillDefaults(db)
 	if db.rangeAlpha <= 1 then db.rangeAlpha = Z.defaults.rangeAlpha end -- ancien format (fraction)
 end
 
+-- Textes des annonces proposés à un joueur dont le jeu n'est pas en français (il peut les réécrire)
+Z.englishTexts = {
+	manaText = "Low mana: {mana}%! Let me drink.",
+	regenText = "Mana is back ({mana}%), ready to go!",
+	resText = "Resurrecting {nom}.",
+}
+
 Z:On("ADDON_LOADED", function(name)
 	if name ~= ADDON then return end
 	LyoruneDB = LyoruneDB or {}
+	if GetLocale() ~= "frFR" then
+		for key, text in pairs(Z.englishTexts) do
+			if LyoruneDB[key] == nil then LyoruneDB[key] = text end
+		end
+	end
 	FillDefaults(LyoruneDB)
 	Z.db = LyoruneDB
 	Z:SetLanguage()

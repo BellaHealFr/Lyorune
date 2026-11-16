@@ -177,4 +177,97 @@ Z.translations.enUS = {
 	["le mode test n'est pas disponible en combat."] = "test mode is not available in combat.",
 	["Mode test : faux groupe. /lyorune test pour quitter."] = "Test mode: fake group. /lyorune test to leave.",
 	[" affiche aussi des cadres de groupe. Les deux fonctionnent ensemble ; pour éviter les doublons, désactivez les cadres de groupe et de raid dans ses options."] = " also shows group frames. Both work together; to avoid duplicates, turn off its party and raid frames in its options.",
+
+	-- Visite guidée (les clés reprennent exactement les textes de Tutorial.lua)
+	["Bienvenue dans Lyorune"] = "Welcome to Lyorune",
+	["Une case par joueur"] = "One frame per player",
+	["Soigner d'un clic"] = "Heal with one click",
+	["Ce que disent les couleurs"] = "What the colours say",
+	["Placer les cadres"] = "Placing the frames",
+	["Essayer sans groupe"] = "Trying without a group",
+	["Régler Lyorune"] = "Setting up Lyorune",
+	["C'est parti"] = "Off you go",
+	["Lyorune affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
+			.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/lyorune tuto|r."] =
+		"Lyorune shows your group as frames and lets you heal with a single click.\n\nThis tour takes one minute. You can restart it with |cff33dd88/lyorune tuto|r.",
+	["La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé.\n\n"
+			.. "Le |cff73ff99vert clair|r au bout de la barre montre les soins déjà en route. "
+			.. "La |cff8cd9ffbande bleue|r en bas est un bouclier."] =
+		"The coloured bar is the player's health: the shorter it is, the more hurt they are.\n\nThe |cff73ff99light green|r at the end of the bar shows heals already on their way. The |cff8cd9ffblue strip|r at the bottom is a shield.",
+	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
+			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
+			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
+			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements."] =
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs.",
+	["Faites glisser la poignée |cff33dd88Lyorune|r pour déplacer les cadres où vous voulez.\n\n"
+			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît."] =
+		"Drag the |cff33dd88Lyorune|r handle to move the frames wherever you like.\n\nOnce you are happy, tick \"Lock position\" in the options: the handle disappears.",
+	["Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
+			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
+			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
+		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
+	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
+			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
+			.. "|cff33dd88Apparence|r : thème, couleurs, luminosité, texte.\n"
+			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
+			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
+			.. "|cff33dd88Clics|r : souris, touches au survol, résurrection.\n"
+			.. "|cff33dd88Alertes|r : annonces et sons.\n"
+			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
+			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: theme, colours, brightness, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, resurrection.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
+			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
+			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
+			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
+			.. "et un rapport prêt à copier pour l'auteur."] =
+		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Clicks tab. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click).\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
+	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a frame to cast a spell on that player, without targeting them.",
+	["Aucun sort n'est encore attribué : vous les choisirez dans l'onglet Clics des options."] = "No spell is assigned yet: you will choose them in the Clicks tab of the options.",
+	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
+
+	-- Thèmes
+	["Néon"] = "Neon", ["Épuré"] = "Clean", ["Verre"] = "Glass", ["Classique"] = "Classic", ["Héroïque"] = "Heroic",
+
+	-- Messages du chat et journal d'erreurs
+	["cette version du jeu n'est pas compatible (fonctions manquantes : %s). Lyorune reste désactivé. Détails : /lyorune erreurs"] = "this game version is not compatible (missing functions: %s). Lyorune stays disabled. Details: /lyorune erreurs",
+	["le jeu est passé à l'interface %s (Lyorune a été testé pour %s). Tout semble compatible ; en cas de souci, tapez /lyorune erreurs."] = "the game moved to interface %s (Lyorune was tested for %s). Everything looks compatible; if something goes wrong, type /lyorune erreurs.",
+	["jeu %s, Lyorune %s testé pour l'interface %s."] = "game %s, Lyorune %s tested for interface %s.",
+	["compatibilité : toutes les fonctions nécessaires sont présentes."] = "compatibility: every required function is present.",
+	["compatibilité : fonctions manquantes : %s"] = "compatibility: missing functions: %s",
+	["%d erreur(s) dans le journal (/lyorune erreurs)."] = "%d error(s) in the log (/lyorune erreurs).",
+	["Vider le journal"] = "Clear the log",
+	["Ctrl+C pour copier, puis collez le texte à la personne qui vous aide."] = "Ctrl+C to copy, then paste the text to the person helping you.",
+	["un allié"] = "an ally",
+
+	-- Nouveautés de chaque version (les clés reprennent exactement les notes de Changes.lua).
+	-- Après une publication, ajouter ici la traduction des nouvelles notes, puis relancer python outils/publier.py
+	["Nouveau nom : Zenith devient Lyorune. Les commandes sont /lyorune et /lyo."] = "New name: Zenith becomes Lyorune. The commands are /lyorune and /lyo.",
+	["Bouton sur la mini-carte : clic gauche pour les options, clic droit pour le mode test. Il se déplace et se désactive dans l'onglet Aide."] = "Minimap button: left click for the options, right click for test mode. It can be moved, and turned off in the Help tab.",
+	["Logo de Lyorune dans la liste des addons."] = "Lyorune logo in the addon list.",
+	["Inscription runique animée au bas de la fenêtre d'options : passez la souris dessus pour la traduire."] = "Animated runic inscription at the bottom of the options window: hover it to translate it.",
+	["Signaler un bug en trois questions avec /lyorune bug : un rapport prêt à copier."] = "Report a bug in three questions with /lyorune bug: a report ready to copy.",
+	["Trois préréglages de transparence : discret, semi-transparent, bien visible."] = "Three transparency presets: subtle, semi-transparent, clearly visible.",
+	["Diagnostic de position avec /lyorune position, en vue de la flèche de direction."] = "Position diagnostic with /lyorune position, in preparation for the direction arrow.",
+	["Changement de spécialisation ou de talents pris en compte sans /reload."] = "Specialization or talent changes are picked up without /reload.",
+	["Un joueur déconnecté reste visible avec la mention « Déco »."] = "A disconnected player stays visible, marked \"Offline\".",
+	["Notification d'erreur réglable, une seule par session."] = "Adjustable error notification, only one per session.",
+	["Mode test : un faux groupe de 5 à 40 joueurs pour régler l'apparence (/lyorune test)."] = "Test mode: a fake group of 5 to 40 players to tune the look (/lyorune test).",
+	["Cadres séparés pour les tanks et les familiers, ordre des rôles au choix."] = "Separate frames for tanks and pets, role order of your choice.",
+	["Barre de mana des soigneurs, alerte visuelle de vie basse, buffs de groupe manquants."] = "Healer mana bar, low health visual alert, missing group buffs.",
+	["Soins sur la durée en icônes ou en barres fines, affaiblissements importants en grand."] = "Heals over time as icons or thin bars, important debuffs shown large.",
+	["Touches au survol, résurrection automatique sur le clic de soin."] = "Hover keys, automatic resurrection on the heal click.",
+	["Listes personnelles : sorts à suivre, affaiblissements à ignorer ou à mettre en avant."] = "Personal lists: spells to track, debuffs to ignore or to highlight.",
+	["Luminosité, opacité, contraste élevé, réduction automatique des cases en grand raid."] = "Brightness, opacity, high contrast, automatic frame shrinking in large raids.",
+	["Profils prêts à l'emploi, envoi direct de sa configuration à un joueur, tout réinitialiser."] = "Ready-made profiles, direct sending of your configuration to a player, reset everything.",
+	["Traduction anglaise des options."] = "English translation of the options.",
+	["Avertissement quand un membre du groupe a une version plus récente."] = "Warning when a group member has a newer version.",
+	["Options rangées en huit onglets, avec une recherche."] = "Options sorted into eight tabs, with a search box.",
+	["Votre propre case n'est plus estompée comme si vous étiez hors de portée."] = "Your own frame is no longer faded as if you were out of range.",
+	["Cinq thèmes, annonces de mana et de résurrection, partage de configuration par code."] = "Five themes, mana and resurrection announcements, configuration sharing by code.",
+	["Journal d'erreurs (/lyorune erreurs) et contrôle de compatibilité (/lyorune diag)."] = "Error log (/lyorune erreurs) and compatibility check (/lyorune diag).",
+	["Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel."] = "First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.",
+	["Lyorune parle anglais partout : visite guidée, nouveautés, messages du chat et noms des thèmes."] = "Lyorune now speaks English everywhere: guided tour, news, chat messages and theme names.",
+	["Sur un jeu en anglais, les annonces proposées (mana, résurrection) sont en anglais dès l'installation."] = "On an English game client, the suggested announcements (mana, resurrection) are in English from the first install.",
+	["La fenêtre /lyorune bug donne le lien direct vers le formulaire de signalement, dans votre langue."] = "The /lyorune bug window gives a direct link to the report form, in your language.",
 }

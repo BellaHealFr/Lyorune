@@ -449,6 +449,31 @@ step("anglais", function()
   Z.db.language = "AUTO" Z:SetLanguage() assert(Z.L["Mort"] == "Mort")
 end)
 
+step("anglais : visite guidee, nouveautes, messages", function()
+  Z.db.language = "enUS" Z:SetLanguage()
+  Z.db.tutorialDone = false Z:StartTutorial()
+  local card = LyoruneTutorial
+  local titles = { "Welcome to Lyorune", "One frame per player", "Heal with one click", "What the colours say",
+    "Placing the frames", "Trying without a group", "Setting up Lyorune", "Off you go" }
+  for i = 1, 8 do
+    assert(card.title:GetText() == titles[i], "titre " .. i .. " : " .. card.title:GetText())
+    local body = card.body:GetText()
+    assert(i == 3 or not body:find("[\195][\160-\191]"), "etape " .. i .. " encore en francais : " .. body:sub(1, 60))
+    assert(card.next.label:GetText() == (i == 8 and "Finish" or "Next"), card.next.label:GetText())
+    card.next:Run("OnClick")
+  end
+  assert(Z.db.tutorialDone)
+  local news = Z:NewsText()
+  assert(news:find("Minimap button", 1, true) and news:find("New", 1, true), "nouveautes non traduites")
+  assert(Z.L["Néon"] == "Neon" and Z.L["un allié"] == "an ally")
+  assert(Z:ReportURL():find("bug_en.yml", 1, true), Z:ReportURL())
+  SlashCmdList.LYORUNE("diag")
+  assert(PRINTED[#PRINTED]:find("error(s) in the log", 1, true), PRINTED[#PRINTED])
+  assert(Z.englishTexts.manaText:find("{mana}", 1, true) and Z.englishTexts.resText:find("{nom}", 1, true))
+  Z.db.language = "AUTO" Z:SetLanguage()
+  assert(Z:ReportURL():find("bug.yml", 1, true) and Z.L["Suivant"] == "Suivant")
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

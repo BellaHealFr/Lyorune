@@ -4,7 +4,7 @@ Everything you need to heal with Lyorune. No technical knowledge required.
 
 [Version française](TUTORIEL.md)
 
-Good to know: the options window is in English when your game is in English. The short in-game tour (`/lyorune tuto`) and the "what's new" window are still in French for now. This guide covers everything they say.
+Good to know: Lyorune is in English when your game is in English: options, in-game tour (`/lyorune tuto`), news and chat messages. You can also force the language in the Help tab.
 
 ## 1. The frames
 
@@ -66,7 +66,7 @@ Type `/lyorune test`, or click "5 players", "10 players", "25 players" or "40 pl
 
 **Look** tab:
 
-- **Theme**: Néon, Épuré, Verre, Classique or Héroïque (flat and modern, lightly embossed, glassy, like the game's raid frames, or textured with a golden border).
+- **Theme**: Neon, Clean, Glass, Classic or Heroic (flat and modern, lightly embossed, glassy, like the game's raid frames, or textured with a golden border).
 - **Transparency**: three one-click presets, "Subtle", "Semi-transparent", "Clearly visible", then the fine settings (frame opacity, out-of-range opacity, brightness).
 - **High contrast**: black background, white border, larger text.
 - **Health text**: missing health, percentage, or nothing.
@@ -128,8 +128,8 @@ Lyorune does not bother you with its errors: at most one discreet message per se
 |---|---|
 | `/lyorune` | Open the options |
 | `/lyorune test` | Test mode |
-| `/lyorune tuto` | In-game tour (French for now) |
+| `/lyorune tuto` | In-game tour |
 | `/lyorune verrou` | Lock or unlock the position |
 | `/lyorune reset` | Move the frames back to the centre |
 | `/lyorune bug` | Report a problem |
-| `/lyorune nouveautes` | See what is new in this version (French for now) |
+| `/lyorune nouveautes` | See what is new in this version |
