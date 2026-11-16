@@ -24,7 +24,7 @@ The tank who survives by a miracle. The mage who "just wanted to see". The heal 
 
 Lyorune is a set of healing frames for **World of Warcraft: Forever**: your whole group in front of your eyes, all your spells under your fingers. You click, it heals. The rest of the time, you enjoy the dungeon, your friends and the journey.
 
-Easy to set up, light in combat, pleasant to look at. By **BellaDroode**, for everyone who loves watching over others.
+Easy to set up, light in combat, pleasant to look at. I made it for everyone who loves watching over others.
 
 <!-- captures:debut -->
 <!-- captures:fin -->
@@ -91,13 +91,13 @@ Every report makes Lyorune better for everyone. In game, type `/lyorune bug`, an
 
 World of Warcraft: Forever, interface 16001. No dependency.
 
-## 💛 The author
+## 💛 Who am I?
 
-**BellaDroode** is in love with World of Warcraft: a magical world where loneliness has no place.
+I am **BellaDroode**, and I am in love with World of Warcraft: a magical world where loneliness has no place.
 
-Lyorune grew out of that idea. Behind every health bar there is a companion, and healing means watching over them. This addon exists to keep that gesture simple, fast and beautiful.
+Lyorune grew out of that idea. Behind every health bar I see a companion, and healing means watching over them. I created this addon to keep that gesture simple, fast and beautiful.
 
-If Lyorune travels with you in dungeons or raids, a ⭐ at the top of this page is always a joy. Have fun, and happy healing!
+If Lyorune travels with you in dungeons or raids, a ⭐ at the top of this page will always make my day. Have fun, and happy healing!
 
 ## 📜 License
 

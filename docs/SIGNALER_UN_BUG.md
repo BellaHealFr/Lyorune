@@ -21,7 +21,7 @@ Tapez `/lyorune bug` dans la fenêtre de discussion. Une fenêtre s'ouvre avec t
 - **Que s'est-il passé ?** Par exemple : « la case du tank est restée grise alors qu'il était vivant ».
 - **Est-ce que ça se reproduit à chaque fois ?**
 
-Sous vos réponses, Lyorune ajoute tout seul ce dont l'auteur a besoin : la version de l'addon et du jeu, votre classe,
+Sous vos réponses, Lyorune ajoute tout seul ce dont j'ai besoin : la version de l'addon et du jeu, votre classe,
 votre niveau, la taille du groupe, et l'erreur technique s'il y en a une. Il n'y a rien de personnel dans ce rapport :
 ni le nom de votre personnage, ni celui de votre compte.
 
@@ -44,7 +44,7 @@ longue explication. Appuyez sur la touche **Impr écran** en jeu : l'image est r
 
 ### 4. Et ensuite ?
 
-- Votre signalement reçoit l'étiquette **bug**. L'auteur le lit et vous répond sur la même page.
+- Votre signalement reçoit l'étiquette **bug**. Je le lis et je vous réponds sur la même page.
 - GitHub vous prévient par e-mail à chaque réponse.
 - S'il manque une information pour reproduire le problème, l'étiquette **à confirmer** est ajoutée et une question vous est posée.
 - Une fois le bug reproduit, il passe à **confirmé**, puis il est corrigé dans une version suivante. Le numéro de votre

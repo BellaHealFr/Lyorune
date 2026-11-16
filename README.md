@@ -25,7 +25,7 @@ Le tank qui tient par miracle. Le mage qui a encore « juste voulu voir ». Le s
 
 Lyorune, ce sont des cadres de soin pour **World of Warcraft: Forever** : tout votre groupe sous les yeux, tous vos sorts sous les doigts. Vous cliquez, ça soigne. Le reste du temps, vous profitez du donjon, de vos amis et du voyage.
 
-Simple à régler, léger en combat, agréable à regarder. Par **BellaDroode**, pour tous ceux qui aiment veiller sur les autres.
+Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour tous ceux qui aiment veiller sur les autres.
 
 <!-- captures:debut -->
 <!-- captures:fin -->
@@ -130,13 +130,13 @@ pip install lupa
 python tests/run.py .
 ```
 
-## 💛 L'auteur
+## 💛 Qui suis-je ?
 
-**BellaDroode** est un amoureux de World of Warcraft : un monde magique où la solitude n'a pas sa place.
+Moi, c'est **BellaDroode**. Je suis un amoureux de World of Warcraft : un monde magique où la solitude n'a pas sa place.
 
-Lyorune est né de cette idée. Derrière chaque barre de vie se trouve un compagnon de route, et soigner, c'est veiller sur lui. Cet addon est fait pour que ce geste reste simple, rapide et beau.
+Lyorune est né de cette idée. Derrière chaque barre de vie, je vois un compagnon de route, et soigner, c'est veiller sur lui. J'ai créé cet addon pour que ce geste reste simple, rapide et beau.
 
-Si Lyorune vous accompagne en donjon ou en raid, une ⭐ en haut de cette page fait toujours plaisir. Bon jeu, et bons soins !
+Si Lyorune vous accompagne en donjon ou en raid, une ⭐ en haut de cette page me fera toujours plaisir. Bon jeu, et bons soins !
 
 ## 📜 Licence
 
