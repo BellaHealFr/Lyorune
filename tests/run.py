@@ -1,3 +1,4 @@
+# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 # Banc de test de Zenith : fait tourner le vrai code de l'addon dans un faux client, hors du jeu.
 #   pip install lupa
 #   python tests/run.py .
@@ -14,6 +15,7 @@ import re
 rt.globals().TOC_VERSION = re.search(r'## Version: (\S+)', read(os.path.join(addon, 'Zenith.toc'))).group(1)
 rt.execute(read(os.path.join(here, 'mock.lua')))
 
+rt.execute('BEFORE = {} for k in pairs(_G) do BEFORE[k] = true end')
 files = [l.strip().replace('\\', '/') for l in read(os.path.join(addon, 'Zenith.toc')).splitlines() if l.strip().endswith('.lua')]
 rt.execute('NS = {}')
 load = rt.eval('function(src, name) local f, err = loadstring(src, name) if not f then error(err) end f("Zenith", NS) end')
@@ -409,6 +411,17 @@ step("anglais", function()
   DEAD = true FireEvent("UNIT_HEALTH", "player") assert(Z.buttons[1].text:GetText() == "Dead")
   DEAD = false FireEvent("UNIT_HEALTH", "player")
   Z.db.language = "AUTO" Z:SetLanguage() assert(Z.L["Mort"] == "Mort")
+end)
+
+step("aucune variable globale imprevue", function()
+  local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Zenith = true, ZenithDB = true,
+    SLASH_ZENITH1 = true, SLASH_ZENITH2 = true, Zenith_OnAddonCompartmentClick = true, ClickCastFrames = true }
+  local leaks = {}
+  for name in pairs(_G) do
+    if not BEFORE[name] and not allowed[name] and not name:match("^Zenith%u") then leaks[#leaks + 1] = name end
+  end
+  table.sort(leaks)
+  assert(#leaks == 0, "variables globales en trop : " .. table.concat(leaks, ", "))
 end)
 
 local miss = {}

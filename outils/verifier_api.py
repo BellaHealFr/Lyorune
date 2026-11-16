@@ -1,3 +1,4 @@
+# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 # Surveille la compatibilité de Zenith avec le jeu, sans lancer le jeu.
 #
 #   python outils/verifier_api.py

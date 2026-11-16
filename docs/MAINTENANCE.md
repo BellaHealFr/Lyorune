@@ -99,4 +99,4 @@ Outils :
 | `outils\tester.bat`, `outils\installer.bat` | Tests, copie dans le dossier AddOns |
 | `.github/workflows/` | Tests à chaque envoi sur GitHub, publication à chaque étiquette `v1.3.0` |
 
-Le travail restant est suivi dans `FEUILLE_DE_ROUTE.md`.
+Le travail restant est suivi dans `docs/FEUILLE_DE_ROUTE.md`.

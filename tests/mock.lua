@@ -1,3 +1,4 @@
+-- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Faux client minimal pour faire tourner Zenith hors du jeu (détection des erreurs Lua).
 MISSING = {}
 local frames = {}

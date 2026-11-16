@@ -45,10 +45,17 @@ documentation et outils).
    Zenith est fourni « tel quel », sans garantie d'aucune sorte. L'auteur ne
    peut être tenu responsable d'aucun dommage lié à son utilisation.
 
-5. FIN DE LA LICENCE
+5. FIN DE LA LICENCE ET COPIES NON AUTORISÉES
 
    Le non-respect de l'une de ces conditions met fin immédiatement aux droits
-   accordés par cette licence.
+   accordés par cette licence. Toute copie publiée en violation de cette
+   licence pourra faire l'objet d'une demande de retrait auprès de la
+   plateforme qui l'héberge (GitHub, CurseForge, Wago ou autre).
+
+   Le fait que le code de Zenith soit lisible, comme l'exige le jeu pour tout
+   addon, ou que son dépôt soit public, n'accorde aucun droit supplémentaire.
+   La possibilité technique de copier le dépôt (« fork ») offerte par GitHub
+   sert uniquement à proposer une contribution à l'auteur.
 
 6. MARQUES
 

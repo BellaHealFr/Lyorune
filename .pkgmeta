@@ -1,11 +1,19 @@
 package-as: Zenith
 
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
 ignore:
   - tests
   - outils
+  - docs
   - dist
   - .github
-  - MAINTENANCE.md
-  - TUTORIEL.md
-  - FEUILLE_DE_ROUTE.md
+  - .editorconfig
+  - .gitattributes
   - README.md
+  - README.en.md
+  - CONTRIBUTING.md
+  - CODE_OF_CONDUCT.md
+  - SECURITY.md

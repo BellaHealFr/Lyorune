@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Guide du joueur
+    url: https://github.com/BellaDroode/Zenith/blob/main/docs/TUTORIEL.md
+    about: Comment régler et utiliser Zenith. La réponse à votre question s'y trouve peut-être.

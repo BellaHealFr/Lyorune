@@ -1,0 +1,52 @@
+name: Signaler un bug
+description: Quelque chose ne fonctionne pas ou s'affiche mal.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de signaler ce problème.
+        En jeu, tapez `/zenith bug` : la fenêtre prépare un rapport que vous n'avez plus qu'à coller ci-dessous.
+  - type: textarea
+    id: rapport
+    attributes:
+      label: Rapport de /zenith bug
+      description: Collez ici le rapport copié depuis le jeu (Ctrl+V).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Que faisiez-vous quand c'est arrivé ?
+      placeholder: "Exemple : en donjon à 5, en plein combat, je venais de changer de spécialisation."
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Que s'est-il passé, et qu'attendiez-vous ?
+    validations:
+      required: true
+  - type: dropdown
+    id: frequence
+    attributes:
+      label: Est-ce que cela se reproduit ?
+      options:
+        - À chaque fois
+        - Souvent
+        - Une seule fois
+        - Je ne sais pas
+    validations:
+      required: true
+  - type: textarea
+    id: captures
+    attributes:
+      label: Captures d'écran
+      description: Indispensable pour un défaut d'affichage. Glissez vos images ici.
+  - type: input
+    id: addons
+    attributes:
+      label: Autres addons d'interface
+      placeholder: "Exemple : ElvUI, Clique, VuhDo"

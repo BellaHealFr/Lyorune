@@ -1,3 +1,4 @@
+# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 # Publie une nouvelle version de Zenith.
 #
 #   python outils/publier.py 1.3.0 "Première nouveauté." "Deuxième nouveauté."

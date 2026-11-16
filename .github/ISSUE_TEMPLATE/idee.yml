@@ -1,0 +1,30 @@
+name: Proposer une idée
+description: Une fonction qui manque, ou quelque chose qui pourrait être plus simple.
+title: "[Idée] "
+labels: ["idée"]
+body:
+  - type: textarea
+    id: besoin
+    attributes:
+      label: Quel est le besoin ?
+      description: Décrivez la situation en jeu, pas la solution.
+      placeholder: "Exemple : en raid à 40, je ne vois pas assez vite qui a perdu son buff."
+    validations:
+      required: true
+  - type: textarea
+    id: proposition
+    attributes:
+      label: Votre proposition
+    validations:
+      required: true
+  - type: dropdown
+    id: classe
+    attributes:
+      label: Classe concernée
+      options:
+        - Toutes
+        - Prêtre
+        - Druide
+        - Paladin
+        - Chaman
+        - Autre

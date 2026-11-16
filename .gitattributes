@@ -1,0 +1,9 @@
+# Fins de ligne identiques pour tout le monde
+* text=auto eol=lf
+*.bat text eol=crlf
+*.zip binary
+*.tga binary
+*.blp binary
+
+# Statistiques de langage GitHub : la documentation et les outils ne comptent pas
+docs/** linguist-documentation
