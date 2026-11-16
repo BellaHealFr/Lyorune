@@ -1,56 +1,82 @@
-<p align="center"><img src="docs/images/logo.png" alt="Logo de Lyorune" width="160"></p>
+<p align="center"><img src="docs/images/logo.png" alt="Logo de Lyorune" width="220"></p>
 
-# Lyorune
+<h1 align="center">Lyorune</h1>
 
-**Cadres de soin pour World of Warcraft: Forever.** Simples à régler, légers en combat, agréables à regarder.
+<p align="center"><em>La lumière qui guide chaque soigneur</em></p>
 
-[![Tests](https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml/badge.svg)](https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml)
-[![Version](https://img.shields.io/github/v/release/BellaHealFr/Lyorune?label=version&color=33dd88)](https://github.com/BellaHealFr/Lyorune/releases/latest)
-[![Téléchargements](https://img.shields.io/github/downloads/BellaHealFr/Lyorune/total?label=t%C3%A9l%C3%A9chargements&color=33dd88)](https://github.com/BellaHealFr/Lyorune/releases)
-![Jeu](https://img.shields.io/badge/WoW%20Forever-interface%2016001-1e90ff)
-![Licence](https://img.shields.io/badge/licence-tous%20droits%20r%C3%A9serv%C3%A9s-lightgrey)
+<p align="center">
+<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><img src="https://img.shields.io/github/v/release/BellaHealFr/Lyorune?label=version&color=d4a94e" alt="Version"></a>
+<a href="https://github.com/BellaHealFr/Lyorune/releases"><img src="https://img.shields.io/github/downloads/BellaHealFr/Lyorune/total?label=t%C3%A9l%C3%A9chargements&color=d4a94e" alt="Téléchargements"></a>
+<a href="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml"><img src="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+<img src="https://img.shields.io/badge/WoW%20Forever-interface%2016001-1e90ff" alt="Jeu">
+<img src="https://img.shields.io/badge/licence-tous%20droits%20r%C3%A9serv%C3%A9s-lightgrey" alt="Licence">
+</p>
 
-Par **BellaDroode** · [English version](README.en.md)
+<p align="center">
+<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>⬇️ Télécharger</strong></a> ·
+<a href="docs/TUTORIEL.md">📖 Guide du joueur</a> ·
+<a href="docs/SIGNALER_UN_BUG.md">🐞 Signaler un bug</a> ·
+<a href="README.en.md">🇬🇧 English</a>
+</p>
 
-## Sommaire
+---
 
-- [Ce que fait Lyorune](#ce-que-fait-lyorune)
-- [Installation](#installation)
-- [Prise en main](#prise-en-main)
-- [Signaler un problème](#signaler-un-problème)
-- [Compatibilité](#compatibilité)
-- [Documentation](#documentation)
-- [Contribuer](#contribuer)
-- [L'auteur](#lauteur)
-- [Licence](#licence)
+Le tank qui tient par miracle. Le mage qui a encore « juste voulu voir ». Le soin qui part à la dernière seconde, et tout le groupe qui respire. **C'est pour ces moments-là qu'on joue soigneur.**
 
-## Ce que fait Lyorune
+Lyorune, ce sont des cadres de soin pour **World of Warcraft: Forever** : tout votre groupe sous les yeux, tous vos sorts sous les doigts. Vous cliquez, ça soigne. Le reste du temps, vous profitez du donjon, de vos amis et du voyage.
+
+Simple à régler, léger en combat, agréable à regarder. Par **BellaDroode**, pour tous ceux qui aiment veiller sur les autres.
+
+<!-- captures:debut -->
+<!-- captures:fin -->
+
+## ✨ Ce que Lyorune fait pour vous
 
 | | |
 |---|---|
-| **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. |
-| **Touches au survol** | Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. |
-| **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers, mana des soigneurs, soins sur la durée, affaiblissements, vie basse, menace, portée. |
-| **Dissiper sans chercher** | La case se colore quand vous pouvez retirer une magie, une malédiction, une maladie ou un poison. |
-| **Relever sans changer de touche** | Sur un joueur mort, votre clic de soin lance votre résurrection. |
-| **À votre goût** | Cinq thèmes, contraste élevé, transparence, taille, rangement par groupe ou par rôle, cadres séparés pour les tanks et les familiers. |
-| **Mode test** | Un faux groupe de 5 à 40 joueurs pour tout régler tranquillement. |
-| **Annonces** | Mana faible, mana remontée, résurrection, avec vos propres textes. |
-| **Partage** | Envoyez votre configuration à un ami, par un code ou directement en jeu. |
-| **Toujours sous la main** | Un bouton au bord de la mini-carte ouvre les options ou le mode test. Il se déplace, et se retire d'une case à cocher. |
-| **Rien n'est obligatoire** | Chaque élément a sa case à cocher, et une recherche retrouve n'importe quel réglage. |
+| 🖱️ **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. |
+| ⌨️ **Touches au survol** | Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. |
+| 👀 **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers, mana des soigneurs, soins sur la durée, affaiblissements, vie basse, menace, portée. |
+| 🧹 **Dissiper sans chercher** | La case se colore quand vous pouvez retirer une magie, une malédiction, une maladie ou un poison. |
+| 💫 **Relever sans changer de touche** | Sur un joueur mort, votre clic de soin lance votre résurrection. Personne ne reste au sol. |
+| 🎨 **À votre goût** | Cinq thèmes, contraste élevé, transparence, taille, rangement par groupe ou par rôle, cadres séparés pour les tanks et les familiers. |
+| 🧪 **Mode test** | Un faux groupe de 5 à 40 joueurs pour tout régler tranquillement, sans déranger personne. |
+| 📣 **Annonces** | Mana faible, mana remontée, résurrection, avec vos propres textes. |
+| 🤝 **Partage** | Envoyez votre configuration à un ami, par un code ou directement en jeu. |
+| 🧭 **Toujours sous la main** | Un bouton au bord de la mini-carte ouvre les options ou le mode test. Il se déplace, et se retire d'une case à cocher. |
+| 🕊️ **Rien n'est obligatoire** | Chaque élément a sa case à cocher, et une recherche retrouve n'importe quel réglage. |
 
 Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à côté d'ElvUI, de Clique ou de vos autres addons d'interface.
 
-## Installation
+## 🔮 Les runes de Lyorune
+
+Au bas de la fenêtre d'options, une ligne de runes dorées s'illumine de temps en temps, de gauche à droite.
+
+<p align="center"><img src="docs/images/runes.png" alt="L'inscription runique de Lyorune" width="100%"></p>
+
+**Ce qu'elles disent :**
+
+> *« Quiconque s'emparera de cette lame détiendra un pouvoir éternel. »*
+>
+> En version originale : *"Whomsoever takes up this blade shall wield power eternal."*
+
+C'est l'inscription gravée sur le socle de Deuillegivre, celle que Muradin déchiffre pour Arthas dans Warcraft III. Tous ceux qui ont grandi avec Warcraft s'en souviennent : c'est l'instant où tout bascule.
+
+**Comment les lire :** chaque rune vaut une lettre de la phrase anglaise. Ce sont les runes de l'ancien futhark, un alphabet bien réel, utilisé il y a près de deux mille ans. Les sons « th » et « ng » s'écrivent d'une seule rune.
+
+En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (onglet Aide).
+
+## 🚀 Installation
 
 1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest).
 2. Décompressez l'archive dans `World of Warcraft\_forever_\Interface\AddOns\`. Vous devez obtenir un dossier `Lyorune`.
-3. Lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion.
+3. Lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion, et c'est parti.
 
 Pour mettre à jour, remplacez le dossier `Lyorune` par celui de la nouvelle version. Vos réglages sont conservés.
 
-## Prise en main
+## 🎮 Prise en main
+
+Pas de groupe sous la main ? Tapez `/lyorune test` : un faux groupe apparaît, avec ses blessés et ses affaiblissements, pour essayer vos clics et régler l'apparence à votre rythme.
 
 | Commande | Effet |
 |---|---|
@@ -63,13 +89,15 @@ Pour mettre à jour, remplacez le dossier `Lyorune` par celui de la nouvelle ver
 
 Le guide complet pour les joueurs est dans [docs/TUTORIEL.md](docs/TUTORIEL.md).
 
-## Signaler un problème
+## 🐞 Un souci ? Dites-le-moi
 
-En jeu, tapez `/lyorune bug`. Répondez aux trois questions, copiez le rapport (Ctrl+C) et collez-le dans une [nouvelle demande](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug.yml). Pour un défaut d'affichage, joignez une capture d'écran.
+Chaque signalement rend Lyorune meilleur pour tout le monde. En jeu, tapez `/lyorune bug`, répondez aux trois questions, copiez le rapport (Ctrl+C) et collez-le dans le [formulaire de signalement](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug.yml). Pour un défaut d'affichage, joignez une capture d'écran.
 
 Première fois sur GitHub ? Le pas à pas est dans [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md) : trois minutes, sans connaissance technique.
 
-## Compatibilité
+Une idée, une envie ? Le [formulaire d'idée](https://github.com/BellaHealFr/Lyorune/issues/new?template=idee.yml) est là pour ça.
+
+## 🧩 Compatibilité
 
 | | |
 |---|---|
@@ -78,11 +106,12 @@ Première fois sur GitHub ? Le pas à pas est dans [docs/SIGNALER_UN_BUG.md](doc
 | Dépendances | Aucune. LibSharedMedia est utilisé s'il est présent, pour proposer vos textures. |
 | Autres addons | Compatible avec ElvUI, Clique et les autres cadres de groupe : Lyorune ne touche à aucun cadre qui n'est pas le sien. |
 
-## Documentation
+## 📚 Documentation
 
 | Document | Pour qui |
 |---|---|
 | [Guide du joueur](docs/TUTORIEL.md) | Utiliser et régler Lyorune |
+| [Signaler un bug](docs/SIGNALER_UN_BUG.md) | Le pas à pas, sans connaissance technique |
 | [Journal des versions](CHANGELOG.md) | Ce qui change à chaque version |
 | [Feuille de route](docs/FEUILLE_DE_ROUTE.md) | Ce qui est prévu |
 | [Notice de maintenance](docs/MAINTENANCE.md) | Comprendre et corriger le code |
@@ -90,7 +119,7 @@ Première fois sur GitHub ? Le pas à pas est dans [docs/SIGNALER_UN_BUG.md](doc
 | [Guide de contribution](CONTRIBUTING.md) | Signaler, proposer, corriger |
 | [Sécurité](SECURITY.md) | Ce que Lyorune fait de vos données |
 
-## Contribuer
+## 🛠️ Contribuer
 
 Les rapports de bug et les idées sont les bienvenus : voir [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -101,13 +130,15 @@ pip install lupa
 python tests/run.py .
 ```
 
-## L'auteur
+## 💛 L'auteur
 
 **BellaDroode** est un amoureux de World of Warcraft : un monde magique où la solitude n'a pas sa place.
 
 Lyorune est né de cette idée. Derrière chaque barre de vie se trouve un compagnon de route, et soigner, c'est veiller sur lui. Cet addon est fait pour que ce geste reste simple, rapide et beau.
 
-## Licence
+Si Lyorune vous accompagne en donjon ou en raid, une ⭐ en haut de cette page fait toujours plaisir. Bon jeu, et bons soins !
+
+## 📜 Licence
 
 Copyright © 2026 BellaDroode. Tous droits réservés.
 
