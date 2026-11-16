@@ -1,0 +1,33 @@
+# Publie Zenith quand une étiquette de version (par exemple v1.3.0) est envoyée sur GitHub :
+# les tests tournent, puis l'archive est attachée à une « release » GitHub.
+#
+# Pour publier aussi sur CurseForge et Wago, ajoutez dans les secrets du dépôt CF_API_KEY et WAGO_API_TOKEN,
+# et dans Zenith.toc les lignes « ## X-Curse-Project-ID: » et « ## X-Wago-ID: » avec vos identifiants de projet.
+name: Publication
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publication:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install lupa
+      - run: python tests/run.py .
+        env:
+          PYTHONIOENCODING: utf-8
+      - uses: BigWigsMods/packager@v2
+        env:
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}

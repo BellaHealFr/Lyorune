@@ -1,0 +1,71 @@
+LICENCE ZENITH
+Version 1.0, novembre 2026
+
+Copyright (c) 2026 BellaDroode. Tous droits réservés.
+
+« Zenith » désigne l'addon pour World of Warcraft: Forever publié par BellaDroode,
+c'est-à-dire l'ensemble des fichiers de ce dépôt (code, textes, traductions,
+documentation et outils).
+
+1. CE QUI EST PERMIS
+
+   a. Installer et utiliser Zenith, gratuitement, pour jouer.
+   b. Redistribuer Zenith gratuitement, à condition de le transmettre complet,
+      sans aucune modification, sous le nom « Zenith », avec cette licence et
+      avec la mention de son auteur, BellaDroode.
+   c. Lire le code pour comprendre son fonctionnement, signaler un problème ou
+      proposer une amélioration à l'auteur.
+   d. Modifier sa propre copie pour son usage strictement personnel, sans la
+      transmettre à qui que ce soit.
+
+2. CE QUI EST INTERDIT SANS L'ACCORD ÉCRIT DE BELLADROODE
+
+   a. Distribuer, publier ou mettre en ligne une version modifiée de Zenith,
+      ou un autre logiciel qui reprend tout ou partie de son code, de ses
+      textes ou de sa documentation.
+   b. Changer le nom de Zenith, ou réutiliser le nom « Zenith » pour un autre
+      addon de cadres de soin.
+   c. Retirer, masquer ou modifier le nom de l'auteur, les mentions de
+      copyright ou cette licence, ou se présenter comme l'auteur de Zenith.
+   d. Vendre Zenith, le louer, l'inclure dans une offre payante, ou placer son
+      téléchargement derrière un paiement, un abonnement ou de la publicité
+      imposée.
+   e. Publier Zenith sur une plateforme de distribution d'addons (CurseForge,
+      Wago, WoWInterface ou autre) à la place de l'auteur.
+
+3. CONTRIBUTIONS
+
+   Toute correction ou amélioration proposée à l'auteur (par exemple sur la
+   page GitHub du projet) peut être intégrée à Zenith. En la proposant, vous
+   acceptez qu'elle soit publiée sous cette licence, BellaDroode restant
+   l'auteur de Zenith.
+
+4. ABSENCE DE GARANTIE
+
+   Zenith est fourni « tel quel », sans garantie d'aucune sorte. L'auteur ne
+   peut être tenu responsable d'aucun dommage lié à son utilisation.
+
+5. FIN DE LA LICENCE
+
+   Le non-respect de l'une de ces conditions met fin immédiatement aux droits
+   accordés par cette licence.
+
+6. MARQUES
+
+   World of Warcraft et Blizzard Entertainment sont des marques de Blizzard
+   Entertainment, Inc. Zenith est un projet indépendant, sans lien avec
+   Blizzard Entertainment.
+
+Pour toute demande d'autorisation : ouvrez une demande sur
+https://github.com/BellaDroode/Zenith/issues
+
+-------------------------------------------------------------------------------
+ENGLISH SUMMARY (the French text above prevails)
+
+Copyright (c) 2026 BellaDroode. All rights reserved.
+You may install and use Zenith for free, and redistribute it for free only if
+it is complete, unmodified, still named "Zenith", and still credits BellaDroode
+with this licence included. You may not distribute modified versions or
+derivative works, rename it, remove or change the author's name, sell it, or
+publish it on an addon platform in the author's place, without written
+permission from BellaDroode. Zenith is provided "as is", without warranty.

@@ -1,0 +1,32 @@
+## Interface: 16001
+## Title: Zenith |cff33dd88(Forever)|r
+## Notes: Cadres de soin simples, rapides et élégants pour WoW Forever : clic-soin, touches au survol, soins entrants, dissipation, thèmes, alertes, partage de configuration, tutoriel intégré.
+## Notes-enUS: Simple, fast and elegant healing frames for WoW Forever: click-casting, hover keys, incoming heals, dispels, themes, alerts, profile sharing, built-in tutorial.
+## Author: BellaDroode
+## X-License: Tous droits réservés (voir LICENSE)
+## X-Website: https://github.com/BellaDroode/Zenith
+## Version: 1.3.0
+## IconTexture: Interface\Icons\Spell_Holy_FlashHeal
+## Category-frFR: Portraits d'unités
+## Category-enUS: Unit Frames
+## SavedVariables: ZenithDB
+## OptionalDeps: LibStub, LibSharedMedia-3.0, SharedMedia, ElvUI_Libraries
+## AddonCompartmentFunc: Zenith_OnAddonCompartmentClick
+
+Core.lua
+Locales\enUS.lua
+Log.lua
+Changes.lua
+Data.lua
+UI.lua
+Themes.lua
+Frames.lua
+Auras.lua
+Clicks.lua
+Alerts.lua
+Share.lua
+Comm.lua
+Bug.lua
+Preview.lua
+Options.lua
+Tutorial.lua

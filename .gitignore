@@ -1,0 +1,10 @@
+# Archives produites par outils/publier.py
+dist/
+
+# Python
+__pycache__/
+*.pyc
+
+# Fichiers locaux de l'éditeur
+.vscode/
+.idea/

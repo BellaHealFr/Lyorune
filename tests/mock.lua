@@ -1,0 +1,271 @@
+-- Faux client minimal pour faire tourner Zenith hors du jeu (détection des erreurs Lua).
+MISSING = {}
+local frames = {}
+local Obj = {}
+Obj.__index = function(t, k)
+	local v = Obj[k]
+	if v then return v end
+	if type(k) == "string" and k:match("^%u") then return function() end end -- méthode inconnue : sans effet
+end
+
+local function new(kind, name, parent)
+	local o = setmetatable({ _kind = kind, _name = name, _parent = parent, _scripts = {}, _attr = {}, _events = {}, _shown = true, _w = 100, _h = 20 }, Obj)
+	frames[#frames + 1] = o
+	if name then _G[name] = o end
+	return o
+end
+
+function Obj:SetScript(n, f) self._scripts[n] = f end
+function Obj:GetScript(n) return self._scripts[n] end
+function Obj:HookScript(n, f)
+	local old = self._scripts[n]
+	self._scripts[n] = old and function(...) old(...) f(...) end or f
+end
+function Obj:Run(n, ...) if self._scripts[n] then return self._scripts[n](self, ...) end end
+function Obj:SetAttribute(k, v) self._attr[k] = v; self:Run("OnAttributeChanged", k, v) end
+function Obj:GetAttribute(k) return self._attr[k] end
+function Obj:Show() local was = self._shown; self._shown = true; if not was then self:Run("OnShow") end end
+function Obj:Hide() self._shown = false end
+function Obj:SetShown(s) if s then self:Show() else self:Hide() end end
+function Obj:IsShown() return self._shown end
+function Obj:IsVisible() return self._shown end
+function Obj:RegisterEvent(e)
+	if e == "FAKE_EVENT" then error("unknown event") end
+	self._events[e] = true
+end
+function Obj:RegisterUnitEvent(e, u) self._events[e] = u end
+function Obj:UnregisterAllEvents() self._events = {} end
+function Obj:CreateTexture() return new("Texture", nil, self) end
+function Obj:CreateFontString() return new("FontString", nil, self) end
+function Obj:CreateAnimationGroup() return new("AnimationGroup", nil, self) end
+function Obj:CreateAnimation() return new("Animation", nil, self) end
+function Obj:GetStatusBarTexture() self._sbt = self._sbt or new("Texture", nil, self); return self._sbt end
+function Obj:SetSize(w, h) self._w, self._h = w, h end
+function Obj:SetWidth(w) self._w = w end
+function Obj:SetHeight(h) self._h = h end
+function Obj:GetWidth() return self._w end
+function Obj:GetHeight() return self._h end
+function Obj:GetStringHeight() return 60 end
+function Obj:GetFrameLevel() return 1 end
+function Obj:GetName() return self._name end
+function Obj:GetParent() return self._parent end
+function Obj:SetText(t) self._text = t end
+function Obj:SetFormattedText(f, ...) self._text = string.format(f, ...) end
+function Obj:GetText() return self._text or "" end
+function Obj:GetPoint() return "CENTER", nil, "CENTER", 0, 0 end
+function Obj:GetIncomingHeals() return 10, 5, 5, false end
+function Obj:GetDamageAbsorbs() return 3, false end
+function Obj:GetRGB() return 1, 1, 1 end
+function Obj:GetRGBA() return 1, 1, 1, 1 end
+function Obj:SetAlphaFromBoolean(b, x, y) assert(type(x) == "number" and type(y) == "number") end
+function Obj:List() return { "Flat", "Glossy" } end
+function Obj:Fetch() return "tex" end
+function Obj:StartMoving() end
+function Obj:StopMovingOrSizing() end
+function Obj:ClearFocus() end
+
+function FireEvent(e, ...)
+	for _, f in ipairs(frames) do
+		if f._events[e] then f:Run("OnEvent", e, ...) end
+	end
+end
+function RunUpdates()
+	for _, f in ipairs(frames) do
+		if f._kind == "Frame" and f._shown and f._scripts.OnUpdate then f:Run("OnUpdate", 0.01) end
+	end
+end
+
+UIParent = new("Frame", "UIParent")
+GameTooltip = new("GameTooltip", "GameTooltip")
+function CreateFrame(kind, name, parent) return new(kind, name, parent) end
+function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a, GetRGB = function() return r, g, b end, GetRGBA = function() return r, g, b, a end } end
+function CopyTable(t) local c = {} for k, v in pairs(t) do c[k] = type(v) == "table" and CopyTable(v) or v end return c end
+tinsert = table.insert
+UISpecialFrames = {}
+SlashCmdList = {}
+STANDARD_TEXT_FONT = "font"
+READY_CHECK_READY_TEXTURE, READY_CHECK_NOT_READY_TEXTURE, READY_CHECK_WAITING_TEXTURE = "r", "n", "w"
+Enum = {
+	StatusBarInterpolation = { Immediate = 0, ExponentialEaseOut = 1 },
+	LuaCurveType = { Step = 1, Linear = 0 },
+	UnitIncomingHealClampMode = { MissingHealth = 1, MaximumHealth = 0 },
+	UnitDamageAbsorbClampMode = { MissingHealth = 1, MaximumHealth = 0 },
+	UnitAuraSortRule = { Default = 0 },
+	SpellBookSpellBank = { Player = 0 },
+	SpellBookItemType = { Spell = 1 },
+}
+CurveConstants = { ScaleTo100 = new("Curve") }
+SOUNDKIT = { IG_MAINMENU_OPTION_CHECKBOX_ON = 856 }
+
+COMBAT = false
+local names = { [2061] = "Soins rapides", [2060] = "Soins supérieurs", [139] = "Rénovation", [17] = "Mot de pouvoir : Bouclier",
+	[527] = "Dissipation de la magie", [552] = "Abolir maladie", [2006] = "Résurrection", [401859] = "Prière de guérison", [6346] = "Gardien de peur",
+	[528] = "Guérison des maladies", [1243] = "Mot de pouvoir : Robustesse", [21562] = "Prière de robustesse", [2054] = "Soins", [2050] = "Soins inférieurs" }
+C_AddOns = { GetAddOnMetadata = function() return TOC_VERSION or "0.0.0" end }
+C_Timer = { After = function(_, f) f() end, NewTicker = function(_, f) TICK = f end }
+C_Spell = {
+	GetSpellName = function(id) return names[id] end,
+	GetSpellTexture = function(id) return 1234 end,
+	IsSpellHelpful = function() return true end,
+}
+C_SpellBook = {
+	IsSpellKnown = function(id) return names[id] ~= nil and id ~= 2050 end,
+	FindSpellBookSlotForSpell = function() return nil end,
+	GetNumSpellBookSkillLines = function() return 1 end,
+	GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 4 } end,
+	GetSpellBookItemInfo = function(slot) return { itemType = 1, isPassive = false, spellID = ({ 2061, 139, 17, 527 })[slot] } end,
+}
+C_CurveUtil = { CreateColorCurve = function() return new("Curve") end }
+C_ClassColor = { GetClassColor = function() return { r = 1, g = 1, b = 1 } end }
+AURAS = {}
+C_UnitAuras = {
+	GetUnitAuras = function(unit, filter, count)
+		if filter:find("FAKE") then error("bad filter") end
+		return AURAS[filter] or {}
+	end,
+	GetAuraDuration = function() return new("Duration") end,
+	GetAuraApplicationDisplayCount = function() return "" end,
+	GetAuraDispelTypeColor = function() return CreateColor(0.2, 0.6, 1, 1) end,
+}
+function CreateUnitHealPredictionCalculator() return new("Calc") end
+function UnitGetDetailedHealPrediction() end
+function UnitClass(u) return "Prêtre", "PRIEST" end
+function UnitName(u) return "Joueur-" .. u end
+function UnitExists(u) return true end
+function UnitHealth() return 800 end
+function UnitHealthMax() return 1000 end
+function UnitHealthMissing() return 200 end
+function UnitHealthPercent(u, p, curve) if curve == CurveConstants.ScaleTo100 then return 80 end return CreateColor(1, 1, 1, 1) end
+function AbbreviateNumbers(n) return tostring(n) end
+rawset(_G, "OFFLINE", false)
+function UnitIsConnected() return not OFFLINE end
+function UnitIsDeadOrGhost() return DEAD or false end
+function UnitIsGhost() return false end
+function UnitInRange() return true, true end
+function UnitThreatSituation() return 3 end
+function UnitGroupRolesAssigned() return "HEALER" end
+function GetRaidTargetIndex() return 4 end
+function SetRaidTargetIconTexture() end
+function GetReadyCheckStatus() return "ready" end
+function UnitHasIncomingResurrection() return false end
+function UnitIsUnit() return false end
+function InCombatLockdown() return COMBAT end
+function IsPlayerSpell() return false end
+function GameTooltip_SetDefaultAnchor() end
+function PlaySound() end
+function LibStub(name, silent) return new("Lib") end
+function issecretvalue() return false end
+PRINTED = {}
+function print(...) PRINTED[#PRINTED + 1] = table.concat({ ... }, " ") end
+
+setmetatable(_G, { __index = function(_, k) MISSING[k] = true return nil end })
+
+-- Ajouts : annonces, journal, partage
+MANA, SENT, NOW, INSTANCE, GROUPED = 1000, {}, 100, true, true
+rawset(_G, "DEAD", false)
+rawset(_G, "ClickCastFrames", {})
+function UnitPower() return MANA end
+function UnitPowerMax() return 1000 end
+function UnitLevel() return 60 end
+function GetLocale() return "frFR" end
+function GetTime() return NOW end
+function IsInGroup() return GROUPED end
+function IsInRaid() return false end
+function IsInInstance() return INSTANCE end
+function GetNumGroupMembers() return 5 end
+function GetRealZoneText() return "Hurlevent" end
+function GetBuildInfo() return "1.60.1", "70938", "Nov 1 2026", INTERFACE or 16001 end
+function SendChatMessage(text, channel) SENT[#SENT + 1] = channel .. ":" .. text end
+function date() return "2026-11-16 21:00:00" end
+function debugstack() return "Interface/AddOns/Zenith/Frames.lua:42: in function <UpdateHealth>" end
+local handler = function(msg) LAST_ERROR = msg end
+function geterrorhandler() return handler end
+function seterrorhandler(f) handler = f end
+function RaiseError(msg) return handler(msg) end
+UIErrorsFrame = CreateFrame("Frame", "UIErrorsFrame")
+C_AddOns.IsAddOnLoaded = function(name) return name == "ElvUI" end
+C_ChatInfo = { InChatMessagingLockdown = function() return false end }
+
+----------------------------------------------------------------------------------------------------
+-- Ajouts 1.2 : valeurs secrètes simulées, messages d'addon, touches
+----------------------------------------------------------------------------------------------------
+-- Une valeur secrète peut être affichée, mais tout calcul, comparaison ou lecture de champ échoue,
+-- comme dans le jeu. (Limite : un simple « if valeur then » ne peut pas être détecté ici.)
+local Secret = {}
+Secret.__tostring = function() return "<secret>" end
+Secret.__index = function() error("lecture d'un champ d'une valeur secrète", 2) end
+Secret.__eq = function() error("comparaison d'une valeur secrète", 2) end
+function MakeSecret(value) return setmetatable({}, Secret) end
+function issecretvalue(value) return getmetatable(value) == Secret end
+
+SECRET = false
+local function S(value)
+	if SECRET then return MakeSecret(value) end
+	return value
+end
+
+function UnitHealth() return S(800) end
+function UnitHealthMax() return S(1000) end
+function UnitHealthMissing() return S(200) end
+function UnitHealthPercent(u, p, curve)
+	if curve == CurveConstants.ScaleTo100 then return S(80) end
+	local c = { r = S(1), g = S(1), b = S(1), a = S(1) }
+	c.GetRGB = function() return c.r, c.g, c.b end
+	c.GetRGBA = function() return c.r, c.g, c.b, c.a end
+	return c
+end
+function AbbreviateNumbers(n) return issecretvalue(n) and n or tostring(n) end
+function UnitIsDeadOrGhost() return S(DEAD or false) end
+function UnitInRange() return S(true), S(true) end
+function UnitThreatSituation() return S(3) end
+function UnitGroupRolesAssigned() return S("HEALER") end
+function GetRaidTargetIndex() return S(4) end
+function UnitIsUnit() return S(false) end
+function UnitHasIncomingResurrection() return S(false) end
+function UnitPower() return S(MANA) end
+function UnitPowerMax() return S(1000) end
+function UnitPowerType() return S(0) end
+C_UnitAuras.GetAuraDispelTypeColor = function()
+	local c = { S(0.2), S(0.6), S(1), S(1) }
+	return { GetRGBA = function() return c[1], c[2], c[3], c[4] end }
+end
+
+-- Les fonctions d'affichage acceptent les secrets ; celles qui décident de la visibilité ou du placement, non
+local Obj = getmetatable(UIParent)
+local strict = { "SetShown", "SetSize", "SetWidth", "SetHeight", "SetPoint" }
+for _, method in ipairs(strict) do
+	local original = rawget(Obj, method) or function() end
+	Obj[method] = function(self, ...)
+		for i = 1, select("#", ...) do
+			if issecretvalue((select(i, ...))) then error(method .. " a reçu une valeur secrète", 2) end
+		end
+		return original(self, ...)
+	end
+end
+function Obj:SetFormattedText(format, ...)
+	local args = { ... }
+	for i = 1, #args do
+		if issecretvalue(args[i]) then
+			args[i] = 0
+			format = format:gsub("%%s", "%%d", 1)
+		end
+	end
+	self._text = string.format(format, unpack(args))
+end
+function Obj:GetVerticalScroll() return 0 end
+function Obj:GetVerticalScrollRange() return 100 end
+
+-- Messages d'addon : ce que Zenith envoie est gardé dans ADDON_SENT
+ADDON_SENT = {}
+C_ChatInfo.RegisterAddonMessagePrefix = function() return true end
+C_ChatInfo.SendAddonMessage = function(prefix, text, channel, target)
+	ADDON_SENT[#ADDON_SENT + 1] = { prefix = prefix, text = text, channel = channel, target = target }
+	return true
+end
+
+function IsAltKeyDown() return false end
+function IsControlKeyDown() return CTRL or false end
+function IsShiftKeyDown() return false end
+rawset(_G, "CTRL", false)
+rawset(_G, "ZenithPreview", false)
+

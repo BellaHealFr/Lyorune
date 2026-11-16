@@ -1,0 +1,11 @@
+package-as: Zenith
+
+ignore:
+  - tests
+  - outils
+  - dist
+  - .github
+  - MAINTENANCE.md
+  - TUTORIEL.md
+  - FEUILLE_DE_ROUTE.md
+  - README.md
