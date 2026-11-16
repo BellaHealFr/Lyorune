@@ -49,7 +49,7 @@ The options are available in English. The in-game tutorial and the player guide 
 
 ## Reporting a problem
 
-In game, type `/lyorune bug`, answer the three questions, copy the report (Ctrl+C) and paste it into a [new issue](https://github.com/BellaHealFr/Lyorune/issues/new/choose). Issues written in English are welcome.
+In game, type `/lyorune bug`, answer the three questions, copy the report (Ctrl+C) and paste it into the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml). Issues written in English are welcome. A step by step guide is in [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md#reporting-a-bug-english).
 
 ## Compatibility
 

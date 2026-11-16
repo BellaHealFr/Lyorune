@@ -8,11 +8,12 @@ body:
       value: |
         Merci de prendre le temps de signaler ce problème.
         En jeu, tapez `/lyorune bug` : la fenêtre prépare un rapport que vous n'avez plus qu'à coller ci-dessous.
+        Le pas à pas complet : [Comment signaler un bug](https://github.com/BellaHealFr/Lyorune/blob/main/docs/SIGNALER_UN_BUG.md).
   - type: textarea
     id: rapport
     attributes:
       label: Rapport de /lyorune bug
-      description: Collez ici le rapport copié depuis le jeu (Ctrl+V).
+      description: Collez ici le rapport copié depuis le jeu (Ctrl+V). Si la commande ne répond pas, écrivez « commande indisponible » et recopiez le message d'erreur affiché par le jeu.
       render: text
     validations:
       required: true
@@ -50,3 +51,10 @@ body:
     attributes:
       label: Autres addons d'interface
       placeholder: "Exemple : ElvUI, Clique, VuhDo"
+  - type: checkboxes
+    id: verifications
+    attributes:
+      label: Avant d'envoyer
+      options:
+        - label: J'utilise la dernière version de Lyorune.
+        - label: J'ai regardé les bugs déjà ouverts et je n'ai pas trouvé celui-ci.

@@ -117,6 +117,8 @@ Elle ne sert à rien d'autre qu'au plaisir des yeux. Pour la retirer, décochez 
 
 Tapez `/lyorune bug`. Répondez aux trois questions, cliquez sur « Tout sélectionner », copiez avec Ctrl+C, puis collez le rapport à l'adresse affichée dans la fenêtre. Pour un défaut d'affichage, joignez une capture d'écran.
 
+Le pas à pas complet, avec la création du compte GitHub et l'envoi d'une image, est dans [SIGNALER_UN_BUG.md](SIGNALER_UN_BUG.md).
+
 Lyorune ne vous dérange pas pour ses erreurs : au plus un message discret par session, que vous pouvez couper dans l'onglet Aide.
 
 ## Les commandes

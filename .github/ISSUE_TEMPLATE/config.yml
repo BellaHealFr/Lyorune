@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Comment signaler un bug, pas à pas
+    url: https://github.com/BellaHealFr/Lyorune/blob/main/docs/SIGNALER_UN_BUG.md
+    about: Trois minutes, sans connaissance technique. With an English summary.
   - name: Guide du joueur
     url: https://github.com/BellaHealFr/Lyorune/blob/main/docs/TUTORIEL.md
     about: Comment régler et utiliser Lyorune. La réponse à votre question s'y trouve peut-être.

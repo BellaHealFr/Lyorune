@@ -126,8 +126,9 @@ def write_release_notes(version):
     for entry_version, date, notes in changes():
         if entry_version == version.lstrip('v'):
             lines = ['# Lyorune %s' % entry_version, ''] + section(notes)
-            lines += ['**Installation** : décompressez `Lyorune-%s.zip` dans `World of Warcraft\\_forever_\\Interface\\AddOns\\`.' % entry_version,
-                      '', 'Journal complet : [CHANGELOG.md](%s/blob/main/CHANGELOG.md)' % DEPOT, '']
+            lines += ["**Installation** : téléchargez l'archive `.zip` ci-dessous et décompressez-la dans `World of Warcraft\\_forever_\\Interface\\AddOns\\`.",
+                      '', 'Un bug ? [Comment le signaler](%s/blob/main/docs/SIGNALER_UN_BUG.md)' % DEPOT,
+                      '','Journal complet : [CHANGELOG.md](%s/blob/main/CHANGELOG.md)' % DEPOT, '']
             write('RELEASE.md', '\n'.join(lines))
             print('RELEASE.md écrit pour la version', entry_version)
             return

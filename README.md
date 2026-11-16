@@ -65,7 +65,9 @@ Le guide complet pour les joueurs est dans [docs/TUTORIEL.md](docs/TUTORIEL.md).
 
 ## Signaler un problème
 
-En jeu, tapez `/lyorune bug`. Répondez aux trois questions, copiez le rapport (Ctrl+C) et collez-le dans une [nouvelle demande](https://github.com/BellaHealFr/Lyorune/issues/new/choose). Pour un défaut d'affichage, joignez une capture d'écran.
+En jeu, tapez `/lyorune bug`. Répondez aux trois questions, copiez le rapport (Ctrl+C) et collez-le dans une [nouvelle demande](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug.yml). Pour un défaut d'affichage, joignez une capture d'écran.
+
+Première fois sur GitHub ? Le pas à pas est dans [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md) : trois minutes, sans connaissance technique.
 
 ## Compatibilité
 

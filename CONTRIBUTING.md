@@ -6,9 +6,9 @@ Merci de votre intérêt. Lyorune est développé par BellaDroode ; les retours 
 
 1. En jeu, tapez `/lyorune bug` et répondez aux trois questions.
 2. Copiez le rapport (bouton « Tout sélectionner », puis Ctrl+C).
-3. Ouvrez une [nouvelle demande](https://github.com/BellaHealFr/Lyorune/issues/new/choose) et collez-le.
+3. Ouvrez le [formulaire de signalement](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug.yml) et collez-le.
 
-Pour un défaut d'affichage, joignez une capture d'écran.
+Pour un défaut d'affichage, joignez une capture d'écran. Le pas à pas complet, pour une première fois sur GitHub, est dans [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md).
 
 ## Proposer une idée
 
