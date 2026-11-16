@@ -112,7 +112,7 @@ Une idée, une envie ? Le [formulaire d'idée](https://github.com/BellaHealFr/Ly
 
 | Document | Pour qui |
 |---|---|
-| [Guide du joueur](docs/TUTORIEL.md) | Utiliser et régler Lyorune |
+| [Guide du joueur](docs/TUTORIEL.md) | Utiliser et régler Lyorune ([English](docs/GUIDE.en.md)) |
 | [Signaler un bug](docs/SIGNALER_UN_BUG.md) | Le pas à pas, sans connaissance technique |
 | [Journal des versions](CHANGELOG.md) | Ce qui change à chaque version |
 | [Feuille de route](docs/FEUILLE_DE_ROUTE.md) | Ce qui est prévu |

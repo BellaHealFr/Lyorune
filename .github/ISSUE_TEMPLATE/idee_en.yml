@@ -1,0 +1,30 @@
+name: Suggest an idea (English)
+description: A missing feature, or something that could be simpler.
+title: "[Idea] "
+labels: ["idée"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What is the need?
+      description: Describe the situation in game, not the solution.
+      placeholder: "Example: in a 40 player raid, I cannot see fast enough who lost their buff."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your suggestion
+    validations:
+      required: true
+  - type: dropdown
+    id: class
+    attributes:
+      label: Class concerned
+      options:
+        - All
+        - Priest
+        - Druid
+        - Paladin
+        - Shaman
+        - Other

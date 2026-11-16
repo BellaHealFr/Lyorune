@@ -3,6 +3,8 @@
 Tout ce qu'il faut savoir pour soigner avec Lyorune. Aucune connaissance technique n'est nécessaire.
 En jeu, le même parcours existe en version courte : tapez `/lyorune tuto`.
 
+[English version](GUIDE.en.md)
+
 ## 1. Les cases
 
 Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus elle est courte, plus il est blessé.

@@ -14,6 +14,7 @@
 
 <p align="center">
 <a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>Download</strong></a> ·
+<a href="docs/GUIDE.en.md">Player guide</a> ·
 <a href="docs/SIGNALER_UN_BUG.md#reporting-a-bug-english">Report a bug</a> ·
 <a href="README.md">Version française</a>
 </p>
@@ -26,7 +27,14 @@ Lyorune is a set of healing frames for **World of Warcraft: Forever**: your whol
 
 Easy to set up, light in combat, pleasant to look at. I made it for everyone who loves watching over others.
 
-<p align="center"><img src="docs/images/piliers.png" alt="Soignez avec précision, protégez vos alliés, anticipez chaque menace, devenez indispensable" width="100%"></p>
+<table>
+<tr>
+<td align="center" width="25%"><img src="docs/images/piliers/soigner.png" alt="" width="150"><br><strong>HEAL</strong><br>with precision</td>
+<td align="center" width="25%"><img src="docs/images/piliers/proteger.png" alt="" width="150"><br><strong>PROTECT</strong><br>your allies</td>
+<td align="center" width="25%"><img src="docs/images/piliers/anticiper.png" alt="" width="150"><br><strong>ANTICIPATE</strong><br>every threat</td>
+<td align="center" width="25%"><img src="docs/images/piliers/indispensable.png" alt="" width="150"><br><strong>BECOME</strong><br>indispensable</td>
+</tr>
+</table>
 
 <!-- captures:debut -->
 <!-- captures:fin -->
@@ -83,15 +91,25 @@ No group at hand? Type `/lyorune test`: a fake group appears, with its wounded p
 | `/lyorune verrou` | Lock or unlock the frames' position |
 | `/lyorune bug` | Report a problem |
 
-The options are available in English. The in-game tutorial and the player guide are currently in French only.
+The full player guide is in [docs/GUIDE.en.md](docs/GUIDE.en.md). The options window is in English; the short in-game tour is still in French for now, and the guide covers everything it says.
 
 ## Something wrong? Tell me
 
 Every report makes Lyorune better for everyone. In game, type `/lyorune bug`, answer the three questions, copy the report (Ctrl+C) and paste it into the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml). Issues written in English are welcome. A step by step guide is in [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md#reporting-a-bug-english).
 
+An idea, a wish? The [idea form](https://github.com/BellaHealFr/Lyorune/issues/new?template=idee_en.yml) is there for that.
+
 ## Compatibility
 
-World of Warcraft: Forever, interface 16001. No dependency.
+World of Warcraft: Forever, interface 16001. Languages: French and English. No dependency.
+
+## Documentation
+
+| Document | For whom |
+|---|---|
+| [Player guide](docs/GUIDE.en.md) | Using and tuning Lyorune |
+| [Reporting a bug](docs/SIGNALER_UN_BUG.md#reporting-a-bug-english) | Step by step, no technical knowledge needed |
+| [Changelog](CHANGELOG.md) | What changes in each version (in French) |
 
 ## Who am I?
 

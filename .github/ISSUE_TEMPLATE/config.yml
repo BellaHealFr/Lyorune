@@ -6,3 +6,6 @@ contact_links:
   - name: Guide du joueur
     url: https://github.com/BellaHealFr/Lyorune/blob/main/docs/TUTORIEL.md
     about: Comment régler et utiliser Lyorune. La réponse à votre question s'y trouve peut-être.
+  - name: Player guide (English)
+    url: https://github.com/BellaHealFr/Lyorune/blob/main/docs/GUIDE.en.md
+    about: How to set up and use Lyorune. The answer to your question may be there.

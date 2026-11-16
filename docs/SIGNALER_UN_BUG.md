@@ -73,10 +73,10 @@ Ne la publiez pas : suivez la procédure de [SECURITY.md](../SECURITY.md).
 ## Reporting a bug (English)
 
 1. In game, type `/lyorune bug` and answer the three questions (answers in English are fine).
-2. Click « Tout sélectionner » (select all), then press Ctrl+C.
+2. Click "Select all", then press Ctrl+C.
 3. Open the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml) and paste the report with Ctrl+V.
 4. For a display problem, drag a screenshot into the form (Print Screen key in game, saved in `World of Warcraft\_forever_\Screenshots`).
 
 The report contains the addon and game versions, your class, level, group size and the technical error if there is one.
-It contains neither your character name nor your account name. You will get an answer on the same page, and GitHub
+It contains neither your character name nor your account name. The full player guide in English is [GUIDE.en.md](GUIDE.en.md). You will get an answer on the same page, and GitHub
 notifies you by e-mail.
