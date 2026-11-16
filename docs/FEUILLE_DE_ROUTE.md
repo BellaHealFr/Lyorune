@@ -28,6 +28,8 @@ a son interrupteur ; le tutoriel des joueurs est mis à jour à chaque changemen
 ## 5. Macros : Fait en 1.5.0, à essayer en jeu
 - Dans le choix d'un clic ou d'une touche au survol, le bouton « Macro... » ouvre un éditeur : trois modèles prêts
   (bijou puis soin, interrompre puis soigner, annonce puis soin) et une saisie libre. `{cible}` désigne la case cliquée.
+- Fait en 1.5.1 : macros pour les barres de sorts. Lyorune crée et tient à jour une vraie macro du jeu par sort
+  des clics (nom « Lyo: », onglet du personnage), à glisser depuis l'onglet Clics. Réglage `barMacros`.
 - Une macro n'est jamais exportée ni importée (un code reçu ne peut pas faire lancer une commande).
 - À faire : une liste de macros nommées, réutilisables sur plusieurs clics, si l'auteur le souhaite.
 

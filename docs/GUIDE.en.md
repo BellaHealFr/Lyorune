@@ -52,6 +52,15 @@ Click a template, change whatever you like, then "Save the macro". You can also 
 /cast [{cible}] Rejuvenation
 ```
 
+### Ready-made macros for your action bars
+
+Lyorune creates a real game macro by itself for each spell of your clicks. You have nothing to write.
+
+1. Open the **Clicks** tab: under "Macros for your action bars", one icon per macro.
+2. Click an icon, then drop it on an action bar. You also find them in `/macro`, in your character's tab: their name starts with "Lyo:".
+
+The macro heals the player under your mouse (a frame or a character), otherwise your target, otherwise yourself. It updates when you change your clicks. Lyorune never touches your other macros. To do without them, untick "Create one macro per spell of my clicks" or click "Remove Lyorune's macros".
+
 A macro also works on a hover key. It stays on your computer: it is never sent or received in a shared configuration. When a click holds a macro, automatic resurrection is not added to it.
 
 ## 3. Hover keys

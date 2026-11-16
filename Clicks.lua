@@ -169,6 +169,116 @@ function Z:ApplyClicks()
 		h:SetAttribute("z-count", count)
 		h:SetAttribute("z-onenter", onEnter)
 	end
+	Z:SyncBarMacros()
+end
+
+----------------------------------------------------------------------------------------------------
+-- MACROS POUR LES BARRES DE SORTS (option « barMacros »). Pour chaque sort ou macro de mes clics, Lyorune
+-- crée une vraie macro du jeu, rangée dans l'onglet du personnage de la fenêtre /macro, à glisser dans une
+-- barre. Elle vise le joueur sous la souris (une case ou un personnage), sinon la cible, sinon moi.
+-- Lyorune ne crée, ne modifie et ne retire que SES macros : leur nom commence par « Lyo: ».
+----------------------------------------------------------------------------------------------------
+local MACRO_PREFIX = "Lyo:"
+local MACRO_ICON = "INV_MISC_QUESTIONMARK" -- avec cette icône, le jeu affiche celle du sort de la macro
+local macrosReady = false -- le jeu charge les macros un peu après la connexion : on attend, pour ne rien créer en double
+local warnedFull
+
+-- Nom d'une macro : 16 octets au plus pour le jeu, coupé sans abîmer une lettre accentuée
+local function MacroName(label)
+	local name = MACRO_PREFIX .. label
+	if #name > 16 then
+		local cut = 16
+		while cut > 0 and name:byte(cut + 1) >= 128 and name:byte(cut + 1) < 192 do cut = cut - 1 end
+		name = name:sub(1, cut)
+	end
+	return name
+end
+
+local function BarBody(value)
+	if Z.IsMacro(value) then return MacroText(value) end
+	local state, fallback = "nodead", "[@player] "
+	for _, id in pairs(Z.classRes[Z.class] or {}) do
+		if Z.SpellName(id) == value then state, fallback = "dead", "" end -- une résurrection vise un mort, jamais moi
+	end
+	return ("#showtooltip %s\n/cast [@mouseover,help,%s][help,%s] %s%s"):format(value, state, state, fallback, value)
+end
+
+-- Les macros que Lyorune tient à jour : une par sort de mes clics et de mes touches au survol
+function Z:BarMacros()
+	local list, seen = {}, {}
+	local function add(label, value)
+		if type(value) ~= "string" or value == "" or value:sub(1, 1) == "@" then return end
+		local macro = Z.IsMacro(value)
+		local name = MacroName(macro and label or value)
+		local body = BarBody(value)
+		if seen[name] or #body > 255 then return end
+		seen[name] = true
+		list[#list + 1] = { name = name, body = body, spell = not macro and value or nil }
+	end
+	local clicks, keys = Z:GetClicks(), {}
+	for key in pairs(clicks) do keys[#keys + 1] = key end
+	table.sort(keys)
+	for _, key in ipairs(keys) do add(key, clicks[key]) end
+	for _, entry in ipairs(Z:GetHoverKeys()) do add(entry.key or "?", entry.spell) end
+	return list
+end
+
+-- Parcourt mes macros de personnage, de la dernière à la première (une suppression décale les suivantes)
+local function EachOwnMacro(fn)
+	local first = MAX_ACCOUNT_MACROS or 120
+	local _, count = GetNumMacros()
+	for index = first + count, first + 1, -1 do
+		local name = GetMacroInfo(index)
+		if name and name:sub(1, #MACRO_PREFIX) == MACRO_PREFIX then fn(index, name) end
+	end
+end
+
+function Z:SyncBarMacros()
+	if not macrosReady or not Z.db.barMacros or not (CreateMacro and GetNumMacros) then return end
+	if InCombatLockdown() then -- le jeu interdit de créer une macro en combat
+		Z:Safe("macros", function() Z:SyncBarMacros() end)
+		return
+	end
+	local wanted, names, created = Z:BarMacros(), {}, 0
+	for _, macro in ipairs(wanted) do names[macro.name] = true end
+	EachOwnMacro(function(index, name)
+		if not names[name] then DeleteMacro(index) end -- sort retiré de mes clics
+	end)
+	for _, macro in ipairs(wanted) do
+		local index = GetMacroIndexByName(macro.name)
+		if index and index > 0 then
+			if GetMacroBody(index) ~= macro.body then EditMacro(index, macro.name, nil, macro.body) end
+		else
+			local _, used = GetNumMacros()
+			if used < (MAX_CHARACTER_MACROS or 30) and pcall(CreateMacro, macro.name, MACRO_ICON, macro.body, true) then
+				created = created + 1
+			elseif not warnedFull then
+				warnedFull = true
+				Z:Print(Z.L["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou décochez l'option dans l'onglet Clics."])
+			end
+		end
+	end
+	if created > 0 then
+		Z:Print(Z.L["%d macro(s) créée(s) pour vos barres de sorts : onglet Clics des options, ou /macro, onglet de votre personnage."]:format(created))
+	end
+end
+
+-- Bouton « Retirer les macros de Lyorune » : ne retire que les macros « Lyo: »
+function Z:RemoveBarMacros()
+	if InCombatLockdown() then return Z:Print(Z.L["impossible de modifier les macros en combat."]) end
+	if not GetNumMacros then return end
+	EachOwnMacro(function(index) DeleteMacro(index) end)
+end
+
+-- Appelé à la connexion : la première synchronisation attend que le jeu ait chargé les macros
+function Z:StartBarMacros()
+	local function Ready()
+		if macrosReady then return end
+		macrosReady = true
+		Z:SyncBarMacros()
+	end
+	Z:On("UPDATE_MACROS", Ready)
+	C_Timer.After(5, Ready)
 end
 
 function Z:SetClick(key, value)

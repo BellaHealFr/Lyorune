@@ -87,6 +87,14 @@ function Z:Log(kind, message, stack)
 	logging = false
 end
 
+-- Exécute fn. Une erreur est écrite au journal sans passer par le gestionnaire d'erreurs du jeu,
+-- qu'un autre addon peut avoir remplacé. Renvoie true si tout s'est bien passé.
+function Z:Try(label, fn, ...)
+	local ok, err = pcall(fn, ...)
+	if not ok then Z:Log("Erreur Lua", label .. " : " .. tostring(err), debugstack(2, 8, 0)) end
+	return ok
+end
+
 -- Spécialisation du joueur, si le jeu sait la donner
 function Z:SpecName()
 	local ok, name = pcall(function()
@@ -107,6 +115,10 @@ function Z:LogText()
 	}
 	local missing = Z:MissingAPI()
 	lines[#lines + 1] = "Fonctions du jeu manquantes : " .. (#missing > 0 and table.concat(missing, ", ") or "aucune")
+	if Z.header then
+		lines[#lines + 1] = "État des cadres :"
+		for _, line in ipairs(Z:FrameState()) do lines[#lines + 1] = "  " .. line end
+	end
 	local errors = Z.db.errors or {}
 	lines[#lines + 1] = "Erreurs enregistrées : " .. #errors
 	for i, e in ipairs(errors) do

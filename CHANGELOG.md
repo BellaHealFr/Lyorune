@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.5.1] - 2026-11-17
+
+### Ajouté
+
+- Macros pour vos barres de sorts : Lyorune crée et tient à jour une vraie macro du jeu pour chaque sort de vos clics. Onglet Clics : cliquez sur son icône puis déposez-la dans une barre.
+
+### Amélioré
+
+- Le rapport de /lyorune erreurs décrit maintenant l'état de chaque cadre.
+
 ## [1.5.0] - 2026-11-17
 
 ### Ajouté
@@ -100,6 +110,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.5.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.0...v1.4.1

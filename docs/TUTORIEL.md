@@ -51,6 +51,15 @@ Cliquez sur un modèle, changez ce que vous voulez, puis « Enregistrer la macro
 /cast [{cible}] Récupération
 ```
 
+### Des macros toutes prêtes pour vos barres de sorts
+
+Lyorune crée tout seul une vraie macro du jeu pour chaque sort de vos clics. Vous n'avez rien à écrire.
+
+1. Ouvrez l'onglet **Clics** : sous « Macros pour vos barres de sorts », une icône par macro.
+2. Cliquez sur une icône, puis déposez-la dans une barre de sorts. Vous les retrouvez aussi dans `/macro`, onglet de votre personnage : leur nom commence par « Lyo: ».
+
+La macro soigne le joueur sous votre souris (une case ou un personnage), sinon votre cible, sinon vous. Elle se met à jour quand vous changez vos clics. Lyorune ne touche jamais à vos autres macros. Pour vous en passer, décochez « Créer une macro par sort de mes clics » ou cliquez sur « Retirer les macros de Lyorune ».
+
 Une macro fonctionne aussi sur une touche au survol. Elle reste sur votre ordinateur : elle n'est jamais envoyée ni reçue dans une configuration partagée. Quand un clic porte une macro, la résurrection automatique ne s'y ajoute pas.
 
 ## 3. Touches au survol

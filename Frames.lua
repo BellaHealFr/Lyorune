@@ -556,7 +556,9 @@ local function CreateHeader(def)
 	h:Hide() -- on règle tout avant d'afficher : les cases sont créées au premier affichage
 	h.def = def
 	h.anchor = CreateAnchor(def)
-	h.InitButton = InitButton
+	-- Une erreur pendant l'habillage d'une case est écrite au journal, même si un autre addon a pris la main
+	-- sur le gestionnaire d'erreurs du jeu.
+	h.InitButton = function(self, name) Z:Try("habillage d'une case", InitButton, self, name) end
 	h:SetPoint("TOPLEFT", h.anchor, "BOTTOMLEFT", 0, -3)
 	h:SetAttribute("template", "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate")
 	h:SetAttribute("showPlayer", true)
@@ -679,6 +681,51 @@ function Z:DiagnoseFrames()
 	end
 end
 
+-- Relevé détaillé, rangé dans LyoruneDB.frameState à la connexion et à la déconnexion : il se lit dans le
+-- fichier SavedVariables, sans que le joueur ait quoi que ce soit à recopier.
+local function Describe(frame)
+	local function call(method, ...)
+		local ok, a, b = pcall(frame[method], frame, ...)
+		return ok and a, ok and b
+	end
+	local width, height = call("GetSize")
+	return ("shown=%s visible=%s taille=%sx%s gauche=%s haut=%s alpha=%s echelle=%s points=%s"):format(
+		tostring(call("IsShown")), tostring(call("IsVisible")), tostring(width), tostring(height),
+		tostring(call("GetLeft")), tostring(call("GetTop")), tostring(call("GetAlpha")),
+		tostring(call("GetEffectiveScale")), tostring(call("GetNumPoints")))
+end
+
+function Z:FrameState()
+	local lines = {
+		("%s, Lyorune %s, combat=%s, groupe=%s, raid=%s, membres=%s, joueur existe=%s, cases habillees=%d"):format(
+			date("%Y-%m-%d %H:%M:%S"), Z.version, tostring(InCombatLockdown()), tostring(IsInGroup()), tostring(IsInRaid()),
+			tostring(GetNumGroupMembers()), tostring(UnitExists("player")), #buttons),
+		("reglages : visibility=%s showSolo=%s locked=%s frameAlpha=%s test=%s"):format(tostring(db.visibility),
+			tostring(db.showSolo), tostring(db.locked), tostring(db.frameAlpha), tostring(Z.previewActive)),
+	}
+	for _, h in ipairs(Z.headers) do
+		lines[#lines + 1] = ("cadre %s : %s | showSolo=%s showPlayer=%s showParty=%s showRaid=%s groupBy=%s visibilite=%s"):format(
+			h.def.key, Describe(h), tostring(h:GetAttribute("showSolo")), tostring(h:GetAttribute("showPlayer")),
+			tostring(h:GetAttribute("showParty")), tostring(h:GetAttribute("showRaid")), tostring(h:GetAttribute("groupBy")),
+			tostring(h:GetAttribute("state-visibility")))
+		lines[#lines + 1] = "  poignee : " .. Describe(h.anchor)
+		local index = 1
+		while h:GetAttribute("child" .. index) and index <= 5 do
+			local b = h:GetAttribute("child" .. index)
+			lines[#lines + 1] = ("  case %d : %s | unit=%s habillee=%s"):format(index, Describe(b),
+				tostring(b:GetAttribute("unit")), tostring(b.hp ~= nil))
+			if b.hp then lines[#lines + 1] = "    barre de vie : " .. Describe(b.hp) end
+			index = index + 1
+		end
+		if index == 1 then lines[#lines + 1] = "  aucune case creee par le jeu" end
+	end
+	return lines
+end
+
+function Z:SaveFrameState()
+	if Z.header then db.frameState = Z:FrameState() end
+end
+
 -- Appelé après chaque changement d'option
 function Z:Refresh()
 	smoothing = db.smooth and SMOOTH or nil
@@ -753,6 +800,10 @@ function Z:CreateFrames()
 	Z:On("READY_CHECK", ReadyCheck(true))
 	Z:On("READY_CHECK_CONFIRM", ReadyCheck(true))
 	Z:On("READY_CHECK_FINISHED", function() C_Timer.After(5, ReadyCheck(false)) end)
+
+	-- Relevé de l'état des cadres : quelques secondes après la connexion, puis à la déconnexion
+	C_Timer.After(6, function() Z:SaveFrameState() end)
+	Z:On("PLAYER_LOGOUT", function() Z:SaveFrameState() end)
 
 	-- Portée : le seul contrôle périodique de l'addon (2 fois par seconde, coût négligeable)
 	C_Timer.NewTicker(0.5, ForVisible(UpdateRange))

@@ -25,7 +25,7 @@ local searchIndex = {}      -- { texte en minuscules, numéro d'onglet, élémen
 ----------------------------------------------------------------------------------------------------
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
 ----------------------------------------------------------------------------------------------------
-local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true }
+local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, barMacros = true }
 
 local function Option(key)
 	return function() return Z.db[key] end, function(value)
@@ -302,7 +302,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Onglet Clics
 ----------------------------------------------------------------------------------------------------
-local cells, hoverRows = {}, {}
+local cells, hoverRows, barIcons = {}, {}, {}
 
 local function SpellText(value)
 	if value == "@target" then return L["Cibler"] end
@@ -420,6 +420,59 @@ function RefreshClicks()
 		row.clear:SetShown(entry ~= nil)
 		row:SetShown(i <= #keys + 1) -- une seule ligne vide à la fois
 	end
+	-- Macros pour les barres de sorts : une icône par macro tenue à jour par Lyorune
+	local macros = Z.db.barMacros and Z:BarMacros() or {}
+	for i, icon in ipairs(barIcons) do
+		local macro = macros[i]
+		icon.macro = macro
+		icon:SetShown(macro ~= nil)
+		if macro then
+			icon.texture:SetTexture(macro.spell and C_Spell.GetSpellTexture(macro.spell) or "Interface\\Icons\\INV_Misc_QuestionMark")
+		end
+	end
+end
+
+-- Prend une macro de Lyorune « en main », pour la déposer dans une barre de sorts
+local function PickupBarMacro(icon)
+	if not icon.macro then return end
+	if InCombatLockdown() then return Z:Print(L["impossible de modifier les macros en combat."]) end
+	local index = GetMacroIndexByName(icon.macro.name)
+	if index and index > 0 then
+		PickupMacro(index)
+	else
+		Z:Print(L["cette macro n'existe pas encore : elle sera créée dans quelques secondes."])
+	end
+end
+
+local function BuildBarIcons(page, x, y)
+	local size, perRow = 28, 9
+	for i = 1, perRow * 2 do
+		local icon = CreateFrame("Button", nil, page)
+		icon:SetSize(size, size)
+		icon:SetPoint("TOPLEFT", x + ((i - 1) % perRow) * (size + 4), y - math.floor((i - 1) / perRow) * (size + 4))
+		icon.texture = icon:CreateTexture(nil, "ARTWORK")
+		icon.texture:SetAllPoints()
+		icon.texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		icon.border = UI.Border(icon, 1)
+		icon:RegisterForDrag("LeftButton")
+		icon:SetScript("OnClick", PickupBarMacro)
+		icon:SetScript("OnDragStart", PickupBarMacro)
+		icon:SetScript("OnEnter", function(self)
+			self.border:SetColor(UI.accent[1], UI.accent[2], UI.accent[3])
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetText(self.macro.name, UI.accent[1], UI.accent[2], UI.accent[3])
+			GameTooltip:AddLine(self.macro.body, 1, 1, 1)
+			GameTooltip:AddLine(L["Cliquez, puis déposez dans une barre de sorts."], 0.6, 0.6, 0.65)
+			GameTooltip:Show()
+		end)
+		icon:SetScript("OnLeave", function(self)
+			self.border:SetColor(0, 0, 0)
+			GameTooltip:Hide()
+		end)
+		icon:Hide()
+		barIcons[i] = icon
+	end
+	return 2 * (size + 4)
 end
 
 -- Fenêtre de choix d'un sort : une icône par sort connu. onChoose(valeur) reçoit le choix.
@@ -604,6 +657,9 @@ local function BuildClicks(page)
 		{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },
 		{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
 		{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés." },
+		{ "head", "Macros pour vos barres de sorts" },
+		{ "check", "barMacros", "Créer une macro par sort de mes clics", "Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro." },
+		{ "note", "Cliquez sur une icône, puis déposez-la dans une barre de sorts. La macro vise le joueur sous la souris, sinon votre cible, sinon vous.", 44 },
 	}
 	local y = -196
 	for _, item in ipairs(options) do
@@ -611,6 +667,13 @@ local function BuildClicks(page)
 		widget:SetPoint("TOPLEFT", x, y)
 		y = y - widget:GetHeight() - 7
 	end
+	y = y - BuildBarIcons(page, x, y) - 4
+	local remove = BuildItem(page, { "button", "Retirer les macros de Lyorune", function()
+		Z:RemoveBarMacros()
+		Z.db.barMacros = false
+		page:Hide() page:Show() -- la case à cocher et les icônes suivent
+	end, "Supprime les macros « Lyo: » et décoche l'option. Vos autres macros ne sont pas touchées." })
+	remove:SetPoint("TOPLEFT", x, y)
 
 	page:SetScript("OnShow", RefreshClicks)
 	RefreshClicks()
@@ -960,6 +1023,11 @@ function Z:ToggleOptions(tab)
 	else
 		window:SetShown(not window:IsShown())
 	end
+end
+
+-- Pour les tests : les icônes des macros de barre
+function Z:BarIcons()
+	return barIcons
 end
 
 function Z:OptionsWindow()

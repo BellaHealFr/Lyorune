@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.5.1", date = "2026-11-17",
+		added = {
+			"Macros pour vos barres de sorts : Lyorune crée et tient à jour une vraie macro du jeu pour chaque sort de vos clics. Onglet Clics : cliquez sur son icône puis déposez-la dans une barre.",
+		},
+		improved = {
+			"Le rapport de /lyorune erreurs décrit maintenant l'état de chaque cadre.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.5.0", date = "2026-11-17",
 		added = {
 			"Macros : dans le choix d'un clic ou d'une touche au survol, le bouton « Macro... » propose trois modèles prêts (bijou puis soin, interrompre puis soigner, annonce puis soin) et une saisie libre.",

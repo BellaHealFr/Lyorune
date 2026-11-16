@@ -156,6 +156,21 @@ function GetReadyCheckStatus() return "ready" end
 function UnitHasIncomingResurrection() return false end
 function UnitIsUnit() return false end
 function InCombatLockdown() return COMBAT end
+-- Macros du personnage : MACROS[1] porte le numéro 121 dans le jeu
+MACROS, PICKED = {}, false
+MAX_ACCOUNT_MACROS, MAX_CHARACTER_MACROS = 120, 18
+function GetNumMacros() return 0, #MACROS end
+function GetMacroInfo(index) local m = MACROS[index - 120] if m then return m.name, m.icon, m.body end end
+function GetMacroBody(index) local m = MACROS[index - 120] return m and m.body end
+function GetMacroIndexByName(name) for i, m in ipairs(MACROS) do if m.name == name then return 120 + i end end return 0 end
+function CreateMacro(name, icon, body, perCharacter)
+	assert(not COMBAT and perCharacter and #name <= 16 and #body <= 255, "macro refusee : " .. name)
+	MACROS[#MACROS + 1] = { name = name, icon = icon, body = body }
+	return 120 + #MACROS
+end
+function EditMacro(index, name, icon, body) local m = MACROS[index - 120] m.name, m.body = name, body end
+function DeleteMacro(index) assert(not COMBAT) table.remove(MACROS, index - 120) end
+function PickupMacro(index) PICKED = MACROS[index - 120].name end
 -- Règles de visibilité : le faux client les réévalue à chaque changement de combat (voir FireEvent dans run.py)
 STATE_DRIVERS = {}
 function SecureCmdOptionParse(rule)

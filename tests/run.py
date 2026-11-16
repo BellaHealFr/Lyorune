@@ -239,6 +239,43 @@ step("macros : modeles, saisie libre, jamais partagees", function()
   Z.db.autoRes = false Z.db.width = 86 Z:Refresh() Z:ApplyClicks()
 end)
 
+step("macros pour les barres de sorts", function()
+  local function find(name) local i = GetMacroIndexByName(name) return i > 0 and GetMacroBody(i) or nil end
+  MACROS[#MACROS + 1] = { name = "Ma macro", body = "/dance" } -- une macro du joueur : jamais touchée
+  Z:SetClick("1", "Soins rapides") Z:SetClick("ctrl-2", "Résurrection")
+  assert(find("Lyo:Soins rapide") == "#showtooltip Soins rapides\n/cast [@mouseover,help,nodead][help,nodead] [@player] Soins rapides", tostring(find("Lyo:Soins rapide")))
+  assert(find("Lyo:Résurrectio") == "#showtooltip Résurrection\n/cast [@mouseover,help,dead][help,dead] Résurrection", tostring(find("Lyo:Résurrectio")))
+  for _, m in ipairs(MACROS) do assert(#m.name <= 16, m.name) end
+  local count = #MACROS
+  Z:ApplyClicks() assert(#MACROS == count, "macros creees en double")
+  -- une macro du joueur posee sur un clic donne aussi une macro de barre, au nom du clic
+  Z:SetClick("shift-4", "/use 13\n/cast [{cible}] Soins rapides")
+  assert(find("Lyo:shift-4") == "/use 13\n/cast [@mouseover] Soins rapides")
+  Z:SetClick("shift-4", "/use 14\n/cast [{cible}] Soins rapides")
+  assert(find("Lyo:shift-4") == "/use 14\n/cast [@mouseover] Soins rapides", "macro non mise a jour")
+  Z:SetClick("shift-4", nil)
+  assert(not find("Lyo:shift-4") and find("Ma macro") == "/dance", "retrait d'un clic")
+  -- en combat : rien n'est cree, tout est rattrape a la fin
+  COMBAT = true Z:SetClick("alt-5", "Prière") assert(not find("Lyo:Prière"))
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") assert(find("Lyo:Prière"))
+  Z:SetClick("alt-5", nil)
+  -- icones de l'onglet Clics : un clic prend la macro en main
+  Z:ToggleOptions("Clics")
+  local shown = 0
+  for _, icon in ipairs(Z:BarIcons()) do
+    if icon:IsShown() then shown = shown + 1 if icon.macro.name == "Lyo:Soins rapide" then icon:Run("OnClick") end end
+  end
+  assert(shown == #Z:BarMacros() and shown > 0 and PICKED == "Lyo:Soins rapide", "icones des macros : " .. shown)
+  -- option coupee : plus aucune creation ; le bouton de retrait ne retire que les macros de Lyorune
+  Z.db.barMacros = false Z:SetClick("alt-5", "Prière") assert(not find("Lyo:Prière"))
+  Z:SetClick("alt-5", nil)
+  Z:RemoveBarMacros()
+  assert(#MACROS == 1 and MACROS[1].name == "Ma macro", "retrait : " .. #MACROS)
+  Z.db.barMacros = true Z:ApplyClicks() assert(find("Lyo:Soins rapide"))
+  Z:SetClick("ctrl-2", nil)
+  Z:ToggleOptions()
+end)
+
 step("combat : report des changements", function()
   COMBAT = true
   Z:SetClick("1", "Soins")
@@ -291,6 +328,18 @@ step("affichage des cadres : toujours, ou en combat seulement", function()
   assert(stopped == 0, "StopMovingOrSizing appele en combat")
   COMBAT = false Z.anchor:Run("OnDragStart") Z.anchor:Run("OnDragStop")
   assert(stopped == 1)
+  -- releve automatique de l'etat des cadres, et erreur d'habillage ecrite au journal
+  Z.db.frameState = nil FireEvent("PLAYER_LOGOUT")
+  local state = table.concat(Z.db.frameState, "\n")
+  assert(state:find("cadre main", 1, true) and state:find("aucune case creee", 1, true) and state:find("showSolo=true", 1, true), state)
+  Z.header:SetAttribute("child1", Z.buttons[1])
+  state = table.concat(Z:FrameState(), "\n")
+  assert(state:find("case 1", 1, true) and state:find("unit=player", 1, true) and state:find("habillee=true", 1, true), state)
+  Z.header:SetAttribute("child1", nil)
+  assert(Z:LogText():find("État des cadres", 1, true))
+  Z.db.errors = {}
+  assert(Z:Try("essai", function() error("boum") end) == false and #Z.db.errors == 1 and Z.db.errors[1].message:find("boum"))
+  Z.db.errors = {}
   local n = #PRINTED
   Z:DiagnoseFrames()
   assert(#PRINTED == n + 3 and PRINTED[n + 1]:find("cases créées", 1, true), "diagnostic des cadres")
