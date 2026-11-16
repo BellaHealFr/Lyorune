@@ -1,5 +1,6 @@
-# Archives produites par outils/publier.py
+# Produits par outils/publier.py
 dist/
+RELEASE.md
 
 # Python
 __pycache__/

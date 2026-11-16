@@ -157,6 +157,8 @@ Z.translations.enUS = {
 	["Aucune erreur technique enregistrée : pense à joindre une capture d'écran du défaut."] = "No technical error recorded: remember to attach a screenshot of the glitch.",
 	["Tout sélectionner"] = "Select all",
 
+	["Nouveau"] = "New", ["Amélioré"] = "Improved", ["Corrigé"] = "Fixed",
+
 	-- Cases et messages
 	["Mort"] = "Dead", ["Fantôme"] = "Ghost", ["Déco"] = "Offline",
 	["modification appliquée à la fin du combat."] = "change applied when combat ends.",

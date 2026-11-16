@@ -351,6 +351,8 @@ step("journal d'erreurs, diagnostic, nouveautes", function()
   assert(text:find("Frames.lua:42", 1, true) and text:find("PRIEST") and text:find("70938") and text:find("x2", 1, true), text)
   SlashCmdList.ZENITH("erreurs") SlashCmdList.ZENITH("diag") SlashCmdList.ZENITH("nouveautes")
   assert(ZenithLog:IsShown() and ZenithNews:IsShown())
+  local news = Z:NewsText()
+  assert(news:find("Nouveau", 1, true) and news:find("Corrigé", 1, true) and news:find("n'est plus estompée", 1, true), "rubriques du journal")
   assert(Z.changes[1].version == Z.version, "Changes.lua n'est pas a jour : " .. Z.changes[1].version .. " / " .. Z.version)
   local saved = C_UnitAuras.GetAuraDuration C_UnitAuras.GetAuraDuration = nil
   assert(Z:MissingAPI()[1] == "C_UnitAuras.GetAuraDuration")

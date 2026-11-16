@@ -41,9 +41,13 @@ Chaque ligne doit commencer par `OK`. Les tests font tourner le vrai code de l'a
 
 L'organisation des fichiers, l'ajout d'une classe, d'un thème ou d'un réglage sont décrits dans [docs/MAINTENANCE.md](docs/MAINTENANCE.md).
 
+### Suivi
+
+Les demandes sont classées par étiquettes et rattachées à un jalon, la version où elles seront livrées. Les versions suivent une numérotation sémantique et un journal classé en « Ajouté, Amélioré, Corrigé » : voir [docs/PUBLICATION.md](docs/PUBLICATION.md).
+
 ### Avant d'envoyer
 
 - Ajoutez une étape de test dans `tests/run.py` pour ce que vous changez.
 - Ajoutez les traductions dans `Locales/enUS.lua` (un test les réclame).
 - Mettez à jour `docs/TUTORIEL.md` si le joueur voit une différence.
-- Un message de commit court, en français, qui dit ce qui change pour le joueur.
+- Un message de commit court, en français, qui dit ce qui change pour le joueur, et cite la demande concernée (`Corrige #12`).

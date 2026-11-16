@@ -1,0 +1,28 @@
+# Etiquettes des demandes. Pour les créer sur GitHub : python outils/etiquettes.py
+- name: bug
+  color: d73a4a
+  description: Quelque chose ne fonctionne pas
+- name: idée
+  color: 33dd88
+  description: Une fonction demandée
+- name: à confirmer
+  color: fbca04
+  description: Il manque une information pour reproduire
+- name: confirmé
+  color: 0e8a16
+  description: Reproduit, en attente de correction
+- name: en jeu
+  color: 1e90ff
+  description: Ne se vérifie que dans le jeu
+- name: compatibilité
+  color: 5319e7
+  description: Lié à une version du jeu ou à un autre addon
+- name: traduction
+  color: c5def5
+  description: Texte manquant ou mal traduit
+- name: doublon
+  color: cfd3d7
+  description: Déjà signalé
+- name: refusé
+  color: ffffff
+  description: Hors du périmètre de Zenith

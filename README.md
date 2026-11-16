@@ -80,6 +80,7 @@ En jeu, tapez `/zenith bug`. Répondez aux trois questions, copiez le rapport (C
 | [Journal des versions](CHANGELOG.md) | Ce qui change à chaque version |
 | [Feuille de route](docs/FEUILLE_DE_ROUTE.md) | Ce qui est prévu |
 | [Notice de maintenance](docs/MAINTENANCE.md) | Comprendre et corriger le code |
+| [Publication](docs/PUBLICATION.md) | Numérotation, sortie d'une version, suivi des demandes |
 | [Guide de contribution](CONTRIBUTING.md) | Signaler, proposer, corriger |
 | [Sécurité](SECURITY.md) | Ce que Zenith fait de vos données |
 

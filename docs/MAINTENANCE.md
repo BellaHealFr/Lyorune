@@ -94,7 +94,9 @@ Outils :
 
 | Commande | Rôle |
 |---|---|
-| `python outils/publier.py 1.3.0 "Nouveauté."` | Tests, numéro de version, `Changes.lua`, `CHANGELOG.md`, archive dans `dist/` |
+| `python outils/publier.py 1.4.0 --nouveau "..." --ameliore "..." --corrige "..."` | Tests, numéro de version, `Changes.lua`, `CHANGELOG.md`, archive dans `dist/` (détails dans `docs/PUBLICATION.md`) |
+| `python outils/etiquettes.py` | Crée sur GitHub les étiquettes de `.github/labels.yml` |
+| `python outils/telechargements.py` | Téléchargements par version sur GitHub |
 | `python outils/verifier_api.py` | Compare les fonctions du jeu utilisées par Zenith à celles de VuhDo, ElvUI et Decursive installés |
 | `outils\tester.bat`, `outils\installer.bat` | Tests, copie dans le dossier AddOns |
 | `.github/workflows/` | Tests à chaque envoi sur GitHub, publication à chaque étiquette `v1.3.0` |
