@@ -50,7 +50,7 @@ def reduire(nom):
 def galerie(presentes, langue):
     if not presentes:
         return ''
-    titre = '## 📸 En images' if langue == 'fr' else '## 📸 Screenshots'
+    titre = '## En images' if langue == 'fr' else '## Screenshots'
     lignes = [titre, '', '<table>']
     for debut in range(0, len(presentes), 2):
         lignes.append('<tr>')

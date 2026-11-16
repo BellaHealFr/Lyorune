@@ -2,6 +2,8 @@
 # Dessine Media/Runes.tga : les 24 runes de l'ancien futhark (alphabet historique), tracées trait par trait.
 #   pip install pillow
 #   python outils/runes.py
+# La même commande dessine aussi les images de la page du projet : docs/images/runes.png (l'inscription)
+# et docs/images/runes/<lettre>.png (une médaille par rune, pour le tableau des fonctions).
 # Grille de 8 colonnes sur 4 lignes, cases de 16 pixels, blanc sur fond transparent (la couleur est donnée en jeu).
 # L'ordre des runes doit rester celui de la table « letters » de Runes.lua.
 import os
@@ -59,5 +61,73 @@ def main():
     print('Media/Runes.tga : %d runes, %d x %d' % (len(RUNES), sortie.width, sortie.height))
 
 
+INSCRIPTION = 'whomsoever takes up this blade shall wield power eternal'
+OR, NUIT, LUEUR = (240, 200, 105), (9, 12, 26), (110, 180, 255)
+
+
+def tracer(dessin, traits, x, y, largeur, hauteur, epaisseur):
+    for points in traits:
+        pixels = [(x + px * largeur, y + py * hauteur) for px, py in points]
+        dessin.line(pixels, fill=255, width=epaisseur, joint='curve')
+        for px, py in pixels:
+            dessin.ellipse((px - epaisseur / 2, py - epaisseur / 2, px + epaisseur / 2, py + epaisseur / 2), fill=255)
+
+
+def dorer(fond, masque, flou):
+    """Pose le tracé en or sur le fond, avec une lueur bleutée autour."""
+    from PIL import ImageFilter
+    lueur = Image.new('RGBA', fond.size, LUEUR + (0,))
+    lueur.putalpha(masque.filter(ImageFilter.GaussianBlur(flou)).point(lambda v: int(v * 0.75)))
+    trait = Image.new('RGBA', fond.size, OR + (0,))
+    trait.putalpha(masque)
+    return Image.alpha_composite(Image.alpha_composite(fond, lueur), trait)
+
+
+def page():
+    traits = dict(RUNES)
+    dossier = os.path.join(ROOT, 'docs', 'images', 'runes')
+    os.makedirs(dossier, exist_ok=True)
+
+    # Une médaille ronde par rune
+    taille, k = 96, 4
+    grand = taille * k
+    for nom, forme in RUNES:
+        masque = Image.new('L', (grand, grand), 0)
+        tracer(ImageDraw.Draw(masque), forme, grand * 0.31, grand * 0.24, grand * 0.38, grand * 0.52, int(grand * 0.055))
+        fond = Image.new('RGBA', (grand, grand), (0, 0, 0, 0))
+        dessin = ImageDraw.Draw(fond)
+        dessin.ellipse((k, k, grand - k, grand - k), fill=NUIT + (255,), outline=(120, 92, 40, 255), width=3 * k)
+        dessin.ellipse((7 * k, 7 * k, grand - 7 * k, grand - 7 * k), outline=(236, 190, 90, 255), width=k)
+        dorer(fond, masque, 4 * k).resize((taille, taille), Image.LANCZOS).save(os.path.join(dossier, nom + '.png'), optimize=True)
+
+    # L'inscription complète, sur un bandeau
+    signes, i = [], 0
+    while i < len(INSCRIPTION):
+        if INSCRIPTION[i:i + 2] in traits:
+            signes.append(INSCRIPTION[i:i + 2])
+            i += 2
+        else:
+            lettre = INSCRIPTION[i]
+            signes.append(None if lettre == ' ' else {'c': 'k', 'q': 'k', 'v': 'u', 'x': 'k'}.get(lettre, lettre))
+            i += 1
+    case, pas, espace, marge = 30 * k, 25 * k, 17 * k, 28 * k
+    largeur = sum(espace if signe is None else pas for signe in signes) + 2 * marge
+    hauteur = case + 2 * marge
+    masque = Image.new('L', (largeur, hauteur), 0)
+    dessin, x = ImageDraw.Draw(masque), marge
+    for signe in signes:
+        if signe is None:
+            x += espace
+        else:
+            tracer(dessin, traits[signe], x + case * 0.12, marge + case * 0.06, case * 0.76, case * 0.88, int(case * 0.085))
+            x += pas
+    fond = Image.new('RGBA', (largeur, hauteur), (0, 0, 0, 0))
+    ImageDraw.Draw(fond).rounded_rectangle((0, 0, largeur - 1, hauteur - 1), radius=18 * k, fill=NUIT + (255,), outline=(120, 92, 40, 255), width=k)
+    image = dorer(fond, masque, 5 * k)
+    image.resize((1600, round(hauteur * 1600 / largeur)), Image.LANCZOS).save(os.path.join(ROOT, 'docs', 'images', 'runes.png'), optimize=True)
+    print('docs/images : inscription et %d médailles' % len(RUNES))
+
+
 if __name__ == '__main__':
     main()
+    page()

@@ -13,9 +13,9 @@
 </p>
 
 <p align="center">
-<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>⬇️ Download</strong></a> ·
-<a href="docs/SIGNALER_UN_BUG.md#reporting-a-bug-english">🐞 Report a bug</a> ·
-<a href="README.md">🇫🇷 Version française</a>
+<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>Download</strong></a> ·
+<a href="docs/SIGNALER_UN_BUG.md#reporting-a-bug-english">Report a bug</a> ·
+<a href="README.md">Version française</a>
 </p>
 
 ---
@@ -26,28 +26,30 @@ Lyorune is a set of healing frames for **World of Warcraft: Forever**: your whol
 
 Easy to set up, light in combat, pleasant to look at. I made it for everyone who loves watching over others.
 
+<p align="center"><img src="docs/images/piliers.png" alt="Soignez avec précision, protégez vos alliés, anticipez chaque menace, devenez indispensable" width="100%"></p>
+
 <!-- captures:debut -->
 <!-- captures:fin -->
 
-## ✨ What Lyorune does for you
+## What Lyorune does for you
 
-| | |
-|---|---|
-| 🖱️ **Heal with one click** | Every mouse button, alone or with Shift, Ctrl, Alt, casts the spell of your choice on a player's frame. No targeting needed. |
-| ⌨️ **Hover keys** | A keyboard key, an extra mouse button or the wheel casts a spell on the hovered frame. |
-| 👀 **Everything at a glance** | Health, incoming heals, shields, healer mana, heals over time, debuffs, low health, threat, range. |
-| 🧹 **Dispel without searching** | The frame lights up when you can remove a magic effect, a curse, a disease or a poison. |
-| 💫 **Resurrect with the same click** | On a dead player, your heal click casts your resurrection spell. Nobody stays on the floor. |
-| 🎨 **Your style** | Five themes, high contrast, transparency, size, sorting by group or by role, separate frames for tanks and pets. |
-| 🧪 **Test mode** | A fake group of 5 to 40 players to tune everything in peace. |
-| 📣 **Announcements** | Low mana, mana restored, resurrection, with your own wording. |
-| 🤝 **Sharing** | Send your configuration to a friend, with a code or directly in game. |
-| 🧭 **Always at hand** | A button on the edge of the minimap opens the options or the test mode. You can move it, or remove it with a checkbox. |
-| 🕊️ **Nothing is mandatory** | Every element has its checkbox, and a search box finds any setting. |
+| | | |
+|:-:|---|---|
+| <img src="docs/images/runes/s.png" alt="" width="40"> | **Heal with one click** | Every mouse button, alone or with Shift, Ctrl, Alt, casts the spell of your choice on a player's frame. No targeting needed. |
+| <img src="docs/images/runes/t.png" alt="" width="40"> | **Hover keys** | A keyboard key, an extra mouse button or the wheel casts a spell on the hovered frame. |
+| <img src="docs/images/runes/u.png" alt="" width="40"> | **Everything at a glance** | Health, incoming heals, shields, healer mana, heals over time, debuffs, low health, threat, range. |
+| <img src="docs/images/runes/d.png" alt="" width="40"> | **Dispel without searching** | The frame lights up when you can remove a magic effect, a curse, a disease or a poison. |
+| <img src="docs/images/runes/r.png" alt="" width="40"> | **Resurrect with the same click** | On a dead player, your heal click casts your resurrection spell. Nobody stays on the floor. |
+| <img src="docs/images/runes/g.png" alt="" width="40"> | **Your style** | Five themes, high contrast, transparency, size, sorting by group or by role, separate frames for tanks and pets. |
+| <img src="docs/images/runes/m.png" alt="" width="40"> | **Test mode** | A fake group of 5 to 40 players to tune everything in peace. |
+| <img src="docs/images/runes/a.png" alt="" width="40"> | **Announcements** | Low mana, mana restored, resurrection, with your own wording. |
+| <img src="docs/images/runes/p.png" alt="" width="40"> | **Sharing** | Send your configuration to a friend, with a code or directly in game. |
+| <img src="docs/images/runes/b.png" alt="" width="40"> | **Always at hand** | A button on the edge of the minimap opens the options or the test mode. You can move it, or remove it with a checkbox. |
+| <img src="docs/images/runes/n.png" alt="" width="40"> | **Nothing is mandatory** | Every element has its checkbox, and a search box finds any setting. |
 
 Lyorune never changes the game's frames or other addons' frames: it runs alongside ElvUI, Clique and your other interface addons.
 
-## 🔮 The runes of Lyorune
+## The runes of Lyorune
 
 At the bottom of the options window, a line of golden runes lights up from time to time, from left to right.
 
@@ -63,13 +65,13 @@ It is the inscription carved on Frostmourne's dais, the one Muradin reads to Art
 
 In game, hover the runes: they light up and their translation appears. If they distract you, a checkbox removes them (Help tab).
 
-## 🚀 Installation
+## Installation
 
 1. Download the latest version from the [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest) page.
 2. Unzip it into `World of Warcraft\_forever_\Interface\AddOns\`. You should get a `Lyorune` folder.
 3. Start the game. A one-minute tutorial opens on first login, and off you go.
 
-## 🎮 Getting started
+## Getting started
 
 No group at hand? Type `/lyorune test`: a fake group appears, with its wounded players and debuffs, so you can try your clicks and tune the look at your own pace.
 
@@ -83,23 +85,23 @@ No group at hand? Type `/lyorune test`: a fake group appears, with its wounded p
 
 The options are available in English. The in-game tutorial and the player guide are currently in French only.
 
-## 🐞 Something wrong? Tell me
+## Something wrong? Tell me
 
 Every report makes Lyorune better for everyone. In game, type `/lyorune bug`, answer the three questions, copy the report (Ctrl+C) and paste it into the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml). Issues written in English are welcome. A step by step guide is in [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md#reporting-a-bug-english).
 
-## 🧩 Compatibility
+## Compatibility
 
 World of Warcraft: Forever, interface 16001. No dependency.
 
-## 💛 Who am I?
+## Who am I?
 
 I am **BellaDroode**, and I am in love with World of Warcraft: a magical world where loneliness has no place.
 
 Lyorune grew out of that idea. Behind every health bar I see a companion, and healing means watching over them. I created this addon to keep that gesture simple, fast and beautiful.
 
-If Lyorune travels with you in dungeons or raids, a ⭐ at the top of this page will always make my day. Have fun, and happy healing!
+If Lyorune travels with you in dungeons or raids, a star at the top of this page will always make my day. Have fun, and happy healing!
 
-## 📜 License
+## License
 
 Copyright © 2026 BellaDroode. All rights reserved.
 

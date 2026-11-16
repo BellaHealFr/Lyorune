@@ -13,10 +13,10 @@
 </p>
 
 <p align="center">
-<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>⬇️ Télécharger</strong></a> ·
-<a href="docs/TUTORIEL.md">📖 Guide du joueur</a> ·
-<a href="docs/SIGNALER_UN_BUG.md">🐞 Signaler un bug</a> ·
-<a href="README.en.md">🇬🇧 English</a>
+<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>Télécharger</strong></a> ·
+<a href="docs/TUTORIEL.md">Guide du joueur</a> ·
+<a href="docs/SIGNALER_UN_BUG.md">Signaler un bug</a> ·
+<a href="README.en.md">English</a>
 </p>
 
 ---
@@ -27,28 +27,30 @@ Lyorune, ce sont des cadres de soin pour **World of Warcraft: Forever** : tout v
 
 Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour tous ceux qui aiment veiller sur les autres.
 
+<p align="center"><img src="docs/images/piliers.png" alt="Soignez avec précision, protégez vos alliés, anticipez chaque menace, devenez indispensable" width="100%"></p>
+
 <!-- captures:debut -->
 <!-- captures:fin -->
 
-## ✨ Ce que Lyorune fait pour vous
+## Ce que Lyorune fait pour vous
 
-| | |
-|---|---|
-| 🖱️ **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. |
-| ⌨️ **Touches au survol** | Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. |
-| 👀 **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers, mana des soigneurs, soins sur la durée, affaiblissements, vie basse, menace, portée. |
-| 🧹 **Dissiper sans chercher** | La case se colore quand vous pouvez retirer une magie, une malédiction, une maladie ou un poison. |
-| 💫 **Relever sans changer de touche** | Sur un joueur mort, votre clic de soin lance votre résurrection. Personne ne reste au sol. |
-| 🎨 **À votre goût** | Cinq thèmes, contraste élevé, transparence, taille, rangement par groupe ou par rôle, cadres séparés pour les tanks et les familiers. |
-| 🧪 **Mode test** | Un faux groupe de 5 à 40 joueurs pour tout régler tranquillement, sans déranger personne. |
-| 📣 **Annonces** | Mana faible, mana remontée, résurrection, avec vos propres textes. |
-| 🤝 **Partage** | Envoyez votre configuration à un ami, par un code ou directement en jeu. |
-| 🧭 **Toujours sous la main** | Un bouton au bord de la mini-carte ouvre les options ou le mode test. Il se déplace, et se retire d'une case à cocher. |
-| 🕊️ **Rien n'est obligatoire** | Chaque élément a sa case à cocher, et une recherche retrouve n'importe quel réglage. |
+| | | |
+|:-:|---|---|
+| <img src="docs/images/runes/s.png" alt="" width="40"> | **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. |
+| <img src="docs/images/runes/t.png" alt="" width="40"> | **Touches au survol** | Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. |
+| <img src="docs/images/runes/u.png" alt="" width="40"> | **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers, mana des soigneurs, soins sur la durée, affaiblissements, vie basse, menace, portée. |
+| <img src="docs/images/runes/d.png" alt="" width="40"> | **Dissiper sans chercher** | La case se colore quand vous pouvez retirer une magie, une malédiction, une maladie ou un poison. |
+| <img src="docs/images/runes/r.png" alt="" width="40"> | **Relever sans changer de touche** | Sur un joueur mort, votre clic de soin lance votre résurrection. Personne ne reste au sol. |
+| <img src="docs/images/runes/g.png" alt="" width="40"> | **À votre goût** | Cinq thèmes, contraste élevé, transparence, taille, rangement par groupe ou par rôle, cadres séparés pour les tanks et les familiers. |
+| <img src="docs/images/runes/m.png" alt="" width="40"> | **Mode test** | Un faux groupe de 5 à 40 joueurs pour tout régler tranquillement, sans déranger personne. |
+| <img src="docs/images/runes/a.png" alt="" width="40"> | **Annonces** | Mana faible, mana remontée, résurrection, avec vos propres textes. |
+| <img src="docs/images/runes/p.png" alt="" width="40"> | **Partage** | Envoyez votre configuration à un ami, par un code ou directement en jeu. |
+| <img src="docs/images/runes/b.png" alt="" width="40"> | **Toujours sous la main** | Un bouton au bord de la mini-carte ouvre les options ou le mode test. Il se déplace, et se retire d'une case à cocher. |
+| <img src="docs/images/runes/n.png" alt="" width="40"> | **Rien n'est obligatoire** | Chaque élément a sa case à cocher, et une recherche retrouve n'importe quel réglage. |
 
 Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à côté d'ElvUI, de Clique ou de vos autres addons d'interface.
 
-## 🔮 Les runes de Lyorune
+## Les runes de Lyorune
 
 Au bas de la fenêtre d'options, une ligne de runes dorées s'illumine de temps en temps, de gauche à droite.
 
@@ -66,7 +68,7 @@ C'est l'inscription gravée sur le socle de Deuillegivre, celle que Muradin déc
 
 En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (onglet Aide).
 
-## 🚀 Installation
+## Installation
 
 1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest).
 2. Décompressez l'archive dans `World of Warcraft\_forever_\Interface\AddOns\`. Vous devez obtenir un dossier `Lyorune`.
@@ -74,7 +76,7 @@ En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction a
 
 Pour mettre à jour, remplacez le dossier `Lyorune` par celui de la nouvelle version. Vos réglages sont conservés.
 
-## 🎮 Prise en main
+## Prise en main
 
 Pas de groupe sous la main ? Tapez `/lyorune test` : un faux groupe apparaît, avec ses blessés et ses affaiblissements, pour essayer vos clics et régler l'apparence à votre rythme.
 
@@ -89,7 +91,7 @@ Pas de groupe sous la main ? Tapez `/lyorune test` : un faux groupe apparaît, a
 
 Le guide complet pour les joueurs est dans [docs/TUTORIEL.md](docs/TUTORIEL.md).
 
-## 🐞 Un souci ? Dites-le-moi
+## Un souci ? Dites-le-moi
 
 Chaque signalement rend Lyorune meilleur pour tout le monde. En jeu, tapez `/lyorune bug`, répondez aux trois questions, copiez le rapport (Ctrl+C) et collez-le dans le [formulaire de signalement](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug.yml). Pour un défaut d'affichage, joignez une capture d'écran.
 
@@ -97,7 +99,7 @@ Première fois sur GitHub ? Le pas à pas est dans [docs/SIGNALER_UN_BUG.md](doc
 
 Une idée, une envie ? Le [formulaire d'idée](https://github.com/BellaHealFr/Lyorune/issues/new?template=idee.yml) est là pour ça.
 
-## 🧩 Compatibilité
+## Compatibilité
 
 | | |
 |---|---|
@@ -106,7 +108,7 @@ Une idée, une envie ? Le [formulaire d'idée](https://github.com/BellaHealFr/Ly
 | Dépendances | Aucune. LibSharedMedia est utilisé s'il est présent, pour proposer vos textures. |
 | Autres addons | Compatible avec ElvUI, Clique et les autres cadres de groupe : Lyorune ne touche à aucun cadre qui n'est pas le sien. |
 
-## 📚 Documentation
+## Documentation
 
 | Document | Pour qui |
 |---|---|
@@ -119,7 +121,7 @@ Une idée, une envie ? Le [formulaire d'idée](https://github.com/BellaHealFr/Ly
 | [Guide de contribution](CONTRIBUTING.md) | Signaler, proposer, corriger |
 | [Sécurité](SECURITY.md) | Ce que Lyorune fait de vos données |
 
-## 🛠️ Contribuer
+## Contribuer
 
 Les rapports de bug et les idées sont les bienvenus : voir [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -130,15 +132,15 @@ pip install lupa
 python tests/run.py .
 ```
 
-## 💛 Qui suis-je ?
+## Qui suis-je ?
 
 Moi, c'est **BellaDroode**. Je suis un amoureux de World of Warcraft : un monde magique où la solitude n'a pas sa place.
 
 Lyorune est né de cette idée. Derrière chaque barre de vie, je vois un compagnon de route, et soigner, c'est veiller sur lui. J'ai créé cet addon pour que ce geste reste simple, rapide et beau.
 
-Si Lyorune vous accompagne en donjon ou en raid, une ⭐ en haut de cette page me fera toujours plaisir. Bon jeu, et bons soins !
+Si Lyorune vous accompagne en donjon ou en raid, une étoile en haut de cette page me fera toujours plaisir. Bon jeu, et bons soins !
 
-## 📜 Licence
+## Licence
 
 Copyright © 2026 BellaDroode. Tous droits réservés.
 
