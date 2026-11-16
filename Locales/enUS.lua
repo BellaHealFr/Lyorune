@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Locales/enUS.lua : traduction anglaise.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Locales/enUS.lua : traduction anglaise.
 -- La clé est le texte français tel qu'il est écrit dans le code ; un texte absent d'ici reste en français.
 -- Les tests listent les libellés d'options qui n'ont pas encore de traduction.
 
@@ -83,7 +83,7 @@ Z.translations.enUS = {
 	["Le même clic relève un joueur mort"] = "The same click resurrects a dead player",
 	["Si la cible est morte, votre sort de soin est remplacé par votre résurrection."] = "If the target is dead, your heal is replaced by your resurrection spell.",
 	["Laisser Clique ou le jeu gérer les clics"] = "Let Clique or the game handle clicks",
-	["À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Zenith sont alors coupés."] = "Only tick this if you prefer Clique or the game's click-casting: Zenith's clicks are then turned off.",
+	["À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés."] = "Only tick this if you prefer Clique or the game's click-casting: Lyorune's clicks are then turned off.",
 
 	-- Alertes
 	["Annonces dans le chat"] = "Chat announcements", ["Canal des annonces"] = "Announcement channel",
@@ -109,25 +109,34 @@ Z.translations.enUS = {
 	["Me prévenir si une version plus récente existe"] = "Tell me when a newer version exists",
 	["Donner ma configuration"] = "Share my configuration", ["Recevoir une configuration"] = "Receive a configuration",
 	["Code à copier (Ctrl+C) et à envoyer : chuchotement, Discord..."] = "Code to copy (Ctrl+C) and send: whisper, Discord...",
-	["Ou envoi direct à un joueur qui a Zenith (il devra accepter) :"] = "Or send it directly to a player who has Zenith (they must accept):",
+	["Ou envoi direct à un joueur qui a Lyorune (il devra accepter) :"] = "Or send it directly to a player who has Lyorune (they must accept):",
 	["Collez le code reçu (Ctrl+V), puis Importer. Votre position à l'écran est conservée."] = "Paste the code you received (Ctrl+V), then Import. Your screen position is kept.",
 	["Envoyer"] = "Send", ["Importer"] = "Import", ["Refuser"] = "Decline", ["Configuration reçue"] = "Configuration received",
-	["Ce texte n'est pas un code Zenith."] = "This text is not a Zenith code.",
+	["Ce texte n'est pas un code Lyorune."] = "This text is not a Lyorune code.",
 	["Ce code ne contient aucun réglage valide."] = "This code contains no valid setting.",
 	["%d réglages importés."] = "%d settings imported.", ["Indiquez le nom du joueur."] = "Enter the player's name.",
 	["Envoi impossible pour le moment (combat ou joueur introuvable)."] = "Cannot send right now (combat or player not found).",
-	["Configuration envoyée à %s. Il doit avoir Zenith et l'accepter."] = "Configuration sent to %s. They need Zenith and must accept it.",
-	["%s vous propose sa configuration Zenith (apparence, clics, alertes). Votre configuration actuelle sera remplacée."] = "%s offers you their Zenith configuration (look, clicks, alerts). Your current configuration will be replaced.",
-	["une version plus récente de Zenith existe (%s, vous avez %s)."] = "a newer version of Zenith exists (%s, you have %s).",
+	["Configuration envoyée à %s. Il doit avoir Lyorune et l'accepter."] = "Configuration sent to %s. They need Lyorune and must accept it.",
+	["%s vous propose sa configuration Lyorune (apparence, clics, alertes). Votre configuration actuelle sera remplacée."] = "%s offers you their Lyorune configuration (look, clicks, alerts). Your current configuration will be replaced.",
+	["une version plus récente de Lyorune existe (%s, vous avez %s)."] = "a newer version of Lyorune exists (%s, you have %s).",
 
 	-- Aide
 	["Lire une case"] = "Reading a cell", ["Commandes"] = "Commands", ["Découvrir"] = "Discover",
-	["Lancer le tutoriel"] = "Start the tutorial", ["Nouveautés de Zenith"] = "What's new in Zenith",
+	["Autour de Lyorune"] = "Around Lyorune", ["Bouton sur la mini-carte"] = "Minimap button",
+	["Clic gauche : options. Clic droit : mode test. Faites-le glisser pour le déplacer."] = "Left click: options. Right click: test mode. Drag it to move it.",
+	["Clic gauche : ouvrir les options"] = "Left click: open the options", ["Clic droit : mode test"] = "Right click: test mode",
+	["Glisser : déplacer ce bouton"] = "Drag: move this button",
+	["Inscription runique au bas de cette fenêtre"] = "Runic inscription at the bottom of this window",
+	["Passez la souris sur les runes pour lire leur traduction."] = "Hover the runes to read their translation.",
+	["Inscription runique"] = "Runic inscription",
+	["« Quiconque s'emparera de cette lame détiendra un pouvoir éternel. »"] = "\"Whomsoever takes up this blade shall wield power eternal.\"",
+	["Runes du socle de Deuillegivre, déchiffrées par Muradin (Warcraft III)."] = "Runes on Frostmourne's dais, read by Muradin (Warcraft III).",
+	["Lancer le tutoriel"] = "Start the tutorial", ["Nouveautés de Lyorune"] = "What's new in Lyorune",
 	["Montrer les nouveautés après une mise à jour"] = "Show what's new after an update",
 	["Un souci ?"] = "A problem?", ["Journal d'erreurs"] = "Error log",
 	["Le journal note chaque erreur avec son contexte. Copiez-le pour obtenir de l'aide."] = "The log records every error with its context. Copy it to get help.",
-	["Zenith ne modifie aucun cadre du jeu ni des autres addons (ElvUI, VuhDo, Clique...) : ils fonctionnent ensemble."] = "Zenith never changes the game's frames or other addons' frames (ElvUI, VuhDo, Clique...): they work side by side.",
-	["Langue"] = "Language", ["Langue de Zenith"] = "Zenith language", ["Automatique"] = "Automatic",
+	["Lyorune ne modifie aucun cadre du jeu ni des autres addons (ElvUI, VuhDo, Clique...) : ils fonctionnent ensemble."] = "Lyorune never changes the game's frames or other addons' frames (ElvUI, VuhDo, Clique...): they work side by side.",
+	["Langue"] = "Language", ["Langue de Lyorune"] = "Lyorune language", ["Automatique"] = "Automatic",
 	["Le changement s'applique après /reload."] = "The change applies after /reload.",
 	["ouvrir cette fenêtre"] = "open this window", ["mode test (faux groupe)"] = "test mode (fake group)",
 	["relancer le tutoriel"] = "restart the tutorial", ["verrouiller ou libérer la position"] = "lock or unlock the position",
@@ -146,9 +155,9 @@ Z.translations.enUS = {
 	["Un rendu en un clic, à ajuster ensuite avec les trois réglages ci-dessus."] = "A look in one click, then fine-tune with the three settings above.",
 	["Signaler un bug"] = "Report a bug", ["signaler un bug"] = "report a bug",
 	["Trois questions, et un rapport prêt à copier. Fonctionne aussi pour un défaut d'affichage."] = "Three questions and a report ready to copy. Also works for a display glitch.",
-	["Me prévenir quand Zenith rencontre une erreur"] = "Tell me when Zenith hits an error",
+	["Me prévenir quand Lyorune rencontre une erreur"] = "Tell me when Lyorune hits an error",
 	["Un seul message discret par session, jamais de fenêtre."] = "One discreet message per session, never a window.",
-	["Zenith a rencontré un problème. Tapez |cff33dd88/zenith bug|r pour le signaler."] = "Zenith ran into a problem. Type |cff33dd88/zenith bug|r to report it.",
+	["Lyorune a rencontré un problème. Tapez |cff33dd88/lyorune bug|r pour le signaler."] = "Lyorune ran into a problem. Type |cff33dd88/lyorune bug|r to report it.",
 	["Que faisais-tu quand c'est arrivé ?"] = "What were you doing when it happened?",
 	["Que s'est-il passé ?"] = "What happened?",
 	["Est-ce que ça se reproduit à chaque fois ?"] = "Does it happen every time?",
@@ -163,9 +172,9 @@ Z.translations.enUS = {
 	["Mort"] = "Dead", ["Fantôme"] = "Ghost", ["Déco"] = "Offline",
 	["modification appliquée à la fin du combat."] = "change applied when combat ends.",
 	["position verrouillée."] = "position locked.", ["position réinitialisée."] = "position reset.",
-	["position déverrouillée : faites glisser la poignée « Zenith »."] = "position unlocked: drag the \"Zenith\" handle.",
+	["position déverrouillée : faites glisser la poignée « Lyorune »."] = "position unlocked: drag the \"Lyorune\" handle.",
 	["impossible de déplacer les cadres en combat."] = "frames cannot be moved in combat.",
 	["le mode test n'est pas disponible en combat."] = "test mode is not available in combat.",
-	["Mode test : faux groupe. /zenith test pour quitter."] = "Test mode: fake group. /zenith test to leave.",
+	["Mode test : faux groupe. /lyorune test pour quitter."] = "Test mode: fake group. /lyorune test to leave.",
 	[" affiche aussi des cadres de groupe. Les deux fonctionnent ensemble ; pour éviter les doublons, désactivez les cadres de groupe et de raid dans ses options."] = " also shows group frames. Both work together; to avoid duplicates, turn off its party and raid frames in its options.",
 }

@@ -1,17 +1,26 @@
 # Journal des versions
 
-Tous les changements notables de Zenith, version par version.
+Tous les changements notables de Lyorune, version par version.
 Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; numérotation en [versions sémantiques](https://semver.org/lang/fr/).
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
-## [1.3.0] - 2026-11-16
+## [1.4.0] - 2026-11-16
 
 ### Ajouté
 
-- Signaler un bug en trois questions avec /zenith bug : un rapport prêt à copier.
+- Nouveau nom : Zenith devient Lyorune. Les commandes sont /lyorune et /lyo.
+- Bouton sur la mini-carte : clic gauche pour les options, clic droit pour le mode test. Il se déplace et se désactive dans l'onglet Aide.
+- Logo de Lyorune dans la liste des addons.
+- Inscription runique animée au bas de la fenêtre d'options : passez la souris dessus pour la traduire.
+
+## 1.3.0 - 2026-11-16
+
+### Ajouté
+
+- Signaler un bug en trois questions avec /lyorune bug : un rapport prêt à copier.
 - Trois préréglages de transparence : discret, semi-transparent, bien visible.
-- Diagnostic de position avec /zenith position, en vue de la flèche de direction.
+- Diagnostic de position avec /lyorune position, en vue de la flèche de direction.
 
 ### Amélioré
 
@@ -23,7 +32,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ### Ajouté
 
-- Mode test : un faux groupe de 5 à 40 joueurs pour régler l'apparence (/zenith test).
+- Mode test : un faux groupe de 5 à 40 joueurs pour régler l'apparence (/lyorune test).
 - Cadres séparés pour les tanks et les familiers, ordre des rôles au choix.
 - Barre de mana des soigneurs, alerte visuelle de vie basse, buffs de groupe manquants.
 - Soins sur la durée en icônes ou en barres fines, affaiblissements importants en grand.
@@ -47,7 +56,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 ### Ajouté
 
 - Cinq thèmes, annonces de mana et de résurrection, partage de configuration par code.
-- Journal d'erreurs (/zenith erreurs) et contrôle de compatibilité (/zenith diag).
+- Journal d'erreurs (/lyorune erreurs) et contrôle de compatibilité (/lyorune diag).
 
 ## 1.0.0 - 2026-11-16
 
@@ -55,4 +64,4 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
-[1.3.0]: https://github.com/BellaDroode/Zenith/releases/tag/v1.3.0
+[1.4.0]: https://github.com/BellaHealFr/Lyorune/releases/tag/v1.4.0

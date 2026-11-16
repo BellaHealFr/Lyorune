@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Faux client minimal pour faire tourner Zenith hors du jeu (détection des erreurs Lua).
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Faux client minimal pour faire tourner Lyorune hors du jeu (détection des erreurs Lua).
 MISSING = {}
 local frames = {}
 local Obj = {}
@@ -77,6 +77,10 @@ function RunUpdates()
 end
 
 UIParent = new("Frame", "UIParent")
+Minimap = new("Frame", "Minimap")
+function Obj:GetCenter() return 400, 300 end
+function Obj:GetEffectiveScale() return 1 end
+function GetCursorPosition() return CURSOR_X or 500, CURSOR_Y or 300 end
 GameTooltip = new("GameTooltip", "GameTooltip")
 function CreateFrame(kind, name, parent) return new(kind, name, parent) end
 function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a, GetRGB = function() return r, g, b end, GetRGBA = function() return r, g, b, a end } end
@@ -178,7 +182,7 @@ function GetRealZoneText() return "Hurlevent" end
 function GetBuildInfo() return "1.60.1", "70938", "Nov 1 2026", INTERFACE or 16001 end
 function SendChatMessage(text, channel) SENT[#SENT + 1] = channel .. ":" .. text end
 function date() return "2026-11-16 21:00:00" end
-function debugstack() return "Interface/AddOns/Zenith/Frames.lua:42: in function <UpdateHealth>" end
+function debugstack() return "Interface/AddOns/Lyorune/Frames.lua:42: in function <UpdateHealth>" end
 local handler = function(msg) LAST_ERROR = msg end
 function geterrorhandler() return handler end
 function seterrorhandler(f) handler = f end
@@ -256,7 +260,7 @@ end
 function Obj:GetVerticalScroll() return 0 end
 function Obj:GetVerticalScrollRange() return 100 end
 
--- Messages d'addon : ce que Zenith envoie est gardé dans ADDON_SENT
+-- Messages d'addon : ce que Lyorune envoie est gardé dans ADDON_SENT
 ADDON_SENT = {}
 C_ChatInfo.RegisterAddonMessagePrefix = function() return true end
 C_ChatInfo.SendAddonMessage = function(prefix, text, channel, target)
@@ -268,5 +272,5 @@ function IsAltKeyDown() return false end
 function IsControlKeyDown() return CTRL or false end
 function IsShiftKeyDown() return false end
 rawset(_G, "CTRL", false)
-rawset(_G, "ZenithPreview", false)
+rawset(_G, "LyorunePreview", false)
 

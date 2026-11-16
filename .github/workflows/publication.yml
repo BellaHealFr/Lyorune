@@ -1,11 +1,11 @@
-# Publie Zenith quand une étiquette de version (par exemple v1.4.0) est envoyée sur GitHub.
+# Publie Lyorune quand une étiquette de version (par exemple v1.4.0) est envoyée sur GitHub.
 #   1. les tests tournent ;
-#   2. l'étiquette doit correspondre à la version écrite dans Zenith.toc ;
+#   2. l'étiquette doit correspondre à la version écrite dans Lyorune.toc ;
 #   3. les notes de cette version sont extraites du journal ;
 #   4. l'archive est attachée à une « release » GitHub, avec ces notes.
 #
 # Pour publier aussi sur CurseForge et Wago, ajoutez dans les secrets du dépôt CF_API_KEY et WAGO_API_TOKEN,
-# et dans Zenith.toc les lignes « ## X-Curse-Project-ID: » et « ## X-Wago-ID: » avec vos identifiants de projet.
+# et dans Lyorune.toc les lignes « ## X-Curse-Project-ID: » et « ## X-Wago-ID: » avec vos identifiants de projet.
 name: Publication
 on:
   push:
@@ -32,9 +32,9 @@ jobs:
           PYTHONIOENCODING: utf-8
       - name: L'étiquette correspond à la version de l'addon
         run: |
-          version=$(grep -oP '## Version: \K\S+' Zenith.toc)
+          version=$(grep -oP '## Version: \K\S+' Lyorune.toc)
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "Etiquette $GITHUB_REF_NAME, mais Zenith.toc indique $version" && exit 1
+            echo "Etiquette $GITHUB_REF_NAME, mais Lyorune.toc indique $version" && exit 1
           fi
       - name: Notes de la version
         run: python outils/publier.py --notes "$GITHUB_REF_NAME"

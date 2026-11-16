@@ -1,5 +1,5 @@
-# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
-# Banc de test de Zenith : fait tourner le vrai code de l'addon dans un faux client, hors du jeu.
+# Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+# Banc de test de Lyorune : fait tourner le vrai code de l'addon dans un faux client, hors du jeu.
 #   pip install lupa
 #   python tests/run.py .
 # Chaque ligne doit commencer par OK. Code de sortie 1 si une étape échoue.
@@ -12,13 +12,13 @@ addon = sys.argv[1] if len(sys.argv) > 1 else os.path.join(here, '..')
 rt = lua51.LuaRuntime(encoding='utf-8', unpack_returned_tuples=True)
 read = lambda p: open(p, encoding='utf-8').read()
 import re
-rt.globals().TOC_VERSION = re.search(r'## Version: (\S+)', read(os.path.join(addon, 'Zenith.toc'))).group(1)
+rt.globals().TOC_VERSION = re.search(r'## Version: (\S+)', read(os.path.join(addon, 'Lyorune.toc'))).group(1)
 rt.execute(read(os.path.join(here, 'mock.lua')))
 
 rt.execute('BEFORE = {} for k in pairs(_G) do BEFORE[k] = true end')
-files = [l.strip().replace('\\', '/') for l in read(os.path.join(addon, 'Zenith.toc')).splitlines() if l.strip().endswith('.lua')]
+files = [l.strip().replace('\\', '/') for l in read(os.path.join(addon, 'Lyorune.toc')).splitlines() if l.strip().endswith('.lua')]
 rt.execute('NS = {}')
-load = rt.eval('function(src, name) local f, err = loadstring(src, name) if not f then error(err) end f("Zenith", NS) end')
+load = rt.eval('function(src, name) local f, err = loadstring(src, name) if not f then error(err) end f("Lyorune", NS) end')
 for f in files:
     load(read(os.path.join(addon, f)), '@' + f)
 print('fichiers charges :', len(files))
@@ -28,7 +28,7 @@ local Z = NS
 local step = function(label, fn) local ok, err = pcall(fn) print((ok and "OK    " or "ERREUR ") .. label .. (ok and "" or (" : " .. tostring(err)))) if not ok then FAILED = true end end
 
 step("demarrage", function()
-  FireEvent("ADDON_LOADED", "Zenith")
+  FireEvent("ADDON_LOADED", "Lyorune")
   FireEvent("PLAYER_LOGIN")
   assert(Z.header and #Z.headers == 3, "en-tetes")
 end)
@@ -43,7 +43,7 @@ end)
 
 step("creation de cases", function()
   for i = 1, 3 do
-    local b = CreateFrame("Button", "ZenithHeaderUnitButton" .. i, Z.header)
+    local b = CreateFrame("Button", "LyoruneHeaderUnitButton" .. i, Z.header)
     b:Hide()
     Z.header:InitButton(b:GetName())
     b:SetAttribute("unit", i == 1 and "player" or ("party" .. (i - 1)))
@@ -146,7 +146,7 @@ step("combat avec valeurs secretes", function()
 end)
 
 step("options : huit onglets, recherche, libelles traduits", function()
-  SlashCmdList.ZENITH("")
+  SlashCmdList.LYORUNE("")
   local w = Z:OptionsWindow()
   assert(w and w:IsShown())
   for i = 1, 8 do w.Select(i) end
@@ -215,7 +215,7 @@ end)
 
 step("mode test", function()
   Z:TogglePreview(25)
-  assert(Z.previewActive and ZenithPreview:IsShown() and not Z.header:IsShown(), "mode test")
+  assert(Z.previewActive and LyorunePreview:IsShown() and not Z.header:IsShown(), "mode test")
   for _, style in ipairs({ "BARS", "ICONS" }) do Z.db.hotStyle = style Z.db.horizontal = not Z.db.horizontal Z:Refresh() end
   Z:TogglePreview(40) assert(Z.previewActive and Z:PreviewSize() == 40)
   COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
@@ -228,13 +228,13 @@ end)
 step("tutoriel", function()
   Z.db.tutorialDone = false
   Z:StartTutorial()
-  local card = ZenithTutorial
+  local card = LyoruneTutorial
   for i = 1, 8 do card.next:Run("OnClick") end
   assert(Z.db.tutorialDone and not card:IsShown() and not Z.previewActive)
   Z:StartTutorial() card.next:Run("OnClick") card.back:Run("OnClick") card.close:Run("OnClick")
-  SlashCmdList.ZENITH("verrou") SlashCmdList.ZENITH("verrou") SlashCmdList.ZENITH("reset") SlashCmdList.ZENITH("tuto") SlashCmdList.ZENITH("test") SlashCmdList.ZENITH("test")
-  ZenithTutorial.close:Run("OnClick")
-  Zenith_OnAddonCompartmentClick() Zenith_OnAddonCompartmentClick()
+  SlashCmdList.LYORUNE("verrou") SlashCmdList.LYORUNE("verrou") SlashCmdList.LYORUNE("reset") SlashCmdList.LYORUNE("tuto") SlashCmdList.LYORUNE("test") SlashCmdList.LYORUNE("test")
+  LyoruneTutorial.close:Run("OnClick")
+  Lyorune_OnAddonCompartmentClick() Lyorune_OnAddonCompartmentClick()
 end)
 
 step("themes", function()
@@ -288,7 +288,7 @@ step("partage, profils prets a l'emploi, reinitialisation", function()
   Z.db.ignoredNames["Mal de mer"] = true
   Z:SetClick("ctrl-1", "Prière de guérison")
   local code = Z:Export()
-  assert(code:match("^Zenith2;") and not code:find(" "), code)
+  assert(code:match("^Lyorune2;") and not code:find(" "), code)
   Z.db.theme = "NEON" Z.db.width = 60 Z.db.manaText = "x" Z.db.smooth = true Z.db.clicks.PRIEST = {} Z.db.hoverKeys.PRIEST = {} Z.db.ignoredNames = {} Z.db.roleOrder = "TANK,HEALER,DAMAGER"
   local pos = Z.db.pos
   local ok, message = Z:Import("  " .. code .. "\n")
@@ -299,8 +299,8 @@ step("partage, profils prets a l'emploi, reinitialisation", function()
   assert(Z.db.hoverKeys.PRIEST[2].key == "BUTTON7" and Z.db.hoverKeys.PRIEST[2].spell == "Soins rapides")
   assert(Z.buttons[1]:GetAttribute("ctrl-spell1") == "Prière de guérison" and Z.db.pos == pos)
   assert(not Z:Import("bonjour"))
-  assert(not Z:Import("Zenith2;width=sabc;theme=sFAUX;inconnu=n5;c.PRIEST.zz=sX;roleOrder=sTANK;l.pos=sX"))
-  ok = Z:Import("Zenith1;width=n9999;height=n-5;pos=sHACK;tutorialDone=bfalse;language=senUS")
+  assert(not Z:Import("Lyorune2;width=sabc;theme=sFAUX;inconnu=n5;c.PRIEST.zz=sX;roleOrder=sTANK;l.pos=sX"))
+  ok = Z:Import("Lyorune1;width=n9999;height=n-5;pos=sHACK;tutorialDone=bfalse;language=senUS")
   assert(ok and Z.db.width == 180 and Z.db.height == 24 and type(Z.db.pos) == "table" and Z.db.tutorialDone == true and Z.db.language == "AUTO")
   assert(Z:ApplyPreset("COMPACT") and Z.db.width == 64 and Z.db.hotStyle == "BARS" and Z.db.clicks.PRIEST["ctrl-1"])
   assert(not Z:ApplyPreset("INCONNU"))
@@ -314,43 +314,43 @@ end)
 step("entre joueurs : version et envoi de configuration", function()
   assert(Z.VersionNumber("1.10.2") > Z.VersionNumber("1.9.9") and Z.VersionNumber("abc") == 0)
   local n = #PRINTED
-  FireEvent("CHAT_MSG_ADDON", "Zenith", "V:0.9.0", "PARTY", "Ami") assert(#PRINTED == n)
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:0.9.0", "PARTY", "Ami") assert(#PRINTED == n)
   FireEvent("CHAT_MSG_ADDON", "Autre", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n)
-  FireEvent("CHAT_MSG_ADDON", "Zenith", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n + 1, "version plus recente non signalee")
-  FireEvent("CHAT_MSG_ADDON", "Zenith", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n + 1, "signalee deux fois")
-  FireEvent("CHAT_MSG_ADDON", "Zenith", "n'importe quoi", "PARTY", "Ami")
-  FireEvent("CHAT_MSG_ADDON", "Zenith", "C:1:99:2:x", "WHISPER", "Ami")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n + 1, "version plus recente non signalee")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n + 1, "signalee deux fois")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "n'importe quoi", "PARTY", "Ami")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "C:1:99:2:x", "WHISPER", "Ami")
   assert(not Z:SendConfig("  "))
   Z.db.width = 132 local first = #ADDON_SENT + 1
   assert(Z:SendConfig("Jaina"))
   assert(#ADDON_SENT - first + 1 >= 2 and ADDON_SENT[first].channel == "WHISPER" and ADDON_SENT[first].target == "Jaina")
   for i = first, #ADDON_SENT do assert(#ADDON_SENT[i].text <= 255, "message trop long") end
   Z.db.width = 86
-  for i = #ADDON_SENT, first, -1 do FireEvent("CHAT_MSG_ADDON", "Zenith", ADDON_SENT[i].text, "WHISPER", "Jaina") end -- dans le desordre
-  assert(ZenithConfigPrompt and ZenithConfigPrompt:IsShown() and Z.db.width == 86, "rien ne doit s'appliquer sans accord")
-  ZenithConfigPrompt.accept:Run("OnClick")
-  assert(Z.db.width == 132 and not ZenithConfigPrompt:IsShown())
+  for i = #ADDON_SENT, first, -1 do FireEvent("CHAT_MSG_ADDON", "Lyorune", ADDON_SENT[i].text, "WHISPER", "Jaina") end -- dans le desordre
+  assert(LyoruneConfigPrompt and LyoruneConfigPrompt:IsShown() and Z.db.width == 86, "rien ne doit s'appliquer sans accord")
+  LyoruneConfigPrompt.accept:Run("OnClick")
+  assert(Z.db.width == 132 and not LyoruneConfigPrompt:IsShown())
   Z.db.acceptConfigs = false Z.db.width = 86
-  for i = first, #ADDON_SENT do FireEvent("CHAT_MSG_ADDON", "Zenith", ADDON_SENT[i].text, "WHISPER", "Jaina") end
-  assert(not ZenithConfigPrompt:IsShown(), "configuration proposee alors que l'option est coupee")
+  for i = first, #ADDON_SENT do FireEvent("CHAT_MSG_ADDON", "Lyorune", ADDON_SENT[i].text, "WHISPER", "Jaina") end
+  assert(not LyoruneConfigPrompt:IsShown(), "configuration proposee alors que l'option est coupee")
   Z.db.acceptConfigs = true Z:Refresh()
 end)
 
 step("journal d'erreurs, diagnostic, nouveautes", function()
   assert(#Z:MissingAPI() == 0, table.concat(Z:MissingAPI(), ","))
   Z.db.errors = {}
-  RaiseError("Interface/AddOns/Zenith/Frames.lua:42: attempt to index nil")
-  RaiseError("Interface/AddOns/Zenith/Frames.lua:42: attempt to index nil")
+  RaiseError("Interface/AddOns/Lyorune/Frames.lua:42: attempt to index nil")
+  RaiseError("Interface/AddOns/Lyorune/Frames.lua:42: attempt to index nil")
   RaiseError("Interface/AddOns/AutreAddon/x.lua:1: rien a voir")
   assert(#Z.db.errors == 1 and Z.db.errors[1].count == 2, "journal : " .. #Z.db.errors)
   assert(LAST_ERROR:find("AutreAddon"), "le gestionnaire d'origine n'est plus appele")
-  FireEvent("ADDON_ACTION_BLOCKED", "Zenith", "Frame:SetAttribute()")
+  FireEvent("ADDON_ACTION_BLOCKED", "Lyorune", "Frame:SetAttribute()")
   FireEvent("ADDON_ACTION_BLOCKED", "Autre", "Frame:Show()")
   assert(#Z.db.errors == 2 and Z.db.errors[1].kind == "Action interdite en combat")
   local text = Z:LogText()
   assert(text:find("Frames.lua:42", 1, true) and text:find("PRIEST") and text:find("70938") and text:find("x2", 1, true), text)
-  SlashCmdList.ZENITH("erreurs") SlashCmdList.ZENITH("diag") SlashCmdList.ZENITH("nouveautes")
-  assert(ZenithLog:IsShown() and ZenithNews:IsShown())
+  SlashCmdList.LYORUNE("erreurs") SlashCmdList.LYORUNE("diag") SlashCmdList.LYORUNE("nouveautes")
+  assert(LyoruneLog:IsShown() and LyoruneNews:IsShown())
   local news = Z:NewsText()
   assert(news:find("Nouveau", 1, true) and news:find("Corrigé", 1, true) and news:find("n'est plus estompée", 1, true), "rubriques du journal")
   assert(Z.changes[1].version == Z.version, "Changes.lua n'est pas a jour : " .. Z.changes[1].version .. " / " .. Z.version)
@@ -364,17 +364,17 @@ step("signalement de bug, transparence, specialisation", function()
   Z.db.errors = {} Z.firstError = nil
   local report = Z:BugReport({ "Je soignais", "", "Oui" })
   assert(report:find("Je soignais", 1, true) and report:find("(sans réponse)", 1, true) and report:find("Aucune erreur technique", 1, true), report)
-  assert(report:find("PRIEST niveau 60", 1, true) and report:find("[Zenith " .. Z.version .. "]", 1, true), report)
+  assert(report:find("PRIEST niveau 60", 1, true) and report:find("[Lyorune " .. Z.version .. "]", 1, true), report)
   local n = #PRINTED
   Z.db.errorNotice = false
-  RaiseError("Interface/AddOns/Zenith/Auras.lua:10: premiere")
+  RaiseError("Interface/AddOns/Lyorune/Auras.lua:10: premiere")
   assert(#PRINTED == n, "notification alors qu'elle est coupee")
-  RaiseError("Interface/AddOns/Zenith/Auras.lua:20: seconde")
+  RaiseError("Interface/AddOns/Lyorune/Auras.lua:20: seconde")
   report = Z:BugReport()
   assert(report:find("premiere", 1, true) and not report:find("seconde", 1, true), "la premiere erreur doit etre en tete : " .. report)
   assert(Z.db.errors[1].level == 60 and Z.db.errors[1].spec ~= nil)
-  SlashCmdList.ZENITH("bug") assert(ZenithBug:IsShown())
-  SlashCmdList.ZENITH("position") assert(#Z.db.positionDiag == 1)
+  SlashCmdList.LYORUNE("bug") assert(LyoruneBug:IsShown())
+  SlashCmdList.LYORUNE("position") assert(#Z.db.positionDiag == 1)
   Z.db.errors = {} Z.firstError = nil Z.db.errorNotice = true
   local w = Z:OptionsWindow() w.Select("Apparence")
   for _, entry in ipairs({ { "Discret", 55 }, { "Bien visible", 100 } }) do
@@ -407,6 +407,40 @@ step("composition du groupe : departs, arrivees, deconnexion", function()
   assert(Z.buttons[1]:GetAttribute("spell1") ~= nil and Z.db.width == 86, "reglages conserves")
 end)
 
+step("bouton de la mini-carte", function()
+  local b = LyoruneMinimapButton
+  assert(b and b:IsShown(), "bouton absent alors que le reglage est actif")
+  assert(Z.private.minimapAngle and Z.db.minimapAngle == 215)
+  local w = Z:OptionsWindow() w:Hide()
+  b:Run("OnClick", "LeftButton") assert(w:IsShown(), "le clic gauche ouvre les options")
+  b:Run("OnClick", "LeftButton") assert(not w:IsShown())
+  b:Run("OnClick", "RightButton") assert(Z.previewActive, "le clic droit lance le mode test")
+  b:Run("OnClick", "RightButton") assert(not Z.previewActive)
+  b:Run("OnEnter") b:Run("OnLeave")
+  CURSOR_X, CURSOR_Y = 400, 500                              -- souris au-dessus de la mini-carte
+  b:Run("OnDragStart") b:Run("OnUpdate") b:Run("OnDragStop")
+  assert(Z.db.minimapAngle == 90 and b:GetScript("OnUpdate") == nil, "angle = " .. tostring(Z.db.minimapAngle))
+  CURSOR_X, CURSOR_Y = nil, nil
+  Z.db.minimapButton = false Z:Refresh() assert(not b:IsShown(), "bouton encore visible")
+  Z.db.minimapButton = true Z:Refresh() assert(b:IsShown())
+  Z:ResetAll() assert(Z.db.minimapAngle == 90, "la place du bouton survit a la reinitialisation")
+  Z.db.minimapAngle = 215
+end)
+
+step("inscription runique", function()
+  local strip = Z:RuneStrip()
+  assert(strip and #strip.base == 47 and #strip.waves == 47, "runes : " .. tostring(strip and #strip.base))
+  assert(strip:GetParent() == Z:OptionsWindow())
+  strip:Run("OnShow") strip:Run("OnEnter") strip:Run("OnLeave") strip:Run("OnHide")
+  Z.db.showRunes = false Z:Refresh() assert(not strip:IsShown(), "runes encore visibles")
+  Z.db.showRunes = true Z:Refresh() assert(strip:IsShown())
+  for _, key in ipairs({ "Inscription runique", "« Quiconque s'emparera de cette lame détiendra un pouvoir éternel. »",
+    "Runes du socle de Deuillegivre, déchiffrées par Muradin (Warcraft III).", "Clic gauche : ouvrir les options",
+    "Clic droit : mode test", "Glisser : déplacer ce bouton" }) do
+    assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+  end
+end)
+
 step("anglais", function()
   Z.db.language = "enUS" Z:SetLanguage()
   assert(Z.L["Mort"] == "Dead" and Z.L["texte inconnu"] == "texte inconnu")
@@ -416,11 +450,12 @@ step("anglais", function()
 end)
 
 step("aucune variable globale imprevue", function()
-  local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Zenith = true, ZenithDB = true,
-    SLASH_ZENITH1 = true, SLASH_ZENITH2 = true, Zenith_OnAddonCompartmentClick = true, ClickCastFrames = true }
+  local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
+    SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,
+    CURSOR_X = true, CURSOR_Y = true }
   local leaks = {}
   for name in pairs(_G) do
-    if not BEFORE[name] and not allowed[name] and not name:match("^Zenith%u") then leaks[#leaks + 1] = name end
+    if not BEFORE[name] and not allowed[name] and not name:match("^Lyorune%u") then leaks[#leaks + 1] = name end
   end
   table.sort(leaks)
   assert(#leaks == 0, "variables globales en trop : " .. table.concat(leaks, ", "))

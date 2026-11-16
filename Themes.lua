@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Themes.lua : les 5 habillages des cases, du plus moderne au plus « MMO ».
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Themes.lua : les 5 habillages des cases, du plus moderne au plus « MMO ».
 -- Un thème n'est qu'une liste de réglages visuels : pour en créer un, copiez un bloc et changez les valeurs.
 --   texture    : image de la barre de vie
 --   font/flags : police du nom et du texte ("OUTLINE" = contour)

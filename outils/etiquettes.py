@@ -1,4 +1,4 @@
-# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+# Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 # Crée ou met à jour sur GitHub les étiquettes décrites dans .github/labels.yml.
 #
 #   python outils/etiquettes.py

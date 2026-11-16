@@ -1,18 +1,18 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Log.lua : journal d'erreurs et contrôle de compatibilité avec la version du jeu.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Log.lua : journal d'erreurs et contrôle de compatibilité avec la version du jeu.
 --
--- Le journal est enregistré dans ZenithDB.errors, donc dans le fichier
---   WTF\Account\<COMPTE>\SavedVariables\Zenith.lua
--- En jeu : /zenith erreurs (fenêtre à copier-coller), /zenith diag (contrôle de compatibilité).
+-- Le journal est enregistré dans LyoruneDB.errors, donc dans le fichier
+--   WTF\Account\<COMPTE>\SavedVariables\Lyorune.lua
+-- En jeu : /lyorune erreurs (fenêtre à copier-coller), /lyorune diag (contrôle de compatibilité).
 -- Chaque entrée dit QUOI (message), OÙ (pile d'appels : fichier et ligne) et DANS QUEL CONTEXTE
--- (version de Zenith et du jeu, classe, combat, groupe), pour corriger sans avoir à reproduire le bug.
+-- (version de Lyorune et du jeu, classe, combat, groupe), pour corriger sans avoir à reproduire le bug.
 
 local ADDON, Z = ...
 
-Z.testedInterface = 16001 -- version du jeu avec laquelle cette version de Zenith a été testée
+Z.testedInterface = 16001 -- version du jeu avec laquelle cette version de Lyorune a été testée
 local MAX_ENTRIES = 30
 
--- Fonctions du jeu indispensables. Si une mise à jour du jeu en retire une, /zenith diag la nomme.
+-- Fonctions du jeu indispensables. Si une mise à jour du jeu en retire une, /lyorune diag la nomme.
 Z.requiredAPI = {
 	"UnitHealthPercent", "UnitHealthMissing", "UnitInRange", "UnitGetDetailedHealPrediction",
 	"CreateUnitHealPredictionCalculator", "AbbreviateNumbers", "UnitGroupRolesAssigned",
@@ -68,7 +68,7 @@ function Z:Log(kind, message, stack)
 		first = now,
 		last = now,
 		count = 1,
-		zenith = Z.version,
+		lyorune = Z.version,
 		game = GameVersion(),
 		class = Z.class,
 		level = UnitLevel("player"),
@@ -81,7 +81,7 @@ function Z:Log(kind, message, stack)
 	Z.firstError = Z.firstError or db.errors[1] -- la première de la session : les suivantes en découlent souvent
 	if not warned and db.errorNotice then
 		warned = true
-		Z:Print(Z.L["Zenith a rencontré un problème. Tapez |cff33dd88/zenith bug|r pour le signaler."])
+		Z:Print(Z.L["Lyorune a rencontré un problème. Tapez |cff33dd88/lyorune bug|r pour le signaler."])
 	end
 	logging = false
 end
@@ -99,8 +99,8 @@ end
 -- Rapport complet, lisible par un humain
 function Z:LogText()
 	local lines = {
-		"=== Journal Zenith ===",
-		"Zenith " .. Z.version .. " (testé pour l'interface " .. Z.testedInterface .. ")",
+		"=== Journal Lyorune ===",
+		"Lyorune " .. Z.version .. " (testé pour l'interface " .. Z.testedInterface .. ")",
 		"Jeu : " .. GameVersion(),
 		"Classe : " .. tostring(Z.class) .. ", niveau " .. tostring(UnitLevel("player")) .. ", langue " .. tostring(GetLocale()),
 	}
@@ -113,7 +113,7 @@ function Z:LogText()
 		lines[#lines + 1] = ("--- %d. %s (x%d) ---"):format(i, e.kind, e.count)
 		lines[#lines + 1] = "Message : " .. tostring(e.message)
 		lines[#lines + 1] = ("Première fois : %s, dernière fois : %s"):format(e.first, e.last)
-		lines[#lines + 1] = ("Contexte : Zenith %s, jeu %s, %s niveau %s spé %s, %s, %s, %s"):format(tostring(e.zenith), tostring(e.game),
+		lines[#lines + 1] = ("Contexte : Lyorune %s, jeu %s, %s niveau %s spé %s, %s, %s, %s"):format(tostring(e.lyorune), tostring(e.game),
 			tostring(e.class), tostring(e.level), tostring(e.spec), e.combat and "en combat" or "hors combat", tostring(e.group), tostring(e.zone))
 		if e.stack and e.stack ~= "" then lines[#lines + 1] = "Pile d'appels :\n" .. e.stack end
 	end
@@ -121,7 +121,7 @@ function Z:LogText()
 end
 
 ----------------------------------------------------------------------------------------------------
--- Capture : toute erreur Lua qui cite Zenith, et toute action que le jeu bloque à Zenith
+-- Capture : toute erreur Lua qui cite Lyorune, et toute action que le jeu bloque à Lyorune
 ----------------------------------------------------------------------------------------------------
 local function HookErrors()
 	local previous = geterrorhandler()
@@ -144,7 +144,7 @@ Z:On("ADDON_ACTION_BLOCKED", Blocked("Action interdite en combat"))
 Z:On("ADDON_ACTION_FORBIDDEN", Blocked("Action réservée au jeu"))
 
 ----------------------------------------------------------------------------------------------------
--- Contrôle au démarrage. Renvoie false si Zenith ne peut pas fonctionner avec ce client.
+-- Contrôle au démarrage. Renvoie false si Lyorune ne peut pas fonctionner avec ce client.
 ----------------------------------------------------------------------------------------------------
 function Z:CheckGame()
 	HookErrors()
@@ -153,12 +153,12 @@ function Z:CheckGame()
 	if #missing > 0 then
 		Z:Log("Incompatibilité", "Fonctions du jeu manquantes : " .. table.concat(missing, ", "))
 		Z:Print("cette version du jeu n'est pas compatible (fonctions manquantes : " .. table.concat(missing, ", ")
-			.. "). Zenith reste désactivé. Détails : /zenith erreurs")
+			.. "). Lyorune reste désactivé. Détails : /lyorune erreurs")
 		return false
 	end
 	if interface ~= Z.testedInterface and Z.db.lastInterface ~= interface then
-		Z:Print(("le jeu est passé à l'interface %s (Zenith a été testé pour %s). Tout semble compatible ; "
-			.. "en cas de souci, tapez /zenith erreurs."):format(tostring(interface), Z.testedInterface))
+		Z:Print(("le jeu est passé à l'interface %s (Lyorune a été testé pour %s). Tout semble compatible ; "
+			.. "en cas de souci, tapez /lyorune erreurs."):format(tostring(interface), Z.testedInterface))
 	end
 	Z.db.lastInterface = interface
 	return true
@@ -166,13 +166,13 @@ end
 
 function Z:Diagnose()
 	local missing = Z:MissingAPI()
-	Z:Print("jeu " .. GameVersion() .. ", Zenith " .. Z.version .. " testé pour l'interface " .. Z.testedInterface .. ".")
+	Z:Print("jeu " .. GameVersion() .. ", Lyorune " .. Z.version .. " testé pour l'interface " .. Z.testedInterface .. ".")
 	if #missing == 0 then
 		Z:Print("compatibilité : toutes les fonctions nécessaires sont présentes.")
 	else
 		Z:Print("compatibilité : fonctions manquantes : " .. table.concat(missing, ", "))
 	end
-	Z:Print(#(Z.db.errors or {}) .. " erreur(s) dans le journal (/zenith erreurs).")
+	Z:Print(#(Z.db.errors or {}) .. " erreur(s) dans le journal (/lyorune erreurs).")
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -183,8 +183,8 @@ local window
 function Z:ShowLog()
 	local UI = Z.UI
 	if not window then
-		window = UI.Window("ZenithLog", "Journal d'erreurs", 660, 440)
-		tinsert(UISpecialFrames, "ZenithLog")
+		window = UI.Window("LyoruneLog", "Journal d'erreurs", 660, 440)
+		tinsert(UISpecialFrames, "LyoruneLog")
 
 		local scroll = CreateFrame("ScrollFrame", nil, window)
 		scroll:SetPoint("TOPLEFT", 14, -44)

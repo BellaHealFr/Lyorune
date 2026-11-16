@@ -2,13 +2,13 @@
 
 ## Versions suivies
 
-Seule la dernière version publiée de Zenith reçoit des corrections.
+Seule la dernière version publiée de Lyorune reçoit des corrections.
 
-## Ce que fait Zenith avec vos données
+## Ce que fait Lyorune avec vos données
 
-- Zenith n'envoie rien sur internet : un addon de World of Warcraft n'en a pas la possibilité.
-- Ses réglages et son journal d'erreurs restent dans le fichier `WTF\Account\<COMPTE>\SavedVariables\Zenith.lua` de votre ordinateur.
-- Entre joueurs qui utilisent Zenith, seuls circulent le numéro de version et les configurations que vous choisissez d'envoyer. Une configuration reçue n'est jamais appliquée sans votre accord, et chaque valeur est contrôlée à l'import.
+- Lyorune n'envoie rien sur internet : un addon de World of Warcraft n'en a pas la possibilité.
+- Ses réglages et son journal d'erreurs restent dans le fichier `WTF\Account\<COMPTE>\SavedVariables\Lyorune.lua` de votre ordinateur.
+- Entre joueurs qui utilisent Lyorune, seuls circulent le numéro de version et les configurations que vous choisissez d'envoyer. Une configuration reçue n'est jamais appliquée sans votre accord, et chaque valeur est contrôlée à l'import.
 
 ## Signaler une faille
 

@@ -1,9 +1,9 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Share.lua : échanger sa configuration avec un autre joueur, et profils prêts à l'emploi.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Share.lua : échanger sa configuration avec un autre joueur, et profils prêts à l'emploi.
 -- L'export produit un code (du texte simple) à copier : en chuchotement, sur Discord, dans un message...
 -- L'autre joueur le colle dans l'onglet Profils et clique sur Importer. (Envoi direct en jeu : voir Comm.lua.)
 --
--- Format : Zenith2;cle=tVALEUR;...   avec t = n (nombre), b (oui/non) ou s (texte).
+-- Format : Lyorune2;cle=tVALEUR;...   avec t = n (nombre), b (oui/non) ou s (texte).
 --   c.CLASSE.touche=sSort   un clic de souris        h.CLASSE.numero=sTOUCHE|Sort   une touche au survol
 --   l.liste=sNom            une entrée d'une liste personnelle
 -- Les caractères spéciaux sont écrits %XX. A l'import, chaque valeur est contrôlée avec les tables
@@ -11,7 +11,7 @@
 
 local _, Z = ...
 
-local PREFIX = "Zenith2"
+local PREFIX = "Lyorune2"
 local LISTS = { extraTracked = true, ignoredNames = true, importantNames = true }
 
 local function Encode(text)
@@ -82,8 +82,8 @@ end
 function Z:Import(code)
 	local L = Z.L
 	code = (code or ""):gsub("%s+", "")
-	if not code:match("^Zenith%d;") then
-		return false, L["Ce texte n'est pas un code Zenith."]
+	if not code:match("^Lyorune%d;") then
+		return false, L["Ce texte n'est pas un code Lyorune."]
 	end
 
 	local settings, clicks, hovers, lists, count = {}, {}, {}, {}, 0

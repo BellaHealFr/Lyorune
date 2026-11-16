@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Auras.lua : ce qui s'affiche sur une case à partir des auras du joueur.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Auras.lua : ce qui s'affiche sur une case à partir des auras du joueur.
 --   en haut à gauche  : mes soins sur la durée (icônes ou barres fines)
 --   en bas à droite   : ses affaiblissements
 --   à gauche, en grand: un affaiblissement important (boss, ou liste personnelle)

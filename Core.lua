@@ -1,11 +1,11 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Cadres de soin pour WoW Forever
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Cadres de soin pour WoW Forever
 -- Core.lua : réglages, événements, commandes. Tout le reste s'appuie sur ce fichier.
 
 local ADDON, Z = ...
-_G.Zenith = Z
+_G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.3.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.4.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -36,6 +36,8 @@ Z.defaults = {
 	pos = { "CENTER", -320, 60 },
 	tankPos = { "CENTER", -320, 200 },
 	petPos = { "CENTER", -320, -160 },
+	minimapButton = true,      -- bouton au bord de la mini-carte
+	minimapAngle = 215,        -- sa place autour de la mini-carte, en degrés
 
 	-- Apparence
 	theme = "PURE", texture = "THEME",
@@ -87,7 +89,8 @@ Z.defaults = {
 	showNews = true,           -- fenêtre des nouveautés après une mise à jour
 	versionNotice = true,      -- prévenir si un membre du groupe a une version plus récente
 	acceptConfigs = true,      -- accepter qu'un joueur me propose sa configuration
-	errorNotice = true,        -- message discret (une fois par session) quand Zenith rencontre une erreur
+	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
+	errorNotice = true,        -- message discret (une fois par session) quand Lyorune rencontre une erreur
 	tutorialDone = false,
 }
 
@@ -115,7 +118,7 @@ Z.choices = {
 }
 
 -- Réglages propres à l'ordinateur ou au personnage : ni partagés, ni réinitialisés avec le reste
-Z.private = { pos = true, tankPos = true, petPos = true, tutorialDone = true, language = true }
+Z.private = { pos = true, tankPos = true, petPos = true, minimapAngle = true, tutorialDone = true, language = true }
 
 ----------------------------------------------------------------------------------------------------
 -- Traduction : Z.L["texte français"] renvoie la traduction si elle existe, sinon le texte lui-même
@@ -131,7 +134,7 @@ function Z:SetLanguage()
 end
 
 function Z:Print(msg)
-	print("|cff33dd88Zenith|r : " .. tostring(msg))
+	print("|cff33dd88Lyorune|r : " .. tostring(msg))
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -188,9 +191,9 @@ end
 
 Z:On("ADDON_LOADED", function(name)
 	if name ~= ADDON then return end
-	ZenithDB = ZenithDB or {}
-	FillDefaults(ZenithDB)
-	Z.db = ZenithDB
+	LyoruneDB = LyoruneDB or {}
+	FillDefaults(LyoruneDB)
+	Z.db = LyoruneDB
 	Z:SetLanguage()
 end)
 
@@ -209,7 +212,7 @@ Z:On("PLAYER_LOGIN", function()
 	end
 	Z.db.lastVersion = Z.version
 
-	-- Cohabitation : Zenith ne modifie ni ne masque les cadres des autres addons. On prévient une seule fois.
+	-- Cohabitation : Lyorune ne modifie ni ne masque les cadres des autres addons. On prévient une seule fois.
 	local others = {}
 	for _, name in ipairs({ "ElvUI", "VuhDo", "HealBot", "Grid2", "Cell" }) do
 		if C_AddOns.IsAddOnLoaded(name) then others[#others + 1] = name end
@@ -220,7 +223,7 @@ Z:On("PLAYER_LOGIN", function()
 	end
 end)
 
--- Sorts appris, changement de spécialisation ou de talents : Zenith relit ce que le joueur sait faire
+-- Sorts appris, changement de spécialisation ou de talents : Lyorune relit ce que le joueur sait faire
 -- et repose ses clics, sans /reload (à la fin du combat si besoin).
 local function SpellsChanged()
 	if not Z.header then return end
@@ -247,20 +250,20 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Commandes
 ----------------------------------------------------------------------------------------------------
-SLASH_ZENITH1, SLASH_ZENITH2 = "/zenith", "/zen"
-SlashCmdList.ZENITH = function(msg)
+SLASH_LYORUNE1, SLASH_LYORUNE2 = "/lyorune", "/lyo"
+SlashCmdList.LYORUNE = function(msg)
 	msg = (msg or ""):lower():match("^%s*(.-)%s*$")
 	if msg == "erreurs" or msg == "erreur" or msg == "log" then return Z:ShowLog() end
 	if msg == "diag" then return Z:Diagnose() end
 	if msg == "bug" then return Z:ShowBug() end
 	if msg == "position" then return Z:DiagnosePosition() end
-	if not Z.header then return end -- Zenith n'a pas pu démarrer : seuls le journal et le diagnostic répondent
+	if not Z.header then return end -- Lyorune n'a pas pu démarrer : seuls le journal et le diagnostic répondent
 	if msg == "tuto" or msg == "tutoriel" or msg == "aide" then
 		Z:StartTutorial()
 	elseif msg == "verrou" or msg == "lock" then
 		Z.db.locked = not Z.db.locked
 		Z:Refresh()
-		Z:Print(Z.db.locked and Z.L["position verrouillée."] or Z.L["position déverrouillée : faites glisser la poignée « Zenith »."])
+		Z:Print(Z.db.locked and Z.L["position verrouillée."] or Z.L["position déverrouillée : faites glisser la poignée « Lyorune »."])
 	elseif msg == "reset" then
 		for _, key in ipairs({ "pos", "tankPos", "petPos" }) do Z.db[key] = CopyTable(Z.defaults[key]) end
 		Z:Refresh()
@@ -274,6 +277,6 @@ SlashCmdList.ZENITH = function(msg)
 	end
 end
 
-function Zenith_OnAddonCompartmentClick()
+function Lyorune_OnAddonCompartmentClick()
 	if Z.header then Z:ToggleOptions() end
 end

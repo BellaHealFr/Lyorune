@@ -11,4 +11,4 @@
 - [ ] `docs/TUTORIEL.md` et le tutoriel en jeu sont à jour si le joueur voit une différence
 - [ ] Aucun code, texte ou image repris d'un autre addon
 
-En proposant cette modification, j'accepte qu'elle soit publiée sous la [licence de Zenith](../LICENSE).
+En proposant cette modification, j'accepte qu'elle soit publiée sous la [licence de Lyorune](../LICENSE).

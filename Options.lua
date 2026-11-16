@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Options.lua : la fenêtre /zenith.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Options.lua : la fenêtre /lyorune.
 -- Huit onglets, un sujet par onglet, chaque réglage à un seul endroit :
 --   Cadres       où et comment les cases sont rangées
 --   Apparence    à quoi elles ressemblent
@@ -176,7 +176,7 @@ local function SimpleTabs()
 				{ "cycle", "horizontal", "Sens des groupes" },
 				{ "head", "Position" },
 				{ "check", "locked", "Verrouiller la position (cache les poignées)" },
-				{ "button", "Remettre les cadres au centre", function() SlashCmdList.ZENITH("reset") end },
+				{ "button", "Remettre les cadres au centre", function() SlashCmdList.LYORUNE("reset") end },
 			},
 			{
 				{ "head", "Cadres affichés" },
@@ -332,9 +332,9 @@ end
 -- Fenêtre de choix d'un sort : une icône par sort connu. onChoose(valeur) reçoit le choix.
 local function OpenPicker(title, onChoose)
 	if not picker then
-		picker = UI.Window("ZenithPicker", "", 372, 200)
+		picker = UI.Window("LyorunePicker", "", 372, 200)
 		picker:SetFrameStrata("FULLSCREEN_DIALOG")
-		tinsert(UISpecialFrames, "ZenithPicker")
+		tinsert(UISpecialFrames, "LyorunePicker")
 		picker.icons = {}
 		local function Choose(value)
 			picker.onChoose(value)
@@ -501,7 +501,7 @@ local function BuildClicks(page)
 		{ "head", "Comportement" },
 		{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },
 		{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
-		{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Zenith sont alors coupés." },
+		{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés." },
 	}
 	local y = -196
 	for _, item in ipairs(options) do
@@ -637,7 +637,7 @@ local function BuildProfiles(page)
 		if byUser then FillExport() end -- le code n'est pas modifiable à la main
 	end)
 
-	Note(page, "Ou envoi direct à un joueur qui a Zenith (il devra accepter) :", right, -84, COLUMN)
+	Note(page, "Ou envoi direct à un joueur qui a Lyorune (il devra accepter) :", right, -84, COLUMN)
 	local target = UI.Edit(page, COLUMN - 96)
 	target:SetPoint("TOPLEFT", right, -106)
 	local send = UI.Button(page, L["Envoyer"], 90, 22, function()
@@ -704,21 +704,24 @@ local function BuildHelp(page)
 	list:SetPoint("TOPLEFT", commands, "BOTTOMLEFT", 0, -8)
 	list:SetJustifyH("LEFT")
 	list:SetSpacing(4)
-	list:SetText("|cff33dd88/zenith|r  " .. L["ouvrir cette fenêtre"] .. "\n|cff33dd88/zenith test|r  " .. L["mode test (faux groupe)"]
-		.. "\n|cff33dd88/zenith tuto|r  " .. L["relancer le tutoriel"] .. "\n|cff33dd88/zenith verrou|r  " .. L["verrouiller ou libérer la position"]
-		.. "\n|cff33dd88/zenith bug|r  " .. L["signaler un bug"] .. "\n|cff33dd88/zenith diag|r  " .. L["compatibilité avec le jeu"])
+	list:SetText("|cff33dd88/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n|cff33dd88/lyorune test|r  " .. L["mode test (faux groupe)"]
+		.. "\n|cff33dd88/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n|cff33dd88/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
+		.. "\n|cff33dd88/lyorune bug|r  " .. L["signaler un bug"] .. "\n|cff33dd88/lyorune diag|r  " .. L["compatibilité avec le jeu"])
 
 	local items = {
 		{ "head", "Découvrir" },
 		{ "button", "Lancer le tutoriel", function() window:Hide() Z:StartTutorial() end },
-		{ "button", "Nouveautés de Zenith", function() Z:ShowNews() end },
+		{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
 		{ "check", "showNews", "Montrer les nouveautés après une mise à jour" },
+		{ "head", "Autour de Lyorune" },
+		{ "check", "minimapButton", "Bouton sur la mini-carte", "Clic gauche : options. Clic droit : mode test. Faites-le glisser pour le déplacer." },
+		{ "check", "showRunes", "Inscription runique au bas de cette fenêtre", "Passez la souris sur les runes pour lire leur traduction." },
 		{ "head", "Un souci ?" },
 		{ "button", "Signaler un bug", function() Z:ShowBug() end, "Trois questions, et un rapport prêt à copier. Fonctionne aussi pour un défaut d'affichage." },
 		{ "button", "Journal d'erreurs", function() Z:ShowLog() end, "Le journal note chaque erreur avec son contexte. Copiez-le pour obtenir de l'aide." },
-		{ "check", "errorNotice", "Me prévenir quand Zenith rencontre une erreur", "Un seul message discret par session, jamais de fenêtre." },
+		{ "check", "errorNotice", "Me prévenir quand Lyorune rencontre une erreur", "Un seul message discret par session, jamais de fenêtre." },
 		{ "head", "Langue" },
-		{ "cycle", "language", "Langue de Zenith", nil, "Le changement s'applique après /reload." },
+		{ "cycle", "language", "Langue de Lyorune", nil, "Le changement s'applique après /reload." },
 	}
 	local y = 0
 	for _, item in ipairs(items) do
@@ -820,8 +823,8 @@ local function BuildSearch()
 end
 
 local function Build()
-	window = UI.Window("ZenithOptions", "Zenith  |cff8a8f99" .. Z.version .. "|r", WIDTH, HEIGHT)
-	tinsert(UISpecialFrames, "ZenithOptions")
+	window = UI.Window("LyoruneOptions", "Lyorune  |cff8a8f99" .. Z.version .. "|r", WIDTH, HEIGHT)
+	tinsert(UISpecialFrames, "LyoruneOptions")
 
 	local simple = SimpleTabs()
 	tabs = {
@@ -841,6 +844,7 @@ local function Build()
 		tab.button.label:SetJustifyH("CENTER")
 	end
 	BuildSearch()
+	if Z.RefreshRunes then Z:RefreshRunes(window) end
 	window.Select = Select
 	Select(1)
 end

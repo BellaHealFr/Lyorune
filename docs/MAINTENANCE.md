@@ -1,12 +1,12 @@
-# Zenith : notice de maintenance
+# Lyorune : notice de maintenance
 
-Pour la personne qui corrige ou fait évoluer Zenith. Aucune connaissance préalable du code n'est supposée.
+Pour la personne qui corrige ou fait évoluer Lyorune. Aucune connaissance préalable du code n'est supposée.
 
 ## Les fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `Core.lua` | Réglages par défaut, événements (`Z:On`), actions remises à la fin du combat (`Z:Safe`), commandes `/zenith` |
+| `Core.lua` | Réglages par défaut, événements (`Z:On`), actions remises à la fin du combat (`Z:Safe`), commandes `/lyorune` |
 | `Log.lua` | Journal d'erreurs, contrôle de compatibilité avec la version du jeu |
 | `Data.lua` | Tout ce qui dépend de la classe : dissipations, sorts suivis, clics proposés, résurrections |
 | `UI.lua` | Boutons, cases à cocher, fenêtres (éléments natifs, aucune bibliothèque obligatoire) |
@@ -16,14 +16,17 @@ Pour la personne qui corrige ou fait évoluer Zenith. Aucune connaissance préal
 | `Clicks.lua` | Clic-soin : traduction des clics en attributs de bouton sécurisé |
 | `Alerts.lua` | Annonces : mana faible, mana remontée, résurrection |
 | `Share.lua` | Export et import de la configuration (code texte) |
-| `Options.lua` | Fenêtre `/zenith` |
+| `Options.lua` | Fenêtre `/lyorune` |
 | `Tutorial.lua` | Visite guidée |
+| `Minimap.lua` | Bouton de la mini-carte (réglage `minimapButton`, place gardée dans `minimapAngle`) |
+| `Runes.lua` | Inscription runique animée au bas de la fenêtre d'options (réglage `showRunes`) |
+| `Media/` | Images : `Logo.tga` (icône de l'addon), `Minimap.tga` (bouton), `Runes.tga` (grille de 24 runes, produite par `outils/runes.py`) |
 
 ## Corriger un bug signalé par un joueur
 
-1. Le joueur tape `/zenith erreurs`, clique sur « Tout sélectionner », copie (Ctrl+C) et envoie le texte.
-   Le même journal se trouve dans `WTF\Account\<COMPTE>\SavedVariables\Zenith.lua`, table `errors`.
-2. Chaque entrée donne le message, la pile d'appels (fichier et ligne), les versions de Zenith et du jeu,
+1. Le joueur tape `/lyorune erreurs`, clique sur « Tout sélectionner », copie (Ctrl+C) et envoie le texte.
+   Le même journal se trouve dans `WTF\Account\<COMPTE>\SavedVariables\Lyorune.lua`, table `errors`.
+2. Chaque entrée donne le message, la pile d'appels (fichier et ligne), les versions de Lyorune et du jeu,
    la classe, l'état de combat et la taille du groupe.
 3. Les entrées « Action interdite en combat » désignent un appel protégé fait pendant un combat :
    il doit passer par `Z:Safe(clé, fonction)`, qui le remet à la fin du combat.
@@ -31,8 +34,8 @@ Pour la personne qui corrige ou fait évoluer Zenith. Aucune connaissance préal
 
 ## Quand le jeu change de version
 
-1. En jeu, `/zenith diag` nomme les fonctions du jeu qui ont disparu (liste `Z.requiredAPI` dans `Log.lua`).
-2. Si tout est présent : mettre le nouveau numéro dans `## Interface:` de `Zenith.toc`
+1. En jeu, `/lyorune diag` nomme les fonctions du jeu qui ont disparu (liste `Z.requiredAPI` dans `Log.lua`).
+2. Si tout est présent : mettre le nouveau numéro dans `## Interface:` de `Lyorune.toc`
    (plusieurs numéros séparés par des virgules sont acceptés) et dans `Z.testedInterface` de `Log.lua`.
 3. Si une fonction manque : c'est le seul endroit à adapter. Les appels sont regroupés en tête de
    `Frames.lua` et `Auras.lua`. Toute nouvelle fonction du jeu utilisée doit être ajoutée à `Z.requiredAPI`.
@@ -74,8 +77,8 @@ ni les valeurs secrètes ni le comportement réel des boutons sécurisés.
 
 ## Cohabitation avec les autres addons
 
-Zenith ne modifie, ne masque et ne déplace aucun cadre du jeu ou d'un autre addon. Il ne crée que des
-cadres nommés `Zenith...` et trois variables globales : `Zenith`, `ZenithDB`, `Zenith_OnAddonCompartmentClick`.
+Lyorune ne modifie, ne masque et ne déplace aucun cadre du jeu ou d'un autre addon. Il ne crée que des
+cadres nommés `Lyorune...` et trois variables globales : `Lyorune`, `LyoruneDB`, `Lyorune_OnAddonCompartmentClick`.
 Les cases s'inscrivent dans `ClickCastFrames` (Clique) et les textures de LibSharedMedia sont proposées si présentes.
 
 ## Ajouts de la version 1.2
@@ -97,7 +100,7 @@ Outils :
 | `python outils/publier.py 1.4.0 --nouveau "..." --ameliore "..." --corrige "..."` | Tests, numéro de version, `Changes.lua`, `CHANGELOG.md`, archive dans `dist/` (détails dans `docs/PUBLICATION.md`) |
 | `python outils/etiquettes.py` | Crée sur GitHub les étiquettes de `.github/labels.yml` |
 | `python outils/telechargements.py` | Téléchargements par version sur GitHub |
-| `python outils/verifier_api.py` | Compare les fonctions du jeu utilisées par Zenith à celles de VuhDo, ElvUI et Decursive installés |
+| `python outils/verifier_api.py` | Compare les fonctions du jeu utilisées par Lyorune à celles de VuhDo, ElvUI et Decursive installés |
 | `outils\tester.bat`, `outils\installer.bat` | Tests, copie dans le dossier AddOns |
 | `.github/workflows/` | Tests à chaque envoi sur GitHub, publication à chaque étiquette `v1.3.0` |
 

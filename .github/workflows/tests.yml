@@ -1,4 +1,4 @@
-# Lance les tests de Zenith à chaque modification envoyée sur GitHub.
+# Lance les tests de Lyorune à chaque modification envoyée sur GitHub.
 name: Tests
 on:
   push:

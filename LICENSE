@@ -1,17 +1,17 @@
-LICENCE ZENITH
+LICENCE LYORUNE
 Version 1.0, novembre 2026
 
 Copyright (c) 2026 BellaDroode. Tous droits réservés.
 
-« Zenith » désigne l'addon pour World of Warcraft: Forever publié par BellaDroode,
+« Lyorune » désigne l'addon pour World of Warcraft: Forever publié par BellaDroode,
 c'est-à-dire l'ensemble des fichiers de ce dépôt (code, textes, traductions,
 documentation et outils).
 
 1. CE QUI EST PERMIS
 
-   a. Installer et utiliser Zenith, gratuitement, pour jouer.
-   b. Redistribuer Zenith gratuitement, à condition de le transmettre complet,
-      sans aucune modification, sous le nom « Zenith », avec cette licence et
+   a. Installer et utiliser Lyorune, gratuitement, pour jouer.
+   b. Redistribuer Lyorune gratuitement, à condition de le transmettre complet,
+      sans aucune modification, sous le nom « Lyorune », avec cette licence et
       avec la mention de son auteur, BellaDroode.
    c. Lire le code pour comprendre son fonctionnement, signaler un problème ou
       proposer une amélioration à l'auteur.
@@ -20,29 +20,29 @@ documentation et outils).
 
 2. CE QUI EST INTERDIT SANS L'ACCORD ÉCRIT DE BELLADROODE
 
-   a. Distribuer, publier ou mettre en ligne une version modifiée de Zenith,
+   a. Distribuer, publier ou mettre en ligne une version modifiée de Lyorune,
       ou un autre logiciel qui reprend tout ou partie de son code, de ses
       textes ou de sa documentation.
-   b. Changer le nom de Zenith, ou réutiliser le nom « Zenith » pour un autre
+   b. Changer le nom de Lyorune, ou réutiliser le nom « Lyorune » pour un autre
       addon de cadres de soin.
    c. Retirer, masquer ou modifier le nom de l'auteur, les mentions de
-      copyright ou cette licence, ou se présenter comme l'auteur de Zenith.
-   d. Vendre Zenith, le louer, l'inclure dans une offre payante, ou placer son
+      copyright ou cette licence, ou se présenter comme l'auteur de Lyorune.
+   d. Vendre Lyorune, le louer, l'inclure dans une offre payante, ou placer son
       téléchargement derrière un paiement, un abonnement ou de la publicité
       imposée.
-   e. Publier Zenith sur une plateforme de distribution d'addons (CurseForge,
+   e. Publier Lyorune sur une plateforme de distribution d'addons (CurseForge,
       Wago, WoWInterface ou autre) à la place de l'auteur.
 
 3. CONTRIBUTIONS
 
    Toute correction ou amélioration proposée à l'auteur (par exemple sur la
-   page GitHub du projet) peut être intégrée à Zenith. En la proposant, vous
+   page GitHub du projet) peut être intégrée à Lyorune. En la proposant, vous
    acceptez qu'elle soit publiée sous cette licence, BellaDroode restant
-   l'auteur de Zenith.
+   l'auteur de Lyorune.
 
 4. ABSENCE DE GARANTIE
 
-   Zenith est fourni « tel quel », sans garantie d'aucune sorte. L'auteur ne
+   Lyorune est fourni « tel quel », sans garantie d'aucune sorte. L'auteur ne
    peut être tenu responsable d'aucun dommage lié à son utilisation.
 
 5. FIN DE LA LICENCE ET COPIES NON AUTORISÉES
@@ -52,7 +52,7 @@ documentation et outils).
    licence pourra faire l'objet d'une demande de retrait auprès de la
    plateforme qui l'héberge (GitHub, CurseForge, Wago ou autre).
 
-   Le fait que le code de Zenith soit lisible, comme l'exige le jeu pour tout
+   Le fait que le code de Lyorune soit lisible, comme l'exige le jeu pour tout
    addon, ou que son dépôt soit public, n'accorde aucun droit supplémentaire.
    La possibilité technique de copier le dépôt (« fork ») offerte par GitHub
    sert uniquement à proposer une contribution à l'auteur.
@@ -60,19 +60,19 @@ documentation et outils).
 6. MARQUES
 
    World of Warcraft et Blizzard Entertainment sont des marques de Blizzard
-   Entertainment, Inc. Zenith est un projet indépendant, sans lien avec
+   Entertainment, Inc. Lyorune est un projet indépendant, sans lien avec
    Blizzard Entertainment.
 
 Pour toute demande d'autorisation : ouvrez une demande sur
-https://github.com/BellaDroode/Zenith/issues
+https://github.com/BellaHealFr/Lyorune/issues
 
 -------------------------------------------------------------------------------
 ENGLISH SUMMARY (the French text above prevails)
 
 Copyright (c) 2026 BellaDroode. All rights reserved.
-You may install and use Zenith for free, and redistribute it for free only if
-it is complete, unmodified, still named "Zenith", and still credits BellaDroode
+You may install and use Lyorune for free, and redistribute it for free only if
+it is complete, unmodified, still named "Lyorune", and still credits BellaDroode
 with this licence included. You may not distribute modified versions or
 derivative works, rename it, remove or change the author's name, sell it, or
 publish it on an addon platform in the author's place, without written
-permission from BellaDroode. Zenith is provided "as is", without warranty.
+permission from BellaDroode. Lyorune is provided "as is", without warranty.

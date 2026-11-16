@@ -1,5 +1,5 @@
-# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
-# Affiche le nombre de téléchargements de Zenith sur GitHub, version par version.
+# Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+# Affiche le nombre de téléchargements de Lyorune sur GitHub, version par version.
 #
 #   python outils/telechargements.py
 #
@@ -8,12 +8,12 @@
 # plateformes affichent leurs propres chiffres sur la page du projet.
 import json, sys, urllib.request
 
-DEPOT = 'BellaDroode/Zenith'
+DEPOT = 'BellaHealFr/Lyorune'
 
 
 def main():
     url = 'https://api.github.com/repos/%s/releases?per_page=100' % DEPOT
-    request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'zenith-stats'})
+    request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'lyorune-stats'})
     try:
         releases = json.load(urllib.request.urlopen(request, timeout=20))
     except Exception as error:

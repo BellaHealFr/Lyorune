@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Alerts.lua : les annonces automatiques du soigneur (onglet Alertes).
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Alerts.lua : les annonces automatiques du soigneur (onglet Alertes).
 --   1. Mana faible     : ma mana passe sous un seuil.            Texte : {mana} = mon pourcentage de mana
 --   2. Mana remontée   : après une alerte, ma mana est revenue.  Texte : {mana}
 --   3. Résurrection    : je commence à relever un joueur.        Texte : {nom} = le joueur relevé

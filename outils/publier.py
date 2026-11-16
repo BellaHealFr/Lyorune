@@ -1,12 +1,12 @@
-# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
-# Publie une nouvelle version de Zenith.
+# Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+# Publie une nouvelle version de Lyorune.
 #
 #   python outils/publier.py 1.4.0 --nouveau "Une fonction." --ameliore "Un réglage." --corrige "Un bug (#12)."
 #       1. lance les tests (arrêt si un test échoue)
-#       2. met le numéro de version dans Zenith.toc et Core.lua
+#       2. met le numéro de version dans Lyorune.toc et Core.lua
 #       3. ajoute la version en tête de Changes.lua, rangée en trois rubriques (affichées en jeu)
 #       4. régénère CHANGELOG.md à partir de Changes.lua
-#       5. crée dist/Zenith-1.4.0.zip, prêt à diffuser
+#       5. crée dist/Lyorune-1.4.0.zip, prêt à diffuser
 #     Chaque rubrique est facultative, mais il en faut au moins une. « (#12) » renvoie à la demande GitHub n° 12.
 #
 #   python outils/publier.py
@@ -22,8 +22,8 @@
 import datetime, io, os, re, subprocess, sys, zipfile
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-DEPOT = 'https://github.com/BellaDroode/Zenith'
-PREMIERE_PUBLIEE = (1, 3, 0)  # première version qui existe sur GitHub (les précédentes n'ont pas d'étiquette)
+DEPOT = 'https://github.com/BellaHealFr/Lyorune'
+PREMIERE_PUBLIEE = (1, 4, 0)  # première version qui existe sur GitHub (les précédentes n'ont pas d'étiquette)
 RUBRIQUES = [('added', '--nouveau', 'Ajouté'), ('improved', '--ameliore', 'Amélioré'), ('fixed', '--corrige', 'Corrigé')]
 
 
@@ -40,7 +40,7 @@ def numero(version):
 
 
 def current_version():
-    return re.search(r'## Version: (\S+)', read('Zenith.toc')).group(1)
+    return re.search(r'## Version: (\S+)', read('Lyorune.toc')).group(1)
 
 
 def run_tests():
@@ -76,7 +76,7 @@ def set_version(version, notes):
         sys.exit('Numéro de version attendu sous la forme 1.4.0')
     if numero(version) <= numero(current_version()):
         sys.exit('La version %s doit être supérieure à la version actuelle (%s).' % (version, current_version()))
-    write('Zenith.toc', re.sub(r'## Version: \S+', '## Version: ' + version, read('Zenith.toc')))
+    write('Lyorune.toc', re.sub(r'## Version: \S+', '## Version: ' + version, read('Lyorune.toc')))
     write('Core.lua', re.sub(r'(GetAddOnMetadata\(ADDON, "Version"\)\) or ")[^"]+', r'\g<1>' + version, read('Core.lua')))
     block = '\t{\n\t\tversion = "%s", date = "%s",\n' % (version, datetime.date.today().isoformat())
     for key, _, _ in RUBRIQUES:
@@ -105,7 +105,7 @@ def section(notes):
 def write_changelog():
     entries = changes()
     out = ['# Journal des versions', '',
-           'Tous les changements notables de Zenith, version par version.',
+           'Tous les changements notables de Lyorune, version par version.',
            'Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; '
            'numérotation en [versions sémantiques](https://semver.org/lang/fr/).', '',
            '<!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->', '']
@@ -125,8 +125,8 @@ def write_changelog():
 def write_release_notes(version):
     for entry_version, date, notes in changes():
         if entry_version == version.lstrip('v'):
-            lines = ['# Zenith %s' % entry_version, ''] + section(notes)
-            lines += ['**Installation** : décompressez `Zenith-%s.zip` dans `World of Warcraft\\_forever_\\Interface\\AddOns\\`.' % entry_version,
+            lines = ['# Lyorune %s' % entry_version, ''] + section(notes)
+            lines += ['**Installation** : décompressez `Lyorune-%s.zip` dans `World of Warcraft\\_forever_\\Interface\\AddOns\\`.' % entry_version,
                       '', 'Journal complet : [CHANGELOG.md](%s/blob/main/CHANGELOG.md)' % DEPOT, '']
             write('RELEASE.md', '\n'.join(lines))
             print('RELEASE.md écrit pour la version', entry_version)
@@ -135,9 +135,10 @@ def write_release_notes(version):
 
 
 def addon_files():
-    # Exactement les fichiers chargés par le jeu : le .toc, ce qu'il cite, et la licence
-    files = ['Zenith.toc', 'LICENSE']
-    for line in read('Zenith.toc').splitlines():
+    # Exactement les fichiers chargés par le jeu : le .toc, ce qu'il cite, les images du dossier Media, et la licence
+    files = ['Lyorune.toc', 'LICENSE']
+    files += ['Media/' + name for name in sorted(os.listdir(os.path.join(ROOT, 'Media'))) if name.endswith('.tga')]
+    for line in read('Lyorune.toc').splitlines():
         line = line.strip()
         if line.endswith('.lua') and not line.startswith('#'):
             files.append(line.replace('\\', '/'))
@@ -146,10 +147,10 @@ def addon_files():
 
 def make_zip(version):
     os.makedirs(os.path.join(ROOT, 'dist'), exist_ok=True)
-    path = os.path.join(ROOT, 'dist', 'Zenith-%s.zip' % version)
+    path = os.path.join(ROOT, 'dist', 'Lyorune-%s.zip' % version)
     with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name in addon_files():
-            archive.write(os.path.join(ROOT, name), 'Zenith/' + name)
+            archive.write(os.path.join(ROOT, name), 'Lyorune/' + name)
     return path
 
 
@@ -180,9 +181,9 @@ def main():
     run_tests()
     write_changelog()
     version = current_version()
-    print('Zenith %s : CHANGELOG.md à jour, archive %s' % (version, make_zip(version)))
+    print('Lyorune %s : CHANGELOG.md à jour, archive %s' % (version, make_zip(version)))
     if args:
-        print('Reste à faire : git add -A, git commit -m "Zenith %s", git tag v%s, git push --follow-tags' % (version, version))
+        print('Reste à faire : git add -A, git commit -m "Lyorune %s", git tag v%s, git push --follow-tags' % (version, version))
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Preview.lua : le mode test. Affiche un faux groupe (5, 10, 25 ou 40 joueurs) pour régler
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Preview.lua : le mode test. Affiche un faux groupe (5, 10, 25 ou 40 joueurs) pour régler
 -- l'apparence sans être en groupe. Les fausses cases utilisent exactement le même habillage que les vraies.
 -- Le mode test se ferme tout seul à l'entrée en combat.
 
@@ -160,7 +160,7 @@ function Z:TogglePreview(wanted)
 	end
 	size = wanted or size
 	if not container then
-		container = CreateFrame("Frame", "ZenithPreview", UIParent)
+		container = CreateFrame("Frame", "LyorunePreview", UIParent)
 		container:SetSize(10, 10)
 		container:SetPoint("TOPLEFT", Z.anchor, "BOTTOMLEFT", 0, -3)
 		container.label = UI.Text(container, 11)
@@ -173,7 +173,7 @@ function Z:TogglePreview(wanted)
 		Z.BuildVisuals(cell)
 		cells[index] = cell
 	end
-	container.label:SetText(Z.L["Mode test : faux groupe. /zenith test pour quitter."])
+	container.label:SetText(Z.L["Mode test : faux groupe. /lyorune test pour quitter."])
 	Z.previewActive = true
 	container:Show()
 	Z:Refresh() -- masque les vrais cadres et dessine les faux

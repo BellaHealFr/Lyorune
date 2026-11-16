@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Data.lua : ce que chaque classe de WoW Forever sait faire.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Data.lua : ce que chaque classe de WoW Forever sait faire.
 -- Tout est donné par identifiant de sort : le nom est traduit tout seul (client français ou anglais).
 
 --
@@ -9,7 +9,7 @@
 --   3. Z.clickDefaults.MACLASSE = { ["1"] = { id }, ["shift-1"] = { id }, ... }
 --   4. Z.resSpells et Z.classRes : son sort de résurrection, s'il en a un
 --   5. Z.raidBuffs.MACLASSE : ses buffs de groupe, s'il en a
--- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /zenith erreurs.
+-- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Les trois tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
 

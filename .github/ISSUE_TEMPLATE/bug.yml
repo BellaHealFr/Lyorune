@@ -7,11 +7,11 @@ body:
     attributes:
       value: |
         Merci de prendre le temps de signaler ce problème.
-        En jeu, tapez `/zenith bug` : la fenêtre prépare un rapport que vous n'avez plus qu'à coller ci-dessous.
+        En jeu, tapez `/lyorune bug` : la fenêtre prépare un rapport que vous n'avez plus qu'à coller ci-dessous.
   - type: textarea
     id: rapport
     attributes:
-      label: Rapport de /zenith bug
+      label: Rapport de /lyorune bug
       description: Collez ici le rapport copié depuis le jeu (Ctrl+V).
       render: text
     validations:

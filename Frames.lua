@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Frames.lua : les cases des joueurs (vie, soins entrants, bouclier, mana, nom, rôle, portée...).
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Frames.lua : les cases des joueurs (vie, soins entrants, bouclier, mana, nom, rôle, portée...).
 -- Performance : chaque case n'écoute que les événements de SON joueur, et ne redessine que ce qui a changé.
 
 local _, Z = ...
@@ -461,7 +461,7 @@ function Z.BuildVisuals(b)
 	b.hots, b.hotBars, b.debuffs = {}, {}, {}
 end
 
--- Création d'une case : le jeu crée le bouton sécurisé, Zenith l'habille.
+-- Création d'une case : le jeu crée le bouton sécurisé, Lyorune l'habille.
 local function InitButton(_, name)
 	local b = _G[name]
 	if not b or b.hp then return end
@@ -484,9 +484,9 @@ end
 -- une case par joueur, même en plein combat (aucun calcul de placement côté addon).
 ----------------------------------------------------------------------------------------------------
 local frameDefs = {
-	{ key = "main", name = "ZenithHeader", template = "SecureGroupHeaderTemplate", pos = "pos", label = "Zenith" },
-	{ key = "tanks", name = "ZenithTanks", template = "SecureGroupHeaderTemplate", pos = "tankPos", label = "Tanks", option = "showTanks" },
-	{ key = "pets", name = "ZenithPets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets" },
+	{ key = "main", name = "LyoruneHeader", template = "SecureGroupHeaderTemplate", pos = "pos", label = "Lyorune" },
+	{ key = "tanks", name = "LyoruneTanks", template = "SecureGroupHeaderTemplate", pos = "tankPos", label = "Tanks", option = "showTanks" },
+	{ key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets" },
 }
 
 local CONFIG_SNIPPET = [[
@@ -655,6 +655,8 @@ function Z:Refresh()
 		if b:IsVisible() then UpdateAll(b) end
 	end
 	if Z.RefreshPreview then Z:RefreshPreview() end
+	if Z.RefreshMinimap then Z:RefreshMinimap() end
+	if Z.RefreshRunes then Z:RefreshRunes() end
 end
 
 function Z:CreateFrames()

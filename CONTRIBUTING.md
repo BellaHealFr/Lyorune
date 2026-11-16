@@ -1,12 +1,12 @@
-# Contribuer à Zenith
+# Contribuer à Lyorune
 
-Merci de votre intérêt. Zenith est développé par BellaDroode ; les retours des joueurs et les corrections sont les bienvenus.
+Merci de votre intérêt. Lyorune est développé par BellaDroode ; les retours des joueurs et les corrections sont les bienvenus.
 
 ## Signaler un bug
 
-1. En jeu, tapez `/zenith bug` et répondez aux trois questions.
+1. En jeu, tapez `/lyorune bug` et répondez aux trois questions.
 2. Copiez le rapport (bouton « Tout sélectionner », puis Ctrl+C).
-3. Ouvrez une [nouvelle demande](https://github.com/BellaDroode/Zenith/issues/new/choose) et collez-le.
+3. Ouvrez une [nouvelle demande](https://github.com/BellaHealFr/Lyorune/issues/new/choose) et collez-le.
 
 Pour un défaut d'affichage, joignez une capture d'écran.
 
@@ -16,7 +16,7 @@ Ouvrez une demande « Proposer une idée ». Décrivez d'abord la situation en j
 
 ## Proposer une correction de code
 
-Zenith est publié sous une licence « tous droits réservés » : le code peut être lu et corrigé à travers ce dépôt, mais pas redistribué modifié ailleurs (voir [LICENSE](LICENSE)). En proposant une modification, vous acceptez qu'elle soit publiée sous cette licence.
+Lyorune est publié sous une licence « tous droits réservés » : le code peut être lu et corrigé à travers ce dépôt, mais pas redistribué modifié ailleurs (voir [LICENSE](LICENSE)). En proposant une modification, vous acceptez qu'elle soit publiée sous cette licence.
 
 Avant de commencer un changement important, ouvrez une demande pour en discuter.
 

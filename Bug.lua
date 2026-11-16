@@ -1,12 +1,12 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Bug.lua : signaler un bug à l'auteur, et diagnostic de position pour la future flèche de direction.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Bug.lua : signaler un bug à l'auteur, et diagnostic de position pour la future flèche de direction.
 --
--- Un addon ne peut rien envoyer sur internet. /zenith bug pose donc trois questions et prépare un rapport
+-- Un addon ne peut rien envoyer sur internet. /lyorune bug pose donc trois questions et prépare un rapport
 -- compact que le joueur copie (Ctrl+C) et colle à l'adresse indiquée. Aucune fenêtre ne s'ouvre toute seule.
 
 local _, Z = ...
 
-Z.reportURL = "https://github.com/BellaDroode/Zenith/issues"
+Z.reportURL = "https://github.com/BellaHealFr/Lyorune/issues"
 
 local QUESTIONS = {
 	"Que faisais-tu quand c'est arrivé ?",
@@ -28,7 +28,7 @@ end
 function Z:BugReport(answers)
 	local version, build, _, interface = GetBuildInfo()
 	local lines = {
-		("[Zenith %s] jeu %s.%s (%s), %s"):format(Z.version, tostring(version), tostring(build), tostring(interface), tostring(GetLocale())),
+		("[Lyorune %s] jeu %s.%s (%s), %s"):format(Z.version, tostring(version), tostring(build), tostring(interface), tostring(GetLocale())),
 		("%s niveau %s, spé %s, %s, %s"):format(tostring(Z.class), tostring(UnitLevel("player")), Z:SpecName(),
 			IsInRaid() and ("raid de " .. GetNumGroupMembers()) or IsInGroup() and "groupe" or "seul",
 			InCombatLockdown() and "en combat" or "hors combat"),
@@ -55,8 +55,8 @@ local window
 function Z:ShowBug()
 	local UI, L = Z.UI, Z.L
 	if not window then
-		window = UI.Window("ZenithBug", L["Signaler un bug"], 600, 520)
-		tinsert(UISpecialFrames, "ZenithBug")
+		window = UI.Window("LyoruneBug", L["Signaler un bug"], 600, 520)
+		tinsert(UISpecialFrames, "LyoruneBug")
 		window.answers = {}
 
 		local function Update()
@@ -131,9 +131,9 @@ function Z:ShowBug()
 end
 
 ----------------------------------------------------------------------------------------------------
--- /zenith position : ce que le jeu accepte de dire sur la position des joueurs, ici et maintenant.
+-- /lyorune position : ce que le jeu accepte de dire sur la position des joueurs, ici et maintenant.
 -- Sert à décider si une flèche de direction est possible (extérieur, donjon, combat). Le résultat est
--- affiché dans le chat et gardé dans ZenithDB.positionDiag pour pouvoir être relu hors du jeu.
+-- affiché dans le chat et gardé dans LyoruneDB.positionDiag pour pouvoir être relu hors du jeu.
 ----------------------------------------------------------------------------------------------------
 local function Describe(label, fn)
 	local ok, a, b, c = pcall(fn)

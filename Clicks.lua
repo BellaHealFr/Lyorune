@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Clicks.lua : lancer un sort sur un joueur depuis sa case, à la souris ou au clavier.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Clicks.lua : lancer un sort sur un joueur depuis sa case, à la souris ou au clavier.
 --
 -- CLICS DE SOURIS. Un clic est identifié par une clé : touche de modification + numéro du bouton.
 --   "1" clic gauche, "2" clic droit, "3" clic milieu, "4" et "5" boutons latéraux
@@ -7,7 +7,7 @@
 --   La valeur est un nom de sort, ou "@target" (cibler), ou "@menu" (menu du joueur).
 -- TOUCHES AU SURVOL. Une touche du clavier lance un sort sur la case que survole la souris.
 --   Elle ne remplace la touche habituelle que pendant le survol d'une case.
--- Les clics n'existent que sur les cases de Zenith : impossible de lancer un sort en cliquant dans le décor.
+-- Les clics n'existent que sur les cases de Lyorune : impossible de lancer un sort en cliquant dans le décor.
 
 local _, Z = ...
 
@@ -81,7 +81,7 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix)
 	end
 end
 
--- Clique, ou le clic-soin du jeu, peuvent gérer les cases à la place de Zenith (option)
+-- Clique, ou le clic-soin du jeu, peuvent gérer les cases à la place de Lyorune (option)
 function Z:RegisterExternalClicks(b)
 	ClickCastFrames = ClickCastFrames or {}
 	ClickCastFrames[b] = Z.db.externalClicks and true or nil

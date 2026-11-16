@@ -1,12 +1,12 @@
-# Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
-# Surveille la compatibilité de Zenith avec le jeu, sans lancer le jeu.
+# Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+# Surveille la compatibilité de Lyorune avec le jeu, sans lancer le jeu.
 #
 #   python outils/verifier_api.py
 #
 # Principe : VuhDo, ElvUI et Decursive sont mis à jour très vite après chaque version du jeu. Si une fonction
-# du jeu utilisée par Zenith n'apparaît plus dans AUCUN de ces addons, elle a probablement été retirée ou
-# renommée. Le script compare aussi le numéro d'interface de Zenith à celui de ces addons.
-# A lancer après chaque mise à jour du jeu ou de ces addons. En jeu, /zenith diag fait le contrôle définitif.
+# du jeu utilisée par Lyorune n'apparaît plus dans AUCUN de ces addons, elle a probablement été retirée ou
+# renommée. Le script compare aussi le numéro d'interface de Lyorune à celui de ces addons.
+# A lancer après chaque mise à jour du jeu ou de ces addons. En jeu, /lyorune diag fait le contrôle définitif.
 import io, os, re, sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -35,7 +35,7 @@ def main():
     if not os.path.isdir(ADDONS):
         sys.exit('Dossier du jeu introuvable : ' + ADDONS + ' (modifiez GAME en tête de ce script).')
 
-    # 1. Fonctions du jeu utilisées par Zenith
+    # 1. Fonctions du jeu utilisées par Lyorune
     used = set()
     for path in lua_files(ROOT):
         text = read(path)
@@ -60,26 +60,26 @@ def main():
 
     # 3. Rapport
     build = read(os.path.join(GAME, '.flavor.info')).split()
-    zenith_toc = read(os.path.join(ROOT, 'Zenith.toc'))
+    lyorune_toc = read(os.path.join(ROOT, 'Lyorune.toc'))
     print('Jeu installé      :', build[-1] if build else '?')
-    print('Zenith            : version %s, interface %s' % (re.search(r'## Version: (\S+)', zenith_toc).group(1),
-                                                           re.search(r'## Interface: (.+)', zenith_toc).group(1).strip()))
+    print('Lyorune            : version %s, interface %s' % (re.search(r'## Version: (\S+)', lyorune_toc).group(1),
+                                                           re.search(r'## Interface: (.+)', lyorune_toc).group(1).strip()))
     print('Addons de référence :')
     print('\n'.join(versions) or '  aucun trouvé')
 
     missing = sorted(name for name in used if name.split('.')[-1] not in everything)
-    print('\nFonctions du jeu utilisées par Zenith : %d' % len(used))
+    print('\nFonctions du jeu utilisées par Lyorune : %d' % len(used))
     if missing:
         print('A VERIFIER : absentes de tous les addons de référence (retirées, renommées, ou simplement rares) :')
         for name in missing:
             print('  -', name)
-        print('Vérifiez en jeu avec /zenith diag avant de conclure.')
+        print('Vérifiez en jeu avec /lyorune diag avant de conclure.')
     else:
         print('Toutes sont encore utilisées par au moins un addon de référence.')
 
-    interface = re.search(r'## Interface: (\d+)', zenith_toc).group(1)
+    interface = re.search(r'## Interface: (\d+)', lyorune_toc).group(1)
     if interface not in ' '.join(versions):
-        print("\nATTENTION : l'interface %s de Zenith n'est plus citée par les addons de référence : "
+        print("\nATTENTION : l'interface %s de Lyorune n'est plus citée par les addons de référence : "
               "le jeu a peut-être changé de version (voir MAINTENANCE.md)." % interface)
     return 1 if missing else 0
 

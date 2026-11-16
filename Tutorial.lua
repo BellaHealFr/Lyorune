@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Tutorial.lua : visite guidée, lancée au premier démarrage puis à la demande (/zenith tuto).
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Tutorial.lua : visite guidée, lancée au premier démarrage puis à la demande (/lyorune tuto).
 -- Chaque étape a un titre, un texte, et peut encadrer un élément de l'écran.
 
 local _, Z = ...
@@ -27,9 +27,9 @@ end
 
 local steps = {
 	{
-		title = "Bienvenue dans Zenith",
-		text = "Zenith affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
-			.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/zenith tuto|r.",
+		title = "Bienvenue dans Lyorune",
+		text = "Lyorune affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
+			.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/lyorune tuto|r.",
 	},
 	{
 		title = "Une case par joueur",
@@ -55,7 +55,7 @@ local steps = {
 	},
 	{
 		title = "Placer les cadres",
-		text = "Faites glisser la poignée |cff33dd88Zenith|r pour déplacer les cadres où vous voulez.\n\n"
+		text = "Faites glisser la poignée |cff33dd88Lyorune|r pour déplacer les cadres où vous voulez.\n\n"
 			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît.",
 		target = function() return Z.anchor end,
 		before = function()
@@ -69,13 +69,13 @@ local steps = {
 		title = "Essayer sans groupe",
 		text = "Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
-			.. "Ouvrez-le avec |cff33dd88/zenith test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat.",
-		target = function() return ZenithPreview end,
+			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat.",
+		target = function() return LyorunePreview end,
 		before = function() if not Z.previewActive then Z:TogglePreview(10) end end,
 		after = function() if Z.previewActive then Z:TogglePreview() end end,
 	},
 	{
-		title = "Régler Zenith",
+		title = "Régler Lyorune",
 		text = "Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
 			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
 			.. "|cff33dd88Apparence|r : thème, couleurs, luminosité, texte.\n"
@@ -96,7 +96,8 @@ local steps = {
 		title = "C'est parti",
 		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
-			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/zenith bug|r : trois questions, "
+			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
+			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur.",
 	},
 }
@@ -147,7 +148,7 @@ local function Show(index)
 end
 
 local function Build()
-	card = UI.Window("ZenithTutorial", "", 380, 220)
+	card = UI.Window("LyoruneTutorial", "", 380, 220)
 	card:SetFrameStrata("FULLSCREEN_DIALOG")
 	card.close:SetScript("OnClick", Finish)
 	card.title:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])

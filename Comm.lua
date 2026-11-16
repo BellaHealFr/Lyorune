@@ -1,13 +1,13 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - Comm.lua : messages invisibles entre joueurs qui utilisent Zenith.
---   1. Version : chacun annonce sa version au groupe. Si un membre en a une plus récente, Zenith le signale.
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - Comm.lua : messages invisibles entre joueurs qui utilisent Lyorune.
+--   1. Version : chacun annonce sa version au groupe. Si un membre en a une plus récente, Lyorune le signale.
 --   2. Configuration : envoyer sa configuration à un joueur précis, qui choisit de l'accepter ou non.
 -- Les deux fonctions se coupent dans les options (onglet Profils). Rien n'est appliqué sans accord.
 
 local _, Z = ...
 local issecret = Z.IsSecret
 
-local PREFIX = "Zenith"
+local PREFIX = "Lyorune"
 local CHUNK = 200             -- taille d'un morceau de configuration (un message d'addon est limité à 255 caractères)
 local incoming = {}           -- configurations en cours de réception, par expéditeur
 local newerSeen, lastAnnounce = false, -60
@@ -46,14 +46,14 @@ function Z:SendConfig(target)
 		local ok = Send(("C:%d:%d:%d:%s"):format(id, i, total, code:sub((i - 1) * CHUNK + 1, i * CHUNK)), "WHISPER", target)
 		if not ok then return false, L["Envoi impossible pour le moment (combat ou joueur introuvable)."] end
 	end
-	return true, (L["Configuration envoyée à %s. Il doit avoir Zenith et l'accepter."]):format(target)
+	return true, (L["Configuration envoyée à %s. Il doit avoir Lyorune et l'accepter."]):format(target)
 end
 
 -- Fenêtre « untel vous propose sa configuration »
 local function Ask(sender, code)
 	local UI, L = Z.UI, Z.L
 	if not prompt then
-		prompt = UI.Window("ZenithConfigPrompt", L["Configuration reçue"], 380, 150)
+		prompt = UI.Window("LyoruneConfigPrompt", L["Configuration reçue"], 380, 150)
 		prompt:SetFrameStrata("FULLSCREEN_DIALOG")
 		prompt.text = UI.Text(prompt, 12)
 		prompt.text:SetPoint("TOPLEFT", 16, -46)
@@ -71,7 +71,7 @@ local function Ask(sender, code)
 		prompt.refuse.label:SetJustifyH("CENTER")
 	end
 	prompt.code = code
-	prompt.text:SetText((L["%s vous propose sa configuration Zenith (apparence, clics, alertes). Votre configuration actuelle sera remplacée."]):format(sender))
+	prompt.text:SetText((L["%s vous propose sa configuration Lyorune (apparence, clics, alertes). Votre configuration actuelle sera remplacée."]):format(sender))
 	prompt:Show()
 end
 
@@ -86,7 +86,7 @@ local function OnMessage(prefix, text, _, sender)
 	if version then
 		if db.versionNotice and not newerSeen and VersionNumber(version) > VersionNumber(Z.version) then
 			newerSeen = true
-			Z:Print((Z.L["une version plus récente de Zenith existe (%s, vous avez %s)."]):format(version, Z.version))
+			Z:Print((Z.L["une version plus récente de Lyorune existe (%s, vous avez %s)."]):format(version, Z.version))
 		end
 		return
 	end

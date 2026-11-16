@@ -1,5 +1,5 @@
--- Zenith (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Zenith - UI.lua : le style visuel et les petits éléments d'interface (boutons, cases, fenêtres).
+-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - UI.lua : le style visuel et les petits éléments d'interface (boutons, cases, fenêtres).
 -- Tout est dessiné avec les éléments natifs du jeu : rien de plus léger.
 
 local _, Z = ...
@@ -21,7 +21,7 @@ UI.dim    = { 0.60, 0.64, 0.70 }
 local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
 
 local builtinTextures = {
-	{ "Zenith", WHITE },
+	{ "Lyorune", WHITE },
 	{ "Blizzard", "Interface\\TargetingFrame\\UI-StatusBar" },
 	{ "Raid", "Interface\\RaidFrame\\Raid-Bar-Hp-Fill" },
 }
