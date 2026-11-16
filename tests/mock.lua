@@ -66,6 +66,7 @@ function Obj:StopMovingOrSizing() end
 function Obj:ClearFocus() end
 
 function FireEvent(e, ...)
+	if e == "PLAYER_REGEN_DISABLED" or e == "PLAYER_REGEN_ENABLED" then ApplyStateDrivers() end
 	for _, f in ipairs(frames) do
 		if f._events[e] then f:Run("OnEvent", e, ...) end
 	end
@@ -155,6 +156,18 @@ function GetReadyCheckStatus() return "ready" end
 function UnitHasIncomingResurrection() return false end
 function UnitIsUnit() return false end
 function InCombatLockdown() return COMBAT end
+-- Règles de visibilité : le faux client les réévalue à chaque changement de combat (voir FireEvent dans run.py)
+STATE_DRIVERS = {}
+function SecureCmdOptionParse(rule)
+	local inCombat, otherwise = rule:match("^%[combat%] (%a+); (%a+)$")
+	if inCombat then return COMBAT and inCombat or otherwise end
+	return rule
+end
+function RegisterStateDriver(frame, state, rule) assert(state == "visibility") STATE_DRIVERS[frame] = rule end
+function UnregisterStateDriver(frame) STATE_DRIVERS[frame] = nil end
+function ApplyStateDrivers()
+	for frame, rule in pairs(STATE_DRIVERS) do frame:SetShown(SecureCmdOptionParse(rule) == "show") end
+end
 function IsPlayerSpell() return false end
 function GameTooltip_SetDefaultAnchor() end
 function PlaySound() end

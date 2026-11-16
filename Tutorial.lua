@@ -56,7 +56,8 @@ local steps = {
 	{
 		title = "Placer les cadres",
 		text = "Faites glisser la poignée |cff33dd88Lyorune|r pour déplacer les cadres où vous voulez.\n\n"
-			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît.",
+			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît.\n\n"
+			.. "Dans l'onglet Cadres, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
 		target = function() return Z.anchor end,
 		before = function()
 			if Z.db.locked then

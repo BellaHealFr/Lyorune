@@ -55,6 +55,8 @@ Avec l'option « Le même clic relève un joueur mort » (onglet Clics, cochée 
 - **Taille** : onglet Cadres, « Largeur », « Hauteur », « Espacement ».
 - **Rangement** : par groupe ou par rôle. Par rôle, choisissez l'ordre (tank, soin, dégâts, ou une autre des six combinaisons).
 - **Tanks et familiers** : chacun peut avoir son propre cadre, déplaçable séparément.
+- **Quand les afficher** : « Afficher les cadres » (onglet Cadres) propose « Toujours » ou « En combat seulement ». « Toujours » garde les cadres à l'écran, en combat comme hors combat, y compris quand vous jouez seul en quête (avec « Mon cadre quand je suis seul » coché). « En combat seulement » les fait apparaître au début de chaque combat et disparaître à la fin. La poignée reste visible tant que la position n'est pas verrouillée.
+- **Un cadre reste vide ?** Tapez `/lyorune diag` : Lyorune écrit dans le chat l'état de chaque cadre. Copiez ces lignes dans votre signalement (`/lyorune bug`).
 - **Grand raid** : « Réduire les cases en grand raid » rétrécit les cases au-delà de 10 puis de 25 joueurs.
 
 ## 6. Essayer sans groupe : le mode test

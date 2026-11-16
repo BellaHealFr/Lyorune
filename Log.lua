@@ -22,6 +22,7 @@ Z.requiredAPI = {
 	"C_UnitAuras.GetAuraApplicationDisplayCount", "C_UnitAuras.GetAuraDispelTypeColor",
 	"C_ClassColor.GetClassColor", "C_Spell.GetSpellName", "C_Spell.GetSpellTexture",
 	"C_Timer.After", "C_Timer.NewTicker",
+	"RegisterStateDriver", "UnregisterStateDriver", "SecureCmdOptionParse",
 }
 
 function Z:MissingAPI()
@@ -170,6 +171,7 @@ function Z:Diagnose()
 	else
 		Z:Print(Z.L["compatibilité : fonctions manquantes : %s"]:format(table.concat(missing, ", ")))
 	end
+	if Z.header then Z:DiagnoseFrames() end
 	Z:Print(Z.L["%d erreur(s) dans le journal (/lyorune erreurs)."]:format(#(Z.db.errors or {})))
 end
 

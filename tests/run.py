@@ -220,9 +220,42 @@ step("mode test", function()
   Z:TogglePreview(40) assert(Z.previewActive and Z:PreviewSize() == 40)
   COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
   assert(not Z.previewActive, "le mode test doit se fermer en combat")
+  assert(Z.header:IsShown(), "les vrais cadres doivent revenir des le debut du combat")
   COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
-  assert(Z.header:IsShown(), "les vrais cadres doivent revenir")
+  assert(Z.header:IsShown(), "les vrais cadres doivent rester apres le combat")
   Z.db.horizontal = false Z:Refresh()
+end)
+
+step("affichage des cadres : toujours, ou en combat seulement", function()
+  assert(Z.db.visibility == "ALWAYS" and Z.header:IsShown())
+  Z.db.visibility = "COMBAT" Z:Refresh()
+  assert(not Z.header:IsShown(), "en combat seulement : masque hors combat")
+  COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
+  assert(Z.header:IsShown(), "en combat seulement : affiche en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(not Z.header:IsShown())
+  COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
+  Z.db.visibility = "ALWAYS" Z:Refresh() -- change en plein combat : applique a la fin
+  assert(Z.header:IsShown())
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(Z.header:IsShown(), "toujours : affiche hors combat")
+  COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
+  assert(Z.header:IsShown(), "toujours : affiche en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(#Z.choices.visibility == 2, "deux choix seulement")
+  assert(not Z.headers[2]:IsShown(), "un cadre coupe reste masque")
+  -- la poignee refusee en combat ne doit rien demander au jeu en fin de glissement
+  local stopped = 0
+  Z.anchor.StopMovingOrSizing = function() stopped = stopped + 1 end
+  Z.anchor.StartMoving = function() end
+  COMBAT = true Z.anchor:Run("OnDragStart") Z.anchor:Run("OnDragStop")
+  assert(stopped == 0, "StopMovingOrSizing appele en combat")
+  COMBAT = false Z.anchor:Run("OnDragStart") Z.anchor:Run("OnDragStop")
+  assert(stopped == 1)
+  local n = #PRINTED
+  Z:DiagnoseFrames()
+  assert(#PRINTED == n + 3 and PRINTED[n + 1]:find("cases créées", 1, true), "diagnostic des cadres")
+  for i = #PRINTED, n + 1, -1 do PRINTED[i] = nil end
 end)
 
 step("tutoriel", function()

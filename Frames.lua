@@ -368,6 +368,7 @@ function Z.BuildVisuals(b)
 
 	-- Vie
 	local hp = CreateFrame("StatusBar", nil, b)
+	hp:SetStatusBarTexture(UI.WHITE) -- la texture doit exister avant d'y accrocher les soins en route
 	hp:SetClipsChildren(true)
 	b.hp = hp
 
@@ -489,7 +490,8 @@ local frameDefs = {
 	{ key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets" },
 }
 
-local CONFIG_SNIPPET = [[
+-- La première ligne nomme Lyorune : le jeu la cite si ce code échoue, et le journal d'erreurs la reconnaît.
+local CONFIG_SNIPPET = [[-- Lyorune
 	local header = self:GetParent()
 	self:SetWidth(header:GetAttribute("z-width"))
 	self:SetHeight(header:GetAttribute("z-height"))
@@ -523,10 +525,14 @@ local function CreateAnchor(def)
 		if InCombatLockdown() then
 			Z:Print(L["impossible de déplacer les cadres en combat."])
 		else
+			self.moving = true
 			self:StartMoving()
 		end
 	end)
 	anchor:SetScript("OnDragStop", function(self)
+		if not self.moving then return end -- glissement refusé en combat : rien à arrêter
+		self.moving = false
+		if InCombatLockdown() then return end -- le combat a commencé pendant le glissement : le jeu a déjà figé la poignée
 		self:StopMovingOrSizing()
 		local point, _, _, x, y = self:GetPoint(1)
 		db[def.pos] = { point, x, y }
@@ -561,6 +567,15 @@ local function CreateHeader(def)
 	if def.key == "tanks" then h:SetAttribute("roleFilter", "TANK") end
 	Z.headers[#Z.headers + 1] = h
 	return h
+end
+
+-- Quand afficher un cadre. La règle est confiée au jeu, qui l'applique seul, même en plein combat :
+-- Lyorune n'a donc jamais à afficher ou masquer un cadre pendant un combat (le jeu le lui interdirait).
+local function VisibilityRule()
+	if Z.previewActive then -- mode test : les vrais cadres reviennent d'eux-mêmes si un combat commence
+		return "[combat] show; hide"
+	end
+	return db.visibility == "COMBAT" and "[combat] show; hide" or "show"
 end
 
 local function ApplyLayout()
@@ -599,8 +614,14 @@ local function ApplyLayout()
 		h:SetAttribute("unitsPerColumn", 5)
 		h:SetAttribute("maxColumns", 8)
 
-		local enabled = (not def.option or db[def.option]) and not Z.previewActive
-		h:SetShown(enabled)
+		if not def.option or db[def.option] then
+			local rule = VisibilityRule()
+			RegisterStateDriver(h, "visibility", rule)
+			h:SetShown(SecureCmdOptionParse(rule) == "show") -- tout de suite, sans attendre le prochain contrôle du jeu
+		else
+			UnregisterStateDriver(h, "visibility")
+			h:Hide()
+		end
 		h:SetAlpha(db.frameAlpha / 100)
 
 		local pos = db[def.pos]
@@ -641,6 +662,21 @@ local function BuildCurves()
 		0.0, 1, 1, 1, 1,
 		db.lowHealthAt / 100, 1, 1, 1, 0,
 	})
+end
+
+-- /lyorune diag : état de chaque cadre, pour comprendre un cadre vide sans avoir à deviner
+function Z:DiagnoseFrames()
+	for _, h in ipairs(Z.headers) do
+		local created, shown, dressed = 0, 0, 0
+		while h:GetAttribute("child" .. (created + 1)) do
+			created = created + 1
+			local b = h:GetAttribute("child" .. created)
+			if b:IsShown() then shown = shown + 1 end
+			if b.hp then dressed = dressed + 1 end
+		end
+		Z:Print(L["cadre %s : %s, cases créées %d, habillées %d, affichées %d."]:format(L[h.def.label],
+			h:IsShown() and L["affiché"] or L["masqué"], created, dressed, shown))
+	end
 end
 
 -- Appelé après chaque changement d'option

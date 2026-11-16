@@ -180,6 +180,7 @@ local function SimpleTabs()
 			},
 			{
 				{ "head", "Cadres affichés" },
+				{ "cycle", "visibility", "Afficher les cadres", nil, "En permanence (pratique pour se soigner en quête, en combat comme hors combat), ou seulement pendant les combats : les cadres apparaissent alors tout seuls au début du combat." },
 				{ "check", "showSolo", "Mon cadre quand je suis seul" },
 				{ "check", "showTanks", "Cadre séparé pour les tanks", "Un second cadre, déplaçable, qui ne montre que les tanks." },
 				{ "check", "showPets", "Cadre séparé pour les familiers" },

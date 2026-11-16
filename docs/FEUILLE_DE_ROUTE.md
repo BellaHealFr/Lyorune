@@ -48,6 +48,8 @@ a son interrupteur ; le tutoriel des joueurs est mis à jour à chaque changemen
   remis à la fin du combat.
 - Fait en 1.3.0 : changement de spécialisation ou de talents (Lyorune relit les sorts et repose les clics sans /reload),
   tests automatiques : départ, arrivée, passage en raid, déconnexion et reconnexion, départ en plein combat.
+- Fait en 1.4.2 : l'affichage des cadres est confié au jeu (règle de visibilité), donc fiable en plein combat ;
+  réglage « Afficher les cadres » (toujours, ou en combat seulement) ; `/lyorune diag` décrit l'état de chaque cadre.
 - À faire : clics différents par spécialisation ; tests des échanges de sous-groupes et du raid réorganisé d'un coup.
 
 ## 10. Rapports d'erreurs : Fait

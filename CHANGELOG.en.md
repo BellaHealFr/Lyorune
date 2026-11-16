@@ -6,6 +6,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.4.2] - 2026-11-17
+
+### Added
+
+- "Show the frames" setting (Frames tab): all the time, or only during fights.
+- The /lyorune diag command describes the state of each frame, to understand a frame that stays empty.
+
+### Improved
+
+- Showing the frames is now handled by the game itself: it stays reliable in the middle of a fight.
+
+### Fixed
+
+- After test mode, the real frames come back as soon as the fight starts.
+- No more error when releasing a frame handle during a fight.
+- Incoming heals are attached to the end of the health bar again.
+
 ## [1.4.1] - 2026-11-16
 
 ### Improved
@@ -73,5 +90,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.4.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/BellaHealFr/Lyorune/releases/tag/v1.4.0

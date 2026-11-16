@@ -6,6 +6,23 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.4.2] - 2026-11-17
+
+### Ajouté
+
+- Réglage « Afficher les cadres » (onglet Cadres) : en permanence, ou seulement pendant les combats.
+- La commande /lyorune diag décrit l'état de chaque cadre, pour comprendre un cadre resté vide.
+
+### Amélioré
+
+- L'affichage des cadres est confié au jeu lui-même : il reste fiable en plein combat.
+
+### Corrigé
+
+- Après le mode test, les vrais cadres reviennent dès le début du combat.
+- Plus d'erreur quand on relâche la poignée d'un cadre pendant un combat.
+- Les soins en route sont de nouveau accrochés au bout de la barre de vie.
+
 ## [1.4.1] - 2026-11-16
 
 ### Amélioré
@@ -73,5 +90,6 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.4.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/BellaHealFr/Lyorune/releases/tag/v1.4.0

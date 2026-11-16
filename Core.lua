@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.4.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.4.2"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -27,6 +27,7 @@ Z.defaults = {
 	roleOrder = "TANK,HEALER,DAMAGER", -- ordre des rôles quand le rangement est « par rôle »
 	horizontal = false,        -- false : groupes en colonnes, true : en lignes
 	showSolo = true,           -- afficher mon cadre quand je suis seul
+	visibility = "ALWAYS",     -- afficher les cadres : en permanence, ou seulement en combat
 	showTanks = false,         -- cadre séparé pour les tanks
 	showPets = false,          -- cadre séparé pour les familiers
 	autoShrink = false,        -- réduire les cases en grand raid
@@ -108,6 +109,7 @@ Z.choices = {
 		{ "DAMAGER,TANK,HEALER", "Dégâts, tank, soin" }, { "DAMAGER,HEALER,TANK", "Dégâts, soin, tank" },
 	},
 	horizontal = { { false, "En colonnes" }, { true, "En lignes" } },
+	visibility = { { "ALWAYS", "Toujours" }, { "COMBAT", "En combat seulement" } },
 	color = { { "CLASS", "Classe" }, { "HEALTH", "Vie restante" } },
 	text = { { "DEFICIT", "Vie manquante" }, { "PERCENT", "Pourcentage" }, { "NONE", "Aucun" } },
 	hotStyle = { { "ICONS", "Icônes" }, { "BARS", "Barres fines" } },

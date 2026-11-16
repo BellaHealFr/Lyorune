@@ -21,6 +21,11 @@ Z.translations.enUS = {
 	["Verrouiller la position (cache les poignées)"] = "Lock position (hides the handles)",
 	["Remettre les cadres au centre"] = "Move frames back to the centre",
 	["Cadres affichés"] = "Shown frames", ["Mon cadre quand je suis seul"] = "My own frame when solo",
+	["Afficher les cadres"] = "Show the frames", ["Toujours"] = "Always",
+	["En combat seulement"] = "In combat only",
+	["En permanence (pratique pour se soigner en quête, en combat comme hors combat), ou seulement pendant les combats : les cadres apparaissent alors tout seuls au début du combat."] = "All the time (handy to heal yourself while questing, in and out of combat), or only during fights: the frames then appear by themselves when a fight starts.",
+	["cadre %s : %s, cases créées %d, habillées %d, affichées %d."] = "frame %s: %s, cells created %d, dressed %d, shown %d.",
+	["affiché"] = "shown", ["masqué"] = "hidden",
 	["Cadre séparé pour les tanks"] = "Separate frame for tanks",
 	["Un second cadre, déplaçable, qui ne montre que les tanks."] = "A second, movable frame that only shows tanks.",
 	["Cadre séparé pour les familiers"] = "Separate frame for pets",
@@ -200,8 +205,9 @@ Z.translations.enUS = {
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements."] =
 		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs.",
 	["Faites glisser la poignée |cff33dd88Lyorune|r pour déplacer les cadres où vous voulez.\n\n"
-			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît."] =
-		"Drag the |cff33dd88Lyorune|r handle to move the frames wherever you like.\n\nOnce you are happy, tick \"Lock position\" in the options: the handle disappears.",
+			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît.\n\n"
+			.. "Dans l'onglet Cadres, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat."] =
+		"Drag the |cff33dd88Lyorune|r handle to move the frames wherever you like.\n\nOnce you are happy, tick \"Lock position\" in the options: the handle disappears.\n\nIn the Frames tab, \"Show the frames\" lets you see them all the time, or only in combat.",
 	["Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
@@ -270,4 +276,10 @@ Z.translations.enUS = {
 	["Lyorune parle anglais partout : visite guidée, nouveautés, messages du chat et noms des thèmes."] = "Lyorune now speaks English everywhere: guided tour, news, chat messages and theme names.",
 	["Sur un jeu en anglais, les annonces proposées (mana, résurrection) sont en anglais dès l'installation."] = "On an English game client, the suggested announcements (mana, resurrection) are in English from the first install.",
 	["La fenêtre /lyorune bug donne le lien direct vers le formulaire de signalement, dans votre langue."] = "The /lyorune bug window gives a direct link to the report form, in your language.",
+	["Réglage « Afficher les cadres » (onglet Cadres) : en permanence, ou seulement pendant les combats."] = "\"Show the frames\" setting (Frames tab): all the time, or only during fights.",
+	["La commande /lyorune diag décrit l'état de chaque cadre, pour comprendre un cadre resté vide."] = "The /lyorune diag command describes the state of each frame, to understand a frame that stays empty.",
+	["L'affichage des cadres est confié au jeu lui-même : il reste fiable en plein combat."] = "Showing the frames is now handled by the game itself: it stays reliable in the middle of a fight.",
+	["Après le mode test, les vrais cadres reviennent dès le début du combat."] = "After test mode, the real frames come back as soon as the fight starts.",
+	["Plus d'erreur quand on relâche la poignée d'un cadre pendant un combat."] = "No more error when releasing a frame handle during a fight.",
+	["Les soins en route sont de nouveau accrochés au bout de la barre de vie."] = "Incoming heals are attached to the end of the health bar again.",
 }

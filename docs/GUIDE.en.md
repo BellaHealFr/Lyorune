@@ -56,6 +56,8 @@ With the option "The same click resurrects a dead player" (Clicks tab, ticked by
 - **Size**: Frames tab, "Width", "Height", "Spacing".
 - **Sorting**: by group or by role. By role, choose the order (tank, healer, damage, or any of the six combinations).
 - **Tanks and pets**: each can have its own frame, moved separately.
+- **When to show them**: "Show the frames" (Frames tab) offers "Always" or "In combat only". "Always" keeps the frames on screen, in and out of combat, including when you quest alone (with "My own frame when solo" ticked). "In combat only" makes them appear when a fight starts and disappear when it ends. The handle stays visible as long as the position is not locked.
+- **A frame stays empty?** Type `/lyorune diag`: Lyorune writes the state of each frame in the chat. Copy those lines into your report (`/lyorune bug`).
 - **Large raids**: "Shrink cells in large raids" makes the frames smaller above 10, then above 25 players.
 
 ## 6. Trying without a group: test mode
