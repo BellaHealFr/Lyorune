@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.5", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Barre ou anneau d'incantation : un sort refusé pendant l'incantation (clics répétés) ne les cache plus (#46).",
+			"La couronne du chef s'affiche dans le mode test et dans la fenêtre « Placer les éléments de la case ».",
+			"Mes macros : effacer le mot avant « : » dans une condition ([:shift]) ne fait plus d'erreur.",
+			"Importer de /macro : la fenêtre ne dit plus « aucune macro » quand des macros ont été créées depuis.",
+		},
+	},
+	{
 		version = "1.23.4", date = "2026-11-17",
 		added = {
 		},

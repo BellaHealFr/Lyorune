@@ -6,6 +6,15 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.5] - 2026-11-17
+
+### Corrigé
+
+- Barre ou anneau d'incantation : un sort refusé pendant l'incantation (clics répétés) ne les cache plus ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- La couronne du chef s'affiche dans le mode test et dans la fenêtre « Placer les éléments de la case ».
+- Mes macros : effacer le mot avant « : » dans une condition ([:shift]) ne fait plus d'erreur.
+- Importer de /macro : la fenêtre ne dit plus « aucune macro » quand des macros ont été créées depuis.
+
 ## [1.23.4] - 2026-11-17
 
 ### Corrigé
@@ -366,6 +375,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.4...v1.23.5
 [1.23.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.3...v1.23.4
 [1.23.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.2...v1.23.3
 [1.23.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.1...v1.23.2

@@ -228,6 +228,9 @@ step("bibliotheque de macros : visee, verification, partage", function()
   assert(C("/cast [ded] Soins rapides"):find("« ded »", 1, true))
   assert(C("/cast [nodead,spec:2,mod:alt] Soins rapides; [@player] Soins") == "", C("/cast [nodead,spec:2,mod:alt] Soins rapides; [@player] Soins"))
   assert(C("/cast [help Soins rapides"):find("^err:"))
+  -- revue 1.23.5 : un mot de condition effacé pendant la frappe (« [:shift] ») ne doit pas planter
+  local okEmpty, emptyWord = pcall(C, "/cast [:shift] Soins rapides")
+  assert(okEmpty and emptyWord:find("^warn:"), tostring(emptyWord))
   assert(C("/cast Pluie de feu"):find("^warn:.*spécialisation active"), "sort d'une autre specialisation")
   assert(C("/run print(1)"):find("code", 1, true))
   assert(C("Soins"):find("barre oblique", 1, true))
@@ -366,7 +369,13 @@ step("macros : fenetre, glisser-deposer, reprise des anciennes", function()
   assert(LyorunePicker:IsShown() and LyorunePicker.macroHead:IsShown())
   LyorunePicker:Hide()
   -- importer de /macro : une macro au même nom mais au texte différent reçoit un nouveau nom
+  -- revue 1.23.5 : la phrase « aucune macro » ne reste pas quand des macros sont apparues depuis
+  local saved = MACROS
+  MACROS = {}
+  Z:OpenMacroImport():Hide()
+  MACROS = saved
   local imp = Z:OpenMacroImport()
+  assert(not imp.note:GetText():find("Aucune macro", 1, true), "note de l'import restee sur aucune macro")
   for _, icon in ipairs(imp.icons) do if icon:IsShown() and icon.game.name == "Bijou soin" then icon:Run("OnClick") end end
   assert(Z:FindMacro("Bijou soin") and Z:FindMacro("Bijou soin").body == "/use 14\n/cast [@mouseover] Soins", "import")
   -- assistant
@@ -2117,6 +2126,9 @@ step("etape 16 : buffs uniques, temps de recharge global", function()
   UnitCastingInfo = function() return "Soins", "", 1, NOW * 1000, NOW * 1000 + 2500 end
   FireEvent("UNIT_SPELLCAST_START", "player")
   assert(bar:IsShown() and bar._barColor[1] == Z.UI.accent[1], "barre d'incantation")
+  -- revue 1.23.5 : un 2e sort refusé pendant l'incantation (clics répétés) ne cache pas la barre
+  FireEvent("UNIT_SPELLCAST_FAILED", "player")
+  assert(bar:IsShown() and bar._barColor[1] == Z.UI.accent[1], "barre cachee par un sort refuse pendant l'incantation")
   FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
   assert(bar._barColor[1] == Z.UI.accent[1], "recharge par-dessus l'incantation")
   FireEvent("UNIT_SPELLCAST_STOP", "player")
@@ -2131,7 +2143,11 @@ step("etape 16 : buffs uniques, temps de recharge global", function()
   bar.SetTimerDuration = function(_, d) fed = d end
   FireEvent("UNIT_SPELLCAST_START", "player")
   assert(bar:IsShown() and fed == "duree", "duree secrete")
+  FireEvent("UNIT_SPELLCAST_FAILED", "player")
+  assert(bar:IsShown(), "barre cachee par un sort refuse, nom secret")
+  UnitCastingInfo = function() end
   FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
+  assert(not bar:IsShown() or bar._barColor[1] == 0.9, "incantation interrompue toujours affichee")
   for _, f in ipairs(later) do f() end later = {}
   -- anneau autour du curseur
   UnitCastingInfo = function() return "Soins", "", 1, NOW * 1000, NOW * 1000 + 2500 end
@@ -2406,5 +2422,11 @@ def cles(nom):
 defauts = cles('Z.defaults')
 for nom in ('Z.limits', 'Z.choices', 'Z.notInProfile', 'Z.private'):
     revue += ['%s.%s absent de Z.defaults' % (nom, k) for k in sorted(cles(nom) - defauts)]
+# Revue 1.23.5 : un échappement inconnu de Lua 5.1 (« Interface\GroupFrame ») perd sa barre sans erreur, l'image
+# n'est pas trouvée. Les chemins s'écrivent avec deux barres « \\ ».
+for f in files:
+    for n, ligne in enumerate(sans_commentaires(read(os.path.join(addon, f))).split('\n'), 1):
+        if re.search(r'(?<!\\)(?:\\\\)*\\[^\\nrt"\'0-9abfv|x\[\]]', ligne):
+            revue.append('barre inverse seule dans %s, ligne %d' % (f, n))
 print(('  OK    revue : fonctions, champs et reglages coherents') if not revue else ('  ERREUR revue : ' + ', '.join(revue)))
 sys.exit(1 if rt.eval('FAILED') or found or revue else 0)

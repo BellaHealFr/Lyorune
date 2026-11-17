@@ -228,7 +228,8 @@ function Z:CheckMacro(body)
 				for token in group:gmatch("[^,]+") do
 					token = token:match("^%s*(.-)%s*$")
 					if token ~= "" and token:sub(1, 1) ~= "@" and not token:lower():find("^target%s*=") then
-						local word = token:lower():match("^([^:]+)"):match("^%s*(.-)%s*$")
+						-- « [:shift] » (mot effacé pendant la frappe) : mot vide, signalé comme inconnu
+						local word = token:lower():match("^([^:]*)"):match("^%s*(.-)%s*$")
 						local base = word:match("^no(.+)$")
 						if not CONDITIONS[word] and not (base and CONDITIONS[base]) then
 							add("warn", "Ligne %d : condition « %s » inconnue (faute de frappe ?).", n, token)
@@ -651,7 +652,6 @@ function Z:OpenMacroImport()
 		tinsert(UISpecialFrames, "LyoruneMacroImport")
 		importer.note = Block(importer, 14, -42, 344)
 		UI.Paint(importer.note, "dim")
-		importer.note:SetText(L["Cliquez sur une macro : elle est copiée dans votre bibliothèque. [@mouseover] y vise la case."])
 		importer.icons = {}
 	end
 	local macros, perRow, size = Z:GameMacros(), 10, 32
@@ -689,7 +689,8 @@ function Z:OpenMacroImport()
 		icon:Show()
 	end
 	for i = #macros + 1, #importer.icons do importer.icons[i]:Hide() end
-	if #macros == 0 then importer.note:SetText(L["Aucune macro dans la fenêtre /macro du jeu."]) end
+	importer.note:SetText(#macros == 0 and L["Aucune macro dans la fenêtre /macro du jeu."]
+		or L["Cliquez sur une macro : elle est copiée dans votre bibliothèque. [@mouseover] y vise la case."])
 	importer:SetHeight(96 + math.ceil(math.max(#macros, 1) / perRow) * (size + 3))
 	importer:ClearAllPoints()
 	importer:SetPoint("CENTER", win or UIParent, "CENTER")

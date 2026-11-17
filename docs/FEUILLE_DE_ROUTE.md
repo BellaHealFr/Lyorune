@@ -199,8 +199,10 @@ Grille de chaque lot :
 - [x] Lot 3 : Frames, 2e moitié. Bug : un appel « Prêt ? » relancé dans les 5 secondes perdait ses réponses (1.23.3)
 - [x] Lot 4 : Auras, Alerts. Bug : « Son quand ma mana est faible » restait muet sans annonce de mana cochée (1.23.4)
 - [x] Lot 5 : Clicks. Aucun bug
-- [ ] Lot 6 : Macros
-- [ ] Lot 7 : Buffs, Cast, Preview
+- [x] Lot 6 : Macros. Bugs : « [:shift] » pendant la frappe faisait une erreur Lua ; la fenêtre d'import gardait
+  « aucune macro » une fois des macros créées (1.23.5)
+- [x] Lot 7 : Buffs, Cast, Preview. Bugs : un sort refusé pendant une incantation cachait la barre ou l'anneau ;
+  couronne du chef absente du mode test et de la fenêtre de placement (chemin d'image abîmé) (1.23.5)
 - [ ] Lot 8 : Share, Comm
 - [ ] Lot 9 : UI
 - [ ] Lot 10 : Options, 1re moitié

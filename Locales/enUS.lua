@@ -688,4 +688,8 @@ Z.translations.enUS = {
 	["Un appel « Prêt ? » relancé moins de 5 secondes après le précédent garde ses réponses sur les cases."] = "A ready check started again less than 5 seconds after the previous one keeps its answers on the cells.",
 	["L'œil « hors de vue » ne reste plus sur une case quand le jeu la donne à un autre joueur."] = "The out of sight eye no longer stays on a cell when the game gives it to another player.",
 	["« Son quand ma mana est faible » fonctionne aussi quand les annonces de mana sont décochées (#46)."] = "\"Sound when my mana is low\" now also works when the mana announcements are unchecked (#46).",
+	["Barre ou anneau d'incantation : un sort refusé pendant l'incantation (clics répétés) ne les cache plus (#46)."] = "Cast bar or ring: a spell refused during a cast (repeated clicks) no longer hides them (#46).",
+	["La couronne du chef s'affiche dans le mode test et dans la fenêtre « Placer les éléments de la case »."] = "The leader crown now shows in test mode and in the \"Place the cell elements\" window.",
+	["Mes macros : effacer le mot avant « : » dans une condition ([:shift]) ne fait plus d'erreur."] = "My macros: erasing the word before \":\" in a condition ([:shift]) no longer causes an error.",
+	["Importer de /macro : la fenêtre ne dit plus « aucune macro » quand des macros ont été créées depuis."] = "Import from /macro: the window no longer says \"no macro\" when macros were created since.",
 }

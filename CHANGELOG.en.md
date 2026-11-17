@@ -6,6 +6,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.5] - 2026-11-17
+
+### Fixed
+
+- Cast bar or ring: a spell refused during a cast (repeated clicks) no longer hides them ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- The leader crown now shows in test mode and in the "Place the cell elements" window.
+- My macros: erasing the word before ":" in a condition ([:shift]) no longer causes an error.
+- Import from /macro: the window no longer says "no macro" when macros were created since.
+
 ## [1.23.4] - 2026-11-17
 
 ### Fixed
@@ -366,6 +375,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.4...v1.23.5
 [1.23.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.3...v1.23.4
 [1.23.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.2...v1.23.3
 [1.23.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.1...v1.23.2

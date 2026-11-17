@@ -196,6 +196,21 @@ local function CastEnded()
 	ShowGCD()
 end
 
+-- Un sort refusé pendant une incantation (clics répétés : « une autre action est en cours ») envoie aussi
+-- UNIT_SPELLCAST_FAILED : l'incantation en cours continue, son indicateur reste
+local function StillCasting()
+	for _, info in ipairs({ UnitCastingInfo, UnitChannelInfo }) do
+		local name = info and info("player")
+		if issecret(name) or name ~= nil then return true end
+	end
+	return false
+end
+
+local function CastFailed()
+	if casting and StillCasting() then return end
+	CastEnded()
+end
+
 local handlers = {
 	UNIT_SPELLCAST_START = function() ShowCast(false) end,
 	UNIT_SPELLCAST_DELAYED = function() ShowCast(false) end,
@@ -203,8 +218,8 @@ local handlers = {
 	UNIT_SPELLCAST_CHANNEL_UPDATE = function() ShowCast(true) end,
 	UNIT_SPELLCAST_STOP = CastEnded,
 	UNIT_SPELLCAST_CHANNEL_STOP = CastEnded,
-	UNIT_SPELLCAST_FAILED = CastEnded,
-	UNIT_SPELLCAST_INTERRUPTED = CastEnded,
+	UNIT_SPELLCAST_FAILED = CastFailed,
+	UNIT_SPELLCAST_INTERRUPTED = CastFailed,
 	UNIT_SPELLCAST_SUCCEEDED = function() if not casting then ShowGCD() end end,
 }
 
