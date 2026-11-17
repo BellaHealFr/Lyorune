@@ -227,7 +227,7 @@ local function DrawThumb(thumb)
 	thumb.label:SetTextColor(unpack(chosen and UI.accent or UI.dim))
 end
 
-local function BuildThumb(parent, id, label)
+local function BuildThumb(parent, id, label, onClick)
 	local thumb = CreateFrame("Button", nil, parent)
 	thumb:SetSize(THUMB_W, THUMB_H)
 	thumb.id = id
@@ -268,7 +268,7 @@ local function BuildThumb(parent, id, label)
 	thumb:SetScript("OnClick", function(self)
 		PlaySound(SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or 856)
 		Z:ApplyShape(self.id)
-		RefreshShownPages()
+		if onClick then onClick(self) else RefreshShownPages() end
 	end)
 	thumb:SetScript("OnEnter", function(self)
 		local shape = Z.shapes[self.id]
@@ -318,6 +318,14 @@ local function ShapePicker(page)
 	picker:Update()
 	Register(page.tabIndex, L["Forme des cases"], picker)
 	return picker
+end
+
+-- Vignette de forme pour une autre fenêtre (assistant du premier lancement) : thumb:Draw() la redessine,
+-- onClick(thumb) suit le choix de la forme
+function Z.ShapeThumb(parent, id, label, onClick)
+	local thumb = BuildThumb(parent, id, label, onClick)
+	thumb.Draw = DrawThumb
+	return thumb
 end
 
 -- Appelé après chaque changement d'option : les vignettes suivent le thème, les angles et les couleurs
@@ -470,6 +478,7 @@ local function SimpleTabs()
 				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges." },
 				{ "head", "Buffs" },
 				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
+				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Elle se cache en combat." },
 			},
 			{
 				{ "head", "Coins de la case" },
@@ -1325,7 +1334,7 @@ local function BuildHelp(page)
 	local function Commands() -- les commandes prennent la couleur d'accent du thème de fenêtre
 		local c = "|cff" .. UI.Hex("accent")
 		list:SetText(c .. "/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n" .. c .. "/lyorune test|r  " .. L["mode test (faux groupe)"]
-			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
+			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune assistant|r  " .. L["assistant de départ"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
 			.. "\n" .. c .. "/lyorune bug|r  " .. L["signaler un bug"] .. "\n" .. c .. "/lyorune diag|r  " .. L["compatibilité avec le jeu"])
 	end
 	Commands()
@@ -1334,6 +1343,7 @@ local function BuildHelp(page)
 	local items = {
 		{ "head", "Découvrir" },
 		{ "button", "Lancer le tutoriel", function() window:Hide() Z:StartTutorial() end },
+		{ "button", "Assistant de départ", function() window:Hide() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." },
 		{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
 		{ "check", "showNews", "Montrer les nouveautés après une mise à jour" },
 		{ "head", "Autour de Lyorune" },

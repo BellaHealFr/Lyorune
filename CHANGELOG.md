@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.16.0] - 2026-11-17
+
+### Ajouté
+
+- Panneau des buffs manquants (onglet Soins) : hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe ; un clic le leur lance, sans les cibler, et un groupe entier sans buff n'a qu'une ligne pour la version de groupe ([#27](https://github.com/BellaHealFr/Lyorune/issues/27)).
+- Assistant de départ : au premier lancement, trois questions (rôle, taille de groupe, forme des cases sur vignettes) règlent Lyorune avant la visite guidée ; à revoir avec /lyorune assistant ou depuis l'onglet Aide ([#28](https://github.com/BellaHealFr/Lyorune/issues/28)).
+
 ## [1.15.0] - 2026-11-17
 
 ### Ajouté
@@ -269,6 +276,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.16.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.12.0...v1.13.0

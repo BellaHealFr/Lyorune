@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.15.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.16.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -78,6 +78,7 @@ Z.defaults = {
 	bossDebuffs = true,        -- affaiblissement important en grand
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
+	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua)
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
@@ -134,6 +135,7 @@ Z.defaults = {
 	magicEffects = true,       -- effets magiques des fenêtres : cercle runique, particules, étincelle de soin
 	errorNotice = true,        -- message discret (une fois par session) quand Lyorune rencontre une erreur
 	tutorialDone = false,
+	wizardDone = false,        -- assistant du premier lancement (Wizard.lua) déjà vu
 }
 
 Z.limits = {
@@ -170,7 +172,7 @@ Z.choices = {
 }
 
 -- Réglages propres à l'ordinateur ou au personnage : ni partagés, ni réinitialisés avec le reste
-Z.private = { minimapAngle = true, tutorialDone = true, language = true,
+Z.private = { minimapAngle = true, tutorialDone = true, wizardDone = true, language = true,
 	macros = true, -- mes macros : jamais partagées, jamais effacées par la réinitialisation
 	profiles = true } -- mes profils enregistrés : idem (la réinitialisation quitte seulement le profil en cours)
 
@@ -186,7 +188,8 @@ Z.notInProfile = {
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
 	language = true, showNews = true, versionNotice = true, acceptConfigs = true, showRunes = true, windowTheme = true,
-	reduceMotion = true, magicEffects = true, errorNotice = true, tutorialDone = true,
+	reduceMotion = true, magicEffects = true, errorNotice = true, tutorialDone = true, wizardDone = true,
+	buffPanel = true,
 }
 
 -- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.
@@ -195,6 +198,7 @@ Z.charDefaults = {
 	tankPos = { "CENTER", -320, 200 },
 	petPos = { "CENTER", -320, -160 },
 	extraPos = { "CENTER", 120, 200 }, -- cible, cible de la cible, focalisation
+	buffPos = { "CENTER", 360, 0 },    -- panneau des buffs manquants
 }
 
 ----------------------------------------------------------------------------------------------------
@@ -328,8 +332,10 @@ Z:On("PLAYER_LOGIN", function()
 	Z:RefreshAlerts()
 	Z:StartComm()
 
-	if not Z.db.tutorialDone then
-		C_Timer.After(3, function() Z:StartTutorial() end)
+	if not Z.db.tutorialDone then -- premier lancement : l'assistant (trois questions), puis la visite guidée
+		C_Timer.After(3, function()
+			if Z.db.wizardDone then Z:StartTutorial() else Z:StartWizard() end
+		end)
 	elseif Z.db.lastVersion ~= Z.version and Z.db.showNews then
 		C_Timer.After(4, function() Z:ShowNews() end)
 	end
@@ -386,6 +392,8 @@ function Z.Command(msg)
 	if not Z.header then return end -- Lyorune n'a pas pu démarrer : seuls le journal et le diagnostic répondent
 	if msg == "tuto" or msg == "tutoriel" or msg == "aide" then
 		Z:StartTutorial()
+	elseif msg == "assistant" or msg == "wizard" then
+		Z:StartWizard()
 	elseif msg == "verrou" or msg == "lock" then
 		Z.db.lockMode = Z.db.lockMode == "LOCKED" and "FREE" or "LOCKED"
 		Z:Refresh()

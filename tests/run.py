@@ -1572,6 +1572,89 @@ step("etape 9 : mode panneau, mode grille, tri", function()
   Z:Refresh()
 end)
 
+step("etape 10 : panneau des buffs manquants, assistant de depart", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = v end
+  -- #27 : le buff et sa version de groupe, lus dans le grimoire
+  local check = Z.buffChecks[1]
+  assert(check.spell == "Mot de pouvoir : Robustesse" and check.groupSpell == "Prière de robustesse", "sorts du buff")
+  AURAS = {} Z:Refresh() RunUpdates()
+  local panel = Z:BuffPanel()
+  assert(panel and panel:IsShown(), "panneau absent alors que des buffs manquent")
+  local list = Z.BuffRows()
+  assert(#list >= 1, "aucune ligne")
+  local missing = 0
+  for _, b in ipairs(Z.buttons) do if b.missingBuff and not b.extra and b:IsVisible() then missing = missing + 1 end end
+  if missing >= 3 then
+    assert(list[1].count == missing and list[1].spell == "Prière de robustesse", "un groupe entier : une seule ligne de groupe")
+  end
+  local row = LyoruneBuffsRow1
+  assert(row:GetAttribute("type1") == "spell" and row:GetAttribute("spell1") == list[1].spell and row:GetAttribute("unit") == list[1].unit, "bouton du jeu mal regle")
+  row:Run("OnEnter") row:Run("OnLeave")
+  -- deux joueurs seulement : une ligne chacun, version simple au clic, version de groupe au clic droit
+  for i, b in ipairs(Z.buttons) do if i > 2 then b.missingBuff = nil end end
+  Z:UpdateBuffPanel()
+  list = Z.BuffRows()
+  assert(list[1].spell == "Mot de pouvoir : Robustesse" and list[1].spell2 == "Prière de robustesse" and not list[1].count, "ligne d'un joueur")
+  assert(LyoruneBuffsRow1:GetAttribute("spell2") == "Prière de robustesse")
+  local third = rawget(_G, "LyoruneBuffsRow3") assert(not third or not third:IsShown(), "ligne en trop")
+  -- buff present : plus rien a lancer
+  AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31 } }
+  Z:Refresh() RunUpdates()
+  assert(not panel:IsShown(), "panneau ouvert sans buff manquant")
+  AURAS = {} Z:Refresh() RunUpdates()
+  assert(panel:IsShown())
+  -- combat : cache juste avant le verrouillage, revient apres
+  FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true RunUpdates()
+  assert(not panel:IsShown(), "panneau visible en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+  assert(panel:IsShown(), "panneau absent apres le combat")
+  -- la croix le ferme jusqu'a la fin du prochain combat
+  panel.close:Run("OnClick") panel:Hide()
+  Z:Refresh() RunUpdates()
+  assert(not panel:IsShown(), "panneau revenu apres la croix")
+  FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+  assert(panel:IsShown())
+  -- interrupteurs : le panneau sans l'icone, puis rien du tout
+  Z.db.missingBuffs = false Z:Refresh() RunUpdates()
+  assert(panel:IsShown() and not Z.buttons[1].buffIcon:IsShown(), "panneau seul")
+  Z.db.buffPanel = false Z:Refresh() RunUpdates()
+  assert(not panel:IsShown(), "interrupteur du panneau")
+  Z.db.missingBuffs, Z.db.buffPanel = true, true
+  -- position par personnage
+  panel:Run("OnDragStop")
+  assert(type(Z.char.buffPos[2]) == "number", "position du panneau")
+  -- #28 : assistant, trois questions puis la visite guidee
+  Z.db.wizardDone, Z.db.tutorialDone = false, false
+  Z:StartWizard()
+  local w = Z:WizardWindow()
+  assert(w:IsShown() and w.pages[1]:IsShown() and not w.pages[2]:IsShown(), "premiere question")
+  w.pages[1].buttons[2]:Run("OnClick") -- tank
+  w.next:Run("OnClick")
+  assert(w.pages[2]:IsShown())
+  w.pages[2].buttons[3]:Run("OnClick") -- raid de 40
+  w.next:Run("OnClick")
+  assert(w.pages[3]:IsShown() and Z.db.shape == "SQUARE" and Z.db.width == Z.shapes.SQUARE.width, "forme conseillee pour 40")
+  w.pages[3].thumbs[1]:Run("OnClick") -- Barre
+  assert(Z.db.shape == "BAR")
+  w.next:Run("OnClick")
+  assert(not w:IsShown() and Z.db.wizardDone, "fin de l'assistant")
+  assert(Z.db.debuffMode == "DISPEL" and Z.db.threatBar and Z.db.manaBars == "HEALERS" and Z.db.autoShrink, "reponses appliquees")
+  assert(LyoruneTutorial and LyoruneTutorial:IsShown(), "visite guidee apres l'assistant")
+  LyoruneTutorial.close:Run("OnClick")
+  -- « Passer » : rien ne change
+  Z:StartWizard()
+  Z:ApplyWizard("HEALER", "SMALL")
+  assert(Z.db.debuffMode == "ALL" and not Z.db.threatBar and not Z.db.autoShrink and Z.db.manaBars == "ALL", "soigneur : reglages d'origine")
+  w.close:Run("OnClick")
+  assert(not w:IsShown() and Z.db.debuffMode == "ALL")
+  -- commande et options
+  SlashCmdList.LYORUNE("assistant") assert(w:IsShown()) w.close:Run("OnClick")
+  local labels = table.concat(Z:OptionLabels(), "|")
+  assert(labels:find("Panneau des buffs manquants", 1, true), "absent de la recherche")
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z:Refresh() RunUpdates()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

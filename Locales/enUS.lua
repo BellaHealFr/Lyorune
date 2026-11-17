@@ -350,13 +350,13 @@ Z.translations.enUS = {
 			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
-			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
+			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu), les coins, le panneau des buffs manquants.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -541,4 +541,24 @@ Z.translations.enUS = {
 	["Ordre dans chaque bloc : l'ordre du groupe, par nom, ou par classe puis par nom ; le jeu le tient à jour tout seul, même en combat (#26)."] = "Order in each block: group order, by name, or by class then name; the game keeps it up to date by itself, even in combat (#26).",
 	["Chaque groupe garde sa place : en rangement par groupe, un groupe reste dans sa colonne même si le précédent est vide (#26)."] = "Each group keeps its place: when arranged by group, a group stays in its column even if the one before is empty (#26).",
 	["Le mode test montre la grille et l'ordre choisis (#26)."] = "Test mode shows the chosen grid and order (#26).",
+	-- 1.16.0 : panneau des buffs manquants, assistant de départ
+	["Panneau des buffs manquants"] = "Missing buffs panel",
+	["Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Elle se cache en combat."] = "Out of combat, a small window lists the players without your group buff: one click casts it on them. A whole group without it: a single line for the group version. It hides in combat.",
+	["Buffs manquants"] = "Missing buffs", ["Clic : %s"] = "Click: %s", ["Clic droit : %s (tout son groupe)"] = "Right-click: %s (their whole group)",
+	["et %d autres"] = "and %d more",
+	["Assistant de départ"] = "Setup assistant", ["assistant de départ"] = "setup assistant",
+	["Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup."] = "Three questions (role, group size, cell shape) to set up Lyorune in one go.",
+	["Bienvenue dans Lyorune"] = "Welcome to Lyorune", ["Passer"] = "Skip",
+	["Garde les réglages actuels. L'assistant se relance avec /lyorune assistant."] = "Keeps the current settings. Restart the assistant with /lyorune assistant.",
+	["Quel rôle jouez-vous le plus souvent ?"] = "Which role do you play most often?",
+	["Soigneur"] = "Healer", ["Tank"] = "Tank",
+	["Tous les affaiblissements et la mana de chacun."] = "Every debuff and everyone's mana.",
+	["Les affaiblissements que vous pouvez dissiper, la mana des soigneurs et une barre de menace sur chaque case."] = "The debuffs you can dispel, the healers' mana and a threat bar on each cell.",
+	["Les affaiblissements que vous pouvez dissiper et la mana des soigneurs."] = "The debuffs you can dispel and the healers' mana.",
+	["Dans quel groupe jouez-vous le plus souvent ?"] = "Which group do you play in most often?",
+	["Seul, ou en groupe de 5"] = "Solo, or in a group of 5", ["En raid de 10 à 25"] = "In a raid of 10 to 25", ["En raid de 40"] = "In a raid of 40",
+	["Les cases rétrécissent quand le raid grandit."] = "Cells shrink as the raid grows.",
+	["Quelle forme de case préférez-vous ?"] = "Which cell shape do you prefer?",
+	["Panneau des buffs manquants (onglet Soins) : hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe ; un clic le leur lance, sans les cibler, et un groupe entier sans buff n'a qu'une ligne pour la version de groupe (#27)."] = "Missing buffs panel (Heals tab): out of combat, a small window lists the players without your group buff; one click casts it on them, without targeting them, and a whole group without it gets a single line for the group version (#27).",
+	["Assistant de départ : au premier lancement, trois questions (rôle, taille de groupe, forme des cases sur vignettes) règlent Lyorune avant la visite guidée ; à revoir avec /lyorune assistant ou depuis l'onglet Aide (#28)."] = "Setup assistant: on first launch, three questions (role, group size, cell shape from thumbnails) set Lyorune up before the guided tour; see it again with /lyorune assistant or from the Help tab (#28).",
 }

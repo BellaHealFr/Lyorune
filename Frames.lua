@@ -1195,6 +1195,7 @@ function Z:Refresh()
 	if Z.RefreshRunes then Z:RefreshRunes() end
 	if Z.RefreshShapes then Z:RefreshShapes() end
 	if Z.RefreshPlacement then Z:RefreshPlacement() end
+	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
 end
 
 function Z:CreateFrames()

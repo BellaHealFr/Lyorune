@@ -6,6 +6,8 @@ Everything you need to heal with Lyorune. No technical knowledge required.
 
 Good to know: Lyorune is in English when your game is in English: options, in-game tour (`/lyorune tuto`), news and chat messages. You can also force the language in the Help tab.
 
+On the very first launch, a **setup assistant** asks three questions before the tour: your role (healer, tank or damage), the group size you play in most (solo or 5, raid of 10 to 25, raid of 40) and the cell shape, picked from thumbnails. Lyorune sets itself up from your answers; everything can be changed later in the options. "Skip" keeps the default settings. To see it again: `/lyorune assistant`, or "Setup assistant" in the Help tab.
+
 ## 1. The frames
 
 Every player in your group has a frame. The coloured bar is their health: the shorter it is, the more hurt they are.
@@ -206,6 +208,7 @@ Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your 
   - **Icon fades at the end**: during the last 6 seconds the icon fades. Time to recast;
   - **Number of charges**: a small number when the heal has several.
 - **Cell corners**: place one of your spells in each corner. It becomes a small coloured square (green, blue, yellow, pink) that drains over time, and leaves the icon row. At a glance you see who lacks your Renew or Rejuvenation. Each class keeps its own corners: your druid and your priest never mix.
+- **Missing buffs panel** (priest, druid, mage): out of combat, a small window lists the players who lack your group buff (Fortitude, Mark of the Wild, Arcane Intellect). Click a name to cast the buff on them, without targeting them; right-click casts the group version. When three players of the same group lack the buff, a single "Group N" line casts the group version directly. A player out of range is faded. The panel hides in combat and comes back afterwards; the cross closes it until the end of the next fight. Drag it by its title: its position is kept for each character. It has its own switch, separate from the small grey icon on the cell.
 
 Everything works in combat. The game hides aura names there, but Lyorune recognises your heals by their number, or by the spell you just cast. A heal it cannot recognise stays in the icon row, never in the wrong corner.
 
@@ -274,6 +277,7 @@ Lyorune does not bother you with its errors: at most one discreet message per se
 | `/lyorune` | Open the options |
 | `/lyorune test` | Test mode |
 | `/lyorune tuto` | In-game tour |
+| `/lyorune assistant` | Setup assistant (three questions) |
 | `/lyorune verrou` | Lock or unlock the position |
 | `/lyorune reset` | Move the frames back to the centre |
 | `/lyorune bug` | Report a problem |

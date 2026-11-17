@@ -476,7 +476,7 @@ end
 
 -- Buff de groupe que je sais lancer et que ce joueur n'a pas. Lisible hors combat seulement.
 local function FindMissingBuff(b, unit)
-	if not Z.db.missingBuffs or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
+	if not (Z.db.missingBuffs or Z.db.buffPanel) or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL", 40)
 	if not list then return end
 	local present = {}
@@ -609,8 +609,13 @@ local function UpdateAuras(b)
 	ImportantSound(b, important or {}, fromList)
 
 	-- 5. Buff de groupe manquant, hors combat
-	local missing = not enemy and FindMissingBuff(b, unit)
-	if missing then
+	-- (le panneau des buffs manquants, Buffs.lua, lit b.missingBuff)
+	local missing = not enemy and FindMissingBuff(b, unit) or nil
+	if b.missingBuff ~= missing then
+		b.missingBuff = missing
+		Z:QueueBuffPanel()
+	end
+	if missing and db.missingBuffs then
 		Z.BuffIcon(b)
 		b.buffIcon.texture:SetTexture(missing.icon)
 		b.buffIcon.texture:SetDesaturated(true)

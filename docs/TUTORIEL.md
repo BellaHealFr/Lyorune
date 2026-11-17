@@ -3,6 +3,8 @@
 Tout ce qu'il faut savoir pour soigner avec Lyorune. Aucune connaissance technique n'est nécessaire.
 En jeu, le même parcours existe en version courte : tapez `/lyorune tuto`.
 
+Au tout premier lancement, un **assistant** pose trois questions avant la visite : votre rôle (soigneur, tank ou dégâts), la taille de groupe où vous jouez le plus (seul ou à 5, raid de 10 à 25, raid de 40) et la forme des cases, choisie sur des vignettes. Lyorune se règle d'après vos réponses ; tout se retouche ensuite dans les options. « Passer » garde les réglages d'origine. Pour le revoir : `/lyorune assistant`, ou « Assistant de départ » dans l'onglet Aide.
+
 [English version](GUIDE.en.md)
 
 ## 1. Les cases
@@ -205,6 +207,7 @@ Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit 
   - **Icône qui s'efface à la fin** : pendant les 6 dernières secondes, l'icône pâlit. C'est le moment de relancer ;
   - **Nombre de charges** : un petit chiffre quand le soin en a plusieurs.
 - **Coins de la case** : placez un de vos sorts dans chaque coin. Il devient un petit carré de couleur (vert, bleu, jaune, rose) qui se vide avec le temps, et quitte la rangée d'icônes. D'un coup d'œil, vous voyez qui n'a pas votre Rénovation ou votre Récupération. Chaque classe garde ses propres coins : votre druide et votre prêtre ne se mélangent pas.
+- **Panneau des buffs manquants** (prêtre, druide, mage) : hors combat, une petite fenêtre liste les joueurs à qui manque votre buff de groupe (Robustesse, Marque du fauve, Intelligence des arcanes). Un clic sur un nom lui lance le buff, sans le cibler ; un clic droit lance la version de groupe. Quand trois joueurs d'un même groupe n'ont pas le buff, une seule ligne « Groupe N » lance directement la version de groupe. Un joueur hors de portée est estompé. Le panneau se cache en combat et revient après ; la croix le ferme jusqu'à la fin du prochain combat. Déplacez-le par son titre : sa place est gardée pour chaque personnage. Il a son propre interrupteur, séparé de la petite icône grise sur la case.
 
 Tout marche en combat. Le jeu y cache le nom des auras, mais Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.
 
@@ -275,6 +278,7 @@ Lyorune ne vous dérange pas pour ses erreurs : au plus un message discret par s
 | `/lyorune` | Ouvrir les options |
 | `/lyorune test` | Mode test |
 | `/lyorune tuto` | Tutoriel en jeu |
+| `/lyorune assistant` | Assistant de départ (trois questions) |
 | `/lyorune verrou` | Verrouiller ou libérer la position |
 | `/lyorune reset` | Remettre les cadres au centre |
 | `/lyorune bug` | Signaler un problème |

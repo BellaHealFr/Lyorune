@@ -133,11 +133,14 @@ function Z:BuildData()
 	Z.buffChecks = {}
 	for _, ids in ipairs(Z.raidBuffs[Z.class] or {}) do
 		if Z.Knows(ids[1]) then
-			local check = { names = {}, icon = C_Spell.GetSpellTexture(ids[1]) }
+			-- spell : le sort lancé par le panneau des buffs ; groupSpell : sa version de groupe, si je la connais
+			local check = { names = {}, icon = C_Spell.GetSpellTexture(ids[1]), spell = Z.SpellName(ids[1]) }
 			for _, id in ipairs(ids) do
 				local name = Z.SpellName(id)
 				if name then check.names[name] = true end
 			end
+			local group = ids[2] and Z.Knows(ids[2]) and Z.SpellName(ids[2])
+			if group and group ~= check.spell then check.groupSpell = group end
 			Z.buffChecks[#Z.buffChecks + 1] = check
 		end
 	end
