@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.11] - 2026-11-18
+
+### Amélioré
+
+- Profil prêt à l'emploi « Compact » : vos soins sur la durée restent en icônes (les barres fines ne s'affichent que si vous les choisissez).
+
 ## [1.23.10] - 2026-11-18
 
 ### Amélioré
@@ -414,6 +420,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.11]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.10...v1.23.11
 [1.23.10]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.9...v1.23.10
 [1.23.9]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.8...v1.23.9
 [1.23.8]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.7...v1.23.8

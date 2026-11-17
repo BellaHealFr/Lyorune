@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.11", date = "2026-11-18",
+		added = {
+		},
+		improved = {
+			"Profil prêt à l'emploi « Compact » : vos soins sur la durée restent en icônes (les barres fines ne s'affichent que si vous les choisissez).",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.23.10", date = "2026-11-18",
 		added = {
 		},

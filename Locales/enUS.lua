@@ -703,4 +703,5 @@ Z.translations.enUS = {
 	["Journal d'erreurs plus complet : chaque événement des cases et chaque mise à jour régulière est surveillé par Lyorune lui-même, sans dépendre d'aucun autre addon."] = "More complete error log: every cell event and every regular update is watched by Lyorune itself, without relying on any other addon.",
 	["Journal d'erreurs plus précis : la pile d'appels est prise au moment de l'erreur, et chaque entrée dit où vous étiez (extérieur, donjon, raid...) et si le jeu cachait les auras."] = "More precise error log: the call stack is taken when the error happens, and each entry tells where you were (outdoors, dungeon, raid...) and whether the game was hiding auras.",
 	["Le rapport de /lyorune bug indique aussi le lieu (extérieur, donjon, raid...)."] = "The /lyorune bug report also tells the location (outdoors, dungeon, raid...).",
+	["Profil prêt à l'emploi « Compact » : vos soins sur la durée restent en icônes (les barres fines ne s'affichent que si vous les choisissez)."] = "\"Compact\" ready-made profile: your heals over time stay as icons (thin bars only show if you pick them).",
 }

@@ -256,7 +256,7 @@ end
 Z.presets = {
 	{ "DUNGEON", "Donjon (5 joueurs)", { width = 110, height = 50, fontSize = 12, spacing = 4, text = "DEFICIT", hotStyle = "ICONS", layout = "GROUP", autoShrink = false } },
 	{ "RAID", "Raid", { width = 80, height = 38, fontSize = 10, spacing = 2, text = "DEFICIT", hotStyle = "ICONS", layout = "GROUP", autoShrink = true } },
-	{ "COMPACT", "Compact", { width = 64, height = 30, fontSize = 9, spacing = 2, text = "NONE", hotStyle = "BARS", layout = "GROUP", autoShrink = false } },
+	{ "COMPACT", "Compact", { width = 64, height = 30, fontSize = 9, spacing = 2, text = "NONE", hotStyle = "ICONS", layout = "GROUP", autoShrink = false } },
 	{ "LARGE", "Grand et lisible", { width = 130, height = 60, fontSize = 14, spacing = 4, text = "PERCENT", hotStyle = "ICONS", layout = "ROLE", autoShrink = false } },
 }
 
