@@ -3,7 +3,7 @@
 Tout ce qu'il faut savoir pour soigner avec Lyorune. Aucune connaissance technique n'est nécessaire.
 En jeu, le même parcours existe en version courte : tapez `/lyorune tuto`.
 
-Au tout premier lancement, un **assistant** pose trois questions avant la visite : votre rôle (soigneur, tank ou dégâts), la taille de groupe où vous jouez le plus (seul ou à 5, raid de 10 à 25, raid de 40) et la forme des cases, choisie sur des vignettes. Lyorune se règle d'après vos réponses ; tout se retouche ensuite dans les options. « Passer » garde les réglages d'origine. Pour le revoir : `/lyorune assistant`, ou « Assistant de départ » dans l'onglet Aide.
+Au tout premier lancement, un **assistant** pose trois questions avant la visite : votre rôle (soigneur, tank ou dégâts), la taille de groupe où vous jouez le plus (seul ou à 5, raid de 10 à 25, raid de 40) et la forme des cases, choisie sur des vignettes. Lyorune se règle d'après vos réponses ; tout se retouche ensuite dans les options. « Passer » ou la croix gardent vos réglages actuels, forme des cases comprise. Pour le revoir : `/lyorune assistant`, ou « Assistant de départ » dans l'onglet Aide.
 
 [English version](GUIDE.en.md)
 

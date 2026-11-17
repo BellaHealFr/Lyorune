@@ -6,7 +6,7 @@ Everything you need to heal with Lyorune. No technical knowledge required.
 
 Good to know: Lyorune is in English when your game is in English: options, in-game tour (`/lyorune tuto`), news and chat messages. You can also force the language in the Help tab.
 
-On the very first launch, a **setup assistant** asks three questions before the tour: your role (healer, tank or damage), the group size you play in most (solo or 5, raid of 10 to 25, raid of 40) and the cell shape, picked from thumbnails. Lyorune sets itself up from your answers; everything can be changed later in the options. "Skip" keeps the default settings. To see it again: `/lyorune assistant`, or "Setup assistant" in the Help tab.
+On the very first launch, a **setup assistant** asks three questions before the tour: your role (healer, tank or damage), the group size you play in most (solo or 5, raid of 10 to 25, raid of 40) and the cell shape, picked from thumbnails. Lyorune sets itself up from your answers; everything can be changed later in the options. "Skip" or the close button keeps your current settings, cell shape included. To see it again: `/lyorune assistant`, or "Setup assistant" in the Help tab.
 
 ## 1. The frames
 

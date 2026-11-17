@@ -32,7 +32,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | Publiée (v1.22.0) |
 | 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | Publiée (v1.23.0) |
 | 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | Abandonnée (le jeu bloque les messages entre addons pendant un combat de boss) |
-| 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | En cours |
+| 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | Publiée (v1.23.8) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -210,8 +210,10 @@ Grille de chaque lot :
   Listes absent, sort retiré affiché « Aucun » alors que le coin restait pris) (1.23.7)
 - [x] Lot 11 : Options, 2e moitié. Bug : « Reprendre les clics proposés » en 2e spécialisation effaçait les clics
   de la 1re sans toucher ceux en cours (1.23.7)
-- [ ] Lot 12 : Placement, Perf, Bug, Minimap
-- [ ] Lot 13 : Runes, Wizard, Tutorial, Themes, Changes
+- [x] Lot 12 : Placement, Perf, Bug, Minimap. Bug : après /lyorune mesure, le marqueur de raid ou la coche
+  « Prêt ? » de mon personnage restait sur les cases du mode test (1.23.8)
+- [x] Lot 13 : Runes, Wizard, Tutorial, Themes, Changes. Bugs : « Passer » dans l'assistant gardait la forme
+  posée par la page des formes ; la visite guidée laissait les cadres déverrouillés (1.23.8)
 
 Les boutons sécurisés ne sont pas simulés hors jeu : ce qui touche aux clics en combat reste à confirmer en jeu.
 

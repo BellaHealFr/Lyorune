@@ -8,6 +8,7 @@ local UI = Z.UI
 
 local WIDTH = 360
 local window, page, answers
+local before -- forme et tailles d'avant l'assistant : « Passer » les rétablit
 local pages = {}
 
 -- Ce que chaque réponse change. Un soigneur garde les réglages d'origine, pensés pour lui.
@@ -107,8 +108,18 @@ local function ShapePage(parent)
 	parent.Update, parent.thumbs = Update, thumbs
 end
 
+-- La page des formes pose la forme en direct : sans réponse validée, la forme d'avant revient
+local function RestoreShape()
+	local changed = false
+	for key, value in pairs(before.values) do
+		if Z.db[key] ~= value then Z.db[key], changed = value, true end
+	end
+	Z.shapeUndo = before.undo
+	if changed then Z:Refresh() end
+end
+
 local function Finish(apply)
-	if apply then Z:ApplyWizard(answers.role, answers.size) end
+	if apply then Z:ApplyWizard(answers.role, answers.size) else RestoreShape() end
 	if Z.previewActive then Z:TogglePreview() end
 	Z.db.wizardDone = true
 	window:Hide()
@@ -179,6 +190,8 @@ function Z:StartWizard()
 	if not Z.header then return end
 	if not window then Build() end
 	answers = { role = GuessRole(), size = "SMALL", shape = Z.db.shape }
+	before = { values = { shape = Z.db.shape }, undo = Z.shapeUndo }
+	for _, key in ipairs(Z.shapeKeys) do before.values[key] = Z.db[key] end
 	Show(1)
 	window:Show()
 end

@@ -6,6 +6,7 @@ local _, Z = ...
 local UI = Z.UI
 
 local card, highlight, current
+local lockBefore -- déplacement des cadres choisi par le joueur, rendu à la fin de l'étape « Placer les cadres »
 
 -- Résumé des clics du joueur, écrit à partir de ses vrais réglages
 local function ClickSummary()
@@ -63,11 +64,20 @@ local steps = {
 			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
 			.. "Dans l'onglet Cadres, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
 		target = function() return Z.header.handle end,
+		-- Les cadres sont libres le temps de l'étape, puis le choix du joueur revient (verrou compris)
 		before = function()
+			lockBefore = Z.db.lockMode
 			if Z.db.lockMode ~= "FREE" then
 				Z.db.lockMode = "FREE"
 				Z:Refresh()
 			end
+		end,
+		after = function()
+			if lockBefore and lockBefore ~= Z.db.lockMode then
+				Z.db.lockMode = lockBefore
+				Z:Refresh()
+			end
+			lockBefore = nil
 		end,
 	},
 	{

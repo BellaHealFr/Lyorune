@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.8", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Mesure des performances : le marqueur de raid et la coche « Prêt ? » de votre personnage ne restent plus sur les cases du mode test (#46).",
+			"Assistant de départ : « Passer » ou la croix rendent la forme des cases d'avant (#46).",
+			"Visite guidée : les cadres verrouillés le redeviennent après l'étape « Placer les cadres » (#46).",
+		},
+	},
+	{
 		version = "1.23.7", date = "2026-11-17",
 		added = {
 		},

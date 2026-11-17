@@ -515,6 +515,16 @@ step("tutoriel", function()
   for i = 1, 8 do card.next:Run("OnClick") end
   assert(Z.db.tutorialDone and not card:IsShown() and not Z.previewActive)
   Z:StartTutorial() card.next:Run("OnClick") card.back:Run("OnClick") card.close:Run("OnClick")
+  -- lot 13 : l'etape « Placer les cadres » libere les cadres, puis rend le verrou du joueur
+  Z.db.lockMode = "LOCKED" Z:StartTutorial()
+  for i = 1, 4 do card.next:Run("OnClick") end
+  assert(Z.db.lockMode == "FREE", "cadres libres pendant l'etape")
+  card.next:Run("OnClick")
+  assert(Z.db.lockMode == "LOCKED", "verrou perdu apres l'etape")
+  card.back:Run("OnClick") assert(Z.db.lockMode == "FREE")
+  card.close:Run("OnClick")
+  assert(Z.db.lockMode == "LOCKED", "verrou perdu a la fermeture")
+  Z.db.lockMode = "FREE" Z:Refresh()
   SlashCmdList.LYORUNE("verrou") SlashCmdList.LYORUNE("verrou") SlashCmdList.LYORUNE("reset") SlashCmdList.LYORUNE("tuto") SlashCmdList.LYORUNE("test") SlashCmdList.LYORUNE("test")
   LyoruneTutorial.close:Run("OnClick")
   Lyorune_OnAddonCompartmentClick() Lyorune_OnAddonCompartmentClick()
@@ -1685,6 +1695,16 @@ step("etape 10 : panneau des buffs manquants, assistant de depart", function()
   assert(Z.db.debuffMode == "ALL" and not Z.db.threatBar and not Z.db.autoShrink and Z.db.manaBars == "ALL", "soigneur : reglages d'origine")
   w.close:Run("OnClick")
   assert(not w:IsShown() and Z.db.debuffMode == "ALL")
+  -- lot 13 : « Passer » apres la page des formes rend la forme et les tailles d'avant
+  Z:ApplyShape("TILE") Z.db.width = 99
+  Z:StartWizard()
+  w.pages[1].buttons[1]:Run("OnClick") w.next:Run("OnClick")
+  w.pages[2].buttons[3]:Run("OnClick") w.next:Run("OnClick")
+  assert(Z.db.shape == "SQUARE", "forme posee en direct")
+  w.pages[3].thumbs[1]:Run("OnClick")
+  assert(Z.db.shape == "BAR")
+  w.close:Run("OnClick")
+  assert(Z.db.shape == "TILE" and Z.db.width == 99, "passer garde la nouvelle forme : " .. tostring(Z.db.shape) .. " " .. tostring(Z.db.width))
   -- commande et options
   SlashCmdList.LYORUNE("assistant") assert(w:IsShown()) w.close:Run("OnClick")
   local labels = table.concat(Z:OptionLabels(), "|")
@@ -1814,6 +1834,10 @@ step("etape 12 : mode performance, mesure des performances", function()
   assert(#Z.db.perfDiag == 1 and Z.db.perfDiag[1]:find("40 joueurs", 1, true), "trace")
   -- les cases d'essai sont rendues propres : aucune unite, aucun evenement
   for _, c in ipairs(Z:PreviewCells(40)) do assert(c.unit == nil and not next(c._events), "case d'essai encore active") end
+  -- lot 12 : le marqueur de raid et la coche de mon personnage ne restent pas sur les fausses cases
+  for _, c in ipairs(Z:PreviewCells(40)) do
+    assert(not c.marker:IsShown() and not c.center:IsShown(), "marqueur ou coche de la mesure restes sur le mode test")
+  end
   -- profileur du jeu : moyenne, pic, part du temps
   Enum.AddOnProfilerMetric = { SessionAverageTime = 1, RecentAverageTime = 2, PeakTime = 3 }
   local values = { Lyorune = { 0.02, 0.03, 1.5 }, ElvUI = { 0.4, 0.5, 9 } }

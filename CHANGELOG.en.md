@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.8] - 2026-11-17
+
+### Fixed
+
+- Performance measurement: your character's raid marker and ready check icon no longer stay on the test mode cells ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- Setup assistant: "Skip" or the close button restores the previous cell shape ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- Guided tour: locked frames are locked again after the "Placing the frames" step ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.7] - 2026-11-17
 
 ### Fixed
@@ -388,6 +396,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.8]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.7...v1.23.8
 [1.23.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.6...v1.23.7
 [1.23.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.5...v1.23.6
 [1.23.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.4...v1.23.5

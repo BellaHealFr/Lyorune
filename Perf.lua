@@ -77,9 +77,16 @@ local function Bench(cells, count)
 		range = Time(updates.range, cells, count),
 	}
 	for i = 1, count do
-		cells[i]:UnregisterAllEvents() -- posés par la mise à jour du rôle (barre de mana)
-		cells[i].unit = nil
-		cells[i]:SetAlpha(1)
+		local cell = cells[i]
+		cell:UnregisterAllEvents() -- posés par la mise à jour du rôle (barre de mana)
+		cell.unit = nil
+		cell:SetAlpha(1)
+		-- Ce que le mode test ne redessine pas : sans cela, le marqueur de raid ou la coche « Prêt ? » de mon
+		-- personnage resterait sur toutes les fausses cases
+		cell.marker:Hide()
+		cell.center:Hide()
+		cell.threatBar:Hide()
+		cell.healAbsorb:SetValue(0)
 	end
 	local rangeChecks = Z.db.perfMode and 1 or 2
 	local perSecond = count * (RATES.health * cost.health + RATES.prediction * cost.prediction

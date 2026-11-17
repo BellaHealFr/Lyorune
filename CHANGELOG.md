@@ -6,6 +6,14 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.8] - 2026-11-17
+
+### Corrigé
+
+- Mesure des performances : le marqueur de raid et la coche « Prêt ? » de votre personnage ne restent plus sur les cases du mode test ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- Assistant de départ : « Passer » ou la croix rendent la forme des cases d'avant ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- Visite guidée : les cadres verrouillés le redeviennent après l'étape « Placer les cadres » ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.7] - 2026-11-17
 
 ### Corrigé
@@ -388,6 +396,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.8]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.7...v1.23.8
 [1.23.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.6...v1.23.7
 [1.23.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.5...v1.23.6
 [1.23.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.4...v1.23.5
