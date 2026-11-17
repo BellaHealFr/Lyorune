@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.22.0] - 2026-11-17
+
+### Added
+
+- Buffs meant for a single person: as long as your Earth Shield (shaman) or Thorns (druid) is on nobody, the missing buffs panel offers a line for the tank, or for the player chosen with /lyorune bearer ([#43](https://github.com/BellaHealFr/Lyorune/issues/43)).
+- Global cooldown and casting (Heals tab): a thin bar under the frames, or a ring around the cursor, shows the global cooldown and your current cast, even in combat ([#43](https://github.com/BellaHealFr/Lyorune/issues/43)).
+
 ## [1.21.0] - 2026-11-17
 
 ### Added
@@ -326,6 +333,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.22.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.18.0...v1.19.0

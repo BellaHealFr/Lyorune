@@ -488,7 +488,9 @@ local function SimpleTabs()
 				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges." },
 				{ "head", "Buffs" },
 				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
-				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Elle se cache en combat." },
+				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat." },
+				{ "head", "Temps de recharge global" },
+				{ "cycle", "castIndicator", "Recharge globale et incantation", nil, "Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat." },
 			},
 			{
 				{ "head", "Coins de la case" },
@@ -1441,6 +1443,7 @@ local function BuildHelp(page)
 		list:SetText(c .. "/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n" .. c .. "/lyorune test|r  " .. L["mode test (faux groupe)"]
 			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune assistant|r  " .. L["assistant de départ"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
 			.. "\n" .. c .. "/lyorune epingler|r  " .. L["épingler ou retirer le joueur survolé"]
+			.. "\n" .. c .. "/lyorune porteur|r  " .. L["le joueur survolé reçoit mes buffs uniques"]
 			.. "\n" .. c .. "/lyorune groupe|r  " .. L["qui a Lyorune dans le groupe"] .. "\n" .. c .. "/lyorune annuler|r  " .. L["annuler le dernier import"]
 			.. "\n" .. c .. "/lyorune mesure|r  " .. L["mesurer les performances"]
 			.. "\n" .. c .. "/lyorune bug|r  " .. L["signaler un bug"] .. "\n" .. c .. "/lyorune diag|r  " .. L["compatibilité avec le jeu"])

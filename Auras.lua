@@ -494,6 +494,22 @@ local function FindMissingBuff(b, unit)
 	end
 end
 
+-- Mes buffs uniques (Bouclier de terre...) posés sur ce joueur : leur nom, ou nil. Lisible hors combat seulement.
+local function FindMyUniques(b, unit)
+	if not Z.db.buffPanel or #Z.uniqueChecks == 0 or b.status or InCombatLockdown() then return end
+	local list = Auras(unit, "HELPFUL|PLAYER", 16)
+	if not list then return end
+	local mine
+	for i = 1, #list do
+		local name = list[i].name
+		if issecret(name) then return end
+		for _, check in ipairs(Z.uniqueChecks) do
+			if check.name == name then mine = (mine and mine .. "," or "") .. name end
+		end
+	end
+	return mine
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Mise à jour des auras d'une case
 ----------------------------------------------------------------------------------------------------
@@ -611,8 +627,9 @@ local function UpdateAuras(b)
 	-- 5. Buff de groupe manquant, hors combat
 	-- (le panneau des buffs manquants, Buffs.lua, lit b.missingBuff)
 	local missing = not enemy and FindMissingBuff(b, unit) or nil
-	if b.missingBuff ~= missing then
-		b.missingBuff = missing
+	local uniques = not enemy and FindMyUniques(b, unit) or nil
+	if b.missingBuff ~= missing or b.myUniques ~= uniques then
+		b.missingBuff, b.myUniques = missing, uniques
 		Z:QueueBuffPanel()
 	end
 	if missing and db.missingBuffs then

@@ -9,6 +9,7 @@
 --   3. Z.clickDefaults.MACLASSE = { ["1"] = { id }, ["shift-1"] = { id }, ... }
 --   4. Z.resSpells et Z.classRes : son sort de résurrection, s'il en a un
 --   5. Z.raidBuffs.MACLASSE : ses buffs de groupe, s'il en a
+--   6. Z.uniqueBuffs.MACLASSE : ses buffs à poser sur une seule personne (le tank), s'il en a
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Les trois tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -94,6 +95,13 @@ Z.raidBuffs = {
 	MAGE   = { { 1459, 23028 } },  -- Intelligence des arcanes, Illumination des arcanes
 }
 
+-- Buffs à poser sur une seule personne, hors combat : le panneau des buffs manquants les propose pour le
+-- tank, ou pour le joueur choisi par /lyorune porteur. Rien n'est proposé tant que le mien est sur quelqu'un.
+Z.uniqueBuffs = {
+	SHAMAN = { 408514 },  -- Bouclier de terre
+	DRUID  = { 467 },     -- Épines
+}
+
 -- Affaiblissements sans intérêt pour un soigneur
 Z.ignoredDebuffs = {
 	[11196] = true, -- Bandé récemment
@@ -142,6 +150,14 @@ function Z:BuildData()
 			local group = ids[2] and Z.Knows(ids[2]) and Z.SpellName(ids[2])
 			if group and group ~= check.spell then check.groupSpell = group end
 			Z.buffChecks[#Z.buffChecks + 1] = check
+		end
+	end
+
+	Z.uniqueChecks = {}
+	for _, id in ipairs(Z.uniqueBuffs[Z.class] or {}) do
+		local name = Z.Knows(id) and Z.SpellName(id)
+		if name then
+			Z.uniqueChecks[#Z.uniqueChecks + 1] = { name = name, spell = name, icon = C_Spell.GetSpellTexture(id), unique = true }
 		end
 	end
 

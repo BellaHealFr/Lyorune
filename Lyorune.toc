@@ -1,11 +1,11 @@
 ## Interface: 16001
 ## Title: Lyorune |cff33dd88(Forever)|r
-## Notes: Cadres de soin simples, rapides et élégants pour WoW Forever : clic-soin avec bijoux, touches au survol, soins entrants, dissipation, distance, joueurs épinglés, signal, thèmes, profils, partage, tutoriel intégré.
-## Notes-enUS: Simple, fast and elegant healing frames for WoW Forever: click-casting with trinkets, hover keys, incoming heals, dispels, range, pinned players, pings, themes, profiles, sharing, built-in tutorial.
+## Notes: Cadres de soin simples, rapides et élégants pour WoW Forever : clic-soin avec bijoux, touches au survol, soins entrants, dissipation, distance, buffs manquants, recharge globale, joueurs épinglés, signal, thèmes, profils, partage, tutoriel intégré.
+## Notes-enUS: Simple, fast and elegant healing frames for WoW Forever: click-casting with trinkets, hover keys, incoming heals, dispels, range, missing buffs, global cooldown, pinned players, pings, themes, profiles, sharing, built-in tutorial.
 ## Author: BellaDroode
 ## X-License: Tous droits réservés (voir LICENSE)
 ## X-Website: https://github.com/BellaHealFr/Lyorune
-## Version: 1.21.0
+## Version: 1.22.0
 ## IconTexture: Interface\AddOns\Lyorune\Media\Logo
 ## Category-frFR: Portraits d'unités
 ## Category-enUS: Unit Frames
@@ -24,6 +24,7 @@ Themes.lua
 Frames.lua
 Auras.lua
 Buffs.lua
+Cast.lua
 Clicks.lua
 Macros.lua
 Alerts.lua

@@ -1323,6 +1323,7 @@ function Z:Refresh()
 	if Z.RefreshShapes then Z:RefreshShapes() end
 	if Z.RefreshPlacement then Z:RefreshPlacement() end
 	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
+	if Z.RefreshCastIndicator then Z:RefreshCastIndicator() end
 end
 
 function Z:CreateFrames()

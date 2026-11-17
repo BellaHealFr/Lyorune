@@ -1,6 +1,7 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - Buffs.lua : panneau des buffs manquants, hors combat seulement.
 -- Une ligne par joueur à qui manque un de mes buffs de groupe : un clic le lui lance, sans le cibler.
+-- Un buff unique (Bouclier de terre...) a sa ligne pour le tank, ou pour le joueur choisi, s'il n'est sur personne.
 -- Quand je connais la version de groupe du buff et que 3 joueurs d'un même groupe en manquent, une seule ligne
 -- « Groupe N » lance la version de groupe : moins de clics, moins de mana.
 -- Le panneau se cache à l'entrée en combat (avant que le jeu ne verrouille ses boutons) et revient après.
@@ -52,6 +53,33 @@ local function Missing()
 	return list
 end
 
+-- Buffs uniques (Bouclier de terre...) : une ligne pour le joueur choisi (/lyorune porteur), sinon pour le tank,
+-- tant que le mien n'est posé sur personne. Lu sur les cases visibles (b.myUniques, Auras.lua).
+local function UniqueRows(result)
+	if #Z.uniqueChecks == 0 then return end
+	local placed, chosen, tank = {}, nil, nil
+	local wanted = Z.char.buffTarget.name
+	for _, b in ipairs(Z.buttons) do
+		local unit = b.unit
+		if unit and not b.extra and b:IsVisible() and not unit:find("pet", 1, true) then
+			for name in (b.myUniques or ""):gmatch("[^,]+") do placed[name] = true end
+			local name = Z.UnitPinName(unit)
+			if name and wanted and name == wanted then chosen = chosen or { unit = unit, name = name } end
+			local role = UnitGroupRolesAssigned(unit)
+			if name and not issecret(role) and role == "TANK" then tank = tank or { unit = unit, name = name } end
+		end
+	end
+	local target, why = chosen, Z.L["choisi"]
+	if not target then target, why = tank, Z.L["tank"] end
+	if not target then return end
+	for _, check in ipairs(Z.uniqueChecks) do
+		if not placed[check.name] then
+			result[#result + 1] = { check = check, spell = check.spell, unit = target.unit, name = target.name,
+				class = select(2, UnitClass(target.unit)), why = why }
+		end
+	end
+end
+
 -- Lignes du panneau : un buff après l'autre (ordre de Data.lua), un joueur ou un groupe entier par ligne
 function Z.BuffRows()
 	local missing, result = Missing(), {}
@@ -79,6 +107,7 @@ function Z.BuffRows()
 			end
 		end
 	end
+	UniqueRows(result)
 	return result
 end
 
@@ -101,6 +130,9 @@ local function RowEnter(self)
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	GameTooltip:SetText(self.label:GetText() or "", 1, 1, 1)
 	GameTooltip:AddLine(L["Clic : %s"]:format(self.spellName or ""), UI.accent[1], UI.accent[2], UI.accent[3])
+	if self.why then
+		GameTooltip:AddLine(Z.L["Un autre joueur : /lyorune porteur en survolant sa case."], 0.8, 0.8, 0.8, true)
+	end
 	if self.spell2Name then
 		GameTooltip:AddLine(L["Clic droit : %s (tout son groupe)"]:format(self.spell2Name), 0.8, 0.8, 0.8)
 	end
@@ -170,7 +202,7 @@ end
 function Z:UpdateBuffPanel()
 	queued = false
 	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
-	local list = (Z.db.buffPanel and not closed and #Z.buffChecks > 0) and Z.BuffRows() or {}
+	local list = (Z.db.buffPanel and not closed and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
 	if #list == 0 then
 		if panel then panel:Hide() end
 		return
@@ -187,11 +219,14 @@ function Z:UpdateBuffPanel()
 		row:SetAttribute("spell1", entry.spell)
 		row:SetAttribute("type2", entry.spell2 and "spell" or nil)
 		row:SetAttribute("spell2", entry.spell2)
-		row.unitToken, row.spellName, row.spell2Name = entry.unit, entry.spell, entry.spell2
+		row.unitToken, row.spellName, row.spell2Name, row.why = entry.unit, entry.spell, entry.spell2, entry.why
 		row.icon:SetTexture(entry.check.icon)
 		if entry.count then
 			row.label:SetText(L["Groupe %d"]:format(entry.group) .. "  |cffb3b3b3(" .. entry.count .. ")|r")
 			row.label:SetTextColor(unpack(UI.accent))
+		elseif entry.why then
+			row.label:SetText(entry.name .. "  |cffb3b3b3(" .. entry.why .. ")|r")
+			row.label:SetTextColor(Z.ClassColor(entry.class))
 		else
 			row.label:SetText(entry.name)
 			row.label:SetTextColor(Z.ClassColor(entry.class))
@@ -237,3 +272,24 @@ Z:On("PLAYER_REGEN_ENABLED", function()
 	Z:QueueBuffPanel()
 end)
 Z:On("GROUP_ROSTER_UPDATE", function() Z:QueueBuffPanel() end)
+
+-- /lyorune porteur [nom] : le joueur qui reçoit mes buffs uniques à la place du tank (le joueur survolé, ou ma
+-- cible). Le même joueur une 2e fois, ou sans joueur : retour au tank. Gardé pour ce personnage.
+function Z:BuffTargetCommand(text)
+	local L, target = Z.L, Z.char.buffTarget
+	local name
+	if text and text ~= "" then
+		name = Z.CleanPinName(text)
+	else
+		local hovered = Z.hovered and Z.hovered:IsVisible() and Z.hovered.unit
+		name = Z.UnitPinName(hovered) or Z.UnitPinName("target")
+	end
+	if not name or name == target.name then
+		target.name = nil
+		Z:Print(L["buffs uniques : de retour sur le tank."])
+	else
+		target.name = name
+		Z:Print(L["buffs uniques : %s les recevra."]:format(name))
+	end
+	Z:QueueBuffPanel()
+end

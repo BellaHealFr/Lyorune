@@ -222,6 +222,8 @@ Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your 
   - **Number of charges**: a small number when the heal has several.
 - **Cell corners**: place one of your spells in each corner. It becomes a small coloured square (green, blue, yellow, pink) that drains over time, and leaves the icon row. At a glance you see who lacks your Renew or Rejuvenation. Each class keeps its own corners: your druid and your priest never mix.
 - **Missing buffs panel** (priest, druid, mage): out of combat, a small window lists the players who lack your group buff (Fortitude, Mark of the Wild, Arcane Intellect). Click a name to cast the buff on them, without targeting them; right-click casts the group version. When three players of the same group lack the buff, a single "Group N" line casts the group version directly. A player out of range is faded. The panel hides in combat and comes back afterwards; the cross closes it until the end of the next fight. Drag it by its title: its position is kept for each character. It has its own switch, separate from the small grey icon on the cell.
+- **Buffs meant for a single person** (shaman: Earth Shield; druid: Thorns): as long as yours is on nobody, the missing buffs panel offers a line for the tank, out of combat. Prefer another player? Hover their cell and type `/lyorune bearer` (or `/lyorune bearer Name`): they come before the tank, for this character. The same command on the same player brings you back to the tank. If your buff is already on someone, Lyorune asks nothing.
+- **Global cooldown and casting** ("Global cooldown and casting" setting, off at first): a thin bar under the frames, or a ring around the cursor, your choice. White during the global cooldown, accent color during your cast. You see at a glance when the next heal can go, even in combat.
 
 Everything works in combat. The game hides aura names there, but Lyorune recognises your heals by their number, or by the spell you just cast. A heal it cannot recognise stays in the icon row, never in the wrong corner.
 
@@ -314,6 +316,7 @@ Attach this result to your report if the game slows down with Lyorune.
 | `/lyorune verrou` | Lock or unlock the position |
 | `/lyorune reset` | Move the frames back to the centre |
 | `/lyorune pin` | Pin or unpin the hovered player (or your target, or the name typed after) |
+| `/lyorune bearer` | The hovered player (or your target, or the name typed after) gets your single-target buffs instead of the tank; a 2nd time: back to the tank |
 | `/lyorune group` | Group players who have Lyorune |
 | `/lyorune undo` | Go back to the configuration from before the last import |
 | `/lyorune measure` | Measure performance (out of combat) |

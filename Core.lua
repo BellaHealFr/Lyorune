@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.21.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.22.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -85,7 +85,8 @@ Z.defaults = {
 	bossDebuffs = true,        -- affaiblissement important en grand
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
-	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua)
+	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris
+	castIndicator = "OFF",     -- temps de recharge global et incantation (Cast.lua) : aucun, barre sous les cadres, anneau au curseur
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
@@ -173,6 +174,7 @@ Z.choices = {
 	color = { { "CLASS", "Classe" }, { "HEALTH", "Vie restante" } },
 	text = { { "DEFICIT", "Vie manquante" }, { "PERCENT", "Pourcentage" }, { "NONE", "Aucun" } },
 	hotStyle = { { "ICONS", "Icônes" }, { "BARS", "Barres fines" } },
+	castIndicator = { { "OFF", "Aucun" }, { "BAR", "Barre sous les cadres" }, { "RING", "Anneau au curseur" } },
 	debuffMode = { { "ALL", "Tous" }, { "DISPEL", "Dissipables par moi" } },
 	manaBars = { { "OFF", "Personne" }, { "HEALERS", "Soigneurs" }, { "ALL", "Tous" } },
 	manaColor = { { "BLUE", "Bleu" }, { "SKY", "Bleu ciel" }, { "PURPLE", "Violet" }, { "TEAL", "Turquoise" }, { "WHITE", "Blanc" } },
@@ -202,7 +204,7 @@ Z.notInProfile = {
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, errorNotice = true, tutorialDone = true, wizardDone = true,
-	buffPanel = true,
+	buffPanel = true, castIndicator = true,
 }
 
 -- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.
@@ -213,6 +215,7 @@ Z.charDefaults = {
 	extraPos = { "CENTER", 120, 200 }, -- cible, cible de la cible, focalisation
 	pinnedPos = { "CENTER", 120, 60 }, -- joueurs épinglés
 	buffPos = { "CENTER", 360, 0 },    -- panneau des buffs manquants
+	buffTarget = {},                   -- buffTarget.name : le joueur qui reçoit mes buffs uniques (sinon le tank)
 }
 
 ----------------------------------------------------------------------------------------------------
@@ -422,6 +425,8 @@ function Z.Command(msg)
 		Z:Print(Z.L["position réinitialisée."])
 	elseif pin then
 		Z:PinCommand(pinName) -- le nom garde ses majuscules
+	elseif msg == "porteur" or msg:match("^porteur ") or msg == "bearer" or msg:match("^bearer ") then
+		Z:BuffTargetCommand(pinName) -- le nom garde ses majuscules
 	elseif msg == "groupe" or msg == "group" then
 		Z:PrintSyncMembers()
 	elseif msg == "annuler" or msg == "undo" then

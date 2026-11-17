@@ -2047,6 +2047,114 @@ step("etape 15 : bijoux, arreter l'incantation, clic pour lancer du jeu", functi
   Z:ApplyClicks()
 end)
 
+step("etape 16 : buffs uniques, temps de recharge global", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  local oldRole, oldAfter = UnitGroupRolesAssigned, C_Timer.After
+  -- un buff unique pour le pretre du faux client (Data.lua : Z.uniqueBuffs)
+  Z.uniqueBuffs.PRIEST = { 6346 } Z:BuildData()
+  assert(#Z.uniqueChecks == 1 and Z.uniqueChecks[1].name == "Gardien de peur", "buff unique non lu")
+  local units = {}
+  for _, b in ipairs(Z.buttons) do if b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then units[#units + 1] = b end end
+  assert(#units >= 2, "faux groupe trop petit")
+  local tank = units[2]
+  UnitGroupRolesAssigned = function(u) return u == tank.unit and "TANK" or "HEALER" end
+  local function UniqueRow() for _, r in ipairs(Z.BuffRows()) do if r.check.unique then return r end end end
+  AURAS = {} Z.db.buffPanel = true Z.char.buffTarget = {} Z:Refresh() RunUpdates()
+  local row = UniqueRow()
+  assert(row and row.unit == tank.unit and row.spell == "Gardien de peur" and row.why == "tank", "buff unique pas propose au tank")
+  local found
+  for i = 1, 10 do
+    local r = rawget(_G, "LyoruneBuffsRow" .. i)
+    if r and r:IsShown() and r:GetAttribute("spell1") == "Gardien de peur" then found = r end
+  end
+  assert(found and found:GetAttribute("unit") == tank.unit and found:GetAttribute("type1") == "spell", "ligne du panneau")
+  found:Run("OnEnter") found:Run("OnLeave")
+  -- deja pose par moi sur quelqu'un : plus rien a proposer
+  AURAS["HELPFUL|PLAYER"] = { { name = "Gardien de peur", icon = 1, auraInstanceID = 51, spellId = 6346 } }
+  Z:Refresh() RunUpdates()
+  assert(not UniqueRow(), "buff deja pose encore propose")
+  AURAS = {} Z:Refresh() RunUpdates()
+  -- le joueur choisi passe avant le tank ; le meme une 2e fois (survol) : retour au tank
+  GROUP_NAMES[units[1].unit] = "Thrall"
+  SlashCmdList.LYORUNE("porteur thrall")
+  assert(Z.char.buffTarget.name == "Thrall", "porteur : " .. tostring(Z.char.buffTarget.name))
+  row = UniqueRow()
+  assert(row and row.unit == units[1].unit and row.why == "choisi", "joueur choisi ignore")
+  units[1]:Run("OnEnter") SlashCmdList.LYORUNE("porteur") units[1]:Run("OnLeave")
+  assert(Z.char.buffTarget.name == nil and UniqueRow().unit == tank.unit, "retour au tank")
+  -- joueur choisi absent du groupe : le tank
+  Z.char.buffTarget.name = "Absent" assert(UniqueRow().unit == tank.unit, "porteur absent")
+  Z.char.buffTarget.name = nil
+  -- ni tank ni joueur choisi, ou role secret : rien, sans erreur
+  UnitGroupRolesAssigned = function() return "HEALER" end assert(not UniqueRow(), "ligne sans tank")
+  UnitGroupRolesAssigned = function() return MakeSecret() end assert(not UniqueRow(), "role secret")
+  UnitGroupRolesAssigned = oldRole GROUP_NAMES[units[1].unit] = nil
+  Z.uniqueBuffs.PRIEST = nil Z:BuildData()
+  assert(#Z.uniqueChecks == 0)
+  -- temps de recharge global : rien n'est cree tant que le reglage reste sur « Aucun »
+  local later = {}
+  C_Timer.After = function(_, f) later[#later + 1] = f end
+  NOW = 5000
+  C_Spell.GetSpellCooldown = function(id) assert(id == 61304, "sort du temps de recharge global") return { startTime = NOW, duration = 1.5 } end
+  Z.db.castIndicator = "OFF" Z:Refresh()
+  FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+  assert(Z:CastIndicator() == nil, "barre creee sans le reglage")
+  -- barre : blanche pour la recharge, cachee a la fin
+  Z.db.castIndicator = "BAR" Z:Refresh()
+  FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+  local bar = Z:CastIndicator()
+  assert(bar and bar:IsShown() and bar._barColor[1] == 0.9, "barre de recharge")
+  RunUpdates()
+  table.remove(later)() assert(not bar:IsShown(), "barre restee apres la recharge")
+  -- incantation : couleur d'accent ; la recharge ne la remplace pas ; a la fin, la recharge reprend
+  UnitCastingInfo = function() return "Soins", "", 1, NOW * 1000, NOW * 1000 + 2500 end
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  assert(bar:IsShown() and bar._barColor[1] == Z.UI.accent[1], "barre d'incantation")
+  FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+  assert(bar._barColor[1] == Z.UI.accent[1], "recharge par-dessus l'incantation")
+  FireEvent("UNIT_SPELLCAST_STOP", "player")
+  assert(bar:IsShown() and bar._barColor[1] == 0.9, "recharge apres l'incantation")
+  for _, f in ipairs(later) do f() end later = {}
+  assert(not bar:IsShown())
+  -- en combat, temps secrets : l'objet « duree » du jeu est confie a la barre
+  UnitCastingInfo = function() return "Soins", "", 1, MakeSecret(), MakeSecret() end
+  Enum.StatusBarTimerDirection = { ElapsedTime = 0 }
+  local fed
+  UnitCastingDuration = function() return "duree" end
+  bar.SetTimerDuration = function(_, d) fed = d end
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  assert(bar:IsShown() and fed == "duree", "duree secrete")
+  FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
+  for _, f in ipairs(later) do f() end later = {}
+  -- anneau autour du curseur
+  UnitCastingInfo = function() return "Soins", "", 1, NOW * 1000, NOW * 1000 + 2500 end
+  Z.db.castIndicator = "RING" Z:Refresh()
+  CURSOR_X, CURSOR_Y = 300, 200
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  local _, ring = Z:CastIndicator()
+  assert(ring and ring:IsShown() and not bar:IsShown(), "anneau")
+  RunUpdates()
+  assert(ring._point and ring._point[4] == 300 and ring._point[5] == 200, "anneau loin du curseur")
+  FireEvent("UNIT_SPELLCAST_STOP", "player")
+  for _, f in ipairs(later) do f() end later = {}
+  assert(not ring:IsShown(), "anneau reste affiche")
+  -- interrupteur : plus rien n'ecoute mes sorts
+  Z.db.castIndicator = "OFF" Z:Refresh()
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  assert(not ring:IsShown() and not bar:IsShown(), "indicateur affiche alors que coupe")
+  CURSOR_X, CURSOR_Y = nil, nil
+  C_Timer.After, C_Spell.GetSpellCooldown = oldAfter, nil
+  UnitCastingInfo, UnitCastingDuration, Enum.StatusBarTimerDirection = nil, nil, nil
+  -- options
+  local labels = table.concat(Z:OptionLabels(), "|")
+  assert(labels:find("Recharge globale et incantation", 1, true), "option absente")
+  for _, tab in ipairs(Z:OptionsWindow().tabs) do
+    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
+  end
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z:Refresh()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

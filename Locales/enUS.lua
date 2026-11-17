@@ -368,14 +368,14 @@ Z.translations.enUS = {
 			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
-			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu), les coins, le panneau des buffs manquants.\n"
+			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu), les coins, le panneau des buffs manquants (tank compris), la recharge globale.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -584,7 +584,7 @@ Z.translations.enUS = {
 	["mesure faite : %d joueurs, %.2f ms par seconde en combat chargé (%.2f %%), mémoire %s."] = "measured: %d players, %.2f ms per second in a busy fight (%.2f%%), memory %s.",
 	-- 1.16.0 : panneau des buffs manquants, assistant de départ
 	["Panneau des buffs manquants"] = "Missing buffs panel",
-	["Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Elle se cache en combat."] = "Out of combat, a small window lists the players without your group buff: one click casts it on them. A whole group without it: a single line for the group version. It hides in combat.",
+	["Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat."] = "Out of combat, a small window lists the players without your group buff: one click casts it on them. A whole group without it: a single line for the group version. A buff meant for a single person (Earth Shield, Thorns) is offered for the tank, or for the player chosen with /lyorune bearer. It hides in combat.",
 	["Buffs manquants"] = "Missing buffs", ["Clic : %s"] = "Click: %s", ["Clic droit : %s (tout son groupe)"] = "Right-click: %s (their whole group)",
 	["et %d autres"] = "and %d more",
 	["Assistant de départ"] = "Setup assistant", ["assistant de départ"] = "setup assistant",
@@ -647,4 +647,15 @@ Z.translations.enUS = {
 	["Bijou avec le sort : sur chaque ligne de l'onglet Clics, deux petites icônes utilisent votre bijou du haut ou du bas juste avant le sort, sur un joueur vivant (#42)."] = "Trinket with the spell: on each line of the Clicks tab, two small icons use your top or bottom trinket right before the spell, on a living player (#42).",
 	["Arrêter l'incantation : un clic ou une touche peut interrompre le sort en cours (#42)."] = "Stop casting: a click or a key can interrupt the spell being cast (#42).",
 	["Clic pris aussi par le jeu : si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune, un message le dit et la ligne passe en orange ; Lyorune ne touche jamais aux raccourcis du jeu (#42)."] = "Click the game also uses: if the game's click casting uses the same combination as a Lyorune click, a message says so and the line turns orange; Lyorune never touches the game's bindings (#42).",
+	["Temps de recharge global"] = "Global cooldown",
+	["Recharge globale et incantation"] = "Global cooldown and casting",
+	["Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat."] = "A thin bar under the frames, or a ring around the cursor, that follows the global cooldown (white) and your current cast (accent color): you know when the next heal can go, even in combat.",
+	["Barre sous les cadres"] = "Bar under the frames", ["Anneau au curseur"] = "Ring at the cursor",
+	["choisi"] = "chosen", ["tank"] = "tank",
+	["Un autre joueur : /lyorune porteur en survolant sa case."] = "Another player: /lyorune bearer while hovering their frame.",
+	["buffs uniques : de retour sur le tank."] = "single-target buffs: back on the tank.",
+	["buffs uniques : %s les recevra."] = "single-target buffs: %s will get them.",
+	["le joueur survolé reçoit mes buffs uniques"] = "the hovered player gets my single-target buffs",
+	["Buffs à poser sur une seule personne : tant que votre Bouclier de terre (chaman) ou vos Épines (druide) ne sont sur personne, le panneau des buffs manquants propose une ligne pour le tank, ou pour le joueur choisi avec /lyorune porteur (#43)."] = "Buffs meant for a single person: as long as your Earth Shield (shaman) or Thorns (druid) is on nobody, the missing buffs panel offers a line for the tank, or for the player chosen with /lyorune bearer (#43).",
+	["Recharge globale et incantation (onglet Soins) : une fine barre sous les cadres, ou un anneau autour du curseur, montre le temps de recharge global et votre incantation en cours, même en combat (#43)."] = "Global cooldown and casting (Heals tab): a thin bar under the frames, or a ring around the cursor, shows the global cooldown and your current cast, even in combat (#43).",
 }

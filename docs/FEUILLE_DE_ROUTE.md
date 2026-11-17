@@ -29,7 +29,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 13 | 1.19.0 | Distance en trois paliers, soin refusé hors de vue (la flèche est abandonnée) | Publiée (v1.19.0) |
 | 14 | 1.20.0 | Joueurs épinglés, signal sur une case, chef et assistants | Publiée (v1.20.0) |
 | 15 | 1.21.0 | Clics plus sûrs : clics du jeu en conflit, bijou et arrêt d'incantation | Publiée (v1.21.0) |
-| 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | À faire |
+| 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | Publiée (v1.22.0) |
 | 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | À faire |
 | 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | À faire |
 
@@ -157,10 +157,11 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
   HealBot porté sur Forever (`/use 13` dans la macro de ses boutons sécurisés), à confirmer par un essai en combat
 
 ## Étape 16 : buffs uniques, temps de recharge global (1.22.0)
-- [ ] Buffs à ne poser que sur une personne (Bouclier de terre, Guide de lumière, etc.) : le panneau des buffs
-  manquants propose le tank, ou le joueur choisi ; hors combat seulement, selon la classe jouée (`Data.lua`)
-- [ ] Temps de recharge global et incantation en cours : fine barre sous les cadres ou anneau autour du curseur,
-  au choix
+- [x] Buffs à ne poser que sur une personne (Bouclier de terre, Épines ; Guide de lumière n'existe pas sur Forever) :
+  le panneau des buffs manquants propose le tank, ou le joueur choisi (`/lyorune porteur`) ; hors combat seulement,
+  selon la classe jouée (`Data.lua`, `Z.uniqueBuffs`)
+- [x] Temps de recharge global et incantation en cours : fine barre sous les cadres ou anneau autour du curseur,
+  au choix (`Cast.lua`, coupé au départ)
 
 ## Étape 17 : profils (1.23.0)
 - [ ] Copier seulement une partie d'un profil vers un autre (clics, apparence, cadres, soins) avec un choix par

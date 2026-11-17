@@ -221,6 +221,8 @@ Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit 
   - **Nombre de charges** : un petit chiffre quand le soin en a plusieurs.
 - **Coins de la case** : placez un de vos sorts dans chaque coin. Il devient un petit carré de couleur (vert, bleu, jaune, rose) qui se vide avec le temps, et quitte la rangée d'icônes. D'un coup d'œil, vous voyez qui n'a pas votre Rénovation ou votre Récupération. Chaque classe garde ses propres coins : votre druide et votre prêtre ne se mélangent pas.
 - **Panneau des buffs manquants** (prêtre, druide, mage) : hors combat, une petite fenêtre liste les joueurs à qui manque votre buff de groupe (Robustesse, Marque du fauve, Intelligence des arcanes). Un clic sur un nom lui lance le buff, sans le cibler ; un clic droit lance la version de groupe. Quand trois joueurs d'un même groupe n'ont pas le buff, une seule ligne « Groupe N » lance directement la version de groupe. Un joueur hors de portée est estompé. Le panneau se cache en combat et revient après ; la croix le ferme jusqu'à la fin du prochain combat. Déplacez-le par son titre : sa place est gardée pour chaque personnage. Il a son propre interrupteur, séparé de la petite icône grise sur la case.
+- **Buffs à poser sur une seule personne** (chaman : Bouclier de terre ; druide : Épines) : tant que le vôtre n'est sur personne, le panneau des buffs manquants propose une ligne pour le tank, hors combat. Vous préférez un autre joueur ? Survolez sa case et tapez `/lyorune porteur` (ou `/lyorune porteur Nom`) : il passe avant le tank, pour ce personnage. La même commande sur le même joueur vous ramène au tank. Si votre buff est déjà sur quelqu'un, Lyorune ne vous demande rien.
+- **Recharge globale et incantation** (réglage « Recharge globale et incantation », coupé au départ) : une fine barre sous les cadres, ou un anneau autour du curseur, au choix. Blanc pendant le temps de recharge global, couleur d'accent pendant votre incantation. Vous voyez d'un coup d'œil quand le prochain soin peut partir, même en combat.
 
 Tout marche en combat. Le jeu y cache le nom des auras, mais Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.
 
@@ -315,6 +317,7 @@ Joignez ce résultat à votre signalement si le jeu ralentit avec Lyorune.
 | `/lyorune verrou` | Verrouiller ou libérer la position |
 | `/lyorune reset` | Remettre les cadres au centre |
 | `/lyorune epingler` | Épingler ou retirer le joueur survolé (ou votre cible, ou le nom tapé après) |
+| `/lyorune porteur` | Le joueur survolé (ou votre cible, ou le nom tapé après) reçoit vos buffs uniques à la place du tank ; une 2e fois : retour au tank |
 | `/lyorune groupe` | Joueurs du groupe qui ont Lyorune |
 | `/lyorune annuler` | Revenir à la configuration d'avant le dernier import |
 | `/lyorune mesure` | Mesurer les performances (hors combat) |
