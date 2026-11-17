@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.19.0", date = "2026-11-17",
+		added = {
+			"Distance en trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (case encore plus estompée, empreintes au centre) (#31).",
+			"Soin refusé car le joueur est hors de vue : un œil apparaît 3 secondes au centre de sa case (#31).",
+		},
+		improved = {
+			"/lyorune position vérifie aussi le palier « très loin », en donjon et en combat.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.18.0", date = "2026-11-17",
 		added = {
 			"Mode performance pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde, icônes des soins et des affaiblissements regroupées, rien ne disparaît (#30).",

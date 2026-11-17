@@ -71,6 +71,8 @@ function Obj:SetVertexColor(r, g, b, a) self._color = { r, g, b, a } end
 function Obj:SetTextColor(r, g, b, a) self._color = { r, g, b, a } end
 function Obj:SetFont(file, size) self._font, self._size = file, size return true end
 function Obj:SetTexture(t) self._tex = t end
+function Obj:SetAlpha(a) self._alpha = a end
+function Obj:GetAlpha() return self._alpha or 1 end
 function Obj:SetStatusBarColor(r, g, b, a) self._barColor = { r, g, b, a } end
 function Obj:SetBackdrop(b) self._backdrop = b end
 function Obj:SetPoint(...) self._point = { ... } end

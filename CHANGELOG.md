@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.19.0] - 2026-11-17
+
+### Ajouté
+
+- Distance en trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (case encore plus estompée, empreintes au centre) ([#31](https://github.com/BellaHealFr/Lyorune/issues/31)).
+- Soin refusé car le joueur est hors de vue : un œil apparaît 3 secondes au centre de sa case ([#31](https://github.com/BellaHealFr/Lyorune/issues/31)).
+
+### Amélioré
+
+- /lyorune position vérifie aussi le palier « très loin », en donjon et en combat.
+
 ## [1.18.0] - 2026-11-17
 
 ### Ajouté
@@ -295,6 +306,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.19.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.15.0...v1.16.0

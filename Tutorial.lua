@@ -47,7 +47,7 @@ local steps = {
 		title = "Ce que disent les couleurs",
 		text = "|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
-			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
+			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins).\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "

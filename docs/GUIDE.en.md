@@ -24,7 +24,9 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Small coloured square in a corner | A spell you placed in that corner (Heals tab): it drains over time |
 | White border | They are your target |
 | Blue, purple, brown or green outline and light tint | A magic effect, a curse, a disease or a poison that YOU can remove (the name and health stay readable) |
-| Faded frame | They are out of range |
+| Faded frame | They are out of your healing range |
+| Frame faded further, footprints in the middle | They are far away (about 100 yards or more): you really need to move. Works in dungeons and raids too |
+| An eye in the middle, for 3 seconds | The game just refused your heal: they are out of sight (behind a pillar, a wall). Step aside |
 | "Dead", "Ghost", "Offline" | They are dead, a ghost, or disconnected (their frame stays in place) |
 | Small icons at the top left | Your heals over time on them |
 | Icons at the bottom right | Their debuffs |
@@ -180,6 +182,7 @@ Type `/lyorune test`, or click "5 players", "10 players", "25 players" or "40 pl
 - **Class colors**: "Vivid" (default) for bold, bright colours, or "Natural" for the game's own.
 - **Theme**: Neon, Clean, Glass, Classic or Heroic (flat and modern, lightly embossed, glassy, like the game's raid frames, or textured with a golden border).
 - **Transparency**: three one-click presets, "Subtle", "Semi-transparent", "Clearly visible", then the fine settings (frame opacity, out-of-range opacity, brightness).
+- **Player far away: footprints** and **Heal refused, out of sight: an eye**: two switches, just under the out-of-range opacity. The game does not give player positions in dungeons or raids (no arrow possible); these two hints work everywhere, even in combat.
 - **High contrast**: black background, white border, larger text. It also applies to Lyorune's windows.
 - **Health text**: missing health, percentage, or nothing.
 

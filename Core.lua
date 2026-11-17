@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.18.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.19.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -60,6 +60,8 @@ Z.defaults = {
 	classIntensity = "VIVID",  -- couleurs de classe : naturelles (celles du jeu) ou vives
 	highContrast = false,      -- mode contraste élevé
 	rangeAlpha = 35,           -- opacité d'un joueur hors de portée, en %
+	farHint = true,            -- joueur très loin (le jeu ne le voit plus) : case plus estompée, empreintes au centre
+	losHint = true,            -- soin refusé car le joueur est hors de vue : œil au centre de sa case, 3 secondes
 
 	-- Indicateurs (chacun peut être coupé)
 	showIncoming = true,       -- soins en route

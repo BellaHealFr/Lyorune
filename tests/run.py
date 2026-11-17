@@ -1817,6 +1817,75 @@ step("etape 12 : mode performance, mesure des performances", function()
   Z:Refresh() RunUpdates()
 end)
 
+step("etape 13 : distance en trois paliers, soin refuse hors de vue", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = v end
+  local b for _, x in ipairs(Z.buttons) do if x.unit and x.unit ~= "player" and x:IsVisible() and not x.extra then b = x break end end
+  assert(b, "case d'un autre joueur")
+  local readyCheck = b.readyCheck b.readyCheck = nil -- l'appel « Pret ? » passe avant
+  Z.db.farHint, Z.db.losHint, Z.db.rangeAlpha = true, true, 40 Z:Refresh()
+  -- #31 tres loin : le jeu ne voit plus le joueur, case plus estompee et empreintes au centre
+  UnitIsVisible = function() return false end
+  TICK()
+  assert(b.far and b.center:IsShown() and b.center._tex:find("Ability_Tracking", 1, true), "empreintes absentes")
+  assert(math.abs(b:GetAlpha() - 0.2) < 0.001, "opacite tres loin : " .. tostring(b:GetAlpha()))
+  -- le jeu le revoit : retour a l'estompage simple, plus d'icone
+  UnitIsVisible = function() return true end
+  TICK()
+  assert(not b.far and not b.center:IsShown(), "empreintes restees")
+  -- reponse secrete ou joueur deconnecte : on s'en tient a l'estompage simple
+  UnitIsVisible = function() return MakeSecret() end TICK()
+  assert(not b.far, "reponse secrete prise pour loin")
+  UnitIsVisible = function() return false end OFFLINE = true TICK() OFFLINE = false
+  assert(not b.far, "deconnecte pris pour loin")
+  -- interrupteur
+  Z.db.farHint = false TICK()
+  assert(not b.far and not b.center:IsShown(), "farHint coupe")
+  UnitIsVisible = nil
+  -- soin refuse hors de vue : clic sur la case, message du jeu
+  SPELL_FAILED_LINE_OF_SIGHT = "Cible hors du champ de vision"
+  b:Run("OnClick", "LeftButton")
+  FireEvent("UI_ERROR_MESSAGE", 50, "Autre erreur")
+  assert(not b.losUntil, "mauvaise erreur prise pour hors de vue")
+  FireEvent("UI_ERROR_MESSAGE", 50, SPELL_FAILED_LINE_OF_SIGHT)
+  assert(b.losUntil and b.center:IsShown() and b.center._tex:find("Ability_EyeOfTheOwl", 1, true), "oeil absent")
+  -- au bout de 3 secondes, l'oeil s'en va
+  NOW = NOW + 4 Z.MarkOutOfSight(nil) b.losUntil = NOW - 1 FireEvent("UNIT_PHASE", b.unit)
+  assert(not b.center:IsShown(), "oeil reste")
+  b.losUntil = nil
+  -- refus a la fin d'une incantation partie du clic, et pas d'une autre plus tard
+  b:Run("OnClick", "LeftButton")
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  NOW = NOW + 2.5
+  FireEvent("UI_ERROR_MESSAGE", 50, SPELL_FAILED_LINE_OF_SIGHT)
+  assert(b.losUntil, "refus en fin d'incantation non relie au clic")
+  b.losUntil = nil FireEvent("UNIT_SPELLCAST_STOP", "player")
+  NOW = NOW + 5
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  FireEvent("UI_ERROR_MESSAGE", 50, SPELL_FAILED_LINE_OF_SIGHT)
+  assert(not b.losUntil, "sort lance sans clic sur une case")
+  -- valeur secrete et interrupteur
+  b:Run("OnClick", "LeftButton")
+  FireEvent("UI_ERROR_MESSAGE", 50, MakeSecret())
+  assert(not b.losUntil, "message secret lu")
+  Z.db.losHint = false
+  FireEvent("UI_ERROR_MESSAGE", 50, SPELL_FAILED_LINE_OF_SIGHT)
+  assert(not b.losUntil, "losHint coupe")
+  FireEvent("UNIT_SPELLCAST_STOP", "player")
+  SPELL_FAILED_LINE_OF_SIGHT = nil
+  -- diagnostic de position : la ligne du nouveau palier
+  Z.db.positionDiag = nil SlashCmdList.LYORUNE("position")
+  assert(Z.db.positionDiag[1]:find("vu par le jeu", 1, true), "diagnostic sans le palier tres loin")
+  -- options
+  local labels = table.concat(Z:OptionLabels(), "|")
+  for _, label in ipairs({ "Joueur très loin : empreintes", "Soin refusé, hors de vue : un œil" }) do
+    assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+  end
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z.db.positionDiag = nil
+  b.readyCheck = readyCheck
+  Z:Refresh() RunUpdates()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

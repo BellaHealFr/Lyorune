@@ -23,7 +23,9 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Petit carré de couleur dans un coin | Un sort que vous avez placé dans ce coin (onglet Soins) : il se vide avec le temps |
 | Bordure blanche | C'est votre cible |
 | Contour et léger voile bleu, violet, brun ou vert | Une magie, une malédiction, une maladie ou un poison que VOUS pouvez retirer (le nom et la vie restent lisibles) |
-| Case estompée | Il est hors de portée |
+| Case estompée | Il est hors de portée de vos soins |
+| Case encore plus estompée, empreintes au centre | Il est très loin (plus de 100 mètres environ) : il faut vraiment vous déplacer. Marche aussi en donjon et en raid |
+| Un œil au centre, pendant 3 secondes | Le jeu vient de refuser votre soin : il est hors de vue (derrière un pilier, un mur). Décalez-vous |
 | « Mort », « Fantôme », « Déco » | Il est mort, en fantôme, ou déconnecté (sa case reste en place) |
 | Petites icônes en haut à gauche | Vos soins sur la durée posés sur lui |
 | Icônes en bas à droite | Ses affaiblissements |
@@ -179,6 +181,7 @@ Onglet **Apparence** :
 - **Couleurs de classe** : « Vives » (par défaut) pour des couleurs franches et lumineuses, ou « Naturelles » pour celles du jeu.
 - **Thème** : Néon, Épuré, Verre, Classique ou Héroïque.
 - **Transparence** : trois préréglages en un clic, « Discret », « Semi-transparent », « Bien visible », puis les réglages fins (opacité des cadres, opacité hors de portée, luminosité).
+- **Joueur très loin : empreintes** et **Soin refusé, hors de vue : un œil** : deux interrupteurs, juste sous l'opacité hors de portée. Le jeu ne donne pas la position des joueurs en donjon ni en raid (pas de flèche possible) ; ces deux indices marchent partout, même en combat.
 - **Contraste élevé** : fond noir, bordure blanche, texte plus gros. Il vaut aussi pour les fenêtres de Lyorune.
 - **Texte de vie** : vie manquante, pourcentage, ou rien.
 

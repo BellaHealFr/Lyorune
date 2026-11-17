@@ -110,6 +110,10 @@ Z.translations.enUS = {
 	["Absorption de soins"] = "Heal absorb",
 	["Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat."] = "Dark red band at the end of the health bar: the part a debuff \"eats\" before your heals count. Computed by the game, visible in combat.",
 	["Invocation en cours, autre phase"] = "Pending summon, other phase",
+	["Joueur très loin : empreintes"] = "Player far away: footprints",
+	["Trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (plus de 100 mètres environ : case encore plus estompée, empreintes au centre)."] = "Three levels, even in dungeons and raids: in healing range, close (faded cell), far away (about 100 yards or more: cell faded further, footprints in the middle).",
+	["Soin refusé, hors de vue : un œil"] = "Heal refused, out of sight: an eye",
+	["Quand le jeu refuse votre soin parce que le joueur est derrière un pilier ou un mur, un œil apparaît 3 secondes au centre de sa case."] = "When the game refuses your heal because the player is behind a pillar or a wall, an eye shows for 3 seconds in the middle of their cell.",
 	["Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte)."] = "Icon in the middle of the cell: summon offered, accepted or declined, or a player in another phase (seemingly close, but out of reach).",
 	["Mes clics dans l'infobulle"] = "My clicks in the tooltip",
 	["Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro."] = "When hovering a cell, out of combat: each click and key with its spell or macro.",
@@ -344,12 +348,12 @@ Z.translations.enUS = {
 		"The coloured bar is the player's health: the shorter it is, the more hurt they are.\n\nThe |cff73ff99light green|r at the end of the bar shows heals already on their way. The |cff8cd9ffblue strip|r at the bottom is a shield.",
 	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
-			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
+			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins).\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab).\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a frame out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range (footprints: far away; an eye: out of sight).\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab).\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a frame out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
@@ -604,4 +608,7 @@ Z.translations.enUS = {
 	["Un interrupteur général « Synchronisation entre joueurs » coupe tous les messages invisibles ; un joueur qui en envoie trop est ignoré un moment (#29)."] = "A main switch \"Sync between players\" turns off every invisible message; a player who sends too many is ignored for a while (#29).",
 	["Mode performance pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde, icônes des soins et des affaiblissements regroupées, rien ne disparaît (#30)."] = "Performance mode for big raids or a modest computer: range checked once per second, heal and debuff icons grouped, nothing disappears (#30).",
 	["Mesure des performances (onglet Aide ou /lyorune mesure) : Lyorune tourne sur un faux groupe de 5, 25 et 40 joueurs et se compare aux autres addons de soin chargés (#30)."] = "Performance measurement (Help tab or /lyorune measure): Lyorune runs on a fake group of 5, 25 and 40 players and compares itself with the other healing addons loaded (#30).",
+	["Distance en trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (case encore plus estompée, empreintes au centre) (#31)."] = "Distance in three levels, even in dungeons and raids: in healing range, close (faded cell), far away (cell faded further, footprints in the middle) (#31).",
+	["Soin refusé car le joueur est hors de vue : un œil apparaît 3 secondes au centre de sa case (#31)."] = "Heal refused because the player is out of sight: an eye shows for 3 seconds in the middle of their cell (#31).",
+	["/lyorune position vérifie aussi le palier « très loin », en donjon et en combat."] = "/lyorune position also checks the \"far away\" level, in dungeons and in combat.",
 }

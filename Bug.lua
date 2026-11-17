@@ -1,5 +1,5 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Lyorune - Bug.lua : signaler un bug à l'auteur, et diagnostic de position pour la future flèche de direction.
+-- Lyorune - Bug.lua : signaler un bug à l'auteur, et diagnostic de position et de distance (/lyorune position).
 --
 -- Un addon ne peut rien envoyer sur internet. /lyorune bug pose donc trois questions et prépare un rapport
 -- compact que le joueur copie (Ctrl+C) et colle à l'adresse indiquée. Aucune fenêtre ne s'ouvre toute seule.
@@ -168,7 +168,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 -- /lyorune position : ce que le jeu accepte de dire sur la position des joueurs, ici et maintenant.
--- Sert à décider si une flèche de direction est possible (extérieur, donjon, combat). Le résultat est
+-- Sert à vérifier les paliers de distance des cases (extérieur, donjon, combat). Le résultat est
 -- affiché dans le chat et gardé dans LyoruneDB.positionDiag pour pouvoir être relu hors du jeu.
 ----------------------------------------------------------------------------------------------------
 local function Describe(label, fn)
@@ -197,6 +197,8 @@ function Z:DiagnosePosition()
 			return position:GetXY()
 		end),
 		Describe("à portée de " .. other, function() return UnitInRange(other) end),
+		-- palier « très loin » des cases (1.19.0) : il faut une réponse lisible, même en combat
+		Describe("vu par le jeu : " .. other, function() return UnitIsVisible(other) end),
 	}
 	local db = Z.db
 	db.positionDiag = db.positionDiag or {}

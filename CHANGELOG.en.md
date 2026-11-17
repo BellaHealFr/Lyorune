@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.19.0] - 2026-11-17
+
+### Added
+
+- Distance in three levels, even in dungeons and raids: in healing range, close (faded cell), far away (cell faded further, footprints in the middle) ([#31](https://github.com/BellaHealFr/Lyorune/issues/31)).
+- Heal refused because the player is out of sight: an eye shows for 3 seconds in the middle of their cell ([#31](https://github.com/BellaHealFr/Lyorune/issues/31)).
+
+### Improved
+
+- /lyorune position also checks the "far away" level, in dungeons and in combat.
+
 ## [1.18.0] - 2026-11-17
 
 ### Added
@@ -295,6 +306,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.19.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.15.0...v1.16.0

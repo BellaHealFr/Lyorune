@@ -26,7 +26,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 10 | 1.16.0 | Confort | Publiée (v1.16.0) |
 | 11 | 1.17.0 | Synchronisation entre joueurs | Publiée (v1.17.0) |
 | 12 | 1.18.0 | Performances | Publiée (v1.18.0) |
-| 13 | 1.19.0 | Flèche de direction | Selon le test en jeu |
+| 13 | 1.19.0 | Distance en trois paliers, soin refusé hors de vue (la flèche est abandonnée) | Publiée (v1.19.0) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -127,10 +127,12 @@ de soin et leurs 5 habillages restent tels quels.
 ## Étape 12 : performances (1.18.0)
 - [x] Mode performance et commande de mesure avec un faux groupe de 5, 25 et 40 (#30)
 
-## Étape 13 : flèche de direction (1.19.0)
-- [ ] Flèche en extérieur seulement, selon les résultats de `/lyorune position` (#31)
+## Étape 13 : distance et vue (1.19.0)
+- [x] Distance en trois paliers (à portée, proche, très loin avec empreintes) et œil quand un soin est refusé
+  car le joueur est hors de vue (#31)
 
-Le jeu ne donne pas la position des autres joueurs en donjon ni en raid : là, l'indication « hors de portée » reste.
+Flèche de direction abandonnée (décision de l'auteur, 17 novembre 2026) : le jeu ne donne pas la position des
+autres joueurs en donjon ni en raid. Ces deux indices marchent partout, même en combat.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.

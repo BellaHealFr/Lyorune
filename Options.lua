@@ -420,6 +420,8 @@ local function SimpleTabs()
 				{ "step", "brightness", "Luminosité des barres (%)" },
 				{ "step", "frameAlpha", "Opacité des cadres (%)" },
 				{ "step", "rangeAlpha", "Opacité hors de portée (%)" },
+				{ "check", "farHint", "Joueur très loin : empreintes", "Trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (plus de 100 mètres environ : case encore plus estompée, empreintes au centre)." },
+				{ "check", "losHint", "Soin refusé, hors de vue : un œil", "Quand le jeu refuse votre soin parce que le joueur est derrière un pilier ou un mur, un œil apparaît 3 secondes au centre de sa case." },
 				{ "head", "Préréglages de transparence" },
 				{ "note", "Un rendu en un clic, à ajuster ensuite avec les trois réglages ci-dessus.", 30 },
 				OpacityButton("Discret", 55, 25),

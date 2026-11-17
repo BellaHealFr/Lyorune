@@ -183,10 +183,34 @@ local function UpdateName(b)
 	b.name:SetText(UnitName(b.unit))
 end
 
--- Hors de portée : la case s'estompe
+-- Distance, en trois paliers, sans la position des joueurs (cachée par le jeu en donjon et en raid) :
+--   à portée de soin (UnitInRange, environ 40 m) : case normale ;
+--   proche mais hors de portée (le jeu voit encore le joueur, environ 100 m) : case estompée ;
+--   loin (le jeu ne le voit plus) : case encore plus estompée, empreintes au centre (réglage « farHint »).
+-- Si le jeu rend une réponse secrète, Lyorune s'en tient à l'estompage simple.
+local UpdateCenter
+
+local function IsFar(unit)
+	if not db.farHint or not UnitIsVisible then return false end
+	local visible, connected = UnitIsVisible(unit), UnitIsConnected(unit)
+	if issecret(visible) or issecret(connected) or not connected then return false end
+	return not visible
+end
+
+local function SetFar(b, far)
+	if b.far == far then return end
+	b.far = far
+	UpdateCenter(b)
+end
+
 local function UpdateRange(b)
 	local me = UnitIsUnit(b.unit, "player")
-	if not issecret(me) and me then return b:SetAlpha(1) end -- je suis toujours à portée de moi-même
+	if not issecret(me) and me then SetFar(b, false) return b:SetAlpha(1) end -- je suis toujours à portée de moi-même
+	if IsFar(b.unit) then
+		SetFar(b, true)
+		return b:SetAlpha(math.max(0.1, rangeAlpha * 0.5))
+	end
+	SetFar(b, false)
 	local inRange, checked = UnitInRange(b.unit)
 	if issecret(inRange) then
 		b:SetAlphaFromBoolean(inRange, 1, rangeAlpha)
@@ -280,8 +304,12 @@ local function InOtherPhase(unit)
 	return reason ~= nil and not issecret(reason)
 end
 
--- Icône centrale : réponse à l'appel, résurrection en cours, invocation, autre phase
-local function UpdateCenter(b)
+-- Icône centrale : réponse à l'appel, résurrection en cours, soin refusé car hors de vue, invocation,
+-- autre phase, joueur très loin
+local LOS_ICON = "Interface\\Icons\\Ability_EyeOfTheOwl"
+local FAR_ICON = "Interface\\Icons\\Ability_Tracking"
+
+function UpdateCenter(b)
 	local unit = b.unit
 	local ready = b.readyCheck and GetReadyCheckStatus(unit)
 	local res = UnitHasIncomingResurrection(unit)
@@ -294,10 +322,14 @@ local function UpdateCenter(b)
 		b.center:SetTexture(READY_CHECK_WAITING_TEXTURE)
 	elseif not issecret(res) and res then
 		b.center:SetTexture("Interface\\RaidFrame\\Raid-Icon-Rez")
+	elseif b.losUntil and GetTime() < b.losUntil then
+		b.center:SetTexture(LOS_ICON)
 	elseif summon then
 		b.center:SetAtlas(summon)
 	elseif db.showSummonPhase and InOtherPhase(unit) then
 		b.center:SetTexture("Interface\\TargetingFrame\\UI-PhasingIcon")
+	elseif b.far then
+		b.center:SetTexture(FAR_ICON)
 	else
 		b.center:Hide()
 		return
@@ -678,6 +710,46 @@ end
 -- Une case apparaît ou disparaît : l'étiquette de son groupe suit (pas d'étiquette sur un groupe vide)
 local function MembersChanged() if Z.UpdateHandles then Z.UpdateHandles() end end
 
+-- Soin refusé car hors de vue (réglage « losHint ») : le jeu ne dit pas d'avance qu'un joueur est derrière un
+-- pilier, mais il le dit quand il refuse le sort. Lyorune retient la case cliquée (clic ou touche au survol),
+-- garde ce lien pendant l'incantation qui suit, et pose un œil au centre de cette case pendant 3 secondes.
+local LOS_SECONDS, CLICK_WINDOW = 3, 0.5
+local clicked, clickedAt, casting, castEndAt = nil, 0, false, nil
+
+local function NoteClick(b)
+	clicked, clickedAt, casting, castEndAt = b, GetTime(), false, nil
+end
+
+-- Mes incantations : celle qui part juste après un clic sur une case est liée à cette case
+local function CastStarted(unit)
+	if unit == "player" and clicked then casting = GetTime() - clickedAt <= CLICK_WINDOW end
+end
+
+local function CastEnded(unit)
+	if unit == "player" and casting then casting, castEndAt = false, GetTime() end
+end
+
+function Z.MarkOutOfSight(b)
+	if not b or not b.unit or not db.losHint then return end
+	b.losUntil = GetTime() + LOS_SECONDS
+	UpdateCenter(b)
+	C_Timer.After(LOS_SECONDS + 0.05, function()
+		if b.losUntil and GetTime() >= b.losUntil then
+			b.losUntil = nil
+			if b.unit then UpdateCenter(b) end
+		end
+	end)
+end
+
+local function OnGameError(_, message)
+	if not clicked or issecret(message) or message ~= SPELL_FAILED_LINE_OF_SIGHT then return end
+	local now = GetTime()
+	-- refus immédiat (sort instantané ou début d'incantation), ou à la fin d'une incantation partie de ce clic
+	if now - clickedAt <= CLICK_WINDOW or casting or (castEndAt and now - castEndAt <= CLICK_WINDOW) then
+		Z.MarkOutOfSight(clicked)
+	end
+end
+
 -- Création d'une case : le jeu crée le bouton sécurisé, Lyorune l'habille.
 local function InitButton(_, name)
 	local b = _G[name]
@@ -692,6 +764,7 @@ local function InitButton(_, name)
 	b:HookScript("OnHide", MembersChanged)
 	b:HookScript("OnEnter", OnEnter)
 	b:HookScript("OnLeave", OnLeave)
+	b:HookScript("OnClick", NoteClick) -- après le clic, sans toucher au sort lancé
 
 	Style(b)
 	Z:RegisterExternalClicks(b)
@@ -1301,6 +1374,21 @@ function Z:CreateFrames()
 	Z:On("READY_CHECK", ReadyCheck(true))
 	Z:On("READY_CHECK_CONFIRM", ReadyCheck(true))
 	Z:On("READY_CHECK_FINISHED", function() C_Timer.After(5, ReadyCheck(false)) end)
+
+	-- Soin refusé car hors de vue : message d'erreur du jeu, et mes incantations pour le relier au bon clic
+	Z:On("UI_ERROR_MESSAGE", OnGameError)
+	local casts = CreateFrame("Frame") -- mes incantations seulement, pas celles de tout le raid
+	for _, event in ipairs({ "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_STOP",
+		"UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_CHANNEL_STOP" }) do
+		pcall(casts.RegisterUnitEvent, casts, event, "player")
+	end
+	casts:SetScript("OnEvent", function(_, event, unit)
+		if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
+			CastStarted(unit)
+		else
+			CastEnded(unit)
+		end
+	end)
 
 	-- Relevé de l'état des cadres : quelques secondes après la connexion, puis à la déconnexion
 	C_Timer.After(6, function() Z:SaveFrameState() end)
