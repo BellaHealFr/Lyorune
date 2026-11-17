@@ -279,6 +279,17 @@ Type `/lyorune bug`. Answer the three questions, click "Select all", copy with C
 
 Lyorune does not bother you with its errors: at most one discreet message per session, which you can turn off in the Help tab.
 
+### The game slows down in a big raid?
+
+Lyorune only works when a player changes (health, heals, debuffs). Only the range is checked twice per second. On a modest computer or in a 40 player raid, tick **Performance mode** in the Help tab: the range is then checked once per second, and heal and debuff icons are grouped (a tenth of a second late at most). Nothing disappears from your frames. This setting can be kept in a raid profile.
+
+To be sure, click **Measure performance** (Help tab) or type `/lyorune measure`, out of combat. Lyorune runs its frames on a fake group of 5, 25 and 40 players and shows:
+- the time it would take each second in a busy fight, for each group size;
+- its memory, next to that of the other healing or interface addons loaded;
+- their real time, if the game's profiler is on.
+
+Attach this result to your report if the game slows down with Lyorune.
+
 ## Commands
 
 | Command | Effect |
@@ -291,5 +302,6 @@ Lyorune does not bother you with its errors: at most one discreet message per se
 | `/lyorune reset` | Move the frames back to the centre |
 | `/lyorune group` | Group players who have Lyorune |
 | `/lyorune undo` | Go back to the configuration from before the last import |
+| `/lyorune measure` | Measure performance (out of combat) |
 | `/lyorune bug` | Report a problem |
 | `/lyorune nouveautes` | See what is new in this version |

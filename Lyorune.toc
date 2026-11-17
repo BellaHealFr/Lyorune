@@ -5,7 +5,7 @@
 ## Author: BellaDroode
 ## X-License: Tous droits réservés (voir LICENSE)
 ## X-Website: https://github.com/BellaHealFr/Lyorune
-## Version: 1.17.0
+## Version: 1.18.0
 ## IconTexture: Interface\AddOns\Lyorune\Media\Logo
 ## Category-frFR: Portraits d'unités
 ## Category-enUS: Unit Frames
@@ -31,6 +31,7 @@ Share.lua
 Comm.lua
 Bug.lua
 Preview.lua
+Perf.lua
 Placement.lua
 Options.lua
 Runes.lua

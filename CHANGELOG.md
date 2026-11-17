@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.18.0] - 2026-11-17
+
+### Ajouté
+
+- Mode performance pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde, icônes des soins et des affaiblissements regroupées, rien ne disparaît ([#30](https://github.com/BellaHealFr/Lyorune/issues/30)).
+- Mesure des performances (onglet Aide ou /lyorune mesure) : Lyorune tourne sur un faux groupe de 5, 25 et 40 joueurs et se compare aux autres addons de soin chargés ([#30](https://github.com/BellaHealFr/Lyorune/issues/30)).
+
 ## [1.17.0] - 2026-11-17
 
 ### Ajouté
@@ -288,6 +295,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.18.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.14.0...v1.15.0

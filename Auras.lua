@@ -630,11 +630,19 @@ end
 
 ----------------------------------------------------------------------------------------------------
 -- File d'attente : une seule mise à jour par case et par image
+-- (mode performance : les changements sont regroupés, 10 passages par seconde au plus)
 ----------------------------------------------------------------------------------------------------
+local PERF_WAIT = 0.1
 local dirty = {}
 local driver = CreateFrame("Frame")
 driver:Hide()
-driver:SetScript("OnUpdate", function(self)
+driver.waited = 0
+driver:SetScript("OnUpdate", function(self, elapsed)
+	if Z.db.perfMode then
+		self.waited = self.waited + (elapsed or 0)
+		if self.waited < PERF_WAIT then return end
+	end
+	self.waited = 0
 	self:Hide()
 	if not dispelCurve then BuildCurve() end
 	for b in pairs(dirty) do
@@ -646,4 +654,10 @@ end)
 function Z.QueueAuras(b)
 	dirty[b] = true
 	driver:Show()
+end
+
+-- Mise à jour immédiate, hors file : pour la mesure des performances (Perf.lua)
+function Z.UpdateAurasNow(b)
+	if not dispelCurve then BuildCurve() end
+	UpdateAuras(b)
 end

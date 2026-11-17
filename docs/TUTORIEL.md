@@ -280,6 +280,17 @@ Le pas à pas complet, avec la création du compte GitHub et l'envoi d'une image
 
 Lyorune ne vous dérange pas pour ses erreurs : au plus un message discret par session, que vous pouvez couper dans l'onglet Aide.
 
+### Le jeu ralentit en grand raid ?
+
+Lyorune ne travaille que lorsqu'un joueur change (vie, soins, affaiblissements). Seule la portée est revue deux fois par seconde. Sur un ordinateur modeste ou en raid de 40, cochez **Mode performance** dans l'onglet Aide : la portée n'est plus revue qu'une fois par seconde, et les icônes de soins et d'affaiblissements sont regroupées (un dixième de seconde de retard au plus). Rien ne disparaît de vos cases. Ce réglage peut être gardé dans un profil de raid.
+
+Pour en avoir le cœur net, cliquez sur **Mesurer les performances** (onglet Aide) ou tapez `/lyorune mesure`, hors combat. Lyorune fait tourner ses cases sur un faux groupe de 5, 25 et 40 joueurs et affiche :
+- le temps qu'il prendrait chaque seconde dans un combat chargé, pour chaque taille de groupe ;
+- sa mémoire, à côté de celle des autres addons de soin ou d'interface chargés ;
+- leur temps réel, si le profileur du jeu est actif.
+
+Joignez ce résultat à votre signalement si le jeu ralentit avec Lyorune.
+
 ## Les commandes
 
 | Commande | Effet |
@@ -292,5 +303,6 @@ Lyorune ne vous dérange pas pour ses erreurs : au plus un message discret par s
 | `/lyorune reset` | Remettre les cadres au centre |
 | `/lyorune groupe` | Joueurs du groupe qui ont Lyorune |
 | `/lyorune annuler` | Revenir à la configuration d'avant le dernier import |
+| `/lyorune mesure` | Mesurer les performances (hors combat) |
 | `/lyorune bug` | Signaler un problème |
 | `/lyorune nouveautes` | Voir les nouveautés de la version |

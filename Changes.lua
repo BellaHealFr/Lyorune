@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.18.0", date = "2026-11-17",
+		added = {
+			"Mode performance pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde, icônes des soins et des affaiblissements regroupées, rien ne disparaît (#30).",
+			"Mesure des performances (onglet Aide ou /lyorune mesure) : Lyorune tourne sur un faux groupe de 5, 25 et 40 joueurs et se compare aux autres addons de soin chargés (#30).",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.17.0", date = "2026-11-17",
 		added = {
 			"Qui relève qui : quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, en vert, chez tous ceux qui ont Lyorune ; deux soigneurs ne relèvent plus le même joueur (#29).",

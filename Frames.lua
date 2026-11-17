@@ -325,6 +325,9 @@ local function UpdateAll(b)
 	Z.QueueAuras(b)
 end
 
+-- Les mises à jour d'une case, pour la mesure des performances (Perf.lua) : le vrai code, chronométré
+Z.cellUpdates = { all = UpdateAll, health = UpdateHealth, prediction = UpdatePrediction, power = UpdatePower, range = UpdateRange }
+
 ----------------------------------------------------------------------------------------------------
 -- Événements d'une case
 ----------------------------------------------------------------------------------------------------
@@ -1306,9 +1309,16 @@ function Z:CreateFrames()
 	-- Portée : le seul contrôle périodique de l'addon (2 fois par seconde, coût négligeable)
 	-- Le même passage efface peu à peu les icônes de mes soins qui finissent (réglage « hotFade »), et revoit la
 	-- case « cible de ma cible », pour laquelle le jeu n'envoie aucun événement.
-	C_Timer.NewTicker(0.5, ForVisible(function(b)
+	-- Mode performance : une fois par seconde seulement.
+	local everyCell = ForVisible(function(b)
 		if b.unit == "targettarget" then UpdateAll(b) end
 		UpdateRange(b)
 		if db.hotFade then Z.FadeHots(b) end
-	end))
+	end)
+	local ticks = 0
+	C_Timer.NewTicker(0.5, function()
+		ticks = ticks + 1
+		if db.perfMode and ticks % 2 == 0 then return end
+		everyCell()
+	end)
 end

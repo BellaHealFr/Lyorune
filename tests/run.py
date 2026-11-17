@@ -1736,6 +1736,87 @@ step("etape 11 : synchronisation entre joueurs", function()
   Z:RefreshAlerts() Z:Refresh() RunUpdates()
 end)
 
+step("etape 12 : mode performance, mesure des performances", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = v end
+  Z.db.perfMode = false Z:Refresh() RunUpdates()
+  -- #30 : mode performance, la portee une fois par seconde au lieu de deux
+  -- (UnitInRange est copie en local par Frames.lua : on compte le fondu, qui suit le meme passage)
+  local calls, realFade, realHotFade = 0, Z.FadeHots, Z.db.hotFade
+  Z.db.hotFade = true
+  Z.FadeHots = function(...) calls = calls + 1 return realFade(...) end
+  TICK() TICK() local normal = calls
+  calls = 0 Z.db.perfMode = true TICK() TICK()
+  Z.FadeHots, Z.db.hotFade = realFade, realHotFade
+  assert(normal > 0 and calls * 2 == normal, "portee : " .. normal .. " puis " .. calls)
+  -- auras regroupees : rien a la premiere image, tout apres un dixieme de seconde
+  local b for _, x in ipairs(Z.buttons) do if x.unit and x:IsVisible() and not x.extra then b = x break end end
+  AURAS = {} Z.db.perfMode = false Z.QueueAuras(b) RunUpdates()
+  assert(b.missingBuff, "buff manquant attendu")
+  AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31 } }
+  Z.db.perfMode = true Z.QueueAuras(b) RunUpdates()
+  assert(b.missingBuff, "auras non regroupees en mode performance")
+  for i = 1, 10 do RunUpdates() end
+  assert(not b.missingBuff, "auras jamais mises a jour en mode performance")
+  AURAS = {} Z.db.perfMode = false Z.QueueAuras(b) RunUpdates()
+  assert(b.missingBuff, "mise a jour immediate hors mode performance")
+  -- mesure sans profileur : faux groupe de 5, 25 et 40, memoire de Lyorune et d'ElvUI
+  Z.db.perfDiag = nil MEMORY._updated = nil
+  local result = Z:Measure()
+  assert(result and MEMORY._updated, "mesure")
+  assert(#result.groups == 3 and result.groups[1].count == 5 and result.groups[3].count == 40, "faux groupes")
+  for _, g in ipairs(result.groups) do assert(g.perSecond >= 0 and g.full >= 0, "temps negatif") end
+  assert(result.addons[1].name == "Lyorune" and result.addons[1].memory == 850, "memoire de Lyorune")
+  assert(#result.addons == 2 and result.addons[2].name == "ElvUI", "autres addons charges")
+  assert(not result.profiler and result.addons[1].average == nil, "profileur absent mais lu")
+  assert(#Z.db.perfDiag == 1 and Z.db.perfDiag[1]:find("40 joueurs", 1, true), "trace")
+  -- les cases d'essai sont rendues propres : aucune unite, aucun evenement
+  for _, c in ipairs(Z:PreviewCells(40)) do assert(c.unit == nil and not next(c._events), "case d'essai encore active") end
+  -- profileur du jeu : moyenne, pic, part du temps
+  Enum.AddOnProfilerMetric = { SessionAverageTime = 1, RecentAverageTime = 2, PeakTime = 3 }
+  local values = { Lyorune = { 0.02, 0.03, 1.5 }, ElvUI = { 0.4, 0.5, 9 } }
+  C_AddOnProfiler = { IsEnabled = function() return true end,
+    GetAddOnMetric = function(name, id) return values[name] and values[name][id] end,
+    GetOverallMetric = function(id) return id == 1 and 0.5 or 1 end }
+  result = Z:Measure()
+  assert(result.profiler and result.addons[1].average == 0.02 and result.addons[2].peak == 9, "temps reel")
+  assert(math.abs(result.share - 4) < 0.001, "part du temps : " .. tostring(result.share))
+  -- profileur coupe, valeur secrete, erreur : rien d'invente
+  C_AddOnProfiler.IsEnabled = function() return false end
+  assert(not Z:Measure().profiler, "profileur coupe mais lu")
+  C_AddOnProfiler.IsEnabled = function() return true end
+  C_AddOnProfiler.GetAddOnMetric = function() return MakeSecret() end
+  assert(Z:Measure().addons[1].average == nil, "valeur secrete lue")
+  C_AddOnProfiler.GetAddOnMetric = function() error("x") end
+  assert(Z:Measure().addons[1].average == nil)
+  C_AddOnProfiler, Enum.AddOnProfilerMetric = nil, nil
+  -- le mode test ouvert retrouve ses faux joueurs apres la mesure
+  Z:TogglePreview(10)
+  Z:Measure()
+  local first = Z:PreviewCells(1)[1]
+  assert(first.name:GetText():match("^Joueur %d+$"), "mode test abime : " .. tostring(first.name:GetText()))
+  Z:TogglePreview()
+  -- fenetre, commande, resume dans le chat, trace limitee
+  SlashCmdList.LYORUNE("mesure")
+  local w = Z:MeasureWindow()
+  assert(w and w:IsShown(), "fenetre")
+  assert(w.groups[3][1]:GetText() == "40 joueurs", tostring(w.groups[3][1]:GetText()))
+  assert(w.addons[1][1]:GetText():find("Lyorune", 1, true) and w.addons[3][1]:GetText() == "", "lignes des addons")
+  assert(PRINTED[#PRINTED]:find("mesure faite", 1, true), "resume dans le chat")
+  for i = 1, 12 do Z:Measure() end
+  assert(#Z.db.perfDiag == 10, "trace limitee")
+  COMBAT = true local none, reason = Z:Measure() COMBAT = false
+  assert(not none and reason:find("combat", 1, true), "mesure en combat")
+  w.close:Run("OnClick")
+  -- options
+  local labels = table.concat(Z:OptionLabels(), "|")
+  for _, label in ipairs({ "Mode performance", "Mesurer les performances" }) do
+    assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+  end
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z.db.perfDiag = nil
+  Z:Refresh() RunUpdates()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

@@ -368,9 +368,10 @@ Z.translations.enUS = {
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
-			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n\n"
+			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n"
+			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -555,6 +556,28 @@ Z.translations.enUS = {
 	["Ordre dans chaque bloc : l'ordre du groupe, par nom, ou par classe puis par nom ; le jeu le tient à jour tout seul, même en combat (#26)."] = "Order in each block: group order, by name, or by class then name; the game keeps it up to date by itself, even in combat (#26).",
 	["Chaque groupe garde sa place : en rangement par groupe, un groupe reste dans sa colonne même si le précédent est vide (#26)."] = "Each group keeps its place: when arranged by group, a group stays in its column even if the one before is empty (#26).",
 	["Le mode test montre la grille et l'ordre choisis (#26)."] = "Test mode shows the chosen grid and order (#26).",
+	-- 1.18.0 : mode performance, mesure
+	["Performances"] = "Performance", ["Mode performance"] = "Performance mode",
+	["Pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde au lieu de deux, icônes des soins et des affaiblissements regroupées (un dixième de seconde de retard au plus). Rien ne disparaît. Peut être gardé dans un profil de raid."] = "For large raids or a modest computer: range checked once a second instead of twice, heal and debuff icons grouped together (a tenth of a second late at most). Nothing disappears. Can be kept in a raid profile.",
+	["Mesurer les performances"] = "Measure performance", ["mesurer les performances"] = "measure performance",
+	["Fait tourner Lyorune sur un faux groupe de 5, 25 et 40 joueurs, et compare sa mémoire et son temps aux autres addons de soin chargés. Hors combat. Aussi : /lyorune mesure."] = "Runs Lyorune on a fake group of 5, 25 and 40 players, and compares its memory and time with the other healing addons loaded. Out of combat. Also: /lyorune measure.",
+	["la mesure n'est pas disponible en combat."] = "measuring is not available in combat.",
+	["ce client ne permet pas de chronométrer le code."] = "this client cannot time the code.",
+	["Performances de Lyorune"] = "Lyorune performance",
+	["Coût en combat de raid chargé, mesuré sur votre ordinateur"] = "Cost in a busy raid fight, measured on your computer",
+	["Faux groupe"] = "Fake group", ["Tout redessiner"] = "Full redraw", ["Par seconde"] = "Per second", ["Part du temps"] = "Share of time",
+	["Hypothèse : chaque joueur change de vie 4 fois par seconde, de soins en route 3 fois, d'auras 3 fois et de mana 2 fois. Le vrai code de Lyorune tourne sur des cases d'essai."] = "Assumption: each player's health changes 4 times a second, incoming heals 3 times, auras 3 times and mana 2 times. Lyorune's real code runs on test cells.",
+	["Comparé aux addons de soin chargés"] = "Compared with the healing addons loaded",
+	["Addon"] = "Addon", ["Mémoire"] = "Memory", ["Moyenne par image"] = "Average per frame", ["Pic"] = "Peak",
+	["Mesurer à nouveau"] = "Measure again", ["%d joueurs"] = "%d players", ["ElvUI (toute l'interface)"] = "ElvUI (whole interface)",
+	["Temps par image indisponible : le profileur du jeu est désactivé sur ce client."] = "Time per frame unavailable: the game's profiler is turned off on this client.",
+	["Depuis la connexion, Lyorune représente %.1f %% du temps de tous les addons."] = "Since login, Lyorune accounts for %.1f%% of the time of all addons.",
+	["Temps par image : moyenne depuis la connexion, mesurée par le jeu."] = "Time per frame: average since login, measured by the game.",
+	["Aucun autre addon de soin chargé."] = "No other healing addon loaded.",
+	["Mode performance : activé (onglet Aide)."] = "Performance mode: on (Help tab).",
+	["Conseil : activez le mode performance (onglet Aide) pour les grands raids."] = "Tip: turn on performance mode (Help tab) for large raids.",
+	["Mode performance : désactivé, inutile ici (onglet Aide)."] = "Performance mode: off, not needed here (Help tab).",
+	["mesure faite : %d joueurs, %.2f ms par seconde en combat chargé (%.2f %%), mémoire %s."] = "measured: %d players, %.2f ms per second in a busy fight (%.2f%%), memory %s.",
 	-- 1.16.0 : panneau des buffs manquants, assistant de départ
 	["Panneau des buffs manquants"] = "Missing buffs panel",
 	["Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Elle se cache en combat."] = "Out of combat, a small window lists the players without your group buff: one click casts it on them. A whole group without it: a single line for the group version. It hides in combat.",
@@ -579,4 +602,6 @@ Z.translations.enUS = {
 	["Joueurs du groupe qui ont Lyorune, avec leur version : dans l'onglet Profils (au survol) et avec /lyorune groupe (#29)."] = "Group players who have Lyorune, with their version: in the Profiles tab (on hover) and with /lyorune group (#29).",
 	["Annuler l'import : la configuration d'avant le dernier import revient en un clic (onglet Profils) ou avec /lyorune annuler (#29)."] = "Undo import: the configuration from before the last import comes back in one click (Profiles tab) or with /lyorune undo (#29).",
 	["Un interrupteur général « Synchronisation entre joueurs » coupe tous les messages invisibles ; un joueur qui en envoie trop est ignoré un moment (#29)."] = "A main switch \"Sync between players\" turns off every invisible message; a player who sends too many is ignored for a while (#29).",
+	["Mode performance pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde, icônes des soins et des affaiblissements regroupées, rien ne disparaît (#30)."] = "Performance mode for big raids or a modest computer: range checked once per second, heal and debuff icons grouped, nothing disappears (#30).",
+	["Mesure des performances (onglet Aide ou /lyorune mesure) : Lyorune tourne sur un faux groupe de 5, 25 et 40 joueurs et se compare aux autres addons de soin chargés (#30)."] = "Performance measurement (Help tab or /lyorune measure): Lyorune runs on a fake group of 5, 25 and 40 players and compares itself with the other healing addons loaded (#30).",
 }

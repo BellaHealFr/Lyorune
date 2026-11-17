@@ -208,13 +208,8 @@ function Z:PreviewSize()
 	return size
 end
 
--- Z:TogglePreview() ouvre ou ferme. Z:TogglePreview(25) ouvre avec 25 faux joueurs.
-function Z:TogglePreview(wanted)
-	if Z.previewActive and (not wanted or wanted == size) then return Stop() end
-	if InCombatLockdown() then
-		return Z:Print(Z.L["le mode test n'est pas disponible en combat."])
-	end
-	size = wanted or size
+-- Le cadre du mode test et ses fausses cases, créés une seule fois, au premier besoin
+local function EnsureCells(count)
 	if not container then
 		container = CreateFrame("Frame", "LyorunePreview", UIParent)
 		container:SetSize(10, 10)
@@ -224,12 +219,29 @@ function Z:TogglePreview(wanted)
 		container.label:SetPoint("BOTTOMLEFT", Z.anchor, "TOPLEFT", 0, 3)
 		container.label:SetTextColor(UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
 		Z:On("PLAYER_REGEN_DISABLED", Stop)
+		container:Hide()
 	end
-	for index = #cells + 1, size do
+	for index = #cells + 1, count do
 		local cell = CreateFrame("Frame", nil, container)
 		Z.BuildVisuals(cell)
 		cells[index] = cell
 	end
+	return cells
+end
+
+-- La mesure des performances (Perf.lua) prête ces mêmes cases : aucun cadre de plus en mémoire
+function Z:PreviewCells(count)
+	return EnsureCells(count)
+end
+
+-- Z:TogglePreview() ouvre ou ferme. Z:TogglePreview(25) ouvre avec 25 faux joueurs.
+function Z:TogglePreview(wanted)
+	if Z.previewActive and (not wanted or wanted == size) then return Stop() end
+	if InCombatLockdown() then
+		return Z:Print(Z.L["le mode test n'est pas disponible en combat."])
+	end
+	size = wanted or size
+	EnsureCells(size)
 	container.label:SetText(Z.L["Mode test : faux groupe. /lyorune test pour quitter."])
 	Z.previewActive = true
 	container:Show()

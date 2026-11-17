@@ -252,6 +252,11 @@ function seterrorhandler(f) handler = f end
 function RaiseError(msg) return handler(msg) end
 UIErrorsFrame = CreateFrame("Frame", "UIErrorsFrame")
 C_AddOns.IsAddOnLoaded = function(name) return name == "ElvUI" end
+-- Mesure des performances : chronomètre, mémoire par addon (le profileur, C_AddOnProfiler, est ajouté par le test)
+function debugprofilestop() return os.clock() * 1000 end
+MEMORY = { Lyorune = 850, ElvUI = 12000 }
+function UpdateAddOnMemoryUsage() MEMORY._updated = true end
+function GetAddOnMemoryUsage(name) return MEMORY[name] or 0 end
 C_ChatInfo = { InChatMessagingLockdown = function() return false end }
 
 ----------------------------------------------------------------------------------------------------

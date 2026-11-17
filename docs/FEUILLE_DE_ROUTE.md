@@ -25,7 +25,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 9 | 1.15.0 | Mode panneau, mode grille, tri | Publiée (v1.15.0) |
 | 10 | 1.16.0 | Confort | Publiée (v1.16.0) |
 | 11 | 1.17.0 | Synchronisation entre joueurs | Publiée (v1.17.0) |
-| 12 | 1.18.0 | Performances | À faire |
+| 12 | 1.18.0 | Performances | Publiée (v1.18.0) |
 | 13 | 1.19.0 | Flèche de direction | Selon le test en jeu |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -125,7 +125,7 @@ de soin et leurs 5 habillages restent tels quels.
 - [x] Qui relève qui, joueurs du groupe qui ont Lyorune, sauvegarde avant import, limites, interrupteur (#29)
 
 ## Étape 12 : performances (1.18.0)
-- [ ] Mode performance et commande de mesure avec un faux groupe de 5, 25 et 40 (#30)
+- [x] Mode performance et commande de mesure avec un faux groupe de 5, 25 et 40 (#30)
 
 ## Étape 13 : flèche de direction (1.19.0)
 - [ ] Flèche en extérieur seulement, selon les résultats de `/lyorune position` (#31)

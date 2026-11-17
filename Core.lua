@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.17.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.18.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -43,6 +43,7 @@ Z.defaults = {
 	lockMode = "FREE",         -- déplacement des cadres : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj
 	showGroupLabels = true,    -- « Groupe 1 »... au-dessus de chaque colonne (ou le rôle en rangement par rôle)
 	frameAlpha = 100,          -- opacité générale, en %
+	perfMode = false,          -- mode performance (Perf.lua) : portée 1 fois par seconde, auras regroupées 10 fois par seconde au plus
 	minimapButton = true,      -- bouton au bord de la mini-carte
 	minimapAngle = 215,        -- sa place autour de la mini-carte, en degrés
 
@@ -410,6 +411,8 @@ function Z.Command(msg)
 		Z:Print(select(2, Z:UndoImport()))
 	elseif msg == "test" then
 		Z:TogglePreview()
+	elseif msg == "mesure" or msg == "perf" or msg == "measure" then
+		Z:ShowMeasure()
 	elseif msg == "nouveautes" or msg == "nouveautés" or msg == "news" then
 		Z:ShowNews()
 	else

@@ -1383,6 +1383,7 @@ local function BuildHelp(page)
 		list:SetText(c .. "/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n" .. c .. "/lyorune test|r  " .. L["mode test (faux groupe)"]
 			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune assistant|r  " .. L["assistant de départ"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
 			.. "\n" .. c .. "/lyorune groupe|r  " .. L["qui a Lyorune dans le groupe"] .. "\n" .. c .. "/lyorune annuler|r  " .. L["annuler le dernier import"]
+			.. "\n" .. c .. "/lyorune mesure|r  " .. L["mesurer les performances"]
 			.. "\n" .. c .. "/lyorune bug|r  " .. L["signaler un bug"] .. "\n" .. c .. "/lyorune diag|r  " .. L["compatibilité avec le jeu"])
 	end
 	Commands()
@@ -1397,6 +1398,9 @@ local function BuildHelp(page)
 		{ "head", "Autour de Lyorune" },
 		{ "check", "minimapButton", "Bouton sur la mini-carte", "Clic gauche : options. Clic droit : mode test. Faites-le glisser pour le déplacer." },
 		{ "check", "showRunes", "Inscription runique au bas de cette fenêtre", "Passez la souris sur les runes pour lire leur traduction." },
+		{ "head", "Performances" },
+		{ "check", "perfMode", "Mode performance", "Pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde au lieu de deux, icônes des soins et des affaiblissements regroupées (un dixième de seconde de retard au plus). Rien ne disparaît. Peut être gardé dans un profil de raid." },
+		{ "button", "Mesurer les performances", function() Z:ShowMeasure() end, "Fait tourner Lyorune sur un faux groupe de 5, 25 et 40 joueurs, et compare sa mémoire et son temps aux autres addons de soin chargés. Hors combat. Aussi : /lyorune mesure." },
 		{ "head", "Un souci ?" },
 		{ "button", "Signaler un bug", function() Z:ShowBug() end, "Trois questions, et un rapport prêt à copier. Fonctionne aussi pour un défaut d'affichage." },
 		{ "button", "Journal d'erreurs", function() Z:ShowLog() end, "Le journal note chaque erreur avec son contexte. Copiez-le pour obtenir de l'aide." },
