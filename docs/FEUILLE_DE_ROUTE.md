@@ -27,6 +27,11 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 11 | 1.17.0 | Synchronisation entre joueurs | Publiée (v1.17.0) |
 | 12 | 1.18.0 | Performances | Publiée (v1.18.0) |
 | 13 | 1.19.0 | Distance en trois paliers, soin refusé hors de vue (la flèche est abandonnée) | Publiée (v1.19.0) |
+| 14 | 1.20.0 | Joueurs épinglés, signal sur une case, chef et assistants | À faire |
+| 15 | 1.21.0 | Clics plus sûrs : clics du jeu en conflit, bijou et arrêt d'incantation | À faire |
+| 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | À faire |
+| 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | À faire |
+| 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -133,6 +138,37 @@ de soin et leurs 5 habillages restent tels quels.
 
 Flèche de direction abandonnée (décision de l'auteur, 17 novembre 2026) : le jeu ne donne pas la position des
 autres joueurs en donjon ni en raid. Ces deux indices marchent partout, même en combat.
+
+## Étapes 14 à 18 : idées retenues par l'auteur (17 novembre 2026)
+Choisies après une comparaison avec VuhDo, HealBot et les addons de soin récents : on prend l'idée, jamais le code.
+Les points marqués « à vérifier » se décident avec l'auteur avant tout codage.
+
+## Étape 14 : joueurs épinglés, signal, chef de groupe (1.20.0)
+- [ ] Joueurs épinglés : un petit cadre de plus où l'on ajoute qui on veut par son nom (un 2e tank, un joueur à
+  surveiller), depuis le menu de sa case ou les options
+- [ ] Signal du jeu (ping) sur une case : marquer un joueur pour le groupe sans viser son personnage
+- [ ] Icônes de chef de groupe et d'assistant sur les cases
+
+## Étape 15 : clics plus sûrs (1.21.0)
+- [ ] Avertir quand un raccourci du « clic pour lancer » du jeu prend la même combinaison qu'un clic de Lyorune
+- [ ] Bijou dans un clic (emplacement 13 ou 14 avant le sort) et clic « arrêter l'incantation » ; à vérifier :
+  `/use` d'un bijou depuis une macro sécurisée en combat sur ce client
+
+## Étape 16 : buffs uniques, temps de recharge global (1.22.0)
+- [ ] Buffs à ne poser que sur une personne (Bouclier de terre, Guide de lumière, etc.) : le panneau des buffs
+  manquants propose le tank, ou le joueur choisi ; hors combat seulement, selon la classe jouée (`Data.lua`)
+- [ ] Temps de recharge global et incantation en cours : fine barre sous les cadres ou anneau autour du curseur,
+  au choix
+
+## Étape 17 : profils (1.23.0)
+- [ ] Copier seulement une partie d'un profil vers un autre (clics, apparence, cadres, soins) avec un choix par
+  partie
+- [ ] Profils automatiques en champ de bataille et en arène, en plus de la taille du groupe et de la spécialisation
+
+## Étape 18 : demandes d'aide entre joueurs (1.24.0)
+- [ ] Demander l'Innervation (druide) ou l'Infusion de puissance (prêtre) : la case du joueur qui demande s'allume
+  chez ceux qui ont Lyorune ; interrupteur, limites contre les abus ; à vérifier : les messages entre addons
+  passent-ils pendant un combat de boss sur ce client ?
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
