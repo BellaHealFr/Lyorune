@@ -17,15 +17,16 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 3 | 1.8.0 | Utile en donjon | Publiée |
 | 3 bis | 1.8.1 | Échanges entre joueurs plus sûrs | Publiée (v1.8.1) |
 | 4 | 1.9.0 | Forme des cases, angles, couleurs de classe | Publiée (v1.9.0) |
-| 5 | 1.10.0 | Soins sur la durée et indicateurs | À faire |
-| 6 | 1.11.0 | Échelle, éditeur de placement, couleurs de l'interface | À faire |
-| 7 | 1.12.0 | Clics et raccourcis | À faire |
-| 8 | 1.13.0 | Profils automatiques, cible et focalisation | À faire |
-| 9 | 1.14.0 | Mode panneau, mode grille, tri | À faire |
-| 10 | 1.15.0 | Confort | À faire |
-| 11 | 1.16.0 | Synchronisation entre joueurs | À faire |
-| 12 | 1.17.0 | Performances | À faire |
-| 13 | 1.18.0 | Flèche de direction | Selon le test en jeu |
+| 4 bis | 1.10.0 | Fenêtre d'options et tutoriel : 3 thèmes, runes animées | À faire (prioritaire) |
+| 5 | 1.11.0 | Soins sur la durée et indicateurs | À faire |
+| 6 | 1.12.0 | Échelle, éditeur de placement | À faire |
+| 7 | 1.13.0 | Clics et raccourcis | À faire |
+| 8 | 1.14.0 | Profils automatiques, cible et focalisation | À faire |
+| 9 | 1.15.0 | Mode panneau, mode grille, tri | À faire |
+| 10 | 1.16.0 | Confort | À faire |
+| 11 | 1.17.0 | Synchronisation entre joueurs | À faire |
+| 12 | 1.18.0 | Performances | À faire |
+| 13 | 1.19.0 | Flèche de direction | Selon le test en jeu |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -74,38 +75,50 @@ contour et son en donjon.
 - [x] Barre, Tuile, Carré, Bandeau, avec vignettes de démonstration et bouton « Voir en vrai » (#14)
 - [x] Angles droits ou arrondis (#15), fond et bordure par groupe
 - [x] Couleurs de classe plus vives, intensité au choix (#32)
-- Animation des runes (#33) : reportée à la refonte de la fenêtre d'options et du tutoriel (demande de l'auteur).
+- Animation des runes (#33) : reportée à l'étape 4 bis.
 
-## Étape 5 : soins sur la durée et indicateurs (1.10.0)
+## Étape 4 bis : fenêtre d'options et tutoriel, 3 thèmes et runes animées (1.10.0)
+Prioritaire. Seules la fenêtre d'options, la visite guidée et les petites fenêtres de Lyorune changent : les cases
+de soin et leurs 5 habillages restent tels quels.
+- [ ] 3 thèmes de fenêtre au choix : Moderne (par défaut), Classique, MMORPG (pierre sombre et or), changés en
+  direct, contraste du texte vérifié pour chacun, mode contraste élevé conservé (#39)
+- [ ] Couleurs de l'interface accordées à l'or et au bleu du logo (#19)
+- [ ] Inscription runique : même phrase, runes qui s'écrivent à l'ouverture, lueur et halo, respiration au repos,
+  vague au survol avant la traduction, couleurs selon le thème (#33)
+- [ ] Animations douces de la fenêtre (ouverture, onglets, survol) et du tutoriel (étapes qui glissent, une rune
+  par étape, élément présenté entouré de runes) ; séparateurs runiques et logo dans l'en-tête (#39)
+- [ ] Réglage « Animations réduites » : fondus courts seulement, runes fixes (#39)
+
+## Étape 5 : soins sur la durée et indicateurs (1.11.0)
 - [ ] Décompte chiffré, cercle, icône qui s'efface, charges, et combinaisons (#16)
 - [ ] Indicateurs libres dans les coins de la case, barres fines (#17)
 
-## Étape 6 : échelle, éditeur de placement, couleurs de l'interface (1.11.0)
+## Étape 6 : échelle, éditeur de placement (1.12.0)
 - [ ] Échelle générale et placement au pixel près sur une case d'exemple (#18)
-- [ ] Couleurs de l'interface accordées à l'or et au bleu du logo (#19)
+- Couleurs de l'interface (#19) : passées à l'étape 4 bis.
 
-## Étape 7 : clics et raccourcis (1.12.0)
+## Étape 7 : clics et raccourcis (1.13.0)
 - [ ] Écran unique « souris / clavier », combinaisons Ctrl+Maj, touches illimitées (#20)
 - [ ] Alerte « nouveau sort de soin sans clic » (#22)
 
-## Étape 8 : profils automatiques, cible et focalisation (1.13.0)
+## Étape 8 : profils automatiques, cible et focalisation (1.14.0)
 - [ ] Profils automatiques par taille de groupe et par spécialisation (#24)
 - [ ] Cases cible, cible de la cible et focalisation (#25)
 
-## Étape 9 : mode panneau, mode grille, tri (1.14.0)
+## Étape 9 : mode panneau, mode grille, tri (1.15.0)
 - [ ] Un bloc par groupe, une grille, tri par classe et par nom (#26)
 
-## Étape 10 : confort (1.15.0)
+## Étape 10 : confort (1.16.0)
 - [ ] Panneau des buffs manquants cliquable (#27)
 - [ ] Assistant au premier lancement (#28)
 
-## Étape 11 : synchronisation entre joueurs (1.16.0)
+## Étape 11 : synchronisation entre joueurs (1.17.0)
 - [ ] Qui relève qui, joueurs du groupe qui ont Lyorune, sauvegarde avant import, limites, interrupteur (#29)
 
-## Étape 12 : performances (1.17.0)
+## Étape 12 : performances (1.18.0)
 - [ ] Mode performance et commande de mesure avec un faux groupe de 5, 25 et 40 (#30)
 
-## Étape 13 : flèche de direction (1.18.0)
+## Étape 13 : flèche de direction (1.19.0)
 - [ ] Flèche en extérieur seulement, selon les résultats de `/lyorune position` (#31)
 
 Le jeu ne donne pas la position des autres joueurs en donjon ni en raid : là, l'indication « hors de portée » reste.
