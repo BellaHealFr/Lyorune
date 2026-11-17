@@ -2,7 +2,8 @@
 #   1. les tests tournent ;
 #   2. l'étiquette doit correspondre à la version écrite dans Lyorune.toc ;
 #   3. les notes de cette version sont extraites du journal ;
-#   4. l'archive est attachée à une « release » GitHub, avec ces notes.
+#   4. l'archive est attachée à une « release » GitHub, avec ces notes ;
+#   5. les notes sont annoncées sur Discord (secret DISCORD_WEBHOOK, facultatif).
 #
 # Pour publier aussi sur CurseForge et Wago, ajoutez dans les secrets du dépôt CF_API_KEY et WAGO_API_TOKEN,
 # et dans Lyorune.toc les lignes « ## X-Curse-Project-ID: » et « ## X-Wago-ID: » avec vos identifiants de projet.
@@ -45,3 +46,8 @@ jobs:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+      - name: Annonce sur Discord
+        run: python outils/annonce_discord.py "$GITHUB_REF_NAME"
+        env:
+          PYTHONIOENCODING: utf-8
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
