@@ -21,7 +21,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 5 | 1.11.0 | Soins sur la durée et indicateurs | Publiée (v1.11.0) |
 | 6 | 1.12.0 | Échelle, éditeur de placement | Publiée (v1.12.0) |
 | 7 | 1.13.0 | Clics et raccourcis | Publiée (v1.13.0) |
-| 8 | 1.14.0 | Profils automatiques, cible et focalisation | À faire |
+| 8 | 1.14.0 | Profils automatiques, cible et focalisation | Publiée (v1.14.0) |
 | 9 | 1.15.0 | Mode panneau, mode grille, tri | À faire |
 | 10 | 1.16.0 | Confort | À faire |
 | 11 | 1.17.0 | Synchronisation entre joueurs | À faire |
@@ -111,8 +111,8 @@ de soin et leurs 5 habillages restent tels quels.
 - [x] Alerte « nouveau sort de soin sans clic » (#22)
 
 ## Étape 8 : profils automatiques, cible et focalisation (1.14.0)
-- [ ] Profils automatiques par taille de groupe et par spécialisation (#24)
-- [ ] Cases cible, cible de la cible et focalisation (#25)
+- [x] Profils automatiques par taille de groupe et par spécialisation (#24)
+- [x] Cases cible, cible de la cible et focalisation (#25)
 
 ## Étape 9 : mode panneau, mode grille, tri (1.15.0)
 - [ ] Un bloc par groupe, une grille, tri par classe et par nom (#26)

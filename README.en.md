@@ -48,10 +48,10 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 | <img src="docs/images/runes/u.png" alt="" width="40"> | **Everything at a glance** | Health, incoming heals, shields, heal absorbs, mana, heals over time, debuffs, boss private auras, summons, low health, threat, range. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dispel without searching** | The frame lights up when you can remove a magic effect, a curse, a disease or a poison. |
 | <img src="docs/images/runes/r.png" alt="" width="40"> | **Resurrect with the same click** | On a dead player, your heal click casts your resurrection spell. Nobody stays on the floor. |
-| <img src="docs/images/runes/g.png" alt="" width="40"> | **Your style** | Five themes, high contrast, transparency, size, sorting by group or by role, separate frames for tanks and pets. |
+| <img src="docs/images/runes/g.png" alt="" width="40"> | **Your style** | Five themes, high contrast, transparency, size, sorting by group or by role, separate frames for tanks and pets, target and focus cells. |
 | <img src="docs/images/runes/m.png" alt="" width="40"> | **Test mode** | A fake group of 5 to 40 players to tune everything in peace. |
 | <img src="docs/images/runes/a.png" alt="" width="40"> | **Announcements** | Low mana, mana restored, resurrection, with your own wording. |
-| <img src="docs/images/runes/p.png" alt="" width="40"> | **Sharing** | Send your configuration to a friend, with a code or directly in game. |
+| <img src="docs/images/runes/p.png" alt="" width="40"> | **Profiles and sharing** | One profile per group size and specialization, applied automatically. Send your configuration to a friend, with a code or directly in game. |
 | <img src="docs/images/runes/b.png" alt="" width="40"> | **Always at hand** | A button on the edge of the minimap opens the options or the test mode. You can move it, or remove it with a checkbox. |
 | <img src="docs/images/runes/n.png" alt="" width="40"> | **Nothing is mandatory** | Every element has its checkbox, and a search box finds any setting. |
 

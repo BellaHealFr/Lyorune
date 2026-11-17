@@ -500,6 +500,9 @@ end
 local function UpdateAuras(b)
 	local unit = b.unit
 	local db = Z.db
+	-- Case cible ou focalisation sur un ennemi : ni soins, ni dissipation, ni buffs à lui montrer
+	local enemy = b.extra and UnitCanAttack("player", unit)
+	if issecret(enemy) then enemy = false end
 
 	-- 1. Mes soins sur la durée et boucliers ; un sort placé dans un coin n'est plus dans la rangée
 	local shown = 0
@@ -509,7 +512,7 @@ local function UpdateAuras(b)
 		if name ~= "" then cornerOf[name] = point end
 	end
 	local wantCorners = next(cornerOf) ~= nil
-	if (db.showHots and (next(Z.trackedNames) or next(db.extraTracked))) or wantCorners then
+	if not enemy and ((db.showHots and (next(Z.trackedNames) or next(db.extraTracked))) or wantCorners) then
 		local list = Auras(unit, "HELPFUL|PLAYER", 16)
 		if list then
 			for i = 1, #list do
@@ -541,8 +544,8 @@ local function UpdateAuras(b)
 	for i = (bars and shown + 1 or 1), #b.hotBars do b.hotBars[i]:Hide() end
 
 	-- 2. Affaiblissement que je peux dissiper : d'abord le filtre du jeu, sinon mes propres sorts
-	local harmful = Auras(unit, "HARMFUL", 8)
-	local dispellable = Auras(unit, "HARMFUL|RAID_PLAYER_DISPELLABLE", 1)
+	local harmful = not enemy and Auras(unit, "HARMFUL", 8)
+	local dispellable = not enemy and Auras(unit, "HARMFUL|RAID_PLAYER_DISPELLABLE", 1)
 	local toDispel = dispellable and dispellable[1]
 	if not toDispel and harmful then
 		for i = 1, #harmful do
@@ -606,7 +609,7 @@ local function UpdateAuras(b)
 	ImportantSound(b, important or {}, fromList)
 
 	-- 5. Buff de groupe manquant, hors combat
-	local missing = FindMissingBuff(b, unit)
+	local missing = not enemy and FindMissingBuff(b, unit)
 	if missing then
 		Z.BuffIcon(b)
 		b.buffIcon.texture:SetTexture(missing.icon)

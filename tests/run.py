@@ -30,7 +30,7 @@ local step = function(label, fn) local ok, err = pcall(fn) print((ok and "OK    
 step("demarrage", function()
   FireEvent("ADDON_LOADED", "Lyorune")
   FireEvent("PLAYER_LOGIN")
-  assert(Z.header and #Z.headers == 11, "en-tetes")
+  assert(Z.header and #Z.headers == 12, "en-tetes")
 end)
 
 step("clics par defaut et resurrection automatique", function()
@@ -1376,6 +1376,143 @@ step("etape 2 : reprise des anciens reglages", function()
   assert(db.manaBars == "HEALERS", "un choix fait apres la 1.7.0 est respecte")
   LyoruneDB, LyoruneCharDB = savedDB, savedChar
   FireEvent("ADDON_LOADED", "Lyorune")
+end)
+
+step("etape 8 : profils automatiques, cible et focalisation", function()
+  local width, shape, clicks = Z.db.width, Z.db.shape, CopyTable(Z:GetClicks())
+  Z.db.profiles, Z.db.autoProfiles, Z.db.activeProfile = {}, {}, ""
+  -- #24 mes profils : seulement l'apparence, jamais les clics ni les annonces
+  Z.db.width = 100
+  assert(Z:SaveProfile("Donjon"))
+  Z.db.width = 80
+  assert(Z:SaveProfile("  Raid ") and Z.db.activeProfile == "Raid", "nom nettoye, profil en cours")
+  local raid = Z.db.profiles.Raid
+  assert(raid.width == 80 and raid.clicks == nil and raid.manaText == nil and raid.macros == nil and raid.profiles == nil, "contenu d'un profil")
+  assert(type(raid.placement) == "table" and raid.placement ~= Z.db.placement, "copie, pas un lien")
+  assert(not Z:SaveProfile("") and not Z:SaveProfile(("x"):rep(25)) and not Z:SaveProfile("a\nb"), "noms refuses")
+  -- charger : le profil quitte garde ce qui a ete regle pendant qu'il etait actif
+  Z.db.width = 82
+  assert(Z:LoadProfile("Donjon") and Z.db.width == 100 and Z.db.activeProfile == "Donjon")
+  assert(Z.db.profiles.Raid.width == 82, "profil quitte enregistre")
+  for key, spell in pairs(clicks) do assert(Z:GetClicks()[key] == spell, "clics inchanges") end
+  -- un profil ancien ou abime ne casse rien : choix inconnu ignore, nombre borne
+  Z.db.profiles.Raid.shape, Z.db.profiles.Raid.width, Z.db.profiles.Raid.inconnu = "NOPE", 999, true
+  Z.db.shape = "BAR"
+  Z:LoadProfile("Raid")
+  assert(Z.db.shape == "BAR" and Z.db.width == 180 and Z.db.inconnu == nil, "valeurs controlees")
+  assert(not Z:LoadProfile("Absent"))
+  -- 20 profils au plus
+  for i = 1, 18 do assert(Z:SaveProfile("P" .. i)) end
+  assert(not Z:SaveProfile("P19") and Z:SaveProfile("P1"), "limite, remplacement permis")
+  for i = 1, 18 do Z:DeleteProfile("P" .. i) end
+  Z:LoadProfile("Donjon")
+  -- profils automatiques : par taille de groupe
+  assert(Z.GroupSize() == "5")
+  RAID = true
+  for _, case in ipairs({ { 8, "10" }, { 10, "10" }, { 11, "25" }, { 25, "25" }, { 26, "40" } }) do
+    MEMBERS = case[1] assert(Z.GroupSize() == case[2], "palier " .. case[1])
+  end
+  Z:ProfileRules(1)["5"], Z:ProfileRules(1)["25"] = "Donjon", "Raid"
+  MEMBERS = 20 FireEvent("GROUP_ROSTER_UPDATE")
+  assert(Z.db.activeProfile == "Donjon", "interrupteur coupe : rien ne change")
+  Z.db.autoProfile = true
+  RAID = false FireEvent("GROUP_ROSTER_UPDATE")
+  RAID = true FireEvent("GROUP_ROSTER_UPDATE")
+  assert(Z.db.activeProfile == "Raid" and Z.db.width == 180, "raid de 20 : profil Raid")
+  MEMBERS = 8 FireEvent("GROUP_ROSTER_UPDATE")
+  assert(Z.db.activeProfile == "Raid", "aucun choix pour 10 : on garde")
+  -- en combat : le changement attend la fin du combat
+  COMBAT = true RAID = false MEMBERS = 5 FireEvent("GROUP_ROSTER_UPDATE")
+  assert(Z.db.activeProfile == "Raid", "rien en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(Z.db.activeProfile == "Donjon" and Z.db.width == 100, "applique a la fin du combat")
+  -- par specialisation : la 2e reprend la 1re si rien n'est choisi
+  SPEC_GROUP = 2 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  assert(Z.db.activeProfile == "Donjon", "2e specialisation sans choix : celui de la 1re")
+  Z:ProfileRules(2)["5"] = "Raid"
+  FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  assert(Z.db.activeProfile == "Raid", "2e specialisation : son propre profil")
+  assert(Z.db.autoProfiles.PRIEST2["5"] == "Raid" and Z.db.autoProfiles.PRIEST["5"] == "Donjon")
+  SPEC_GROUP = 1 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  assert(Z.db.activeProfile == "Donjon")
+  -- suppression : plus aucune regle vers un profil disparu
+  Z:DeleteProfile("Raid")
+  assert(Z.db.autoProfiles.PRIEST["25"] == nil and Z.db.autoProfiles.PRIEST2["5"] == nil, "regles nettoyees")
+  -- deconnexion : le profil en cours garde les derniers reglages
+  Z.db.width = 96 FireEvent("PLAYER_LOGOUT")
+  assert(Z.db.profiles.Donjon.width == 96)
+  -- partage : les profils ne partent jamais dans le code ; la reinitialisation les garde
+  assert(not Z:Export():find("Donjon", 1, true) and not Z:Export():find("autoProfile", 1, true))
+  Z:ResetAll()
+  assert(Z.db.profiles.Donjon and Z.db.activeProfile == "" and Z.db.autoProfile == false, "reinitialisation")
+  -- onglet Profils : les cases du tableau font tourner les profils
+  Z:ToggleOptions()
+  local page
+  for _, tab in ipairs(Z:OptionsTabs()) do if tab.page and tab.page.profileCells then page = tab.page end end
+  assert(page, "onglet Profils construit")
+  do
+    local cell = page.profileCells[1]
+    cell:Run("OnClick", "LeftButton")
+    assert(Z:ProfileRules(1)["5"] == "Donjon", "case du tableau : profil suivant")
+    cell:Run("OnClick", "LeftButton")
+    assert(Z:ProfileRules(1)["5"] == nil, "puis aucun")
+  end
+  Z:ToggleOptions()
+  Z.db.profiles, Z.db.autoProfiles, Z.db.activeProfile, Z.db.autoProfile = {}, {}, "", false
+  Z.db.width, Z.db.shape = width, shape
+  RAID, MEMBERS = false, 5
+  Z:Refresh()
+
+  -- #25 cible, cible de la cible, focalisation : aucune case tant que rien n'est coche
+  local before = #Z.buttons
+  assert(LyoruneExtra and not LyoruneExtra1, "cases creees a la demande seulement")
+  Z.db.showTarget, Z.db.showFocus = true, true
+  Z:Refresh()
+  local target, focus = LyoruneExtra1, LyoruneExtra3
+  assert(target and focus and not LyoruneExtra2 and #Z.buttons == before + 2, "deux cases creees")
+  assert(target.unit == "target" and focus.unit == "focus" and target.extra)
+  assert(UNIT_WATCH[target] and UNIT_WATCH[focus], "le jeu montre la case quand l'unite existe")
+  assert(target:GetAttribute("spell1") or target:GetAttribute("macrotext1"), "mes clics sur la case cible")
+  assert(focus._point[5] == -(Z.db.height + Z.db.spacing), "focalisation sous la cible")
+  assert(STATE_DRIVERS[LyoruneExtra] == "show", "cadre affiche")
+  target:Show() focus:Show() -- dans le jeu : RegisterUnitWatch, quand l'unite existe
+  -- ennemi : couleur de son camp, aucune icone d'aura
+  local isPlayer = UnitIsPlayer
+  UnitIsPlayer = function(u) return u ~= "target" end
+  ENEMIES.target = true
+  AURAS["HARMFUL"] = { { name = "Morsure", icon = 3, auraInstanceID = 77, spellId = 5 } }
+  Z.db.color = "CLASS"
+  FireEvent("PLAYER_TARGET_CHANGED") RunUpdates()
+  local c = target.hp._barColor
+  assert(c[1] > 0.8 and c[2] < 0.3, "ennemi en rouge")
+  assert(not (target.debuffs and target.debuffs[1] and target.debuffs[1]:IsShown()), "aucune icone sur un ennemi")
+  ENEMIES.target = nil
+  FireEvent("PLAYER_TARGET_CHANGED") RunUpdates()
+  assert(target.hp._barColor[2] > 0.5, "personnage amical en vert")
+  UnitIsPlayer = isPlayer
+  FireEvent("PLAYER_TARGET_CHANGED") RunUpdates()
+  assert(target.debuffs and target.debuffs[1]:IsShown(), "un allie garde ses icones")
+  AURAS = {}
+  -- la case de ma cible n'a pas de bordure blanche ; cible de la cible revue avec la portee
+  Z.db.showTargetTarget = true
+  COMBAT = true Z:Refresh()
+  assert(not LyoruneExtra2, "jamais creee en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  local tot = LyoruneExtra2
+  tot:Show()
+  assert(tot and tot.unit == "targettarget" and tot._point[5] == -(Z.db.height + Z.db.spacing), "cible de la cible au milieu")
+  tot.name:SetText("") TICK()
+  assert(tot.name:GetText() ~= "", "revue deux fois par seconde")
+  -- decocher : le jeu ne la montre plus, la suivante remonte
+  Z.db.showTarget = false Z:Refresh()
+  assert(not UNIT_WATCH[target] and not target:IsShown() and tot._point[5] == 0, "case retiree")
+  local labels = table.concat(Z:OptionLabels(), "|")
+  for _, label in ipairs({ "Case de ma cible", "Case de ma focalisation", "Mes profils", "Profils automatiques", "Changer de profil tout seul" }) do
+    assert(labels:find(label, 1, true), "absent de la recherche : " .. label .. " " .. tostring(Z.db.errors[1] and Z.db.errors[1].message))
+  end
+  Z.db.showTarget, Z.db.showTargetTarget, Z.db.showFocus = false, false, false
+  Z:Refresh()
+  assert(not focus:IsShown() and not tot:IsShown() and STATE_DRIVERS[LyoruneExtra] == nil, "tout coupe")
 end)
 
 step("securite : codes et messages abimes", function()

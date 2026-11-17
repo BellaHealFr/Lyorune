@@ -373,3 +373,15 @@ function GetUnitName(u) return GROUP_NAMES[u] or UnitName(u) end
 function IsInGuild() return true end
 C_GuildInfo = { MemberExistsByName = function(name) return GUILD_LIST[name] or false end }
 C_FriendList = { GetFriendInfo = function(name) return FRIEND_LIST[name] and { name = name } or nil end }
+
+----------------------------------------------------------------------------------------------------
+-- Ajouts 1.14.0 : cases cible et focalisation, profils
+----------------------------------------------------------------------------------------------------
+UNIT_WATCH = {}
+function RegisterUnitWatch(frame) UNIT_WATCH[frame] = true end
+function UnregisterUnitWatch(frame) UNIT_WATCH[frame] = nil end
+ENEMIES = {}
+function UnitCanAttack(_, unit) return ENEMIES[unit] or false end
+function wipe(t) for k in pairs(t) do t[k] = nil end return t end
+MEMBERS = 5
+function GetNumGroupMembers() return MEMBERS end

@@ -59,7 +59,17 @@ end
 -- Mises à jour d'une case. « b » est la case, b.unit son joueur ("raid7", "party2", "player"...)
 ----------------------------------------------------------------------------------------------------
 -- Couleur de classe, naturelle ou vive selon le réglage (Z.ClassColor, Themes.lua)
-local function ClassColor(unit)
+-- Sur les cases cible et focalisation (extra), un personnage non joueur prend la couleur de son camp.
+local ENEMY_COLOR, FRIEND_COLOR = { 0.85, 0.20, 0.18 }, { 0.30, 0.75, 0.35 }
+local function ClassColor(unit, extra)
+	if extra then
+		local player = UnitIsPlayer(unit)
+		if not issecret(player) and not player then
+			local enemy = UnitCanAttack("player", unit)
+			local color = (not issecret(enemy) and enemy) and ENEMY_COLOR or FRIEND_COLOR
+			return color[1], color[2], color[3]
+		end
+	end
 	local _, class = UnitClass(unit)
 	return Z.ClassColor(class)
 end
@@ -98,7 +108,7 @@ local function UpdateState(b)
 	end
 	b.status = status
 
-	local r, g, bl = ClassColor(unit)
+	local r, g, bl = ClassColor(unit, b.extra)
 	if status then
 		b.hp:SetStatusBarColor(0.25, 0.25, 0.28)
 		b.name:SetTextColor(0.65, 0.65, 0.68)
@@ -294,6 +304,7 @@ end
 
 -- Bordure blanche : c'est ma cible
 local function UpdateTarget(b)
+	if b.unit == "target" then return b.selected:SetAlpha(0) end -- la case de ma cible n'a pas besoin de le dire
 	b.selected:SetAlphaFromBoolean(UnitIsUnit(b.unit, "target"), 1, 0)
 end
 
@@ -701,6 +712,15 @@ for i = 1, RAID_GROUPS do
 end
 frameDefs[#frameDefs + 1] = { key = "tanks", name = "LyoruneTanks", template = "SecureGroupHeaderTemplate", pos = "tankPos", label = "Tanks", option = "showTanks", always = true }
 frameDefs[#frameDefs + 1] = { key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets", always = true }
+-- Cadre « Cible » (#25) : trois cases fixes, chacune avec son interrupteur. Ce n'est pas un en-tête de groupe :
+-- Lyorune crée lui-même les trois boutons sécurisés, et le jeu les montre ou les cache selon que l'unité existe.
+frameDefs[#frameDefs + 1] = { key = "extra", extra = true, name = "LyoruneExtra", template = "SecureHandlerStateTemplate", pos = "extraPos", label = "Cible", always = true }
+local EXTRA_SLOTS = {
+	{ unit = "target", option = "showTarget" },
+	{ unit = "targettarget", option = "showTargetTarget" }, -- aucun événement du jeu pour elle : revue avec la portée
+	{ unit = "focus", option = "showFocus" },
+}
+local extraButtons = {}
 
 local raidHeaders = {}
 local anchors = {}   -- un point d'attache invisible par position enregistrée (cadre principal, tanks, familiers)
@@ -844,6 +864,10 @@ local function CreateHeader(def)
 	-- Une erreur pendant l'habillage d'une case est écrite au journal, même si un autre addon a pris la main
 	-- sur le gestionnaire d'erreurs du jeu.
 	h.InitButton = function(self, name) Z:Try("habillage d'une case", InitButton, self, name) end
+	h:HookScript("OnShow", UpdateHandles)
+	h:HookScript("OnHide", UpdateHandles)
+	Z.headers[#Z.headers + 1] = h
+	if def.extra then return h end -- ses cases sont créées à la première demande (LayoutExtra)
 	h:SetAttribute("template", "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate")
 	h:SetAttribute("showPlayer", true)
 	h:SetAttribute("showParty", not def.raid)
@@ -854,9 +878,6 @@ local function CreateHeader(def)
 	h:SetAttribute("_initialAttribute-_onenter", "self:ClearBindings()")
 	h:SetAttribute("_initialAttribute-_onleave", "self:ClearBindings()")
 	if def.key == "tanks" then h:SetAttribute("roleFilter", "TANK") end
-	h:HookScript("OnShow", UpdateHandles)
-	h:HookScript("OnHide", UpdateHandles)
-	Z.headers[#Z.headers + 1] = h
 	if def.raid then raidHeaders[def.raid] = h end
 	return h
 end
@@ -872,6 +893,52 @@ local function VisibilityRule(def)
 		return combat and "[group:raid] hide; [combat] show; hide" or "[group:raid] hide; show"
 	end
 	return combat and "[combat] show; hide" or "show"
+end
+
+-- Cadre « Cible » : seules les cases cochées prennent une place, côte à côte (en lignes) ou l'une sous l'autre.
+-- Chaque case cochée est confiée au jeu (RegisterUnitWatch) : il la montre quand l'unité existe, même en combat.
+-- Renvoie true si au moins une case est cochée.
+-- Une case du cadre « Cible », créée hors combat la première fois qu'elle est cochée. Mêmes réglages que les cases
+-- du jeu (CONFIG_SNIPPET) : clic gauche cible, clic droit menu, puis mes clics (Z:ApplyClicks).
+local function CreateExtraButton(h, i)
+	local b = CreateFrame("Button", h.def.name .. i, h, "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate")
+	b.extra = true
+	b:SetAttribute("*type1", "target")
+	b:SetAttribute("*type2", "togglemenu")
+	b:Hide()
+	h:SetAttribute("child" .. i, b) -- comme un en-tête : l'étiquette et le diagnostic retrouvent ses cases
+	extraButtons[i] = b
+	h:InitButton(b:GetName())
+	b:SetAttribute("unit", EXTRA_SLOTS[i].unit)
+	if Z.ApplyClicks then Z:ApplyClicks() end
+	return b
+end
+
+local function LayoutExtra(h, width, height)
+	local count = 0
+	for i, slot in ipairs(EXTRA_SLOTS) do
+		local b = extraButtons[i]
+		if db[slot.option] then
+			b = b or CreateExtraButton(h, i)
+			b:ClearAllPoints()
+			b:SetSize(width, height)
+			local x, y = 0, 0
+			if db.horizontal then x = count * (width + db.spacing) else y = -count * (height + db.spacing) end
+			b:SetPoint("TOPLEFT", h, "TOPLEFT", x, y)
+			RegisterUnitWatch(b)
+			count = count + 1
+		elseif b then -- décochée : le jeu ne la montre plus
+			UnregisterUnitWatch(b)
+			b:Hide()
+		end
+	end
+	local across = math.max(count, 1)
+	if db.horizontal then
+		h:SetSize(across * width + (across - 1) * db.spacing, height)
+	else
+		h:SetSize(width, across * height + (across - 1) * db.spacing)
+	end
+	return count > 0
 end
 
 local function ApplyLayout()
@@ -896,6 +963,7 @@ local function ApplyLayout()
 	for _, h in ipairs(Z.headers) do
 		local def = h.def
 		local enabled = not def.option or db[def.option]
+		if def.extra then enabled = LayoutExtra(h, width, height) end
 		if def.label then h.labelText = L[def.label] end -- suit le changement de langue
 		h:SetAttribute("z-width", width)
 		h:SetAttribute("z-height", height)
@@ -1001,7 +1069,8 @@ end
 -- /lyorune diag : état de chaque cadre, pour comprendre un cadre vide sans avoir à deviner
 function Z:DiagnoseFrames()
 	for _, h in ipairs(Z.headers) do
-		if not h.def.raid or IsInRaid() then -- hors raid, les cadres par groupe restent vides : inutile de les citer
+		-- hors raid, les cadres par groupe restent vides : inutile de les citer ; le cadre « Cible » seulement s'il sert
+		if (not h.def.raid or IsInRaid()) and not (h.def.extra and not next(extraButtons)) then
 			local created, shown, dressed = 0, 0, 0
 			while h:GetAttribute("child" .. (created + 1)) do
 				created = created + 1
@@ -1137,6 +1206,21 @@ function Z:CreateFrames()
 	Z:On("PLAYER_ENTERING_WORLD", updateAll)
 	Z:On("PLAYER_ROLES_ASSIGNED", ForVisible(UpdateRole))
 	Z:On("PLAYER_TARGET_CHANGED", ForVisible(UpdateTarget))
+	-- Cases cible et focalisation : leur unité change de personne sans que la case se cache ni s'affiche
+	local function RefreshExtra(...)
+		local units = { ... }
+		return function(unit)
+			if unit and unit ~= "target" then return end -- UNIT_TARGET : seul le changement de cible de ma cible compte
+			for _, b in ipairs(extraButtons) do
+				for _, wanted in ipairs(units) do
+					if b.unit == wanted and b:IsVisible() then UpdateAll(b) end
+				end
+			end
+		end
+	end
+	Z:On("PLAYER_TARGET_CHANGED", RefreshExtra("target", "targettarget"))
+	Z:On("PLAYER_FOCUS_CHANGED", RefreshExtra("focus"))
+	Z:On("UNIT_TARGET", RefreshExtra("targettarget"))
 	Z:On("RAID_TARGET_UPDATE", ForVisible(UpdateMarker))
 	Z:On("INCOMING_SUMMON_CHANGED", ForVisible(UpdateCenter))
 	-- Entrée et sortie de combat : les buffs manquants ne se lisent que hors combat
@@ -1167,8 +1251,10 @@ function Z:CreateFrames()
 	Z:On("PLAYER_LOGOUT", function() Z:SaveFrameState("frameStateLogout") end)
 
 	-- Portée : le seul contrôle périodique de l'addon (2 fois par seconde, coût négligeable)
-	-- Le même passage efface peu à peu les icônes de mes soins qui finissent (réglage « hotFade »)
+	-- Le même passage efface peu à peu les icônes de mes soins qui finissent (réglage « hotFade »), et revoit la
+	-- case « cible de ma cible », pour laquelle le jeu n'envoie aucun événement.
 	C_Timer.NewTicker(0.5, ForVisible(function(b)
+		if b.unit == "targettarget" then UpdateAll(b) end
 		UpdateRange(b)
 		if db.hotFade then Z.FadeHots(b) end
 	end))

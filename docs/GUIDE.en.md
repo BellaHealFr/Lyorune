@@ -157,6 +157,7 @@ With the option "The same click resurrects a dead player" (Clicks tab, ticked by
 - **Place the cell elements**: Frames tab, "Place the cell elements..." button. An enlarged sample cell shows every element: name, health text, role icon, raid marker, centre icon, your heals over time, debuffs, important debuff, missing buff and private auras. Drag an element with the mouse, or pick it in the list and nudge it with "Left", "Up", "Down", "Right": one pixel per click, five with Shift. The offset is shown under the cell and your real cells follow at once. "Put it back" undoes it for the chosen element, "Reset all" for all of them. Each cell shape (Bar, Tile, Square, Strip) keeps its own placements.
 - **Sorting**: by group or by role. By role, choose the order (tank, healer, damage, or any of the six combinations).
 - **Tanks and pets**: each can have its own frame, moved separately.
+- **Target, target's target, focus**: Frames tab, three checkboxes ("My target's cell", "My target's target cell", "My focus cell"). They appear in a small "Target" frame, moved by its label like the others. Each cell has your clicks and the same look as the group's. It only appears when the target or focus exists, even in combat. An enemy is red, a friendly non-player character green, and neither shows heal or debuff icons. Your target's target (for example the player the boss is hitting) is checked twice a second, since the game gives no notice when it changes.
 - **When to show them**: "Show the frames" (Frames tab) offers "Always" or "In combat only". "Always" keeps the frames on screen, in and out of combat, including when you quest alone (with "My own frame when solo" ticked). "In combat only" makes them appear when a fight starts and disappear when it ends. The labels show along with the frames.
 - **A frame stays empty?** Type `/lyorune diag`: Lyorune writes the state of each frame in the chat. Copy those lines into your report (`/lyorune bug`).
 - **Large raids**: "Shrink cells in large raids" makes the frames smaller above 10, then above 25 players.
@@ -225,10 +226,12 @@ Good to know: outside dungeons and raids, the game does not let an addon write i
 
 **Profiles** tab:
 
+- **My profiles**: set the look the way you like it, type a name (for example "Dungeon") and click "Save as". A profile keeps size, shape, colours, indicators, your heals over time and element placement. It never touches your clicks, macros, lists or announcements. Pick a profile in the list, then "Load" or "Delete" (two clicks). What you change while a profile is current belongs to it: Lyorune saves it by itself before switching profile and at logout. Up to 20 profiles.
+- **Automatic profiles**: tick "Switch profile automatically", then fill in the small table. One column per group size (solo or 5, raid of 10, 25, 40) and one row per specialization: click a cell to move to the next profile, right-click to go back. "-" means "keep the current settings". On the 2nd specialization row, "as 1" uses the 1st one's choice. The switch happens without /reload, as soon as the group changes size or you change specialization; in combat, it waits for the end of the fight. A chat message tells you which profile was applied.
 - **Ready-made profiles**: Dungeon, Raid, Compact, Large and readable. One click changes size and layout; your clicks are kept.
 - **Share my configuration**: copy the code shown and send it to a friend, who pastes it into "Receive a configuration". The code holds the look (element placements included), clicks and lists, but never your macros nor the sentences of your announcements (mana, resurrection): nobody can make you say anything in chat.
 - **Direct sending**: type the name of a player who has Lyorune. They receive a request and choose whether to accept. A request only comes from a member of your group, your guild or your friends list, at most once a minute. The window shows the sender's name and realm, and the "Import" button only becomes active after two seconds.
-- **Reset everything**: two clicks to go back to the default settings.
+- **Reset everything**: two clicks to go back to the default settings. Your saved profiles are kept.
 
 ## 11. Between players who have Lyorune
 

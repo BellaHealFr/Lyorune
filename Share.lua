@@ -26,6 +26,7 @@ end
 local function Shared(key)
 	local default = Z.defaults[key]
 	if default == nil or type(default) == "table" or Z.private[key] then return false end
+	if key == "autoProfile" or key == "activeProfile" then return false end -- sans mes profils (jamais partagés), ils n'ont pas de sens
 	return type(default) ~= "string" or Z.choices[key] ~= nil or key == "theme" or key == "texture"
 end
 
@@ -197,4 +198,164 @@ function Z:ApplyPreset(id)
 			return true
 		end
 	end
+end
+
+----------------------------------------------------------------------------------------------------
+-- Mes profils (#24) : mes réglages d'apparence enregistrés sous un nom. Les clics, les macros, les listes et les
+-- annonces n'en font pas partie (Z.notInProfile, Core.lua) : ils restent les mêmes quel que soit le profil.
+-- Le profil en cours est enregistré tout seul avant d'en changer et à la déconnexion : ce que l'on règle pendant
+-- qu'il est actif lui appartient.
+-- Profils automatiques : pour 5, 10, 25 et 40 joueurs, le profil voulu, pour chaque spécialisation. La seconde
+-- spécialisation reprend le choix de la première quand rien n'est choisi pour elle. Le changement se fait sans
+-- /reload, à la fin du combat si besoin.
+----------------------------------------------------------------------------------------------------
+local MAX_PROFILES, MAX_NAME = 20, 24
+Z.profileSizes = { "5", "10", "25", "40" }
+
+local function InProfile(key)
+	return Z.defaults[key] ~= nil and not Z.notInProfile[key]
+end
+
+-- Les réglages d'apparence du moment, copiés
+local function Snapshot()
+	local copy = {}
+	for key in pairs(Z.defaults) do
+		if InProfile(key) then
+			local value = Z.db[key]
+			copy[key] = type(value) == "table" and CopyTable(value) or value
+		end
+	end
+	return copy
+end
+
+-- Une valeur d'un profil enregistré, contrôlée comme un réglage reçu : un profil d'une version plus ancienne ne
+-- peut rien casser (choix disparu, nombre hors des limites).
+local function Accept(key, value)
+	local default = Z.defaults[key]
+	if not InProfile(key) or type(value) ~= type(default) then return nil end
+	if type(value) == "number" and Z.limits[key] then
+		local limit = Z.limits[key]
+		return math.max(limit[1], math.min(limit[2], value))
+	end
+	if Z.choices[key] then
+		for _, choice in ipairs(Z.choices[key]) do
+			if choice[1] == value then return value end
+		end
+		return nil
+	end
+	return type(value) == "table" and CopyTable(value) or value
+end
+
+-- Un nom de profil : 1 à 24 caractères, sans caractère de contrôle. Renvoie le nom nettoyé, ou nil.
+function Z.ProfileName(text)
+	text = tostring(text or ""):match("^%s*(.-)%s*$")
+	if #text == 0 or #text > MAX_NAME or text:find("%c") then return nil end
+	return text
+end
+
+-- Noms des profils, dans l'ordre alphabétique
+function Z:ProfileNames()
+	local names = {}
+	for name in pairs(Z.db.profiles) do names[#names + 1] = name end
+	table.sort(names)
+	return names
+end
+
+-- Enregistre les réglages du moment sous ce nom (nouveau profil, ou remplacement). Renvoie true, ou false et la raison.
+function Z:SaveProfile(text)
+	local L = Z.L
+	local name = Z.ProfileName(text)
+	if not name then return false, L["Nom de profil vide ou trop long (24 caractères au plus)."] end
+	if not Z.db.profiles[name] and #Z:ProfileNames() >= MAX_PROFILES then
+		return false, (L["%d profils au plus : supprimez-en un d'abord."]):format(MAX_PROFILES)
+	end
+	Z.db.profiles[name] = Snapshot()
+	Z.db.activeProfile = name
+	return true, (L["Profil « %s » enregistré."]):format(name)
+end
+
+-- Charge un profil. Le profil en cours garde d'abord ce qui a été réglé pendant qu'il était actif.
+function Z:LoadProfile(name)
+	local profile = Z.db.profiles[name]
+	if not profile then return false end
+	local active = Z.db.activeProfile
+	if active ~= name and Z.db.profiles[active] then Z.db.profiles[active] = Snapshot() end
+	for key, value in pairs(profile) do
+		local accepted = Accept(key, value)
+		if accepted ~= nil then Z.db[key] = accepted end
+	end
+	Z.db.activeProfile = name
+	Z:Refresh()
+	return true
+end
+
+function Z:DeleteProfile(name)
+	if not Z.db.profiles[name] then return false end
+	Z.db.profiles[name] = nil
+	if Z.db.activeProfile == name then Z.db.activeProfile = "" end
+	for _, rules in pairs(Z.db.autoProfiles) do -- plus aucune règle ne mène à un profil disparu
+		for size, wanted in pairs(rules) do
+			if wanted == name then rules[size] = nil end
+		end
+	end
+	return true
+end
+
+-- Taille du groupe, en palier : « 5 » seul ou en groupe, puis « 10 », « 25 » ou « 40 » selon le raid
+function Z.GroupSize()
+	if not IsInRaid() then return "5" end
+	local members = GetNumGroupMembers()
+	return members <= 10 and "10" or members <= 25 and "25" or "40"
+end
+
+-- Règles d'une spécialisation (1 ou 2), créées au besoin
+function Z:ProfileRules(group)
+	local set = (group or 1) > 1 and Z.class .. group or Z.class
+	Z.db.autoProfiles[set] = Z.db.autoProfiles[set] or {}
+	return Z.db.autoProfiles[set]
+end
+
+-- Le profil voulu maintenant, ou nil (aucun choix : on garde les réglages du moment)
+function Z:WantedProfile()
+	local size, group = Z.GroupSize(), Z:SpecGroup()
+	local rules = Z.db.autoProfiles
+	local own = group > 1 and rules[Z.class .. group]
+	local name = own and own[size]
+	if not name then name = rules[Z.class] and rules[Z.class][size] end
+	if name and Z.db.profiles[name] then return name end
+end
+
+-- Appelé quand le groupe change de taille, à la connexion et au changement de spécialisation
+function Z:CheckAutoProfile()
+	if not (Z.header and Z.db.autoProfile) then return end
+	local name = Z:WantedProfile()
+	if not name or name == Z.db.activeProfile then return end
+	Z:Safe("profile", function()
+		local wanted = Z:WantedProfile() -- le groupe a pu changer encore pendant le combat
+		if wanted and wanted ~= Z.db.activeProfile and Z:LoadProfile(wanted) then
+			Z:Print((Z.L["profil « %s » appliqué (%s joueurs)."]):format(wanted, Z.GroupSize()))
+			if Z.RefreshProfiles then Z.RefreshProfiles() end
+		end
+	end)
+end
+
+do
+	local lastSize
+	Z:On("GROUP_ROSTER_UPDATE", function()
+		local size = Z.GroupSize()
+		if size == lastSize then return end -- rien à faire tant que le palier ne change pas
+		lastSize = size
+		Z:CheckAutoProfile()
+	end)
+	Z:On("PLAYER_LOGIN", function()
+		lastSize = Z.GroupSize()
+		Z:CheckAutoProfile()
+	end)
+	for _, event in ipairs({ "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_SPECIALIZATION_CHANGED" }) do
+		Z:On(event, function() Z:CheckAutoProfile() end)
+	end
+	-- Ce qui a été réglé pendant la session reste dans le profil en cours
+	Z:On("PLAYER_LOGOUT", function()
+		if Z.db and Z.db.profiles[Z.db.activeProfile] then Z.db.profiles[Z.db.activeProfile] = Snapshot() end
+	end)
 end

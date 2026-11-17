@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.13.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.14.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -32,6 +32,9 @@ Z.defaults = {
 	visibility = "ALWAYS",     -- afficher les cadres : en permanence, ou seulement en combat
 	showTanks = false,         -- cadre séparé pour les tanks
 	showPets = false,          -- cadre séparé pour les familiers
+	showTarget = false,        -- petite case de ma cible (cadre « Cible », déplaçable)
+	showTargetTarget = false,  -- case de la cible de ma cible
+	showFocus = false,         -- case de ma focalisation
 	autoShrink = false,        -- réduire les cases en grand raid
 	hideBlizzard = false,      -- masquer les cadres de groupe du jeu
 	lockMode = "FREE",         -- déplacement des cadres : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj
@@ -111,6 +114,12 @@ Z.defaults = {
 	soundDispel = false,       -- son quand une dissipation est possible
 	soundMana = false,         -- son quand ma mana est faible
 
+	-- Profils (Share.lua) : mes réglages d'apparence enregistrés sous un nom, et choisis seuls selon le groupe
+	profiles = {},             -- profiles["Raid"] = { width = 80, ... } : seulement les réglages d'apparence
+	activeProfile = "",        -- profil en cours ("" : aucun), enregistré tout seul avant d'en changer
+	autoProfile = false,       -- changer de profil tout seul selon la taille du groupe et la spécialisation
+	autoProfiles = {},         -- par classe et spécialisation : autoProfiles.PRIEST["25"] = "Raid" (PRIEST2 : 2e spécialisation)
+
 	-- Divers
 	language = "AUTO",
 	showNews = true,           -- fenêtre des nouveautés après une mise à jour
@@ -158,13 +167,30 @@ Z.choices = {
 
 -- Réglages propres à l'ordinateur ou au personnage : ni partagés, ni réinitialisés avec le reste
 Z.private = { minimapAngle = true, tutorialDone = true, language = true,
-	macros = true } -- mes macros : jamais partagées, jamais effacées par la réinitialisation
+	macros = true, -- mes macros : jamais partagées, jamais effacées par la réinitialisation
+	profiles = true } -- mes profils enregistrés : idem (la réinitialisation quitte seulement le profil en cours)
+
+-- Réglages qu'un profil ne change jamais : clics, listes, annonces, fenêtres de Lyorune, profils eux-mêmes.
+-- Tous les autres (cadres, apparence, indicateurs, soins) suivent le profil. Un nouveau réglage d'apparence
+-- n'a donc rien à faire ici ; un nouveau réglage d'une autre sorte doit y être ajouté.
+Z.notInProfile = {
+	minimapButton = true, minimapAngle = true, hideBlizzard = true,
+	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
+	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
+	extraTracked = true, ignoredNames = true, importantNames = true,
+	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
+	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,
+	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
+	language = true, showNews = true, versionNotice = true, acceptConfigs = true, showRunes = true, windowTheme = true,
+	reduceMotion = true, magicEffects = true, errorNotice = true, tutorialDone = true,
+}
 
 -- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.
 Z.charDefaults = {
 	pos = { "CENTER", -320, 60 },
 	tankPos = { "CENTER", -320, 200 },
 	petPos = { "CENTER", -320, -160 },
+	extraPos = { "CENTER", 120, 200 }, -- cible, cible de la cible, focalisation
 }
 
 ----------------------------------------------------------------------------------------------------

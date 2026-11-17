@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.14.0] - 2026-11-17
+
+### Added
+
+- My profiles (Profiles tab): your appearance settings saved under a name, loaded in one click; the current profile keeps what you change in it by itself. Clicks, macros, lists and announcements are not part of it ([#24](https://github.com/BellaHealFr/Lyorune/issues/24)).
+- Automatic profiles: one profile for 5, 10, 25 and 40 players and for each specialization, applied by itself without /reload, at the end of combat if needed ([#24](https://github.com/BellaHealFr/Lyorune/issues/24)).
+- Cells for your target, your target's target and your focus, each with its own switch (Frames tab), in a small movable "Target" frame, with your clicks; an enemy is red ([#25](https://github.com/BellaHealFr/Lyorune/issues/25)).
+
 ## [1.13.0] - 2026-11-17
 
 ### Added
@@ -249,6 +257,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.14.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.10.0...v1.11.0

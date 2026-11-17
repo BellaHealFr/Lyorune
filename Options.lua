@@ -378,6 +378,9 @@ local function SimpleTabs()
 				{ "check", "showSolo", "Mon cadre quand je suis seul" },
 				{ "check", "showTanks", "Cadre séparé pour les tanks", "Un second cadre, déplaçable, qui ne montre que les tanks." },
 				{ "check", "showPets", "Cadre séparé pour les familiers" },
+				{ "check", "showTarget", "Case de ma cible", "Dans un petit cadre « Cible », déplaçable : mêmes clics et même apparence que les autres cases. Un ennemi est en rouge, sans icônes." },
+				{ "check", "showTargetTarget", "Case de la cible de ma cible", "Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change." },
+				{ "check", "showFocus", "Case de ma focalisation" },
 				{ "check", "hideBlizzard", "Masquer les cadres de groupe du jeu", "Expérimental. Pour les faire revenir, décochez puis tapez /reload." },
 				{ "head", "Mode test" },
 				{ "note", "Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer.", 30 },
@@ -1052,26 +1055,156 @@ local function BuildProfiles(page)
 	local right = COLUMN + 32
 	local result
 
-	-- Colonne de gauche : points de départ et remise à zéro
+	-- Colonne de gauche, 1 : mes profils (#24)
+	local mine = Heading(page, "Mes profils")
+	mine:SetPoint("TOPLEFT")
+	Register(page.tabIndex, L["Mes profils"], mine)
+	Note(page, "Vos réglages d'apparence, enregistrés sous un nom. Clics, macros, listes et annonces n'en font pas partie : ils ne changent jamais avec le profil.", 0, -30, COLUMN)
+
+	local choices, selected = { { false, L["(aucun)"] } }, false -- remplie par Refresh
+	local picker = UI.Cycle(page, L["Profil"], choices, function() return selected end, function(value) selected = value end)
+	picker:SetWidth(COLUMN)
+	picker:SetPoint("TOPLEFT", 0, -66)
+	local status = Note(page, "", 0, -158, COLUMN)
+	local cells = {}
+	local function Refresh()
+		wipe(choices)
+		for _, name in ipairs(Z:ProfileNames()) do choices[#choices + 1] = { name, name } end
+		if #choices == 0 then choices[1] = { false, L["(aucun)"] } end
+		if not (selected and Z.db.profiles[selected]) then
+			selected = Z.db.profiles[Z.db.activeProfile] and Z.db.activeProfile or choices[1][1]
+		end
+		picker:Update()
+		local active = Z.db.activeProfile ~= "" and Z.db.activeProfile or L["aucun"]
+		status:SetText(L["Profil en cours : %s"]:format("|cffffffff" .. active .. "|r"))
+		for _, cell in ipairs(cells) do cell:Update() end
+	end
+	Z.RefreshProfiles = Refresh
+
+	local load = UI.Button(page, L["Charger"], 100, 24, function()
+		if selected and Z:LoadProfile(selected) then
+			RefreshShownPages()
+			result:SetText("|cff33dd88" .. L["Profil « %s » chargé."]:format(selected) .. "|r")
+		end
+		Refresh()
+	end)
+	load:SetPoint("TOPLEFT", 0, -94)
+	load.label:SetJustifyH("CENTER")
+	local delete
+	delete = UI.Button(page, L["Supprimer"], 100, 24, function(self)
+		if not selected then return end
+		if not self.armed then -- un premier clic arme le bouton, le second confirme
+			self.armed = true
+			self.label:SetText("|cffff5555" .. L["Confirmer"] .. "|r")
+			C_Timer.After(4, function()
+				delete.armed = false
+				delete.label:SetText(L["Supprimer"])
+			end)
+			return
+		end
+		self.armed = false
+		self.label:SetText(L["Supprimer"])
+		Z:DeleteProfile(selected)
+		result:SetText("|cff33dd88" .. L["Profil « %s » supprimé."]:format(selected) .. "|r")
+		selected = nil
+		Refresh()
+	end)
+	delete:SetPoint("TOPLEFT", 106, -94)
+	delete.label:SetJustifyH("CENTER")
+
+	local name
+	local function Save()
+		local ok, message = Z:SaveProfile(name:GetText())
+		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
+		if ok then
+			selected = Z.ProfileName(name:GetText())
+			name:SetText("")
+		end
+		Refresh()
+	end
+	name = UI.Edit(page, COLUMN - 116, Save)
+	name:SetPoint("TOPLEFT", 0, -126)
+	local save = UI.Button(page, L["Enregistrer sous"], 110, 22, Save)
+	save:SetPoint("LEFT", name, "RIGHT", 6, 0)
+	save.label:SetJustifyH("CENTER")
+	save.tip = L["Tapez un nom, puis Enregistrer sous : vos réglages d'apparence du moment deviennent ce profil (nouveau, ou remplacé)."]
+	Register(page.tabIndex, L["Enregistrer sous"], save)
+
+	-- Colonne de gauche, 2 : profils automatiques, pour chaque taille de groupe et chaque spécialisation
+	local auto = Heading(page, "Profils automatiques")
+	auto:SetPoint("TOPLEFT", 0, -180)
+	Register(page.tabIndex, L["Profils automatiques"], auto)
+	local enable = BuildItem(page, { "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." })
+	enable:SetPoint("TOPLEFT", 0, -212)
+	local LABEL_W, CELL_W = 74, 56
+	for i, size in ipairs(Z.profileSizes) do
+		local head = UI.Label(page, 11, nil, "accent")
+		head:SetPoint("TOPLEFT", LABEL_W + (i - 1) * (CELL_W + 4), -240)
+		head:SetWidth(CELL_W)
+		head:SetJustifyH("CENTER")
+		head:SetText(size == "5" and L["Seul, 5"] or size)
+	end
+	for group = 1, 2 do
+		local y = -256 - (group - 1) * 26
+		local label = UI.Label(page, 11)
+		label:SetPoint("TOPLEFT", 0, y - 5)
+		label:SetText(L["Spé. %d"]:format(group))
+		for i, size in ipairs(Z.profileSizes) do
+			local cell = UI.Button(page, "", CELL_W, 22, function(self, mouseButton)
+				local rules = Z:ProfileRules(group)
+				local list = { false } -- false : aucun profil
+				for _, n in ipairs(Z:ProfileNames()) do list[#list + 1] = n end
+				local at = 1
+				for k, n in ipairs(list) do if n == rules[size] then at = k end end
+				at = at + (mouseButton == "RightButton" and -1 or 1)
+				if at > #list then at = 1 elseif at < 1 then at = #list end
+				rules[size] = list[at] or nil
+				self:Update()
+				UI.Confirm(self)
+				Z:CheckAutoProfile()
+			end)
+			cell:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			cell:SetPoint("TOPLEFT", LABEL_W + (i - 1) * (CELL_W + 4), y)
+			cell.label:SetJustifyH("CENTER")
+			cell.Update = function(self)
+				local wanted = Z:ProfileRules(group)[size]
+				self.label:SetText(wanted or (group == 2 and L["comme 1"] or "-"))
+				if wanted then
+					self.tip = wanted
+				elseif group == 2 then
+					self.tip = L["Rien de choisi : le profil de la spécialisation 1 s'applique."]
+				else
+					self.tip = L["Aucun profil : les réglages du moment restent."]
+				end
+			end
+			cell.size, cell.group = size, group
+			cells[#cells + 1] = cell
+		end
+	end
+	page.profileCells = cells
+	Note(page, "Clic : profil suivant, clic droit : précédent.", 0, -312, COLUMN)
+
+	-- Colonne de gauche, 3 : points de départ
 	local presets = Heading(page, "Profils prêts à l'emploi")
-	presets:SetPoint("TOPLEFT")
+	presets:SetPoint("TOPLEFT", 0, -340)
 	Register(page.tabIndex, L["Profils prêts à l'emploi"], presets)
-	Note(page, "Un point de départ en un clic. Seules la taille et la disposition changent ; vos clics sont conservés.", 0, -30, COLUMN)
+	Note(page, "Un point de départ en un clic. Seules la taille et la disposition changent ; vos clics sont conservés.", 0, -370, COLUMN)
 	for i, preset in ipairs(Z.presets) do
 		local button = UI.Button(page, L[preset[2]], 150, 24, function() Z:ApplyPreset(preset[1]) end)
-		button:SetPoint("TOPLEFT", ((i - 1) % 2) * 156, -70 - math.floor((i - 1) / 2) * 29)
+		button:SetPoint("TOPLEFT", ((i - 1) % 2) * 156, -406 - math.floor((i - 1) / 2) * 29)
 		button.label:SetJustifyH("CENTER")
 	end
 
+	-- Colonne de droite, 2 et 3 : remise à zéro, entre joueurs
 	local clicksHead = Heading(page, "Remise à zéro")
-	clicksHead:SetPoint("TOPLEFT", 0, -140)
+	clicksHead:SetPoint("TOPLEFT", right, -262)
 	local clicks = UI.Button(page, L["Reprendre les clics proposés pour ma classe"], COLUMN, 24, function()
 		Z.db.clicks[Z.class] = nil
 		Z:BuildData()
 		Z:ApplyClicks()
 		result:SetText("|cff33dd88" .. L["Clics de la classe rétablis."] .. "|r")
 	end)
-	clicks:SetPoint("TOPLEFT", 0, -172)
+	clicks:SetPoint("TOPLEFT", right, -294)
 	clicks.label:SetJustifyH("CENTER")
 	local reset
 	reset = UI.Button(page, L["Tout réinitialiser"], COLUMN, 24, function(self)
@@ -1085,19 +1218,20 @@ local function BuildProfiles(page)
 			return
 		end
 		Z:ResetAll()
+		Refresh()
 		result:SetText("|cff33dd88" .. L["Tous les réglages sont revenus à l'origine."] .. "|r")
 	end)
-	reset:SetPoint("TOPLEFT", 0, -202)
+	reset:SetPoint("TOPLEFT", right, -324)
 	reset.label:SetJustifyH("CENTER")
-	reset.tip = L["Remet tous les réglages d'origine. La position des cadres est conservée."]
+	reset.tip = L["Remet tous les réglages d'origine. La position des cadres et vos profils enregistrés sont conservés."]
 	Register(page.tabIndex, L["Tout réinitialiser"], reset)
 
 	local sync = Heading(page, "Entre joueurs")
-	sync:SetPoint("TOPLEFT", 0, -244)
+	sync:SetPoint("TOPLEFT", right, -366)
 	local accept = BuildItem(page, { "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande." })
-	accept:SetPoint("TOPLEFT", 0, -276)
+	accept:SetPoint("TOPLEFT", right, -398)
 	local notice = BuildItem(page, { "check", "versionNotice", "Me prévenir si une version plus récente existe" })
-	notice:SetPoint("TOPLEFT", 0, -303)
+	notice:SetPoint("TOPLEFT", right, -425)
 
 	-- Colonne de droite : partage
 	local exportHead = Heading(page, "Donner ma configuration")
@@ -1143,9 +1277,13 @@ local function BuildProfiles(page)
 	button:SetPoint("LEFT", import, "RIGHT", 6, 0)
 	button.label:SetJustifyH("CENTER")
 
-	result = Note(page, "", right, -236, COLUMN)
-	page:SetScript("OnShow", FillExport)
+	result = Note(page, "", right, -234, COLUMN)
+	page:SetScript("OnShow", function()
+		FillExport()
+		Refresh()
+	end)
 	FillExport()
+	Refresh()
 end
 
 ----------------------------------------------------------------------------------------------------

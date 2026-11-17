@@ -341,16 +341,16 @@ Z.translations.enUS = {
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement, tanks, familiers, mode test.\n"
+			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement, tanks, familiers, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
-			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
+			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -494,4 +494,41 @@ Z.translations.enUS = {
 	["Onglet Clics : une seule liste pour la souris et le clavier, un raccourci par ligne, sans limite, avec toutes les combinaisons d'Alt, Ctrl et Maj (#20)."] = "Clicks tab: a single list for mouse and keyboard, one shortcut per line, no limit, with every combination of Alt, Ctrl and Shift (#20).",
 	["Bouton « Ajouter un clic ou une touche » : faites la combinaison voulue, puis choisissez le sort. Changer le raccourci d'une ligne échange les deux sorts s'il était déjà pris (#20)."] = "\"Add a click or a key\" button: do the combination you want, then pick the spell. Changing a line's shortcut swaps the two spells if it was already taken (#20).",
 	["Nouveau sort sans clic : un message, et le sort en haut de l'onglet Clics avec « Attribuer » (option « Signaler un nouveau sort sans clic ») (#22)."] = "New spell without a click: a message, and the spell at the top of the Clicks tab with \"Assign\" (option \"Report a new spell without a click\") (#22).",
+
+	-- 1.14.0 : cases cible et focalisation, profils
+	["Cible"] = "Target",
+	["Case de ma cible"] = "My target's cell",
+	["Dans un petit cadre « Cible », déplaçable : mêmes clics et même apparence que les autres cases. Un ennemi est en rouge, sans icônes."] = "In a small movable \"Target\" frame: same clicks and same look as the other cells. An enemy is red, with no icons.",
+	["Case de la cible de ma cible"] = "My target's target cell",
+	["Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change."] = "For example the player the boss is hitting. Checked twice a second: the game gives no notice when it changes.",
+	["Case de ma focalisation"] = "My focus cell",
+	["Mes profils"] = "My profiles",
+	["Vos réglages d'apparence, enregistrés sous un nom. Clics, macros, listes et annonces n'en font pas partie : ils ne changent jamais avec le profil."] = "Your appearance settings, saved under a name. Clicks, macros, lists and announcements are not part of it: they never change with the profile.",
+	["Profil"] = "Profile",
+	["(aucun)"] = "(none)",
+	["aucun"] = "none",
+	["Profil en cours : %s"] = "Current profile: %s",
+	["Charger"] = "Load",
+	["Confirmer"] = "Confirm",
+	["Profil « %s » chargé."] = "Profile \"%s\" loaded.",
+	["Profil « %s » supprimé."] = "Profile \"%s\" deleted.",
+	["Profil « %s » enregistré."] = "Profile \"%s\" saved.",
+	["Enregistrer sous"] = "Save as",
+	["Tapez un nom, puis Enregistrer sous : vos réglages d'apparence du moment deviennent ce profil (nouveau, ou remplacé)."] = "Type a name, then Save as: your current appearance settings become this profile (new, or replaced).",
+	["Profils automatiques"] = "Automatic profiles",
+	["Changer de profil tout seul"] = "Switch profile automatically",
+	["Selon la taille du groupe et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat."] = "Based on group size and your specialization, without /reload. In combat, the switch waits for the end of the fight.",
+	["Seul, 5"] = "Solo, 5",
+	["Spé. %d"] = "Spec %d",
+	["comme 1"] = "as 1",
+	["Rien de choisi : le profil de la spécialisation 1 s'applique."] = "Nothing chosen: specialization 1's profile applies.",
+	["Aucun profil : les réglages du moment restent."] = "No profile: the current settings stay.",
+	["Clic : profil suivant, clic droit : précédent."] = "Click: next profile, right-click: previous.",
+	["Remet tous les réglages d'origine. La position des cadres et vos profils enregistrés sont conservés."] = "Restores every original setting. Frame positions and your saved profiles are kept.",
+	["Nom de profil vide ou trop long (24 caractères au plus)."] = "Profile name empty or too long (24 characters at most).",
+	["%d profils au plus : supprimez-en un d'abord."] = "%d profiles at most: delete one first.",
+	["profil « %s » appliqué (%s joueurs)."] = "profile \"%s\" applied (%s players).",
+	["Mes profils (onglet Profils) : vos réglages d'apparence enregistrés sous un nom, chargés en un clic ; le profil en cours garde tout seul ce que vous y réglez. Clics, macros, listes et annonces n'en font pas partie (#24)."] = "My profiles (Profiles tab): your appearance settings saved under a name, loaded in one click; the current profile keeps what you change in it by itself. Clicks, macros, lists and announcements are not part of it (#24).",
+	["Profils automatiques : un profil pour 5, 10, 25 et 40 joueurs et pour chaque spécialisation, appliqué tout seul sans /reload, à la fin du combat si besoin (#24)."] = "Automatic profiles: one profile for 5, 10, 25 and 40 players and for each specialization, applied by itself without /reload, at the end of combat if needed (#24).",
+	["Cases de la cible, de la cible de la cible et de la focalisation, chacune avec son interrupteur (onglet Cadres), dans un petit cadre « Cible » déplaçable, avec vos clics ; un ennemi est en rouge (#25)."] = "Cells for your target, your target's target and your focus, each with its own switch (Frames tab), in a small movable \"Target\" frame, with your clicks; an enemy is red (#25).",
 }
