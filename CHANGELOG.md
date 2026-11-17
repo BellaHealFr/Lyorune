@@ -6,6 +6,14 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.21.0] - 2026-11-17
+
+### Ajouté
+
+- Bijou avec le sort : sur chaque ligne de l'onglet Clics, deux petites icônes utilisent votre bijou du haut ou du bas juste avant le sort, sur un joueur vivant ([#42](https://github.com/BellaHealFr/Lyorune/issues/42)).
+- Arrêter l'incantation : un clic ou une touche peut interrompre le sort en cours ([#42](https://github.com/BellaHealFr/Lyorune/issues/42)).
+- Clic pris aussi par le jeu : si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune, un message le dit et la ligne passe en orange ; Lyorune ne touche jamais aux raccourcis du jeu ([#42](https://github.com/BellaHealFr/Lyorune/issues/42)).
+
 ## [1.20.0] - 2026-11-17
 
 ### Ajouté
@@ -318,6 +326,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.21.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.17.0...v1.18.0

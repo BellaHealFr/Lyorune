@@ -58,7 +58,13 @@ Il n'y a pas de limite : ajoutez autant de lignes que vous voulez. Quand la list
 
 - **Changer le sort** : cliquez sur le sort de la ligne, ou glissez-y un sort de votre grimoire.
 - **Changer le raccourci** : cliquez sur le clic ou la touche de la ligne, puis faites la nouvelle combinaison. Si elle était déjà prise, les deux sorts sont échangés : rien n'est perdu.
+- **Utiliser un bijou avec le sort** : chaque ligne a deux petites icônes, vos bijoux du haut (1) et du bas (2). Cliquez sur l'une pour l'allumer : le bijou est utilisé juste avant le sort, seulement si le joueur est vivant. Cliquez de nouveau pour l'éteindre. Si le bijou n'est pas prêt, le sort part quand même.
+- **Arrêter l'incantation** : dans la fenêtre de choix du sort, ce bouton fait d'un clic un « stop » qui interrompt le sort en cours (un long soin devenu inutile, par exemple).
 - Un clic gauche ou droit sans sort garde son rôle habituel : cibler le joueur, ouvrir son menu.
+
+### Un clic que le jeu prend aussi
+
+Le jeu a son propre « clic pour lancer » (dans le grimoire). S'il utilise la même combinaison qu'un clic de Lyorune, il peut passer avant. Lyorune vous le dit une fois dans la discussion, et la ligne apparaît en orange dans l'onglet **Clics** : changez la combinaison d'un côté ou de l'autre. Lyorune ne modifie jamais les raccourcis du jeu. Pour ne plus être prévenu, décochez « Signaler un clic pris aussi par le jeu ».
 
 Exemple pour un prêtre : clic gauche pour Soins rapides, clic droit pour Rénovation, Maj + clic droit pour le bouclier, clic milieu pour dissiper, Ctrl + Maj + clic gauche pour Prière de soins.
 

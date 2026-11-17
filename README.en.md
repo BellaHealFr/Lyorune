@@ -43,7 +43,7 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 
 | | | |
 |:-:|---|---|
-| <img src="docs/images/runes/s.png" alt="" width="40"> | **Heal with one click** | Every mouse button, alone or with Shift, Ctrl, Alt, casts the spell of your choice on a player's frame. No targeting needed. The game's ping key on a frame marks the player for the whole group. |
+| <img src="docs/images/runes/s.png" alt="" width="40"> | **Heal with one click** | Every mouse button, alone or with Shift, Ctrl, Alt, casts the spell of your choice on a player's frame. No targeting needed. A trinket can go with the spell, another click stops casting, and Lyorune warns you if the game's click casting uses the same combination. The game's ping key on a frame marks the player for the whole group. |
 | <img src="docs/images/runes/t.png" alt="" width="40"> | **Hover keys** | A keyboard key, an extra mouse button or the wheel casts a spell on the hovered frame. |
 | <img src="docs/images/runes/u.png" alt="" width="40"> | **Everything at a glance** | Health, incoming heals, shields, heal absorbs, mana, heals over time, debuffs, boss private auras, summons, low health, threat, range in three levels, group leader. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dispel without searching** | The frame lights up when you can remove a magic effect, a curse, a disease or a poison. |

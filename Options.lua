@@ -26,7 +26,8 @@ local searchIndex = {}      -- { texte en minuscules, numéro d'onglet, élémen
 ----------------------------------------------------------------------------------------------------
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
 ----------------------------------------------------------------------------------------------------
-local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true, clicksPerSpec = true }
+local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true, clicksPerSpec = true,
+	clickConflictAlert = true }
 
 local function Option(key)
 	return function() return Z.db[key] end, function(value)
@@ -599,14 +600,28 @@ function RefreshClicks()
 	end
 	-- Une ligne par clic ou par touche
 	local bindings = Z:Bindings()
+	local conflicts = Z.db.clickConflictAlert and Z:GameClickConflicts() or {}
 	scroll = math.max(0, math.min(scroll, #bindings - VISIBLE_ROWS))
 	for i, row in ipairs(rows) do
 		local binding = bindings[i + scroll]
 		row.binding = binding
 		row:SetShown(binding ~= nil)
 		if binding then
-			row.key.label:SetText(Z:TriggerLabel(binding))
+			-- en orange : le clic pour lancer du jeu prend aussi cette combinaison
+			local game = binding.kind == "click" and conflicts[binding.key]
+			row.key.label:SetText((game and "|cffff9933" or "") .. Z:TriggerLabel(binding))
+			row.key.tip = game and L["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."]:format(game)
+				or L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
 			row.spell.label:SetText(binding.value ~= "" and SpellText(binding.value) or "|cff555a63" .. L["Sort"] .. "|r")
+			for index, toggle in ipairs(row.trinkets) do
+				local slot = Z.TRINKET_SLOTS[index]
+				local on = Z.MaskHas(binding.trinkets, index)
+				toggle:SetShown(Z.TakesTrinket(binding.value))
+				toggle.icon:SetTexture(GetInventoryItemTexture and GetInventoryItemTexture("player", slot) or "Interface\\Icons\\INV_Misc_QuestionMark")
+				toggle.icon:SetDesaturated(not on)
+				toggle.icon:SetAlpha(on and 1 or 0.3)
+				toggle.label:SetText(on and "" or tostring(index))
+			end
 		end
 	end
 	if more then
@@ -693,7 +708,7 @@ local function OpenPicker(title, onChoose, current, spellsOnly)
 		picker.Choose = Choose
 		picker.actions = CreateFrame("Frame", nil, picker)
 		picker.actions:SetPoint("TOPLEFT", 14, -42)
-		picker.actions:SetSize(344, 22)
+		picker.actions:SetSize(344, 48)
 		local target = UI.Button(picker.actions, L["Cibler"], 70, 22, function() Choose("@target") end)
 		target:SetPoint("TOPLEFT")
 		local menu = UI.Button(picker.actions, L["Menu du joueur"], 110, 22, function() Choose("@menu") end)
@@ -707,6 +722,10 @@ local function OpenPicker(title, onChoose, current, spellsOnly)
 		macro:SetPoint("LEFT", none, "RIGHT", 6, 0)
 		macro.label:SetJustifyH("CENTER")
 		macro.tip = L["Plusieurs actions en un clic : écrivez vos macros une fois, posez-les sur autant de clics que vous voulez."]
+		local stop = UI.Button(picker.actions, L["Arrêter l'incantation"], 186, 22, function() Choose("@stop") end)
+		stop:SetPoint("TOPLEFT", target, "BOTTOMLEFT", 0, -4)
+		stop.label:SetJustifyH("CENTER")
+		stop.tip = L["Interrompt le sort en cours, par exemple un long soin devenu inutile."]
 		picker.hint = UI.Text(picker, 11)
 		picker.hint:SetPoint("BOTTOMLEFT", 14, 44)
 		UI.Paint(picker.hint, "dim")
@@ -761,7 +780,7 @@ local function OpenPicker(title, onChoose, current, spellsOnly)
 		return icon
 	end
 
-	local top = -74
+	local top = spellsOnly and -74 or -100 -- 2e ligne d'actions : « Arrêter l'incantation »
 	for i, spell in ipairs(spells) do
 		local icon = Place(i, i, top)
 		icon.spell, icon.macro = spell, nil
@@ -943,7 +962,7 @@ local function BuildClicks(page)
 		local row = CreateFrame("Frame", nil, listTop)
 		row:SetSize(COLUMN, 24)
 		row:SetPoint("TOPLEFT", 0, -(i - 1) * 27)
-		row.key = UI.Button(row, "", 132, 24, function(self)
+		row.key = UI.Button(row, "", 124, 24, function(self)
 			if self.capturing or GetTime() < (self.ignoreUntil or 0) or not row.binding then return end
 			local from = Trigger(row)
 			CaptureTrigger(self, function(to)
@@ -954,7 +973,7 @@ local function BuildClicks(page)
 		row.key:SetPoint("LEFT")
 		row.key.label:SetJustifyH("CENTER")
 		row.key.tip = L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
-		row.spell = UI.Button(row, "", COLUMN - 132 - 30, 24, function()
+		row.spell = UI.Button(row, "", COLUMN - 124 - 4 - 2 * 20 - 4 - 22, 24, function()
 			if not row.binding then return end
 			ChooseAction(Trigger(row), Z:TakeCursor()) -- un sort ou une macro tenu sous la souris est posé directement
 		end)
@@ -968,7 +987,24 @@ local function BuildClicks(page)
 			Z:SetBinding(Trigger(row), nil)
 			RefreshClicks()
 		end)
-		row.clear:SetPoint("LEFT", row.spell, "RIGHT", 4, 0)
+		-- Bijou 1 (emplacement 13) et bijou 2 (emplacement 14), utilisés juste avant le sort
+		row.trinkets = {}
+		local anchor = row.spell
+		for index, slot in ipairs(Z.TRINKET_SLOTS) do
+			local toggle = UI.Button(row, "", 18, 24, function()
+				if row.binding then Z:ToggleTrinket(Trigger(row), index) RefreshClicks() end
+			end)
+			toggle:SetPoint("LEFT", anchor, "RIGHT", 2, 0)
+			toggle.label:SetJustifyH("CENTER")
+			toggle.icon = toggle:CreateTexture(nil, "ARTWORK")
+			toggle.icon:SetPoint("TOPLEFT", 1, -4)
+			toggle.icon:SetPoint("BOTTOMRIGHT", -1, 4)
+			toggle.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+			toggle.tip = L["Bijou %d (emplacement %d) : utilisé juste avant le sort, sur un joueur vivant. Cliquez pour l'ajouter ou le retirer."]:format(index, slot)
+			row.trinkets[index] = toggle
+			anchor = toggle
+		end
+		row.clear:SetPoint("LEFT", anchor, "RIGHT", 4, 0)
 		row.clear.label:SetJustifyH("CENTER")
 		row.clear.tip = L["Retirer ce raccourci"]
 		rows[i] = row
@@ -1001,6 +1037,7 @@ local function BuildClicks(page)
 		{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },
 		{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
 		{ "check", "newSpellAlert", "Signaler un nouveau sort sans clic", "Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de cet onglet avec le bouton « Attribuer »." },
+		{ "check", "clickConflictAlert", "Signaler un clic pris aussi par le jeu", "Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans cet onglet. Lyorune ne modifie jamais les raccourcis du jeu." },
 		{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés." },
 		{ "head", "Macros pour vos barres de sorts" },
 		{ "check", "actionBarMacros", "Créer une macro par sort de mes clics", "Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro." },

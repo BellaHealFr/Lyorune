@@ -59,7 +59,13 @@ There is no limit: add as many lines as you like. When the list is long, scroll 
 
 - **Changing the spell**: click the spell of the line, or drag a spell from your spellbook onto it.
 - **Changing the shortcut**: click the click or key of the line, then do the new combination. If it was already taken, the two spells are swapped: nothing is lost.
+- **Using a trinket with the spell**: each line has two small icons, your top (1) and bottom (2) trinkets. Click one to light it up: the trinket is used right before the spell, only if the player is alive. Click again to turn it off. If the trinket is not ready, the spell is still cast.
+- **Stop casting**: in the spell choice window, this button turns a click into a "stop" that interrupts the spell being cast (a long heal that is no longer needed, for example).
 - A left or right click without a spell keeps its usual role: target the player, open their menu.
+
+### A click the game also uses
+
+The game has its own click casting (in the spellbook). If it uses the same combination as a Lyorune click, it may go first. Lyorune tells you once in the chat, and the line turns orange in the **Clicks** tab: change the combination on one side or the other. Lyorune never changes the game's bindings. To stop being warned, untick "Warn about a click the game also uses".
 
 Example for a priest: left click for Flash Heal, right click for Renew, Shift + right click for the shield, middle click to dispel, Ctrl + Shift + left click for Prayer of Healing.
 

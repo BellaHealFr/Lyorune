@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.20.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.21.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -108,6 +108,8 @@ Z.defaults = {
 	externalClicks = false,    -- laisser Clique ou le clic-soin du jeu gérer les cases
 	clicks = {},               -- clics de souris par classe : clicks.PRIEST["shift-1"] = "Rénovation" (PRIEST2 : 2e spécialisation)
 	hoverKeys = {},            -- touches au survol par classe : hoverKeys.PRIEST[1] = { key = "F", spell = "Rénovation" }
+	clickTrinkets = {},        -- bijoux utilisés avant le sort : clickTrinkets.PRIEST["shift-1"] = 1, 2 ou 3 (voir Clicks.lua)
+	clickConflictAlert = true, -- signaler un clic que le « clic pour lancer » du jeu prend aussi
 	clicksPerSpec = true,      -- des clics et des touches propres à chaque spécialisation (groupe de talents)
 	macros = {},               -- ma bibliothèque de macros, par classe : macros.PRIEST[1] = { name = "...", body = "..." }
 	macroAutoTarget = true,    -- une commande de macro sans cible vise la case
@@ -193,6 +195,7 @@ Z.notInProfile = {
 	minimapButton = true, minimapAngle = true, hideBlizzard = true,
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
+	clickTrinkets = true, clickConflictAlert = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,

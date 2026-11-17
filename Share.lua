@@ -32,7 +32,7 @@ end
 
 -- Sauvegarde avant import (#29) : tout ce qu'un import peut remplacer, copié juste avant. Un seul niveau,
 -- gardé dans mes réglages (Z.db.importBackup) : il survit à un /reload, le prochain import le remplace.
-local BACKUP_TABLES = { "clicks", "hoverKeys", "placement", "extraTracked", "ignoredNames", "importantNames" }
+local BACKUP_TABLES = { "clicks", "hoverKeys", "clickTrinkets", "placement", "extraTracked", "ignoredNames", "importantNames" }
 
 local function Backup()
 	local copy = { settings = {} }
@@ -70,6 +70,22 @@ function Z:Export()
 			if not Z.IsMacro(entry.spell) and not Z.MacroRef(entry.spell) then
 				index = index + 1
 				parts[#parts + 1] = "h." .. class .. "." .. index .. "=s" .. Encode(entry.key .. "|" .. entry.spell)
+			end
+		end
+	end
+	-- bijoux d'un clic ou d'une touche (1, 2 ou 3), seulement s'il est partagé lui aussi
+	for class, marks in pairs(Z.db.clickTrinkets or {}) do
+		local binds = Z.db.clicks[class] or {}
+		for id, mask in pairs(marks) do
+			local key = id:match("^key:(.+)$")
+			local value = binds[id]
+			if key then
+				for _, entry in ipairs(Z.db.hoverKeys[class] or {}) do
+					if entry.key == key then value = entry.spell end
+				end
+			end
+			if value and not Z.IsMacro(value) and not Z.MacroRef(value) then
+				parts[#parts + 1] = "t." .. class .. "." .. Encode(id) .. "=n" .. mask
 			end
 		end
 	end
@@ -129,12 +145,14 @@ function Z:Import(code)
 	end
 
 	local settings, clicks, hovers, lists, places, count = {}, {}, {}, {}, {}, 0
+	local trinkets = {}
 	for entry in code:gmatch("[^;]+") do
 		local key, kind, raw = entry:match("^([%w%.%%]+)=(%a)(.*)$")
 		if key then
 			raw = Decode(raw)
 			local class, click = key:match("^c%.(%u+%d?)%.(.+)$") -- PRIEST, ou PRIEST2 : seconde spécialisation
 			local hoverClass, index = key:match("^h%.(%u+%d?)%.(%d+)$")
+			local trinketClass, trinketId = key:match("^t%.(%u+%d?)%.(.+)$")
 			local list = key:match("^l%.(%a+)$")
 			local shape, element = key:match("^p%.(%u+)%.(%a+)$")
 			if class then
@@ -142,6 +160,16 @@ function Z:Import(code)
 				if kind == "s" and Z.ParseClickKey(click) and SafeSpell(raw) then
 					clicks[class] = clicks[class] or {}
 					clicks[class][click] = raw
+					count = count + 1
+				end
+			elseif trinketClass then
+				-- un masque de 1 à 3 sur un clic ou une touche valable : rien d'autre n'entre
+				trinketId = Decode(trinketId)
+				local mask, hoverKey = kind == "n" and tonumber(raw), trinketId:match("^key:(.+)$")
+				local validId = hoverKey and Z.ValidKey(hoverKey) or not hoverKey and Z.ParseClickKey(trinketId)
+				if (mask == 1 or mask == 2 or mask == 3) and validId then
+					trinkets[trinketClass] = trinkets[trinketClass] or {}
+					trinkets[trinketClass][trinketId] = mask
 					count = count + 1
 				end
 			elseif hoverClass then
@@ -186,6 +214,10 @@ function Z:Import(code)
 	for key, value in pairs(settings) do Z.db[key] = value end
 	for class, binds in pairs(clicks) do Z.db.clicks[class] = binds end
 	for class, list in pairs(hovers) do Z.db.hoverKeys[class] = list end
+	-- les bijoux suivent les clics reçus : une classe dont les clics changent prend aussi ses bijoux
+	Z.db.clickTrinkets = Z.db.clickTrinkets or {}
+	for class in pairs(clicks) do Z.db.clickTrinkets[class] = trinkets[class] or {} end
+	for class in pairs(hovers) do Z.db.clickTrinkets[class] = trinkets[class] or {} end
 	for list, names in pairs(lists) do Z.db[list] = names end
 	for shape, elements in pairs(places) do Z.db.placement[shape] = elements end
 	Z:Refresh()

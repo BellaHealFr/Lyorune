@@ -36,7 +36,7 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 
 | | | |
 |:-:|---|---|
-| <img src="docs/images/runes/s.png" alt="" width="40"> | **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. La touche de signal du jeu sur une case marque le joueur pour tout le groupe. |
+| <img src="docs/images/runes/s.png" alt="" width="40"> | **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. Un bijou peut partir avec le sort, un autre clic arrête l'incantation, et Lyorune vous prévient si le « clic pour lancer » du jeu prend la même combinaison. La touche de signal du jeu sur une case marque le joueur pour tout le groupe. |
 | <img src="docs/images/runes/t.png" alt="" width="40"> | **Touches au survol** | Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. |
 | <img src="docs/images/runes/u.png" alt="" width="40"> | **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers, absorption de soins, mana, soins sur la durée, affaiblissements, auras privées des boss, invocation, vie basse, menace, portée en trois paliers, chef de groupe. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dissiper sans chercher** | La case se colore quand vous pouvez retirer une magie, une malédiction, une maladie ou un poison. |

@@ -1960,6 +1960,93 @@ step("etape 14 : joueurs epingles, signal, chef de groupe", function()
   Z:Refresh() RunUpdates()
 end)
 
+step("etape 15 : bijoux, arreter l'incantation, clic pour lancer du jeu", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  local b = Z.buttons[1]
+  Z.db.autoRes = false Z.db.externalClicks = false
+  Z.db.clicks[Z:ClickSet()] = { ["shift-1"] = "Soins rapides", ["2"] = "@menu", ["ctrl-1"] = "Rénovation" }
+  Z.db.hoverKeys[Z:ClickSet()] = { { key = "F", spell = "Soins rapides" } }
+  Z.db.clickTrinkets = {}
+  Z:ApplyClicks()
+  assert(b:GetAttribute("shift-type1") == "spell", "sans bijou : sort simple")
+  -- bijou 1 sur un clic, les deux sur une touche : /use avant le sort, sur un vivant
+  local shift, key = { kind = "click", key = "shift-1" }, { kind = "key", key = "F" }
+  Z:ToggleTrinket(shift, 1)
+  assert(b:GetAttribute("shift-macrotext1") == "/use [@mouseover,nodead] 13\n/cast [@mouseover] Soins rapides", tostring(b:GetAttribute("shift-macrotext1")))
+  Z:ToggleTrinket(key, 1) Z:ToggleTrinket(key, 2)
+  assert(Z:GetTrinkets()["key:F"] == 3 and b:GetAttribute("*macrotext-zh1") == "/use [@mouseover,nodead] 13\n/use [@mouseover,nodead] 14\n/cast [@mouseover] Soins rapides", tostring(b:GetAttribute("*macrotext-zh1")))
+  -- avec la resurrection automatique, le bijou passe avant tout
+  Z.db.autoRes = true Z:ApplyClicks()
+  assert(b:GetAttribute("shift-macrotext1"):find("^/use %[@mouseover,nodead%] 13\n/cast %[@mouseover,help,dead%]"), tostring(b:GetAttribute("shift-macrotext1")))
+  Z.db.autoRes = false
+  -- infobulle de la case
+  local found for _, line in ipairs(Z:ClickSummary()) do if line[2]:find("bijou", 1, true) then found = true end end
+  assert(found, "bijou absent de l'infobulle")
+  -- retirer un bijou, deplacer un raccourci : les bijoux suivent leur sort
+  Z:ToggleTrinket(key, 2) assert(Z:GetTrinkets()["key:F"] == 1)
+  Z:MoveBinding(shift, { kind = "click", key = "ctrl-1" })
+  assert(Z:GetTrinkets()["ctrl-1"] == 1 and Z:GetTrinkets()["shift-1"] == nil, "bijou reste sur l'ancien clic")
+  assert(b:GetAttribute("ctrl-macrotext1"):find("/use", 1, true) and b:GetAttribute("shift-type1") == "spell", "attributs apres echange")
+  Z:MoveBinding(key, { kind = "key", key = "G" })
+  assert(Z:GetTrinkets()["key:G"] == 1 and Z:GetTrinkets()["key:F"] == nil, "bijou de la touche renommee")
+  -- pas de bijou sur « menu », « cibler », « arreter » ; retirer le raccourci retire le bijou
+  assert(not Z.TakesTrinket("@menu") and not Z.TakesTrinket("@target") and not Z.TakesTrinket("@stop") and Z.TakesTrinket("Rénovation"))
+  Z:SetBinding({ kind = "click", key = "ctrl-1" }, "@stop")
+  assert(Z:GetTrinkets()["ctrl-1"] == nil, "bijou garde sur Arreter")
+  assert(b:GetAttribute("ctrl-type1") == "macro" and b:GetAttribute("ctrl-macrotext1") == "/stopcasting", "arreter l'incantation")
+  assert(Z:ActionText("@stop") == "Arrêter l'incantation")
+  Z:SetBinding({ kind = "click", key = "ctrl-1" }, "Rénovation")
+  Z:ToggleTrinket({ kind = "click", key = "ctrl-1" }, 2)
+  Z:SetBinding({ kind = "click", key = "ctrl-1" }, nil)
+  assert(Z:GetTrinkets()["ctrl-1"] == nil, "raccourci retire, bijou garde")
+  -- macro de ma bibliotheque : les lignes /use passent devant
+  Z.db.clicks[Z:ClickSet()]["alt-1"] = "/cast [@mouseover] Soins"
+  Z:ToggleTrinket({ kind = "click", key = "alt-1" }, 2)
+  assert(b:GetAttribute("alt-macrotext1") == "/use [@mouseover,nodead] 14\n/cast [@mouseover] Soins", tostring(b:GetAttribute("alt-macrotext1")))
+  -- partage : bijoux exportes avec leur sort, controles a l'import, annulables
+  Z:ToggleTrinket({ kind = "click", key = "shift-1" }, 1) -- shift-1 a repris « Rénovation » a l'echange
+  local code = Z:Export()
+  assert(code:find("t%." .. Z:ClickSet() .. "%.shift%%2D1=n1"), "bijou absent du code")
+  assert(not code:find("alt%%2D1=n"), "bijou d'une macro partage")
+  Z.db.clickTrinkets = {}
+  assert(Z:Import(code))
+  assert(Z:GetTrinkets()["shift-1"] == 1, "bijou non importe")
+  Z:UndoImport()
+  assert(Z:GetTrinkets()["shift-1"] == nil, "annuler l'import garde le bijou")
+  local before = Z:GetTrinkets()["key:G"]
+  Z:Import("Lyorune1;t.PRIEST.shift%2D1=n9;t.PRIEST.zzz=n1;t.PRIEST.key%3AF%22=n1;c.PRIEST.shift%2D1=sSoins")
+  for id, mask in pairs(Z.db.clickTrinkets.PRIEST or {}) do assert(mask >= 1 and mask <= 3 and (Z.ParseClickKey(id) or id:find("^key:")), "bijou abime importe : " .. id) end
+  Z:UndoImport()
+  -- clic pour lancer du jeu : lu, jamais modifie ; conflit signale une seule fois
+  Z.db.clicks[Z:ClickSet()] = { ["shift-1"] = "Soins rapides", ["1"] = "Rénovation" }
+  local types = { Spell = 1, Macro = 2, Interaction = 3, PetAction = 4 }
+  Enum.ClickBindingType = types
+  local profile = { { type = 1, actionID = 2061, button = "LeftButton", modifiers = 1 },
+    { type = 3, actionID = 1, button = "LeftButton", modifiers = 0 },  -- « cibler » du jeu : pas un conflit
+    { type = 1, actionID = 2061, button = "Button6", modifiers = 0 } }
+  C_ClickBindings = { GetProfileInfo = function() return profile end }
+  GetStringFromModifiers = function(m) return m == 1 and "SHIFT" or "" end
+  assert(Z.GameClickKey("LeftButton", 1) == "shift-1" and Z.GameClickKey("Button5", 0) == "5" and Z.GameClickKey("Button7", 0) == nil)
+  local conflicts = Z:GameClickConflicts()
+  assert(conflicts["shift-1"] and not conflicts["1"], "conflit mal lu")
+  local n = #PRINTED
+  Z.db.clickConflictAlert = true Z:ApplyClicks() Z:ApplyClicks()
+  assert(#PRINTED == n + 1 and PRINTED[n + 1]:find("Maj + Clic gauche", 1, true), "message de conflit : " .. tostring(PRINTED[n + 1]))
+  Z.db.externalClicks = true assert(next(Z:GameClickConflicts()) == nil, "conflit avec clics externes")
+  Z.db.externalClicks = false
+  C_ClickBindings = { GetProfileInfo = function() error("refuse") end }
+  assert(next(Z:GameClickConflicts()) == nil, "erreur du jeu non rattrapee")
+  C_ClickBindings, GetStringFromModifiers, Enum.ClickBindingType = nil, nil, nil
+  -- options
+  local labels = table.concat(Z:OptionLabels(), "|")
+  assert(labels:find("Signaler un clic pris aussi par le jeu", 1, true), "option de conflit absente")
+  for _, tab in ipairs(Z:OptionsWindow().tabs) do
+    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
+  end
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z:ApplyClicks()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

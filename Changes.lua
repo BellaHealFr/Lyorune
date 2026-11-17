@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.21.0", date = "2026-11-17",
+		added = {
+			"Bijou avec le sort : sur chaque ligne de l'onglet Clics, deux petites icônes utilisent votre bijou du haut ou du bas juste avant le sort, sur un joueur vivant (#42).",
+			"Arrêter l'incantation : un clic ou une touche peut interrompre le sort en cours (#42).",
+			"Clic pris aussi par le jeu : si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune, un message le dit et la ligne passe en orange ; Lyorune ne touche jamais aux raccourcis du jeu (#42).",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.20.0", date = "2026-11-17",
 		added = {
 			"Joueurs épinglés : un petit cadre « Épinglés » pour garder à part un 2e tank ou un joueur à surveiller ; on épingle depuis la case survolée (/lyorune epingler), sa cible ou la liste de l'onglet Listes (#41).",

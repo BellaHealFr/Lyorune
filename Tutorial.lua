@@ -40,6 +40,7 @@ local steps = {
 		title = "Soigner d'un clic",
 		text = function()
 			return Z.L["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] .. "\n\n" .. ClickSummary()
+				.. "\n\n" .. Z.L["Onglet Clics : les icônes de bijou d'une ligne utilisent votre bijou avec le sort."]
 		end,
 		target = function() return Z.buttons[1] end,
 	},

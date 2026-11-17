@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.21.0] - 2026-11-17
+
+### Added
+
+- Trinket with the spell: on each line of the Clicks tab, two small icons use your top or bottom trinket right before the spell, on a living player ([#42](https://github.com/BellaHealFr/Lyorune/issues/42)).
+- Stop casting: a click or a key can interrupt the spell being cast ([#42](https://github.com/BellaHealFr/Lyorune/issues/42)).
+- Click the game also uses: if the game's click casting uses the same combination as a Lyorune click, a message says so and the line turns orange; Lyorune never touches the game's bindings ([#42](https://github.com/BellaHealFr/Lyorune/issues/42)).
+
 ## [1.20.0] - 2026-11-17
 
 ### Added
@@ -318,6 +326,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.21.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.17.0...v1.18.0

@@ -5,8 +5,14 @@
 --   "1" clic gauche, "2" clic droit, "3" clic milieu, "4" et "5" boutons latéraux
 --   "shift-1" Maj + clic gauche, "ctrl-shift-2" Ctrl + Maj + clic droit, "alt-ctrl-shift-3"...
 --   Les modifications s'écrivent toujours dans l'ordre du jeu : alt, ctrl, shift.
---   La valeur est un nom de sort, "@target" (cibler), "@menu" (menu du joueur) ou "@macro:Nom" (une macro
---   de ma bibliothèque, voir Macros.lua).
+--   La valeur est un nom de sort, "@target" (cibler), "@menu" (menu du joueur), "@stop" (arrêter
+--   l'incantation) ou "@macro:Nom" (une macro de ma bibliothèque, voir Macros.lua).
+-- BIJOUX. Chaque raccourci peut utiliser un bijou (emplacement 13, 14 ou les deux) juste avant son sort :
+--   clickTrinkets.PRIEST["shift-1"] = 1 (bijou du haut), 2 (bijou du bas) ou 3 (les deux). Une touche au survol
+--   a pour identifiant « key:F ». Le bijou n'est utilisé que sur un joueur vivant.
+-- CLIC POUR LANCER DU JEU. Le jeu peut lancer ses propres sorts au clic sur toutes les cases de soin, celles de
+--   Lyorune comprises. Lyorune lit ces raccourcis (sans jamais les modifier) et signale ceux qui prennent la même
+--   combinaison qu'un de ses clics (option « clickConflictAlert »).
 -- TOUCHES AU SURVOL. Une touche du clavier (avec ou sans Alt, Ctrl, Maj), un bouton de souris à partir du 6e ou
 --   la molette lance un sort sur la case que survole la souris. Elle ne remplace la touche habituelle que
 --   pendant le survol d'une case. Leur nombre n'est pas limité.
@@ -87,12 +93,49 @@ function Z:GetHoverKeys()
 	return Set(Z.db.hoverKeys)
 end
 
+-- Bijoux des raccourcis de la spécialisation active (voir BIJOUX en haut du fichier)
+function Z:GetTrinkets()
+	Z.db.clickTrinkets = Z.db.clickTrinkets or {}
+	return Set(Z.db.clickTrinkets)
+end
+
+Z.TRINKET_SLOTS = { 13, 14 } -- bijou 1 (masque 1) et bijou 2 (masque 2)
+
+-- Identifiant d'un raccourci dans la table des bijoux : « shift-1 » pour un clic, « key:F » pour une touche
+function Z.TriggerId(trigger)
+	return trigger.kind == "click" and trigger.key or "key:" .. trigger.key
+end
+
+-- Une action qui lance quelque chose sur le joueur : on peut y joindre un bijou (pas à « cibler », « menu »...)
+function Z.TakesTrinket(value)
+	return type(value) == "string" and value ~= "" and value ~= "@target" and value ~= "@menu" and value ~= "@stop"
+end
+
+-- Le masque contient-il le bijou « index » (1 ou 2) ?
+function Z.MaskHas(mask, index)
+	return math.floor((mask or 0) / index) % 2 == 1
+end
+
+function Z:HasTrinket(trigger, index)
+	return Z.MaskHas(Z:GetTrinkets()[Z.TriggerId(trigger)], index)
+end
+
+function Z:ToggleTrinket(trigger, index)
+	local list, id = Z:GetTrinkets(), Z.TriggerId(trigger)
+	local mask = list[id] or 0
+	mask = Z.MaskHas(mask, index) and mask - index or mask + index
+	list[id] = mask > 0 and mask or nil
+	Z:ApplyClicks()
+end
+
 -- Bouton « Copier l'autre spécialisation » : mes clics et touches deviennent ceux de l'autre groupe de talents
 function Z:CopyOtherSpec()
 	local set = Z:ClickSet()
 	local other = set == Z.class and Z.class .. "2" or Z.class
 	Z.db.clicks[set] = CopyTable(Z.db.clicks[other] or {})
 	Z.db.hoverKeys[set] = CopyTable(Z.db.hoverKeys[other] or {})
+	Z:GetTrinkets()
+	Z.db.clickTrinkets[set] = CopyTable(Z.db.clickTrinkets[other] or {})
 	Z:ApplyClicks()
 end
 
@@ -144,16 +187,18 @@ end
 -- { { kind = "click", key = "shift-1", value = "Rénovation" }, { kind = "key", key = "F", value = "...", index = 1 } }
 function Z:Bindings()
 	local list = {}
-	local clicks = Z:GetClicks()
+	local clicks, trinkets = Z:GetClicks(), Z:GetTrinkets()
 	for _, button in ipairs(Z.clickButtons) do
 		for _, modifier in ipairs(Z.clickModifiers) do
 			local key = modifier[1] .. button[1]
 			local value = clicks[key]
-			if value and value ~= "" then list[#list + 1] = { kind = "click", key = key, value = value } end
+			if value and value ~= "" then list[#list + 1] = { kind = "click", key = key, value = value, trinkets = trinkets[key] } end
 		end
 	end
 	for index, entry in ipairs(Z:GetHoverKeys()) do
-		if entry.key then list[#list + 1] = { kind = "key", key = entry.key, value = entry.spell or "", index = index } end
+		if entry.key then
+			list[#list + 1] = { kind = "key", key = entry.key, value = entry.spell or "", index = index, trinkets = trinkets["key:" .. entry.key] }
+		end
 	end
 	return list
 end
@@ -169,6 +214,7 @@ end
 -- Pose « value » sur un déclencheur (nil ou "" : retire le raccourci). Une touche déjà présente garde sa place.
 function Z:SetBinding(trigger, value, noApply)
 	if value == "" then value = nil end
+	if not Z.TakesTrinket(value) then Z:GetTrinkets()[Z.TriggerId(trigger)] = nil end -- raccourci retiré : bijoux retirés
 	if trigger.kind == "click" then
 		if not Z.ParseClickKey(trigger.key) then return end
 		Z:GetClicks()[trigger.key] = value
@@ -193,15 +239,22 @@ function Z:MoveBinding(from, to)
 	if from.kind == to.kind and from.key == to.key then return end
 	local moving, other = Z:GetBinding(from), Z:GetBinding(to)
 	if to.kind == "key" and not Z.ValidKey(to.key) or to.kind == "click" and not Z.ParseClickKey(to.key) then return end
+	-- les bijoux suivent leur sort
+	local trinkets = Z:GetTrinkets()
+	local fromId, toId = Z.TriggerId(from), Z.TriggerId(to)
+	local fromMask, toMask = trinkets[fromId], trinkets[toId]
 	-- une touche garde sa place dans la liste : on la renomme au lieu de la retirer puis de l'ajouter
 	if from.kind == "key" and to.kind == "key" and not other then
 		for _, entry in ipairs(Z:GetHoverKeys()) do
 			if entry.key == from.key then entry.key = to.key end
 		end
+		trinkets[fromId], trinkets[toId] = nil, fromMask
 		return Z:ApplyClicks()
 	end
 	Z:SetBinding(from, other, true)
 	Z:SetBinding(to, moving, true)
+	trinkets[fromId] = Z.TakesTrinket(other) and toMask or nil
+	trinkets[toId] = Z.TakesTrinket(moving) and fromMask or nil
 	Z:ApplyClicks()
 end
 
@@ -210,6 +263,7 @@ function Z:ActionText(value)
 	local L = Z.L
 	if value == "@target" then return L["Cibler"] end
 	if value == "@menu" then return L["Menu du joueur"] end
+	if value == "@stop" then return L["Arrêter l'incantation"] end
 	local ref = Z.MacroRef(value)
 	if ref then
 		return (Z:FindMacro(ref) and "|cffffd060" or "|cffff6060") .. L["Macro"] .. "|r " .. ref
@@ -223,7 +277,11 @@ end
 function Z:ClickSummary()
 	local list = {}
 	for _, binding in ipairs(Z:Bindings()) do
-		if binding.value ~= "" then list[#list + 1] = { Z:TriggerLabel(binding), Z:ActionText(binding.value) } end
+		if binding.value ~= "" then
+			local text = Z:ActionText(binding.value)
+			if binding.trinkets and Z.TakesTrinket(binding.value) then text = text .. " + " .. Z.L["bijou"] end
+			list[#list + 1] = { Z:TriggerLabel(binding), text }
+		end
 	end
 	return list
 end
@@ -261,24 +319,37 @@ local function ResPrefix()
 	return prefix ~= "" and prefix or nil
 end
 
--- Ajoute à « attributes » ce qu'il faut pour que le bouton « suffix » lance « value »
-local function AddAction(attributes, prefix, suffix, value, resPrefix)
+-- Lignes de macro qui utilisent les bijoux du masque (1 : emplacement 13, 2 : 14, 3 : les deux), sur un vivant
+function Z.TrinketLines(mask)
+	local lines = ""
+	for index, slot in ipairs(Z.TRINKET_SLOTS) do
+		if Z.MaskHas(mask, index) then lines = lines .. ("/use [@mouseover,nodead] %d\n"):format(slot) end
+	end
+	return lines
+end
+
+-- Ajoute à « attributes » ce qu'il faut pour que le bouton « suffix » lance « value » (avec ses bijoux)
+local function AddAction(attributes, prefix, suffix, value, resPrefix, trinkets)
+	local use = Z.TakesTrinket(value) and Z.TrinketLines(trinkets) or ""
 	if value == "@target" then
 		attributes[prefix .. "type" .. suffix] = "target"
 	elseif value == "@menu" then
 		attributes[prefix .. "type" .. suffix] = "togglemenu"
+	elseif value == "@stop" then
+		attributes[prefix .. "type" .. suffix] = "macro"
+		attributes[prefix .. "macrotext" .. suffix] = "/stopcasting"
 	elseif Z.MacroRef(value) then -- une macro de ma bibliothèque, sans la résurrection automatique
 		local macro = Z:FindMacro(Z.MacroRef(value))
 		if macro and macro.body:find("%S") then
 			attributes[prefix .. "type" .. suffix] = "macro"
-			attributes[prefix .. "macrotext" .. suffix] = Z:ResolveMacro(macro.body)
+			attributes[prefix .. "macrotext" .. suffix] = use .. Z:ResolveMacro(macro.body)
 		end
 	elseif Z.IsMacro(value) then -- macro écrite sur le clic (avant la 1.6.0, rangée ensuite dans la bibliothèque)
 		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = Z:ResolveMacro(value)
-	elseif resPrefix then
+		attributes[prefix .. "macrotext" .. suffix] = use .. Z:ResolveMacro(value)
+	elseif resPrefix or use ~= "" then
 		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = "/cast " .. resPrefix .. "[@mouseover] " .. value
+		attributes[prefix .. "macrotext" .. suffix] = use .. "/cast " .. (resPrefix or "") .. "[@mouseover] " .. value
 	else
 		attributes[prefix .. "type" .. suffix] = "spell"
 		attributes[prefix .. "spell" .. suffix] = value
@@ -301,6 +372,7 @@ function Z:ApplyClicks()
 
 	local attributes = {}
 	local resPrefix = ResPrefix()
+	local trinkets = Z:GetTrinkets()
 	local onEnter = "self:ClearBindings()"
 
 	if not Z.db.externalClicks then
@@ -308,14 +380,14 @@ function Z:ApplyClicks()
 		for key, value in pairs(Z:GetClicks()) do
 			local modifier, button = Z.ParseClickKey(key)
 			if modifier and value and value ~= "" then
-				AddAction(attributes, modifier, button, value, resPrefix)
+				AddAction(attributes, modifier, button, value, resPrefix, trinkets[key])
 			end
 		end
 		-- Touches au survol : à l'entrée de la souris, la touche « clique » un bouton virtuel de la case
 		for i, entry in ipairs(Z:GetHoverKeys()) do
 			local key = Z.ValidKey(entry.key) and entry.key -- jamais de guillemet ni d'antislash dans le code sécurisé
 			if key and entry.spell and entry.spell ~= "" then
-				AddAction(attributes, "*", "-zh" .. i, entry.spell, resPrefix)
+				AddAction(attributes, "*", "-zh" .. i, entry.spell, resPrefix, trinkets["key:" .. key])
 				onEnter = onEnter .. (' self:SetBindingClick(true, "%s", self, "zh%d")'):format(key, i)
 			end
 		end
@@ -345,7 +417,73 @@ function Z:ApplyClicks()
 		h:SetAttribute("_initialAttribute-_onenter", onEnter)
 	end
 	Z:SyncBarMacros()
+	Z:WarnClickConflicts()
 	if Z.RefreshClicks then Z.RefreshClicks() end
+end
+
+----------------------------------------------------------------------------------------------------
+-- CLIC POUR LANCER DU JEU : les combinaisons qu'il prend aussi. Lecture seule, jamais de modification.
+----------------------------------------------------------------------------------------------------
+local GAME_BUTTONS = { LeftButton = "1", RightButton = "2", MiddleButton = "3" }
+
+-- Clé de clic Lyorune (« ctrl-shift-1 ») d'un raccourci du jeu, ou nil (bouton 6 et plus, format inconnu)
+function Z.GameClickKey(button, modifiers)
+	if type(button) ~= "string" then return nil end
+	local number = GAME_BUTTONS[button] or button:match("^Button([1-5])$")
+	if not number then return nil end
+	local text = ""
+	if modifiers and modifiers ~= 0 and GetStringFromModifiers then
+		local ok, result = pcall(GetStringFromModifiers, modifiers)
+		text = ok and type(result) == "string" and result:lower() or ""
+	end
+	local key = ""
+	for _, name in ipairs({ "alt", "ctrl", "shift" }) do
+		if text:find(name, 1, true) then key = key .. name .. "-" end
+	end
+	return key .. number
+end
+
+-- Mes clics que le clic pour lancer du jeu prend aussi : { ["shift-1"] = "Soins rapides", ... }
+-- Seuls ses sorts et ses macros comptent : « cibler » et « menu » font la même chose que chez Lyorune.
+function Z:GameClickConflicts()
+	local found = {}
+	local api = C_ClickBindings
+	if Z.db.externalClicks or not (api and api.GetProfileInfo) then return found end
+	local ok, profile = pcall(api.GetProfileInfo)
+	if not ok or type(profile) ~= "table" then return found end
+	local types = Enum and Enum.ClickBindingType or {}
+	local clicks = Z:GetClicks()
+	for _, info in ipairs(profile) do
+		local kind = type(info) == "table" and info.type
+		if kind and (kind == types.Spell or kind == types.Macro or kind == types.PetAction) then
+			local key = Z.GameClickKey(info.button, info.modifiers)
+			if key and clicks[key] and clicks[key] ~= "" then
+				local name
+				pcall(function()
+					if kind == types.Macro then name = GetMacroInfo(info.actionID)
+					else name = C_Spell.GetSpellName(info.actionID) end
+				end)
+				found[key] = type(name) == "string" and name or "?"
+			end
+		end
+	end
+	return found
+end
+
+-- Message dans le chat, une fois par combinaison et par session (option « clickConflictAlert »)
+local warnedConflicts = {}
+function Z:WarnClickConflicts()
+	if not Z.db.clickConflictAlert then return end
+	local list = {}
+	for key, name in pairs(Z:GameClickConflicts()) do
+		if not warnedConflicts[key] then
+			warnedConflicts[key] = true
+			list[#list + 1] = Z:ClickLabel(key) .. " (" .. name .. ")"
+		end
+	end
+	if #list == 0 then return end
+	table.sort(list)
+	Z:Print(Z.L["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (onglet Clics, ligne en orange)."]:format(table.concat(list, ", ")))
 end
 
 ----------------------------------------------------------------------------------------------------
