@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.5.2"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.5.3"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -156,7 +156,7 @@ end
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
 	local list = handlers[event]
-	for i = 1, #list do list[i](...) end
+	for i = 1, #list do Z:Try(event, list[i], ...) end -- une erreur n'empêche pas la suite, et elle est notée
 end)
 
 ----------------------------------------------------------------------------------------------------
@@ -267,7 +267,9 @@ end
 -- Commandes
 ----------------------------------------------------------------------------------------------------
 SLASH_LYORUNE1, SLASH_LYORUNE2 = "/lyorune", "/lyo"
-SlashCmdList.LYORUNE = function(msg)
+SlashCmdList.LYORUNE = function(msg) Z:Try("commande /lyorune", Z.Command, msg) end
+
+function Z.Command(msg)
 	msg = (msg or ""):lower():match("^%s*(.-)%s*$")
 	if msg == "erreurs" or msg == "erreur" or msg == "log" then return Z:ShowLog() end
 	if msg == "diag" then return Z:Diagnose() end

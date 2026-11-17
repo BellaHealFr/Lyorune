@@ -91,7 +91,13 @@ end
 -- qu'un autre addon peut avoir remplacé. Renvoie true si tout s'est bien passé.
 function Z:Try(label, fn, ...)
 	local ok, err = pcall(fn, ...)
-	if not ok then Z:Log("Erreur Lua", label .. " : " .. tostring(err), debugstack(2, 8, 0)) end
+	if not ok then
+		if Z.db then
+			Z:Log("Erreur Lua", tostring(label) .. " : " .. tostring(err), debugstack(2, 8, 0))
+		else
+			print("|cff33dd88Lyorune|r : " .. tostring(label) .. " : " .. tostring(err)) -- avant le chargement des réglages
+		end
+	end
 	return ok
 end
 

@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.5.3", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+			"La fenêtre d'options est plus haute, pour que les macros des barres de sorts tiennent dans l'onglet Clics.",
+			"Une erreur dans un onglet des options ne cache plus les autres réglages, et elle est notée au journal.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.5.2", date = "2026-11-17",
 		added = {
 		},

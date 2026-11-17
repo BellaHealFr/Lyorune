@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.5.3] - 2026-11-17
+
+### Improved
+
+- The options window is taller, so that the action bar macros fit in the Clicks tab.
+- An error in one options tab no longer hides the other settings, and it is written to the log.
+
 ## [1.5.2] - 2026-11-17
 
 ### Fixed
@@ -116,6 +123,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.5.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.4.2...v1.5.0

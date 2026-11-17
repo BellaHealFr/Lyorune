@@ -726,8 +726,8 @@ function Z:FrameState()
 	return lines
 end
 
-function Z:SaveFrameState()
-	if Z.header then db.frameState = Z:FrameState() end
+function Z:SaveFrameState(key)
+	if Z.header then db[key or "frameState"] = Z:FrameState() end
 end
 
 -- Appelé après chaque changement d'option
@@ -807,7 +807,7 @@ function Z:CreateFrames()
 
 	-- Relevé de l'état des cadres : quelques secondes après la connexion, puis à la déconnexion
 	C_Timer.After(6, function() Z:SaveFrameState() end)
-	Z:On("PLAYER_LOGOUT", function() Z:SaveFrameState() end)
+	Z:On("PLAYER_LOGOUT", function() Z:SaveFrameState("frameStateLogout") end)
 
 	-- Portée : le seul contrôle périodique de l'addon (2 fois par seconde, coût négligeable)
 	C_Timer.NewTicker(0.5, ForVisible(UpdateRange))

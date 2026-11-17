@@ -304,4 +304,6 @@ Z.translations.enUS = {
 	["Macros pour vos barres de sorts : Lyorune crée et tient à jour une vraie macro du jeu pour chaque sort de vos clics. Onglet Clics : cliquez sur son icône puis déposez-la dans une barre."] = "Macros for your action bars: Lyorune creates and keeps up to date a real game macro for each spell of your clicks. Clicks tab: click its icon, then drop it on an action bar.",
 	["Le rapport de /lyorune erreurs décrit maintenant l'état de chaque cadre."] = "The /lyorune erreurs report now describes the state of each frame.",
 	["Les cadres s'affichent de nouveau : le jeu refusait de créer les cases, seul comme en groupe."] = "The frames show up again: the game refused to create the cells, solo as well as in a group.",
+	["La fenêtre d'options est plus haute, pour que les macros des barres de sorts tiennent dans l'onglet Clics."] = "The options window is taller, so that the action bar macros fit in the Clicks tab.",
+	["Une erreur dans un onglet des options ne cache plus les autres réglages, et elle est notée au journal."] = "An error in one options tab no longer hides the other settings, and it is written to the log.",
 }

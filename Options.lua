@@ -16,7 +16,7 @@ local _, Z = ...
 local UI = Z.UI
 local L = Z.L
 
-local WIDTH, HEIGHT = 700, 560
+local WIDTH, HEIGHT = 700, 650
 local COLUMN = 310          -- largeur d'une colonne de réglages
 local window, picker
 local tabs
@@ -124,9 +124,12 @@ local function BuildColumns(page, columns)
 	for index, column in ipairs(columns) do
 		local x, y = (index - 1) * (COLUMN + 32), 0
 		for _, item in ipairs(column) do
-			local widget = BuildItem(page, item)
-			widget:SetPoint("TOPLEFT", page, "TOPLEFT", x, y)
-			y = y - widget:GetHeight() - 7
+			-- Un réglage qui échoue est noté au journal et ne cache pas les suivants
+			Z:Try("option " .. tostring(item[2]), function()
+				local widget = BuildItem(page, item)
+				widget:SetPoint("TOPLEFT", page, "TOPLEFT", x, y)
+				y = y - widget:GetHeight() - 7
+			end)
 		end
 	end
 end
@@ -907,7 +910,11 @@ local function BuildPage(index)
 	tab.page:SetPoint("BOTTOMRIGHT", -24, 20)
 	tab.page.tabIndex = index
 	tab.page:Hide()
-	if tab.columns then BuildColumns(tab.page, tab.columns) else tab.build(tab.page) end
+	if tab.columns then
+		BuildColumns(tab.page, tab.columns)
+	else
+		Z:Try("onglet " .. tab.name, tab.build, tab.page)
+	end
 end
 
 local function Select(index)
