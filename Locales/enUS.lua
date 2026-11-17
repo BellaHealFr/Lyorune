@@ -82,11 +82,52 @@ Z.translations.enUS = {
 	["Touche"] = "Key", ["Sort"] = "Spell", ["Appuyez..."] = "Press a key...",
 	["Touches au survol"] = "Hover keys", ["Touche au survol"] = "Hover key", ["Comportement"] = "Behaviour",
 	["Ou tapez le nom exact d'un sort, puis Entrée :"] = "Or type a spell's exact name, then Enter:",
-	["Clics de souris : cliquez sur une cellule pour choisir le sort, ou une macro, lancé sur la case d'un joueur. Enregistrés par classe."] = "Mouse clicks: click a cell to pick the spell, or a macro, cast on a player's frame. Saved per class.",
-	["Macro"] = "Macro", ["Macro..."] = "Macro...", ["Annuler"] = "Cancel", ["Nom du sort"] = "Spell name",
-	["Enregistrer la macro"] = "Save the macro",
-	["Mes macros du jeu (fenêtre /macro) :"] = "My game macros (/macro window):",
-	["Pour viser le joueur de la case, écrivez [@mouseover] ou {cible} dans la macro."] = "To aim at the player of the frame, write [@mouseover] or {cible} in the macro.",
+	["Clics de souris : cliquez sur une cellule pour choisir le sort ou la macro lancé sur la case d'un joueur. Vous pouvez aussi y glisser un sort du grimoire."] = "Mouse clicks: click a cell to pick the spell or macro cast on a player's frame. You can also drag a spell from your spellbook onto it.",
+	["Macro"] = "Macro", ["macro"] = "macro", ["touche"] = "key",
+	["Clics de la spécialisation %d"] = "Clicks of specialization %d",
+	["Mêmes clics dans toutes les spécialisations"] = "Same clicks in every specialization",
+	["Copier l'autre spécialisation"] = "Copy the other specialization",
+	["Remplace les clics et les touches de cette spécialisation par ceux de l'autre."] = "Replaces this specialization's clicks and keys with the other one's.",
+	["Clics propres à chaque spécialisation"] = "Separate clicks for each specialization",
+	["Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout."] = "Each talent group has its own clicks and keys; they switch by themselves with your talents. Unticked: the same everywhere.",
+	-- Mes macros
+	["Mes macros"] = "My macros", ["Mes macros..."] = "My macros...", ["Mes macros :"] = "My macros:",
+	["Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic."] = "Your macro library: write, check, import from /macro, then drag onto a click.",
+	["Plusieurs actions en un clic : écrivez vos macros une fois, posez-les sur autant de clics que vous voulez."] = "Several actions in one click: write your macros once, put them on as many clicks as you like.",
+	["Nouvelle"] = "New", ["Assistant..."] = "Wizard...", ["Importer de /macro..."] = "Import from /macro...",
+	["Importer de /macro"] = "Import from /macro",
+	["Une macro écrite pour vous : cochez ce que vous voulez, Lyorune écrit le texte."] = "A macro written for you: tick what you want, Lyorune writes the text.",
+	["Copie une macro de la fenêtre /macro du jeu. Vous pouvez aussi la glisser depuis /macro sur cette liste."] = "Copies a macro from the game's /macro window. You can also drag it from /macro onto this list.",
+	["Glissez une macro sur une case de l'onglet Clics, ou choisissez-la en cliquant sur la case."] = "Drag a macro onto a cell of the Clicks tab, or pick it by clicking the cell.",
+	["Nom"] = "Name", ["Enregistrer"] = "Save", ["Supprimer"] = "Delete",
+	["{cible} est le joueur de la case. Une commande sans cible vise la case."] = "{cible} is the player of the frame. A command without a target aims at the frame.",
+	["Vérification"] = "Check", ["Envoyé au jeu"] = "Sent to the game", ["Posée sur"] = "Used on",
+	["Aucune faute trouvée."] = "No mistake found.",
+	["Aucune macro : cliquez sur Nouvelle."] = "No macro yet: click New.",
+	["aucun clic ni touche, dans cette spécialisation"] = "no click or key, in this specialization",
+	["Une commande sans cible vise la case"] = "A command without a target aims at the frame",
+	["Décochez pour que vos macros partent exactement comme écrites, comme dans la fenêtre /macro."] = "Untick to send your macros exactly as written, as in the /macro window.",
+	["Supprime la macro et vide les clics qui l'utilisaient."] = "Deletes the macro and clears the clicks that used it.",
+	["Une autre macro porte déjà ce nom."] = "Another macro already has this name.",
+	["Cliquez sur une macro : elle est copiée dans votre bibliothèque. [@mouseover] y vise la case."] = "Click a macro: it is copied into your library. [@mouseover] in it aims at the frame.",
+	["Aucune macro dans la fenêtre /macro du jeu."] = "No macro in the game's /macro window.",
+	["La macro est vide."] = "The macro is empty.",
+	["Trop longue : %d caractères, %d au plus."] = "Too long: %d characters, %d at most.",
+	["Ligne %d trop longue : %d caractères, %d au plus."] = "Line %d too long: %d characters, %d at most.",
+	["Ligne %d : un crochet [ ] n'est pas fermé."] = "Line %d: a [ ] bracket is not closed.",
+	["Ligne %d : /%s exécute du code. Gardez-la seulement si vous savez d'où elle vient."] = "Line %d: /%s runs code. Keep it only if you know where it comes from.",
+	["Ligne %d : condition « %s » inconnue (faute de frappe ?)."] = "Line %d: unknown condition \"%s\" (typo?).",
+	["Ligne %d : touche « %s » inconnue (shift, ctrl ou alt)."] = "Line %d: unknown key \"%s\" (shift, ctrl or alt).",
+	["Ligne %d : « %s » n'est pas connu dans votre spécialisation active."] = "Line %d: \"%s\" is not known in your active specialization.",
+	["Ligne %d : une commande commence par une barre oblique, par exemple /cast."] = "Line %d: a command starts with a slash, for example /cast.",
+	["Aucune commande : une macro commence par une barre oblique, par exemple /cast."] = "No command: a macro starts with a slash, for example /cast.",
+	-- Assistant
+	["Assistant de macro"] = "Macro wizard", ["Sort lancé sur le joueur"] = "Spell cast on the player",
+	["Choisir..."] = "Choose...", ["Arrêter le sort en cours"] = "Stop the current cast",
+	["Utiliser mon bijou du haut"] = "Use my top trinket", ["Utiliser mon bijou du bas"] = "Use my bottom trinket",
+	["Si le joueur est mort : le relever"] = "If the player is dead: resurrect them",
+	["Si c'est un ennemi, lancer (facultatif)"] = "If it is an enemy, cast (optional)",
+	["Votre macro"] = "Your macro", ["Créer la macro"] = "Create the macro",
 	["Macros pour vos barres de sorts"] = "Macros for your action bars",
 	["Créer une macro par sort de mes clics"] = "Create one macro per spell of my clicks",
 	["Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro."] = "Lyorune creates and keeps up to date real game macros (their name starts with \"Lyo:\"), stored in /macro, in your character's tab. It never touches any other macro.",
@@ -98,10 +139,6 @@ Z.translations.enUS = {
 	["cette macro n'existe pas encore : elle sera créée dans quelques secondes."] = "this macro does not exist yet: it will be created in a few seconds.",
 	["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou décochez l'option dans l'onglet Clics."] = "no room left for a character macro: delete one in /macro, or untick the option in the Clicks tab.",
 	["%d macro(s) créée(s) pour vos barres de sorts : onglet Clics des options, ou /macro, onglet de votre personnage."] = "%d macro(s) created for your action bars: Clicks tab of the options, or /macro, your character's tab.",
-	["Bijou puis soin"] = "Trinket then heal", ["Interrompre puis soigner"] = "Stop cast then heal", ["Annonce puis soin"] = "Announce then heal",
-	["Plusieurs actions en un clic : un bijou puis un soin, une annonce puis un sort..."] = "Several actions in one click: a trinket then a heal, an announcement then a spell...",
-	["Écrivez la macro comme dans le jeu, une commande par ligne. {cible} désigne le joueur de la case. Partez d'un modèle, puis changez ce que vous voulez."] = "Write the macro as you would in the game, one command per line. {cible} stands for the player of the frame. Start from a template, then change whatever you like.",
-	["Une macro commence par une barre oblique, par exemple /cast."] = "A macro starts with a slash, for example /cast.",
 	["Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. Cliquez sur « Touche », puis appuyez."] = "A keyboard key, an extra mouse button or the wheel casts a spell on the hovered frame. Click \"Key\", then press.",
 	["Lancer le sort dès l'appui (plus rapide)"] = "Cast on key press (faster)",
 	["Le même clic relève un joueur mort"] = "The same click resurrects a dead player",
@@ -236,11 +273,11 @@ Z.translations.enUS = {
 			.. "|cff33dd88Apparence|r : thème, couleurs, luminosité, texte.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
-			.. "|cff33dd88Clics|r : souris, touches au survol, macros, résurrection.\n"
+			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: theme, colours, brightness, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, macros, resurrection.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: theme, colours, brightness, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -267,7 +304,7 @@ Z.translations.enUS = {
 
 	-- Nouveautés de chaque version (les clés reprennent exactement les notes de Changes.lua).
 	-- Après une publication, ajouter ici la traduction des nouvelles notes, puis relancer python outils/publier.py
-	["Nouveau nom : Zenith devient Lyorune. Les commandes sont /lyorune et /lyo."] = "New name: Zenith becomes Lyorune. The commands are /lyorune and /lyo.",
+	["Nouveau nom : Lyorune. Les commandes sont /lyorune et /lyo."] = "New name: Lyorune. The commands are /lyorune and /lyo.",
 	["Bouton sur la mini-carte : clic gauche pour les options, clic droit pour le mode test. Il se déplace et se désactive dans l'onglet Aide."] = "Minimap button: left click for the options, right click for test mode. It can be moved, and turned off in the Help tab.",
 	["Logo de Lyorune dans la liste des addons."] = "Lyorune logo in the addon list.",
 	["Inscription runique animée au bas de la fenêtre d'options : passez la souris dessus pour la traduire."] = "Animated runic inscription at the bottom of the options window: hover it to translate it.",
@@ -310,4 +347,10 @@ Z.translations.enUS = {
 	["Une erreur dans un onglet des options ne cache plus les autres réglages, et elle est notée au journal."] = "An error in one options tab no longer hides the other settings, and it is written to the log.",
 	["Vos propres macros du jeu sur un clic : la fenêtre de choix d'un sort montre les macros que vous avez écrites dans /macro."] = "Your own game macros on a click: the spell picker shows the macros you wrote in /macro.",
 	["Les macros pour les barres de sorts ne sont plus créées d'office : cochez la case dans l'onglet Clics si vous les voulez. Celles créées par la 1.5.1 sont retirées."] = "Action bar macros are no longer created automatically: tick the box in the Clicks tab if you want them. Those created by 1.5.1 are removed.",
+	["Bibliothèque « Mes macros » : une macro écrite une fois, posée sur autant de clics et de touches que vous voulez (#23)."] = "\"My macros\" library: write a macro once, put it on as many clicks and keys as you like (#23).",
+	["Assistant de macro à cases à cocher, import depuis /macro, glisser-déposer sur les cases."] = "Checkbox macro wizard, import from /macro, drag and drop onto the cells.",
+	["Vérification de la macro pendant la saisie, et aperçu du texte exact envoyé au jeu."] = "The macro is checked while you type, with a preview of the exact text sent to the game.",
+	["Clics et touches propres à chaque spécialisation, qui changent tout seuls avec les talents (#21)."] = "Clicks and keys for each specialization, switching by themselves with your talents (#21).",
+	["Une commande de macro sans cible vise la case ; [@mouseover] marche tel quel."] = "A macro command without a target aims at the frame; [@mouseover] works as it is.",
+	["Vos anciennes macros sont rangées toutes seules dans la bibliothèque."] = "Your previous macros are moved into the library by themselves.",
 }

@@ -35,31 +35,65 @@ To choose your spells: `/lyorune`, **Clicks** tab. Click a cell of the table (fo
 
 Example for a priest: left click for Flash Heal, right click for Renew, Shift + right click for the shield, middle click to dispel.
 
+You can also drag a spell from your spellbook straight onto a cell.
+
 Your clicks are saved per class: each character keeps its own.
 
-### Macros: several actions in one click
+### One specialization, its own clicks
 
-In the spell picker, click "Macro...". Three templates are ready, already filled in with the spell of your click:
+Your character has two specializations (two talent groups)? Each one has its own clicks and its own keys. When you switch talents, Lyorune moves to the right clicks by itself, macros included.
 
-- **Trinket then heal**: uses your first trinket, then casts the heal.
-- **Stop cast then heal**: cancels the current cast to heal right away.
-- **Announce then heal**: warns the group, then casts the heal.
+- At the top right of the **Clicks** tab, Lyorune shows which specialization's clicks you are looking at.
+- The first time, your second specialization takes over the clicks of the first. Then change whatever you like.
+- "Copy the other specialization" takes over all the clicks and keys of the other one.
+- Want the same clicks everywhere? Untick "Separate clicks for each specialization".
 
-Click a template, change whatever you like, then "Save the macro". You can also write everything yourself, like a game macro, one command per line. The word `{cible}` stands for the player of the frame you click:
+### My macros: several actions in one click
+
+A macro does several things in one click: use a trinket then heal, resurrect a dead player or heal a living one, attack an enemy or heal an ally...
+
+Lyorune keeps your macros in a library. You write a macro once, then put it on as many clicks and keys as you like, in both specializations. If you edit it, all its clicks follow. It takes no room in the game's `/macro` window.
+
+**Open the library**: **Clicks** tab, "My macros..." button (or the same button in the spell picker).
+
+**Three ways to create a macro:**
+
+1. **The wizard** ("Wizard..." button): pick your healing spell, then tick what you want: stop the current cast, use a trinket, resurrect the player if dead, cast an attack spell if it is an enemy. Lyorune writes the macro for you.
+2. **Write it yourself** ("New" button), like a game macro, one command per line.
+3. **Take a game macro** ("Import from /macro..." button), or drag it from the `/macro` window onto the list.
+
+**Aiming at the player of the frame.** Nothing to write: a command without a target goes to the player of the frame.
 
 ```
 /use 13
-/cast [{cible}] Rejuvenation
+/cast Rejuvenation
 ```
 
-### Using your own game macros
+A macro found on the Internet with `[@mouseover]` works as it is. To place the player of the frame yourself, write `{cible}`: `/cast [@cible,dead] Resurrection; [@cible] Flash Heal`. A written target (`[@player]`) is always respected. If you prefer your macros to go out exactly as written, untick "A command without a target aims at the frame" in the library.
 
-Already wrote macros in the game's `/macro` window? Put them on a click:
+**One macro for both specializations.** The game condition `[spec:1]` or `[spec:2]` picks the spell according to your talents:
 
-1. **Clicks** tab, click a cell of the table (or "Spell" of a hover key).
-2. Below your spells, the "My game macros" row shows your macros: click the one you want.
+```
+/cast [spec:1] Flash Heal; [spec:2] Rejuvenation
+```
 
-For the macro to aim at the player of the frame, write `[@mouseover]` or `{cible}` in it, for example `/cast [@mouseover] Rejuvenation`. If you edit the macro in `/macro`, the click follows by itself.
+**Checked while you type.** Below the macro, Lyorune points out:
+
+- a typo in a condition (`[mod:shfit]`, `[ded]`);
+- a forgotten bracket, a line that is too long;
+- a spell your active specialization does not know (maybe it belongs to the other one);
+- a command that runs code (`/run`, `/script`).
+
+Just below, "Sent to the game" shows the exact text that goes out on the click, and "Used on" the clicks that use the macro.
+
+**Putting the macro on a click:**
+
+- drag it from the list onto a cell of the **Clicks** tab (or onto the "Spell" of a hover key);
+- or click the cell: your macros are listed below your spells, in the "My macros" row.
+
+Your macros stay on your computer: they are never sent or received in a shared configuration, and "Reset everything" does not erase them. When a click holds a macro, automatic resurrection is not added to it: use the "If the player is dead: resurrect them" box of the wizard.
+
+Already used macros with a previous version? They are moved into the library by themselves, on the same clicks.
 
 ### Ready-made macros for your action bars (optional)
 
@@ -69,8 +103,6 @@ If you ask for it, Lyorune creates a real game macro for each spell of your clic
 2. Click an icon, then drop it on an action bar. You also find them in `/macro`, in your character's tab: their name starts with "Lyo:".
 
 The macro heals the player under your mouse (a frame or a character), otherwise your target, otherwise yourself. It updates when you change your clicks. Lyorune never touches your other macros. To do without them, untick "Create one macro per spell of my clicks" or click "Remove Lyorune's macros".
-
-A macro also works on a hover key. It stays on your computer: it is never sent or received in a shared configuration. When a click holds a macro, automatic resurrection is not added to it.
 
 ## 3. Hover keys
 

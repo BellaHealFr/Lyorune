@@ -14,8 +14,9 @@ local function ClickSummary()
 		for _, modifier in ipairs(Z.clickModifiers) do
 			local key = modifier[1] .. button[1]
 			local value = Z:GetClicks()[key]
-			if value and value:sub(1, 1) ~= "@" and #lines < 5 then
-				lines[#lines + 1] = "|cff33dd88" .. Z:ClickLabel(key) .. "|r : " .. value
+			local shown = Z.MacroRef(value) and Z.L["macro"] .. " " .. Z.MacroRef(value) or value
+			if value and (value:sub(1, 1) ~= "@" or Z.MacroRef(value)) and #lines < 5 then
+				lines[#lines + 1] = "|cff33dd88" .. Z:ClickLabel(key) .. "|r : " .. shown
 			end
 		end
 	end
@@ -82,7 +83,7 @@ local steps = {
 			.. "|cff33dd88Apparence|r : thème, couleurs, luminosité, texte.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
-			.. "|cff33dd88Clics|r : souris, touches au survol, macros, résurrection.\n"
+			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite.",

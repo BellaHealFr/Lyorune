@@ -6,6 +6,20 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.6.0] - 2026-11-17
+
+### Ajouté
+
+- Bibliothèque « Mes macros » : une macro écrite une fois, posée sur autant de clics et de touches que vous voulez ([#23](https://github.com/BellaHealFr/Lyorune/issues/23)).
+- Assistant de macro à cases à cocher, import depuis /macro, glisser-déposer sur les cases.
+- Vérification de la macro pendant la saisie, et aperçu du texte exact envoyé au jeu.
+- Clics et touches propres à chaque spécialisation, qui changent tout seuls avec les talents ([#21](https://github.com/BellaHealFr/Lyorune/issues/21)).
+
+### Amélioré
+
+- Une commande de macro sans cible vise la case ; [@mouseover] marche tel quel.
+- Vos anciennes macros sont rangées toutes seules dans la bibliothèque.
+
 ## [1.5.4] - 2026-11-17
 
 ### Ajouté
@@ -78,7 +92,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ### Ajouté
 
-- Nouveau nom : Zenith devient Lyorune. Les commandes sont /lyorune et /lyo.
+- Nouveau nom : Lyorune. Les commandes sont /lyorune et /lyo.
 - Bouton sur la mini-carte : clic gauche pour les options, clic droit pour le mode test. Il se déplace et se désactive dans l'onglet Aide.
 - Logo de Lyorune dans la liste des addons.
 - Inscription runique animée au bas de la fenêtre d'options : passez la souris dessus pour la traduire.
@@ -133,6 +147,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0
 [1.5.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.1...v1.5.2

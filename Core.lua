@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.5.4"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.6.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -70,8 +70,11 @@ Z.defaults = {
 	actionBarMacros = false,   -- créer une macro du jeu par sort de mes clics, pour les barres de sorts (à la demande)
 	autoRes = true,            -- le même clic relève un joueur mort
 	externalClicks = false,    -- laisser Clique ou le clic-soin du jeu gérer les cases
-	clicks = {},               -- clics de souris par classe : clicks.PRIEST["shift-1"] = "Rénovation"
+	clicks = {},               -- clics de souris par classe : clicks.PRIEST["shift-1"] = "Rénovation" (PRIEST2 : 2e spécialisation)
 	hoverKeys = {},            -- touches au survol par classe : hoverKeys.PRIEST[1] = { key = "F", spell = "Rénovation" }
+	clicksPerSpec = true,      -- des clics et des touches propres à chaque spécialisation (groupe de talents)
+	macros = {},               -- ma bibliothèque de macros, par classe : macros.PRIEST[1] = { name = "...", body = "..." }
+	macroAutoTarget = true,    -- une commande de macro sans cible vise la case
 
 	-- Listes personnelles (noms de sorts)
 	extraTracked = {},         -- mes sorts à suivre en plus
@@ -121,7 +124,8 @@ Z.choices = {
 }
 
 -- Réglages propres à l'ordinateur ou au personnage : ni partagés, ni réinitialisés avec le reste
-Z.private = { pos = true, tankPos = true, petPos = true, minimapAngle = true, tutorialDone = true, language = true }
+Z.private = { pos = true, tankPos = true, petPos = true, minimapAngle = true, tutorialDone = true, language = true,
+	macros = true } -- mes macros : jamais partagées, jamais effacées par la réinitialisation
 
 ----------------------------------------------------------------------------------------------------
 -- Traduction : Z.L["texte français"] renvoie la traduction si elle existe, sinon le texte lui-même
@@ -216,6 +220,7 @@ Z:On("PLAYER_LOGIN", function()
 	if not Z:CheckGame() then return end -- journal d'erreurs + contrôle de compatibilité (Log.lua)
 	Z:BuildData()
 	Z:CreateFrames()
+	Z:MigrateMacros(false) -- macros écrites sur un clic avant la 1.6.0 : rangées dans la bibliothèque
 	Z:ApplyClicks()
 	Z:StartBarMacros()
 	Z:RefreshAlerts()

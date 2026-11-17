@@ -204,43 +204,63 @@ step("clics, touches au survol", function()
   Z:SetClick("1", "Soins rapides")
 end)
 
-step("macros : modeles, saisie libre, jamais partagees", function()
+step("bibliotheque de macros : visee, verification, partage", function()
   local b = Z.buttons[1]
-  assert(Z.IsMacro("/cast x") and not Z.IsMacro("Soins") and not Z.IsMacro("@target") and not Z.IsMacro(nil))
-  assert(Z:MacroFromTemplate(1, "Soins rapides") == "/use 13\n/cast [{cible}] Soins rapides")
-  Z.db.autoRes = true
-  Z:SetClick("shift-4", "/stopcasting\n/cast [{cible}] Soins rapides")
-  assert(b:GetAttribute("shift-type4") == "macro")
-  assert(b:GetAttribute("shift-macrotext4") == "/stopcasting\n/cast [@mouseover] Soins rapides", b:GetAttribute("shift-macrotext4"))
-  Z:SetClick("shift-4", "/cast [@{cible},help] Soins") -- les deux écritures de {cible} donnent le même résultat
-  assert(b:GetAttribute("shift-macrotext4") == "/cast [@mouseover,help] Soins")
-  assert(Z.header:GetAttribute("z-count") > 0)
-  local keys = Z:GetHoverKeys()
-  keys[3] = { key = "G", spell = "/use 13\n/cast [{cible}] Soins" }
-  Z:ApplyClicks()
-  assert(b:GetAttribute("*type-zh3") == "macro" and b:GetAttribute("*macrotext-zh3") == "/use 13\n/cast [@mouseover] Soins")
-  -- éditeur : un modèle remplit la zone de texte, l'enregistrement pose la macro sur le clic
-  local saved
-  Z.OpenMacroEditor("Maj + Bouton 4", "Rénovation", function(text) saved = text end)
-  local m = LyoruneMacro
-  assert(m:IsShown() and m.edit:GetText() == "" and m.spell == "Rénovation")
-  m.edit:SetText("Rénovation") m.Save()
-  assert(saved == nil and m:IsShown() and m.warn:GetText() ~= "", "un texte sans barre oblique n'est pas une macro")
-  m.edit:SetText(Z:MacroFromTemplate(2, m.spell)) m.Save()
-  assert(saved == "/stopcasting\n/cast [{cible}] Rénovation" and not m:IsShown(), tostring(saved))
-  Z.OpenMacroEditor("Maj + Bouton 4", saved, function() end)
-  assert(m.edit:GetText() == saved, "l'editeur doit rouvrir la macro existante")
-  m:Hide()
+  local function R(text) return Z:ResolveMacro(text) end
+  -- une commande sans cible vise la case ; une cible écrite est respectée
+  assert(R("/cast Soins rapides") == "/cast [@mouseover] Soins rapides", R("/cast Soins rapides"))
+  assert(R("/cast [help] Soins; [harm] Châtiment") == "/cast [help,@mouseover] Soins; [harm,@mouseover] Châtiment", R("/cast [help] Soins; [harm] Châtiment"))
+  assert(R("/cast [@player] Soins") == "/cast [@player] Soins")
+  assert(R("/cast [@cible,dead] Résurrection; [@{cible}] Soins") == "/cast [@mouseover,dead] Résurrection; [@mouseover] Soins")
+  assert(R("/cast [{cible}] Soins") == "/cast [@mouseover] Soins")
+  assert(R("#showtooltip\n/use 13\n/stopcasting") == "#showtooltip\n/use 13\n/stopcasting")
+  assert(R("/focus") == "/focus [@mouseover]" and R("/focus {cible}") == "/focus mouseover", R("/focus"))
+  assert(R("/cast [mod:shift] Soins") == "/cast [mod:shift,@mouseover] Soins")
+  assert(R("/castsequence reset=8 Rénovation, Soins") == "/castsequence [@mouseover] reset=8 Rénovation, Soins")
+  Z.db.macroAutoTarget = false
+  assert(R("/cast Soins") == "/cast Soins" and R("/cast [@cible] Soins") == "/cast [@mouseover] Soins")
+  Z.db.macroAutoTarget = true
+  -- vérification en direct
+  local function C(body) local t = {} for _, p in ipairs(Z:CheckMacro(body)) do t[#t + 1] = p[1] .. ":" .. p[2] end return table.concat(t, "|") end
+  assert(C("/cast Soins rapides") == "", C("/cast Soins rapides"))
+  assert(C(""):find("vide"))
+  assert(C("/cast [mod:shfit] Soins rapides"):find("shfit", 1, true))
+  assert(C("/cast [ded] Soins rapides"):find("« ded »", 1, true))
+  assert(C("/cast [nodead,spec:2,mod:alt] Soins rapides; [@player] Soins") == "", C("/cast [nodead,spec:2,mod:alt] Soins rapides; [@player] Soins"))
+  assert(C("/cast [help Soins rapides"):find("^err:"))
+  assert(C("/cast Pluie de feu"):find("^warn:.*spécialisation active"), "sort d'une autre specialisation")
+  assert(C("/run print(1)"):find("code", 1, true))
+  assert(C("Soins"):find("barre oblique", 1, true))
+  assert(C("/cast " .. string.rep("a", 260)):find("trop longue", 1, true))
+  -- création, pose sur un clic, modification, renommage
+  local m = Z:NewMacro("Bijou et soin", "/use 13\n/cast Soins rapides")
+  assert(Z:NewMacro("Bijou et soin", "").name == "Bijou et soin 2", "nom libre")
+  Z:RemoveMacro(Z:FindMacro("Bijou et soin 2"))
+  Z:SetClick("alt-4", "@macro:Bijou et soin")
+  assert(b:GetAttribute("alt-type4") == "macro" and b:GetAttribute("alt-macrotext4") == "/use 13\n/cast [@mouseover] Soins rapides", tostring(b:GetAttribute("alt-macrotext4")))
+  m.body = "/cast [@cible] Soins" Z:ApplyClicks()
+  assert(b:GetAttribute("alt-macrotext4") == "/cast [@mouseover] Soins", "la macro modifiee doit suivre")
+  assert(Z:MacroUses(m)[1] == "Alt + Bouton 4")
+  assert(Z:RenameMacro(m, "Soin vite") and Z:GetClicks()["alt-4"] == "@macro:Soin vite", "renommage")
+  Z:NewMacro("Autre", "/cast Soins")
+  assert(not Z:RenameMacro(m, "autre"), "nom deja pris")
+  Z:RemoveMacro(Z:FindMacro("Autre"))
+  -- jamais partagée : ni exportée, ni acceptée dans un code reçu
   local code = Z:Export()
-  assert(not code:find("%2F", 1, true), "une macro ne doit pas etre exportee")
-  -- un code reçu ne peut ni poser une macro ni glisser une commande dans un nom de sort
+  assert(not code:find("%40macro", 1, true) and not code:find("%2F", 1, true), "une macro ne doit pas etre exportee")
   local before = Z:GetClicks()["1"]
-  local ok = Z:Import("Lyorune2;c." .. Z.class .. ".1=s%2Fgquit;c." .. Z.class .. ".2=sSoins%0A%2Fgquit;h." .. Z.class .. ".1=sF|%2Fgquit;width=n90")
-  assert(ok and Z:GetClicks()["1"] == before, "macro importee")
-  assert(not next(Z.db.clicks[Z.class]) or Z:GetClicks()["2"] ~= "Soins\n/gquit", "commande glissee dans un nom de sort")
-  table.remove(keys, 3)
-  Z:SetClick("shift-4", nil)
-  Z.db.autoRes = false Z.db.width = 86 Z:Refresh() Z:ApplyClicks()
+  local ok = Z:Import("Lyorune2;c." .. Z.class .. ".1=s%40macro%3ASoin%20vite;c." .. Z.class .. ".2=s%2Fgquit;c." .. Z.class .. ".3=sSoins%0A%2Fgquit;width=n90")
+  assert(ok and Z:GetClicks()["1"] == before and Z:GetClicks()["2"] ~= "/gquit" and Z:GetClicks()["3"] ~= "Soins\n/gquit", "macro importee")
+  Z.db.width = 86 Z:Refresh()
+  -- la réinitialisation garde mes macros
+  assert(Z.private.macros, "la reinitialisation ne doit pas effacer mes macros")
+  -- assistant
+  local text = Z:MacroFromWizard({ spell = "Soins rapides", stop = true, trinket1 = true, res = true, harm = "Châtiment" })
+  assert(text == "/stopcasting\n/use 13\n/cast [@cible,help,dead] Résurrection; [@cible,harm,nodead] Châtiment; [@cible] Soins rapides", text)
+  assert(Z:MacroIcon("/use 13\n/cast Soins rapides") == 1234)
+  -- suppression : les clics qui l'utilisaient sont vidés
+  Z:RemoveMacro(m)
+  assert(Z:GetClicks()["alt-4"] == nil and b:GetAttribute("alt-type4") == nil)
 end)
 
 step("macros pour les barres de sorts", function()
@@ -285,31 +305,103 @@ step("macros pour les barres de sorts", function()
   assert(#MACROS == 1 and MACROS[1].name == "Ma macro")
 end)
 
-step("mes macros du jeu sur un clic", function()
+step("macros : fenetre, glisser-deposer, reprise des anciennes", function()
   local b = Z.buttons[1]
-  MACROS[#MACROS + 1] = { name = "Bijou soin", icon = 134400, body = "#showtooltip\n/use 13\n/cast [{cible}] Soins rapides" }
-  local list = Z:GameMacros()
-  assert(#list == 2 and list[2].name == "Bijou soin" and list[2].index == 122, "liste de mes macros")
-  Z:SetClick("alt-4", "@macro:Bijou soin")
-  assert(b:GetAttribute("alt-type4") == "macro")
-  assert(b:GetAttribute("alt-macrotext4") == "#showtooltip\n/use 13\n/cast [@mouseover] Soins rapides", tostring(b:GetAttribute("alt-macrotext4")))
-  -- je modifie la macro dans /macro : le clic suit
-  MACROS[2].body = "/cast [@mouseover] Soins" FireEvent("UPDATE_MACROS")
-  assert(b:GetAttribute("alt-macrotext4") == "/cast [@mouseover] Soins", "macro modifiee non relue")
-  -- macro supprimee du jeu : le clic ne fait plus rien, sans erreur
-  table.remove(MACROS, 2) FireEvent("UPDATE_MACROS")
-  assert(b:GetAttribute("alt-type4") == nil)
-  assert(not Z:Export():find("macro", 1, true), "une macro du jeu ne doit pas etre exportee")
-  local before = Z:GetClicks()["1"]
-  Z:Import("Lyorune2;c." .. Z.class .. ".1=s%40macro%3AMa%20macro;width=n90")
-  assert(Z:GetClicks()["1"] == before, "macro du jeu importee")
-  Z.db.width = 86 Z:Refresh()
-  -- la fenetre de choix montre mes macros, pas celles de Lyorune
-  MACROS[#MACROS + 1] = { name = "Lyo:Test", icon = 1, body = "/dance" }
-  assert(#Z:GameMacros() == 1)
-  table.remove(MACROS)
-  Z:SetClick("alt-4", nil)
-  table.remove(MACROS, 1)
+  -- reprise : une macro écrite sur un clic (1.5.0) et le nom d'une macro de /macro (1.5.4)
+  Z:GetClicks()["shift-4"] = "/use 13\n/cast [{cible}] Soins"
+  MACROS[#MACROS + 1] = { name = "Bijou soin", icon = 134400, body = "/use 14\n/cast [@mouseover] Soins" }
+  Z:GetClicks()["alt-5"] = "@macro:Bijou soin"
+  Z:MigrateMacros(true) Z:ApplyClicks()
+  assert(Z:GetClicks()["shift-4"] == "@macro:Maj + Bouton 4", tostring(Z:GetClicks()["shift-4"]))
+  assert(Z:FindMacro("Maj + Bouton 4").body == "/use 13\n/cast [{cible}] Soins")
+  assert(Z:FindMacro("Bijou soin").body == "/use 14\n/cast [@mouseover] Soins")
+  assert(b:GetAttribute("alt-macrotext5") == "/use 14\n/cast [@mouseover] Soins")
+  assert(b:GetAttribute("shift-macrotext4") == "/use 13\n/cast [@mouseover] Soins")
+  -- fenêtre : vérification et aperçu en direct, enregistrement, renommage
+  local w = Z:OpenMacros("Bijou soin")
+  assert(w:IsShown() and w.macro.name == "Bijou soin" and w.edit:GetText() == "/use 14\n/cast [@mouseover] Soins")
+  w.edit:SetText("/cast [mod:shfit] Soins") w.edit:Run("OnTextChanged")
+  assert(w.problems:GetText():find("shfit", 1, true), w.problems:GetText())
+  assert(w.preview:GetText() == "/cast [mod:shfit,@mouseover] Soins", w.preview:GetText())
+  w.edit:SetText("/cast Soins rapides") w.save:Run("OnClick")
+  assert(b:GetAttribute("alt-macrotext5") == "/cast [@mouseover] Soins rapides")
+  assert(w.uses:GetText():find("Alt + Bouton 5", 1, true), w.uses:GetText())
+  w.name:SetText("Soin du bijou") w.name:Run("OnEnterPressed")
+  assert(Z:GetClicks()["alt-5"] == "@macro:Soin du bijou", "renommage par la fenetre")
+  -- glisser une macro de la liste sur une case de l'onglet Clics
+  Z:ToggleOptions("Clics")
+  local cell = Z:ClickCell("ctrl-4")
+  local row
+  for _, r in ipairs(w.rows) do if r.macro and r.macro.name == "Soin du bijou" then row = r end end
+  MOUSE_FOCI = { cell.label }
+  Z:MacroDragStart(row)
+  assert(Z:MacroDragStop(), "rien sous la souris")
+  MOUSE_FOCI = false
+  assert(Z:GetClicks()["ctrl-4"] == "@macro:Soin du bijou")
+  assert(cell.label:GetText():find("Soin du bijou", 1, true), cell.label:GetText())
+  -- glisser un sort du grimoire, puis une macro de /macro, sur une case
+  CURSOR_INFO = { "spell", 1, "spell", 139 }
+  cell:Run("OnReceiveDrag")
+  assert(Z:GetClicks()["ctrl-4"] == "Rénovation" and not CURSOR_INFO)
+  MACROS[#MACROS + 1] = { name = "Danse", icon = 1, body = "/dance" }
+  CURSOR_INFO = { "macro", 120 + #MACROS }
+  cell:Run("OnClick", "LeftButton")
+  assert(Z:GetClicks()["ctrl-4"] == "@macro:Danse" and Z:FindMacro("Danse"), tostring(Z:GetClicks()["ctrl-4"]))
+  -- la fenêtre de choix d'un clic montre ma bibliothèque
+  cell:Run("OnClick", "LeftButton")
+  assert(LyorunePicker:IsShown() and LyorunePicker.macroHead:IsShown())
+  LyorunePicker:Hide()
+  -- importer de /macro : une macro au même nom mais au texte différent reçoit un nouveau nom
+  local imp = Z:OpenMacroImport()
+  for _, icon in ipairs(imp.icons) do if icon:IsShown() and icon.game.name == "Bijou soin" then icon:Run("OnClick") end end
+  assert(Z:FindMacro("Bijou soin") and Z:FindMacro("Bijou soin").body == "/use 14\n/cast [@mouseover] Soins", "import")
+  -- assistant
+  local wiz = Z:OpenMacroWizard()
+  wiz.opts.stop, wiz.opts.spell = true, "Soins rapides" wiz.Update()
+  assert(wiz.preview:GetText():find("/stopcasting", 1, true))
+  wiz.create:Run("OnClick")
+  assert(Z:FindMacro("Soins rapides") and w.macro.name == "Soins rapides", "macro de l'assistant")
+  -- nettoyage
+  w:Hide() Z:ToggleOptions()
+  Z:SetClick("shift-4", nil) Z:SetClick("alt-5", nil) Z:SetClick("ctrl-4", nil)
+  Z.db.macros[Z.class] = {}
+  for i = #MACROS, 2, -1 do table.remove(MACROS, i) end
+end)
+
+step("clics propres a chaque specialisation", function()
+  local b = Z.buttons[1]
+  local saved = CopyTable(Z.db.clicks.PRIEST)
+  assert(Z:SpecGroup() == 1 and Z:ClickSet() == "PRIEST")
+  SPEC_GROUP = 2 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  assert(Z:ClickSet() == "PRIEST2" and Z.db.clicks.PRIEST2["1"] == saved["1"], "copie de la premiere specialisation")
+  Z:SetClick("1", "Rénovation")
+  assert(b:GetAttribute("spell1") == "Rénovation" and Z.db.clicks.PRIEST["1"] == saved["1"])
+  -- une même macro sert dans les deux spécialisations, et s'adapte avec [spec:N]
+  local m = Z:NewMacro("Commune", "/cast [spec:1] Soins rapides; [spec:2] Rénovation")
+  Z:SetClick("shift-5", "@macro:Commune")
+  assert(b:GetAttribute("shift-macrotext5") == "/cast [spec:1,@mouseover] Soins rapides; [spec:2,@mouseover] Rénovation", tostring(b:GetAttribute("shift-macrotext5")))
+  SPEC_GROUP = 1 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  assert(b:GetAttribute("spell1") == saved["1"] and b:GetAttribute("shift-type5") == nil, "retour a la premiere specialisation")
+  Z:RenameMacro(m, "Partout")
+  assert(Z.db.clicks.PRIEST2["shift-5"] == "@macro:Partout", "renommage dans l'autre specialisation")
+  -- le partage emporte la seconde spécialisation
+  local code = Z:Export()
+  assert(code:find("c.PRIEST2.1=s", 1, true), "seconde specialisation absente du partage")
+  Z.db.clicks.PRIEST2 = nil
+  assert(Z:Import(code) and Z.db.clicks.PRIEST2["1"] == "Rénovation")
+  -- copier l'autre spécialisation
+  Z:CopyOtherSpec() assert(Z.db.clicks.PRIEST["1"] == "Rénovation")
+  -- interrupteur coupé : les mêmes clics partout
+  SPEC_GROUP = 2 Z.db.clicksPerSpec = false
+  assert(Z:ClickSet() == "PRIEST")
+  Z.db.clicksPerSpec = true SPEC_GROUP = 1
+  -- onglet Clics : la spécialisation affichée
+  Z:ToggleOptions("Clics")
+  assert(Z:OptionsWindow():IsShown())
+  Z:ToggleOptions()
+  Z.db.clicks.PRIEST = saved Z.db.clicks.PRIEST2 = nil Z.db.hoverKeys.PRIEST2 = nil
+  Z.db.macros[Z.class] = {}
+  Z:ApplyClicks()
 end)
 
 step("combat : report des changements", function()

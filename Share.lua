@@ -36,13 +36,13 @@ function Z:Export()
 	end
 	for class, binds in pairs(Z.db.clicks) do
 		for key, spell in pairs(binds) do
-			if not Z.IsMacro(spell) and not Z.GameMacro(spell) then parts[#parts + 1] = "c." .. class .. "." .. Encode(key) .. "=s" .. Encode(spell) end
+			if not Z.IsMacro(spell) and not Z.MacroRef(spell) then parts[#parts + 1] = "c." .. class .. "." .. Encode(key) .. "=s" .. Encode(spell) end
 		end
 	end
 	for class, list in pairs(Z.db.hoverKeys) do
 		local index = 0
 		for _, entry in ipairs(list) do
-			if not Z.IsMacro(entry.spell) and not Z.GameMacro(entry.spell) then
+			if not Z.IsMacro(entry.spell) and not Z.MacroRef(entry.spell) then
 				index = index + 1
 				parts[#parts + 1] = "h." .. class .. "." .. index .. "=s" .. Encode(entry.key .. "|" .. entry.spell)
 			end
@@ -84,7 +84,7 @@ end
 
 -- Un nom de sort reçu d'un autre joueur : jamais une macro, jamais de saut de ligne (il finirait dans une commande)
 local function SafeSpell(raw)
-	return #raw > 0 and #raw <= 80 and not Z.IsMacro(raw) and not Z.GameMacro(raw) and not raw:find("%c")
+	return #raw > 0 and #raw <= 80 and not Z.IsMacro(raw) and not Z.MacroRef(raw) and not raw:find("%c")
 end
 
 -- Renvoie true et un résumé, ou false et la raison du refus
@@ -100,8 +100,8 @@ function Z:Import(code)
 		local key, kind, raw = entry:match("^([%w%.%%]+)=(%a)(.*)$")
 		if key then
 			raw = Decode(raw)
-			local class, click = key:match("^c%.(%u+)%.(.+)$")
-			local hoverClass, index = key:match("^h%.(%u+)%.(%d)$")
+			local class, click = key:match("^c%.(%u+%d?)%.(.+)$") -- PRIEST, ou PRIEST2 : seconde spécialisation
+			local hoverClass, index = key:match("^h%.(%u+%d?)%.(%d)$")
 			local list = key:match("^l%.(%a+)$")
 			if class then
 				click = Decode(click)

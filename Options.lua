@@ -25,7 +25,7 @@ local searchIndex = {}      -- { texte en minuscules, numéro d'onglet, élémen
 ----------------------------------------------------------------------------------------------------
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
 ----------------------------------------------------------------------------------------------------
-local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true }
+local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true, clicksPerSpec = true }
 
 local function Option(key)
 	return function() return Z.db[key] end, function(value)
@@ -310,101 +310,16 @@ local cells, hoverRows, barIcons = {}, {}, {}
 local function SpellText(value)
 	if value == "@target" then return L["Cibler"] end
 	if value == "@menu" then return L["Menu du joueur"] end
-	if Z.GameMacro(value) then return "|cffffd060" .. L["Macro"] .. "|r " .. Z.GameMacro(value) end
+	local ref = Z.MacroRef(value)
+	if ref then -- une macro de la bibliothèque : en rouge si elle n'existe plus
+		return (Z:FindMacro(ref) and "|cffffd060" or "|cffff6060") .. L["Macro"] .. "|r " .. ref
+	end
 	if Z.IsMacro(value) then return "|cffffd060" .. L["Macro"] .. "|r " .. (value:match("[^\n]*$") or "") end -- dernière ligne : le sort
 	return value
 end
 
--- Éditeur de macro : trois modèles prêts à remplir, ou saisie libre. onSave(texte) reçoit la macro.
-local macroWindow
 local RefreshClicks -- définie plus bas
-
-local function OpenMacro(title, current, onSave)
-	local m = macroWindow
-	if not m then
-		m = UI.Window("LyoruneMacro", "", 430, 300)
-		macroWindow = m
-		m:SetFrameStrata("FULLSCREEN_DIALOG")
-		tinsert(UISpecialFrames, "LyoruneMacro")
-
-		m.note = UI.Text(m, 11)
-		m.note:SetPoint("TOPLEFT", 14, -42)
-		m.note:SetWidth(402)
-		m.note:SetJustifyH("LEFT")
-		m.note:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
-		m.note:SetText(L["Écrivez la macro comme dans le jeu, une commande par ligne. {cible} désigne le joueur de la case. Partez d'un modèle, puis changez ce que vous voulez."])
-
-		for i, template in ipairs(Z.macroTemplates) do
-			local button = UI.Button(m, L[template[1]], 130, 22, function()
-				m.edit:SetText(Z:MacroFromTemplate(i, m.spell))
-				m.Count()
-			end)
-			button:SetPoint("TOPLEFT", 14 + (i - 1) * 136, -88)
-			button.label:SetJustifyH("CENTER")
-		end
-
-		local box = CreateFrame("Frame", nil, m)
-		box:SetPoint("TOPLEFT", 14, -118)
-		box:SetSize(402, 110)
-		box.bg = UI.Tex(box, "BACKGROUND", UI.panel[1], UI.panel[2], UI.panel[3])
-		box.bg:SetAllPoints()
-		box.border = UI.Border(box, 1)
-		box.border:SetColor(UI.line[1], UI.line[2], UI.line[3])
-		local edit = CreateFrame("EditBox", nil, box)
-		edit:SetMultiLine(true)
-		edit:SetAutoFocus(false)
-		edit:SetFont(UI.Font(), 12, "")
-		edit:SetMaxLetters(Z.MACRO_MAX)
-		edit:SetPoint("TOPLEFT", 6, -6)
-		edit:SetWidth(390)
-		edit:SetScript("OnEscapePressed", edit.ClearFocus)
-		box:EnableMouse(true)
-		box:SetScript("OnMouseDown", function() edit:SetFocus() end)
-		m.edit = edit
-
-		m.count = UI.Text(m, 11)
-		m.count:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -6)
-		m.count:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
-		m.warn = UI.Text(m, 11)
-		m.warn:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 0, -6)
-		m.warn:SetTextColor(0.95, 0.35, 0.35)
-		m.Count = function()
-			m.count:SetText(#edit:GetText() .. " / " .. Z.MACRO_MAX)
-			m.warn:SetText("")
-		end
-		edit:SetScript("OnTextChanged", m.Count)
-
-		m.Save = function()
-			local text = edit:GetText():match("^%s*(.-)%s*$")
-			if not Z.IsMacro(text) then
-				m.warn:SetText(L["Une macro commence par une barre oblique, par exemple /cast."])
-				return
-			end
-			m.onSave(text)
-			m:Hide()
-			RefreshClicks()
-		end
-		local save = UI.Button(m, L["Enregistrer la macro"], 160, 24, function() m.Save() end)
-		save:SetPoint("BOTTOMLEFT", 14, 14)
-		save.label:SetJustifyH("CENTER")
-		local cancel = UI.Button(m, L["Annuler"], 90, 24, function() m:Hide() end)
-		cancel:SetPoint("LEFT", save, "RIGHT", 6, 0)
-		cancel.label:SetJustifyH("CENTER")
-	end
-
-	-- Sort proposé dans les modèles : celui du clic s'il y en a un, sinon le premier sort de soin connu
-	local known = Z:KnownSpells()[1]
-	local plain = current and current ~= "" and current:sub(1, 1) ~= "@" and not Z.IsMacro(current)
-	m.spell = plain and current or known and known.name or L["Nom du sort"]
-	m.onSave = onSave
-	m.title:SetText(L["Macro"] .. " : " .. title)
-	m.edit:SetText(Z.IsMacro(current) and current or "")
-	m.Count()
-	m:ClearAllPoints()
-	m:SetPoint("CENTER", window or UIParent, "CENTER")
-	m:Show()
-end
-Z.OpenMacroEditor = OpenMacro
+local specLabel, specCopy
 
 local function CellText(key)
 	local value = Z:GetClicks()[key]
@@ -430,11 +345,16 @@ function RefreshClicks()
 		local macro = macros[i]
 		icon.macro = macro
 		icon:SetShown(macro ~= nil)
-		if macro then
-			icon.texture:SetTexture(macro.spell and C_Spell.GetSpellTexture(macro.spell) or "Interface\\Icons\\INV_Misc_QuestionMark")
-		end
+		if macro then icon.texture:SetTexture(macro.icon or "Interface\\Icons\\INV_Misc_QuestionMark") end
+	end
+	-- Spécialisation dont on voit les clics
+	if specLabel then
+		local perSpec = Z.db.clicksPerSpec
+		specLabel:SetText(perSpec and L["Clics de la spécialisation %d"]:format(Z:SpecGroup()) or L["Mêmes clics dans toutes les spécialisations"])
+		specCopy:SetShown(perSpec)
 	end
 end
+Z.RefreshClicks = function() if RefreshClicks then RefreshClicks() end end
 
 -- Prend une macro de Lyorune « en main », pour la déposer dans une barre de sorts
 local function PickupBarMacro(icon)
@@ -480,8 +400,8 @@ local function BuildBarIcons(page, x, y)
 end
 
 -- Fenêtre de choix d'un sort : une icône par sort connu. onChoose(valeur) reçoit le choix.
--- « current » est la valeur actuelle du clic : l'éditeur de macro s'en sert comme point de départ.
-local function OpenPicker(title, onChoose, current)
+-- spellsOnly : seulement les sorts (pour l'assistant de macro), sans « Cibler », « Menu » ni macros.
+local function OpenPicker(title, onChoose, current, spellsOnly)
 	if not picker then
 		picker = UI.Window("LyorunePicker", "", 372, 200)
 		picker:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -493,19 +413,22 @@ local function OpenPicker(title, onChoose, current)
 			RefreshClicks()
 		end
 		picker.Choose = Choose
-		local target = UI.Button(picker, L["Cibler"], 70, 22, function() Choose("@target") end)
-		target:SetPoint("TOPLEFT", 14, -42)
-		local menu = UI.Button(picker, L["Menu du joueur"], 110, 22, function() Choose("@menu") end)
+		picker.actions = CreateFrame("Frame", nil, picker)
+		picker.actions:SetPoint("TOPLEFT", 14, -42)
+		picker.actions:SetSize(344, 22)
+		local target = UI.Button(picker.actions, L["Cibler"], 70, 22, function() Choose("@target") end)
+		target:SetPoint("TOPLEFT")
+		local menu = UI.Button(picker.actions, L["Menu du joueur"], 110, 22, function() Choose("@menu") end)
 		menu:SetPoint("LEFT", target, "RIGHT", 6, 0)
-		local none = UI.Button(picker, L["Vider"], 60, 22, function() Choose(nil) end)
+		local none = UI.Button(picker.actions, L["Vider"], 60, 22, function() Choose(nil) end)
 		none:SetPoint("LEFT", menu, "RIGHT", 6, 0)
-		local macro = UI.Button(picker, L["Macro..."], 86, 22, function()
+		local macro = UI.Button(picker.actions, L["Mes macros..."], 92, 22, function()
 			picker:Hide()
-			OpenMacro(picker.title:GetText(), picker.current, picker.onChoose)
+			Z:OpenMacros()
 		end)
 		macro:SetPoint("LEFT", none, "RIGHT", 6, 0)
 		macro.label:SetJustifyH("CENTER")
-		macro.tip = L["Plusieurs actions en un clic : un bijou puis un soin, une annonce puis un sort..."]
+		macro.tip = L["Plusieurs actions en un clic : écrivez vos macros une fois, posez-les sur autant de clics que vous voulez."]
 		picker.hint = UI.Text(picker, 11)
 		picker.hint:SetPoint("BOTTOMLEFT", 14, 44)
 		picker.hint:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
@@ -520,9 +443,10 @@ local function OpenPicker(title, onChoose, current)
 	picker.current = current
 	picker.title:SetText(title)
 	picker.edit:SetText("")
+	picker.actions:SetShown(not spellsOnly)
 
-	-- Les sorts connus, puis les macros que le joueur a écrites dans la fenêtre /macro du jeu
-	local spells, macros = Z:KnownSpells(), Z:GameMacros()
+	-- Les sorts connus, puis les macros de ma bibliothèque
+	local spells, macros = Z:KnownSpells(), spellsOnly and {} or Z:GetMacros()
 	local perRow, size = 10, 32
 	local function Place(index, slot, top)
 		local icon = picker.icons[index]
@@ -540,8 +464,7 @@ local function OpenPicker(title, onChoose, current)
 					GameTooltip:SetSpellByID(self.spell.id)
 				else
 					GameTooltip:SetText(self.macro.name, UI.accent[1], UI.accent[2], UI.accent[3])
-					GameTooltip:AddLine(GetMacroBody(self.macro.index), 1, 1, 1)
-					GameTooltip:AddLine(L["Pour viser le joueur de la case, écrivez [@mouseover] ou {cible} dans la macro."], 0.6, 0.6, 0.65, true)
+					GameTooltip:AddLine(self.macro.body, 1, 1, 1)
 				end
 				GameTooltip:Show()
 			end)
@@ -571,7 +494,7 @@ local function OpenPicker(title, onChoose, current)
 	if not picker.macroHead then
 		picker.macroHead = UI.Text(picker, 11)
 		picker.macroHead:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
-		picker.macroHead:SetText(L["Mes macros du jeu (fenêtre /macro) :"])
+		picker.macroHead:SetText(L["Mes macros :"])
 	end
 	local shown = math.min(#macros, 40)
 	picker.macroHead:SetShown(shown > 0)
@@ -582,7 +505,7 @@ local function OpenPicker(title, onChoose, current)
 		for i = 1, shown do
 			local icon = Place(#spells + i, i, top)
 			icon.spell, icon.macro = nil, macros[i]
-			icon.texture:SetTexture(macros[i].icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+			icon.texture:SetTexture(Z:MacroIcon(macros[i].body))
 		end
 		top = top - math.ceil(shown / perRow) * (size + 3)
 	end
@@ -590,8 +513,23 @@ local function OpenPicker(title, onChoose, current)
 
 	picker:SetHeight(-top + 72)
 	picker:ClearAllPoints()
-	picker:SetPoint("CENTER", window, "CENTER")
+	picker:SetPoint("CENTER", (spellsOnly or not window) and UIParent or window, "CENTER")
 	picker:Show()
+	picker:Raise()
+	return picker
+end
+Z.OpenPicker = OpenPicker
+
+-- Une case de clic accepte un sort glissé du grimoire, une macro glissée de /macro ou de ma bibliothèque
+local function Droppable(button, setValue)
+	button.dropValue = setValue
+	button:SetScript("OnReceiveDrag", function()
+		local value = Z:TakeCursor()
+		if value then
+			setValue(value)
+			RefreshClicks()
+		end
+	end)
 end
 
 -- Attend la prochaine touche (clavier, bouton de souris supplémentaire ou molette) et la renvoie
@@ -625,7 +563,19 @@ local function CaptureKey(button, onKey)
 end
 
 local function BuildClicks(page)
-	Note(page, "Clics de souris : cliquez sur une cellule pour choisir le sort, ou une macro, lancé sur la case d'un joueur. Enregistrés par classe.", 0, 0)
+	Note(page, "Clics de souris : cliquez sur une cellule pour choisir le sort ou la macro lancé sur la case d'un joueur. Vous pouvez aussi y glisser un sort du grimoire.", 0, 0, 420)
+
+	-- Spécialisation dont on voit les clics, et copie depuis l'autre
+	specLabel = UI.Text(page, 11)
+	specLabel:SetPoint("TOPRIGHT", 0, 0)
+	specLabel:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+	specCopy = UI.Button(page, L["Copier l'autre spécialisation"], 200, 18, function()
+		Z:CopyOtherSpec()
+		RefreshClicks()
+	end)
+	specCopy:SetPoint("TOPRIGHT", 0, -15)
+	specCopy.label:SetJustifyH("CENTER")
+	specCopy.tip = L["Remplace les clics et les touches de cette spécialisation par ceux de l'autre."]
 
 	local left, top, cellWidth, cellHeight = 96, -44, 132, 24
 	for column, modifier in ipairs(Z.clickModifiers) do
@@ -642,8 +592,14 @@ local function BuildClicks(page)
 		for column, modifier in ipairs(Z.clickModifiers) do
 			local key = modifier[1] .. button[1]
 			local cell = UI.Button(page, "", cellWidth, cellHeight, function()
+				local held = Z:TakeCursor() -- un sort ou une macro tenu sous la souris est posé directement
+				if held then
+					Z:SetClick(key, held)
+					return RefreshClicks()
+				end
 				OpenPicker(Z:ClickLabel(key), function(value) Z:SetClick(key, value) end, Z:GetClicks()[key])
 			end)
+			Droppable(cell, function(value) Z:SetClick(key, value) end)
 			cell:SetPoint("TOPLEFT", left + (column - 1) * (cellWidth + 4), y)
 			cell.label:SetJustifyH("CENTER")
 			cells[key] = cell
@@ -680,6 +636,13 @@ local function BuildClicks(page)
 		end)
 		row.spell:SetPoint("LEFT", row.key, "RIGHT", 4, 0)
 		row.spell.label:SetJustifyH("CENTER")
+		Droppable(row.spell, function(value)
+			local keys = Z:GetHoverKeys()
+			if keys[i] then
+				keys[i].spell = value
+				Z:ApplyClicks()
+			end
+		end)
 		row.clear = UI.Button(row, "x", 22, 22, function()
 			table.remove(Z:GetHoverKeys(), i)
 			Z:ApplyClicks()
@@ -689,6 +652,14 @@ local function BuildClicks(page)
 		row.clear.label:SetJustifyH("CENTER")
 		hoverRows[i] = row
 	end
+
+	-- Mes macros et spécialisations
+	local library = BuildItem(page, { "button", "Mes macros...", function() Z:OpenMacros() end,
+		"Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic." })
+	library:SetPoint("TOPLEFT", 0, -470)
+	local perSpec = BuildItem(page, { "check", "clicksPerSpec", "Clics propres à chaque spécialisation",
+		"Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout." })
+	perSpec:SetPoint("TOPLEFT", 0, -500)
 
 	-- Comportement
 	local x = COLUMN + 32
@@ -1069,9 +1040,13 @@ function Z:ToggleOptions(tab)
 	end
 end
 
--- Pour les tests : les icônes des macros de barre
+-- Pour les tests : les icônes des macros de barre, une case de clic
 function Z:BarIcons()
 	return barIcons
+end
+
+function Z:ClickCell(key)
+	return cells[key]
 end
 
 function Z:OptionsWindow()

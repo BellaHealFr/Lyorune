@@ -113,6 +113,7 @@ C_Spell = {
 	GetSpellName = function(id) return names[id] end,
 	GetSpellTexture = function(id) return 1234 end,
 	IsSpellHelpful = function() return true end,
+	GetSpellInfo = function(name) for id, n in pairs(names) do if n == name or id == name then return { name = n, spellID = id } end end end,
 }
 C_SpellBook = {
 	IsSpellKnown = function(id) return names[id] ~= nil and id ~= 2050 end,
@@ -302,3 +303,12 @@ function IsShiftKeyDown() return false end
 rawset(_G, "CTRL", false)
 rawset(_G, "LyorunePreview", false)
 
+
+-- Ajouts 1.6 : spécialisation, objet tenu par la souris, cadres sous la souris
+rawset(_G, "SPEC_GROUP", 1)
+rawset(_G, "CURSOR_INFO", false)
+rawset(_G, "MOUSE_FOCI", false)
+C_SpecializationInfo = { GetActiveSpecGroup = function() return SPEC_GROUP end }
+function GetCursorInfo() if CURSOR_INFO then return unpack(CURSOR_INFO) end end
+function ClearCursor() CURSOR_INFO = false end
+function GetMouseFoci() return MOUSE_FOCI or {} end

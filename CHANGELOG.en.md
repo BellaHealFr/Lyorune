@@ -6,6 +6,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.6.0] - 2026-11-17
+
+### Added
+
+- "My macros" library: write a macro once, put it on as many clicks and keys as you like ([#23](https://github.com/BellaHealFr/Lyorune/issues/23)).
+- Checkbox macro wizard, import from /macro, drag and drop onto the cells.
+- The macro is checked while you type, with a preview of the exact text sent to the game.
+- Clicks and keys for each specialization, switching by themselves with your talents ([#21](https://github.com/BellaHealFr/Lyorune/issues/21)).
+
+### Improved
+
+- A macro command without a target aims at the frame; [@mouseover] works as it is.
+- Your previous macros are moved into the library by themselves.
+
 ## [1.5.4] - 2026-11-17
 
 ### Added
@@ -78,7 +92,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Added
 
-- New name: Zenith becomes Lyorune. The commands are /lyorune and /lyo.
+- New name: Lyorune. The commands are /lyorune and /lyo.
 - Minimap button: left click for the options, right click for test mode. It can be moved, and turned off in the Help tab.
 - Lyorune logo in the addon list.
 - Animated runic inscription at the bottom of the options window: hover it to translate it.
@@ -133,6 +147,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0
 [1.5.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.1...v1.5.2

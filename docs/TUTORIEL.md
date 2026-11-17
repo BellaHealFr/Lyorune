@@ -34,31 +34,65 @@ Pour choisir vos sorts : `/lyorune`, onglet **Clics**. Cliquez sur une cellule d
 
 Exemple pour un prêtre : clic gauche pour Soins rapides, clic droit pour Rénovation, Maj + clic droit pour le bouclier, clic milieu pour dissiper.
 
+Vous pouvez aussi glisser un sort de votre grimoire directement sur une cellule.
+
 Vos clics sont enregistrés par classe : chaque personnage garde les siens.
 
-### Les macros : plusieurs actions en un clic
+### Une spécialisation, des clics
 
-Dans la fenêtre de choix du sort, cliquez sur « Macro... ». Trois modèles sont prêts, déjà remplis avec le sort de votre clic :
+Votre personnage a deux spécialisations (deux groupes de talents) ? Chacune a ses propres clics et ses propres touches. Quand vous changez de talents, Lyorune passe tout seul aux bons clics, même pour une macro.
 
-- **Bijou puis soin** : active votre premier bijou, puis lance le soin.
-- **Interrompre puis soigner** : coupe le sort en cours pour lancer le soin tout de suite.
-- **Annonce puis soin** : prévient le groupe, puis lance le soin.
+- En haut à droite de l'onglet **Clics**, Lyorune indique la spécialisation dont vous voyez les clics.
+- La première fois, votre seconde spécialisation reprend les clics de la première. Changez ensuite ce que vous voulez.
+- « Copier l'autre spécialisation » reprend tous les clics et les touches de l'autre.
+- Vous voulez les mêmes clics partout ? Décochez « Clics propres à chaque spécialisation ».
 
-Cliquez sur un modèle, changez ce que vous voulez, puis « Enregistrer la macro ». Vous pouvez aussi tout écrire vous-même, comme une macro du jeu, une commande par ligne. Le mot `{cible}` désigne le joueur de la case sur laquelle vous cliquez :
+### Mes macros : plusieurs actions en un clic
+
+Une macro fait plusieurs choses d'un seul clic : activer un bijou puis soigner, relever un mort ou soigner un vivant, attaquer un ennemi ou soigner un allié...
+
+Lyorune garde vos macros dans une bibliothèque. Vous écrivez une macro une seule fois, puis vous la posez sur autant de clics et de touches que vous voulez, dans vos deux spécialisations. Si vous la modifiez, tous ses clics suivent. Elle ne prend aucune place dans la fenêtre `/macro` du jeu.
+
+**Ouvrir la bibliothèque** : onglet **Clics**, bouton « Mes macros... » (ou le même bouton dans la fenêtre de choix d'un sort).
+
+**Trois façons de créer une macro :**
+
+1. **L'assistant** (bouton « Assistant... ») : choisissez votre sort de soin, puis cochez ce que vous voulez : arrêter le sort en cours, utiliser un bijou, relever le joueur s'il est mort, lancer un sort offensif s'il s'agit d'un ennemi. Lyorune écrit la macro pour vous.
+2. **Écrire vous-même** (bouton « Nouvelle »), comme une macro du jeu, une commande par ligne.
+3. **Reprendre une macro du jeu** (bouton « Importer de /macro... »), ou la glisser depuis la fenêtre `/macro` sur la liste.
+
+**Viser le joueur de la case.** Vous n'avez rien à écrire : une commande sans cible part sur le joueur de la case.
 
 ```
 /use 13
-/cast [{cible}] Récupération
+/cast Récupération
 ```
 
-### Utiliser vos propres macros du jeu
+Une macro trouvée sur Internet avec `[@mouseover]` marche telle quelle. Pour placer le joueur de la case vous-même, écrivez `{cible}` : `/cast [@cible,dead] Résurrection; [@cible] Soins rapides`. Une cible écrite (`[@player]`) est toujours respectée. Si vous préférez que vos macros partent exactement comme écrites, décochez « Une commande sans cible vise la case » dans la bibliothèque.
 
-Vous avez déjà écrit des macros dans la fenêtre `/macro` du jeu ? Mettez-les sur un clic :
+**Une seule macro pour vos deux spécialisations.** La condition du jeu `[spec:1]` ou `[spec:2]` choisit le sort selon vos talents :
 
-1. Onglet **Clics**, cliquez sur une cellule du tableau (ou sur « Sort » d'une touche au survol).
-2. Sous vos sorts, la ligne « Mes macros du jeu » montre vos macros : cliquez sur celle que vous voulez.
+```
+/cast [spec:1] Soins rapides; [spec:2] Rénovation
+```
 
-Pour que la macro vise le joueur de la case, écrivez `[@mouseover]` ou `{cible}` dedans, par exemple `/cast [@mouseover] Récupération`. Si vous modifiez la macro dans `/macro`, le clic suit tout seul.
+**La vérification, pendant que vous écrivez.** Sous la macro, Lyorune signale :
+
+- une faute dans une condition (`[mod:shfit]`, `[ded]`) ;
+- un crochet oublié, une ligne trop longue ;
+- un sort que votre spécialisation active ne connaît pas (c'est peut-être celui de l'autre) ;
+- une commande qui exécute du code (`/run`, `/script`).
+
+Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, et « Posée sur » les clics qui utilisent la macro.
+
+**Poser la macro sur un clic :**
+
+- glissez-la de la liste sur une cellule de l'onglet **Clics** (ou sur le « Sort » d'une touche au survol) ;
+- ou cliquez sur la cellule : vos macros sont listées sous vos sorts, à la ligne « Mes macros ».
+
+Vos macros restent sur votre ordinateur : elles ne sont jamais envoyées ni reçues dans une configuration partagée, et « Tout réinitialiser » ne les efface pas. Quand un clic porte une macro, la résurrection automatique ne s'y ajoute pas : utilisez la case « Si le joueur est mort » de l'assistant.
+
+Vous utilisiez déjà des macros avec une version précédente ? Elles sont rangées toutes seules dans la bibliothèque, sur les mêmes clics.
 
 ### Des macros toutes prêtes pour vos barres de sorts (facultatif)
 
@@ -68,8 +102,6 @@ Si vous le demandez, Lyorune crée une vraie macro du jeu pour chaque sort de vo
 2. Cliquez sur une icône, puis déposez-la dans une barre de sorts. Vous les retrouvez aussi dans `/macro`, onglet de votre personnage : leur nom commence par « Lyo: ».
 
 La macro soigne le joueur sous votre souris (une case ou un personnage), sinon votre cible, sinon vous. Elle se met à jour quand vous changez vos clics. Lyorune ne touche jamais à vos autres macros. Pour vous en passer, décochez « Créer une macro par sort de mes clics » ou cliquez sur « Retirer les macros de Lyorune ».
-
-Une macro fonctionne aussi sur une touche au survol. Elle reste sur votre ordinateur : elle n'est jamais envoyée ni reçue dans une configuration partagée. Quand un clic porte une macro, la résurrection automatique ne s'y ajoute pas.
 
 ## 3. Touches au survol
 

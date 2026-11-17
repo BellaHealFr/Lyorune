@@ -8,6 +8,21 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.6.0", date = "2026-11-17",
+		added = {
+			"Bibliothèque « Mes macros » : une macro écrite une fois, posée sur autant de clics et de touches que vous voulez (#23).",
+			"Assistant de macro à cases à cocher, import depuis /macro, glisser-déposer sur les cases.",
+			"Vérification de la macro pendant la saisie, et aperçu du texte exact envoyé au jeu.",
+			"Clics et touches propres à chaque spécialisation, qui changent tout seuls avec les talents (#21).",
+		},
+		improved = {
+			"Une commande de macro sans cible vise la case ; [@mouseover] marche tel quel.",
+			"Vos anciennes macros sont rangées toutes seules dans la bibliothèque.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.5.4", date = "2026-11-17",
 		added = {
 			"Vos propres macros du jeu sur un clic : la fenêtre de choix d'un sort montre les macros que vous avez écrites dans /macro.",
@@ -91,7 +106,7 @@ Z.changes = {
 	{
 		version = "1.4.0", date = "2026-11-16",
 		added = {
-			"Nouveau nom : Zenith devient Lyorune. Les commandes sont /lyorune et /lyo.",
+			"Nouveau nom : Lyorune. Les commandes sont /lyorune et /lyo.",
 			"Bouton sur la mini-carte : clic gauche pour les options, clic droit pour le mode test. Il se déplace et se désactive dans l'onglet Aide.",
 			"Logo de Lyorune dans la liste des addons.",
 			"Inscription runique animée au bas de la fenêtre d'options : passez la souris dessus pour la traduire.",

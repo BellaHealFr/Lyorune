@@ -4,12 +4,13 @@
 -- CLICS DE SOURIS. Un clic est identifié par une clé : touche de modification + numéro du bouton.
 --   "1" clic gauche, "2" clic droit, "3" clic milieu, "4" et "5" boutons latéraux
 --   "shift-1" Maj + clic gauche, "ctrl-2" Ctrl + clic droit, "alt-3" Alt + clic milieu...
---   La valeur est un nom de sort, ou "@target" (cibler), ou "@menu" (menu du joueur).
+--   La valeur est un nom de sort, "@target" (cibler), "@menu" (menu du joueur) ou "@macro:Nom" (une macro
+--   de ma bibliothèque, voir Macros.lua).
 -- TOUCHES AU SURVOL. Une touche du clavier lance un sort sur la case que survole la souris.
 --   Elle ne remplace la touche habituelle que pendant le survol d'une case.
--- MACROS. Une valeur qui commence par « / » est une macro, écrite comme dans le jeu (une commande par ligne).
---   {cible} y désigne le joueur de la case : « /cast [{cible}] Récupération ».
---   Une macro n'est jamais partagée ni importée : chacun écrit les siennes (voir Share.lua).
+-- SPÉCIALISATIONS. Sur WoW Forever, un personnage a deux groupes de talents. Avec l'option « clicksPerSpec »,
+--   chacun a ses clics et ses touches : clicks.PRIEST pour le premier, clicks.PRIEST2 pour le second (copie du
+--   premier au premier passage). Changer de talents change les clics tout seul.
 -- Les clics n'existent que sur les cases de Lyorune : impossible de lancer un sort en cliquant dans le décor.
 
 local _, Z = ...
@@ -29,16 +30,48 @@ Z.clickModifiers = {
 }
 Z.MAX_HOVER_KEYS = 8
 
+-- Groupe de talents actif (1 ou 2). Le jeu sans double spécialisation répond toujours 1.
+function Z:SpecGroup()
+	local info = C_SpecializationInfo
+	local ok, group = pcall(function() return info and info.GetActiveSpecGroup and info.GetActiveSpecGroup() end)
+	return (ok and type(group) == "number" and group > 1) and group or 1
+end
+
+-- Nom du jeu de clics en cours : « PRIEST », ou « PRIEST2 » dans la seconde spécialisation
+function Z:ClickSet()
+	local group = Z.db.clicksPerSpec and Z:SpecGroup() or 1
+	return group == 1 and Z.class or Z.class .. group
+end
+
+-- Tous les jeux de clics de ma classe
+function Z:ClickSets()
+	return { Z.class, Z.class .. "2" }
+end
+
+local function Set(store)
+	local set = Z:ClickSet()
+	if store[set] == nil and set ~= Z.class and store[Z.class] then
+		store[set] = CopyTable(store[Z.class]) -- seconde spécialisation : on part des clics de la première
+	end
+	store[set] = store[set] or {}
+	return store[set]
+end
+
 function Z:GetClicks()
-	local clicks = Z.db.clicks
-	clicks[Z.class] = clicks[Z.class] or {}
-	return clicks[Z.class]
+	return Set(Z.db.clicks)
 end
 
 function Z:GetHoverKeys()
-	local keys = Z.db.hoverKeys
-	keys[Z.class] = keys[Z.class] or {}
-	return keys[Z.class]
+	return Set(Z.db.hoverKeys)
+end
+
+-- Bouton « Copier l'autre spécialisation » : mes clics et touches deviennent ceux de l'autre groupe de talents
+function Z:CopyOtherSpec()
+	local set = Z:ClickSet()
+	local other = set == Z.class and Z.class .. "2" or Z.class
+	Z.db.clicks[set] = CopyTable(Z.db.clicks[other] or {})
+	Z.db.hoverKeys[set] = CopyTable(Z.db.hoverKeys[other] or {})
+	Z:ApplyClicks()
 end
 
 -- Texte lisible d'une clé : "shift-1" -> "Maj + Clic gauche"
@@ -53,12 +86,6 @@ function Z:ClickLabel(key)
 		if entry[1] == modifier and modifier ~= "" then label = L[entry[2]] .. " + " .. label end
 	end
 	return label
-end
-
--- MES MACROS DU JEU. La valeur « @macro:Nom » lance une macro de la fenêtre /macro du joueur. Elle est relue à
--- chaque changement : la modifier dans /macro suffit. {cible} et [@mouseover] y désignent le joueur de la case.
-function Z.GameMacro(value)
-	return type(value) == "string" and value:match("^@macro:(.+)$") or nil
 end
 
 -- Les macros du joueur (compte puis personnage), sans celles que Lyorune crée lui-même
@@ -78,26 +105,6 @@ end
 
 function Z.IsMacro(value)
 	return type(value) == "string" and value:sub(1, 1) == "/"
-end
-
--- Texte envoyé au jeu : {cible} devient la case survolée (celle sur laquelle on clique)
-local function MacroText(value)
-	local text = value:gsub("@?{cible}", "@mouseover")
-	text = text:gsub("@?{target}", "@mouseover")
-	return text
-end
-
--- Modèles proposés dans l'éditeur de macro. {sort} est remplacé par le sort du clic au moment du choix.
-Z.macroTemplates = {
-	{ "Bijou puis soin", "/use 13\n/cast [{cible}] {sort}" },
-	{ "Interrompre puis soigner", "/stopcasting\n/cast [{cible}] {sort}" },
-	{ "Annonce puis soin", "/p {sort} en cours !\n/cast [{cible}] {sort}" },
-}
-Z.MACRO_MAX = 240 -- le jeu refuse au-delà de 255 caractères ; on garde une marge pour {cible}
-
-function Z:MacroFromTemplate(index, spell)
-	local text = Z.macroTemplates[index][2]:gsub("{sort}", function() return spell end)
-	return text
 end
 
 -- Début de macro qui relève un joueur mort avec le même clic (option « résurrection automatique »)
@@ -120,16 +127,15 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix)
 		attributes[prefix .. "type" .. suffix] = "target"
 	elseif value == "@menu" then
 		attributes[prefix .. "type" .. suffix] = "togglemenu"
-	elseif Z.GameMacro(value) then -- une macro de la fenêtre /macro : son texte du moment
-		local index = GetMacroIndexByName and GetMacroIndexByName(Z.GameMacro(value)) or 0
-		local body = index > 0 and GetMacroBody(index)
-		if body and body ~= "" then
+	elseif Z.MacroRef(value) then -- une macro de ma bibliothèque, sans la résurrection automatique
+		local macro = Z:FindMacro(Z.MacroRef(value))
+		if macro and macro.body:find("%S") then
 			attributes[prefix .. "type" .. suffix] = "macro"
-			attributes[prefix .. "macrotext" .. suffix] = MacroText(body)
+			attributes[prefix .. "macrotext" .. suffix] = Z:ResolveMacro(macro.body)
 		end
-	elseif Z.IsMacro(value) then -- macro du joueur : envoyée telle quelle, sans la résurrection automatique
+	elseif Z.IsMacro(value) then -- macro écrite sur le clic (avant la 1.6.0, rangée ensuite dans la bibliothèque)
 		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = MacroText(value)
+		attributes[prefix .. "macrotext" .. suffix] = Z:ResolveMacro(value)
 	elseif resPrefix then
 		attributes[prefix .. "type" .. suffix] = "macro"
 		attributes[prefix .. "macrotext" .. suffix] = "/cast " .. resPrefix .. "[@mouseover] " .. value
@@ -214,17 +220,16 @@ local warnedFull
 
 -- Nom d'une macro : 16 octets au plus pour le jeu, coupé sans abîmer une lettre accentuée
 local function MacroName(label)
-	local name = MACRO_PREFIX .. label
-	if #name > 16 then
-		local cut = 16
-		while cut > 0 and name:byte(cut + 1) >= 128 and name:byte(cut + 1) < 192 do cut = cut - 1 end
-		name = name:sub(1, cut)
-	end
-	return name
+	return Z.CutText(MACRO_PREFIX .. label, 16)
 end
 
 local function BarBody(value)
-	if Z.IsMacro(value) then return MacroText(value) end
+	if Z.IsMacro(value) then return Z:ResolveMacro(value) end
+	local ref = Z.MacroRef(value)
+	if ref then
+		local macro = Z:FindMacro(ref)
+		return macro and Z:ResolveMacro(macro.body) or ""
+	end
 	local state, fallback = "nodead", "[@player] "
 	for _, id in pairs(Z.classRes[Z.class] or {}) do
 		if Z.SpellName(id) == value then state, fallback = "dead", "" end -- une résurrection vise un mort, jamais moi
@@ -236,13 +241,16 @@ end
 function Z:BarMacros()
 	local list, seen = {}, {}
 	local function add(label, value)
-		if type(value) ~= "string" or value == "" or value:sub(1, 1) == "@" then return end
+		local ref = Z.MacroRef(value)
+		if type(value) ~= "string" or value == "" or (value:sub(1, 1) == "@" and not ref) then return end
 		local macro = Z.IsMacro(value)
-		local name = MacroName(macro and label or value)
+		local name = MacroName(ref or (macro and label) or value)
 		local body = BarBody(value)
-		if seen[name] or #body > 255 then return end
+		if seen[name] or body == "" or #body > 255 then return end
 		seen[name] = true
-		list[#list + 1] = { name = name, body = body, spell = not macro and value or nil }
+		local plain = not (macro or ref)
+		list[#list + 1] = { name = name, body = body, spell = plain and value or nil,
+			icon = plain and C_Spell.GetSpellTexture(value) or Z:MacroIcon(body) }
 	end
 	local clicks, keys = Z:GetClicks(), {}
 	for key in pairs(clicks) do keys[#keys + 1] = key end
@@ -309,20 +317,11 @@ function Z:StartBarMacros()
 			Z.db.barMacros = nil
 			if not Z.db.actionBarMacros then Z:RemoveBarMacros() end
 		end
+		-- Avant la 1.6.0, un clic pouvait viser une macro de /macro : elle est copiée dans la bibliothèque
+		if Z:MigrateMacros(true) then Z:ApplyClicks() end
 		Z:SyncBarMacros()
 	end
-	local function UsesGameMacro()
-		for _, value in pairs(Z:GetClicks()) do
-			if Z.GameMacro(value) then return true end
-		end
-		for _, entry in ipairs(Z:GetHoverKeys()) do
-			if Z.GameMacro(entry.spell) then return true end
-		end
-	end
-	Z:On("UPDATE_MACROS", function()
-		Ready()
-		if UsesGameMacro() then Z:ApplyClicks() end -- une de mes macros a peut-être changé : on relit son texte
-	end)
+	Z:On("UPDATE_MACROS", Ready)
 	C_Timer.After(5, Ready)
 end
 
