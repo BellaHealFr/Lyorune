@@ -395,7 +395,7 @@ local unitEvents = {
 	UNIT_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
 	UNIT_HEAL_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
 	UNIT_PHASE = UpdateCenter,
-	UNIT_AURA = function(b, _, info) Z.NoteAuraChanges(b, info) Z.QueueAuras(b) end,
+	UNIT_AURA = function(b, _, info) Z.QueueAuras(b) Z.NoteAuraChanges(b, info) end, -- la mise à jour d'abord
 	UNIT_CONNECTION = UpdateAll,
 	UNIT_NAME_UPDATE = UpdateName,
 	UNIT_FLAGS = UpdateState,
@@ -413,8 +413,10 @@ do
 	probe:UnregisterAllEvents()
 end
 
+-- Chaque événement d'une case passe par Z:Try : une erreur est notée au journal de Lyorune, même quand un autre
+-- addon a pris le gestionnaire d'erreurs du jeu, et n'empêche pas les événements suivants.
 local function OnEvent(b, event, ...)
-	if b.unit then (unitEvents[event] or powerEvents[event])(b, ...) end
+	if b.unit then Z:Try(event, unitEvents[event] or powerEvents[event], b, ...) end
 end
 
 -- L'en-tête sécurisé du jeu attribue un joueur à la case en changeant son attribut « unit »
@@ -772,7 +774,7 @@ function Z.MarkOutOfSight(b)
 	C_Timer.After(LOS_SECONDS + 0.05, function()
 		if b.losUntil and GetTime() >= b.losUntil then
 			b.losUntil = nil
-			if b.unit then UpdateCenter(b) end
+			if b.unit then Z:Try("hors de vue", UpdateCenter, b) end
 		end
 	end)
 end
@@ -1445,9 +1447,9 @@ function Z:CreateFrames()
 	end
 	casts:SetScript("OnEvent", function(_, event, unit)
 		if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
-			CastStarted(unit)
+			Z:Try(event, CastStarted, unit)
 		else
-			CastEnded(unit)
+			Z:Try(event, CastEnded, unit)
 		end
 	end)
 
@@ -1468,7 +1470,7 @@ function Z:CreateFrames()
 	C_Timer.NewTicker(0.5, function()
 		ticks = ticks + 1
 		if db.perfMode and ticks % 2 == 0 then return end
-		everyCell()
+		Z:Try("portée", everyCell)
 	end)
 end
 

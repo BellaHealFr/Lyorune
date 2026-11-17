@@ -42,13 +42,15 @@ local function Send(text, channel, target)
 	return pcall(C_ChatInfo.SendAddonMessage, PREFIX, text, channel, target)
 end
 
--- Groupe trouvé par l'outil de recherche (donjon, raid) : le canal d'instance ; sinon le groupe ou le raid
+-- Groupe trouvé par l'outil de recherche (donjon, raid) : le canal d'instance ; sinon le groupe ou le raid.
+-- Sert aussi aux annonces (Alerts.lua) : « PARTY » est refusé en silence dans un groupe d'instance.
 local function GroupChannel()
 	if LE_PARTY_CATEGORY_INSTANCE and IsInGroup(LE_PARTY_CATEGORY_INSTANCE) and not IsInGroup(LE_PARTY_CATEGORY_HOME) then
 		return "INSTANCE_CHAT"
 	end
 	return IsInRaid() and "RAID" or "PARTY"
 end
+Z.GroupChannel = GroupChannel
 
 local function SendGroup(text)
 	if not IsInGroup() then return false end
@@ -215,7 +217,7 @@ local function StartRes(target, from, by)
 end
 
 local resWatch = CreateFrame("Frame")
-resWatch:SetScript("OnEvent", function(_, event, _, a, b, c)
+local function OnResEvent(event, a, b, c)
 	if event == "UNIT_SPELLCAST_SENT" then -- a : cible, b : identifiant du sort lancé, c : sort
 		if issecret(c) or not c or issecret(a) or not a or a == "" or issecret(b) or not b then return end
 		local spell = C_Spell.GetSpellName(c)
@@ -230,7 +232,8 @@ resWatch:SetScript("OnEvent", function(_, event, _, a, b, c)
 		EndRes(Key(UnitName("player")), success)
 		SendGroup(success and "R:+" or "R:-")
 	end
-end)
+end
+resWatch:SetScript("OnEvent", function(_, event, _, a, b, c) Z:Try("qui relève qui", OnResEvent, event, a, b, c) end)
 
 -- N'écoute mes sorts que si l'option est active
 function Z:RefreshComm()

@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.9] - 2026-11-18
+
+### Amélioré
+
+- Journal d'erreurs plus complet : chaque événement des cases et chaque mise à jour régulière est surveillé par Lyorune lui-même, sans dépendre d'aucun autre addon.
+
+### Corrigé
+
+- En donjon, vos soins sur la durée, les affaiblissements et la dissipation s'affichent de nouveau sur les cases : le jeu y rend secret le détail des changements d'auras, ce qui provoquait des centaines d'erreurs.
+- Annonces de mana et de résurrection dans un groupe trouvé par l'outil de recherche : envoyées sur le canal d'instance (elles étaient refusées).
+
 ## [1.23.8] - 2026-11-17
 
 ### Corrigé
@@ -396,6 +407,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.9]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.8...v1.23.9
 [1.23.8]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.7...v1.23.8
 [1.23.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.6...v1.23.7
 [1.23.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.5...v1.23.6

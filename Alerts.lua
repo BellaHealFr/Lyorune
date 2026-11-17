@@ -30,7 +30,7 @@ function Z:ResText(name) return Fill(Z.db.resText, "{nom}", name) end
 function Z:Announce(text, byHand)
 	local channel = "SAY"
 	if Z.db.alertChannel == "GROUP" or (not byHand and not IsInInstance()) then
-		channel = IsInRaid() and "RAID" or IsInGroup() and "PARTY" or "SAY"
+		channel = IsInGroup() and Z.GroupChannel() or "SAY"
 	end
 	UIErrorsFrame:AddMessage(text, 0.35, 0.65, 1)
 	if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown and C_ChatInfo.InChatMessagingLockdown() then
@@ -86,9 +86,9 @@ end
 local watcher = CreateFrame("Frame")
 watcher:SetScript("OnEvent", function(_, event, _, target, _, spellID)
 	if event == "UNIT_SPELLCAST_SENT" then
-		CheckRes(target, spellID)
+		Z:Try("annonce de résurrection", CheckRes, target, spellID)
 	else
-		CheckMana()
+		Z:Try("annonce de mana", CheckMana)
 	end
 end)
 

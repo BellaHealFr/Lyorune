@@ -288,22 +288,27 @@ local function IsMine(unit, id)
 	return ok and out == false
 end
 
--- Appelé par la case à chaque UNIT_AURA, avec le détail des changements donné par le jeu
+-- Appelé par la case à chaque UNIT_AURA, avec le détail des changements donné par le jeu.
+-- En donjon, le jeu peut rendre ce détail secret (les listes elles-mêmes, ou chaque aura) : on ne le lit alors
+-- pas, et la mise à jour des icônes se fait quand même (Frames.lua, UNIT_AURA).
 function Z.NoteAuraChanges(b, info)
-	if type(info) ~= "table" then return end
-	if info.removedAuraInstanceIDs then
-		for _, id in ipairs(info.removedAuraInstanceIDs) do
+	if type(info) ~= "table" or issecret(info) then return end
+	local removed, added = info.removedAuraInstanceIDs, info.addedAuras
+	if type(removed) == "table" and not issecret(removed) then
+		for _, id in ipairs(removed) do
 			if not issecret(id) and known[id] then
 				known[id] = nil
 				knownCount = knownCount - 1
 			end
 		end
 	end
-	if info.addedAuras then
+	if type(added) == "table" and not issecret(added) then
 		local recent = lastCast and GetTime() - lastCastTime <= CAST_WINDOW
-		for _, aura in ipairs(info.addedAuras) do
-			local id = aura.auraInstanceID
-			if not issecret(aura.name) then
+		for _, aura in ipairs(added) do
+			local id = type(aura) == "table" and not issecret(aura) and aura.auraInstanceID
+			if not id then
+				-- aura secrète : rien à retenir
+			elseif not issecret(aura.name) then
 				Remember(id, aura.name)
 			elseif recent and IsMine(b.unit, id) then
 				Remember(id, lastCast)
@@ -322,13 +327,14 @@ end
 
 local castWatcher = CreateFrame("Frame")
 castWatcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
-castWatcher:SetScript("OnEvent", function(_, _, _, _, spellID)
+local function OnMyCast(spellID)
 	if not spellID or issecret(spellID) or not GetSpellName or not Z.db then return end
 	local name = GetSpellName(spellID)
 	if name and not issecret(name) and Wanted(name) then
 		lastCast, lastCastTime = name, GetTime()
 	end
-end)
+end
+castWatcher:SetScript("OnEvent", function(_, _, _, _, spellID) Z:Try("mes sorts lancés", OnMyCast, spellID) end)
 
 -- Cache toutes les icônes d'une case (changement de style ou de taille)
 function Z.HideAuras(b)
@@ -662,9 +668,11 @@ driver:SetScript("OnUpdate", function(self, elapsed)
 	self.waited = 0
 	self:Hide()
 	if not dispelCurve then BuildCurve() end
+	-- Une case en erreur est notée au journal sans arrêter les autres : sinon une seule case fautive
+	-- laissait toutes les cases sans auras
 	for b in pairs(dirty) do
 		dirty[b] = nil
-		if b.unit and b:IsVisible() then UpdateAuras(b) end
+		if b.unit and b:IsVisible() then Z:Try("auras", UpdateAuras, b) end
 	end
 end)
 

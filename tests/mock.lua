@@ -273,6 +273,18 @@ Secret.__index = function() error("lecture d'un champ d'une valeur secrète", 2)
 Secret.__eq = function() error("comparaison d'une valeur secrète", 2) end
 function MakeSecret(value) return setmetatable({}, Secret) end
 function issecretvalue(value) return getmetatable(value) == Secret end
+-- Comme le jeu : parcourir une liste secrète est une erreur (vu dans Logs\General.log, 17 novembre 2026)
+do
+	local realIpairs, realPairs = ipairs, pairs
+	ipairs = function(t, ...)
+		if getmetatable(t) == Secret then error("bad argument #1 to 'ipairs' (table expected, got secret)", 2) end
+		return realIpairs(t, ...)
+	end
+	pairs = function(t, ...)
+		if getmetatable(t) == Secret then error("bad argument #1 to 'pairs' (table expected, got secret)", 2) end
+		return realPairs(t, ...)
+	end
+end
 
 SECRET = false
 local function S(value)

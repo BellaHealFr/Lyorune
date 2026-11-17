@@ -97,6 +97,29 @@ step("auras", function()
   Z.db.importantNames = {} Z.db.ignoredNames["X"] = true Z.db.extraTracked["Autre"] = true Z:Refresh() RunUpdates()
   assert(not b.bigIcon:IsShown() and #b.hots == 2 and b.hots[2]:IsShown(), "listes personnelles")
   Z.db.ignoredNames = {} Z.db.extraTracked = {}
+  -- une case en erreur ne prive plus les autres de leurs auras : l'erreur va au journal
+  local hotIcon, cells = Z.HotIcon, {}
+  for _, x in ipairs(Z.buttons) do if x.unit and x:IsVisible() and not x.extra then cells[#cells + 1] = x end end
+  assert(#cells >= 2, "il faut deux cases")
+  for _, x in ipairs(cells) do for _, icon in ipairs(x.hots) do icon:Hide() end end
+  Z.HotIcon = function(x, i) if x ~= cells[1] then error("case fautive") end return hotIcon(x, i) end
+  for _, x in ipairs(cells) do Z.QueueAuras(x) end
+  RunUpdates()
+  Z.HotIcon = hotIcon
+  assert(cells[1].hots[1] and cells[1].hots[1]:IsShown(), "une case en erreur arrete les autres")
+  local logged = false
+  for _, e in ipairs(Z.db.errors) do if tostring(e.message):find("case fautive", 1, true) then logged = true end end
+  assert(logged, "erreur des auras absente du journal")
+  Z:ClearLog()
+  -- donjon : le detail des changements d'auras est secret (1 736 erreurs dans Logs\General.log, 17 novembre 2026).
+  -- Les icones doivent quand meme se mettre a jour, sans aucune erreur.
+  for _, icon in ipairs(b.hots) do icon:Hide() end
+  FireEvent("UNIT_AURA", "player", { addedAuras = MakeSecret(), removedAuraInstanceIDs = MakeSecret() })
+  FireEvent("UNIT_AURA", "player", { addedAuras = { MakeSecret() }, removedAuraInstanceIDs = { MakeSecret() } })
+  FireEvent("UNIT_AURA", "player", MakeSecret())
+  RunUpdates()
+  assert(#Z.db.errors == 0, "detail secret des auras : " .. tostring(Z.db.errors[1] and Z.db.errors[1].message))
+  assert(b.hots[1]:IsShown(), "icones non mises a jour quand le detail des auras est secret")
   AURAS = {}
   FireEvent("UNIT_AURA", "player") RunUpdates()
   assert(not b.dispel:IsShown() and not b.hots[1]:IsShown() and not b.debuffs[1]:IsShown())
@@ -554,6 +577,14 @@ step("annonces de mana", function()
   MANA = 950 FireEvent("UNIT_POWER_UPDATE", "player") NOW = 200
   INSTANCE = false MANA = 100 FireEvent("UNIT_POWER_UPDATE", "player")
   assert(SENT[#SENT]:match("^PARTY:Mana faible"), SENT[#SENT])
+  -- groupe d'instance (outil de recherche) : canal d'instance, « PARTY » serait refuse en silence par le jeu
+  local inGroup = IsInGroup
+  LE_PARTY_CATEGORY_HOME, LE_PARTY_CATEGORY_INSTANCE = 1, 2
+  IsInGroup = function(category) return category ~= 1 end
+  MANA = 950 FireEvent("UNIT_POWER_UPDATE", "player") NOW = 250
+  MANA = 100 FireEvent("UNIT_POWER_UPDATE", "player")
+  assert(SENT[#SENT]:match("^INSTANCE_CHAT:Mana faible"), "groupe d'instance : " .. SENT[#SENT])
+  IsInGroup, LE_PARTY_CATEGORY_HOME, LE_PARTY_CATEGORY_INSTANCE = inGroup, nil, nil
   INSTANCE = true
   Z.db.manaAlert = false Z.db.regenAlert = false Z:RefreshAlerts()
   local n = #SENT MANA = 950 FireEvent("UNIT_POWER_UPDATE", "player") MANA = 50 FireEvent("UNIT_POWER_UPDATE", "player")

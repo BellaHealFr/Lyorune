@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.9] - 2026-11-18
+
+### Improved
+
+- More complete error log: every cell event and every regular update is watched by Lyorune itself, without relying on any other addon.
+
+### Fixed
+
+- In dungeons, your heals over time, debuffs and dispel highlight show on the cells again: the game makes aura change details secret there, which caused hundreds of errors.
+- Mana and resurrection announcements in a group-finder group are sent to the instance channel (they were refused).
+
 ## [1.23.8] - 2026-11-17
 
 ### Fixed
@@ -396,6 +407,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.9]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.8...v1.23.9
 [1.23.8]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.7...v1.23.8
 [1.23.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.6...v1.23.7
 [1.23.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.5...v1.23.6
