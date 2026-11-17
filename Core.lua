@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.23.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.23.2"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -271,7 +271,7 @@ end
 Z:On("PLAYER_REGEN_ENABLED", function()
 	for key, fn in pairs(pending) do
 		pending[key] = nil
-		fn()
+		Z:Try("fin du combat : " .. tostring(key), fn) -- une action en erreur n'empêche pas les suivantes
 	end
 end)
 

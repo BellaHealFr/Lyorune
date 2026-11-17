@@ -11,7 +11,7 @@
 --   5. Z.raidBuffs.MACLASSE : ses buffs de groupe, s'il en a
 --   6. Z.uniqueBuffs.MACLASSE : ses buffs à poser sur une seule personne (le tank), s'il en a
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
--- Les trois tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
+-- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
 
 local _, Z = ...

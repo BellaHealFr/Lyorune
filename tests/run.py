@@ -2246,6 +2246,24 @@ step("revue 1.23.1 : le mode test a 40 montre des cases reduites comme un vrai r
   Z:Refresh()
 end)
 
+step("revue 1.23.2 : fin du combat et journal vide", function()
+  -- une action remise à la fin du combat qui échoue n'empêche pas les autres
+  COMBAT = true
+  local done = {}
+  Z:Safe("a", function() error("panne") end)
+  Z:Safe("b", function() done.b = true end)
+  Z:Safe("c", function() done.c = true end)
+  COMBAT = false
+  Z.db.errors = {} Z.firstError = nil
+  FireEvent("PLAYER_REGEN_ENABLED")
+  assert(done.b and done.c, "une action en erreur a bloque les suivantes")
+  assert(#Z.db.errors == 1 and Z.db.errors[1].message:find("panne", 1, true), "l'erreur doit etre notee au journal")
+  -- vider le journal efface aussi la premiere erreur de la session
+  Z:ClearLog()
+  assert(Z.firstError == nil and #Z.db.errors == 0)
+  assert(Z:BugReport():find("Aucune erreur technique", 1, true), "erreur effacee encore signalee")
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

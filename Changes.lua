@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.2", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Fin du combat : si une modification remise à plus tard échoue, les autres (clics, disposition, profil) s'appliquent quand même (#46).",
+			"« Vider le journal » : /lyorune bug ne signale plus une erreur déjà effacée (#46).",
+		},
+	},
+	{
 		version = "1.23.1", date = "2026-11-17",
 		added = {
 		},

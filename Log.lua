@@ -195,6 +195,12 @@ function Z:Diagnose()
 	Z:Print(Z.L["%d erreur(s) dans le journal (/lyorune erreurs)."]:format(#(Z.db.errors or {})))
 end
 
+-- Vide le journal, et oublie la première erreur de la session : /lyorune bug ne la signale plus
+function Z:ClearLog()
+	Z.db.errors = {}
+	Z.firstError = nil
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Fenêtre du journal : texte à sélectionner et copier
 ----------------------------------------------------------------------------------------------------
@@ -237,7 +243,7 @@ function Z:ShowLog()
 		select:SetPoint("BOTTOMLEFT", 14, 14)
 		select.label:SetJustifyH("CENTER")
 		local clear = UI.Button(window, Z.L["Vider le journal"], 130, 24, function()
-			Z.db.errors = {}
+			Z:ClearLog()
 			edit:SetText(Z:LogText())
 		end)
 		clear:SetPoint("LEFT", select, "RIGHT", 6, 0)

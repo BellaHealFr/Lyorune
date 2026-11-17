@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.2] - 2026-11-17
+
+### Fixed
+
+- End of combat: if one postponed change fails, the others (clicks, layout, profile) still apply ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- "Clear log": /lyorune bug no longer reports an error that was already cleared ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.1] - 2026-11-17
 
 ### Fixed
@@ -346,6 +353,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.1...v1.23.2
 [1.23.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.0...v1.23.1
 [1.23.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.21.0...v1.22.0

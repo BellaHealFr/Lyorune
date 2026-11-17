@@ -193,7 +193,8 @@ Grille de chaque lot :
 - [x] Vérification automatique de tout l'addon : fonctions appelées mais absentes, réglages absents de
   `Z.defaults`, événements écoutés sans traitement, valeurs secrètes comparées, tirets cadratins. Gardée dans
   `tests/run.py` (étape « revue »). Bug trouvé : le mode test à 25 ou 40 ne réduisait pas les cases (1.23.1)
-- [ ] Lot 1 : Core, Log, Data
+- [x] Lot 1 : Core, Log, Data. Bugs : une action en erreur à la fin du combat bloquait les suivantes ;
+  « Vider le journal » laissait /lyorune bug signaler l'erreur effacée (1.23.2)
 - [ ] Lot 2 : Frames, 1re moitié
 - [ ] Lot 3 : Frames, 2e moitié
 - [ ] Lot 4 : Auras, Alerts
