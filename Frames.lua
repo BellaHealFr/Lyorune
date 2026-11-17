@@ -398,25 +398,32 @@ local function Cover(texture, inset)
 	texture:SetPoint("BOTTOMRIGHT", -inset, inset)
 end
 
--- Nom, vie et rôle selon la forme : au centre (Tuile, Carré) ou sur une ligne (Barre, Bandeau)
+-- Pose un élément à sa place d'origine, plus le décalage choisi dans l'éditeur de placement (Z.Offset)
+local function Place(region, key, point, relative, relativePoint, x, y)
+	local dx, dy = Z.Offset(key)
+	region:ClearAllPoints()
+	region:SetPoint(point, relative, relativePoint, x + dx, y + dy)
+end
+
+-- Nom, vie et rôle selon la forme : au centre (Tuile, Carré) ou sur une ligne (Barre, Bandeau).
+-- Le marqueur et l'icône centrale suivent aussi l'éditeur de placement.
 local function PlaceTexts(b, width, icon)
-	b.name:ClearAllPoints()
-	b.text:ClearAllPoints()
-	b.role:ClearAllPoints()
 	if Z:Shape().inline then
-		b.role:SetPoint("LEFT", b.hp, "LEFT", 3, 0)
-		b.name:SetPoint("LEFT", b.hp, "LEFT", icon + 3, 0)
+		Place(b.role, "role", "LEFT", b.hp, "LEFT", 3, 0)
+		Place(b.name, "name", "LEFT", b.hp, "LEFT", icon + 3, 0)
 		b.name:SetJustifyH("LEFT")
 		b.name:SetWidth(math.max(20, width - icon - 46))
-		b.text:SetPoint("RIGHT", b.hp, "RIGHT", -4, 0)
+		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", -4, 0)
 	else
-		b.role:SetPoint("TOPRIGHT", -2 - Z.CornerShift(b, "TOPRIGHT"), -2)
+		Place(b.role, "role", "TOPRIGHT", b, "TOPRIGHT", -2 - Z.CornerShift(b, "TOPRIGHT"), -2)
 		-- Accrochés à la barre de vie : ils remontent avec elle quand la barre de mana s'affiche
-		b.name:SetPoint("CENTER", b.hp, "CENTER", 0, 3)
+		Place(b.name, "name", "CENTER", b.hp, "CENTER", 0, 3)
 		b.name:SetJustifyH("CENTER")
 		b.name:SetWidth(width - 8)
-		b.text:SetPoint("BOTTOM", b.hp, "BOTTOM", 0, 4)
+		Place(b.text, "text", "BOTTOM", b.hp, "BOTTOM", 0, 4)
 	end
+	Place(b.marker, "marker", "CENTER", b.over, "TOP", 0, -1)
+	Place(b.center, "center", "CENTER", b.over, "CENTER", 0, 0)
 end
 
 local function Style(b)
@@ -948,6 +955,7 @@ local function ApplyLayout()
 			h:Hide()
 		end
 		h:SetAlpha(db.frameAlpha / 100)
+		h:SetScale(db.scale / 100) -- échelle générale : cases, icônes et étiquette grandissent ensemble
 	end
 	UpdateHandles()
 end
@@ -1062,6 +1070,7 @@ function Z:Refresh()
 	if Z.RefreshMinimap then Z:RefreshMinimap() end
 	if Z.RefreshRunes then Z:RefreshRunes() end
 	if Z.RefreshShapes then Z:RefreshShapes() end
+	if Z.RefreshPlacement then Z:RefreshPlacement() end
 end
 
 function Z:CreateFrames()

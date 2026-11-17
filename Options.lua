@@ -360,6 +360,8 @@ local function SimpleTabs()
 				{ "step", "width", "Largeur" },
 				{ "step", "height", "Hauteur" },
 				{ "step", "spacing", "Espacement" },
+				{ "step", "scale", "Échelle générale (%)" },
+				{ "button", "Placer les éléments de la case...", function() Z:OpenPlacement() end, "Nom, texte de vie, icônes : décalez chaque élément au pixel près sur une case d'exemple agrandie." },
 				{ "check", "autoShrink", "Réduire les cases en grand raid", "Au-delà de 10 joueurs les cases rétrécissent de 15 %, au-delà de 25 de 30 %." },
 				{ "head", "Rangement" },
 				{ "cycle", "layout", "Rangement des joueurs" },

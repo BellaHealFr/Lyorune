@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.12.0] - 2026-11-17
+
+### Ajouté
+
+- Échelle générale de tous les cadres, de 50 à 200 %, suivie par le mode test ([#18](https://github.com/BellaHealFr/Lyorune/issues/18)).
+- Éditeur de placement (onglet Cadres) : sur une case d'exemple agrandie, glissez ou poussez au pixel près le nom, le texte de vie, les icônes de rôle, de marqueur et centrale, vos soins, les affaiblissements, le buff manquant et les auras privées ; chaque forme de case garde ses placements, partagés avec le code de configuration ([#18](https://github.com/BellaHealFr/Lyorune/issues/18)).
+
 ## [1.11.0] - 2026-11-17
 
 ### Ajouté
@@ -234,6 +241,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.12.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0

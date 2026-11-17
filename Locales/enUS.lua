@@ -324,7 +324,7 @@ Z.translations.enUS = {
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
+			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement, tanks, familiers, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
@@ -333,7 +333,7 @@ Z.translations.enUS = {
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -345,6 +345,20 @@ Z.translations.enUS = {
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
 
 	-- Thèmes
+	-- Échelle et éditeur de placement (1.12.0)
+	["Échelle générale (%)"] = "Overall scale (%)",
+	["Placer les éléments de la case..."] = "Place the cell elements...",
+	["Nom, texte de vie, icônes : décalez chaque élément au pixel près sur une case d'exemple agrandie."] = "Name, health text, icons: move each element to the exact pixel on an enlarged sample cell.",
+	["Placement des éléments"] = "Element placement",
+	["Icône de rôle"] = "Role icon", ["Icône centrale"] = "Centre icon", ["Affaiblissement important"] = "Important debuff",
+	["Buff manquant"] = "Missing buff", ["Auras privées"] = "Private auras",
+	["Gauche"] = "Left", ["Haut"] = "Up", ["Bas"] = "Down", ["Droite"] = "Right",
+	["Un pixel par clic, cinq avec Maj."] = "One pixel per click, five with Shift.",
+	["Remettre à sa place"] = "Put it back", ["Tout remettre"] = "Reset all",
+	["Tous les éléments de cette forme de case reviennent à leur place d'origine."] = "Every element of this cell shape goes back to its original place.",
+	["Décalage : %d, %d"] = "Offset: %d, %d", ["Forme : %s"] = "Shape: %s",
+	["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."] = "Drag an element on the cell, or pick it in the list and nudge it with the arrows (Shift: 5 pixels). Each cell shape keeps its own placements. Every element is shown here, even those switched off in the options.",
+
 	-- Forme des cases, angles, couleurs (1.9.0)
 	["Forme des cases"] = "Cell shape", ["Barre"] = "Bar", ["Tuile"] = "Tile", ["Carré"] = "Square", ["Bandeau"] = "Strip",
 	["Cases de %d x %d, texte %d."] = "Cells of %d x %d, text %d.",
@@ -458,4 +472,6 @@ Z.translations.enUS = {
 	["Barre fine de menace en haut de la vie : jaune, orange puis rouge (#17)."] = "Thin threat bar at the top of the health: yellow, orange then red (#17).",
 	["Pourcentage de mana écrit dans la barre de mana, lisible en combat (#40)."] = "Mana percentage written in the mana bar, readable in combat (#40).",
 	["Le texte de vie ne passe plus par-dessus la barre de mana en forme Tuile et Carré (#40)."] = "The health text no longer overlaps the mana bar in the Tile and Square shapes (#40).",
+	["Échelle générale de tous les cadres, de 50 à 200 %, suivie par le mode test (#18)."] = "Overall scale for all frames, from 50 to 200%, followed by test mode (#18).",
+	["Éditeur de placement (onglet Cadres) : sur une case d'exemple agrandie, glissez ou poussez au pixel près le nom, le texte de vie, les icônes de rôle, de marqueur et centrale, vos soins, les affaiblissements, le buff manquant et les auras privées ; chaque forme de case garde ses placements, partagés avec le code de configuration (#18)."] = "Placement editor (Frames tab): on an enlarged sample cell, drag or nudge to the exact pixel the name, health text, role, marker and centre icons, your heals, debuffs, missing buff and private auras; each cell shape keeps its placements, shared with the configuration code (#18).",
 }

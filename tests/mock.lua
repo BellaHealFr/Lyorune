@@ -94,6 +94,8 @@ UIParent = new("Frame", "UIParent")
 Minimap = new("Frame", "Minimap")
 function Obj:GetCenter() return 400, 300 end
 function Obj:GetEffectiveScale() return 1 end
+function Obj:SetScale(s) self._scale = s end
+function Obj:GetScale() return self._scale or 1 end
 function GetCursorPosition() return CURSOR_X or 500, CURSOR_Y or 300 end
 GameTooltip = new("GameTooltip", "GameTooltip")
 function CreateFrame(kind, name, parent) return new(kind, name, parent) end

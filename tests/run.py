@@ -1183,6 +1183,75 @@ step("etape 5 : soins sur la duree, coins, mana en %, menace", function()
   end
 end)
 
+step("etape 6 : echelle, editeur de placement", function()
+  local b = Z.buttons[1]
+  -- #18 echelle generale : tous les cadres et le mode test, dans ses limites
+  assert(Z.defaults.scale == 100 and Z.limits.scale[1] == 50 and Z.limits.scale[2] == 200)
+  Z.db.scale = 150 Z:Refresh()
+  for _, h in ipairs(Z.headers) do assert(h:GetScale() == 1.5, "echelle des cadres") end
+  Z:TogglePreview(5)
+  assert(LyorunePreview:GetScale() == 1.5, "echelle du mode test")
+  Z:TogglePreview()
+  -- placement : decalage ajoute a la place d'origine, garde pour chaque forme
+  Z.db.shape = "TILE" Z.db.placement = {}
+  Z.SetOffset("name", 4, -3) Z:Refresh()
+  local p = b.name._point
+  assert(p[1] == "CENTER" and p[4] == 4 and p[5] == 0, "nom decale")
+  Z.SetOffset("marker", 0, 2) Z:Refresh()
+  assert(b.marker._point[5] == 1, "marqueur decale")
+  AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 41, spellId = 139 } }
+  Z.db.showHots, Z.db.hotStyle = true, "ICONS"
+  Z.SetOffset("hots", 5, 0) Z:Refresh() FireEvent("UNIT_AURA", "player") RunUpdates()
+  assert(b.hots[1]:IsShown() and b.hots[1]._point[4] == 7, "icones de soins decalees")
+  AURAS = {}
+  Z.db.shape = "BAR" Z:Refresh()
+  assert(Z.Offset("name") == 0 and b.name._point[4] == b.iconSize + 3, "une autre forme garde sa place d'origine")
+  Z.db.shape = "TILE" Z:Refresh()
+  -- bornes, nettoyage, element inconnu refuse
+  Z.SetOffset("name", 999, -999)
+  local x, y = Z.Offset("name")
+  assert(x == 40 and y == -40, "decalage borne")
+  Z.SetOffset("name", 0, 0)
+  assert(Z.db.placement.TILE.name == nil, "place d'origine : entree effacee")
+  Z.SetOffset("inconnu", 1, 1)
+  assert(Z.db.placement.TILE.inconnu == nil)
+  -- editeur : liste, fleches (Maj : 5 pixels), coordonnees, glisser, remise a zero
+  Z:OpenPlacement()
+  local w = Z:PlacementWindow()
+  assert(w:IsShown() and #w.list == #Z.placeElements and w.beside, "fenetre de placement")
+  for _, button in ipairs(w.list) do if button.key == "hots" then button:Run("OnClick") end end
+  w.right:Run("OnClick") w.up:Run("OnClick")
+  x, y = Z.Offset("hots")
+  assert(x == 6 and y == 1, "fleches : " .. x .. "," .. y)
+  local shift = IsShiftKeyDown
+  IsShiftKeyDown = function() return true end
+  w.left:Run("OnClick")
+  IsShiftKeyDown = shift
+  assert(Z.Offset("hots") == 1, "Maj : 5 pixels")
+  assert(w.coords:GetText():find("1, 1", 1, true), "coordonnees affichees")
+  local cell = w.cell
+  cell.marker.GetLeft = function() return 100 end cell.marker.GetRight = function() return 110 end
+  cell.marker.GetTop = function() return 210 end cell.marker.GetBottom = function() return 200 end
+  CURSOR_X, CURSOR_Y = 105, 205
+  w.stage:Run("OnMouseDown", "LeftButton")
+  assert(w.stage:GetScript("OnUpdate"), "glisser commence sur l'element")
+  CURSOR_X, CURSOR_Y = 108, 203
+  w.stage:Run("OnUpdate", 0.01)
+  w.stage:Run("OnMouseUp", "LeftButton")
+  assert(not w.stage:GetScript("OnUpdate"), "aucune boucle apres le glissement")
+  x, y = Z.Offset("marker")
+  assert(x == 3 and y == 0, "marqueur glisse : " .. x .. "," .. y)
+  assert(b.marker._point[4] == 3, "les vraies cases suivent")
+  CURSOR_X, CURSOR_Y = nil, nil
+  w.resetAll:Run("OnClick")
+  assert(Z.db.placement.TILE == nil, "tout remettre")
+  w:Hide()
+  -- options : trouvables par la recherche
+  local labels = table.concat(Z:OptionLabels(), "|")
+  assert(labels:find("Échelle générale (%)", 1, true) and labels:find("Placer les éléments de la case...", 1, true))
+  Z.db.scale = 100 Z:Refresh()
+end)
+
 step("etape 2 : reprise des anciens reglages", function()
   local db = { locked = true, lastVersion = "1.6.0", manaBars = "HEALERS", pos = { "TOPLEFT", 10, -10 } }
   local savedDB, savedChar = LyoruneDB, LyoruneCharDB
@@ -1200,6 +1269,7 @@ end)
 
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
+  Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi
   local saved = Z:Export()
   local seed = 12345
   local function rand(n) seed = (seed * 1103515245 + 12345) % 2147483648 return seed % n + 1 end
@@ -1216,10 +1286,18 @@ step("securite : codes et messages abimes", function()
   for key, value in pairs(Z.defaults) do
     local current, limit = Z.db[key], Z.limits[key]
     assert(type(current) == type(value), "type change : " .. key)
-    if limit then assert(current >= limit[1] and current <= limit[2], "hors limites : " .. key) end
+    if limit and type(current) == "number" then assert(current >= limit[1] and current <= limit[2], "hors limites : " .. key) end
     if Z.choices[key] then
       local found for _, c in ipairs(Z.choices[key]) do if c[1] == current then found = true end end
       assert(found, "choix inconnu : " .. key .. " = " .. tostring(current))
+    end
+  end
+  local limit = Z.limits.placement
+  for shape, elements in pairs(Z.db.placement) do
+    assert(Z.shapes[shape] and type(elements) == "table", "forme inconnue dans le placement : " .. tostring(shape))
+    for key, at in pairs(elements) do
+      assert(Z.IsPlaceElement(key), "element inconnu : " .. tostring(key))
+      for i = 1, 2 do assert(type(at[i]) == "number" and at[i] >= limit[1] and at[i] <= limit[2], "placement hors limites : " .. key) end
     end
   end
   assert(Z.db.manaText == Z.defaults.manaText or Z.db.manaText == "x", "texte libre modifie : " .. Z.db.manaText)
@@ -1231,6 +1309,8 @@ step("securite : codes et messages abimes", function()
     assert(ok, "message : " .. tostring(err))
   end
   assert(Z:Import(saved))
+  assert(select(1, Z.Offset("name")) == 3 and Z.db.placement.BAR.debuffs[1] == -40, "placements partages")
+  Z.db.placement = {} Z:Refresh()
 end)
 
 step("aucune variable globale imprevue", function()

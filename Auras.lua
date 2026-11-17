@@ -90,7 +90,6 @@ local function GetIcon(b, list, index, point, x, y, direction, scale)
 	icon:SetPoint(point, b.over, point, x + direction * (index - 1) * (size + 2), y)
 	return icon
 end
-Z.GetAuraIcon = GetIcon
 
 -- mine : icône d'un de mes soins, qui suit les réglages cercle, décompte, fondu et charges
 local function ShowAura(icon, unit, aura, mine)
@@ -135,7 +134,7 @@ function Z.FadeHots(b)
 end
 
 -- Barre fine numéro « index » : elle se vide avec la durée restante du soin
-local function GetBar(b, index, x)
+local function GetBar(b, index, x, y)
 	local bar = b.hotBars[index]
 	if not bar then
 		bar = CreateFrame("StatusBar", nil, b.over)
@@ -148,10 +147,9 @@ local function GetBar(b, index, x)
 	end
 	bar:SetSize(math.floor(Z.CellSize() * 0.45), 3)
 	bar:ClearAllPoints()
-	bar:SetPoint("TOPLEFT", b.over, "TOPLEFT", x or 3, -3 - (index - 1) * 4)
+	bar:SetPoint("TOPLEFT", b.over, "TOPLEFT", x or 3, (y or 0) - 3 - (index - 1) * 4)
 	return bar
 end
-Z.GetHotBar = GetBar
 
 local function ShowBar(bar, unit, aura)
 	local duration = GetAuraDuration(unit, aura.auraInstanceID)
@@ -212,6 +210,39 @@ local function GetCorner(b, point)
 	square:ClearAllPoints()
 	square:SetPoint(point, b.over, point, sign[1] * 2, sign[2] * 2)
 	return square
+end
+
+----------------------------------------------------------------------------------------------------
+-- Place de chaque rangée d'icônes : celle d'origine, plus le décalage de l'éditeur de placement (Z.Offset).
+-- Les vraies cases, le mode test et la case d'exemple de l'éditeur passent tous par ici.
+----------------------------------------------------------------------------------------------------
+function Z.HotIcon(b, index)
+	local dx, dy = Z.Offset("hots")
+	return GetIcon(b, b.hots, index, "TOPLEFT", 2 + Z.CornerShift(b, "TOPLEFT") + dx, -2 + dy, 1)
+end
+
+function Z.HotBar(b, index)
+	local dx, dy = Z.Offset("hots")
+	return GetBar(b, index, 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy)
+end
+
+function Z.DebuffIcon(b, index)
+	local dx, dy = Z.Offset("debuffs")
+	return GetIcon(b, b.debuffs, index, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT") + dx, 2 + dy, -1)
+end
+
+function Z.BigIcon(b)
+	local dx, dy = Z.Offset("big")
+	b.bigList = b.bigList or {}
+	b.bigIcon = GetIcon(b, b.bigList, 1, "LEFT", 3 + dx, dy, 1, 1.6)
+	return b.bigIcon
+end
+
+function Z.BuffIcon(b)
+	local dx, dy = Z.Offset("buff")
+	b.buffList = b.buffList or {}
+	b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, 1)
+	return b.buffIcon
 end
 
 local function ShowCorner(square, unit, aura)
@@ -341,6 +372,25 @@ end
 local PRIVATE_SLOTS = 2
 local PRIVATE_OFFSETS = { CENTER = { 0, 0 }, TOP = { 0, -2 }, BOTTOM = { 0, 2 }, LEFT = { 2, 0 }, RIGHT = { -2, 0 } }
 
+-- Le cadre qui reçoit les auras privées : place choisie dans les options, plus le décalage de l'éditeur
+function Z.PrivateHolder(b)
+	local db = Z.db
+	local size, point = db.privateAuraSize, db.privateAuraPoint
+	local offset = PRIVATE_OFFSETS[point] or PRIVATE_OFFSETS.CENTER
+	local dx, dy = Z.Offset("private")
+	local holder = b.privateHolder
+	if not holder then
+		holder = CreateFrame("Frame", nil, b.over)
+		holder:SetFrameLevel(b.over:GetFrameLevel() + 5) -- au-dessus des icônes de Lyorune
+		b.privateHolder = holder
+	end
+	holder:SetSize(PRIVATE_SLOTS * (size + 2) - 2, size)
+	holder:ClearAllPoints()
+	holder:SetPoint(point, b.over, point, offset[1] + dx, offset[2] + dy)
+	return holder, size
+end
+Z.PRIVATE_SLOTS = PRIVATE_SLOTS
+
 function Z.AnchorPrivateAuras(b)
 	if b.privateAnchors then
 		for _, id in ipairs(b.privateAnchors) do pcall(RemovePrivateAnchor, id) end
@@ -352,17 +402,7 @@ function Z.AnchorPrivateAuras(b)
 		return
 	end
 
-	local size, point = db.privateAuraSize, db.privateAuraPoint
-	local offset = PRIVATE_OFFSETS[point] or PRIVATE_OFFSETS.CENTER
-	local holder = b.privateHolder
-	if not holder then
-		holder = CreateFrame("Frame", nil, b.over)
-		holder:SetFrameLevel(b.over:GetFrameLevel() + 5) -- au-dessus des icônes de Lyorune
-		b.privateHolder = holder
-	end
-	holder:SetSize(PRIVATE_SLOTS * (size + 2) - 2, size)
-	holder:ClearAllPoints()
-	holder:SetPoint(point, b.over, point, offset[1], offset[2])
+	local holder, size = Z.PrivateHolder(b)
 	holder:Show()
 
 	b.privateAnchors = {}
@@ -471,7 +511,6 @@ local function UpdateAuras(b)
 	local wantCorners = next(cornerOf) ~= nil
 	if (db.showHots and (next(Z.trackedNames) or next(db.extraTracked))) or wantCorners then
 		local list = Auras(unit, "HELPFUL|PLAYER", 16)
-		local startX = 2 + Z.CornerShift(b, "TOPLEFT")
 		if list then
 			for i = 1, #list do
 				local aura = list[i]
@@ -485,9 +524,9 @@ local function UpdateAuras(b)
 				elseif db.showHots and shown < MAX_HOTS and IsTracked(aura) then
 					shown = shown + 1
 					if bars then
-						ShowBar(GetBar(b, shown, startX + 1), unit, aura)
+						ShowBar(Z.HotBar(b, shown), unit, aura)
 					else
-						ShowAura(GetIcon(b, b.hots, shown, "TOPLEFT", startX, -2, 1), unit, aura, true)
+						ShowAura(Z.HotIcon(b, shown), unit, aura, true)
 					end
 				end
 			end
@@ -525,13 +564,12 @@ local function UpdateAuras(b)
 
 	-- 3. Icônes d'affaiblissements : celui à dissiper en premier
 	shown = 0
-	local debuffX = -2 - Z.CornerShift(b, "BOTTOMRIGHT")
 	if db.showDebuffs and harmful then
 		local firstId = toDispel and toDispel.auraInstanceID
 		if issecret(firstId) then firstId = nil end
 		if toDispel then
 			shown = 1
-			ShowAura(GetIcon(b, b.debuffs, 1, "BOTTOMRIGHT", debuffX, 2, -1), unit, toDispel)
+			ShowAura(Z.DebuffIcon(b, 1), unit, toDispel)
 		end
 		if db.debuffMode == "ALL" then
 			for i = 1, #harmful do
@@ -540,7 +578,7 @@ local function UpdateAuras(b)
 				local id = aura.auraInstanceID
 				if not (firstId and not issecret(id) and id == firstId) and not IsIgnored(aura) then
 					shown = shown + 1
-					ShowAura(GetIcon(b, b.debuffs, shown, "BOTTOMRIGHT", debuffX, 2, -1), unit, aura)
+					ShowAura(Z.DebuffIcon(b, shown), unit, aura)
 				end
 			end
 		end
@@ -553,9 +591,7 @@ local function UpdateAuras(b)
 		important, gameDecides, fromList = FindImportant(harmful)
 	end
 	if important and db.bossDebuffs then
-		b.bigList = b.bigList or {}
-		b.bigIcon = GetIcon(b, b.bigList, 1, "LEFT", 3, 0, 1, 1.6)
-		ShowAura(b.bigIcon, unit, important)
+		ShowAura(Z.BigIcon(b), unit, important)
 		if gameDecides then b.bigIcon:SetAlphaFromBoolean(important.isBossAura, 1, 0) end
 	elseif b.bigIcon then
 		b.bigIcon:Hide()
@@ -572,8 +608,7 @@ local function UpdateAuras(b)
 	-- 5. Buff de groupe manquant, hors combat
 	local missing = FindMissingBuff(b, unit)
 	if missing then
-		b.buffList = b.buffList or {}
-		b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", 2 + Z.CornerShift(b, "BOTTOMLEFT"), 2, 1)
+		Z.BuffIcon(b)
 		b.buffIcon.texture:SetTexture(missing.icon)
 		b.buffIcon.texture:SetDesaturated(true)
 		b.buffIcon.border:SetColor(1, 0.2, 0.2, 1)

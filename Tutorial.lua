@@ -84,7 +84,7 @@ local steps = {
 	{
 		title = "Régler Lyorune",
 		text = "Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
+			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement, tanks, familiers, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"

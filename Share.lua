@@ -6,6 +6,7 @@
 -- Format : Lyorune2;cle=tVALEUR;...   avec t = n (nombre), b (oui/non) ou s (texte).
 --   c.CLASSE.touche=sSort   un clic de souris        h.CLASSE.numero=sTOUCHE|Sort   une touche au survol
 --   l.liste=sNom            une entrée d'une liste personnelle
+--   p.FORME.element=sX,Y    un élément décalé dans l'éditeur de placement
 -- Les caractères spéciaux sont écrits %XX. A l'import, chaque valeur est contrôlée avec les tables
 -- Z.defaults, Z.limits et Z.choices (Core.lua) : un code abîmé ou malveillant ne peut rien casser.
 -- Un texte libre (les annonces dites dans le chat) n'est jamais partagé : un code reçu pourrait sinon faire dire
@@ -62,6 +63,11 @@ function Z:Export()
 			parts[#parts + 1] = "l." .. list .. "=s" .. Encode(name)
 		end
 	end
+	for shape, elements in pairs(Z.db.placement) do
+		for key, at in pairs(elements) do
+			parts[#parts + 1] = "p." .. shape .. "." .. key .. "=s" .. Encode(at[1] .. "," .. at[2])
+		end
+	end
 	return table.concat(parts, ";")
 end
 
@@ -107,7 +113,7 @@ function Z:Import(code)
 		return false, L["Ce texte n'est pas un code Lyorune."]
 	end
 
-	local settings, clicks, hovers, lists, count = {}, {}, {}, {}, 0
+	local settings, clicks, hovers, lists, places, count = {}, {}, {}, {}, {}, 0
 	for entry in code:gmatch("[^;]+") do
 		local key, kind, raw = entry:match("^([%w%.%%]+)=(%a)(.*)$")
 		if key then
@@ -115,6 +121,7 @@ function Z:Import(code)
 			local class, click = key:match("^c%.(%u+%d?)%.(.+)$") -- PRIEST, ou PRIEST2 : seconde spécialisation
 			local hoverClass, index = key:match("^h%.(%u+%d?)%.(%d)$")
 			local list = key:match("^l%.(%a+)$")
+			local shape, element = key:match("^p%.(%u+)%.(%a+)$")
 			if class then
 				click = Decode(click)
 				if kind == "s" and click:match("^%a*%-?[1-5]$") and SafeSpell(raw) then
@@ -127,6 +134,17 @@ function Z:Import(code)
 				if kind == "s" and hoverKey and SafeSpell(spell) then
 					hovers[hoverClass] = hovers[hoverClass] or {}
 					table.insert(hovers[hoverClass], { key = hoverKey, spell = spell })
+					count = count + 1
+				end
+			elseif shape then
+				-- forme et élément connus, deux nombres entiers bornés : rien d'autre n'entre
+				local x, y = raw:match("^(%-?%d+),(%-?%d+)$")
+				local limit = Z.limits.placement
+				if kind == "s" and x and Z.shapes[shape] and Z.IsPlaceElement(element) then
+					x = math.max(limit[1], math.min(limit[2], tonumber(x)))
+					y = math.max(limit[1], math.min(limit[2], tonumber(y)))
+					places[shape] = places[shape] or {}
+					places[shape][element] = { x, y }
 					count = count + 1
 				end
 			elseif list then
@@ -152,6 +170,7 @@ function Z:Import(code)
 	for class, binds in pairs(clicks) do Z.db.clicks[class] = binds end
 	for class, list in pairs(hovers) do Z.db.hoverKeys[class] = list end
 	for list, names in pairs(lists) do Z.db[list] = names end
+	for shape, elements in pairs(places) do Z.db.placement[shape] = elements end
 	Z:Refresh()
 	Z:ApplyClicks()
 	Z:RefreshAlerts()

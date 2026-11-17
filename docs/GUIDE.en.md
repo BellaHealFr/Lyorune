@@ -133,6 +133,8 @@ With the option "The same click resurrects a dead player" (Clicks tab, ticked by
 - **Each character has its own place**: the position is kept for each character, even after logging out. A new character starts from the default position.
 - **Without labels**: untick "Group number above the cells". They only come back while you move the frames.
 - **Size**: Frames tab, "Width", "Height", "Spacing".
+- **Overall scale**: Frames tab, "Overall scale (%)", from 50 to 200%. Everything grows or shrinks together (cells, icons, texts, labels) without changing your size settings. Test mode follows the same scale. In combat, the change waits for the end of the fight.
+- **Place the cell elements**: Frames tab, "Place the cell elements..." button. An enlarged sample cell shows every element: name, health text, role icon, raid marker, centre icon, your heals over time, debuffs, important debuff, missing buff and private auras. Drag an element with the mouse, or pick it in the list and nudge it with "Left", "Up", "Down", "Right": one pixel per click, five with Shift. The offset is shown under the cell and your real cells follow at once. "Put it back" undoes it for the chosen element, "Reset all" for all of them. Each cell shape (Bar, Tile, Square, Strip) keeps its own placements.
 - **Sorting**: by group or by role. By role, choose the order (tank, healer, damage, or any of the six combinations).
 - **Tanks and pets**: each can have its own frame, moved separately.
 - **When to show them**: "Show the frames" (Frames tab) offers "Always" or "In combat only". "Always" keeps the frames on screen, in and out of combat, including when you quest alone (with "My own frame when solo" ticked). "In combat only" makes them appear when a fight starts and disappear when it ends. The labels show along with the frames.
@@ -204,7 +206,7 @@ Good to know: outside dungeons and raids, the game does not let an addon write i
 **Profiles** tab:
 
 - **Ready-made profiles**: Dungeon, Raid, Compact, Large and readable. One click changes size and layout; your clicks are kept.
-- **Share my configuration**: copy the code shown and send it to a friend, who pastes it into "Receive a configuration". The code holds the look, clicks and lists, but never your macros nor the sentences of your announcements (mana, resurrection): nobody can make you say anything in chat.
+- **Share my configuration**: copy the code shown and send it to a friend, who pastes it into "Receive a configuration". The code holds the look (element placements included), clicks and lists, but never your macros nor the sentences of your announcements (mana, resurrection): nobody can make you say anything in chat.
 - **Direct sending**: type the name of a player who has Lyorune. They receive a request and choose whether to accept. A request only comes from a member of your group, your guild or your friends list, at most once a minute. The window shows the sender's name and realm, and the "Import" button only becomes active after two seconds.
 - **Reset everything**: two clicks to go back to the default settings.
 

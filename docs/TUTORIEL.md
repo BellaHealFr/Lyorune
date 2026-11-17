@@ -132,6 +132,8 @@ Avec l'option « Le même clic relève un joueur mort » (onglet Clics, cochée 
 - **Chaque personnage a sa place** : la position est gardée pour chaque personnage, même après une déconnexion. Un nouveau personnage part de la position par défaut.
 - **Sans étiquettes** : décochez « Numéro de groupe au-dessus des cases ». Elles reviennent seulement le temps de déplacer les cadres.
 - **Taille** : onglet Cadres, « Largeur », « Hauteur », « Espacement ».
+- **Échelle générale** : onglet Cadres, « Échelle générale (%) », de 50 à 200 %. Tout grandit ou rapetisse ensemble (cases, icônes, textes, étiquettes), sans changer vos réglages de taille. Le mode test suit la même échelle. En combat, le changement attend la fin du combat.
+- **Placer les éléments de la case** : onglet Cadres, bouton « Placer les éléments de la case... ». Une case d'exemple agrandie montre tous les éléments : nom, texte de vie, icône de rôle, marqueur de raid, icône centrale, vos soins sur la durée, affaiblissements, affaiblissement important, buff manquant et auras privées. Glissez un élément avec la souris, ou choisissez-le dans la liste et poussez-le avec « Gauche », « Haut », « Bas », « Droite » : un pixel par clic, cinq avec Maj. Le décalage s'affiche sous la case et vos vraies cases suivent aussitôt. « Remettre à sa place » annule pour l'élément choisi, « Tout remettre » pour tous. Chaque forme de case (Barre, Tuile, Carré, Bandeau) garde ses propres placements.
 - **Rangement** : par groupe ou par rôle. Par rôle, choisissez l'ordre (tank, soin, dégâts, ou une autre des six combinaisons).
 - **Tanks et familiers** : chacun peut avoir son propre cadre, déplaçable séparément.
 - **Quand les afficher** : « Afficher les cadres » (onglet Cadres) propose « Toujours » ou « En combat seulement ». « Toujours » garde les cadres à l'écran, en combat comme hors combat, y compris quand vous jouez seul en quête (avec « Mon cadre quand je suis seul » coché). « En combat seulement » les fait apparaître au début de chaque combat et disparaître à la fin. Les étiquettes s'affichent avec les cadres.
@@ -203,7 +205,7 @@ Onglet **Alertes** : Lyorune peut annoncer que votre mana est faible, qu'elle es
 Onglet **Profils** :
 
 - **Profils prêts à l'emploi** : Donjon, Raid, Compact, Grand et lisible. Un clic change la taille et la disposition ; vos clics sont conservés.
-- **Donner sa configuration** : copiez le code affiché et envoyez-le à un ami, qui le colle dans « Recevoir une configuration ». Le code contient l'apparence, les clics et les listes, mais jamais vos macros ni les phrases de vos annonces (mana, résurrection) : personne ne peut vous faire dire quelque chose dans le chat.
+- **Donner sa configuration** : copiez le code affiché et envoyez-le à un ami, qui le colle dans « Recevoir une configuration ». Le code contient l'apparence (placements des éléments compris), les clics et les listes, mais jamais vos macros ni les phrases de vos annonces (mana, résurrection) : personne ne peut vous faire dire quelque chose dans le chat.
 - **Envoi direct** : tapez le nom d'un joueur qui a Lyorune. Il reçoit une demande et choisit d'accepter ou non. Une demande n'arrive que d'un membre de votre groupe, de votre guilde ou de votre liste d'amis, une fois par minute au plus. La fenêtre affiche le nom et le royaume de l'expéditeur, et le bouton « Importer » ne s'active qu'au bout de deux secondes.
 - **Tout réinitialiser** : deux clics pour revenir aux réglages d'origine.
 

@@ -19,7 +19,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 4 | 1.9.0 | Forme des cases, angles, couleurs de classe | Publiée (v1.9.0) |
 | 4 bis | 1.10.0 | Fenêtre d'options et tutoriel : 3 thèmes, runes animées | Publiée (v1.10.0) |
 | 5 | 1.11.0 | Soins sur la durée et indicateurs | Publiée (v1.11.0) |
-| 6 | 1.12.0 | Échelle, éditeur de placement | À faire |
+| 6 | 1.12.0 | Échelle, éditeur de placement | Publiée (v1.12.0) |
 | 7 | 1.13.0 | Clics et raccourcis | À faire |
 | 8 | 1.14.0 | Profils automatiques, cible et focalisation | À faire |
 | 9 | 1.15.0 | Mode panneau, mode grille, tri | À faire |
@@ -102,7 +102,8 @@ de soin et leurs 5 habillages restent tels quels.
   combat ; barre fine de menace (le bouclier avait déjà sa bande) ; nouvel onglet « Soins »
 
 ## Étape 6 : échelle, éditeur de placement (1.12.0)
-- [ ] Échelle générale et placement au pixel près sur une case d'exemple (#18)
+- [x] Échelle générale et placement au pixel près sur une case d'exemple (#18) : échelle de 50 à 200 %, éditeur
+  (glisser, flèches, Maj : 5 pixels), dix éléments, placements gardés par forme et partagés avec le code
 - Couleurs de l'interface (#19) : passées à l'étape 4 bis.
 
 ## Étape 7 : clics et raccourcis (1.13.0)

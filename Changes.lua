@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.12.0", date = "2026-11-17",
+		added = {
+			"Échelle générale de tous les cadres, de 50 à 200 %, suivie par le mode test (#18).",
+			"Éditeur de placement (onglet Cadres) : sur une case d'exemple agrandie, glissez ou poussez au pixel près le nom, le texte de vie, les icônes de rôle, de marqueur et centrale, vos soins, les affaiblissements, le buff manquant et les auras privées ; chaque forme de case garde ses placements, partagés avec le code de configuration (#18).",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.11.0", date = "2026-11-17",
 		added = {
 			"Onglet Soins : vos soins sur la durée avec cercle, décompte en secondes, icône qui s'efface à la fin et charges, à combiner comme vous voulez (#16).",

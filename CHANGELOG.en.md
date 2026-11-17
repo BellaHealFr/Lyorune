@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.12.0] - 2026-11-17
+
+### Added
+
+- Overall scale for all frames, from 50 to 200%, followed by test mode ([#18](https://github.com/BellaHealFr/Lyorune/issues/18)).
+- Placement editor (Frames tab): on an enlarged sample cell, drag or nudge to the exact pixel the name, health text, role, marker and centre icons, your heals, debuffs, missing buff and private auras; each cell shape keeps its placements, shared with the configuration code ([#18](https://github.com/BellaHealFr/Lyorune/issues/18)).
+
 ## [1.11.0] - 2026-11-17
 
 ### Added
@@ -234,6 +241,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.12.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0

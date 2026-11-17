@@ -90,12 +90,12 @@ local function Fill(cell, index)
 			if shown == 2 then break end
 			shown = shown + 1
 			if db.hotStyle == "BARS" then
-				local bar = Z.GetHotBar(cell, shown)
+				local bar = Z.HotBar(cell, shown)
 				bar:SetMinMaxValues(0, 1)
 				bar:SetValue(shown == 1 and 0.8 or 0.4)
 				bar:Show()
 			else
-				local icon = Z.GetAuraIcon(cell, cell.hots, shown, "TOPLEFT", 2, -2, 1)
+				local icon = Z.HotIcon(cell, shown)
 				icon.texture:SetTexture(C_Spell.GetSpellTexture(id))
 				icon.cooldown:Clear()
 				icon.count:SetText("")
@@ -104,7 +104,7 @@ local function Fill(cell, index)
 		end
 	end
 	if db.showDebuffs and (dispel or index % 7 == 5) and not dead then
-		local icon = Z.GetAuraIcon(cell, cell.debuffs, 1, "BOTTOMRIGHT", -2, 2, -1)
+		local icon = Z.DebuffIcon(cell, 1)
 		icon.texture:SetTexture("Interface\\Icons\\Spell_Shadow_CurseOfTounges")
 		icon.cooldown:Clear()
 		icon.count:SetText("")
@@ -149,6 +149,7 @@ local function Layout()
 		end
 	end
 	container:SetAlpha(db.frameAlpha / 100)
+	container:SetScale(db.scale / 100) -- même échelle générale que les vrais cadres
 end
 
 function Z:RefreshPreview()
