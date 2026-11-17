@@ -28,6 +28,35 @@ local function ShortStack(stack)
 	return table.concat(lines, "\n")
 end
 
+-- Le rapport finit sur GitHub, en public : le nom de mon personnage, de mon royaume et des membres de mon groupe
+-- y sont remplacés par « (joueur) » et « (royaume) », même s'ils apparaissent dans un message d'erreur ou une réponse.
+local function Escape(text) return (text:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0")) end
+
+function Z:Anonymize(text)
+	local names, realms = {}, {}
+	local function add(list, value)
+		if type(value) == "string" and not Z.IsSecret(value) and #value >= 2 then list[#list + 1] = value end
+	end
+	local units = { "player" }
+	for i = 1, 4 do units[#units + 1] = "party" .. i end
+	if IsInRaid() then for i = 1, 40 do units[#units + 1] = "raid" .. i end end
+	for _, unit in ipairs(units) do
+		if UnitExists(unit) then
+			pcall(function()
+				local name, realm = UnitName(unit)
+				add(names, name) add(realms, realm)
+			end)
+		end
+	end
+	pcall(function() add(realms, GetRealmName()) add(realms, GetNormalizedRealmName()) end)
+	-- les plus longs d'abord : « Jainara » avant « Jaina »
+	table.sort(names, function(a, b) return #a > #b end)
+	table.sort(realms, function(a, b) return #a > #b end)
+	for _, realm in ipairs(realms) do text = text:gsub(Escape(realm), "(royaume)") end
+	for _, name in ipairs(names) do text = text:gsub(Escape(name), "(joueur)") end
+	return text
+end
+
 -- Rapport compact : les réponses du joueur, le contexte, et la première erreur de la session
 function Z:BugReport(answers)
 	local version, build, _, interface = GetBuildInfo()
@@ -51,7 +80,7 @@ function Z:BugReport(answers)
 	else
 		lines[#lines + 1] = "Aucune erreur technique enregistrée."
 	end
-	return table.concat(lines, "\n")
+	return Z:Anonymize(table.concat(lines, "\n"))
 end
 
 local window

@@ -191,7 +191,7 @@ Z.translations.enUS = {
 	["Clics de la classe rétablis."] = "Class clicks restored.", ["Tous les réglages sont revenus à l'origine."] = "All settings are back to default.",
 	["Entre joueurs"] = "Between players",
 	["Accepter qu'on me propose une configuration"] = "Let players offer me their configuration",
-	["Rien n'est appliqué sans votre accord : une fenêtre vous demande."] = "Nothing is applied without your consent: a window asks you first.",
+	["Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande."] = "Only from a group member, a guild member or a friend. Nothing is applied without your consent: a window asks you first.",
 	["Me prévenir si une version plus récente existe"] = "Tell me when a newer version exists",
 	["Donner ma configuration"] = "Share my configuration", ["Recevoir une configuration"] = "Receive a configuration",
 	["Code à copier (Ctrl+C) et à envoyer : chuchotement, Discord..."] = "Code to copy (Ctrl+C) and send: whisper, Discord...",
@@ -204,7 +204,7 @@ Z.translations.enUS = {
 	["Envoi impossible pour le moment (combat ou joueur introuvable)."] = "Cannot send right now (combat or player not found).",
 	["Configuration envoyée à %s. Il doit avoir Lyorune et l'accepter."] = "Configuration sent to %s. They need Lyorune and must accept it.",
 	["%s vous propose sa configuration Lyorune (apparence, clics, alertes). Votre configuration actuelle sera remplacée."] = "%s offers you their Lyorune configuration (look, clicks, alerts). Your current configuration will be replaced.",
-	["une version plus récente de Lyorune existe (%s, vous avez %s)."] = "a newer version of Lyorune exists (%s, you have %s).",
+	["une version plus récente de Lyorune existe (%s, vous avez %s). Téléchargez-la uniquement sur github.com/BellaHealFr/Lyorune."] = "a newer version of Lyorune exists (%s, you have %s). Download it only from github.com/BellaHealFr/Lyorune.",
 
 	-- Aide
 	["Lire une case"] = "Reading a cell", ["Commandes"] = "Commands", ["Découvrir"] = "Discover",
@@ -393,4 +393,9 @@ Z.translations.enUS = {
 	["Icônes d'invocation en cours et de joueur dans une autre phase (#11)."] = "Icons for a pending summon and for a player in another phase (#11).",
 	["Infobulle au survol d'une case : la liste de vos clics et touches, hors combat (#12)."] = "Tooltip when hovering a frame: the list of your clicks and keys, out of combat (#12).",
 	["Contour lumineux pour un affaiblissement important, même en combat pour ceux des boss, et son pour ceux de votre liste (#13)."] = "Glowing outline for an important debuff, even in combat for boss debuffs, and a sound for those in your list (#13).",
+	["Configurations reçues : seulement d'un membre du groupe, de la guilde ou d'un ami, une par minute au plus, avec le royaume de l'expéditeur ; une fenêtre ouverte n'est plus remplacée et le bouton Importer attend deux secondes. Les phrases des annonces et les textures inconnues ne sont plus partagées (#34)."] = "Received configurations: only from a group member, guild member or friend, at most one a minute, with the sender's realm; an open window is no longer replaced and the Import button waits two seconds. Announcement sentences and unknown textures are no longer shared (#34).",
+	["Avis de nouvelle version : il faut deux joueurs différents et un numéro vraisemblable ; le message cite la page officielle (#35)."] = "New version notice: two different players and a plausible number are needed; the message names the official page (#35).",
+	["Rapport de bug et journal d'erreurs : noms de personnages et de royaumes remplacés (#36)."] = "Bug report and error log: character and realm names are replaced (#36).",
+	["Macros des barres de sorts : Lyorune ne touche plus qu'aux macros qu'il a créées, jamais à une macro du joueur nommée « Lyo: » (#37)."] = "Action bar macros: Lyorune only touches the macros it created, never a player macro named \"Lyo:\" (#37).",
+	["Contrôles de sécurité avant chaque publication : codes et messages abîmés, fonctions interdites, contenu de l'archive (#38)."] = "Security checks before each release: damaged codes and messages, forbidden functions, archive contents (#38).",
 }

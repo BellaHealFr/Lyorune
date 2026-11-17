@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.8.1] - 2026-11-17
+
+### Improved
+
+- Security checks before each release: damaged codes and messages, forbidden functions, archive contents ([#38](https://github.com/BellaHealFr/Lyorune/issues/38)).
+
+### Fixed
+
+- Received configurations: only from a group member, guild member or friend, at most one a minute, with the sender's realm; an open window is no longer replaced and the Import button waits two seconds. Announcement sentences and unknown textures are no longer shared ([#34](https://github.com/BellaHealFr/Lyorune/issues/34)).
+- New version notice: two different players and a plausible number are needed; the message names the official page ([#35](https://github.com/BellaHealFr/Lyorune/issues/35)).
+- Bug report and error log: character and realm names are replaced ([#36](https://github.com/BellaHealFr/Lyorune/issues/36)).
+- Action bar macros: Lyorune only touches the macros it created, never a player macro named "Lyo:" ([#37](https://github.com/BellaHealFr/Lyorune/issues/37)).
+
 ## [1.8.0] - 2026-11-17
 
 ### Added
@@ -174,6 +187,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0

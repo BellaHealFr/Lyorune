@@ -339,3 +339,15 @@ C_IncomingSummon = { IncomingSummonStatus = function() return SUMMON or 0 end }
 function UnitPhaseReason() return PHASE end
 function UnitIsPlayer() return true end
 function Obj:GetHealAbsorbs() return 4, false end
+
+----------------------------------------------------------------------------------------------------
+-- Ajouts 1.8.1 : groupe, guilde et amis (qui peut me proposer sa configuration), royaume
+----------------------------------------------------------------------------------------------------
+GROUP_NAMES, GUILD_LIST, FRIEND_LIST = {}, {}, {}
+function GetNormalizedRealmName() return "MonRoyaume" end
+function GetRealmName() return "Mon Royaume" end
+function Ambiguate(name) return (name:gsub("%-MonRoyaume$", "")) end
+function GetUnitName(u) return GROUP_NAMES[u] or UnitName(u) end
+function IsInGuild() return true end
+C_GuildInfo = { MemberExistsByName = function(name) return GUILD_LIST[name] or false end }
+C_FriendList = { GetFriendInfo = function(name) return FRIEND_LIST[name] and { name = name } or nil end }

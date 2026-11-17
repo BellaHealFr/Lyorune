@@ -189,7 +189,34 @@ def make_zip(version):
     with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name in addon_files():
             archive.write(os.path.join(ROOT, name), 'Lyorune/' + name)
+    check_zip(path)
     return path
+
+
+def check_zip(path):
+    """Relit l'archive avant diffusion : exactement les fichiers de l'addon, rien de caché, rien de privé."""
+    attendus = sorted('Lyorune/' + name for name in addon_files())
+    problemes = []
+    with zipfile.ZipFile(path) as archive:
+        noms = sorted(archive.namelist())
+        if noms != attendus:
+            problemes.append('fichiers en trop : %s ; manquants : %s' % (sorted(set(noms) - set(attendus)), sorted(set(attendus) - set(noms))))
+        for name in noms:
+            if '..' in name or name.startswith('/') or '\\' in name:
+                problemes.append('chemin suspect : ' + name)
+            if not name.endswith(('.lua', '.toc', 'LICENSE')):
+                continue
+            texte = archive.read(name).decode('utf-8', 'replace')
+            if archive.read(name) != io.open(os.path.join(ROOT, name[len('Lyorune/'):]), 'rb').read():
+                problemes.append('contenu différent du dépôt : ' + name)
+            # un chemin de mon ordinateur, ou un tiret cadratin
+            for motif in (r'[A-Za-z]:\\Users\\', chr(0x2014)):
+                if re.search(motif, texte):
+                    problemes.append('%s contient %r' % (name, motif))
+    if problemes:
+        os.remove(path)
+        sys.exit('Archive refusée, rien n\'est publié :\n  ' + '\n  '.join(problemes))
+    print('Archive vérifiée : %d fichiers, rien de privé.' % len(noms))
 
 
 def parse(args):

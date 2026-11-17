@@ -6,6 +6,19 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.8.1] - 2026-11-17
+
+### Amélioré
+
+- Contrôles de sécurité avant chaque publication : codes et messages abîmés, fonctions interdites, contenu de l'archive ([#38](https://github.com/BellaHealFr/Lyorune/issues/38)).
+
+### Corrigé
+
+- Configurations reçues : seulement d'un membre du groupe, de la guilde ou d'un ami, une par minute au plus, avec le royaume de l'expéditeur ; une fenêtre ouverte n'est plus remplacée et le bouton Importer attend deux secondes. Les phrases des annonces et les textures inconnues ne sont plus partagées ([#34](https://github.com/BellaHealFr/Lyorune/issues/34)).
+- Avis de nouvelle version : il faut deux joueurs différents et un numéro vraisemblable ; le message cite la page officielle ([#35](https://github.com/BellaHealFr/Lyorune/issues/35)).
+- Rapport de bug et journal d'erreurs : noms de personnages et de royaumes remplacés ([#36](https://github.com/BellaHealFr/Lyorune/issues/36)).
+- Macros des barres de sorts : Lyorune ne touche plus qu'aux macros qu'il a créées, jamais à une macro du joueur nommée « Lyo: » ([#37](https://github.com/BellaHealFr/Lyorune/issues/37)).
+
 ## [1.8.0] - 2026-11-17
 
 ### Ajouté
@@ -174,6 +187,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0

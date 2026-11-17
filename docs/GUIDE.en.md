@@ -174,13 +174,15 @@ Good to know: outside dungeons and raids, the game does not let an addon write i
 **Profiles** tab:
 
 - **Ready-made profiles**: Dungeon, Raid, Compact, Large and readable. One click changes size and layout; your clicks are kept.
-- **Share my configuration**: copy the code shown and send it to a friend, who pastes it into "Receive a configuration".
-- **Direct sending**: type the name of a player who has Lyorune. They receive a request and choose whether to accept.
+- **Share my configuration**: copy the code shown and send it to a friend, who pastes it into "Receive a configuration". The code holds the look, clicks and lists, but never your macros nor the sentences of your announcements (mana, resurrection): nobody can make you say anything in chat.
+- **Direct sending**: type the name of a player who has Lyorune. They receive a request and choose whether to accept. A request only comes from a member of your group, your guild or your friends list, at most once a minute. The window shows the sender's name and realm, and the "Import" button only becomes active after two seconds.
 - **Reset everything**: two clicks to go back to the default settings.
 
 ## 11. Between players who have Lyorune
 
 Lyorune exchanges two pieces of information, invisibly, with the other players of the group who use it: its version number (to tell you once if a newer version exists) and the configurations you choose to send. Nothing is ever applied without your consent. Both can be turned off in the Profiles tab, "Between players" section.
+
+A new version is only reported when two different players announce it. Download Lyorune only from its official page: [github.com/BellaHealFr/Lyorune](https://github.com/BellaHealFr/Lyorune/releases/latest). Another site, or a player sending you a file, is not a safe source.
 
 ## 12. Finding a setting
 
@@ -204,7 +206,7 @@ It is there for the pleasure of the eyes only. To remove it, untick "Runic inscr
 
 ## 15. A problem?
 
-Type `/lyorune bug`. Answer the three questions, click "Select all", copy with Ctrl+C, then paste the report into the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml). For a display problem, attach a screenshot. The step by step guide is in [SIGNALER_UN_BUG.md](SIGNALER_UN_BUG.md#reporting-a-bug-english).
+Type `/lyorune bug`. Answer the three questions, click "Select all", copy with Ctrl+C, then paste the report into the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml). Your character's name, your realm and your group members' names are replaced with "(joueur)" and "(royaume)": the report is public. For a display problem, attach a screenshot. The step by step guide is in [SIGNALER_UN_BUG.md](SIGNALER_UN_BUG.md#reporting-a-bug-english).
 
 Lyorune does not bother you with its errors: at most one discreet message per session, which you can turn off in the Help tab.
 

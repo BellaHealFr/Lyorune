@@ -797,7 +797,7 @@ local function BuildProfiles(page)
 
 	local sync = Heading(page, "Entre joueurs")
 	sync:SetPoint("TOPLEFT", 0, -244)
-	local accept = BuildItem(page, { "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Rien n'est appliqué sans votre accord : une fenêtre vous demande." })
+	local accept = BuildItem(page, { "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande." })
 	accept:SetPoint("TOPLEFT", 0, -276)
 	local notice = BuildItem(page, { "check", "versionNotice", "Me prévenir si une version plus récente existe" })
 	notice:SetPoint("TOPLEFT", 0, -303)

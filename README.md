@@ -70,7 +70,7 @@ En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction a
 
 ## Installation
 
-1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest).
+1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest). C'est la seule source officielle (voir [SECURITY.md](SECURITY.md)).
 2. Décompressez l'archive dans `World of Warcraft\_forever_\Interface\AddOns\`. Vous devez obtenir un dossier `Lyorune`.
 3. Lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion, et c'est parti.
 

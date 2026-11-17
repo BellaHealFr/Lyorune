@@ -246,7 +246,8 @@ end
 -- MACROS POUR LES BARRES DE SORTS (option « actionBarMacros »). Pour chaque sort ou macro de mes clics, Lyorune
 -- crée une vraie macro du jeu, rangée dans l'onglet du personnage de la fenêtre /macro, à glisser dans une
 -- barre. Elle vise le joueur sous la souris (une case ou un personnage), sinon la cible, sinon moi.
--- Lyorune ne crée, ne modifie et ne retire que SES macros : leur nom commence par « Lyo: ».
+-- Lyorune ne crée, ne modifie et ne retire que SES macros : leur nom commence par « Lyo: », et Lyorune les a
+-- notées à leur création (LyoruneCharDB.barMacros). Une macro du joueur nommée « Lyo:... » n'est jamais touchée.
 ----------------------------------------------------------------------------------------------------
 local MACRO_PREFIX = "Lyo:"
 local MACRO_ICON = "INV_MISC_QUESTIONMARK" -- avec cette icône, le jeu affiche celle du sort de la macro
@@ -295,13 +296,40 @@ function Z:BarMacros()
 	return list
 end
 
--- Parcourt mes macros de personnage, de la dernière à la première (une suppression décale les suivantes)
-local function EachOwnMacro(fn)
+-- Les macros créées par Lyorune pour ce personnage : nom -> true
+local function Owned()
+	local char = Z.char or {}
+	char.barMacros = char.barMacros or {}
+	return char.barMacros
+end
+
+-- Avant la 1.8.1, la liste n'existait pas : on reprend une seule fois les macros « Lyo: » écrites comme Lyorune
+-- les écrit (« #showtooltip » puis « /cast [@mouseover,help,... »), ou identiques à celles qu'il voudrait poser.
+local function AdoptOldMacros(wanted)
+	local char = Z.char
+	if not char or char.barMacrosAdopted then return end
+	char.barMacrosAdopted = true
+	local owned, bodies = Owned(), {}
+	for _, macro in ipairs(wanted) do bodies[macro.name] = macro.body end
 	local first = MAX_ACCOUNT_MACROS or 120
+	local _, count = GetNumMacros()
+	for index = first + 1, first + count do
+		local name, _, body = GetMacroInfo(index)
+		if name and name:sub(1, #MACRO_PREFIX) == MACRO_PREFIX and type(body) == "string"
+			and (body == bodies[name] or body:match("^#showtooltip [^\n]+\n/cast %[@mouseover,help,%a+%]%[help,%a+%] [^\n]+$")) then
+			owned[name] = true
+		end
+	end
+end
+
+-- Parcourt les macros de personnage créées par Lyorune, de la dernière à la première (une suppression décale
+-- les suivantes)
+local function EachOwnMacro(fn)
+	local first, owned = MAX_ACCOUNT_MACROS or 120, Owned()
 	local _, count = GetNumMacros()
 	for index = first + count, first + 1, -1 do
 		local name = GetMacroInfo(index)
-		if name and name:sub(1, #MACRO_PREFIX) == MACRO_PREFIX then fn(index, name) end
+		if name and owned[name] and name:sub(1, #MACRO_PREFIX) == MACRO_PREFIX then fn(index, name) end
 	end
 end
 
@@ -312,17 +340,27 @@ function Z:SyncBarMacros()
 		return
 	end
 	local wanted, names, created = Z:BarMacros(), {}, 0
+	AdoptOldMacros(wanted)
+	local owned = Owned()
 	for _, macro in ipairs(wanted) do names[macro.name] = true end
 	EachOwnMacro(function(index, name)
-		if not names[name] then DeleteMacro(index) end -- sort retiré de mes clics
+		if not names[name] then -- sort retiré de mes clics
+			DeleteMacro(index)
+			owned[name] = nil
+		end
 	end)
+	for name in pairs(owned) do -- supprimée à la main dans /macro : plus à moi
+		if GetMacroIndexByName(name) == 0 then owned[name] = nil end
+	end
 	for _, macro in ipairs(wanted) do
 		local index = GetMacroIndexByName(macro.name)
 		if index and index > 0 then
-			if GetMacroBody(index) ~= macro.body then EditMacro(index, macro.name, nil, macro.body) end
+			-- une macro du joueur porte déjà ce nom : on la laisse telle quelle
+			if owned[macro.name] and GetMacroBody(index) ~= macro.body then EditMacro(index, macro.name, nil, macro.body) end
 		else
 			local _, used = GetNumMacros()
 			if used < (MAX_CHARACTER_MACROS or 30) and pcall(CreateMacro, macro.name, MACRO_ICON, macro.body, true) then
+				owned[macro.name] = true
 				created = created + 1
 			elseif not warnedFull then
 				warnedFull = true
@@ -339,7 +377,12 @@ end
 function Z:RemoveBarMacros()
 	if InCombatLockdown() then return Z:Print(Z.L["impossible de modifier les macros en combat."]) end
 	if not GetNumMacros then return end
-	EachOwnMacro(function(index) DeleteMacro(index) end)
+	AdoptOldMacros(Z:BarMacros())
+	local owned = Owned()
+	EachOwnMacro(function(index, name)
+		DeleteMacro(index)
+		owned[name] = nil
+	end)
 end
 
 -- Appelé à la connexion : la première synchronisation attend que le jeu ait chargé les macros

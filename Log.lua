@@ -138,7 +138,7 @@ function Z:LogText()
 			tostring(e.class), tostring(e.level), tostring(e.spec), e.combat and "en combat" or "hors combat", tostring(e.group), tostring(e.zone))
 		if e.stack and e.stack ~= "" then lines[#lines + 1] = "Pile d'appels :\n" .. e.stack end
 	end
-	return table.concat(lines, "\n")
+	return Z:Anonymize(table.concat(lines, "\n")) -- Bug.lua : sans nom de joueur ni de royaume
 end
 
 ----------------------------------------------------------------------------------------------------

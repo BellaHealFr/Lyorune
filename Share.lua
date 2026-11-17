@@ -8,6 +8,8 @@
 --   l.liste=sNom            une entrée d'une liste personnelle
 -- Les caractères spéciaux sont écrits %XX. A l'import, chaque valeur est contrôlée avec les tables
 -- Z.defaults, Z.limits et Z.choices (Core.lua) : un code abîmé ou malveillant ne peut rien casser.
+-- Un texte libre (les annonces dites dans le chat) n'est jamais partagé : un code reçu pourrait sinon faire dire
+-- n'importe quoi en mon nom. Seuls circulent les textes choisis dans une liste (thème, texture, choix des options).
 
 local _, Z = ...
 
@@ -18,6 +20,13 @@ local function Encode(text)
 	return (tostring(text):gsub("[^%w]", function(c) return ("%%%02X"):format(c:byte()) end))
 end
 
+-- Un réglage partagé : ni propre à ce personnage (Z.private), ni un texte libre
+local function Shared(key)
+	local default = Z.defaults[key]
+	if default == nil or type(default) == "table" or Z.private[key] then return false end
+	return type(default) ~= "string" or Z.choices[key] ~= nil or key == "theme" or key == "texture"
+end
+
 local function Decode(text)
 	return (text:gsub("%%(%x%x)", function(hex) return string.char(tonumber(hex, 16)) end))
 end
@@ -26,7 +35,7 @@ function Z:Export()
 	local parts = { PREFIX }
 	local keys = {}
 	for key, value in pairs(Z.defaults) do
-		if type(value) ~= "table" and not Z.private[key] then keys[#keys + 1] = key end
+		if Shared(key) then keys[#keys + 1] = key end
 	end
 	table.sort(keys)
 	for _, key in ipairs(keys) do
@@ -58,8 +67,8 @@ end
 
 -- Contrôle une valeur importée. Renvoie la valeur acceptée, ou nil.
 local function Validate(key, kind, raw)
+	if not Shared(key) then return nil end
 	local default = Z.defaults[key]
-	if default == nil or type(default) == "table" or Z.private[key] then return nil end
 	if type(default) == "boolean" then
 		if kind == "b" and raw == "true" then return true end
 		if kind == "b" and raw == "false" then return false end
@@ -75,8 +84,11 @@ local function Validate(key, kind, raw)
 			for _, theme in ipairs(Z.themes) do
 				if theme.id == raw then return raw end
 			end
-		elseif #raw > 0 and #raw <= 120 then
-			return raw
+		elseif key == "texture" then -- celle du thème, ou une texture présente chez moi
+			if raw == "THEME" then return raw end
+			for _, name in ipairs(Z.UI.TextureList()) do
+				if name == raw then return raw end
+			end
 		end
 	end
 	return nil

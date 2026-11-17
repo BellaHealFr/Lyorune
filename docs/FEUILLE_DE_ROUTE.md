@@ -15,7 +15,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 1 | 1.6.0 | Bibliothèque de macros, clics par spécialisation | Publiée |
 | 2 | 1.7.0 | Bases de l'interface | Publiée |
 | 3 | 1.8.0 | Utile en donjon | Publiée |
-| 3 bis | 1.8.1 | Échanges entre joueurs plus sûrs | À faire |
+| 3 bis | 1.8.1 | Échanges entre joueurs plus sûrs | Publiée (v1.8.1) |
 | 4 | 1.9.0 | Forme des cases, couleurs de classe, runes | À faire |
 | 5 | 1.10.0 | Soins sur la durée et indicateurs | À faire |
 | 6 | 1.11.0 | Échelle, éditeur de placement, couleurs de l'interface | À faire |
@@ -64,11 +64,11 @@ macro sur une case (1023 caractères retenus).
 contour et son en donjon.
 
 ## Étape 3 bis : échanges entre joueurs plus sûrs (1.8.1)
-- [ ] Configurations reçues : contrôle renforcé et accord plus clair (#34)
-- [ ] Avis de nouvelle version plus fiable (#35)
-- [ ] Rapport de bogue sans informations personnelles (#36)
-- [ ] Macros de barres : ne jamais toucher une macro du joueur (#37)
-- [ ] Contrôles de sécurité avant chaque publication (#38)
+- [x] Configurations reçues : contrôle renforcé et accord plus clair (#34)
+- [x] Avis de nouvelle version plus fiable (#35)
+- [x] Rapport de bogue sans informations personnelles (#36)
+- [x] Macros de barres : ne jamais toucher une macro du joueur (#37)
+- [x] Contrôles de sécurité avant chaque publication (#38)
 
 ## Étape 4 : forme des cases, couleurs de classe, runes (1.9.0)
 - [ ] Barre, Tuile, Carré, Bandeau, avec vignettes de démonstration et bouton « Voir en vrai » (#14)

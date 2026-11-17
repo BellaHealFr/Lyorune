@@ -303,6 +303,19 @@ step("macros pour les barres de sorts", function()
   Z:ToggleOptions()
   -- une macro creee d'office par la 1.5.1 est retiree une fois, sans toucher aux autres
   assert(#MACROS == 1 and MACROS[1].name == "Ma macro")
+  -- une macro du joueur dont le nom commence par « Lyo: » : ni modifiée, ni retirée
+  MACROS[#MACROS + 1] = { name = "Lyo:Perso", icon = 1, body = "/dance" }
+  MACROS[#MACROS + 1] = { name = "Lyo:Soins rapide", icon = 1, body = "/cast Soins rapides" }
+  Z.db.actionBarMacros = true Z:ApplyClicks()
+  Z.db.actionBarMacros = false Z:RemoveBarMacros()
+  assert(find("Lyo:Perso") == "/dance" and find("Lyo:Soins rapide") == "/cast Soins rapides", "macro du joueur touchee")
+  -- reprise : une macro « Lyo: » posée par une ancienne version, écrite comme Lyorune l'écrit, reste retirable
+  Z.char.barMacrosAdopted = nil
+  MACROS[#MACROS + 1] = { name = "Lyo:Ancienne", icon = 1, body = "#showtooltip Soins\n/cast [@mouseover,help,nodead][help,nodead] [@player] Soins" }
+  Z:RemoveBarMacros()
+  assert(not find("Lyo:Ancienne") and find("Lyo:Perso") == "/dance", "reprise des anciennes macros")
+  table.remove(MACROS) table.remove(MACROS)
+  assert(#MACROS == 1 and MACROS[1].name == "Ma macro")
 end)
 
 step("macros : fenetre, glisser-deposer, reprise des anciennes", function()
@@ -544,7 +557,13 @@ step("partage, profils prets a l'emploi, reinitialisation", function()
   local ok, message = Z:Import("  " .. code .. "\n")
   assert(ok, message)
   assert(Z.db.theme == "HEROIC" and Z.db.width == 100 and Z.db.smooth == false and Z.db.roleOrder == "DAMAGER,HEALER,TANK")
-  assert(Z.db.manaText == "Plus de mana ; = {mana} % !", Z.db.manaText)
+  -- un texte libre (annonce dite dans le chat) ne circule jamais : ni à l'export, ni à l'import
+  assert(Z.db.manaText == "x" and not code:find("manaText", 1, true), Z.db.manaText)
+  Z.db.texture = "THEME"
+  assert(not Z:Import("Lyorune2;manaText=sAchetez%20de%20l%27or;regenText=sx;resText=sx;texture=sInterface%5CFAUX"), "texte libre ou texture inconnue importes")
+  assert(Z.db.manaText == "x" and Z.db.texture == "THEME")
+  assert(Z:Import("Lyorune2;texture=s" .. Z.UI.TextureList()[1]) and Z.db.texture == Z.UI.TextureList()[1], "texture connue refusee")
+  Z.db.texture = "THEME"
   assert(Z.db.clicks.PRIEST["ctrl-1"] == "Prière de guérison" and Z.db.ignoredNames["Mal de mer"])
   assert(Z.db.hoverKeys.PRIEST[2].key == "BUTTON7" and Z.db.hoverKeys.PRIEST[2].spell == "Soins rapides")
   assert(Z.buttons[1]:GetAttribute("ctrl-spell1") == "Prière de guérison" and Z.char.pos == pos)
@@ -565,23 +584,66 @@ step("entre joueurs : version et envoi de configuration", function()
   assert(Z.VersionNumber("1.10.2") > Z.VersionNumber("1.9.9") and Z.VersionNumber("abc") == 0)
   local n = #PRINTED
   FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:0.9.0", "PARTY", "Ami") assert(#PRINTED == n)
-  FireEvent("CHAT_MSG_ADDON", "Autre", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n)
-  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n + 1, "version plus recente non signalee")
-  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:9.9.9", "PARTY", "Ami") assert(#PRINTED == n + 1, "signalee deux fois")
-  FireEvent("CHAT_MSG_ADDON", "Lyorune", "n'importe quoi", "PARTY", "Ami")
-  FireEvent("CHAT_MSG_ADDON", "Lyorune", "C:1:99:2:x", "WHISPER", "Ami")
+  FireEvent("CHAT_MSG_ADDON", "Autre", "V:2.0.0", "PARTY", "Ami") assert(#PRINTED == n)
+  -- numéros invraisemblables : ignorés, même annoncés par plusieurs joueurs
+  for _, v in ipairs({ "99.0", "99.0.0", "3.0.0", "1.999.0", "1.9.0.1" }) do
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:" .. v, "PARTY", "Ami")
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:" .. v, "PARTY", "Autre")
+  end
+  assert(#PRINTED == n, "version invraisemblable signalee")
+  -- un seul joueur ne suffit pas, même s'il répète ; un second joueur confirme
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "PARTY", "Ami")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "PARTY", "Ami") assert(#PRINTED == n, "un seul joueur a suffi")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "PARTY", "Autre") assert(#PRINTED == n + 1, "version plus recente non signalee")
+  assert(PRINTED[#PRINTED]:find("github.com/BellaHealFr/Lyorune", 1, true), "source officielle absente")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "PARTY", "Troisieme") assert(#PRINTED == n + 1, "signalee deux fois")
+  -- messages abîmés : aucune erreur
+  for _, bad in ipairs({ "n'importe quoi", "C:1:99:2:x", "C:1:0:0:x", "C:a:1:1:x", "C:1:1:1:" .. ("x"):rep(300), "V:", "C:", ("x"):rep(255) }) do
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", bad, "WHISPER", "Ami")
+  end
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", MakeSecret(), "WHISPER", "Ami")
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "WHISPER", MakeSecret())
   assert(not Z:SendConfig("  "))
   Z.db.width = 132 local first = #ADDON_SENT + 1
   assert(Z:SendConfig("Jaina"))
   assert(#ADDON_SENT - first + 1 >= 2 and ADDON_SENT[first].channel == "WHISPER" and ADDON_SENT[first].target == "Jaina")
   for i = first, #ADDON_SENT do assert(#ADDON_SENT[i].text <= 255, "message trop long") end
   Z.db.width = 86
-  for i = #ADDON_SENT, first, -1 do FireEvent("CHAT_MSG_ADDON", "Lyorune", ADDON_SENT[i].text, "WHISPER", "Jaina") end -- dans le desordre
+  local function Receive(sender, from, to) for i = to or #ADDON_SENT, from or first, -1 do FireEvent("CHAT_MSG_ADDON", "Lyorune", ADDON_SENT[i].text, "WHISPER", sender) end end
+  -- un inconnu (ni groupe, ni guilde, ni ami) : rien ne s'ouvre
+  NOW = 1000 Receive("Inconnu-Ailleurs")
+  assert(not rawget(_G, "LyoruneConfigPrompt"), "configuration d'un inconnu proposee")
+  -- membre du groupe : la fenêtre s'ouvre, avec le royaume
+  GROUP_NAMES.party2 = "Jaina"
+  Receive("Jaina-MonRoyaume") -- dans le desordre
   assert(LyoruneConfigPrompt and LyoruneConfigPrompt:IsShown() and Z.db.width == 86, "rien ne doit s'appliquer sans accord")
+  assert(LyoruneConfigPrompt.text:GetText():find("Jaina-MonRoyaume", 1, true), "royaume absent")
+  -- un autre envoi pendant que la fenêtre est ouverte ne remplace rien
+  FRIEND_LIST.Thrall = true
+  Z.db.width = 150 local code2 = Z:Export() Z.db.width = 86
+  FireEvent("CHAT_MSG_ADDON", "Lyorune", "C:77:1:1:" .. code2:sub(1, 200), "WHISPER", "Thrall-MonRoyaume")
+  assert(LyoruneConfigPrompt.text:GetText():find("Jaina", 1, true), "fenetre remplacee")
+  -- bouton Importer : sans effet avant le délai
+  local opened = NOW
+  LyoruneConfigPrompt.readyAt = NOW + 2
+  LyoruneConfigPrompt.accept:Run("OnClick") assert(Z.db.width == 86 and LyoruneConfigPrompt:IsShown(), "import immediat")
+  NOW = opened + 3
   LyoruneConfigPrompt.accept:Run("OnClick")
   assert(Z.db.width == 132 and not LyoruneConfigPrompt:IsShown())
+  -- le même joueur, moins d'une minute après : ignoré ; après une minute : accepté
+  Z.db.width = 86 NOW = opened + 30 Receive("Jaina-MonRoyaume")
+  assert(not LyoruneConfigPrompt:IsShown(), "deux propositions en moins d'une minute")
+  NOW = opened + 70 Receive("Jaina-MonRoyaume")
+  assert(LyoruneConfigPrompt:IsShown(), "proposition refusee apres une minute")
+  LyoruneConfigPrompt.refuse:Run("OnClick") assert(Z.db.width == 86)
+  -- membre de la guilde accepté ; un envoi incomplet est oublié après 30 secondes
+  GUILD_LIST.Anduin = true
+  NOW = 2000 Receive("Anduin-MonRoyaume", first + 1)
+  NOW = 2040 Receive("Anduin-MonRoyaume", first, first)
+  assert(not LyoruneConfigPrompt:IsShown(), "envoi incomplet garde trop longtemps")
+  GROUP_NAMES.party2, GUILD_LIST.Anduin, FRIEND_LIST.Thrall = nil, nil, nil
   Z.db.acceptConfigs = false Z.db.width = 86
-  for i = first, #ADDON_SENT do FireEvent("CHAT_MSG_ADDON", "Lyorune", ADDON_SENT[i].text, "WHISPER", "Jaina") end
+  GROUP_NAMES.party2 = "Jaina" NOW = 3000 Receive("Jaina-MonRoyaume") GROUP_NAMES.party2 = nil
   assert(not LyoruneConfigPrompt:IsShown(), "configuration proposee alors que l'option est coupee")
   Z.db.acceptConfigs = true Z:Refresh()
 end)
@@ -623,6 +685,11 @@ step("signalement de bug, transparence, specialisation", function()
   report = Z:BugReport()
   assert(report:find("premiere", 1, true) and not report:find("seconde", 1, true), "la premiere erreur doit etre en tete : " .. report)
   assert(Z.db.errors[1].level == 60 and Z.db.errors[1].spec ~= nil)
+  -- ni nom de personnage ni royaume dans un rapport publié sur GitHub
+  RaiseError("Interface/AddOns/Lyorune/Auras.lua:30: Joueur-party2 de MonRoyaume")
+  report = Z:Anonymize(Z:BugReport({ "Je soignais Joueur-party1 sur Mon Royaume" }) .. "\n" .. Z.db.errors[1].message)
+  assert(not report:find("Joueur-party", 1, true) and not report:find("Royaume", 1, true) and report:find("(joueur)", 1, true), report)
+  assert(not Z:LogText():find("MonRoyaume", 1, true), "journal non anonymise")
   SlashCmdList.LYORUNE("bug") assert(LyoruneBug:IsShown())
   SlashCmdList.LYORUNE("position") assert(#Z.db.positionDiag == 1)
   Z.db.errors = {} Z.firstError = nil Z.db.errorNotice = true
@@ -863,6 +930,41 @@ step("etape 2 : reprise des anciens reglages", function()
   FireEvent("ADDON_LOADED", "Lyorune")
 end)
 
+step("securite : codes et messages abimes", function()
+  -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
+  local saved = Z:Export()
+  local seed = 12345
+  local function rand(n) seed = (seed * 1103515245 + 12345) % 2147483648 return seed % n + 1 end
+  local alphabet = "Lyorune2;=%.snbc0123456789ABCDEFtrue-|\n\0\255 #@/"
+  local function noise(len) local t = {} for i = 1, len do local k = rand(#alphabet) t[i] = alphabet:sub(k, k) end return table.concat(t) end
+  for i = 1, 3000 do
+    local code
+    if i % 3 == 0 then code = "Lyorune2;" .. noise(rand(80))
+    elseif i % 3 == 1 then local at = rand(#saved) code = saved:sub(1, at) .. noise(rand(10)) .. saved:sub(at + rand(20))
+    else code = noise(rand(200)) end
+    local ok, err = pcall(Z.Import, Z, code)
+    assert(ok, "import : " .. tostring(err) .. " pour " .. code)
+  end
+  for key, value in pairs(Z.defaults) do
+    local current, limit = Z.db[key], Z.limits[key]
+    assert(type(current) == type(value), "type change : " .. key)
+    if limit then assert(current >= limit[1] and current <= limit[2], "hors limites : " .. key) end
+    if Z.choices[key] then
+      local found for _, c in ipairs(Z.choices[key]) do if c[1] == current then found = true end end
+      assert(found, "choix inconnu : " .. key .. " = " .. tostring(current))
+    end
+  end
+  assert(Z.db.manaText == Z.defaults.manaText or Z.db.manaText == "x", "texte libre modifie : " .. Z.db.manaText)
+  for _, spell in pairs(Z:GetClicks()) do assert(type(spell) ~= "string" or not spell:find("%c") or Z.IsMacro(spell) or spell:find("^@macro:"), "commande cachee dans un clic") end
+  -- messages entre joueurs abîmés : jamais d'erreur
+  for i = 1, 2000 do
+    local text = (i % 2 == 0 and "C:" or i % 3 == 0 and "V:" or "") .. noise(rand(255))
+    local ok, err = pcall(FireEvent, "CHAT_MSG_ADDON", "Lyorune", text, "WHISPER", "Joueur" .. rand(50))
+    assert(ok, "message : " .. tostring(err))
+  end
+  assert(Z:Import(saved))
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,
@@ -885,4 +987,20 @@ rt.execute(scenario)
 for line in rt.eval('PRINTED').values():
     if line.startswith(('OK', 'ERREUR', 'globales')):
         print(' ', line)
-sys.exit(1 if rt.eval('FAILED') else 0)
+
+# Fonctions du jeu qu'un addon de soin n'a aucune raison d'appeler : exécuter du texte, toucher à l'or, au courrier,
+# aux échanges, à la guilde ou aux objets. Leur présence dans le code est une erreur, même dans un commentaire.
+FORBIDDEN = ['loadstring', 'RunScript', 'setfenv', 'getfenv', 'SendMail', 'SetSendMailMoney', 'PickupPlayerMoney',
+             'SetTradeMoney', 'AcceptTrade', 'InitiateTrade', 'GuildDisband', 'GuildLeave', 'GuildUninvite', 'GuildPromote',
+             'DeleteCursorItem', 'PlaceAuctionBid', 'BuyMerchantItem', 'BNSendWhisper', 'SendSystemMessage']
+found = []
+for f in files + ['Locales/' + name for name in os.listdir(os.path.join(addon, 'Locales'))]:
+    text = read(os.path.join(addon, f))
+    for word in FORBIDDEN:
+        if re.search(r'\b' + word + r'\b', text):
+            found.append('%s dans %s' % (word, f))
+    # le chat public : seulement depuis Alerts.lua (annonces choisies par le joueur)
+    if f != 'Alerts.lua' and re.search(r'\bSendChatMessage\b', text):
+        found.append('SendChatMessage dans %s' % f)
+print(('  OK    securite : aucune fonction interdite') if not found else ('  ERREUR securite : ' + ', '.join(found)))
+sys.exit(1 if rt.eval('FAILED') or found else 0)

@@ -173,13 +173,15 @@ Onglet **Alertes** : Lyorune peut annoncer que votre mana est faible, qu'elle es
 Onglet **Profils** :
 
 - **Profils prêts à l'emploi** : Donjon, Raid, Compact, Grand et lisible. Un clic change la taille et la disposition ; vos clics sont conservés.
-- **Donner sa configuration** : copiez le code affiché et envoyez-le à un ami, qui le colle dans « Recevoir une configuration ».
-- **Envoi direct** : tapez le nom d'un joueur qui a Lyorune. Il reçoit une demande et choisit d'accepter ou non.
+- **Donner sa configuration** : copiez le code affiché et envoyez-le à un ami, qui le colle dans « Recevoir une configuration ». Le code contient l'apparence, les clics et les listes, mais jamais vos macros ni les phrases de vos annonces (mana, résurrection) : personne ne peut vous faire dire quelque chose dans le chat.
+- **Envoi direct** : tapez le nom d'un joueur qui a Lyorune. Il reçoit une demande et choisit d'accepter ou non. Une demande n'arrive que d'un membre de votre groupe, de votre guilde ou de votre liste d'amis, une fois par minute au plus. La fenêtre affiche le nom et le royaume de l'expéditeur, et le bouton « Importer » ne s'active qu'au bout de deux secondes.
 - **Tout réinitialiser** : deux clics pour revenir aux réglages d'origine.
 
 ## 11. Entre joueurs qui ont Lyorune
 
 Lyorune échange deux informations, de façon invisible, avec les autres joueurs du groupe qui l'utilisent : son numéro de version (pour vous prévenir une fois si une version plus récente existe) et les configurations que vous choisissez d'envoyer. Rien n'est jamais appliqué sans votre accord. Les deux se coupent dans l'onglet Profils, section « Entre joueurs ».
+
+Une nouvelle version n'est signalée que si deux joueurs différents l'annoncent. Téléchargez Lyorune uniquement sur sa page officielle : [github.com/BellaHealFr/Lyorune](https://github.com/BellaHealFr/Lyorune/releases/latest). Un autre site, ou un joueur qui vous envoie un fichier, n'est pas une source sûre.
 
 ## 12. Retrouver un réglage
 
@@ -203,7 +205,7 @@ Elle ne sert à rien d'autre qu'au plaisir des yeux. Pour la retirer, décochez 
 
 ## 15. Un problème ?
 
-Tapez `/lyorune bug`. Répondez aux trois questions, cliquez sur « Tout sélectionner », copiez avec Ctrl+C, puis collez le rapport à l'adresse affichée dans la fenêtre. Pour un défaut d'affichage, joignez une capture d'écran.
+Tapez `/lyorune bug`. Répondez aux trois questions, cliquez sur « Tout sélectionner », copiez avec Ctrl+C, puis collez le rapport à l'adresse affichée dans la fenêtre. Le nom de votre personnage, de votre royaume et des membres de votre groupe y est remplacé par « (joueur) » et « (royaume) » : le rapport est public. Pour un défaut d'affichage, joignez une capture d'écran.
 
 Le pas à pas complet, avec la création du compte GitHub et l'envoi d'une image, est dans [SIGNALER_UN_BUG.md](SIGNALER_UN_BUG.md).
 

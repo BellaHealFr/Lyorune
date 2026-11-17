@@ -8,6 +8,20 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.8.1", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+			"Contrôles de sécurité avant chaque publication : codes et messages abîmés, fonctions interdites, contenu de l'archive (#38).",
+		},
+		fixed = {
+			"Configurations reçues : seulement d'un membre du groupe, de la guilde ou d'un ami, une par minute au plus, avec le royaume de l'expéditeur ; une fenêtre ouverte n'est plus remplacée et le bouton Importer attend deux secondes. Les phrases des annonces et les textures inconnues ne sont plus partagées (#34).",
+			"Avis de nouvelle version : il faut deux joueurs différents et un numéro vraisemblable ; le message cite la page officielle (#35).",
+			"Rapport de bug et journal d'erreurs : noms de personnages et de royaumes remplacés (#36).",
+			"Macros des barres de sorts : Lyorune ne touche plus qu'aux macros qu'il a créées, jamais à une macro du joueur nommée « Lyo: » (#37).",
+		},
+	},
+	{
 		version = "1.8.0", date = "2026-11-17",
 		added = {
 			"Auras privées des boss : le jeu les dessine lui-même sur la case, taille et place réglables (#9).",
