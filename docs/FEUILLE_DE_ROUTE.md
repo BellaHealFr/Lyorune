@@ -32,6 +32,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | Publiée (v1.22.0) |
 | 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | Publiée (v1.23.0) |
 | 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | Abandonnée (le jeu bloque les messages entre addons pendant un combat de boss) |
+| 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | En cours |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -174,6 +175,38 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
 - [x] Vérifié (17 novembre 2026) : pendant un combat de boss, une clé mythique+ et le JcJ coté, le jeu bloque les
   messages entre addons et les messages du chat écrits par un addon (`C_ChatInfo.InChatMessagingLockdown()`).
   La demande ne partirait pas au moment où elle sert. Décision de l'auteur : étape écartée.
+
+## Étape 19 : revue complète du code (versions correctives 1.23.x)
+Demande de l'auteur (17 novembre 2026) : relire tout l'addon (environ 11 500 lignes, 24 fichiers) sans survoler.
+Méthode : une vérification automatique, puis une lecture ligne par ligne par lots de 800 lignes environ, tous avec
+la même grille. Chaque erreur trouvée reçoit une étape de test dans `tests/run.py`. Un lot qui corrige au moins un
+bug sort tout de suite en version corrective (1.23.1, 1.23.2...) envoyée sur GitHub ; un lot sans bug ne publie rien.
+Deux ou trois lots par session au plus.
+
+Grille de chaque lot :
+- combat : valeurs secrètes (vie, auras), actions bloquées, boutons sécurisés ;
+- valeurs vides : joueur absent, sort inconnu, réglage manquant ;
+- événements et minuteurs : rien qui tourne sans fin (seule la portée, 2 fois par seconde) ;
+- règles de l'addon : chaque réglage une seule fois, aucun cadre du jeu touché, ajout de classes possible ;
+- textes : français et anglais présents et justes, aucun tiret cadratin.
+
+- [ ] Vérification automatique de tout l'addon : fonctions appelées mais absentes, réglages absents de
+  `Z.defaults`, événements écoutés sans traitement, valeurs secrètes comparées, tirets cadratins
+- [ ] Lot 1 : Core, Log, Data
+- [ ] Lot 2 : Frames, 1re moitié
+- [ ] Lot 3 : Frames, 2e moitié
+- [ ] Lot 4 : Auras, Alerts
+- [ ] Lot 5 : Clicks
+- [ ] Lot 6 : Macros
+- [ ] Lot 7 : Buffs, Cast, Preview
+- [ ] Lot 8 : Share, Comm
+- [ ] Lot 9 : UI
+- [ ] Lot 10 : Options, 1re moitié
+- [ ] Lot 11 : Options, 2e moitié
+- [ ] Lot 12 : Placement, Perf, Bug, Minimap
+- [ ] Lot 13 : Runes, Wizard, Tutorial, Themes, Changes
+
+Les boutons sécurisés ne sont pas simulés hors jeu : ce qui touche aux clics en combat reste à confirmer en jeu.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
