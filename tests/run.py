@@ -342,6 +342,7 @@ step("macros : fenetre, glisser-deposer, reprise des anciennes", function()
   w.name:SetText("Soin du bijou") w.name:Run("OnEnterPressed")
   assert(Z:GetClicks()["alt-5"] == "@macro:Soin du bijou", "renommage par la fenetre")
   -- glisser une macro de la liste sur une case de l'onglet Clics
+  Z:SetClick("ctrl-4", "Soins")
   Z:ToggleOptions("Clics")
   local cell = Z:ClickCell("ctrl-4")
   local row
@@ -1250,6 +1251,116 @@ step("etape 6 : echelle, editeur de placement", function()
   local labels = table.concat(Z:OptionLabels(), "|")
   assert(labels:find("Échelle générale (%)", 1, true) and labels:find("Placer les éléments de la case...", 1, true))
   Z.db.scale = 100 Z:Refresh()
+end)
+
+step("etape 7 : clics et touches sur un seul ecran, nouveau sort sans clic", function()
+  local b = Z.buttons[1]
+  local saved, savedKeys = CopyTable(Z:GetClicks()), CopyTable(Z:GetHoverKeys())
+  local autoRes = Z.db.autoRes Z.db.autoRes = false
+  -- #20 combinaisons de modifications : cles valides, libelles, attributs poses sur les cases
+  assert(Z.ParseClickKey("alt-ctrl-shift-1") and Z.ParseClickKey("ctrl-shift-2") and Z.ParseClickKey("3"))
+  assert(not Z.ParseClickKey("shift-ctrl-1") and not Z.ParseClickKey("ctrl-6") and not Z.ParseClickKey("foo-1") and not Z.ParseClickKey(5))
+  assert(Z:ClickLabel("ctrl-shift-1") == "Ctrl + Maj + Clic gauche", Z:ClickLabel("ctrl-shift-1"))
+  assert(Z:KeyLabel("ALT-CTRL-SHIFT-F") == "Alt + Ctrl + Maj + F" and Z:KeyLabel("BUTTON6") == "Bouton 6" and Z:KeyLabel("SHIFT-MOUSEWHEELUP") == "Maj + Molette haut")
+  assert(Z.ValidKey("CTRL-,") and not Z.ValidKey('F" self:Hide() "') and not Z.ValidKey("A B") and not Z.ValidKey("A|B") and not Z.ValidKey(""))
+  Z:SetBinding({ kind = "click", key = "ctrl-shift-2" }, "Rénovation")
+  assert(b:GetAttribute("ctrl-shift-spell2") == "Rénovation", "combinaison absente de la case")
+  -- touches illimitees, avec modifications
+  for i = 1, 20 do Z:SetBinding({ kind = "key", key = "CTRL-SHIFT-F" .. i }, "Soins") end
+  assert(#Z:GetHoverKeys() >= 20 and b:GetAttribute("_onenter"):find('"CTRL-SHIFT-F20", self, "zh', 1, true), "touche 20 absente")
+  -- une touche deja presente garde sa place, l'ancienne valeur est remplacee
+  local n = #Z:GetHoverKeys()
+  Z:SetBinding({ kind = "key", key = "CTRL-SHIFT-F3" }, "Rénovation")
+  assert(#Z:GetHoverKeys() == n and Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-F3" }) == "Rénovation")
+  -- changer de declencheur vers un raccourci pris : les deux actions sont echangees
+  Z:SetBinding({ kind = "click", key = "ctrl-shift-2" }, "Soins rapides")
+  Z:MoveBinding({ kind = "click", key = "ctrl-shift-2" }, { kind = "key", key = "CTRL-SHIFT-F3" })
+  assert(Z:GetClicks()["ctrl-shift-2"] == "Rénovation" and Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-F3" }) == "Soins rapides", "echange")
+  -- vers une touche libre : la touche est renommee sur place
+  local place
+  for i, entry in ipairs(Z:GetHoverKeys()) do if entry.key == "CTRL-SHIFT-F3" then place = i end end
+  Z:MoveBinding({ kind = "key", key = "CTRL-SHIFT-F3" }, { kind = "key", key = "ALT-G" })
+  assert(Z:GetHoverKeys()[place].key == "ALT-G" and #Z:GetHoverKeys() == n)
+  Z:SetBinding({ kind = "key", key = "ALT-G" }, nil) assert(#Z:GetHoverKeys() == n - 1, "retrait")
+  -- la liste unique : les clics d'abord, puis les touches ; l'infobulle suit le meme ordre
+  local list = Z:Bindings()
+  assert(list[1].kind == "click" and list[#list].kind == "key")
+  local summary = Z:ClickSummary()
+  assert(#summary == #list and summary[#summary][1] == "Ctrl + Maj + F20", summary[#summary][1])
+  -- l'ecran : ajouter par la souris (Ctrl + Maj + clic du milieu), puis par une touche
+  Z:ToggleOptions("Clics")
+  local cell, row = Z:ClickCell("ctrl-shift-2")
+  assert(cell and row, "ligne du clic combine absente")
+  local page = row:GetParent():GetParent()
+  local add = page.add
+  assert(add, "bouton Ajouter")
+  NOW = NOW + 1 add:Run("OnClick", "LeftButton")
+  assert(add.capturing)
+  local shift = IsShiftKeyDown
+  IsShiftKeyDown = function() return true end CTRL = true
+  add:Run("OnMouseDown", "MiddleButton")
+  assert(not add.capturing and LyorunePicker:IsShown(), "choix du sort apres la capture")
+  LyorunePicker.Choose("Soins")
+  assert(Z:GetClicks()["ctrl-shift-3"] == "Soins" and b:GetAttribute("ctrl-shift-spell3") == "Soins")
+  NOW = NOW + 1 add:Run("OnClick", "LeftButton")
+  add:Run("OnKeyDown", "LSHIFT") assert(add.capturing, "Maj seul ne suffit pas")
+  add:Run("OnKeyDown", "Q")
+  LyorunePicker.Choose("Rénovation")
+  assert(Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-Q" }) == "Rénovation")
+  -- le relachement du clic capture ne relance pas l'attente ; Echap annule
+  add:Run("OnClick", "LeftButton") assert(not add.capturing, "attente relancee")
+  NOW = NOW + 1 add:Run("OnClick", "LeftButton") add:Run("OnKeyDown", "ESCAPE")
+  assert(not add.capturing and add.label:GetText():find("Ajouter", 1, true))
+  -- changer le declencheur d'une ligne
+  local list = page.add and Z:ClickCell("ctrl-shift-2") and select(2, Z:ClickCell("ctrl-shift-2")):GetParent()
+  assert(not Z:ClickCell("CTRL-SHIFT-Q", "key"), "liste sans defilement")
+  list:Run("OnMouseWheel", -100) -- la molette descend au bas de la liste
+  cell, row = Z:ClickCell("CTRL-SHIFT-Q", "key")
+  assert(row, "ligne de la touche")
+  NOW = NOW + 1 row.key:Run("OnClick", "LeftButton") row.key:Run("OnMouseDown", "Button7")
+  assert(Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-BUTTON7" }) == "Rénovation" and not Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-Q" }))
+  IsShiftKeyDown = shift CTRL = false
+  -- partage : combinaisons et touches au-dela de 9 passent
+  local code = Z:Export()
+  Z.db.clicks.PRIEST = {} Z.db.hoverKeys.PRIEST = {}
+  assert(Z:Import(code))
+  assert(Z.db.clicks.PRIEST["ctrl-shift-3"] == "Soins" and #Z.db.hoverKeys.PRIEST >= 20, "partage des raccourcis")
+  assert(not Z:Import("Lyorune2;h.PRIEST.1=sF%22%20x|Soins") and not Z:Import("Lyorune2;c.PRIEST.shift-ctrl-1=sSoins"), "raccourci invalide importe")
+  -- #22 nouveau sort sans clic : rien au premier passage, puis un message et une ligne en haut de l'onglet
+  local info, lines = C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo
+  local function Book(ids)
+    C_SpellBook.GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = #ids } end
+    C_SpellBook.GetSpellBookItemInfo = function(slot) return { itemType = 1, isPassive = false, spellID = ids[slot] } end
+  end
+  Z.char.knownSpells = nil Z.char.newSpells = nil
+  local printed = #PRINTED
+  Z:CheckNewSpells()
+  assert(Z.char.knownSpells["Soins rapides"] and #PRINTED == printed, "premier passage bavard")
+  Book({ 2061, 139, 17, 527, 6346, 2006 })
+  Z:QueueNewSpells()
+  assert(PRINTED[#PRINTED]:find("Gardien de peur", 1, true) and not PRINTED[#PRINTED]:find("Résurrection", 1, true), PRINTED[#PRINTED])
+  assert(#Z:NewSpells() == 1 and Z:NewSpells()[1].name == "Gardien de peur")
+  printed = #PRINTED Z:CheckNewSpells() assert(#PRINTED == printed, "signale deux fois")
+  Z:ToggleOptions() Z:ToggleOptions("Clics")
+  local banner = page.banner
+  assert(banner and banner:IsShown() and banner.text:GetText():find("Gardien de peur", 1, true), "bandeau absent")
+  -- Attribuer : la capture suivante pose directement le sort, et le bandeau disparait
+  NOW = NOW + 1 banner.assign:Run("OnClick", "LeftButton")
+  add:Run("OnKeyDown", "H")
+  assert(Z:GetBinding({ kind = "key", key = "H" }) == "Gardien de peur" and not banner:IsShown() and #Z:NewSpells() == 0)
+  -- un sort ecarte ne revient pas ; l'option coupe tout
+  Book({ 2061, 139, 17, 527, 6346, 2006, 596 })
+  Z:CheckNewSpells()
+  assert(Z:NewSpells()[1] and Z:NewSpells()[1].name == "Prière de soins", "Prière de soins")
+  Z:DismissNewSpell("Prière de soins") Z:CheckNewSpells()
+  assert(#Z:NewSpells() == 0, "sort ecarte revenu")
+  Z.db.newSpellAlert = false assert(#Z:NewSpells() == 0) Z.db.newSpellAlert = true
+  C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo = info, lines
+  local labels = table.concat(Z:OptionLabels(), "|")
+  assert(labels:find("Ajouter un clic ou une touche", 1, true) and labels:find("Signaler un nouveau sort sans clic", 1, true))
+  Z:ToggleOptions()
+  Z.db.clicks.PRIEST, Z.db.hoverKeys.PRIEST = saved, savedKeys
+  Z.db.autoRes = autoRes Z:ApplyClicks()
 end)
 
 step("etape 2 : reprise des anciens reglages", function()

@@ -125,7 +125,7 @@ SOUNDKIT = { IG_MAINMENU_OPTION_CHECKBOX_ON = 856 }
 
 COMBAT = false
 local names = { [2061] = "Soins rapides", [2060] = "Soins supérieurs", [139] = "Rénovation", [17] = "Mot de pouvoir : Bouclier",
-	[527] = "Dissipation de la magie", [552] = "Abolir maladie", [2006] = "Résurrection", [401859] = "Prière de guérison", [6346] = "Gardien de peur",
+	[527] = "Dissipation de la magie", [552] = "Abolir maladie", [2006] = "Résurrection", [401859] = "Prière de guérison", [6346] = "Gardien de peur", [596] = "Prière de soins",
 	[528] = "Guérison des maladies", [1243] = "Mot de pouvoir : Robustesse", [21562] = "Prière de robustesse", [2054] = "Soins", [2050] = "Soins inférieurs" }
 C_AddOns = { GetAddOnMetadata = function() return TOC_VERSION or "0.0.0" end }
 C_Timer = { After = function(_, f) f() end, NewTicker = function(_, f) TICK = f end }

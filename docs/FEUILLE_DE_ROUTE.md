@@ -20,7 +20,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 4 bis | 1.10.0 | Fenêtre d'options et tutoriel : 3 thèmes, runes animées | Publiée (v1.10.0) |
 | 5 | 1.11.0 | Soins sur la durée et indicateurs | Publiée (v1.11.0) |
 | 6 | 1.12.0 | Échelle, éditeur de placement | Publiée (v1.12.0) |
-| 7 | 1.13.0 | Clics et raccourcis | À faire |
+| 7 | 1.13.0 | Clics et raccourcis | Publiée (v1.13.0) |
 | 8 | 1.14.0 | Profils automatiques, cible et focalisation | À faire |
 | 9 | 1.15.0 | Mode panneau, mode grille, tri | À faire |
 | 10 | 1.16.0 | Confort | À faire |
@@ -107,8 +107,8 @@ de soin et leurs 5 habillages restent tels quels.
 - Couleurs de l'interface (#19) : passées à l'étape 4 bis.
 
 ## Étape 7 : clics et raccourcis (1.13.0)
-- [ ] Écran unique « souris / clavier », combinaisons Ctrl+Maj, touches illimitées (#20)
-- [ ] Alerte « nouveau sort de soin sans clic » (#22)
+- [x] Écran unique « souris / clavier », combinaisons Ctrl+Maj, touches illimitées (#20)
+- [x] Alerte « nouveau sort de soin sans clic » (#22)
 
 ## Étape 8 : profils automatiques, cible et focalisation (1.14.0)
 - [ ] Profils automatiques par taille de groupe et par spécialisation (#24)

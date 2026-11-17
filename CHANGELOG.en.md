@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.13.0] - 2026-11-17
+
+### Added
+
+- Clicks tab: a single list for mouse and keyboard, one shortcut per line, no limit, with every combination of Alt, Ctrl and Shift ([#20](https://github.com/BellaHealFr/Lyorune/issues/20)).
+- "Add a click or a key" button: do the combination you want, then pick the spell. Changing a line's shortcut swaps the two spells if it was already taken ([#20](https://github.com/BellaHealFr/Lyorune/issues/20)).
+- New spell without a click: a message, and the spell at the top of the Clicks tab with "Assign" (option "Report a new spell without a click") ([#22](https://github.com/BellaHealFr/Lyorune/issues/22)).
+
 ## [1.12.0] - 2026-11-17
 
 ### Added
@@ -241,6 +249,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.13.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0

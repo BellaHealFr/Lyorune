@@ -6,6 +6,14 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.13.0] - 2026-11-17
+
+### Ajouté
+
+- Onglet Clics : une seule liste pour la souris et le clavier, un raccourci par ligne, sans limite, avec toutes les combinaisons d'Alt, Ctrl et Maj ([#20](https://github.com/BellaHealFr/Lyorune/issues/20)).
+- Bouton « Ajouter un clic ou une touche » : faites la combinaison voulue, puis choisissez le sort. Changer le raccourci d'une ligne échange les deux sorts s'il était déjà pris ([#20](https://github.com/BellaHealFr/Lyorune/issues/20)).
+- Nouveau sort sans clic : un message, et le sort en haut de l'onglet Clics avec « Attribuer » (option « Signaler un nouveau sort sans clic ») ([#22](https://github.com/BellaHealFr/Lyorune/issues/22)).
+
 ## [1.12.0] - 2026-11-17
 
 ### Ajouté
@@ -241,6 +249,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.13.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0

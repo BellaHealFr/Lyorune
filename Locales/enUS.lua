@@ -129,15 +129,33 @@ Z.translations.enUS = {
 	["Clic gauche"] = "Left click", ["Clic droit"] = "Right click", ["Clic milieu"] = "Middle click",
 	["Bouton 4"] = "Button 4", ["Bouton 5"] = "Button 5", ["Seul"] = "Alone", ["Maj"] = "Shift",
 	["Cibler"] = "Target", ["Menu du joueur"] = "Player menu", ["Vider"] = "Clear",
-	["Touche"] = "Key", ["Sort"] = "Spell", ["Appuyez..."] = "Press a key...",
-	["Touches au survol"] = "Hover keys", ["Touche au survol"] = "Hover key", ["Comportement"] = "Behaviour",
+	["Touche"] = "Key", ["Sort"] = "Spell",
+	["Touches au survol"] = "Hover keys", ["Comportement"] = "Behaviour",
 	["Ou tapez le nom exact d'un sort, puis Entrée :"] = "Or type a spell's exact name, then Enter:",
-	["Clics de souris : cliquez sur une cellule pour choisir le sort ou la macro lancé sur la case d'un joueur. Vous pouvez aussi y glisser un sort du grimoire."] = "Mouse clicks: click a cell to pick the spell or macro cast on a player's frame. You can also drag a spell from your spellbook onto it.",
 	["Macro"] = "Macro", ["macro"] = "macro", ["touche"] = "key",
 	["Clics de la spécialisation %d"] = "Clicks of specialization %d",
 	["Mêmes clics dans toutes les spécialisations"] = "Same clicks in every specialization",
 	["Copier l'autre spécialisation"] = "Copy the other specialization",
 	["Remplace les clics et les touches de cette spécialisation par ceux de l'autre."] = "Replaces this specialization's clicks and keys with the other one's.",
+	["Ctrl + Maj"] = "Ctrl + Shift", ["Alt + Maj"] = "Alt + Shift", ["Alt + Ctrl"] = "Alt + Ctrl", ["Alt + Ctrl + Maj"] = "Alt + Ctrl + Shift", ["Cmd"] = "Cmd",
+	["Bouton %s"] = "Button %s", ["Molette haut"] = "Wheel up", ["Molette bas"] = "Wheel down", ["Espace"] = "Space", ["Tab"] = "Tab",
+	["Entrée"] = "Enter", ["Retour arrière"] = "Backspace", ["Suppr"] = "Delete", ["Inser"] = "Insert", ["Début"] = "Home", ["Fin"] = "End",
+	["Page haut"] = "Page up", ["Page bas"] = "Page down", ["Haut"] = "Up", ["Bas"] = "Down", ["Gauche"] = "Left", ["Droite"] = "Right",
+	["Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée."] = "One click or key per line, as many as you like, with Alt, Ctrl, Shift or any combination. The spell goes to the hovered frame.",
+	["Ajouter un clic ou une touche"] = "Add a click or a key",
+	["Cliquez ici ou appuyez sur une touche..."] = "Click here or press a key...",
+	["Cliquez, puis faites la combinaison voulue sur ce bouton : un clic (avec Alt, Ctrl, Maj...), une touche du clavier, un bouton de souris supplémentaire ou la molette. Échap : annuler."] = "Click, then do the combination you want on this button: a click (with Alt, Ctrl, Shift...), a keyboard key, an extra mouse button or the wheel. Escape: cancel.",
+	["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."] = "Change this shortcut: click, then do the new combination. If it was already taken, the two spells are swapped.",
+	["Retirer ce raccourci"] = "Remove this shortcut",
+	["Molette : %d autre(s) raccourci(s)"] = "Wheel: %d more shortcut(s)",
+	["Aucun raccourci pour l'instant : cliquez sur « Ajouter », puis faites un clic ou appuyez sur une touche."] = "No shortcut yet: click \"Add\", then click or press a key.",
+	["Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser."] = "Free left click: target. Free right click: player menu. Drag a spell from your spellbook onto a line to set it.",
+	["... et %d autre(s) : onglet Clics."] = "... and %d more: Clicks tab.",
+	["Nouveau sort sans clic :"] ="New spell without a click:", ["Attribuer"] = "Assign", ["Ne plus proposer ce sort."] = "Stop suggesting this spell.",
+	["Puis faites sur le bouton « Ajouter » le clic ou la touche qui lancera ce sort."] = "Then do, on the \"Add\" button, the click or key that will cast this spell.",
+	["Signaler un nouveau sort sans clic"] = "Report a new spell without a click",
+	["Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de cet onglet avec le bouton « Attribuer »."] = "When you learn a spell usable on an ally that has no click or key yet: a message, and the spell at the top of this tab with the \"Assign\" button.",
+	["nouveau sort sans clic : %s. Onglet Clics des options, bouton « Attribuer »."] = "new spell without a click: %s. Clicks tab of the options, \"Assign\" button.",
 	["Clics propres à chaque spécialisation"] = "Separate clicks for each specialization",
 	["Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout."] = "Each talent group has its own clicks and keys; they switch by themselves with your talents. Unticked: the same everywhere.",
 	-- Mes macros
@@ -189,7 +207,6 @@ Z.translations.enUS = {
 	["cette macro n'existe pas encore : elle sera créée dans quelques secondes."] = "this macro does not exist yet: it will be created in a few seconds.",
 	["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou décochez l'option dans l'onglet Clics."] = "no room left for a character macro: delete one in /macro, or untick the option in the Clicks tab.",
 	["%d macro(s) créée(s) pour vos barres de sorts : onglet Clics des options, ou /macro, onglet de votre personnage."] = "%d macro(s) created for your action bars: Clicks tab of the options, or /macro, your character's tab.",
-	["Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. Cliquez sur « Touche », puis appuyez."] = "A keyboard key, an extra mouse button or the wheel casts a spell on the hovered frame. Click \"Key\", then press.",
 	["Lancer le sort dès l'appui (plus rapide)"] = "Cast on key press (faster)",
 	["Le même clic relève un joueur mort"] = "The same click resurrects a dead player",
 	["Si la cible est morte, votre sort de soin est remplacé par votre résurrection."] = "If the target is dead, your heal is replaced by your resurrection spell.",
@@ -329,11 +346,11 @@ Z.translations.enUS = {
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
-			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
+			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -474,4 +491,7 @@ Z.translations.enUS = {
 	["Le texte de vie ne passe plus par-dessus la barre de mana en forme Tuile et Carré (#40)."] = "The health text no longer overlaps the mana bar in the Tile and Square shapes (#40).",
 	["Échelle générale de tous les cadres, de 50 à 200 %, suivie par le mode test (#18)."] = "Overall scale for all frames, from 50 to 200%, followed by test mode (#18).",
 	["Éditeur de placement (onglet Cadres) : sur une case d'exemple agrandie, glissez ou poussez au pixel près le nom, le texte de vie, les icônes de rôle, de marqueur et centrale, vos soins, les affaiblissements, le buff manquant et les auras privées ; chaque forme de case garde ses placements, partagés avec le code de configuration (#18)."] = "Placement editor (Frames tab): on an enlarged sample cell, drag or nudge to the exact pixel the name, health text, role, marker and centre icons, your heals, debuffs, missing buff and private auras; each cell shape keeps its placements, shared with the configuration code (#18).",
+	["Onglet Clics : une seule liste pour la souris et le clavier, un raccourci par ligne, sans limite, avec toutes les combinaisons d'Alt, Ctrl et Maj (#20)."] = "Clicks tab: a single list for mouse and keyboard, one shortcut per line, no limit, with every combination of Alt, Ctrl and Shift (#20).",
+	["Bouton « Ajouter un clic ou une touche » : faites la combinaison voulue, puis choisissez le sort. Changer le raccourci d'une ligne échange les deux sorts s'il était déjà pris (#20)."] = "\"Add a click or a key\" button: do the combination you want, then pick the spell. Changing a line's shortcut swaps the two spells if it was already taken (#20).",
+	["Nouveau sort sans clic : un message, et le sort en haut de l'onglet Clics avec « Attribuer » (option « Signaler un nouveau sort sans clic ») (#22)."] = "New spell without a click: a message, and the spell at the top of the Clicks tab with \"Assign\" (option \"Report a new spell without a click\") (#22).",
 }

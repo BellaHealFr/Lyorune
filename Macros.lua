@@ -114,7 +114,7 @@ function Z:MacroUses(macro)
 	table.sort(keys)
 	for _, key in ipairs(keys) do uses[#uses + 1] = Z:ClickLabel(key) end
 	for _, entry in ipairs(Z:GetHoverKeys()) do
-		if entry.spell == value and entry.key then uses[#uses + 1] = L["touche"] .. " " .. entry.key end
+		if entry.spell == value and entry.key then uses[#uses + 1] = L["touche"] .. " " .. Z:KeyLabel(entry.key) end
 	end
 	return uses
 end

@@ -39,11 +39,30 @@ Survolez une case hors combat : l'infobulle montre le joueur, puis la liste de v
 
 Cliquez sur une case : le sort part sur ce joueur, sans le cibler.
 
-Pour choisir vos sorts : `/lyorune`, onglet **Clics**. Cliquez sur une cellule du tableau (par exemple « Clic droit » + « Maj »), puis sur l'icône du sort voulu. Lyorune ne propose que les sorts que votre personnage connaît à son niveau.
+Pour choisir vos sorts : `/lyorune`, onglet **Clics**. Tous vos raccourcis sont sur une seule liste, un par ligne : à gauche le clic ou la touche, au milieu le sort, à droite « x » pour le retirer.
 
-Exemple pour un prêtre : clic gauche pour Soins rapides, clic droit pour Rénovation, Maj + clic droit pour le bouclier, clic milieu pour dissiper.
+**Ajouter un raccourci :**
 
-Vous pouvez aussi glisser un sort de votre grimoire directement sur une cellule.
+1. Cliquez sur « + Ajouter un clic ou une touche ».
+2. Faites sur ce même bouton la combinaison voulue : un clic (gauche, droit, milieu, boutons 4 et 5), avec ou sans Alt, Ctrl, Maj, et même plusieurs à la fois (Ctrl + Maj + clic droit). Une touche du clavier, un bouton de souris supplémentaire ou la molette marchent aussi.
+3. Choisissez le sort dans la fenêtre qui s'ouvre. Lyorune ne propose que les sorts que votre personnage connaît à son niveau.
+
+Il n'y a pas de limite : ajoutez autant de lignes que vous voulez. Quand la liste est longue, faites-la défiler avec la molette.
+
+- **Changer le sort** : cliquez sur le sort de la ligne, ou glissez-y un sort de votre grimoire.
+- **Changer le raccourci** : cliquez sur le clic ou la touche de la ligne, puis faites la nouvelle combinaison. Si elle était déjà prise, les deux sorts sont échangés : rien n'est perdu.
+- Un clic gauche ou droit sans sort garde son rôle habituel : cibler le joueur, ouvrir son menu.
+
+Exemple pour un prêtre : clic gauche pour Soins rapides, clic droit pour Rénovation, Maj + clic droit pour le bouclier, clic milieu pour dissiper, Ctrl + Maj + clic gauche pour Prière de soins.
+
+### Un nouveau sort sans clic
+
+Vous venez d'apprendre un sort utilisable sur un allié, et aucun de vos clics ni de vos touches ne le lance ? Lyorune vous le dit une fois dans la discussion, et le sort apparaît en haut de l'onglet **Clics** :
+
+- « Attribuer » : faites ensuite sur le bouton « Ajouter » le clic ou la touche voulu, le sort y est posé directement ;
+- « x » : Lyorune ne vous le propose plus.
+
+Votre résurrection et vos buffs de groupe ne sont jamais signalés. Pour ne plus rien voir, décochez « Signaler un nouveau sort sans clic ».
 
 Vos clics sont enregistrés par classe : chaque personnage garde les siens.
 
@@ -96,8 +115,8 @@ Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, e
 
 **Poser la macro sur un clic :**
 
-- glissez-la de la liste sur une cellule de l'onglet **Clics** (ou sur le « Sort » d'une touche au survol) ;
-- ou cliquez sur la cellule : vos macros sont listées sous vos sorts, à la ligne « Mes macros ».
+- glissez-la de la liste sur le sort d'une ligne de l'onglet **Clics** ;
+- ou cliquez sur ce sort : vos macros sont listées sous vos sorts, à la ligne « Mes macros ».
 
 Vos macros restent sur votre ordinateur : elles ne sont jamais envoyées ni reçues dans une configuration partagée, et « Tout réinitialiser » ne les efface pas. Quand un clic porte une macro, la résurrection automatique ne s'y ajoute pas : utilisez la case « Si le joueur est mort » de l'assistant.
 
@@ -114,12 +133,13 @@ La macro soigne le joueur sous votre souris (une case ou un personnage), sinon v
 
 ## 3. Touches au survol
 
-Vous préférez le clavier, ou votre souris a beaucoup de boutons ? Dans l'onglet **Clics**, section « Touches au survol » :
+Vous préférez le clavier, ou votre souris a beaucoup de boutons ? Les touches se règlent sur la même liste que les clics, onglet **Clics** :
 
-1. Cliquez sur « Touche », puis appuyez sur la touche voulue : une lettre, un bouton de souris supplémentaire, la molette, avec ou sans Maj, Ctrl, Alt.
-2. Cliquez sur « Sort » et choisissez le sort.
+1. Cliquez sur « + Ajouter un clic ou une touche ».
+2. Appuyez sur la touche voulue : une lettre, un chiffre, un bouton de souris à partir du 6e, la molette, avec ou sans Maj, Ctrl, Alt (et leurs combinaisons). Échap annule.
+3. Choisissez le sort.
 
-Passez ensuite la souris sur une case et appuyez sur la touche : le sort part sur ce joueur. La touche ne change de rôle que pendant le survol d'une case.
+Passez ensuite la souris sur une case et appuyez sur la touche : le sort part sur ce joueur. La touche ne change de rôle que pendant le survol d'une case. Le nombre de touches n'est pas limité.
 
 ## 4. Relever un joueur
 

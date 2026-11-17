@@ -40,11 +40,30 @@ Hover a frame out of combat: the tooltip shows the player, then the list of your
 
 Click a frame: the spell is cast on that player, without targeting them.
 
-To choose your spells: `/lyorune`, **Clicks** tab. Click a cell of the table (for example "Right click" + "Shift"), then the icon of the spell you want. Lyorune only offers spells your character knows at its level.
+To choose your spells: `/lyorune`, **Clicks** tab. All your shortcuts are on a single list, one per line: the click or key on the left, the spell in the middle, "x" on the right to remove it.
 
-Example for a priest: left click for Flash Heal, right click for Renew, Shift + right click for the shield, middle click to dispel.
+**Adding a shortcut:**
 
-You can also drag a spell from your spellbook straight onto a cell.
+1. Click "+ Add a click or a key".
+2. On that same button, do the combination you want: a click (left, right, middle, buttons 4 and 5), with or without Alt, Ctrl, Shift, even several at once (Ctrl + Shift + right click). A keyboard key, an extra mouse button or the wheel work too.
+3. Pick the spell in the window that opens. Lyorune only offers spells your character knows at its level.
+
+There is no limit: add as many lines as you like. When the list is long, scroll it with the mouse wheel.
+
+- **Changing the spell**: click the spell of the line, or drag a spell from your spellbook onto it.
+- **Changing the shortcut**: click the click or key of the line, then do the new combination. If it was already taken, the two spells are swapped: nothing is lost.
+- A left or right click without a spell keeps its usual role: target the player, open their menu.
+
+Example for a priest: left click for Flash Heal, right click for Renew, Shift + right click for the shield, middle click to dispel, Ctrl + Shift + left click for Prayer of Healing.
+
+### A new spell without a click
+
+You just learned a spell usable on an ally, and none of your clicks or keys casts it? Lyorune tells you once in the chat, and the spell shows up at the top of the **Clicks** tab:
+
+- "Assign": then do, on the "Add" button, the click or key you want, and the spell is put on it straight away;
+- "x": Lyorune stops suggesting it.
+
+Your resurrection and your group buffs are never reported. To see nothing at all, untick "Report a new spell without a click".
 
 Your clicks are saved per class: each character keeps its own.
 
@@ -97,8 +116,8 @@ Just below, "Sent to the game" shows the exact text that goes out on the click, 
 
 **Putting the macro on a click:**
 
-- drag it from the list onto a cell of the **Clicks** tab (or onto the "Spell" of a hover key);
-- or click the cell: your macros are listed below your spells, in the "My macros" row.
+- drag it from the list onto the spell of a line in the **Clicks** tab;
+- or click that spell: your macros are listed below your spells, in the "My macros" row.
 
 Your macros stay on your computer: they are never sent or received in a shared configuration, and "Reset everything" does not erase them. When a click holds a macro, automatic resurrection is not added to it: use the "If the player is dead: resurrect them" box of the wizard.
 
@@ -115,12 +134,13 @@ The macro heals the player under your mouse (a frame or a character), otherwise 
 
 ## 3. Hover keys
 
-Prefer the keyboard, or does your mouse have many buttons? In the **Clicks** tab, "Hover keys" section:
+Prefer the keyboard, or does your mouse have many buttons? Keys are set on the same list as clicks, **Clicks** tab:
 
-1. Click "Key", then press the key you want: a letter, an extra mouse button, the wheel, with or without Shift, Ctrl, Alt.
-2. Click "Spell" and choose the spell.
+1. Click "+ Add a click or a key".
+2. Press the key you want: a letter, a number, a mouse button from the 6th on, the wheel, with or without Shift, Ctrl, Alt (and their combinations). Escape cancels.
+3. Pick the spell.
 
-Then hover a frame and press the key: the spell is cast on that player. The key only changes role while you hover a frame.
+Then hover a frame and press the key: the spell is cast on that player. The key only changes role while you hover a frame. The number of keys is not limited.
 
 ## 4. Resurrecting a player
 

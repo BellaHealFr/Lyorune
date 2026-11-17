@@ -16,6 +16,7 @@ local _, Z = ...
 
 local PREFIX = "Lyorune2"
 local LISTS = { extraTracked = true, ignoredNames = true, importantNames = true }
+local MAX_KEYS = 100 -- touches au survol reçues par spécialisation : sans limite dans les options, bornées à l'import
 
 local function Encode(text)
 	return (tostring(text):gsub("[^%w]", function(c) return ("%%%02X"):format(c:byte()) end))
@@ -119,19 +120,20 @@ function Z:Import(code)
 		if key then
 			raw = Decode(raw)
 			local class, click = key:match("^c%.(%u+%d?)%.(.+)$") -- PRIEST, ou PRIEST2 : seconde spécialisation
-			local hoverClass, index = key:match("^h%.(%u+%d?)%.(%d)$")
+			local hoverClass, index = key:match("^h%.(%u+%d?)%.(%d+)$")
 			local list = key:match("^l%.(%a+)$")
 			local shape, element = key:match("^p%.(%u+)%.(%a+)$")
 			if class then
 				click = Decode(click)
-				if kind == "s" and click:match("^%a*%-?[1-5]$") and SafeSpell(raw) then
+				if kind == "s" and Z.ParseClickKey(click) and SafeSpell(raw) then
 					clicks[class] = clicks[class] or {}
 					clicks[class][click] = raw
 					count = count + 1
 				end
 			elseif hoverClass then
-				local hoverKey, spell = raw:match("^([%w%-]+)|(.+)$")
-				if kind == "s" and hoverKey and SafeSpell(spell) then
+				local hoverKey, spell = raw:match("^([^|]+)|(.+)$")
+				local taken = hovers[hoverClass] or {}
+				if kind == "s" and Z.ValidKey(hoverKey) and SafeSpell(spell) and #taken < MAX_KEYS then
 					hovers[hoverClass] = hovers[hoverClass] or {}
 					table.insert(hovers[hoverClass], { key = hoverKey, spell = spell })
 					count = count + 1

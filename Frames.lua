@@ -376,7 +376,14 @@ local function OnEnter(b)
 	if clicks then
 		GameTooltip:AddLine(" ")
 		GameTooltip:AddLine(L["Mes clics"], UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
-		for _, line in ipairs(clicks) do GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1) end
+		local TOOLTIP_LINES = 16 -- les raccourcis ne sont pas limités, mais l'infobulle reste courte
+		for i, line in ipairs(clicks) do
+			if i > TOOLTIP_LINES then
+				GameTooltip:AddLine(L["... et %d autre(s) : onglet Clics."]:format(#clicks - TOOLTIP_LINES), 0.6, 0.6, 0.65)
+				break
+			end
+			GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1)
+		end
 	end
 	GameTooltip:Show()
 end

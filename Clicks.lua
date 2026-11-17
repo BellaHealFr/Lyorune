@@ -1,13 +1,17 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - Clicks.lua : lancer un sort sur un joueur depuis sa case, à la souris ou au clavier.
 --
--- CLICS DE SOURIS. Un clic est identifié par une clé : touche de modification + numéro du bouton.
+-- CLICS DE SOURIS. Un clic est identifié par une clé : touches de modification + numéro du bouton.
 --   "1" clic gauche, "2" clic droit, "3" clic milieu, "4" et "5" boutons latéraux
---   "shift-1" Maj + clic gauche, "ctrl-2" Ctrl + clic droit, "alt-3" Alt + clic milieu...
+--   "shift-1" Maj + clic gauche, "ctrl-shift-2" Ctrl + Maj + clic droit, "alt-ctrl-shift-3"...
+--   Les modifications s'écrivent toujours dans l'ordre du jeu : alt, ctrl, shift.
 --   La valeur est un nom de sort, "@target" (cibler), "@menu" (menu du joueur) ou "@macro:Nom" (une macro
 --   de ma bibliothèque, voir Macros.lua).
--- TOUCHES AU SURVOL. Une touche du clavier lance un sort sur la case que survole la souris.
---   Elle ne remplace la touche habituelle que pendant le survol d'une case.
+-- TOUCHES AU SURVOL. Une touche du clavier (avec ou sans Alt, Ctrl, Maj), un bouton de souris à partir du 6e ou
+--   la molette lance un sort sur la case que survole la souris. Elle ne remplace la touche habituelle que
+--   pendant le survol d'une case. Leur nombre n'est pas limité.
+-- UN SEUL ÉCRAN. L'onglet Clics montre clics et touches dans une même liste (Z:Bindings) : un raccourci,
+--   « déclencheur », est { kind = "click", key = "ctrl-1" } ou { kind = "key", key = "CTRL-F" }.
 -- SPÉCIALISATIONS. Sur WoW Forever, un personnage a deux groupes de talents. Avec l'option « clicksPerSpec »,
 --   chacun a ses clics et ses touches : clicks.PRIEST pour le premier, clicks.PRIEST2 pour le second (copie du
 --   premier au premier passage). Changer de talents change les clics tout seul.
@@ -22,14 +26,32 @@ Z.clickButtons = {
 	{ "4", "Bouton 4" },
 	{ "5", "Bouton 5" },
 }
+-- Toutes les combinaisons possibles, dans l'ordre où le jeu les écrit (et où la liste les range)
 Z.clickModifiers = {
 	{ "", "Seul" },
 	{ "shift-", "Maj" },
 	{ "ctrl-", "Ctrl" },
 	{ "alt-", "Alt" },
+	{ "ctrl-shift-", "Ctrl + Maj" },
+	{ "alt-shift-", "Alt + Maj" },
+	{ "alt-ctrl-", "Alt + Ctrl" },
+	{ "alt-ctrl-shift-", "Alt + Ctrl + Maj" },
 }
-Z.MAX_HOVER_KEYS = 8
+local modifierRank = {}
+for rank, entry in ipairs(Z.clickModifiers) do modifierRank[entry[1]] = rank end
 
+-- Une clé de clic valable : "1" à "5", précédé d'une combinaison connue. Renvoie la combinaison et le bouton.
+function Z.ParseClickKey(key)
+	if type(key) ~= "string" then return nil end
+	local modifier, button = key:match("^([%a%-]*)([1-5])$")
+	if modifier and modifierRank[modifier] then return modifier, button end
+end
+
+-- Une touche valable pour le jeu : "F", "CTRL-SHIFT-F", "BUTTON6", "MOUSEWHEELUP", "ALT-," ... Jamais de
+-- guillemet, d'antislash, de barre ni d'espace : la touche est écrite dans du code sécurisé et dans les codes de partage.
+function Z.ValidKey(key)
+	return type(key) == "string" and #key > 0 and #key <= 40 and key:match("^[%w%p]+$") ~= nil and not key:find('["\\|]')
+end
 -- Groupe de talents actif (1 ou 2). Le jeu sans double spécialisation répond toujours 1.
 function Z:SpecGroup()
 	local info = C_SpecializationInfo
@@ -74,18 +96,113 @@ function Z:CopyOtherSpec()
 	Z:ApplyClicks()
 end
 
--- Texte lisible d'une clé : "shift-1" -> "Maj + Clic gauche"
+-- Nom lisible d'une touche de modification, dans les clics ("shift") comme dans les touches ("SHIFT")
+local MODIFIER_NAMES = { alt = "Alt", ctrl = "Ctrl", shift = "Maj", meta = "Cmd" }
+
+-- Texte lisible d'une clé : "ctrl-shift-1" -> "Ctrl + Maj + Clic gauche"
 function Z:ClickLabel(key)
 	local L = Z.L
-	local modifier, button = key:match("^(.-)(%d)$")
-	local label
-	for _, entry in ipairs(Z.clickButtons) do
-		if entry[1] == button then label = L[entry[2]] end
+	local modifier, button = Z.ParseClickKey(key)
+	if not modifier then return tostring(key) end
+	local parts = {}
+	for name in modifier:gmatch("(%a+)%-") do parts[#parts + 1] = L[MODIFIER_NAMES[name]] end
+	parts[#parts + 1] = L[Z.clickButtons[tonumber(button)][2]]
+	return table.concat(parts, " + ")
+end
+
+-- Noms lisibles des touches spéciales ; les autres restent telles que le jeu les nomme ("F", "NUMPAD1", ",")
+local KEY_NAMES = {
+	MOUSEWHEELUP = "Molette haut", MOUSEWHEELDOWN = "Molette bas", SPACE = "Espace", TAB = "Tab",
+	ENTER = "Entrée", BACKSPACE = "Retour arrière", DELETE = "Suppr", INSERT = "Inser", HOME = "Début", END = "Fin",
+	PAGEUP = "Page haut", PAGEDOWN = "Page bas", UP = "Haut", DOWN = "Bas", LEFT = "Gauche", RIGHT = "Droite",
+}
+
+-- Texte lisible d'une touche : "CTRL-SHIFT-F" -> "Ctrl + Maj + F", "BUTTON6" -> "Bouton 6"
+function Z:KeyLabel(key)
+	local L = Z.L
+	if not Z.ValidKey(key) then return tostring(key) end
+	local parts, rest = {}, key
+	while true do
+		local name, after = rest:match("^(%u+)%-(.+)$")
+		if not (name and MODIFIER_NAMES[name:lower()]) then break end
+		parts[#parts + 1] = L[MODIFIER_NAMES[name:lower()]]
+		rest = after
 	end
-	for _, entry in ipairs(Z.clickModifiers) do
-		if entry[1] == modifier and modifier ~= "" then label = L[entry[2]] .. " + " .. label end
+	local number = rest:match("^BUTTON(%d+)$")
+	parts[#parts + 1] = number and L["Bouton %s"]:format(number) or (KEY_NAMES[rest] and L[KEY_NAMES[rest]]) or rest
+	return table.concat(parts, " + ")
+end
+
+-- Texte lisible d'un déclencheur, clic ou touche
+function Z:TriggerLabel(trigger)
+	if trigger.kind == "click" then return Z:ClickLabel(trigger.key) end
+	return Z:KeyLabel(trigger.key)
+end
+
+-- Tous mes raccourcis de la spécialisation active, dans l'ordre de l'onglet Clics : les clics (par bouton, puis
+-- par combinaison), puis les touches dans l'ordre où je les ai ajoutées.
+-- { { kind = "click", key = "shift-1", value = "Rénovation" }, { kind = "key", key = "F", value = "...", index = 1 } }
+function Z:Bindings()
+	local list = {}
+	local clicks = Z:GetClicks()
+	for _, button in ipairs(Z.clickButtons) do
+		for _, modifier in ipairs(Z.clickModifiers) do
+			local key = modifier[1] .. button[1]
+			local value = clicks[key]
+			if value and value ~= "" then list[#list + 1] = { kind = "click", key = key, value = value } end
+		end
 	end
-	return label
+	for index, entry in ipairs(Z:GetHoverKeys()) do
+		if entry.key then list[#list + 1] = { kind = "key", key = entry.key, value = entry.spell or "", index = index } end
+	end
+	return list
+end
+
+-- Ce que lance un déclencheur (nil s'il est libre)
+function Z:GetBinding(trigger)
+	if trigger.kind == "click" then return Z:GetClicks()[trigger.key] end
+	for _, entry in ipairs(Z:GetHoverKeys()) do
+		if entry.key == trigger.key then return entry.spell end
+	end
+end
+
+-- Pose « value » sur un déclencheur (nil ou "" : retire le raccourci). Une touche déjà présente garde sa place.
+function Z:SetBinding(trigger, value, noApply)
+	if value == "" then value = nil end
+	if trigger.kind == "click" then
+		if not Z.ParseClickKey(trigger.key) then return end
+		Z:GetClicks()[trigger.key] = value
+	else
+		if not Z.ValidKey(trigger.key) then return end
+		local keys = Z:GetHoverKeys()
+		for index = #keys, 1, -1 do
+			if keys[index].key == trigger.key then
+				if value then keys[index].spell = value else table.remove(keys, index) end
+				if not noApply then Z:ApplyClicks() end
+				return
+			end
+		end
+		if value then keys[#keys + 1] = { key = trigger.key, spell = value } end
+	end
+	if not noApply then Z:ApplyClicks() end
+end
+
+-- Change le déclencheur d'un raccourci. Si le nouveau était déjà pris, les deux actions sont échangées :
+-- rien n'est perdu.
+function Z:MoveBinding(from, to)
+	if from.kind == to.kind and from.key == to.key then return end
+	local moving, other = Z:GetBinding(from), Z:GetBinding(to)
+	if to.kind == "key" and not Z.ValidKey(to.key) or to.kind == "click" and not Z.ParseClickKey(to.key) then return end
+	-- une touche garde sa place dans la liste : on la renomme au lieu de la retirer puis de l'ajouter
+	if from.kind == "key" and to.kind == "key" and not other then
+		for _, entry in ipairs(Z:GetHoverKeys()) do
+			if entry.key == from.key then entry.key = to.key end
+		end
+		return Z:ApplyClicks()
+	end
+	Z:SetBinding(from, other, true)
+	Z:SetBinding(to, moving, true)
+	Z:ApplyClicks()
 end
 
 -- Texte lisible de ce que fait un clic : sort, cibler, menu, ou macro (en jaune, en rouge si elle n'existe plus)
@@ -105,20 +222,8 @@ end
 -- Sert à l'infobulle d'une case.
 function Z:ClickSummary()
 	local list = {}
-	local clicks = Z:GetClicks()
-	for _, modifier in ipairs(Z.clickModifiers) do
-		for _, button in ipairs(Z.clickButtons) do
-			local key = modifier[1] .. button[1]
-			local value = clicks[key]
-			if value and value ~= "" then list[#list + 1] = { Z:ClickLabel(key), Z:ActionText(value) } end
-		end
-	end
-	local keys = Z:GetHoverKeys()
-	for i = 1, Z.MAX_HOVER_KEYS do
-		local entry = keys[i]
-		if entry and entry.key and entry.spell and entry.spell ~= "" then
-			list[#list + 1] = { entry.key, Z:ActionText(entry.spell) }
-		end
+	for _, binding in ipairs(Z:Bindings()) do
+		if binding.value ~= "" then list[#list + 1] = { Z:TriggerLabel(binding), Z:ActionText(binding.value) } end
 	end
 	return list
 end
@@ -201,14 +306,14 @@ function Z:ApplyClicks()
 	if not Z.db.externalClicks then
 		-- Clics de souris
 		for key, value in pairs(Z:GetClicks()) do
-			local modifier, button = key:match("^(.-)(%d)$")
+			local modifier, button = Z.ParseClickKey(key)
 			if modifier and value and value ~= "" then
 				AddAction(attributes, modifier, button, value, resPrefix)
 			end
 		end
 		-- Touches au survol : à l'entrée de la souris, la touche « clique » un bouton virtuel de la case
 		for i, entry in ipairs(Z:GetHoverKeys()) do
-			local key = entry.key and entry.key:match("^[%w%-]+$") -- jamais autre chose que lettres, chiffres, tirets
+			local key = Z.ValidKey(entry.key) and entry.key -- jamais de guillemet ni d'antislash dans le code sécurisé
 			if key and entry.spell and entry.spell ~= "" then
 				AddAction(attributes, "*", "-zh" .. i, entry.spell, resPrefix)
 				onEnter = onEnter .. (' self:SetBindingClick(true, "%s", self, "zh%d")'):format(key, i)
@@ -240,6 +345,7 @@ function Z:ApplyClicks()
 		h:SetAttribute("_initialAttribute-_onenter", onEnter)
 	end
 	Z:SyncBarMacros()
+	if Z.RefreshClicks then Z.RefreshClicks() end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -443,4 +549,98 @@ function Z:KnownSpells()
 	end
 	table.sort(spells, function(a, b) return a.name < b.name end)
 	return spells
+end
+
+----------------------------------------------------------------------------------------------------
+-- NOUVEAU SORT SANS CLIC (option « newSpellAlert »). Quand le grimoire gagne un sort utilisable sur un allié
+-- et qu'aucun de mes clics ni de mes touches ne le lance, Lyorune le signale une fois dans le chat et le garde
+-- en haut de l'onglet Clics (bouton « Attribuer »), jusqu'à ce qu'il ait un raccourci ou que je l'écarte.
+-- Lyorune retient les sorts déjà vus par personnage (LyoruneCharDB.knownSpells) : au tout premier passage, il
+-- les note sans rien dire. Seules les classes qui ont des clics proposés (Data.lua) sont concernées.
+----------------------------------------------------------------------------------------------------
+-- Vrai si l'un de mes raccourcis (spécialisation active) lance ce sort, seul ou dans une macro
+function Z:SpellIsBound(name)
+	for _, binding in ipairs(Z:Bindings()) do
+		local value = binding.value
+		if value == name then return true end
+		local ref = Z.MacroRef(value)
+		local macro = ref and Z:FindMacro(ref)
+		local body = macro and macro.body or (Z.IsMacro(value) and value)
+		if body and body:find(name, 1, true) then return true end
+	end
+	return false
+end
+
+-- Sorts que l'alerte ne propose jamais : la résurrection (déjà sur le clic de soin) et les buffs de groupe
+local function Excluded()
+	local skip = {}
+	for _, id in pairs(Z.classRes[Z.class] or {}) do
+		local name = Z.SpellName(id)
+		if name then skip[name] = true end
+	end
+	for _, pair in ipairs(Z.raidBuffs[Z.class] or {}) do
+		for _, id in ipairs(pair) do
+			local name = Z.SpellName(id)
+			if name then skip[name] = true end
+		end
+	end
+	return skip
+end
+
+-- Mes nouveaux sorts encore sans raccourci : { { name = "...", icon = ... }, ... } (les plus anciens d'abord)
+function Z:NewSpells()
+	local char = Z.char
+	if not (char and char.newSpells and Z.db.newSpellAlert) then return {} end
+	local list, known = {}, {}
+	for _, spell in ipairs(Z:KnownSpells()) do known[spell.name] = spell end
+	for index = #char.newSpells, 1, -1 do -- un sort oublié ou attribué depuis quitte la liste
+		local name = char.newSpells[index]
+		if not known[name] or Z:SpellIsBound(name) then table.remove(char.newSpells, index) end
+	end
+	for _, name in ipairs(char.newSpells) do list[#list + 1] = known[name] end
+	return list
+end
+
+-- Écarte un sort de la liste sans lui donner de raccourci
+function Z:DismissNewSpell(name)
+	local list = Z.char and Z.char.newSpells or {}
+	for index = #list, 1, -1 do
+		if list[index] == name then table.remove(list, index) end
+	end
+	if Z.RefreshClicks then Z.RefreshClicks() end
+end
+
+function Z:CheckNewSpells()
+	local char = Z.char
+	if not char or not Z.clickDefaults[Z.class] then return end
+	local spells = Z:KnownSpells()
+	if #spells == 0 then return end -- grimoire pas encore chargé
+	local first = char.knownSpells == nil
+	char.knownSpells = char.knownSpells or {}
+	char.newSpells = char.newSpells or {}
+	local skip, found = Excluded(), {}
+	for _, spell in ipairs(spells) do
+		if not char.knownSpells[spell.name] then
+			char.knownSpells[spell.name] = true
+			if not first and not skip[spell.name] and not Z:SpellIsBound(spell.name) then
+				char.newSpells[#char.newSpells + 1] = spell.name
+				found[#found + 1] = spell.name
+			end
+		end
+	end
+	if #found > 0 and Z.db.newSpellAlert then
+		Z:Print(Z.L["nouveau sort sans clic : %s. Onglet Clics des options, bouton « Attribuer »."]:format(table.concat(found, ", ")))
+	end
+	if #found > 0 and Z.RefreshClicks then Z.RefreshClicks() end
+end
+
+-- Le grimoire change souvent d'un coup (montée de niveau, talents) : on attend qu'il soit calme
+local checkPending
+function Z:QueueNewSpells()
+	if checkPending then return end
+	checkPending = true
+	C_Timer.After(2, function()
+		checkPending = false
+		Z:CheckNewSpells()
+	end)
 end

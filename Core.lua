@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.12.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.13.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -88,6 +88,7 @@ Z.defaults = {
 
 	-- Clics
 	castOnDown = true,         -- lancer le sort dès l'appui
+	newSpellAlert = true,      -- signaler un sort appris qui n'a encore aucun clic ni aucune touche
 	actionBarMacros = false,   -- créer une macro du jeu par sort de mes clics, pour les barres de sorts (à la demande)
 	autoRes = true,            -- le même clic relève un joueur mort
 	externalClicks = false,    -- laisser Clique ou le clic-soin du jeu gérer les cases
@@ -321,6 +322,7 @@ local function SpellsChanged()
 	if not Z.header then return end
 	Z:BuildData()
 	Z:ApplyClicks()
+	Z:QueueNewSpells()
 end
 for _, event in ipairs({ "SPELLS_CHANGED", "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_SPECIALIZATION_CHANGED", "PLAYER_TALENT_UPDATE" }) do
 	Z:On(event, SpellsChanged)

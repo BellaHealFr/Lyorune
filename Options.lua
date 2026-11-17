@@ -537,32 +537,46 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Onglet Clics
 ----------------------------------------------------------------------------------------------------
-local cells, hoverRows, barIcons = {}, {}, {}
+local rows, barIcons = {}, {}
+local VISIBLE_ROWS = 13     -- lignes de raccourcis visibles ; la molette fait défiler les autres
+local scroll = 0
 
 local function SpellText(value)
 	return Z:ActionText(value)
 end
 
 local RefreshClicks -- définie plus bas
-local specLabel, specCopy
-
-local function CellText(key)
-	local value = Z:GetClicks()[key]
-	if value and value ~= "" then return SpellText(value) end
-	if key:match("^1$") or key:match("%-1$") then return "|cff8a8f99" .. L["Cibler"] .. "|r" end
-	if key:match("2$") then return "|cff8a8f99" .. L["Menu du joueur"] .. "|r" end
-	return "|cff555a63-|r"
-end
+local specLabel, specCopy, banner, listTop, more, empty
 
 function RefreshClicks()
-	for key, cell in pairs(cells) do cell.label:SetText(CellText(key)) end
-	local keys = Z:GetHoverKeys()
-	for i, row in ipairs(hoverRows) do
-		local entry = keys[i]
-		row.key.label:SetText(entry and entry.key or "|cff555a63" .. L["Touche"] .. "|r")
-		row.spell.label:SetText(entry and entry.spell ~= "" and SpellText(entry.spell) or "|cff555a63" .. L["Sort"] .. "|r")
-		row.clear:SetShown(entry ~= nil)
-		row:SetShown(i <= #keys + 1) -- une seule ligne vide à la fois
+	-- Nouveau sort sans clic : le plus ancien en haut de la liste
+	if banner then
+		local spell = Z:NewSpells()[1]
+		banner.spell = spell
+		banner:SetShown(spell ~= nil)
+		if spell then
+			banner.icon:SetTexture(spell.icon)
+			banner.text:SetText(L["Nouveau sort sans clic :"] .. " |cffffffff" .. spell.name .. "|r")
+		end
+		listTop:ClearAllPoints()
+		listTop:SetPoint("TOPLEFT", 0, spell and -104 or -74)
+	end
+	-- Une ligne par clic ou par touche
+	local bindings = Z:Bindings()
+	scroll = math.max(0, math.min(scroll, #bindings - VISIBLE_ROWS))
+	for i, row in ipairs(rows) do
+		local binding = bindings[i + scroll]
+		row.binding = binding
+		row:SetShown(binding ~= nil)
+		if binding then
+			row.key.label:SetText(Z:TriggerLabel(binding))
+			row.spell.label:SetText(binding.value ~= "" and SpellText(binding.value) or "|cff555a63" .. L["Sort"] .. "|r")
+		end
+	end
+	if more then
+		local hidden = math.max(0, #bindings - VISIBLE_ROWS - scroll)
+		more:SetText((scroll + hidden > 0) and L["Molette : %d autre(s) raccourci(s)"]:format(scroll + hidden) or "")
+		empty:SetShown(#bindings == 0)
 	end
 	-- Macros pour les barres de sorts : une icône par macro tenue à jour par Lyorune
 	local macros = Z.db.actionBarMacros and Z:BarMacros() or {}
@@ -579,7 +593,10 @@ function RefreshClicks()
 		specCopy:SetShown(perSpec)
 	end
 end
-Z.RefreshClicks = function() if RefreshClicks then RefreshClicks() end end
+-- Appelé aussi par ApplyClicks : la liste suit les changements faits ailleurs (macros, partage), si elle est visible
+Z.RefreshClicks = function()
+	if listTop and listTop:IsVisible() then RefreshClicks() end
+end
 
 -- Prend une macro de Lyorune « en main », pour la déposer dans une barre de sorts
 local function PickupBarMacro(icon)
@@ -757,147 +774,203 @@ local function Droppable(button, setValue)
 	end)
 end
 
--- Attend la prochaine touche (clavier, bouton de souris supplémentaire ou molette) et la renvoie
+-- Attend le prochain raccourci, à la souris ou au clavier, et le renvoie à onTrigger({ kind, key }) :
+--   un bouton de souris de 1 à 5 sur ce bouton-ci   -> un clic   ("ctrl-shift-1")
+--   un bouton à partir du 6e, la molette, une touche -> une touche au survol ("CTRL-SHIFT-F", "BUTTON6")
+-- Alt, Ctrl et Maj seuls ne font qu'attendre la suite ; Échap annule.
 local MODIFIER_KEYS = { LSHIFT = true, RSHIFT = true, LCTRL = true, RCTRL = true, LALT = true, RALT = true, LMETA = true, RMETA = true }
+local MOUSE_CLICKS = { LeftButton = "1", RightButton = "2", MiddleButton = "3", Button4 = "4", Button5 = "5" }
 
-local function CaptureKey(button, onKey)
-	local function Finish(key)
+local function CaptureTrigger(button, onTrigger)
+	local function Finish(trigger)
+		button.capturing = nil
+		button.ignoreUntil = GetTime() + 0.3 -- le relâchement du clic capturé ne relance pas l'attente
 		button:EnableKeyboard(false)
 		button:EnableMouseWheel(false)
 		button:SetScript("OnKeyDown", nil)
 		button:SetScript("OnMouseWheel", nil)
 		button:SetScript("OnMouseDown", nil)
-		if key then
-			local prefix = (IsAltKeyDown() and "ALT-" or "") .. (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "")
-			onKey(prefix .. key)
-		end
+		if button.idle then button.label:SetText(button.idle) end
 		RefreshClicks()
+		if trigger then onTrigger(trigger) end
 	end
-	button.label:SetText("|cff" .. UI.Hex("accent") .. L["Appuyez..."] .. "|r")
+	local function Upper()
+		return (IsAltKeyDown() and "ALT-" or "") .. (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "")
+	end
+	button.capturing = true
+	button.label:SetText("|cff" .. UI.Hex("accent") .. L["Cliquez ici ou appuyez sur une touche..."] .. "|r")
 	button:EnableKeyboard(true)
 	button:EnableMouseWheel(true)
 	button:SetScript("OnKeyDown", function(_, key)
 		if MODIFIER_KEYS[key] then return end
-		Finish(key ~= "ESCAPE" and key or nil)
+		if key == "ESCAPE" then return Finish(nil) end
+		local full = Upper() .. key
+		Finish(Z.ValidKey(full) and { kind = "key", key = full } or nil)
 	end)
-	button:SetScript("OnMouseWheel", function(_, delta) Finish(delta > 0 and "MOUSEWHEELUP" or "MOUSEWHEELDOWN") end)
+	button:SetScript("OnMouseWheel", function(_, delta)
+		Finish({ kind = "key", key = Upper() .. (delta > 0 and "MOUSEWHEELUP" or "MOUSEWHEELDOWN") })
+	end)
 	button:SetScript("OnMouseDown", function(_, mouse)
-		local number = mouse:match("^Button(%d+)$") -- boutons supplémentaires des souris MMO
-		if mouse == "MiddleButton" then Finish("BUTTON3") elseif number then Finish("BUTTON" .. number) end
+		local click = MOUSE_CLICKS[mouse]
+		if click then return Finish({ kind = "click", key = Upper():lower() .. click }) end
+		local number = mouse and mouse:match("^Button(%d+)$") -- boutons supplémentaires des souris MMO
+		if number then Finish({ kind = "key", key = Upper() .. "BUTTON" .. number }) end
 	end)
 end
 
+-- Ouvre la fenêtre de choix pour un raccourci ; « value » est posé directement s'il est donné
+local function ChooseAction(trigger, value)
+	if value then
+		Z:SetBinding(trigger, value)
+		return RefreshClicks()
+	end
+	OpenPicker(Z:TriggerLabel(trigger), function(chosen) Z:SetBinding(trigger, chosen) end, Z:GetBinding(trigger))
+end
+
+local function Trigger(row)
+	return { kind = row.binding.kind, key = row.binding.key }
+end
+
 local function BuildClicks(page)
-	Note(page, "Clics de souris : cliquez sur une cellule pour choisir le sort ou la macro lancé sur la case d'un joueur. Vous pouvez aussi y glisser un sort du grimoire.", 0, 0, 420)
+	Note(page, "Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée.", 0, 0, COLUMN)
 
 	-- Spécialisation dont on voit les clics, et copie depuis l'autre
+	local x = COLUMN + 32
 	specLabel = UI.Text(page, 11)
-	specLabel:SetPoint("TOPRIGHT", 0, 0)
+	specLabel:SetPoint("TOPLEFT", x, 0)
 	UI.Paint(specLabel, "accent")
 	specCopy = UI.Button(page, L["Copier l'autre spécialisation"], 200, 18, function()
 		Z:CopyOtherSpec()
 		RefreshClicks()
 	end)
-	specCopy:SetPoint("TOPRIGHT", 0, -15)
+	specCopy:SetPoint("TOPLEFT", x, -15)
 	specCopy.label:SetJustifyH("CENTER")
 	specCopy.tip = L["Remplace les clics et les touches de cette spécialisation par ceux de l'autre."]
 
-	local left, top, cellWidth, cellHeight = 96, -44, 132, 24
-	for column, modifier in ipairs(Z.clickModifiers) do
-		local head = UI.Text(page, 12)
-		head:SetPoint("TOP", page, "TOPLEFT", left + (column - 1) * (cellWidth + 4) + cellWidth / 2, top + 18)
-		head:SetText(L[modifier[2]])
-		UI.Paint(head, "accent")
-	end
-	for row, button in ipairs(Z.clickButtons) do
-		local y = top - (row - 1) * (cellHeight + 4)
-		local label = UI.Text(page, 12)
-		label:SetPoint("LEFT", page, "TOPLEFT", 0, y - cellHeight / 2)
-		label:SetText(L[button[2]])
-		for column, modifier in ipairs(Z.clickModifiers) do
-			local key = modifier[1] .. button[1]
-			local cell = UI.Button(page, "", cellWidth, cellHeight, function()
-				local held = Z:TakeCursor() -- un sort ou une macro tenu sous la souris est posé directement
-				if held then
-					Z:SetClick(key, held)
-					return RefreshClicks()
-				end
-				OpenPicker(Z:ClickLabel(key), function(value) Z:SetClick(key, value) end, Z:GetClicks()[key])
-			end)
-			Droppable(cell, function(value) Z:SetClick(key, value) end)
-			cell:SetPoint("TOPLEFT", left + (column - 1) * (cellWidth + 4), y)
-			cell.label:SetJustifyH("CENTER")
-			cells[key] = cell
-		end
-	end
+	-- Ajouter : on clique sur le bouton, puis on fait la combinaison voulue (clic, touche ou molette)
+	local add = UI.Button(page, "", COLUMN, 28, function(self)
+		if self.capturing or GetTime() < (self.ignoreUntil or 0) then return end
+		local preset = self.preset
+		self.preset = nil
+		CaptureTrigger(self, function(trigger) ChooseAction(trigger, preset) end)
+	end)
+	add.idle = "+ " .. L["Ajouter un clic ou une touche"]
+	add.label:SetText(add.idle)
+	add.label:SetJustifyH("CENTER")
+	add.tip = L["Cliquez, puis faites la combinaison voulue sur ce bouton : un clic (avec Alt, Ctrl, Maj...), une touche du clavier, un bouton de souris supplémentaire ou la molette. Échap : annuler."]
+	add:SetPoint("TOPLEFT", 0, -40)
+	Register(page.tabIndex, L["Ajouter un clic ou une touche"], add)
+	Register(page.tabIndex, L["Touches au survol"], add)
+	page.add = add
 
-	-- Touches au survol
-	local head = Heading(page, "Touches au survol")
-	head:SetPoint("TOPLEFT", 0, -196)
-	Register(page.tabIndex, L["Touches au survol"], head)
-	Note(page, "Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. Cliquez sur « Touche », puis appuyez.", 0, -224, COLUMN)
-	for i = 1, Z.MAX_HOVER_KEYS do
-		local row = CreateFrame("Frame", nil, page)
-		row:SetSize(COLUMN, 22)
-		row:SetPoint("TOPLEFT", 0, -262 - (i - 1) * 25)
-		row.key = UI.Button(row, "", 110, 22, function(self)
-			CaptureKey(self, function(key)
-				local keys = Z:GetHoverKeys()
-				keys[i] = keys[i] or { spell = "" }
-				keys[i].key = key
-				Z:ApplyClicks()
+	-- Nouveau sort appris, sans aucun raccourci (option « newSpellAlert »)
+	banner = CreateFrame("Frame", nil, page)
+	banner:SetSize(COLUMN, 26)
+	banner:SetPoint("TOPLEFT", 0, -74)
+	banner.icon = banner:CreateTexture(nil, "ARTWORK")
+	banner.icon:SetSize(22, 22)
+	banner.icon:SetPoint("LEFT", 2, 0)
+	banner.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	banner.text = UI.Text(banner, 11)
+	banner.text:SetPoint("LEFT", banner.icon, "RIGHT", 6, 0)
+	banner.text:SetPoint("RIGHT", -104, 0)
+	banner.text:SetJustifyH("LEFT")
+	banner.text:SetWordWrap(false)
+	UI.Paint(banner.text, "accent")
+	banner.dismiss = UI.Button(banner, "x", 22, 22, function()
+		if banner.spell then Z:DismissNewSpell(banner.spell.name) end
+	end)
+	banner.dismiss:SetPoint("RIGHT")
+	banner.dismiss.label:SetJustifyH("CENTER")
+	banner.dismiss.tip = L["Ne plus proposer ce sort."]
+	banner.assign = UI.Button(banner, L["Attribuer"], 74, 22, function()
+		if not banner.spell then return end
+		add.preset = banner.spell.name
+		add:GetScript("OnClick")(add, "LeftButton")
+	end)
+	banner.assign:SetPoint("RIGHT", banner.dismiss, "LEFT", -4, 0)
+	banner.assign.label:SetJustifyH("CENTER")
+	banner.assign.tip = L["Puis faites sur le bouton « Ajouter » le clic ou la touche qui lancera ce sort."]
+	banner:Hide()
+	page.banner = banner
+
+	-- La liste : déclencheur, action, retirer. La molette fait défiler.
+	listTop = CreateFrame("Frame", nil, page)
+	listTop:SetSize(COLUMN, VISIBLE_ROWS * 27)
+	listTop:SetPoint("TOPLEFT", 0, -74)
+	listTop:EnableMouseWheel(true)
+	listTop:SetScript("OnMouseWheel", function(_, delta)
+		scroll = scroll - delta
+		RefreshClicks()
+	end)
+	for i = 1, VISIBLE_ROWS do
+		local row = CreateFrame("Frame", nil, listTop)
+		row:SetSize(COLUMN, 24)
+		row:SetPoint("TOPLEFT", 0, -(i - 1) * 27)
+		row.key = UI.Button(row, "", 132, 24, function(self)
+			if self.capturing or GetTime() < (self.ignoreUntil or 0) or not row.binding then return end
+			local from = Trigger(row)
+			CaptureTrigger(self, function(to)
+				Z:MoveBinding(from, to)
+				RefreshClicks()
 			end)
 		end)
 		row.key:SetPoint("LEFT")
 		row.key.label:SetJustifyH("CENTER")
-		row.spell = UI.Button(row, "", 150, 22, function()
-			OpenPicker(L["Touche au survol"] .. " " .. i, function(value)
-				local keys = Z:GetHoverKeys()
-				if keys[i] then
-					keys[i].spell = value or ""
-					Z:ApplyClicks()
-				end
-			end, (Z:GetHoverKeys()[i] or {}).spell)
+		row.key.tip = L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
+		row.spell = UI.Button(row, "", COLUMN - 132 - 30, 24, function()
+			if not row.binding then return end
+			ChooseAction(Trigger(row), Z:TakeCursor()) -- un sort ou une macro tenu sous la souris est posé directement
 		end)
 		row.spell:SetPoint("LEFT", row.key, "RIGHT", 4, 0)
 		row.spell.label:SetJustifyH("CENTER")
 		Droppable(row.spell, function(value)
-			local keys = Z:GetHoverKeys()
-			if keys[i] then
-				keys[i].spell = value
-				Z:ApplyClicks()
-			end
+			if row.binding then Z:SetBinding(Trigger(row), value) end
 		end)
-		row.clear = UI.Button(row, "x", 22, 22, function()
-			table.remove(Z:GetHoverKeys(), i)
-			Z:ApplyClicks()
+		row.clear = UI.Button(row, "x", 22, 24, function()
+			if not row.binding then return end
+			Z:SetBinding(Trigger(row), nil)
 			RefreshClicks()
 		end)
 		row.clear:SetPoint("LEFT", row.spell, "RIGHT", 4, 0)
 		row.clear.label:SetJustifyH("CENTER")
-		hoverRows[i] = row
+		row.clear.tip = L["Retirer ce raccourci"]
+		rows[i] = row
 	end
+	empty = UI.Text(listTop, 11)
+	empty:SetPoint("TOPLEFT", 4, -6)
+	empty:SetWidth(COLUMN - 8)
+	empty:SetJustifyH("LEFT")
+	UI.Paint(empty, "dim")
+	empty:SetText(L["Aucun raccourci pour l'instant : cliquez sur « Ajouter », puis faites un clic ou appuyez sur une touche."])
+	more = UI.Text(page, 11)
+	more:SetPoint("TOPLEFT", listTop, "BOTTOMLEFT", 0, -2)
+	UI.Paint(more, "dim")
+	local free = UI.Text(page, 11)
+	free:SetPoint("TOPLEFT", listTop, "BOTTOMLEFT", 0, -18)
+	free:SetWidth(COLUMN)
+	free:SetJustifyH("LEFT")
+	UI.Paint(free, "dim")
+	free:SetText(L["Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser."])
 
-	-- Mes macros et spécialisations
-	local library = BuildItem(page, { "button", "Mes macros...", function() Z:OpenMacros() end,
-		"Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic." })
-	library:SetPoint("TOPLEFT", 0, -470)
+	-- Spécialisations, macros et comportement, à droite
 	local perSpec = BuildItem(page, { "check", "clicksPerSpec", "Clics propres à chaque spécialisation",
 		"Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout." })
-	perSpec:SetPoint("TOPLEFT", 0, -500)
-
-	-- Comportement
-	local x = COLUMN + 32
+	perSpec:SetPoint("TOPLEFT", x, -42)
+	local library = BuildItem(page, { "button", "Mes macros...", function() Z:OpenMacros() end,
+		"Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic." })
+	library:SetPoint("TOPLEFT", x, -72)
 	local options = {
 		{ "head", "Comportement" },
 		{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },
 		{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
+		{ "check", "newSpellAlert", "Signaler un nouveau sort sans clic", "Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de cet onglet avec le bouton « Attribuer »." },
 		{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés." },
 		{ "head", "Macros pour vos barres de sorts" },
 		{ "check", "actionBarMacros", "Créer une macro par sort de mes clics", "Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro." },
 		{ "note", "Cliquez sur une icône, puis déposez-la dans une barre de sorts. La macro vise le joueur sous la souris, sinon votre cible, sinon vous.", 44 },
 	}
-	local y = -196
+	local y = -104
 	for _, item in ipairs(options) do
 		local widget = BuildItem(page, item)
 		widget:SetPoint("TOPLEFT", x, y)
@@ -911,7 +984,10 @@ local function BuildClicks(page)
 	end, "Supprime les macros « Lyo: » et décoche l'option. Vos autres macros ne sont pas touchées." })
 	remove:SetPoint("TOPLEFT", x, y)
 
-	page:SetScript("OnShow", RefreshClicks)
+	page:SetScript("OnShow", function()
+		Z:CheckNewSpells()
+		RefreshClicks()
+	end)
 	RefreshClicks()
 end
 
@@ -1355,8 +1431,11 @@ function Z:BarIcons()
 	return barIcons
 end
 
-function Z:ClickCell(key)
-	return cells[key]
+-- La ligne d'un raccourci dans l'onglet Clics (bouton du sort, puis la ligne) ; kind : "click" ou "key"
+function Z:ClickCell(key, kind)
+	for _, row in ipairs(rows) do
+		if row.binding and row.binding.key == key and row.binding.kind == (kind or "click") then return row.spell, row end
+	end
 end
 
 -- Pour les tests : les onglets et leurs boutons

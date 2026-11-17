@@ -10,14 +10,11 @@ local card, highlight, current
 -- Résumé des clics du joueur, écrit à partir de ses vrais réglages
 local function ClickSummary()
 	local lines = {}
-	for _, button in ipairs(Z.clickButtons) do
-		for _, modifier in ipairs(Z.clickModifiers) do
-			local key = modifier[1] .. button[1]
-			local value = Z:GetClicks()[key]
-			local shown = Z.MacroRef(value) and Z.L["macro"] .. " " .. Z.MacroRef(value) or value
-			if value and (value:sub(1, 1) ~= "@" or Z.MacroRef(value)) and #lines < 5 then
-				lines[#lines + 1] = "|cff33dd88" .. Z:ClickLabel(key) .. "|r : " .. shown
-			end
+	for _, binding in ipairs(Z:Bindings()) do
+		local value = binding.value
+		local shown = Z.MacroRef(value) and Z.L["macro"] .. " " .. Z.MacroRef(value) or value
+		if value ~= "" and (value:sub(1, 1) ~= "@" or Z.MacroRef(value)) and #lines < 5 then
+			lines[#lines + 1] = "|cff33dd88" .. Z:TriggerLabel(binding) .. "|r : " .. shown
 		end
 	end
 	if #lines == 0 then
@@ -89,7 +86,7 @@ local steps = {
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
-			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
+			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite.",
