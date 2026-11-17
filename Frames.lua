@@ -97,14 +97,17 @@ local function UpdateState(b)
 	if issecret(connected) then connected = true end
 	local dead = UnitIsDeadOrGhost(unit)
 	if issecret(dead) then dead = false end
+	if b.dead and not dead then Z.ClearResFor(unit) end -- relevé : le nom du soigneur ne sert plus
 	b.dead = dead
 
-	local status
+	local status, rezzer
 	if not connected then
 		status = L["Déco"]
 	elseif dead then
 		local ghost = UnitIsGhost(unit)
 		status = (not issecret(ghost) and ghost) and L["Fantôme"] or L["Mort"]
+		rezzer = Z.ResBy(unit) -- qui relève qui (Comm.lua) : le nom du soigneur remplace « Mort »
+		if rezzer then status = rezzer end
 	end
 	b.status = status
 
@@ -113,7 +116,7 @@ local function UpdateState(b)
 		b.hp:SetStatusBarColor(0.25, 0.25, 0.28)
 		b.name:SetTextColor(0.65, 0.65, 0.68)
 		b.text:SetText(status)
-		b.text:SetTextColor(0.95, 0.35, 0.35)
+		if rezzer then b.text:SetTextColor(0.45, 1, 0.55) else b.text:SetTextColor(0.95, 0.35, 0.35) end
 		b.text:SetAlpha(1)
 		b.low.fill:SetAlpha(0)
 	else
@@ -1272,6 +1275,7 @@ function Z:CreateFrames()
 	Z:On("UNIT_TARGET", RefreshExtra("targettarget"))
 	Z:On("RAID_TARGET_UPDATE", ForVisible(UpdateMarker))
 	Z:On("INCOMING_SUMMON_CHANGED", ForVisible(UpdateCenter))
+	Z.RefreshResBy = ForVisible(UpdateState) -- qui relève qui : une résurrection annoncée ou finie (Comm.lua)
 	-- Entrée et sortie de combat : les buffs manquants ne se lisent que hors combat
 	Z:On("PLAYER_REGEN_ENABLED", ForVisible(Z.QueueAuras))
 	Z:On("PLAYER_REGEN_DISABLED", ForVisible(Z.QueueAuras))

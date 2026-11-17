@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.17.0] - 2026-11-17
+
+### Ajouté
+
+- Qui relève qui : quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, en vert, chez tous ceux qui ont Lyorune ; deux soigneurs ne relèvent plus le même joueur ([#29](https://github.com/BellaHealFr/Lyorune/issues/29)).
+- Joueurs du groupe qui ont Lyorune, avec leur version : dans l'onglet Profils (au survol) et avec /lyorune groupe ([#29](https://github.com/BellaHealFr/Lyorune/issues/29)).
+- Annuler l'import : la configuration d'avant le dernier import revient en un clic (onglet Profils) ou avec /lyorune annuler ([#29](https://github.com/BellaHealFr/Lyorune/issues/29)).
+
+### Amélioré
+
+- Un interrupteur général « Synchronisation entre joueurs » coupe tous les messages invisibles ; un joueur qui en envoie trop est ignoré un moment ([#29](https://github.com/BellaHealFr/Lyorune/issues/29)).
+
 ## [1.16.0] - 2026-11-17
 
 ### Ajouté
@@ -276,6 +288,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.17.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.13.0...v1.14.0

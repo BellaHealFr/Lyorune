@@ -1218,8 +1218,9 @@ local function BuildProfiles(page)
 	end)
 	clicks:SetPoint("TOPLEFT", right, -294)
 	clicks.label:SetJustifyH("CENTER")
-	local reset
-	reset = UI.Button(page, L["Tout réinitialiser"], COLUMN, 24, function(self)
+	local reset, undo
+	local HALF = (COLUMN - 6) / 2
+	reset = UI.Button(page, L["Tout réinitialiser"], HALF, 24, function(self)
 		if not self.armed then -- un premier clic arme le bouton, le second confirme
 			self.armed = true
 			self.label:SetText("|cffff5555" .. L["Cliquez encore pour confirmer"] .. "|r")
@@ -1237,13 +1238,56 @@ local function BuildProfiles(page)
 	reset.label:SetJustifyH("CENTER")
 	reset.tip = L["Remet tous les réglages d'origine. La position des cadres et vos profils enregistrés sont conservés."]
 	Register(page.tabIndex, L["Tout réinitialiser"], reset)
+	-- Sauvegarde avant import (#29) : grisé tant qu'aucun import n'a eu lieu
+	undo = UI.Button(page, L["Annuler l'import"], HALF, 24, function()
+		local ok, message = Z:UndoImport()
+		if ok then RefreshShownPages() end
+		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
+	end)
+	undo:SetPoint("LEFT", reset, "RIGHT", 6, 0)
+	undo.label:SetJustifyH("CENTER")
+	undo.tip = L["Remet la configuration d'avant le dernier import (code collé ou configuration reçue). Aussi : /lyorune annuler."]
+	Register(page.tabIndex, L["Annuler l'import"], undo)
 
+	-- Entre joueurs (#29) : un interrupteur général, et sous lui chaque fonction, grisée quand il est coupé
 	local sync = Heading(page, "Entre joueurs")
 	sync:SetPoint("TOPLEFT", right, -366)
-	local accept = BuildItem(page, { "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande." })
-	accept:SetPoint("TOPLEFT", right, -398)
-	local notice = BuildItem(page, { "check", "versionNotice", "Me prévenir si une version plus récente existe" })
-	notice:SetPoint("TOPLEFT", right, -425)
+	local master = BuildItem(page, { "check", "syncEnabled", "Synchronisation entre joueurs", "Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu." })
+	master:SetPoint("TOPLEFT", right, -398)
+	local subs = {
+		BuildItem(page, { "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande." }),
+		BuildItem(page, { "check", "versionNotice", "Me prévenir si une version plus récente existe" }),
+		BuildItem(page, { "check", "resSync", "Montrer qui relève qui", "Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss, le jeu bloque ces messages." }),
+	}
+	for i, sub in ipairs(subs) do
+		sub:SetPoint("TOPLEFT", right + 16, -398 - i * 27)
+		sub:SetWidth(COLUMN - 16)
+	end
+	-- Joueurs du groupe qui ont Lyorune : le nombre, et la liste au survol
+	local who = CreateFrame("Frame", nil, page)
+	who:SetSize(COLUMN, 16)
+	who:SetPoint("TOPLEFT", right, -510)
+	who.text = Note(who, "", 0, 0, COLUMN)
+	who:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(L["Avec Lyorune dans le groupe"], 1, 1, 1)
+		for _, entry in ipairs(Z:SyncMembers()) do GameTooltip:AddDoubleLine(entry.name, entry.version, 0.8, 0.8, 0.8, 0.45, 1, 0.55) end
+		GameTooltip:Show()
+	end)
+	who:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	local function UpdateSync()
+		local on = Z.db.syncEnabled
+		for _, sub in ipairs(subs) do
+			sub:SetAlpha(on and 1 or 0.4)
+			sub:EnableMouse(on)
+		end
+		undo:SetAlpha(Z:CanUndoImport() and 1 or 0.4)
+		undo:EnableMouse(Z:CanUndoImport())
+		local count = on and IsInGroup() and #Z:SyncMembers() or 0
+		who.text:SetText(not on and L["Synchronisation coupée."] or count == 0 and L["Pas de groupe : personne avec qui se synchroniser."]
+			or (L["Avec Lyorune dans le groupe : %d (survolez)."]):format(count))
+	end
+	master:HookScript("OnClick", UpdateSync)
 
 	-- Colonne de droite : partage
 	local exportHead = Heading(page, "Donner ma configuration")
@@ -1281,6 +1325,7 @@ local function BuildProfiles(page)
 		if ok then
 			import:SetText("")
 			FillExport()
+			UpdateSync()
 		end
 	end
 	import = UI.Edit(page, COLUMN - 96, DoImport)
@@ -1293,9 +1338,11 @@ local function BuildProfiles(page)
 	page:SetScript("OnShow", function()
 		FillExport()
 		Refresh()
+		UpdateSync()
 	end)
 	FillExport()
 	Refresh()
+	UpdateSync()
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1335,6 +1382,7 @@ local function BuildHelp(page)
 		local c = "|cff" .. UI.Hex("accent")
 		list:SetText(c .. "/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n" .. c .. "/lyorune test|r  " .. L["mode test (faux groupe)"]
 			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune assistant|r  " .. L["assistant de départ"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
+			.. "\n" .. c .. "/lyorune groupe|r  " .. L["qui a Lyorune dans le groupe"] .. "\n" .. c .. "/lyorune annuler|r  " .. L["annuler le dernier import"]
 			.. "\n" .. c .. "/lyorune bug|r  " .. L["signaler un bug"] .. "\n" .. c .. "/lyorune diag|r  " .. L["compatibilité avec le jeu"])
 	end
 	Commands()

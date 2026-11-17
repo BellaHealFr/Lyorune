@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.16.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.17.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -127,8 +127,10 @@ Z.defaults = {
 	-- Divers
 	language = "AUTO",
 	showNews = true,           -- fenêtre des nouveautés après une mise à jour
+	syncEnabled = true,        -- synchronisation entre joueurs (Comm.lua) : décochée, aucun message invisible ne part ni n'est lu
 	versionNotice = true,      -- prévenir si un membre du groupe a une version plus récente
 	acceptConfigs = true,      -- accepter qu'un joueur me propose sa configuration
+	resSync = true,            -- qui relève qui : le nom du soigneur qui relève s'affiche sur la case du mort
 	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
 	windowTheme = "MODERN",    -- thème des fenêtres de Lyorune (pas des cases) : Moderne, Classique, MMORPG
 	reduceMotion = false,      -- animations réduites : fondus courts seulement, rien en boucle
@@ -187,7 +189,7 @@ Z.notInProfile = {
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
-	language = true, showNews = true, versionNotice = true, acceptConfigs = true, showRunes = true, windowTheme = true,
+	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, errorNotice = true, tutorialDone = true, wizardDone = true,
 	buffPanel = true,
 }
@@ -402,6 +404,10 @@ function Z.Command(msg)
 		for key, value in pairs(Z.charDefaults) do Z.char[key] = CopyTable(value) end
 		Z:Refresh()
 		Z:Print(Z.L["position réinitialisée."])
+	elseif msg == "groupe" or msg == "group" then
+		Z:PrintSyncMembers()
+	elseif msg == "annuler" or msg == "undo" then
+		Z:Print(select(2, Z:UndoImport()))
 	elseif msg == "test" then
 		Z:TogglePreview()
 	elseif msg == "nouveautes" or msg == "nouveautés" or msg == "news" then

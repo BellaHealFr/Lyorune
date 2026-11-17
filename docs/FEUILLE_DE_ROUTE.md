@@ -24,7 +24,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 8 | 1.14.0 | Profils automatiques, cible et focalisation | Publiée (v1.14.0) |
 | 9 | 1.15.0 | Mode panneau, mode grille, tri | Publiée (v1.15.0) |
 | 10 | 1.16.0 | Confort | Publiée (v1.16.0) |
-| 11 | 1.17.0 | Synchronisation entre joueurs | À faire |
+| 11 | 1.17.0 | Synchronisation entre joueurs | Publiée (v1.17.0) |
 | 12 | 1.18.0 | Performances | À faire |
 | 13 | 1.19.0 | Flèche de direction | Selon le test en jeu |
 
@@ -122,7 +122,7 @@ de soin et leurs 5 habillages restent tels quels.
 - [x] Assistant au premier lancement (#28)
 
 ## Étape 11 : synchronisation entre joueurs (1.17.0)
-- [ ] Qui relève qui, joueurs du groupe qui ont Lyorune, sauvegarde avant import, limites, interrupteur (#29)
+- [x] Qui relève qui, joueurs du groupe qui ont Lyorune, sauvegarde avant import, limites, interrupteur (#29)
 
 ## Étape 12 : performances (1.18.0)
 - [ ] Mode performance et commande de mesure avec un faux groupe de 5, 25 et 40 (#30)

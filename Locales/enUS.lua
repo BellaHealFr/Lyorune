@@ -241,6 +241,20 @@ Z.translations.enUS = {
 	["Accepter qu'on me propose une configuration"] = "Let players offer me their configuration",
 	["Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande."] = "Only from a group member, a guild member or a friend. Nothing is applied without your consent: a window asks you first.",
 	["Me prévenir si une version plus récente existe"] = "Tell me when a newer version exists",
+	["Annuler l'import"] = "Undo import", ["qui a Lyorune dans le groupe"] = "who has Lyorune in the group", ["annuler le dernier import"] = "undo the last import",
+	["Remet la configuration d'avant le dernier import (code collé ou configuration reçue). Aussi : /lyorune annuler."] = "Restores the configuration from before the last import (pasted code or received configuration). Also: /lyorune undo.",
+	["Aucun import à annuler."] = "No import to undo.", ["Configuration d'avant l'import rétablie."] = "Configuration from before the import restored.",
+	["Synchronisation entre joueurs"] = "Sync between players",
+	["Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu."] = "Invisible messages between players who have Lyorune. Unticked: nothing is sent, nothing is read.",
+	["Montrer qui relève qui"] = "Show who resurrects whom",
+	["Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss, le jeu bloque ces messages."] = "When a healer starts a resurrection, their name replaces \"Dead\" on the cell, for everyone who has Lyorune. During a boss fight, the game blocks these messages.",
+	["Avec Lyorune dans le groupe"] = "With Lyorune in the group",
+	["Avec Lyorune dans le groupe : %d (survolez)."] = "With Lyorune in the group: %d (hover).",
+	["Synchronisation coupée."] = "Sync turned off.", ["Pas de groupe : personne avec qui se synchroniser."] = "No group: nobody to sync with.",
+	["La synchronisation entre joueurs est coupée (onglet Profils)."] = "Sync between players is turned off (Profiles tab).",
+	["la synchronisation entre joueurs est coupée (onglet Profils)."] = "sync between players is turned off (Profiles tab).",
+	["vous n'êtes pas en groupe."] = "you are not in a group.",
+	["avec Lyorune dans le groupe : %s."] = "with Lyorune in the group: %s.",
 	["Donner ma configuration"] = "Share my configuration", ["Recevoir une configuration"] = "Receive a configuration",
 	["Code à copier (Ctrl+C) et à envoyer : chuchotement, Discord..."] = "Code to copy (Ctrl+C) and send: whisper, Discord...",
 	["Ou envoi direct à un joueur qui a Lyorune (il devra accepter) :"] = "Or send it directly to a player who has Lyorune (they must accept):",
@@ -248,7 +262,7 @@ Z.translations.enUS = {
 	["Envoyer"] = "Send", ["Importer"] = "Import", ["Refuser"] = "Decline", ["Configuration reçue"] = "Configuration received",
 	["Ce texte n'est pas un code Lyorune."] = "This text is not a Lyorune code.",
 	["Ce code ne contient aucun réglage valide."] = "This code contains no valid setting.",
-	["%d réglages importés."] = "%d settings imported.", ["Indiquez le nom du joueur."] = "Enter the player's name.",
+	["%d réglages importés. Pour revenir en arrière : /lyorune annuler."] = "%d settings imported. To go back: /lyorune undo.", ["Indiquez le nom du joueur."] = "Enter the player's name.",
 	["Envoi impossible pour le moment (combat ou joueur introuvable)."] = "Cannot send right now (combat or player not found).",
 	["Configuration envoyée à %s. Il doit avoir Lyorune et l'accepter."] = "Configuration sent to %s. They need Lyorune and must accept it.",
 	["%s vous propose sa configuration Lyorune (apparence, clics, alertes). Votre configuration actuelle sera remplacée."] = "%s offers you their Lyorune configuration (look, clicks, alerts). Your current configuration will be replaced.",
@@ -354,9 +368,9 @@ Z.translations.enUS = {
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
-			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage.\n\n"
+			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -561,4 +575,8 @@ Z.translations.enUS = {
 	["Quelle forme de case préférez-vous ?"] = "Which cell shape do you prefer?",
 	["Panneau des buffs manquants (onglet Soins) : hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe ; un clic le leur lance, sans les cibler, et un groupe entier sans buff n'a qu'une ligne pour la version de groupe (#27)."] = "Missing buffs panel (Heals tab): out of combat, a small window lists the players without your group buff; one click casts it on them, without targeting them, and a whole group without it gets a single line for the group version (#27).",
 	["Assistant de départ : au premier lancement, trois questions (rôle, taille de groupe, forme des cases sur vignettes) règlent Lyorune avant la visite guidée ; à revoir avec /lyorune assistant ou depuis l'onglet Aide (#28)."] = "Setup assistant: on first launch, three questions (role, group size, cell shape from thumbnails) set Lyorune up before the guided tour; see it again with /lyorune assistant or from the Help tab (#28).",
+	["Qui relève qui : quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, en vert, chez tous ceux qui ont Lyorune ; deux soigneurs ne relèvent plus le même joueur (#29)."] = "Who resurrects whom: when a healer starts a resurrection, their name replaces \"Dead\" on the cell, in green, for everyone who has Lyorune; two healers no longer resurrect the same player (#29).",
+	["Joueurs du groupe qui ont Lyorune, avec leur version : dans l'onglet Profils (au survol) et avec /lyorune groupe (#29)."] = "Group players who have Lyorune, with their version: in the Profiles tab (on hover) and with /lyorune group (#29).",
+	["Annuler l'import : la configuration d'avant le dernier import revient en un clic (onglet Profils) ou avec /lyorune annuler (#29)."] = "Undo import: the configuration from before the last import comes back in one click (Profiles tab) or with /lyorune undo (#29).",
+	["Un interrupteur général « Synchronisation entre joueurs » coupe tous les messages invisibles ; un joueur qui en envoie trop est ignoré un moment (#29)."] = "A main switch \"Sync between players\" turns off every invisible message; a player who sends too many is ignored for a while (#29).",
 }

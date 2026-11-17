@@ -1655,6 +1655,87 @@ step("etape 10 : panneau des buffs manquants, assistant de depart", function()
   Z:Refresh() RunUpdates()
 end)
 
+step("etape 11 : synchronisation entre joueurs", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = v end
+  local clicks = CopyTable(Z.db.clicks)
+  GROUPED, RAID = true, false
+  GROUP_NAMES.party1, GROUP_NAMES.party2 = "Anduin", "Jaina"
+  local function Msg(text, sender) FireEvent("CHAT_MSG_ADDON", "Lyorune", text, "PARTY", sender) end
+  -- joueurs du groupe qui ont Lyorune : un membre qui annonce sa version entre dans la liste et recoit la mienne
+  NOW = 5000 local n = #ADDON_SENT
+  Msg("V:1.16.0", "Anduin-MonRoyaume")
+  local list = Z:SyncMembers()
+  assert(#list == 2 and list[2].name == "Anduin-MonRoyaume" and list[2].version == "1.16.0", "membre absent de la liste")
+  assert(#ADDON_SENT == n + 1 and ADDON_SENT[n + 1].text == "V:" .. Z.version and ADDON_SENT[n + 1].channel == "PARTY", "pas de reponse au nouveau venu")
+  Msg("V:1.16.0", "Anduin-MonRoyaume") assert(#ADDON_SENT == n + 1, "reponse en double")
+  Msg("V:1.16.0", "Inconnu-Ailleurs") assert(#Z:SyncMembers() == 2, "joueur hors du groupe dans la liste")
+  GROUP_NAMES.party1 = "Autre" assert(#Z:SyncMembers() == 1, "joueur parti encore dans la liste")
+  GROUP_NAMES.party1 = "Anduin" NOW = 5020 Msg("V:1.17.0", "Anduin-MonRoyaume")
+  SlashCmdList.LYORUNE("groupe") assert(PRINTED[#PRINTED]:find("Anduin (1.17.0)", 1, true), "commande /lyorune groupe")
+  -- qui releve qui : Jaina releve Anduin
+  local b for _, x in ipairs(Z.buttons) do if x.unit == "party1" and x:IsVisible() then b = x break end end
+  assert(b, "case d'Anduin")
+  DEAD = true Z.RefreshResBy() assert(b.text:GetText() == "Mort")
+  Msg("R:Anduin-MonRoyaume", "Jaina-MonRoyaume") assert(b.text:GetText() == "Jaina", "nom du soigneur absent")
+  Msg("R:-", "Jaina-MonRoyaume") assert(b.text:GetText() == "Mort", "resurrection arretee mais affichee")
+  Msg("R:Anduin-MonRoyaume", "Jaina-MonRoyaume") Msg("R:+", "Jaina-MonRoyaume")
+  NOW = 5050 Z.RefreshResBy() assert(b.text:GetText() == "Jaina", "attente de l'accord non affichee")
+  NOW = 5090 Z.RefreshResBy() assert(b.text:GetText() == "Mort", "resurrection reussie affichee trop longtemps")
+  -- releve puis retombe : l'ancien nom ne revient pas
+  Msg("R:Anduin-MonRoyaume", "Jaina-MonRoyaume") DEAD = false Z.RefreshResBy() DEAD = true Z.RefreshResBy()
+  assert(b.text:GetText() == "Mort", "ancien soigneur encore affiche")
+  -- messages refuses : hors du groupe, nom abime
+  for _, bad in ipairs({ "R:Anduin", "R:a b-c", "R:" .. ("x"):rep(70) .. "-Y", "R:-x-y", "R:" }) do Msg(bad, "Jaina-MonRoyaume") end
+  Msg("R:Anduin-MonRoyaume", "Inconnu-Ailleurs")
+  assert(b.text:GetText() == "Mort", "message refuse mais affiche")
+  -- ma propre resurrection : le groupe est prevenu, puis l'arret
+  n = #ADDON_SENT
+  FireEvent("UNIT_SPELLCAST_SENT", "player", "Anduin", "guid1", 2006)
+  assert(ADDON_SENT[#ADDON_SENT].text == "R:Anduin-MonRoyaume" and b.text:GetText() == "Joueur", "ma resurrection non annoncee")
+  FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player", "autre", 2006) assert(b.text:GetText() == "Joueur")
+  FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player", "guid1", 2006)
+  assert(ADDON_SENT[#ADDON_SENT].text == "R:-" and b.text:GetText() == "Mort", "arret non annonce")
+  FireEvent("UNIT_SPELLCAST_SENT", "player", "Anduin", "guid2", 2061) assert(ADDON_SENT[#ADDON_SENT].text == "R:-", "un soin annonce comme resurrection")
+  FireEvent("UNIT_SPELLCAST_SENT", "player", MakeSecret(), MakeSecret(), 2006)
+  FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", MakeSecret(), 2006)
+  -- debit : un expediteur trop bavard est ignore un moment
+  for i = 1, 60 do Msg("V:x", "Jaina-MonRoyaume") end
+  Msg("R:Anduin-MonRoyaume", "Jaina-MonRoyaume") assert(b.text:GetText() == "Mort", "expediteur trop bavard ecoute")
+  NOW = 5200 Msg("R:Anduin-MonRoyaume", "Jaina-MonRoyaume") assert(b.text:GetText() == "Jaina", "expediteur jamais pardonne")
+  Msg("R:-", "Jaina-MonRoyaume")
+  -- interrupteurs : la case seule, puis tout
+  Z.db.resSync = false Z:RefreshAlerts() n = #ADDON_SENT
+  Msg("R:Anduin-MonRoyaume", "Jaina-MonRoyaume") FireEvent("UNIT_SPELLCAST_SENT", "player", "Anduin", "guid3", 2006)
+  assert(b.text:GetText() == "Mort" and #ADDON_SENT == n, "qui releve qui coupe")
+  Z.db.resSync = true Z.db.syncEnabled = false Z:RefreshAlerts()
+  Msg("R:Anduin-MonRoyaume", "Jaina-MonRoyaume") FireEvent("UNIT_SPELLCAST_SENT", "player", "Anduin", "guid4", 2006)
+  NOW = 5300 FireEvent("GROUP_ROSTER_UPDATE")
+  assert(b.text:GetText() == "Mort" and #ADDON_SENT == n, "synchronisation coupee mais active")
+  assert(not Z:SendConfig("Jaina"), "envoi malgre la synchronisation coupee")
+  SlashCmdList.LYORUNE("groupe") assert(PRINTED[#PRINTED]:find("coup", 1, true))
+  Z.db.syncEnabled = true Z:RefreshAlerts() DEAD = false Z.RefreshResBy()
+  -- sauvegarde avant import, puis retour en arriere
+  Z.db.importBackup = nil assert(not Z:UndoImport() and not Z:CanUndoImport(), "rien a annuler")
+  Z.db.clicks.PRIEST = { ["1"] = "Soins rapides" } Z.db.width = 140 local code = Z:Export()
+  Z.db.clicks.PRIEST["alt-5"] = "Rénovation" Z.db.width = 100
+  local ok, message = Z:Import(code)
+  assert(ok and message:find("/lyorune annuler", 1, true) and Z.db.width == 140 and Z.db.clicks.PRIEST["alt-5"] == nil, "import")
+  assert(Z:CanUndoImport())
+  SlashCmdList.LYORUNE("annuler")
+  assert(Z.db.width == 100 and Z.db.clicks.PRIEST["alt-5"] == "Rénovation" and not Z:CanUndoImport(), "retour en arriere")
+  assert(not Z:UndoImport(), "deux retours en arriere")
+  Z.db.importBackup = { settings = { width = "abc", inconnu = 5 }, clicks = 7 } -- sauvegarde abimee : sans effet
+  assert(Z:UndoImport() and Z.db.width == 100 and Z.db.inconnu == nil and type(Z.db.clicks) == "table")
+  -- options
+  local labels = table.concat(Z:OptionLabels(), "|")
+  for _, label in ipairs({ "Synchronisation entre joueurs", "Montrer qui relève qui", "Annuler l'import" }) do
+    assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+  end
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z.db.clicks = clicks Z.db.importBackup = nil GROUP_NAMES.party1, GROUP_NAMES.party2 = nil, nil
+  Z:RefreshAlerts() Z:Refresh() RunUpdates()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

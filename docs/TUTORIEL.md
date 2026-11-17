@@ -235,11 +235,20 @@ Onglet **Profils** :
 - **Profils prêts à l'emploi** : Donjon, Raid, Compact, Grand et lisible. Un clic change la taille et la disposition ; vos clics sont conservés.
 - **Donner sa configuration** : copiez le code affiché et envoyez-le à un ami, qui le colle dans « Recevoir une configuration ». Le code contient l'apparence (placements des éléments compris), les clics et les listes, mais jamais vos macros ni les phrases de vos annonces (mana, résurrection) : personne ne peut vous faire dire quelque chose dans le chat.
 - **Envoi direct** : tapez le nom d'un joueur qui a Lyorune. Il reçoit une demande et choisit d'accepter ou non. Une demande n'arrive que d'un membre de votre groupe, de votre guilde ou de votre liste d'amis, une fois par minute au plus. La fenêtre affiche le nom et le royaume de l'expéditeur, et le bouton « Importer » ne s'active qu'au bout de deux secondes.
+- **Annuler l'import** : un code collé ou une configuration reçue ne vous plaît pas ? Ce bouton (ou `/lyorune annuler`) remet vos réglages d'avant le dernier import : apparence, clics, touches et listes. Lyorune garde cette sauvegarde même après un /reload, jusqu'au prochain import.
 - **Tout réinitialiser** : deux clics pour revenir aux réglages d'origine. Vos profils enregistrés sont gardés.
 
 ## 11. Entre joueurs qui ont Lyorune
 
-Lyorune échange deux informations, de façon invisible, avec les autres joueurs du groupe qui l'utilisent : son numéro de version (pour vous prévenir une fois si une version plus récente existe) et les configurations que vous choisissez d'envoyer. Rien n'est jamais appliqué sans votre accord. Les deux se coupent dans l'onglet Profils, section « Entre joueurs ».
+Lyorune se parle de façon invisible avec les autres joueurs du groupe qui l'utilisent. Tout se règle dans l'onglet Profils, section « Entre joueurs » :
+
+- **Synchronisation entre joueurs** : l'interrupteur général. Décoché, rien ne part et rien n'est lu ; les cases du dessous sont grisées.
+- **Qui relève qui** (« Montrer qui relève qui ») : quand un soigneur commence une résurrection, son nom s'affiche en vert à la place de « Mort » sur la case du joueur, chez tous ceux qui ont Lyorune. Vous voyez d'un coup d'œil qui est déjà pris en charge : deux soigneurs ne relèvent plus le même joueur pendant qu'un autre attend. Le nom reste le temps du sort, puis une minute pendant que le joueur décide d'accepter. Pendant un combat de boss, le jeu bloque ces messages : seule l'icône de résurrection du jeu reste.
+- **Qui a Lyorune** : sous les cases, Lyorune compte les joueurs du groupe qui l'utilisent. Passez la souris dessus pour la liste, avec la version de chacun, ou tapez `/lyorune groupe`.
+- **Configurations** : vous recevez seulement celles que vous acceptez (voir le chapitre 10).
+- **Nouvelle version** : Lyorune vous prévient une fois si une version plus récente existe.
+
+Rien n'est jamais appliqué sans votre accord. Un joueur qui envoie trop de messages est ignoré un moment.
 
 Une nouvelle version n'est signalée que si deux joueurs différents l'annoncent. Téléchargez Lyorune uniquement sur sa page officielle : [github.com/BellaHealFr/Lyorune](https://github.com/BellaHealFr/Lyorune/releases/latest). Un autre site, ou un joueur qui vous envoie un fichier, n'est pas une source sûre.
 
@@ -281,5 +290,7 @@ Lyorune ne vous dérange pas pour ses erreurs : au plus un message discret par s
 | `/lyorune assistant` | Assistant de départ (trois questions) |
 | `/lyorune verrou` | Verrouiller ou libérer la position |
 | `/lyorune reset` | Remettre les cadres au centre |
+| `/lyorune groupe` | Joueurs du groupe qui ont Lyorune |
+| `/lyorune annuler` | Revenir à la configuration d'avant le dernier import |
 | `/lyorune bug` | Signaler un problème |
 | `/lyorune nouveautes` | Voir les nouveautés de la version |

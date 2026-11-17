@@ -236,11 +236,20 @@ Good to know: outside dungeons and raids, the game does not let an addon write i
 - **Ready-made profiles**: Dungeon, Raid, Compact, Large and readable. One click changes size and layout; your clicks are kept.
 - **Share my configuration**: copy the code shown and send it to a friend, who pastes it into "Receive a configuration". The code holds the look (element placements included), clicks and lists, but never your macros nor the sentences of your announcements (mana, resurrection): nobody can make you say anything in chat.
 - **Direct sending**: type the name of a player who has Lyorune. They receive a request and choose whether to accept. A request only comes from a member of your group, your guild or your friends list, at most once a minute. The window shows the sender's name and realm, and the "Import" button only becomes active after two seconds.
+- **Undo import**: you don't like a pasted code or a received configuration? This button (or `/lyorune undo`) restores your settings from before the last import: look, clicks, keys and lists. Lyorune keeps this backup even after a /reload, until the next import.
 - **Reset everything**: two clicks to go back to the default settings. Your saved profiles are kept.
 
 ## 11. Between players who have Lyorune
 
-Lyorune exchanges two pieces of information, invisibly, with the other players of the group who use it: its version number (to tell you once if a newer version exists) and the configurations you choose to send. Nothing is ever applied without your consent. Both can be turned off in the Profiles tab, "Between players" section.
+Lyorune talks invisibly with the other players of the group who use it. Everything is set in the Profiles tab, "Between players" section:
+
+- **Sync between players**: the main switch. Unticked, nothing is sent and nothing is read; the boxes below are greyed out.
+- **Who resurrects whom** ("Show who resurrects whom"): when a healer starts a resurrection, their name shows in green instead of "Dead" on the player's cell, for everyone who has Lyorune. You see at a glance who is already taken care of: two healers no longer resurrect the same player while another one waits. The name stays during the cast, then for a minute while the player decides to accept. During a boss fight, the game blocks these messages: only the game's resurrection icon remains.
+- **Who has Lyorune**: below the boxes, Lyorune counts the group players who use it. Hover over it for the list, with each player's version, or type `/lyorune group`.
+- **Configurations**: you only get the ones you accept (see chapter 10).
+- **New version**: Lyorune tells you once if a newer version exists.
+
+Nothing is ever applied without your consent. A player who sends too many messages is ignored for a while.
 
 A new version is only reported when two different players announce it. Download Lyorune only from its official page: [github.com/BellaHealFr/Lyorune](https://github.com/BellaHealFr/Lyorune/releases/latest). Another site, or a player sending you a file, is not a safe source.
 
@@ -280,5 +289,7 @@ Lyorune does not bother you with its errors: at most one discreet message per se
 | `/lyorune assistant` | Setup assistant (three questions) |
 | `/lyorune verrou` | Lock or unlock the position |
 | `/lyorune reset` | Move the frames back to the centre |
+| `/lyorune group` | Group players who have Lyorune |
+| `/lyorune undo` | Go back to the configuration from before the last import |
 | `/lyorune bug` | Report a problem |
 | `/lyorune nouveautes` | See what is new in this version |

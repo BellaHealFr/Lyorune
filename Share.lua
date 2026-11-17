@@ -30,6 +30,19 @@ local function Shared(key)
 	return type(default) ~= "string" or Z.choices[key] ~= nil or key == "theme" or key == "texture"
 end
 
+-- Sauvegarde avant import (#29) : tout ce qu'un import peut remplacer, copié juste avant. Un seul niveau,
+-- gardé dans mes réglages (Z.db.importBackup) : il survit à un /reload, le prochain import le remplace.
+local BACKUP_TABLES = { "clicks", "hoverKeys", "placement", "extraTracked", "ignoredNames", "importantNames" }
+
+local function Backup()
+	local copy = { settings = {} }
+	for key in pairs(Z.defaults) do
+		if Shared(key) then copy.settings[key] = Z.db[key] end
+	end
+	for _, key in ipairs(BACKUP_TABLES) do copy[key] = CopyTable(Z.db[key]) end
+	return copy
+end
+
 local function Decode(text)
 	return (text:gsub("%%(%x%x)", function(hex) return string.char(tonumber(hex, 16)) end))
 end
@@ -169,6 +182,7 @@ function Z:Import(code)
 		return false, L["Ce code ne contient aucun réglage valide."]
 	end
 
+	Z.db.importBackup = Backup() -- la configuration d'avant, pour /lyorune annuler
 	for key, value in pairs(settings) do Z.db[key] = value end
 	for class, binds in pairs(clicks) do Z.db.clicks[class] = binds end
 	for class, list in pairs(hovers) do Z.db.hoverKeys[class] = list end
@@ -177,7 +191,31 @@ function Z:Import(code)
 	Z:Refresh()
 	Z:ApplyClicks()
 	Z:RefreshAlerts()
-	return true, (L["%d réglages importés."]):format(count)
+	return true, (L["%d réglages importés. Pour revenir en arrière : /lyorune annuler."]):format(count)
+end
+
+-- Retour à la configuration d'avant le dernier import. La copie vient de mes propres réglages enregistrés :
+-- chaque valeur est quand même contrôlée (type attendu), un fichier abîmé ne peut rien casser.
+function Z:UndoImport()
+	local L, copy = Z.L, Z.db.importBackup
+	if type(copy) ~= "table" or type(copy.settings) ~= "table" then
+		return false, L["Aucun import à annuler."]
+	end
+	for key, value in pairs(copy.settings) do
+		if Shared(key) and type(value) == type(Z.defaults[key]) then Z.db[key] = value end
+	end
+	for _, key in ipairs(BACKUP_TABLES) do
+		if type(copy[key]) == "table" then Z.db[key] = copy[key] end
+	end
+	Z.db.importBackup = nil
+	Z:Refresh()
+	Z:ApplyClicks()
+	Z:RefreshAlerts()
+	return true, L["Configuration d'avant l'import rétablie."]
+end
+
+function Z:CanUndoImport()
+	return type(Z.db.importBackup) == "table"
 end
 
 ----------------------------------------------------------------------------------------------------
