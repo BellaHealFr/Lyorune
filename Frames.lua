@@ -25,6 +25,9 @@ Z.manaColors = {
 	BLUE = { 0.25, 0.50, 1.00 }, SKY = { 0.40, 0.75, 1.00 }, PURPLE = { 0.62, 0.42, 1.00 },
 	TEAL = { 0.20, 0.82, 0.82 }, WHITE = { 0.88, 0.90, 0.95 },
 }
+-- Signal du jeu (ping) : un modèle du jeu rend la case sensible à la touche de signal, qui marque alors le
+-- joueur de la case pour tout le groupe. Absent d'un client plus ancien : les cases s'en passent.
+local PING_TEMPLATE = PingableType_UnitFrameMixin and ",PingableUnitFrameTemplate" or ""
 local SMOOTH = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.ExponentialEaseOut
 local smoothing      -- SMOOTH ou nil selon l'option
 local rangeAlpha = 0.35
@@ -286,6 +289,26 @@ local function UpdateMarker(b)
 	end
 end
 
+-- Chef de groupe (couronne) ou assistant en raid (petit drapeau). En combat, une réponse secrète laisse l'icône
+-- telle qu'elle était : le chef ne change pas en plein combat.
+local LEADER_ICON = "Interface\\GroupFrame\\UI-Group-LeaderIcon"
+local ASSIST_ICON = "Interface\\GroupFrame\\UI-Group-AssistantIcon"
+
+local function UpdateLeader(b)
+	if not db.showLeader then return b.leader:Hide() end
+	local unit = b.unit
+	local leader = UnitIsGroupLeader(unit)
+	if issecret(leader) then return end
+	local assist = not leader and IsInRaid() and UnitIsGroupAssistant(unit)
+	if issecret(assist) then return end
+	if leader then
+		b.leader:SetTexture(LEADER_ICON)
+	elseif assist then
+		b.leader:SetTexture(ASSIST_ICON)
+	end
+	b.leader:SetShown(leader or assist or false)
+end
+
 -- Invocation en cours : 1 proposée, 2 acceptée, 3 refusée (0 : aucune)
 local SUMMON_ATLAS = { "Raid-Icon-SummonPending", "Raid-Icon-SummonAccepted", "Raid-Icon-SummonDeclined" }
 
@@ -351,6 +374,7 @@ local function UpdateAll(b)
 	UpdateRange(b)
 	UpdateThreat(b)
 	UpdateRole(b)
+	UpdateLeader(b)
 	UpdateMarker(b)
 	UpdateCenter(b)
 	UpdateTarget(b)
@@ -412,6 +436,7 @@ end
 -- Infobulle hors combat : le joueur (infobulle du jeu), puis mes clics et touches (option)
 local function OnEnter(b)
 	b.hover:Show()
+	Z.hovered = b -- /lyorune epingler : le joueur survolé
 	if not b.unit or InCombatLockdown() then return end
 	local clicks = db.clickTooltip and Z:ClickSummary()
 	if clicks and #clicks == 0 then clicks = nil end
@@ -439,6 +464,7 @@ end
 
 local function OnLeave(b)
 	b.hover:Hide()
+	if Z.hovered == b then Z.hovered = nil end
 	GameTooltip:Hide()
 end
 
@@ -470,6 +496,7 @@ local function PlaceTexts(b, width, icon)
 		b.name:SetJustifyH("LEFT")
 		b.name:SetWidth(math.max(20, width - icon - 46))
 		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", -4, 0)
+		Place(b.leader, "leader", "CENTER", b.role, "TOPRIGHT", 0, 0) -- petit badge sur l'icône de rôle
 	else
 		Place(b.role, "role", "TOPRIGHT", b, "TOPRIGHT", -2 - Z.CornerShift(b, "TOPRIGHT"), -2)
 		-- Accrochés à la barre de vie : ils remontent avec elle quand la barre de mana s'affiche
@@ -477,6 +504,7 @@ local function PlaceTexts(b, width, icon)
 		b.name:SetJustifyH("CENTER")
 		b.name:SetWidth(width - 8)
 		Place(b.text, "text", "BOTTOM", b.hp, "BOTTOM", 0, 4)
+		Place(b.leader, "leader", "TOPRIGHT", b.role, "TOPLEFT", -1, 0) -- à gauche de l'icône de rôle
 	end
 	Place(b.marker, "marker", "CENTER", b.over, "TOP", 0, -1)
 	Place(b.center, "center", "CENTER", b.over, "CENTER", 0, 0)
@@ -530,6 +558,8 @@ local function Style(b)
 	b.iconSize = icon
 	PlaceTexts(b, width, icon)
 	b.role:SetSize(icon - 2, icon - 2)
+	local badge = Z:Shape().inline and math.max(8, math.floor(icon * 0.7)) or icon - 2
+	b.leader:SetSize(badge, badge)
 	b.marker:SetSize(icon, icon)
 	b.center:SetSize(icon + 8, icon + 8)
 	Z.HideAuras(b)
@@ -630,6 +660,10 @@ function Z.BuildVisuals(b)
 
 	b.role = over:CreateTexture(nil, "ARTWORK")
 	b.role:SetPoint("TOPRIGHT", -2, -2)
+
+	b.leader = over:CreateTexture(nil, "OVERLAY") -- chef de groupe ou assistant
+	b.leader:SetPoint("TOPLEFT", 2, -2)
+	b.leader:Hide()
 
 	b.marker = over:CreateTexture(nil, "ARTWORK")
 	b.marker:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
@@ -790,6 +824,9 @@ for i = 1, RAID_GROUPS do
 	frameDefs[#frameDefs + 1] = { key = "raid" .. i, raid = i, name = "LyoruneRaid" .. i, template = "SecureGroupHeaderTemplate", pos = "pos" }
 end
 frameDefs[#frameDefs + 1] = { key = "tanks", name = "LyoruneTanks", template = "SecureGroupHeaderTemplate", pos = "tankPos", label = "Tanks", option = "showTanks", always = true }
+-- Joueurs épinglés : un en-tête du jeu qui ne montre que les noms de la liste (attribut « nameList »). Le jeu
+-- range lui-même ces joueurs quand ils rejoignent le groupe, même en combat ; la liste ne change que hors combat.
+frameDefs[#frameDefs + 1] = { key = "pinned", name = "LyorunePinned", template = "SecureGroupHeaderTemplate", pos = "pinnedPos", label = "Épinglés", always = true }
 frameDefs[#frameDefs + 1] = { key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets", always = true }
 -- Cadre « Cible » (#25) : trois cases fixes, chacune avec son interrupteur. Ce n'est pas un en-tête de groupe :
 -- Lyorune crée lui-même les trois boutons sécurisés, et le jeu les montre ou les cache selon que l'unité existe.
@@ -813,6 +850,7 @@ local CONFIG_SNIPPET = [[-- Lyorune
 	self:SetAttribute("*type1", "target")
 	self:SetAttribute("*type2", "togglemenu")
 	self:SetAttribute("toggleForVehicle", true)
+	self:SetAttribute("ping-receiver", header:GetAttribute("z-ping"))
 	for i = 1, header:GetAttribute("z-count") or 0 do
 		self:SetAttribute(header:GetAttribute("z-key" .. i), header:GetAttribute("z-value" .. i))
 	end
@@ -947,7 +985,7 @@ local function CreateHeader(def)
 	h:HookScript("OnHide", UpdateHandles)
 	Z.headers[#Z.headers + 1] = h
 	if def.extra then return h end -- ses cases sont créées à la première demande (LayoutExtra)
-	h:SetAttribute("template", "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate")
+	h:SetAttribute("template", "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate" .. PING_TEMPLATE)
 	h:SetAttribute("showPlayer", true)
 	h:SetAttribute("showParty", not def.raid)
 	h:SetAttribute("showRaid", def.key ~= "main") -- en raid, les cadres par groupe prennent le relais
@@ -980,7 +1018,7 @@ end
 -- Une case du cadre « Cible », créée hors combat la première fois qu'elle est cochée. Mêmes réglages que les cases
 -- du jeu (CONFIG_SNIPPET) : clic gauche cible, clic droit menu, puis mes clics (Z:ApplyClicks).
 local function CreateExtraButton(h, i)
-	local b = CreateFrame("Button", h.def.name .. i, h, "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate")
+	local b = CreateFrame("Button", h.def.name .. i, h, "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate" .. PING_TEMPLATE)
 	b.extra = true
 	b:SetAttribute("*type1", "target")
 	b:SetAttribute("*type2", "togglemenu")
@@ -1052,6 +1090,7 @@ local function ApplyLayout()
 	for _, b in ipairs(buttons) do
 		b:ClearAllPoints()
 		b:SetSize(width, height)
+		if PING_TEMPLATE ~= "" then b:SetAttribute("ping-receiver", db.pingCells or nil) end
 	end
 	local gap = (db.showGroupLabels or db.lockMode == "FREE") and LABEL_SPACE or 0
 	local grid = db.layout == "GRID"
@@ -1111,7 +1150,15 @@ local function ApplyLayout()
 			h:SetAttribute("sortMethod", db.sortOrder == "INDEX" and "INDEX" or "NAME")
 		elseif def.key == "tanks" then
 			ApplySort(h)
+		elseif def.key == "pinned" then
+			local names = Z:PinnedList()
+			enabled = db.showPinned and #names > 0
+			h:SetAttribute("groupFilter", nil)
+			h:SetAttribute("roleFilter", nil)
+			h:SetAttribute("nameList", table.concat(names, ","))
+			ApplySort(h)
 		end
+		h:SetAttribute("z-ping", db.pingCells or nil) -- cases créées plus tard, même en combat (CONFIG_SNIPPET)
 		if db.horizontal then
 			h:SetAttribute("point", "LEFT")
 			h:SetAttribute("xOffset", db.spacing)
@@ -1196,8 +1243,9 @@ end
 -- /lyorune diag : état de chaque cadre, pour comprendre un cadre vide sans avoir à deviner
 function Z:DiagnoseFrames()
 	for _, h in ipairs(Z.headers) do
-		-- hors raid, les cadres par groupe restent vides : inutile de les citer ; le cadre « Cible » seulement s'il sert
-		if (not h.def.raid or IsInRaid()) and not (h.def.extra and not next(extraButtons)) then
+		-- hors raid, les cadres par groupe restent vides : inutile de les citer ; « Cible » et « Épinglés » seulement s'ils servent
+		if (not h.def.raid or IsInRaid()) and not (h.def.extra and not next(extraButtons))
+			and not (h.def.key == "pinned" and not next(db.pinned)) then
 			local created, shown, dressed = 0, 0, 0
 			while h:GetAttribute("child" .. (created + 1)) do
 				created = created + 1
@@ -1333,6 +1381,7 @@ function Z:CreateFrames()
 	end)
 	Z:On("PLAYER_ENTERING_WORLD", updateAll)
 	Z:On("PLAYER_ROLES_ASSIGNED", ForVisible(UpdateRole))
+	Z:On("PARTY_LEADER_CHANGED", ForVisible(UpdateLeader))
 	Z:On("PLAYER_TARGET_CHANGED", ForVisible(UpdateTarget))
 	-- Cases cible et focalisation : leur unité change de personne sans que la case se cache ni s'affiche
 	local function RefreshExtra(...)
@@ -1409,4 +1458,78 @@ function Z:CreateFrames()
 		if db.perfMode and ticks % 2 == 0 then return end
 		everyCell()
 	end)
+end
+
+----------------------------------------------------------------------------------------------------
+-- Joueurs épinglés (réglage « pinned » : un nom par joueur, « Nom » ou « Nom-Royaume » comme le jeu les écrit)
+----------------------------------------------------------------------------------------------------
+-- Les noms épinglés, triés : c'est la liste confiée au cadre « Épinglés »
+function Z:PinnedList()
+	local names = {}
+	for name in pairs(db.pinned) do names[#names + 1] = name end
+	table.sort(names)
+	return names
+end
+
+-- Les joueurs du groupe, avec leur nom complet (le royaume s'ajoute pour un joueur d'un autre royaume)
+local function MemberNames()
+	local units = { "player" }
+	if IsInRaid() then
+		units = {}
+		for i = 1, GetNumGroupMembers() do units[i] = "raid" .. i end
+	else
+		for i = 1, 4 do units[#units + 1] = "party" .. i end
+	end
+	local names = {}
+	for _, unit in ipairs(units) do
+		local name = UnitExists(unit) and GetUnitName(unit, true)
+		if name and not issecret(name) then names[#names + 1] = name end
+	end
+	return names
+end
+
+-- Un nom tapé à la main : sans espace ni virgule (la virgule sépare les noms pour le jeu). Si un joueur du groupe
+-- porte ce nom, quelle que soit la casse, Lyorune prend son nom exact. Sinon, la première lettre en majuscule.
+function Z.CleanPinName(text)
+	if type(text) ~= "string" or issecret(text) then return nil end
+	text = text:gsub("[,%s%c]", "")
+	if text == "" or #text > 60 then return nil end
+	local wanted = text:lower()
+	for _, name in ipairs(MemberNames()) do
+		if name:lower() == wanted or name:match("^[^-]+"):lower() == wanted then return name end
+	end
+	return text:sub(1, 1):upper() .. text:sub(2)
+end
+
+-- Le nom à épingler pour une unité (« target », « raid7 »...), ou nil si ce n'est pas un joueur
+local function UnitPinName(unit)
+	if not unit or not UnitExists(unit) then return nil end
+	local player = UnitIsPlayer(unit)
+	if issecret(player) or not player then return nil end
+	local name = GetUnitName(unit, true)
+	if not name or issecret(name) then return nil end
+	return name
+end
+Z.UnitPinName = UnitPinName
+
+-- Épingle le joueur, ou le retire s'il l'était. Renvoie le message à afficher.
+function Z:TogglePin(name)
+	if not name then return L["aucun joueur : survolez sa case ou ciblez-le."] end
+	local added = not db.pinned[name]
+	db.pinned[name] = added or nil
+	if added then db.showPinned = true end -- épingler quelqu'un montre le cadre
+	Z:Refresh()
+	return (added and L["%s épinglé."] or L["%s retiré des épinglés."]):format(name)
+end
+
+-- /lyorune epingler [nom] : le nom donné, sinon le joueur de la case survolée, sinon ma cible
+function Z:PinCommand(text)
+	local name
+	if text and text ~= "" then
+		name = Z.CleanPinName(text)
+	else
+		local hovered = Z.hovered and Z.hovered:IsVisible() and Z.hovered.unit
+		name = UnitPinName(hovered) or UnitPinName("target")
+	end
+	Z:Print(Z:TogglePin(name))
 end

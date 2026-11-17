@@ -27,7 +27,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 11 | 1.17.0 | Synchronisation entre joueurs | Publiée (v1.17.0) |
 | 12 | 1.18.0 | Performances | Publiée (v1.18.0) |
 | 13 | 1.19.0 | Distance en trois paliers, soin refusé hors de vue (la flèche est abandonnée) | Publiée (v1.19.0) |
-| 14 | 1.20.0 | Joueurs épinglés, signal sur une case, chef et assistants | À faire |
+| 14 | 1.20.0 | Joueurs épinglés, signal sur une case, chef et assistants | Publiée (v1.20.0) |
 | 15 | 1.21.0 | Clics plus sûrs : clics du jeu en conflit, bijou et arrêt d'incantation | À faire |
 | 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | À faire |
 | 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | À faire |
@@ -144,10 +144,12 @@ Choisies après une comparaison avec VuhDo, HealBot et les addons de soin récen
 Les points marqués « à vérifier » se décident avec l'auteur avant tout codage.
 
 ## Étape 14 : joueurs épinglés, signal, chef de groupe (1.20.0)
-- [ ] Joueurs épinglés : un petit cadre de plus où l'on ajoute qui on veut par son nom (un 2e tank, un joueur à
-  surveiller), depuis le menu de sa case ou les options
-- [ ] Signal du jeu (ping) sur une case : marquer un joueur pour le groupe sans viser son personnage
-- [ ] Icônes de chef de groupe et d'assistant sur les cases
+- [x] Joueurs épinglés : un petit cadre de plus où l'on ajoute qui on veut par son nom (un 2e tank, un joueur à
+  surveiller). Le menu du clic droit appartient au jeu (règle : ne jamais modifier un cadre du jeu) : on épingle
+  donc depuis la case survolée (`/lyorune epingler`), la cible (« Épingler ma cible ») ou la liste de l'onglet Listes
+- [x] Signal du jeu (ping) sur une case : marquer un joueur pour le groupe sans viser son personnage
+- [x] Icônes de chef de groupe et d'assistant sur les cases
+- [x] En plus (demande de l'auteur) : l'avis de nouvelle version donne la page de cette version, avec ses nouveautés
 
 ## Étape 15 : clics plus sûrs (1.21.0)
 - [ ] Avertir quand un raccourci du « clic pour lancer » du jeu prend la même combinaison qu'un clic de Lyorune
@@ -173,12 +175,16 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
 2. Guide des joueurs (`docs/TUTORIEL.md`, `docs/GUIDE.en.md`), visite guidée en jeu, traduction anglaise.
-3. Cases cochées et état de l'étape mis à jour ci-dessus.
-4. Publication : `python outils/publier.py X.Y.Z --nouveau "..." --en "..."`, avec le numéro de chaque demande
+   Visite guidée courte : compléter une carte existante d'une ligne plutôt qu'ajouter une carte ; elle ne doit
+   jamais devenir longue au point de lasser.
+3. Description de ce que sait faire l'addon, tenue à jour : `## Notes` du `Lyorune.toc` (français et anglais),
+   `README.md` et `README.en.md`, description du dépôt GitHub (`gh repo edit --description`).
+4. Cases cochées et état de l'étape mis à jour ci-dessus.
+5. Publication : `python outils/publier.py X.Y.Z --nouveau "..." --en "..."`, avec le numéro de chaque demande
    (`(#12)`) dans le texte du changement.
-5. Essai en jeu : `outils\installer.bat`, puis `/reload`.
-6. Commit, étiquette `vX.Y.Z`, envoi sur GitHub : la version est publiée avec son archive.
-7. Demandes de l'étape fermées, jalon fermé.
+6. Essai en jeu : `outils\installer.bat`, puis `/reload`.
+7. Commit, étiquette `vX.Y.Z`, envoi sur GitHub : la version est publiée avec son archive.
+8. Demandes de l'étape fermées, jalon fermé.
 
 ## Déjà fait (jusqu'à la 1.5.4)
 Résurrection en un clic, transparence avec préréglages, sorts lus dans le grimoire, rapports d'erreurs et

@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.20.0] - 2026-11-17
+
+### Ajouté
+
+- Joueurs épinglés : un petit cadre « Épinglés » pour garder à part un 2e tank ou un joueur à surveiller ; on épingle depuis la case survolée (/lyorune epingler), sa cible ou la liste de l'onglet Listes ([#41](https://github.com/BellaHealFr/Lyorune/issues/41)).
+- Signal du jeu sur une case : survolez-la et appuyez sur la touche de signal, le joueur est marqué pour tout le groupe ([#41](https://github.com/BellaHealFr/Lyorune/issues/41)).
+- Couronne du chef de groupe et drapeau des assistants du raid sur les cases, à placer dans l'éditeur de placement ([#41](https://github.com/BellaHealFr/Lyorune/issues/41)).
+
+### Amélioré
+
+- L'avis de nouvelle version donne l'adresse de la page de cette version, où chaque nouveauté est décrite.
+
 ## [1.19.0] - 2026-11-17
 
 ### Ajouté
@@ -306,6 +318,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.20.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.16.0...v1.17.0

@@ -133,6 +133,9 @@ local function BuildColumns(page, columns)
 				y = y - widget:GetHeight() - 7
 			end)
 		end
+		page.used = math.max(page.used or 0, -y) -- hauteur occupée par la plus longue colonne (contrôlée par les tests)
+		page.heights = page.heights or {}
+		page.heights[index] = -y
 	end
 end
 
@@ -392,6 +395,7 @@ local function SimpleTabs()
 				{ "check", "showTarget", "Case de ma cible", "Dans un petit cadre « Cible », déplaçable : mêmes clics et même apparence que les autres cases. Un ennemi est en rouge, sans icônes." },
 				{ "check", "showTargetTarget", "Case de la cible de ma cible", "Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change." },
 				{ "check", "showFocus", "Case de ma focalisation" },
+				{ "check", "showPinned", "Cadre des joueurs épinglés", "Un petit cadre « Épinglés » avec les joueurs de votre liste (onglet Listes), par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler." },
 				{ "check", "hideBlizzard", "Masquer les cadres de groupe du jeu", "Expérimental. Pour les faire revenir, décochez puis tapez /reload." },
 				{ "head", "Mode test" },
 				{ "note", "Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer.", 30 },
@@ -448,11 +452,10 @@ local function SimpleTabs()
 				{ "head", "Joueur" },
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
 				{ "check", "showMarker", "Marqueur de raid" },
+				{ "check", "showLeader", "Chef de groupe et assistants", "Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid." },
 				{ "check", "showThreat", "Bordure rouge quand il est attaqué" },
 				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la vie : jaune quand il monte dans la liste d'un monstre, orange juste avant qu'il le prenne, rouge quand il l'a." },
 				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte)." },
-				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },
-				{ "check", "clickTooltip", "Mes clics dans l'infobulle", "Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro." },
 			},
 			{
 				{ "head", "Affaiblissements" },
@@ -466,6 +469,10 @@ local function SimpleTabs()
 				{ "check", "privateAuras", "Afficher les auras privées", "Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place choisie ici (deux au plus)." },
 				{ "step", "privateAuraSize", "Taille des auras privées" },
 				{ "cycle", "privateAuraPoint", "Place des auras privées" },
+				{ "head", "Au survol d'une case" },
+				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },
+				{ "check", "clickTooltip", "Mes clics dans l'infobulle", "Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro." },
+				{ "check", "pingCells", "Signal du jeu sur une case", "Survolez une case et appuyez sur la touche de signal du jeu : le joueur est marqué pour tout le groupe, sans viser son personnage." },
 			},
 		},
 		Soins = {
@@ -498,8 +505,8 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Onglet Listes : trois listes de noms de sorts
 ----------------------------------------------------------------------------------------------------
-local function ListEditor(page, x, title, hint, key)
-	local width = 208
+local function ListEditor(page, x, title, hint, key, clean)
+	local width = 151
 	local head = Heading(page, title)
 	head:SetWidth(width)
 	head:SetPoint("TOPLEFT", x, 0)
@@ -516,7 +523,8 @@ local function ListEditor(page, x, title, hint, key)
 		end
 	end
 	local edit = UI.Edit(page, width, function(text)
-		if text ~= "" then
+		if clean then text = clean(text) end
+		if text and text ~= "" then
 			Z.db[key][text] = true
 			Z:Refresh()
 		end
@@ -537,15 +545,26 @@ local function ListEditor(page, x, title, hint, key)
 		rows[i] = row
 	end
 	Register(page.tabIndex, L[title], edit)
-	return Fill
+	return Fill, rows
 end
 
 local function BuildLists(page)
+	local fillPinned, pinnedRows = ListEditor(page, 501, "Joueurs épinglés", "Montrés dans le cadre « Épinglés ». Tapez un nom puis Entrée.", "pinned", Z.CleanPinName)
 	local fills = {
-		ListEditor(page, 0, "Mes sorts à suivre", "Sorts à vous, affichés avec vos soins sur la durée. Tapez le nom exact puis Entrée.", "extraTracked"),
-		ListEditor(page, 222, "À ignorer", "Affaiblissements à ne jamais afficher.", "ignoredNames"),
-		ListEditor(page, 444, "À mettre en avant", "Affaiblissements affichés en grand, avec contour lumineux et son (onglet Indicateurs).", "importantNames"),
+		ListEditor(page, 0, "Mes sorts à suivre", "Vos sorts affichés avec vos soins sur la durée. Nom exact puis Entrée.", "extraTracked"),
+		ListEditor(page, 167, "À ignorer", "Affaiblissements à ne jamais afficher.", "ignoredNames"),
+		ListEditor(page, 334, "À mettre en avant", "Affaiblissements en grand, avec contour et son (onglet Indicateurs).", "importantNames"),
+		fillPinned,
 	}
+	-- Épingler ma cible : sous la liste des joueurs épinglés
+	local pinTarget = UI.Button(page, L["Épingler ma cible"], 151, 22, function()
+		local name = Z.UnitPinName("target")
+		if name and Z.db.pinned[name] then return Z:Print(L["%s est déjà épinglé."]:format(name)) end
+		Z:Print(Z:TogglePin(name))
+		fillPinned()
+	end)
+	pinTarget:SetPoint("TOPLEFT", pinnedRows[#pinnedRows], "BOTTOMLEFT", 0, -8)
+	pinTarget.tip = L["Aussi : survolez une case et tapez /lyorune epingler (une macro sur une touche, par exemple)."]
 	local function FillAll() for _, fill in ipairs(fills) do fill() end end
 	page:SetScript("OnShow", FillAll)
 	FillAll()
@@ -1384,6 +1403,7 @@ local function BuildHelp(page)
 		local c = "|cff" .. UI.Hex("accent")
 		list:SetText(c .. "/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n" .. c .. "/lyorune test|r  " .. L["mode test (faux groupe)"]
 			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune assistant|r  " .. L["assistant de départ"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
+			.. "\n" .. c .. "/lyorune epingler|r  " .. L["épingler ou retirer le joueur survolé"]
 			.. "\n" .. c .. "/lyorune groupe|r  " .. L["qui a Lyorune dans le groupe"] .. "\n" .. c .. "/lyorune annuler|r  " .. L["annuler le dernier import"]
 			.. "\n" .. c .. "/lyorune mesure|r  " .. L["mesurer les performances"]
 			.. "\n" .. c .. "/lyorune bug|r  " .. L["signaler un bug"] .. "\n" .. c .. "/lyorune diag|r  " .. L["compatibilité avec le jeu"])
@@ -1617,6 +1637,7 @@ local function Build()
 	window.magic = UI.HeaderMagic(window, logo, window.search)
 	if Z.RefreshRunes then Z:RefreshRunes(window) end
 	window.Select = Select
+	window.tabs = tabs -- les tests vérifient que chaque onglet tient dans la fenêtre
 	Select(1, true)
 end
 

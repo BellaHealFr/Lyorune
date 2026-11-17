@@ -36,8 +36,11 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Icône de résurrection au centre | Quelqu'un est en train de le relever |
 | Icône d'invocation au centre | Une invocation lui est proposée, ou il l'a acceptée ou refusée |
 | Icône de phase au centre | Il est dans une autre phase : il semble proche, mais vos sorts ne l'atteignent pas |
+| Couronne près de l'icône de rôle | C'est le chef du groupe (un petit drapeau : un assistant du raid) |
 
 Survolez une case hors combat : l'infobulle montre le joueur, puis la liste de vos clics et touches avec le sort ou la macro de chacun.
+
+**Signaler un joueur au groupe** : survolez sa case et appuyez sur la touche de signal du jeu (réglée dans les raccourcis du jeu). Le joueur est marqué pour tout le groupe, comme si vous visiez son personnage, mais sans le chercher dans la mêlée. À couper dans l'onglet Indicateurs (« Signal du jeu sur une case »).
 
 ## 2. Soigner d'un clic
 
@@ -157,11 +160,12 @@ Avec l'option « Le même clic relève un joueur mort » (onglet Clics, cochée 
 - **Sans étiquettes** : décochez « Numéro de groupe au-dessus des cases ». Elles reviennent seulement le temps de déplacer les cadres.
 - **Taille** : onglet Cadres, « Largeur », « Hauteur », « Espacement ».
 - **Échelle générale** : onglet Cadres, « Échelle générale (%) », de 50 à 200 %. Tout grandit ou rapetisse ensemble (cases, icônes, textes, étiquettes), sans changer vos réglages de taille. Le mode test suit la même échelle. En combat, le changement attend la fin du combat.
-- **Placer les éléments de la case** : onglet Cadres, bouton « Placer les éléments de la case... ». Une case d'exemple agrandie montre tous les éléments : nom, texte de vie, icône de rôle, marqueur de raid, icône centrale, vos soins sur la durée, affaiblissements, affaiblissement important, buff manquant et auras privées. Glissez un élément avec la souris, ou choisissez-le dans la liste et poussez-le avec « Gauche », « Haut », « Bas », « Droite » : un pixel par clic, cinq avec Maj. Le décalage s'affiche sous la case et vos vraies cases suivent aussitôt. « Remettre à sa place » annule pour l'élément choisi, « Tout remettre » pour tous. Chaque forme de case (Barre, Tuile, Carré, Bandeau) garde ses propres placements.
+- **Placer les éléments de la case** : onglet Cadres, bouton « Placer les éléments de la case... ». Une case d'exemple agrandie montre tous les éléments : nom, texte de vie, icône de rôle, marqueur de raid, chef de groupe, icône centrale, vos soins sur la durée, affaiblissements, affaiblissement important, buff manquant et auras privées. Glissez un élément avec la souris, ou choisissez-le dans la liste et poussez-le avec « Gauche », « Haut », « Bas », « Droite » : un pixel par clic, cinq avec Maj. Le décalage s'affiche sous la case et vos vraies cases suivent aussitôt. « Remettre à sa place » annule pour l'élément choisi, « Tout remettre » pour tous. Chaque forme de case (Barre, Tuile, Carré, Bandeau) garde ses propres placements.
 - **Rangement** : par groupe, par rôle ou en grille. Par rôle, choisissez l'ordre (tank, soin, dégâts, ou une autre des six combinaisons). En grille, tout le raid tient d'un seul bloc, sans trou entre les groupes : « Cases par colonne en grille » règle sa hauteur (8 cases par colonne donnent 5 colonnes pour 40 joueurs).
 - **Ordre dans chaque bloc** : l'ordre du groupe, par nom, ou par classe puis par nom (tous les prêtres ensemble, puis tous les druides...). C'est le jeu qui tient cet ordre à jour, même en plein combat, quand quelqu'un arrive ou change de groupe. En rangement par rôle, « par classe » range par nom dans chaque rôle.
 - **Chaque groupe garde sa place** : en rangement par groupe, le groupe 3 reste toujours en 3e colonne, même si le groupe 2 est vide. Pratique pour retrouver un joueur d'un coup d'œil. Décoché, les groupes se resserrent.
 - **Tanks et familiers** : chacun peut avoir son propre cadre, déplaçable séparément.
+- **Joueurs épinglés** : un petit cadre « Épinglés » pour les joueurs que vous voulez garder à part (un 2e tank, un joueur à surveiller). Pour épingler quelqu'un : survolez sa case et tapez `/lyorune epingler` (pratique dans une macro sur une touche), ou ciblez-le et cliquez sur « Épingler ma cible » (onglet Listes), ou tapez son nom dans la liste « Joueurs épinglés ». Le même geste le retire. Le cadre n'apparaît que si un joueur de la liste est dans votre groupe ; il se déplace par son étiquette. En combat, un changement de la liste attend la fin du combat.
 - **Cible, cible de la cible, focalisation** : onglet Cadres, trois cases à cocher (« Case de ma cible », « Case de la cible de ma cible », « Case de ma focalisation »). Elles apparaissent dans un petit cadre « Cible », que l'on déplace par son étiquette comme les autres. Chaque case a vos clics et la même apparence que celles du groupe. Elle n'apparaît que si la cible ou la focalisation existe, même en combat. Un ennemi est en rouge, un personnage non joueur amical en vert, et ni l'un ni l'autre n'affiche d'icônes de soins ou d'affaiblissements. La cible de votre cible (par exemple le joueur que le boss frappe) est revue deux fois par seconde, car le jeu ne prévient pas quand elle change.
 - **Quand les afficher** : « Afficher les cadres » (onglet Cadres) propose « Toujours » ou « En combat seulement ». « Toujours » garde les cadres à l'écran, en combat comme hors combat, y compris quand vous jouez seul en quête (avec « Mon cadre quand je suis seul » coché). « En combat seulement » les fait apparaître au début de chaque combat et disparaître à la fin. Les étiquettes s'affichent avec les cadres.
 - **Un cadre reste vide ?** Tapez `/lyorune diag` : Lyorune écrit dans le chat l'état de chaque cadre. Copiez ces lignes dans votre signalement (`/lyorune bug`).
@@ -249,7 +253,7 @@ Lyorune se parle de façon invisible avec les autres joueurs du groupe qui l'uti
 - **Qui relève qui** (« Montrer qui relève qui ») : quand un soigneur commence une résurrection, son nom s'affiche en vert à la place de « Mort » sur la case du joueur, chez tous ceux qui ont Lyorune. Vous voyez d'un coup d'œil qui est déjà pris en charge : deux soigneurs ne relèvent plus le même joueur pendant qu'un autre attend. Le nom reste le temps du sort, puis une minute pendant que le joueur décide d'accepter. Pendant un combat de boss, le jeu bloque ces messages : seule l'icône de résurrection du jeu reste.
 - **Qui a Lyorune** : sous les cases, Lyorune compte les joueurs du groupe qui l'utilisent. Passez la souris dessus pour la liste, avec la version de chacun, ou tapez `/lyorune groupe`.
 - **Configurations** : vous recevez seulement celles que vous acceptez (voir le chapitre 10).
-- **Nouvelle version** : Lyorune vous prévient une fois si une version plus récente existe.
+- **Nouvelle version** : Lyorune vous prévient une fois si une version plus récente existe, avec l'adresse de sa page officielle, où chaque nouveauté est décrite. Après la mise à jour, la fenêtre des nouveautés les détaille aussi en jeu.
 
 Rien n'est jamais appliqué sans votre accord. Un joueur qui envoie trop de messages est ignoré un moment.
 
@@ -304,6 +308,7 @@ Joignez ce résultat à votre signalement si le jeu ralentit avec Lyorune.
 | `/lyorune assistant` | Assistant de départ (trois questions) |
 | `/lyorune verrou` | Verrouiller ou libérer la position |
 | `/lyorune reset` | Remettre les cadres au centre |
+| `/lyorune epingler` | Épingler ou retirer le joueur survolé (ou votre cible, ou le nom tapé après) |
 | `/lyorune groupe` | Joueurs du groupe qui ont Lyorune |
 | `/lyorune annuler` | Revenir à la configuration d'avant le dernier import |
 | `/lyorune mesure` | Mesurer les performances (hors combat) |

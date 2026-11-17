@@ -270,7 +270,7 @@ Z.translations.enUS = {
 	["Envoi impossible pour le moment (combat ou joueur introuvable)."] = "Cannot send right now (combat or player not found).",
 	["Configuration envoyée à %s. Il doit avoir Lyorune et l'accepter."] = "Configuration sent to %s. They need Lyorune and must accept it.",
 	["%s vous propose sa configuration Lyorune (apparence, clics, alertes). Votre configuration actuelle sera remplacée."] = "%s offers you their Lyorune configuration (look, clicks, alerts). Your current configuration will be replaced.",
-	["une version plus récente de Lyorune existe (%s, vous avez %s). Téléchargez-la uniquement sur github.com/BellaHealFr/Lyorune."] = "a newer version of Lyorune exists (%s, you have %s). Download it only from github.com/BellaHealFr/Lyorune.",
+	["Lyorune %s est sortie (vous avez %s). Ce qu'elle apporte : github.com/BellaHealFr/Lyorune/releases/tag/v%s (seule source officielle). Après la mise à jour, la fenêtre des nouveautés détaille chaque changement en jeu."] = "Lyorune %s is out (you have %s). What it brings: github.com/BellaHealFr/Lyorune/releases/tag/v%s (the only official source). After updating, the news window details every change in game.",
 
 	-- Aide
 	["Lire une case"] = "Reading a cell", ["Commandes"] = "Commands", ["Découvrir"] = "Discover",
@@ -365,17 +365,17 @@ Z.translations.enUS = {
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, cible et focalisation, mode test.\n"
+			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu), les coins, le panneau des buffs manquants.\n"
-			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
+			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -611,4 +611,28 @@ Z.translations.enUS = {
 	["Distance en trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (case encore plus estompée, empreintes au centre) (#31)."] = "Distance in three levels, even in dungeons and raids: in healing range, close (faded cell), far away (cell faded further, footprints in the middle) (#31).",
 	["Soin refusé car le joueur est hors de vue : un œil apparaît 3 secondes au centre de sa case (#31)."] = "Heal refused because the player is out of sight: an eye shows for 3 seconds in the middle of their cell (#31).",
 	["/lyorune position vérifie aussi le palier « très loin », en donjon et en combat."] = "/lyorune position also checks the \"far away\" level, in dungeons and in combat.",
+	-- 1.20.0 : joueurs épinglés, signal, chef de groupe
+	["Épinglés"] = "Pinned", ["Au survol d'une case"] = "When hovering a cell",
+	["Cadre des joueurs épinglés"] = "Pinned players frame",
+	["Un petit cadre « Épinglés » avec les joueurs de votre liste (onglet Listes), par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler."] = "A small \"Pinned\" frame with the players on your list (Lists tab), a second tank for example. To pin: hover their cell and type /lyorune pin.",
+	["Chef de groupe et assistants"] = "Group leader and assistants",
+	["Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid."] = "A crown on the leader's cell, a small flag on the raid assistants' cells.",
+	["Signal du jeu sur une case"] = "Game ping on a cell",
+	["Survolez une case et appuyez sur la touche de signal du jeu : le joueur est marqué pour tout le groupe, sans viser son personnage."] = "Hover a cell and press the game's ping key: the player is marked for the whole group, without aiming at their character.",
+	["Joueurs épinglés"] = "Pinned players",
+	["Montrés dans le cadre « Épinglés ». Tapez un nom puis Entrée."] = "Shown in the \"Pinned\" frame. Type a name then Enter.",
+	["Vos sorts affichés avec vos soins sur la durée. Nom exact puis Entrée."] = "Your spells shown with your heals over time. Exact name then Enter.",
+	["Affaiblissements en grand, avec contour et son (onglet Indicateurs)."] = "Debuffs shown big, with outline and sound (Indicators tab).",
+	["Épingler ma cible"] = "Pin my target",
+	["%s est déjà épinglé."] = "%s is already pinned.",
+	["Aussi : survolez une case et tapez /lyorune epingler (une macro sur une touche, par exemple)."] = "Also: hover a cell and type /lyorune pin (a macro on a key, for example).",
+	["aucun joueur : survolez sa case ou ciblez-le."] = "no player: hover their cell or target them.",
+	["%s épinglé."] = "%s pinned.",
+	["%s retiré des épinglés."] = "%s removed from pinned players.",
+	["épingler ou retirer le joueur survolé"] = "pin or unpin the hovered player",
+	["Chef de groupe"] = "Group leader",
+	["Joueurs épinglés : un petit cadre « Épinglés » pour garder à part un 2e tank ou un joueur à surveiller ; on épingle depuis la case survolée (/lyorune epingler), sa cible ou la liste de l'onglet Listes (#41)."] = "Pinned players: a small \"Pinned\" frame to keep a second tank or a player to watch apart; pin from the hovered cell (/lyorune pin), your target or the list in the Lists tab (#41).",
+	["Signal du jeu sur une case : survolez-la et appuyez sur la touche de signal, le joueur est marqué pour tout le groupe (#41)."] = "Game ping on a cell: hover it and press the ping key, the player is marked for the whole group (#41).",
+	["Couronne du chef de groupe et drapeau des assistants du raid sur les cases, à placer dans l'éditeur de placement (#41)."] = "Group leader crown and raid assistant flag on the cells, movable in the placement editor (#41).",
+	["L'avis de nouvelle version donne l'adresse de la page de cette version, où chaque nouveauté est décrite."] = "The new version notice gives the address of that version's page, where every new feature is described.",
 }

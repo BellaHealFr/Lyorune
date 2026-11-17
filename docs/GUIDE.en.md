@@ -37,8 +37,11 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Resurrection icon in the centre | Someone is resurrecting them |
 | Summon icon in the centre | A summon is offered to them, or they accepted or declined it |
 | Phase icon in the centre | They are in another phase: they seem close, but your spells cannot reach them |
+| Crown next to the role icon | They lead the group (a small flag: a raid assistant) |
 
 Hover a frame out of combat: the tooltip shows the player, then the list of your clicks and keys with the spell or macro of each.
+
+**Pointing a player out to the group**: hover their cell and press the game's ping key (set in the game's key bindings). The player is marked for the whole group, as if you aimed at their character, without hunting for them in the fight. Can be turned off in the Indicators tab ("Game ping on a cell").
 
 ## 2. Healing with one click
 
@@ -158,11 +161,12 @@ With the option "The same click resurrects a dead player" (Clicks tab, ticked by
 - **Without labels**: untick "Group number above the cells". They only come back while you move the frames.
 - **Size**: Frames tab, "Width", "Height", "Spacing".
 - **Overall scale**: Frames tab, "Overall scale (%)", from 50 to 200%. Everything grows or shrinks together (cells, icons, texts, labels) without changing your size settings. Test mode follows the same scale. In combat, the change waits for the end of the fight.
-- **Place the cell elements**: Frames tab, "Place the cell elements..." button. An enlarged sample cell shows every element: name, health text, role icon, raid marker, centre icon, your heals over time, debuffs, important debuff, missing buff and private auras. Drag an element with the mouse, or pick it in the list and nudge it with "Left", "Up", "Down", "Right": one pixel per click, five with Shift. The offset is shown under the cell and your real cells follow at once. "Put it back" undoes it for the chosen element, "Reset all" for all of them. Each cell shape (Bar, Tile, Square, Strip) keeps its own placements.
+- **Place the cell elements**: Frames tab, "Place the cell elements..." button. An enlarged sample cell shows every element: name, health text, role icon, raid marker, group leader, centre icon, your heals over time, debuffs, important debuff, missing buff and private auras. Drag an element with the mouse, or pick it in the list and nudge it with "Left", "Up", "Down", "Right": one pixel per click, five with Shift. The offset is shown under the cell and your real cells follow at once. "Put it back" undoes it for the chosen element, "Reset all" for all of them. Each cell shape (Bar, Tile, Square, Strip) keeps its own placements.
 - **Sorting**: by group, by role or as a grid. By role, choose the order (tank, healer, damage, or any of the six combinations). As a grid, the whole raid is one block with no gap between groups: "Cells per column in grid" sets its height (8 cells per column give 5 columns for 40 players).
 - **Order in each block**: group order, by name, or by class then name (all priests together, then all druids...). The game keeps this order up to date by itself, even in combat, when someone joins or changes group. When arranged by role, "by class" sorts by name within each role.
 - **Each group keeps its place**: when arranged by group, group 3 always stays in the 3rd column, even if group 2 is empty. Handy to find a player at a glance. Unchecked, groups close up.
 - **Tanks and pets**: each can have its own frame, moved separately.
+- **Pinned players**: a small "Pinned" frame for the players you want to keep apart (a second tank, a player to watch). To pin someone: hover their cell and type `/lyorune pin` (handy in a macro on a key), or target them and click "Pin my target" (Lists tab), or type their name in the "Pinned players" list. The same action unpins them. The frame only shows when a player from the list is in your group; move it by its label. In combat, a change to the list waits for the end of the fight.
 - **Target, target's target, focus**: Frames tab, three checkboxes ("My target's cell", "My target's target cell", "My focus cell"). They appear in a small "Target" frame, moved by its label like the others. Each cell has your clicks and the same look as the group's. It only appears when the target or focus exists, even in combat. An enemy is red, a friendly non-player character green, and neither shows heal or debuff icons. Your target's target (for example the player the boss is hitting) is checked twice a second, since the game gives no notice when it changes.
 - **When to show them**: "Show the frames" (Frames tab) offers "Always" or "In combat only". "Always" keeps the frames on screen, in and out of combat, including when you quest alone (with "My own frame when solo" ticked). "In combat only" makes them appear when a fight starts and disappear when it ends. The labels show along with the frames.
 - **A frame stays empty?** Type `/lyorune diag`: Lyorune writes the state of each frame in the chat. Copy those lines into your report (`/lyorune bug`).
@@ -250,7 +254,7 @@ Lyorune talks invisibly with the other players of the group who use it. Everythi
 - **Who resurrects whom** ("Show who resurrects whom"): when a healer starts a resurrection, their name shows in green instead of "Dead" on the player's cell, for everyone who has Lyorune. You see at a glance who is already taken care of: two healers no longer resurrect the same player while another one waits. The name stays during the cast, then for a minute while the player decides to accept. During a boss fight, the game blocks these messages: only the game's resurrection icon remains.
 - **Who has Lyorune**: below the boxes, Lyorune counts the group players who use it. Hover over it for the list, with each player's version, or type `/lyorune group`.
 - **Configurations**: you only get the ones you accept (see chapter 10).
-- **New version**: Lyorune tells you once if a newer version exists.
+- **New version**: Lyorune tells you once if a newer version exists, with the address of its official page, where every new feature is described. After updating, the news window also details them in game.
 
 Nothing is ever applied without your consent. A player who sends too many messages is ignored for a while.
 
@@ -303,6 +307,7 @@ Attach this result to your report if the game slows down with Lyorune.
 | `/lyorune assistant` | Setup assistant (three questions) |
 | `/lyorune verrou` | Lock or unlock the position |
 | `/lyorune reset` | Move the frames back to the centre |
+| `/lyorune pin` | Pin or unpin the hovered player (or your target, or the name typed after) |
 | `/lyorune group` | Group players who have Lyorune |
 | `/lyorune undo` | Go back to the configuration from before the last import |
 | `/lyorune measure` | Measure performance (out of combat) |

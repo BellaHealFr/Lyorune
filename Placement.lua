@@ -15,6 +15,7 @@ Z.placeElements = {
 	{ "text", "Texte de vie" },
 	{ "role", "Icône de rôle" },
 	{ "marker", "Marqueur de raid" },
+	{ "leader", "Chef de groupe" },
 	{ "center", "Icône centrale" },
 	{ "hots", "Mes soins sur la durée" },
 	{ "debuffs", "Affaiblissements" },
@@ -160,6 +161,8 @@ local function Draw()
 	cell.role:Show()
 	SetRaidTargetIconTexture(cell.marker, 1)
 	cell.marker:Show()
+	cell.leader:SetTexture("Interface\GroupFrame\UI-Group-LeaderIcon")
+	cell.leader:Show()
 	cell.center:SetTexture(READY_CHECK_READY_TEXTURE)
 	cell.center:Show()
 

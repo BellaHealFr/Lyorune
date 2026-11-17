@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.20.0", date = "2026-11-17",
+		added = {
+			"Joueurs épinglés : un petit cadre « Épinglés » pour garder à part un 2e tank ou un joueur à surveiller ; on épingle depuis la case survolée (/lyorune epingler), sa cible ou la liste de l'onglet Listes (#41).",
+			"Signal du jeu sur une case : survolez-la et appuyez sur la touche de signal, le joueur est marqué pour tout le groupe (#41).",
+			"Couronne du chef de groupe et drapeau des assistants du raid sur les cases, à placer dans l'éditeur de placement (#41).",
+		},
+		improved = {
+			"L'avis de nouvelle version donne l'adresse de la page de cette version, où chaque nouveauté est décrite.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.19.0", date = "2026-11-17",
 		added = {
 			"Distance en trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (case encore plus estompée, empreintes au centre) (#31).",

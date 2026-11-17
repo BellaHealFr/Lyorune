@@ -60,6 +60,10 @@ local function Fill(cell, index)
 	local role = slot == 0 and "TANK" or slot == 1 and "HEALER" or nil
 	cell.role:SetShown(db.showRole and role ~= nil)
 	if role then cell.role:SetAtlas(role == "TANK" and "roleicon-tiny-tank" or "roleicon-tiny-healer") end
+	-- Chef de groupe sur la première case, un assistant par groupe de cinq en raid
+	local leader = db.showLeader and (index == 1 and "LeaderIcon" or size > 5 and slot == 0 and "AssistantIcon")
+	if leader then cell.leader:SetTexture("Interface\GroupFrame\UI-Group-" .. leader) end
+	cell.leader:SetShown(leader and true or false)
 	local mana = db.manaBars == "ALL" or (db.manaBars == "HEALERS" and role == "HEALER")
 	if mana ~= cell.powerShown then
 		cell.powerShown = mana

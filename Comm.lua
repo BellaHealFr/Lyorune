@@ -326,7 +326,9 @@ local function OnVersion(version, sender)
 	end
 	if votes.count >= 2 then
 		newerSeen = true
-		Z:Print((Z.L["une version plus récente de Lyorune existe (%s, vous avez %s). Téléchargez-la uniquement sur github.com/BellaHealFr/Lyorune."]):format(version, Z.version))
+		-- Le contenu d'une version future est inconnu de ce client, et un texte libre venu d'un autre joueur ne
+		-- s'affiche jamais : l'avis donne donc la page officielle de cette version, où chaque nouveauté est décrite.
+		Z:Print((Z.L["Lyorune %s est sortie (vous avez %s). Ce qu'elle apporte : github.com/BellaHealFr/Lyorune/releases/tag/v%s (seule source officielle). Après la mise à jour, la fenêtre des nouveautés détaille chaque changement en jeu."]):format(version, Z.version, version))
 	end
 end
 

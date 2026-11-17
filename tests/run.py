@@ -30,7 +30,7 @@ local step = function(label, fn) local ok, err = pcall(fn) print((ok and "OK    
 step("demarrage", function()
   FireEvent("ADDON_LOADED", "Lyorune")
   FireEvent("PLAYER_LOGIN")
-  assert(Z.header and #Z.headers == 12, "en-tetes")
+  assert(Z.header and #Z.headers == 13, "en-tetes")
 end)
 
 step("clics par defaut et resurrection automatique", function()
@@ -597,6 +597,7 @@ step("entre joueurs : version et envoi de configuration", function()
   FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "PARTY", "Ami") assert(#PRINTED == n, "un seul joueur a suffi")
   FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "PARTY", "Autre") assert(#PRINTED == n + 1, "version plus recente non signalee")
   assert(PRINTED[#PRINTED]:find("github.com/BellaHealFr/Lyorune", 1, true), "source officielle absente")
+  assert(PRINTED[#PRINTED]:find("releases/tag/v2.0.0", 1, true), "avis sans la page des nouveautes de cette version")
   FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:2.0.0", "PARTY", "Troisieme") assert(#PRINTED == n + 1, "signalee deux fois")
   -- messages abîmés : aucune erreur
   for _, bad in ipairs({ "n'importe quoi", "C:1:99:2:x", "C:1:0:0:x", "C:a:1:1:x", "C:1:1:1:" .. ("x"):rep(300), "V:", "C:", ("x"):rep(255) }) do
@@ -1883,6 +1884,79 @@ step("etape 13 : distance en trois paliers, soin refuse hors de vue", function()
   for k, v in pairs(saved) do Z.db[k] = v end
   Z.db.positionDiag = nil
   b.readyCheck = readyCheck
+  Z:Refresh() RunUpdates()
+end)
+
+step("etape 14 : joueurs epingles, signal, chef de groupe", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  local h = LyorunePinned
+  assert(h and h.def.key == "pinned", "cadre Epingles absent")
+  -- liste vide : cadre cache, meme coche
+  Z.db.pinned = {} Z.db.showPinned = true Z:Refresh()
+  assert(not h:IsShown(), "cadre vide affiche")
+  -- nom tape a la main : nettoye, casse du joueur du groupe retrouvee
+  GROUP_NAMES.party2 = "Thrall-Autreroyaume"
+  assert(Z.CleanPinName("  thrall ") == "Thrall-Autreroyaume", tostring(Z.CleanPinName("thrall")))
+  assert(Z.CleanPinName("jaina,proud moore") == "Jainaproudmoore", "virgule ou espace gardes")
+  assert(Z.CleanPinName("") == nil and Z.CleanPinName(MakeSecret()) == nil and Z.CleanPinName(("x"):rep(80)) == nil)
+  -- /lyorune epingler Nom : la liste passe au jeu (nameList), sans filtre de groupe ni de role
+  Z.db.showPinned = false
+  SlashCmdList.LYORUNE("epingler Thrall")
+  assert(Z.db.pinned["Thrall-Autreroyaume"] and Z.db.showPinned, "epingler ne montre pas le cadre")
+  SlashCmdList.LYORUNE("épingler Anduin")
+  assert(h:GetAttribute("nameList") == "Anduin,Thrall-Autreroyaume", tostring(h:GetAttribute("nameList")))
+  assert(h:GetAttribute("groupFilter") == nil and h:GetAttribute("roleFilter") == nil and h:IsShown(), "cadre Epingles mal regle")
+  -- case survolee : epingler puis retirer le meme joueur
+  local b for _, x in ipairs(Z.buttons) do if x.unit and x.unit ~= "player" and x:IsVisible() and not x.extra then b = x break end end
+  b:Run("OnEnter") GROUP_NAMES[b.unit] = "Varian"
+  SlashCmdList.LYORUNE("epingler") assert(Z.db.pinned.Varian, "case survolee non epinglee")
+  SlashCmdList.LYORUNE("epingler") assert(not Z.db.pinned.Varian, "second appel ne retire pas")
+  b:Run("OnLeave") GROUP_NAMES[b.unit] = nil
+  -- personne de vise : message, rien d'ajoute
+  local n = #PRINTED
+  UnitIsPlayer = function() return false end
+  SlashCmdList.LYORUNE("pin")
+  UnitIsPlayer = function() return true end
+  assert(#PRINTED == n + 1 and PRINTED[n + 1]:find("aucun joueur", 1, true), "message sans joueur")
+  -- en combat, la liste change a la fin du combat
+  COMBAT = true SlashCmdList.LYORUNE("epingler Garrosh") COMBAT = false
+  assert(not h:GetAttribute("nameList"):find("Garrosh"), "liste changee en combat")
+  FireEvent("PLAYER_REGEN_ENABLED")
+  assert(h:GetAttribute("nameList"):find("Garrosh"), "liste non reprise apres le combat")
+  -- interrupteur et diagnostic
+  Z.db.showPinned = false Z:Refresh() assert(not h:IsShown(), "showPinned coupe")
+  assert(Z:Export():find("pinned") == nil, "noms epingles partages")
+  -- chef de groupe et assistant
+  Z.db.showLeader = true LEADER = b.unit FireEvent("PARTY_LEADER_CHANGED")
+  assert(b.leader:IsShown() and b.leader._tex:find("LeaderIcon", 1, true), "couronne absente")
+  LEADER = nil RAID = true ASSISTS[b.unit] = true FireEvent("PARTY_LEADER_CHANGED")
+  assert(b.leader:IsShown() and b.leader._tex:find("AssistantIcon", 1, true), "drapeau d'assistant absent")
+  RAID = false FireEvent("PARTY_LEADER_CHANGED")
+  assert(not b.leader:IsShown(), "assistant hors raid")
+  -- reponse secrete en combat : l'icone reste comme elle etait
+  LEADER = b.unit FireEvent("PARTY_LEADER_CHANGED")
+  SECRET_LEADER = true FireEvent("PARTY_LEADER_CHANGED") SECRET_LEADER = nil
+  assert(b.leader:IsShown(), "reponse secrete efface la couronne")
+  Z.db.showLeader = false Z:Refresh() assert(not b.leader:IsShown(), "showLeader coupe")
+  LEADER, ASSISTS = nil, {}
+  -- signal du jeu : la touche de signal marque le joueur de la case (attribut du jeu), interrupteur
+  Z.db.pingCells = true Z:Refresh()
+  assert(b:GetAttribute("ping-receiver") == true and Z.header:GetAttribute("z-ping") == true, "case sans signal")
+  Z.db.pingCells = false Z:Refresh()
+  assert(b:GetAttribute("ping-receiver") == nil and Z.header:GetAttribute("z-ping") == nil, "pingCells coupe")
+  assert(Z.header:GetAttribute("template"):find("PingableUnitFrameTemplate", 1, true), "modele de signal absent")
+  -- placement et options
+  assert(Z.IsPlaceElement("leader"), "couronne absente de l'editeur de placement")
+  local labels = table.concat(Z:OptionLabels(), "|")
+  for _, label in ipairs({ "Cadre des joueurs épinglés", "Chef de groupe et assistants", "Signal du jeu sur une case", "Joueurs épinglés" }) do
+    assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+  end
+  -- chaque onglet tient dans la fenetre (528 pixels de haut)
+  for _, tab in ipairs(Z:OptionsWindow().tabs) do
+    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
+  end
+  for k, v in pairs(saved) do Z.db[k] = v end
+  GROUP_NAMES.party2 = nil
   Z:Refresh() RunUpdates()
 end)
 

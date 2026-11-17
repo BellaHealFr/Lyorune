@@ -395,3 +395,11 @@ function UnitCanAttack(_, unit) return ENEMIES[unit] or false end
 function wipe(t) for k in pairs(t) do t[k] = nil end return t end
 MEMBERS = 5
 function GetNumGroupMembers() return MEMBERS end
+
+----------------------------------------------------------------------------------------------------
+-- Ajouts 1.20.0 : chef de groupe et assistants, joueurs épinglés, signal du jeu
+----------------------------------------------------------------------------------------------------
+LEADER, ASSISTS = nil, {}
+function UnitIsGroupLeader(u) if SECRET_LEADER then return MakeSecret() end return u == LEADER end
+function UnitIsGroupAssistant(u) return ASSISTS[u] or false end
+PingableType_UnitFrameMixin = {}

@@ -81,11 +81,11 @@ local steps = {
 	{
 		title = "Régler Lyorune",
 		text = "Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, cible et focalisation, mode test.\n"
+			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu), les coins, le panneau des buffs manquants.\n"
-			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
+			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n"

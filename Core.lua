@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.19.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.20.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -38,6 +38,8 @@ Z.defaults = {
 	showTarget = false,        -- petite case de ma cible (cadre « Cible », déplaçable)
 	showTargetTarget = false,  -- case de la cible de ma cible
 	showFocus = false,         -- case de ma focalisation
+	showPinned = true,         -- cadre « Épinglés » : les joueurs de ma liste (vide, il ne s'affiche pas)
+	pinned = {},               -- joueurs épinglés, par nom : pinned["Nom-Royaume"] = true
 	autoShrink = false,        -- réduire les cases en grand raid
 	hideBlizzard = false,      -- masquer les cadres de groupe du jeu
 	lockMode = "FREE",         -- déplacement des cadres : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj
@@ -69,6 +71,8 @@ Z.defaults = {
 	showThreat = true,         -- bordure rouge de menace
 	showRole = true,           -- icône de rôle
 	showMarker = true,         -- marqueur de raid
+	showLeader = true,         -- couronne du chef de groupe, drapeau des assistants en raid
+	pingCells = true,          -- la touche « signal » du jeu marque le joueur de la case survolée
 	showDispel = true,         -- cadre coloré de dissipation
 	showHots = true, hotStyle = "ICONS",
 	hotSwipe = true,           -- icônes de mes soins : cercle qui se vide
@@ -179,6 +183,7 @@ Z.choices = {
 -- Réglages propres à l'ordinateur ou au personnage : ni partagés, ni réinitialisés avec le reste
 Z.private = { minimapAngle = true, tutorialDone = true, wizardDone = true, language = true,
 	macros = true, -- mes macros : jamais partagées, jamais effacées par la réinitialisation
+	pinned = true, -- mes joueurs épinglés : des noms, jamais partagés
 	profiles = true } -- mes profils enregistrés : idem (la réinitialisation quitte seulement le profil en cours)
 
 -- Réglages qu'un profil ne change jamais : clics, listes, annonces, fenêtres de Lyorune, profils eux-mêmes.
@@ -188,7 +193,7 @@ Z.notInProfile = {
 	minimapButton = true, minimapAngle = true, hideBlizzard = true,
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
-	extraTracked = true, ignoredNames = true, importantNames = true,
+	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
@@ -203,6 +208,7 @@ Z.charDefaults = {
 	tankPos = { "CENTER", -320, 200 },
 	petPos = { "CENTER", -320, -160 },
 	extraPos = { "CENTER", 120, 200 }, -- cible, cible de la cible, focalisation
+	pinnedPos = { "CENTER", 120, 60 }, -- joueurs épinglés
 	buffPos = { "CENTER", 360, 0 },    -- panneau des buffs manquants
 }
 
@@ -389,7 +395,11 @@ SLASH_LYORUNE1, SLASH_LYORUNE2 = "/lyorune", "/lyo"
 SlashCmdList.LYORUNE = function(msg) Z:Try("commande /lyorune", Z.Command, msg) end
 
 function Z.Command(msg)
-	msg = (msg or ""):lower():match("^%s*(.-)%s*$")
+	msg = (msg or ""):match("^%s*(.-)%s*$")
+	-- « épingler » est comparé tel quel : lower() ne sait pas mettre en minuscules une lettre accentuée
+	local pinWord, pinName = msg:match("^(%S+)%s*(.-)$")
+	local pin = pinWord == "épingler" or pinWord == "Épingler" or pinWord and (pinWord:lower() == "epingler" or pinWord:lower() == "pin")
+	msg = msg:lower()
 	if msg == "erreurs" or msg == "erreur" or msg == "log" then return Z:ShowLog() end
 	if msg == "diag" then return Z:Diagnose() end
 	if msg == "bug" then return Z:ShowBug() end
@@ -407,6 +417,8 @@ function Z.Command(msg)
 		for key, value in pairs(Z.charDefaults) do Z.char[key] = CopyTable(value) end
 		Z:Refresh()
 		Z:Print(Z.L["position réinitialisée."])
+	elseif pin then
+		Z:PinCommand(pinName) -- le nom garde ses majuscules
 	elseif msg == "groupe" or msg == "group" then
 		Z:PrintSyncMembers()
 	elseif msg == "annuler" or msg == "undo" then

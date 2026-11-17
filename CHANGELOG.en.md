@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.20.0] - 2026-11-17
+
+### Added
+
+- Pinned players: a small "Pinned" frame to keep a second tank or a player to watch apart; pin from the hovered cell (/lyorune pin), your target or the list in the Lists tab ([#41](https://github.com/BellaHealFr/Lyorune/issues/41)).
+- Game ping on a cell: hover it and press the ping key, the player is marked for the whole group ([#41](https://github.com/BellaHealFr/Lyorune/issues/41)).
+- Group leader crown and raid assistant flag on the cells, movable in the placement editor ([#41](https://github.com/BellaHealFr/Lyorune/issues/41)).
+
+### Improved
+
+- The new version notice gives the address of that version's page, where every new feature is described.
+
 ## [1.19.0] - 2026-11-17
 
 ### Added
@@ -306,6 +318,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.20.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.16.0...v1.17.0
