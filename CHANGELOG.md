@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.4] - 2026-11-17
+
+### Corrigé
+
+- « Son quand ma mana est faible » fonctionne aussi quand les annonces de mana sont décochées ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.3] - 2026-11-17
 
 ### Corrigé
@@ -360,6 +366,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.3...v1.23.4
 [1.23.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.2...v1.23.3
 [1.23.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.1...v1.23.2
 [1.23.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.0...v1.23.1

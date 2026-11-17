@@ -687,4 +687,5 @@ Z.translations.enUS = {
 	["« Vider le journal » : /lyorune bug ne signale plus une erreur déjà effacée (#46)."] = "\"Clear log\": /lyorune bug no longer reports an error that was already cleared (#46).",
 	["Un appel « Prêt ? » relancé moins de 5 secondes après le précédent garde ses réponses sur les cases."] = "A ready check started again less than 5 seconds after the previous one keeps its answers on the cells.",
 	["L'œil « hors de vue » ne reste plus sur une case quand le jeu la donne à un autre joueur."] = "The out of sight eye no longer stays on a cell when the game gives it to another player.",
+	["« Son quand ma mana est faible » fonctionne aussi quand les annonces de mana sont décochées (#46)."] = "\"Sound when my mana is low\" now also works when the mana announcements are unchecked (#46).",
 }

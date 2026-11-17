@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.4", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"« Son quand ma mana est faible » fonctionne aussi quand les annonces de mana sont décochées (#46).",
+		},
+	},
+	{
 		version = "1.23.3", date = "2026-11-17",
 		added = {
 		},

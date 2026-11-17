@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.4] - 2026-11-17
+
+### Fixed
+
+- "Sound when my mana is low" now also works when the mana announcements are unchecked ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.3] - 2026-11-17
 
 ### Fixed
@@ -360,6 +366,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.3...v1.23.4
 [1.23.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.2...v1.23.3
 [1.23.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.1...v1.23.2
 [1.23.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.0...v1.23.1

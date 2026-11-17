@@ -95,7 +95,7 @@ end)
 -- N'écoute que ce qui est activé : aucun coût si tout est décoché
 function Z:RefreshAlerts()
 	watcher:UnregisterAllEvents()
-	if Z.db.manaAlert or Z.db.regenAlert then
+	if Z.db.manaAlert or Z.db.regenAlert or Z.db.soundMana then -- le son seul a aussi besoin de la mana
 		watcher:RegisterUnitEvent("UNIT_POWER_UPDATE", "player")
 	end
 	if Z.db.resAlert then

@@ -197,8 +197,8 @@ Grille de chaque lot :
   « Vider le journal » laissait /lyorune bug signaler l'erreur effacée (1.23.2)
 - [x] Lot 2 : Frames, 1re moitié. Bug : l'œil « hors de vue » restait sur une case donnée à un autre joueur (1.23.3)
 - [x] Lot 3 : Frames, 2e moitié. Bug : un appel « Prêt ? » relancé dans les 5 secondes perdait ses réponses (1.23.3)
-- [ ] Lot 4 : Auras, Alerts
-- [ ] Lot 5 : Clicks
+- [x] Lot 4 : Auras, Alerts. Bug : « Son quand ma mana est faible » restait muet sans annonce de mana cochée (1.23.4)
+- [x] Lot 5 : Clicks. Aucun bug
 - [ ] Lot 6 : Macros
 - [ ] Lot 7 : Buffs, Cast, Preview
 - [ ] Lot 8 : Share, Comm

@@ -529,6 +529,13 @@ step("annonces de mana", function()
   Z.db.manaAlert = false Z.db.regenAlert = false Z:RefreshAlerts()
   local n = #SENT MANA = 950 FireEvent("UNIT_POWER_UPDATE", "player") MANA = 50 FireEvent("UNIT_POWER_UPDATE", "player")
   assert(#SENT == n, "annonce alors que tout est desactive")
+  -- revue 1.23.4 : le son de mana faible coche seul (annonces decochees) doit sonner
+  local playSound, sounds = PlaySound, 0
+  PlaySound = function() sounds = sounds + 1 end
+  Z.db.soundMana = true Z:RefreshAlerts()
+  MANA = 950 FireEvent("UNIT_POWER_UPDATE", "player") MANA = 50 FireEvent("UNIT_POWER_UPDATE", "player")
+  assert(sounds == 1 and #SENT == n, "son de mana faible muet sans annonce")
+  PlaySound = playSound Z.db.soundMana = false Z:RefreshAlerts()
   MANA = 1000
 end)
 
