@@ -12,7 +12,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | Étape | Version | Contenu | État |
 |---|---|---|---|
 | 0 | 1.5.5 | Vérification en jeu des versions 1.4.2 à 1.5.4 | En cours |
-| 1 | 1.6.0 | Bibliothèque de macros, clics par spécialisation | Prête, à publier |
+| 1 | 1.6.0 | Bibliothèque de macros, clics par spécialisation | Publiée |
 | 2 | 1.7.0 | Bases de l'interface | À faire |
 | 3 | 1.8.0 | Utile en donjon | À faire |
 | 4 | 1.9.0 | Forme des cases, couleurs de classe, runes | À faire |
