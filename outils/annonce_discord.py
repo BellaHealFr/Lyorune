@@ -54,9 +54,9 @@ def message(version):
                        + '\n\n[Télécharger](%s)' % page,
     }]
     if len(parties) > 1:
+        # Pas de lien sur ce titre : Discord fusionne les encadrés qui ont le même lien et n'affiche que le premier
         encadres.append({
             'title': 'Lyorune %s (English)' % numero,
-            'url': page,
             'color': COULEUR,
             'description': couper(notes_markdown(parties[1]), '[All changes](%s)' % page)
                            + '\n\n[Download](%s)' % page,
