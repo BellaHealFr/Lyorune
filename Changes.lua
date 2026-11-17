@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.7", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Coins de la case : la liste suit l'onglet Listes sans /reload, et le sort d'un coin reste affiché même retiré de la liste (#46).",
+			"« Reprendre les clics proposés » en 2e spécialisation remplace ses clics, sans effacer ceux de la 1re (#46).",
+		},
+	},
+	{
 		version = "1.23.6", date = "2026-11-17",
 		added = {
 		},

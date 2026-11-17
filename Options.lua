@@ -339,16 +339,28 @@ end
 
 -- Choix d'un coin : « Aucun », puis mes sorts suivis (ceux de ma classe et ma liste), par ordre alphabétique.
 -- Le réglage est gardé par classe : un prêtre et un druide ont chacun leurs coins.
+-- La liste est refaite à chaque affichage : un sort ajouté dans l'onglet Listes y entre aussitôt, et le sort du
+-- coin reste affiché même s'il a quitté la liste (sinon « Aucun » s'afficherait alors que le coin est pris).
+function Z.CornerChoices(point)
+	local names, seen = {}, {}
+	local function Add(name)
+		if name and name ~= "" and not seen[name] then
+			seen[name] = true
+			names[#names + 1] = name
+		end
+	end
+	for name in pairs(Z.trackedNames or {}) do Add(name) end
+	for name in pairs(Z.db.extraTracked) do Add(name) end
+	Add(Z.MyCorners()[point])
+	table.sort(names)
+	local choices = { { "", L["Aucun"] } }
+	for _, name in ipairs(names) do choices[#choices + 1] = { name, name } end
+	return choices
+end
+
 local function CornerPicker(point, label)
 	return { "custom", function(page)
-		local names = {}
-		for name in pairs(Z.trackedNames or {}) do names[#names + 1] = name end
-		for name in pairs(Z.db.extraTracked) do
-			if not (Z.trackedNames and Z.trackedNames[name]) then names[#names + 1] = name end
-		end
-		table.sort(names)
-		local choices = { { "", L["Aucun"] } }
-		for _, name in ipairs(names) do choices[#choices + 1] = { name, name } end
+		local choices = Z.CornerChoices(point)
 		local widget = UI.Cycle(page, L[label], choices,
 			function() return Z.MyCorners()[point] or "" end,
 			function(value)
@@ -357,6 +369,11 @@ local function CornerPicker(point, label)
 				all[Z.class][point] = value ~= "" and value or nil
 				Z:Refresh()
 			end)
+		widget:SetScript("OnShow", function(self)
+			wipe(choices)
+			for _, choice in ipairs(Z.CornerChoices(point)) do choices[#choices + 1] = choice end
+			self:Update()
+		end)
 		local color = Z.CORNER_COLORS[point]
 		widget.label:SetTextColor(color[1], color[2], color[3])
 		Register(page.tabIndex, L[label], widget)
@@ -1373,9 +1390,7 @@ local function BuildProfiles(page)
 	local clicksHead = Heading(page, "Remise à zéro")
 	clicksHead:SetPoint("TOPLEFT", right, -262)
 	local clicks = UI.Button(page, L["Reprendre les clics proposés pour ma classe"], COLUMN, 24, function()
-		Z.db.clicks[Z.class] = nil
-		Z:BuildData()
-		Z:ApplyClicks()
+		Z:ResetClassClicks()
 		result:SetText("|cff33dd88" .. L["Clics de la classe rétablis."] .. "|r")
 	end)
 	clicks:SetPoint("TOPLEFT", right, -294)

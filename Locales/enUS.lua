@@ -693,4 +693,6 @@ Z.translations.enUS = {
 	["Mes macros : effacer le mot avant « : » dans une condition ([:shift]) ne fait plus d'erreur."] = "My macros: erasing the word before \":\" in a condition ([:shift]) no longer causes an error.",
 	["Importer de /macro : la fenêtre ne dit plus « aucune macro » quand des macros ont été créées depuis."] = "Import from /macro: the window no longer says \"no macro\" when macros were created since.",
 	["« Qui relève qui » : la liste ne se remplit plus pour toute la session quand des joueurs relevés quittent le groupe (#46)."] = "Who resurrects whom: the list no longer fills up for the whole session when resurrected players leave the group (#46).",
+	["Coins de la case : la liste suit l'onglet Listes sans /reload, et le sort d'un coin reste affiché même retiré de la liste (#46)."] = "Cell corners: the list follows the Lists tab without /reload, and a corner's spell stays shown even when removed from the list (#46).",
+	["« Reprendre les clics proposés » en 2e spécialisation remplace ses clics, sans effacer ceux de la 1re (#46)."] = "\"Restore suggested clicks\" in the 2nd specialization replaces its clicks without erasing those of the 1st (#46).",
 }

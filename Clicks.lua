@@ -139,6 +139,21 @@ function Z:CopyOtherSpec()
 	Z:ApplyClicks()
 end
 
+-- Bouton « Reprendre les clics proposés pour ma classe » : seuls les clics de la spécialisation en cours sont
+-- remplacés. Dans la seconde, ceux de la première restent tels quels.
+function Z:ResetClassClicks()
+	local set = Z:ClickSet()
+	local first = set ~= Z.class and Z.db.clicks[Z.class]
+	Z.db.clicks[Z.class] = nil
+	Z:BuildData() -- recrée les clics proposés dans Z.db.clicks[Z.class]
+	if set ~= Z.class then
+		local proposed = Z.db.clicks[Z.class]
+		if proposed then Z.db.clicks[set] = CopyTable(proposed) end -- grimoire pas encore chargé : rien ne change
+		Z.db.clicks[Z.class] = first or nil
+	end
+	Z:ApplyClicks()
+end
+
 -- Nom lisible d'une touche de modification, dans les clics ("shift") comme dans les touches ("SHIFT")
 local MODIFIER_NAMES = { alt = "Alt", ctrl = "Ctrl", shift = "Maj", meta = "Cmd" }
 

@@ -418,6 +418,16 @@ step("clics propres a chaque specialisation", function()
   SPEC_GROUP = 2 Z.db.clicksPerSpec = false
   assert(Z:ClickSet() == "PRIEST")
   Z.db.clicksPerSpec = true SPEC_GROUP = 1
+  -- revue 1.23.7 : « Reprendre les clics proposés » en 2e spécialisation remplace ceux de la 2e, pas ceux de la 1re
+  SPEC_GROUP = 2 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  Z.db.clicks.PRIEST["1"] = "Rénovation" Z:SetClick("1", "Rénovation")
+  Z:ResetClassClicks()
+  assert(Z.db.clicks.PRIEST2["1"] == saved["1"], "clics proposés en 2e spécialisation")
+  assert(Z.db.clicks.PRIEST["1"] == "Rénovation", "la 1re spécialisation ne change pas")
+  assert(Z.buttons[1]:GetAttribute("spell1") == saved["1"], "clic appliqué tout de suite")
+  SPEC_GROUP = 1 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  Z:ResetClassClicks()
+  assert(Z.db.clicks.PRIEST["1"] == saved["1"], "clics proposés en 1re spécialisation")
   -- onglet Clics : la spécialisation affichée
   Z:ToggleOptions("Clics")
   assert(Z:OptionsWindow():IsShown())
@@ -1193,6 +1203,17 @@ step("etape 5 : soins sur la duree, coins, mana en %, menace", function()
   Z.db.cornerSpells.DRUID = { TOPLEFT = "Récupération" } Z:Refresh() RunUpdates()
   assert(Z.CornerShift(b, "TOPLEFT") == 0, "les coins du druide ne touchent pas le pretre")
   Z.db.cornerSpells.DRUID = nil
+  -- revue 1.23.7 : la liste d'un coin suit l'onglet Listes, et garde le sort choisi même retiré de la liste
+  Z.db.extraTracked["Prière de soins"] = true
+  local found
+  for _, choice in ipairs(Z.CornerChoices("TOPLEFT")) do if choice[1] == "Prière de soins" then found = true end end
+  assert(found, "sort de l'onglet Listes absent du choix des coins")
+  Z.db.cornerSpells.PRIEST = { TOPLEFT = "Prière de soins" }
+  Z.db.extraTracked["Prière de soins"] = nil
+  found = false
+  for _, choice in ipairs(Z.CornerChoices("TOPLEFT")) do if choice[1] == "Prière de soins" then found = true end end
+  assert(found, "le sort du coin doit rester affiché")
+  Z.db.cornerSpells.PRIEST = nil
   -- options : les quatre coins et les nouveaux reglages sont trouvables par la recherche
   Z:ToggleOptions("Indicateurs") Z:ToggleOptions()
   local labels = table.concat(Z:OptionLabels(), "|")

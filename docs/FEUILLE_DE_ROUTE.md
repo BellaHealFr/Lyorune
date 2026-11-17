@@ -206,8 +206,10 @@ Grille de chaque lot :
 - [x] Lot 8 : Share, Comm. Bug : 80 résurrections réussies dont le joueur avait quitté le groupe remplissaient
   la liste « qui relève qui » pour toute la session (1.23.6)
 - [x] Lot 9 : UI. Aucun bug
-- [ ] Lot 10 : Options, 1re moitié
-- [ ] Lot 11 : Options, 2e moitié
+- [x] Lot 10 : Options, 1re moitié. Bug : la liste des coins de la case restait figée (sort ajouté dans l'onglet
+  Listes absent, sort retiré affiché « Aucun » alors que le coin restait pris) (1.23.7)
+- [x] Lot 11 : Options, 2e moitié. Bug : « Reprendre les clics proposés » en 2e spécialisation effaçait les clics
+  de la 1re sans toucher ceux en cours (1.23.7)
 - [ ] Lot 12 : Placement, Perf, Bug, Minimap
 - [ ] Lot 13 : Runes, Wizard, Tutorial, Themes, Changes
 
