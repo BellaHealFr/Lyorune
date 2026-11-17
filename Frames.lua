@@ -10,6 +10,8 @@ local issecret = Z.IsSecret
 local UnitHealth, UnitHealthMax, UnitHealthPercent, UnitHealthMissing = UnitHealth, UnitHealthMax, UnitHealthPercent, UnitHealthMissing
 local UnitIsConnected, UnitIsDeadOrGhost, UnitIsGhost, UnitInRange = UnitIsConnected, UnitIsDeadOrGhost, UnitIsGhost, UnitInRange
 local UnitGetDetailedHealPrediction, UnitPower, UnitPowerMax = UnitGetDetailedHealPrediction, UnitPower, UnitPowerMax
+local UnitPhaseReason = UnitPhaseReason
+local SummonStatus = C_IncomingSummon and C_IncomingSummon.IncomingSummonStatus
 
 local db
 local buttons = {}   -- toutes les cases, tous cadres confondus
@@ -59,8 +61,9 @@ local function ClassColor(unit)
 	return 0.6, 0.6, 0.6
 end
 
+-- Soins en route, bouclier, et absorption de soins : trois montants calculés par le jeu, lisibles en combat
 local function UpdatePrediction(b)
-	if not (db.showIncoming or db.showAbsorb) then return end
+	if not (db.showIncoming or db.showAbsorb or db.showHealAbsorb) then return end
 	local unit = b.unit
 	local max = UnitHealthMax(unit)
 	UnitGetDetailedHealPrediction(unit, "player", healCalculator)
@@ -68,6 +71,10 @@ local function UpdatePrediction(b)
 	b.incoming:SetValue((healCalculator:GetIncomingHeals()))
 	b.absorb:SetMinMaxValues(0, max)
 	b.absorb:SetValue((healCalculator:GetDamageAbsorbs()))
+	if healCalculator.GetHealAbsorbs then
+		b.healAbsorb:SetMinMaxValues(0, max)
+		b.healAbsorb:SetValue((healCalculator:GetHealAbsorbs()))
+	end
 end
 
 -- Mort, fantôme, hors ligne : la case devient grise et affiche l'état
@@ -220,11 +227,30 @@ local function UpdateMarker(b)
 	end
 end
 
--- Icône centrale : résurrection en cours, ou réponse à l'appel
+-- Invocation en cours : 1 proposée, 2 acceptée, 3 refusée (0 : aucune)
+local SUMMON_ATLAS = { "Raid-Icon-SummonPending", "Raid-Icon-SummonAccepted", "Raid-Icon-SummonDeclined" }
+
+local function SummonAtlas(unit)
+	local status = SummonStatus and SummonStatus(unit)
+	if issecret(status) then return nil end
+	return SUMMON_ATLAS[status or 0]
+end
+
+-- Dans une autre phase : à côté de moi en apparence, mais hors d'atteinte. Seulement pour un joueur connecté.
+local function InOtherPhase(unit)
+	if not UnitPhaseReason then return false end
+	local player, connected = UnitIsPlayer(unit), UnitIsConnected(unit)
+	if issecret(player) or issecret(connected) or not (player and connected) then return false end
+	local reason = UnitPhaseReason(unit)
+	return reason ~= nil and not issecret(reason)
+end
+
+-- Icône centrale : réponse à l'appel, résurrection en cours, invocation, autre phase
 local function UpdateCenter(b)
 	local unit = b.unit
 	local ready = b.readyCheck and GetReadyCheckStatus(unit)
 	local res = UnitHasIncomingResurrection(unit)
+	local summon = db.showSummonPhase and SummonAtlas(unit)
 	if ready == "ready" then
 		b.center:SetTexture(READY_CHECK_READY_TEXTURE)
 	elseif ready == "notready" then
@@ -233,6 +259,10 @@ local function UpdateCenter(b)
 		b.center:SetTexture(READY_CHECK_WAITING_TEXTURE)
 	elseif not issecret(res) and res then
 		b.center:SetTexture("Interface\\RaidFrame\\Raid-Icon-Rez")
+	elseif summon then
+		b.center:SetAtlas(summon)
+	elseif db.showSummonPhase and InOtherPhase(unit) then
+		b.center:SetTexture("Interface\\TargetingFrame\\UI-PhasingIcon")
 	else
 		b.center:Hide()
 		return
@@ -267,6 +297,8 @@ local unitEvents = {
 	UNIT_MAXHEALTH = UpdateHealth,
 	UNIT_HEAL_PREDICTION = UpdatePrediction,
 	UNIT_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
+	UNIT_HEAL_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
+	UNIT_PHASE = UpdateCenter,
 	UNIT_AURA = function(b) Z.QueueAuras(b) end,
 	UNIT_CONNECTION = UpdateAll,
 	UNIT_NAME_UPDATE = UpdateName,
@@ -303,15 +335,28 @@ local function OnAttributeChanged(b, name, value)
 		for event in pairs(unitEvents) do b:RegisterUnitEvent(event, value) end
 		if b:IsVisible() then UpdateAll(b) end
 	end
+	Z.AnchorPrivateAuras(b) -- les auras privées suivent le joueur de la case
 end
 
+-- Infobulle hors combat : le joueur (infobulle du jeu), puis mes clics et touches (option)
 local function OnEnter(b)
 	b.hover:Show()
-	if db.showTooltip and b.unit and not InCombatLockdown() then
-		GameTooltip_SetDefaultAnchor(GameTooltip, b)
+	if not b.unit or InCombatLockdown() then return end
+	local clicks = db.clickTooltip and Z:ClickSummary()
+	if clicks and #clicks == 0 then clicks = nil end
+	if not (db.showTooltip or clicks) then return end
+	GameTooltip_SetDefaultAnchor(GameTooltip, b)
+	if db.showTooltip then
 		GameTooltip:SetUnit(b.unit)
-		GameTooltip:Show()
+	else
+		GameTooltip:SetText(UnitName(b.unit) or "", 1, 1, 1)
 	end
+	if clicks then
+		GameTooltip:AddLine(" ")
+		GameTooltip:AddLine(L["Mes clics"], UI.accent[1], UI.accent[2], UI.accent[3])
+		for _, line in ipairs(clicks) do GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1) end
+	end
+	GameTooltip:Show()
 end
 
 local function OnLeave(b)
@@ -322,6 +367,8 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Apparence d'une case (appelé à la création et quand une option change)
 ----------------------------------------------------------------------------------------------------
+local HEAL_ABSORB_COLOR = { 0.45, 0.02, 0.10, 0.75 } -- rouge sombre, si le thème n'en donne pas
+
 local function Style(b)
 	local theme = Z:Theme()
 	local texture = UI.BarTexture()
@@ -335,6 +382,10 @@ local function Style(b)
 	b.absorb:SetStatusBarTexture(UI.WHITE)
 	b.absorb:SetStatusBarColor(unpack(theme.absorb))
 	b.absorb:SetShown(db.showAbsorb)
+	b.healAbsorb:SetStatusBarTexture(texture)
+	b.healAbsorb:SetStatusBarColor(unpack(theme.healAbsorb or HEAL_ABSORB_COLOR))
+	b.healAbsorb:SetWidth(width - 2 * theme.borderSize)
+	b.healAbsorb:SetShown(db.showHealAbsorb)
 	b.power:SetStatusBarTexture(texture)
 	b.power:SetHeight(db.powerHeight)
 	b.bg:SetVertexColor(unpack(theme.bg))
@@ -356,6 +407,7 @@ local function Style(b)
 	b.marker:SetSize(icon, icon)
 	b.center:SetSize(icon + 8, icon + 8)
 	Z.HideAuras(b)
+	Z.AnchorPrivateAuras(b)
 	if b.RegisterForClicks then b:RegisterForClicks(db.castOnDown and "AnyDown" or "AnyUp") end
 end
 Z.StyleButton = Style
@@ -378,6 +430,13 @@ function Z.BuildVisuals(b)
 	incoming:SetPoint("TOPLEFT", hp:GetStatusBarTexture(), "TOPRIGHT")
 	incoming:SetPoint("BOTTOMLEFT", hp:GetStatusBarTexture(), "BOTTOMRIGHT")
 	b.incoming = incoming
+
+	-- Absorption de soins : la part de vie qu'un affaiblissement « mange », au bout de la vie, vers la gauche
+	local healAbsorb = CreateFrame("StatusBar", nil, hp)
+	healAbsorb:SetPoint("TOPRIGHT", hp:GetStatusBarTexture(), "TOPRIGHT")
+	healAbsorb:SetPoint("BOTTOMRIGHT", hp:GetStatusBarTexture(), "BOTTOMRIGHT")
+	healAbsorb:SetReverseFill(true)
+	b.healAbsorb = healAbsorb
 
 	-- Bouclier d'absorption : bande en bas de la barre de vie
 	local absorb = CreateFrame("StatusBar", nil, hp)
@@ -900,6 +959,9 @@ function Z:CreateFrames()
 	if healCalculator.SetDamageAbsorbClampMode and Enum.UnitDamageAbsorbClampMode then
 		healCalculator:SetDamageAbsorbClampMode(Enum.UnitDamageAbsorbClampMode.MaximumHealth)
 	end
+	if healCalculator.SetHealAbsorbClampMode and Enum.UnitHealAbsorbClampMode then
+		healCalculator:SetHealAbsorbClampMode(Enum.UnitHealAbsorbClampMode.CurrentHealth) -- jamais plus que la vie
+	end
 
 	for _, def in ipairs(frameDefs) do CreateHeader(def) end
 	Z.header = Z.headers[1]
@@ -942,6 +1004,7 @@ function Z:CreateFrames()
 	Z:On("PLAYER_ROLES_ASSIGNED", ForVisible(UpdateRole))
 	Z:On("PLAYER_TARGET_CHANGED", ForVisible(UpdateTarget))
 	Z:On("RAID_TARGET_UPDATE", ForVisible(UpdateMarker))
+	Z:On("INCOMING_SUMMON_CHANGED", ForVisible(UpdateCenter))
 	-- Entrée et sortie de combat : les buffs manquants ne se lisent que hors combat
 	Z:On("PLAYER_REGEN_ENABLED", ForVisible(Z.QueueAuras))
 	Z:On("PLAYER_REGEN_DISABLED", ForVisible(Z.QueueAuras))

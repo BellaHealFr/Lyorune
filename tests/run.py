@@ -780,6 +780,74 @@ step("etape 2 : cadres par groupe, etiquettes, verrou, position par personnage, 
   assert(LyoruneMinimapButton:GetWidth() == 31 and LyoruneMinimapButton.icon:GetWidth() == 18)
 end)
 
+step("etape 3 : auras privees, absorption de soins, invocation, phase, infobulle, lueur", function()
+  local b = Z.buttons[1]
+  local function anchors() local n = 0 for _ in pairs(PRIVATE) do n = n + 1 end return n end
+  -- #9 auras privees : deux ancres par case, pour son joueur, refaites quand un reglage change
+  assert(b.privateAnchors and #b.privateAnchors == 2, "ancres d'auras privees")
+  assert(PRIVATE[b.privateAnchors[1]].unitToken == "player" and PRIVATE[b.privateAnchors[2]].auraIndex == 2)
+  local before = anchors()
+  Z.db.privateAuraSize = 30 Z.db.privateAuraPoint = "TOP" Z:Refresh()
+  assert(anchors() == before, "les anciennes ancres sont retirees")
+  assert(PRIVATE[b.privateAnchors[1]].iconInfo.iconWidth == 30)
+  b:SetAttribute("unit", "party3")
+  assert(PRIVATE[b.privateAnchors[1]].unitToken == "party3", "les ancres suivent le joueur de la case")
+  b:SetAttribute("unit", "player")
+  Z.db.privateAuras = false Z:Refresh()
+  assert(b.privateAnchors == nil and anchors() == 0 and not b.privateHolder:IsShown(), "interrupteur des auras privees")
+  Z.db.privateAuras = true Z.db.privateAuraSize = 20 Z.db.privateAuraPoint = "CENTER" Z:Refresh()
+  -- #10 absorption de soins : barre au bout de la vie, valeur calculee par le jeu
+  local value FireEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "player")
+  b.healAbsorb.SetValue = function(_, v) value = v end
+  FireEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "player")
+  assert(value == 4 and b.healAbsorb:IsShown(), "absorption de soins")
+  Z.db.showHealAbsorb = false Z:Refresh() assert(not b.healAbsorb:IsShown())
+  Z.db.showHealAbsorb = true Z:Refresh()
+  -- #11 invocation et autre phase : icone centrale
+  local atlas, texture
+  b.center.SetAtlas = function(_, a) atlas = a end
+  b.center.SetTexture = function(_, t) texture = t end
+  b.readyCheck = false
+  SUMMON = 1 FireEvent("INCOMING_SUMMON_CHANGED", "player")
+  assert(atlas == "Raid-Icon-SummonPending" and b.center:IsShown(), "invocation proposee")
+  SUMMON = 0 PHASE = 2 FireEvent("UNIT_PHASE", "player")
+  assert(texture and texture:find("PhasingIcon"), "autre phase")
+  Z.db.showSummonPhase = false Z:Refresh() assert(not b.center:IsShown(), "interrupteur invocation et phase")
+  Z.db.showSummonPhase = true PHASE = nil Z:Refresh()
+  b.center.SetAtlas, b.center.SetTexture = nil, nil
+  -- #12 infobulle des clics, hors combat seulement
+  local lines = {}
+  GameTooltip.AddDoubleLine = function(_, left, right) lines[#lines + 1] = left .. "=" .. right end
+  b:Run("OnEnter") b:Run("OnLeave")
+  local text = table.concat(lines, ";")
+  assert(text:find("Clic gauche=Soins rapides", 1, true) and text:find("Maj + Clic gauche=Soins supérieurs", 1, true), text)
+  lines = {} COMBAT = true b:Run("OnEnter") b:Run("OnLeave") COMBAT = false
+  assert(#lines == 0, "pas d'infobulle en combat")
+  Z.db.clickTooltip = false b:Run("OnEnter") b:Run("OnLeave") assert(#lines == 0, "interrupteur de l'infobulle des clics")
+  Z.db.clickTooltip = true GameTooltip.AddDoubleLine = nil
+  -- #13 contour lumineux et son : par nom (ma liste), et contour decide par le jeu en combat
+  local sounds = 0
+  local playSound = PlaySound
+  PlaySound = function() sounds = sounds + 1 end
+  Z.db.importantSound = true NOW = (NOW or 0) + 10
+  Z.db.importantNames["Brulure"] = true
+  AURAS["HARMFUL"] = { { name = "Brulure", icon = 7, auraInstanceID = 41, spellId = 77 } }
+  FireEvent("UNIT_AURA", "player") RunUpdates()
+  assert(b.glow and b.glow:IsShown() and sounds == 1, "contour et son pour un affaiblissement de ma liste")
+  NOW = NOW + 10 FireEvent("UNIT_AURA", "player") RunUpdates()
+  assert(sounds == 1, "un seul son tant que l'affaiblissement reste pose")
+  Z.db.importantGlow = false Z:Refresh() RunUpdates() assert(not b.glow:IsShown(), "interrupteur du contour")
+  Z.db.importantGlow = true
+  SECRET = true COMBAT = true
+  AURAS["HARMFUL"] = { { name = MakeSecret(), icon = 7, auraInstanceID = 42, spellId = MakeSecret(), isBossAura = MakeSecret() } }
+  NOW = NOW + 10 FireEvent("UNIT_AURA", "player") RunUpdates()
+  assert(b.glow:IsShown() and sounds == 1, "en combat : contour decide par le jeu, pas de son")
+  SECRET = false COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  AURAS = {} FireEvent("UNIT_AURA", "player") RunUpdates()
+  assert(not b.glow:IsShown(), "contour retire")
+  Z.db.importantNames = {} Z.db.importantSound = false PlaySound = playSound
+end)
+
 step("etape 2 : reprise des anciens reglages", function()
   local db = { locked = true, lastVersion = "1.6.0", manaBars = "HEALERS", pos = { "TOPLEFT", 10, -10 } }
   local savedDB, savedChar = LyoruneDB, LyoruneCharDB
@@ -798,7 +866,8 @@ end)
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,
-    CURSOR_X = true, CURSOR_Y = true }
+    CURSOR_X = true, CURSOR_Y = true,
+    PRIVATE = true, PRIVATE_NEXT = true, SUMMON = true, PHASE = true, C_IncomingSummon = true, UnitPhaseReason = true, UnitIsPlayer = true }
   local leaks = {}
   for name in pairs(_G) do
     if not BEFORE[name] and not allowed[name] and not name:match("^Lyorune%u") then leaks[#leaks + 1] = name end

@@ -88,6 +88,41 @@ function Z:ClickLabel(key)
 	return label
 end
 
+-- Texte lisible de ce que fait un clic : sort, cibler, menu, ou macro (en jaune, en rouge si elle n'existe plus)
+function Z:ActionText(value)
+	local L = Z.L
+	if value == "@target" then return L["Cibler"] end
+	if value == "@menu" then return L["Menu du joueur"] end
+	local ref = Z.MacroRef(value)
+	if ref then
+		return (Z:FindMacro(ref) and "|cffffd060" or "|cffff6060") .. L["Macro"] .. "|r " .. ref
+	end
+	if Z.IsMacro(value) then return "|cffffd060" .. L["Macro"] .. "|r " .. (value:match("[^\n]*$") or "") end -- dernière ligne : le sort
+	return value
+end
+
+-- Mes clics et touches au survol, dans l'ordre de l'onglet Clics : { { "Maj + Clic gauche", "Rénovation" }, ... }
+-- Sert à l'infobulle d'une case.
+function Z:ClickSummary()
+	local list = {}
+	local clicks = Z:GetClicks()
+	for _, modifier in ipairs(Z.clickModifiers) do
+		for _, button in ipairs(Z.clickButtons) do
+			local key = modifier[1] .. button[1]
+			local value = clicks[key]
+			if value and value ~= "" then list[#list + 1] = { Z:ClickLabel(key), Z:ActionText(value) } end
+		end
+	end
+	local keys = Z:GetHoverKeys()
+	for i = 1, Z.MAX_HOVER_KEYS do
+		local entry = keys[i]
+		if entry and entry.key and entry.spell and entry.spell ~= "" then
+			list[#list + 1] = { entry.key, Z:ActionText(entry.spell) }
+		end
+	end
+	return list
+end
+
 -- Les macros du joueur (compte puis personnage), sans celles que Lyorune crée lui-même
 function Z:GameMacros()
 	local list = {}

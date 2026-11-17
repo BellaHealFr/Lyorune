@@ -223,6 +223,7 @@ local function SimpleTabs()
 				{ "head", "Vie et mana" },
 				{ "check", "showIncoming", "Soins en route" },
 				{ "check", "showAbsorb", "Bouclier d'absorption" },
+				{ "check", "showHealAbsorb", "Absorption de soins", "Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat." },
 				{ "check", "lowHealth", "Voile rouge clignotant quand la vie est basse" },
 				{ "step", "lowHealthAt", "Seuil de vie basse (%)" },
 				{ "cycle", "manaBars", "Barre de mana" },
@@ -231,7 +232,9 @@ local function SimpleTabs()
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
 				{ "check", "showMarker", "Marqueur de raid" },
 				{ "check", "showThreat", "Bordure rouge quand il est attaqué" },
+				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte)." },
 				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },
+				{ "check", "clickTooltip", "Mes clics dans l'infobulle", "Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro." },
 			},
 			{
 				{ "head", "Mes soins" },
@@ -243,6 +246,12 @@ local function SimpleTabs()
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
 				{ "cycle", "debuffMode", "Affaiblissements affichés" },
 				{ "check", "bossDebuffs", "Affaiblissement important en grand", "Ceux des boss, et ceux de votre liste (onglet Listes)." },
+				{ "check", "importantGlow", "Contour lumineux si important", "La case s'entoure d'un contour doré qui pulse. Marche en combat pour les affaiblissements de boss : le jeu décide lui-même." },
+				{ "check", "importantSound", "Son pour ceux de ma liste", "Un son d'alerte quand un affaiblissement de la liste « À mettre en avant » est posé. En combat, le jeu cache souvent le nom des affaiblissements de boss : le son ne peut alors pas partir." },
+				{ "head", "Auras privées des boss" },
+				{ "check", "privateAuras", "Afficher les auras privées", "Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place choisie ici (deux au plus)." },
+				{ "step", "privateAuraSize", "Taille des auras privées" },
+				{ "cycle", "privateAuraPoint", "Place des auras privées" },
 			},
 		},
 	}
@@ -297,7 +306,7 @@ local function BuildLists(page)
 	local fills = {
 		ListEditor(page, 0, "Mes sorts à suivre", "Sorts à vous, affichés avec vos soins sur la durée. Tapez le nom exact puis Entrée.", "extraTracked"),
 		ListEditor(page, 222, "À ignorer", "Affaiblissements à ne jamais afficher.", "ignoredNames"),
-		ListEditor(page, 444, "À mettre en avant", "Affaiblissements affichés en grand sur la case.", "importantNames"),
+		ListEditor(page, 444, "À mettre en avant", "Affaiblissements affichés en grand, avec contour lumineux et son (onglet Indicateurs).", "importantNames"),
 	}
 	local function FillAll() for _, fill in ipairs(fills) do fill() end end
 	page:SetScript("OnShow", FillAll)
@@ -310,14 +319,7 @@ end
 local cells, hoverRows, barIcons = {}, {}, {}
 
 local function SpellText(value)
-	if value == "@target" then return L["Cibler"] end
-	if value == "@menu" then return L["Menu du joueur"] end
-	local ref = Z.MacroRef(value)
-	if ref then -- une macro de la bibliothèque : en rouge si elle n'existe plus
-		return (Z:FindMacro(ref) and "|cffffd060" or "|cffff6060") .. L["Macro"] .. "|r " .. ref
-	end
-	if Z.IsMacro(value) then return "|cffffd060" .. L["Macro"] .. "|r " .. (value:match("[^\n]*$") or "") end -- dernière ligne : le sort
-	return value
+	return Z:ActionText(value)
 end
 
 local RefreshClicks -- définie plus bas

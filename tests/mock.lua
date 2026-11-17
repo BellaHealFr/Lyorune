@@ -322,3 +322,20 @@ C_SpecializationInfo = { GetActiveSpecGroup = function() return SPEC_GROUP end }
 function GetCursorInfo() if CURSOR_INFO then return unpack(CURSOR_INFO) end end
 function ClearCursor() CURSOR_INFO = false end
 function GetMouseFoci() return MOUSE_FOCI or {} end
+
+----------------------------------------------------------------------------------------------------
+-- Ajouts 1.8 : auras privées, absorption de soins, invocation, phase
+----------------------------------------------------------------------------------------------------
+Enum.UnitHealAbsorbClampMode = { CurrentHealth = 1, MaximumHealth = 0 }
+PRIVATE, PRIVATE_NEXT = {}, 0
+C_UnitAuras.AddPrivateAuraAnchor = function(args)
+	assert(args.unitToken and args.auraIndex and args.parent and args.iconInfo.iconAnchor.relativeTo, "ancre incomplete")
+	PRIVATE_NEXT = PRIVATE_NEXT + 1
+	PRIVATE[PRIVATE_NEXT] = args
+	return PRIVATE_NEXT
+end
+C_UnitAuras.RemovePrivateAuraAnchor = function(id) assert(PRIVATE[id], "ancre inconnue") PRIVATE[id] = nil end
+C_IncomingSummon = { IncomingSummonStatus = function() return SUMMON or 0 end }
+function UnitPhaseReason() return PHASE end
+function UnitIsPlayer() return true end
+function Obj:GetHealAbsorbs() return 4, false end

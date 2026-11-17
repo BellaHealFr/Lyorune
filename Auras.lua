@@ -5,6 +5,8 @@
 --   à gauche, en grand: un affaiblissement important (boss, ou liste personnelle)
 --   en bas à gauche   : un buff de groupe qui lui manque (hors combat)
 --   bordure colorée   : je peux dissiper quelque chose
+--   contour lumineux  : un affaiblissement important est posé (avec un son pour ceux de ma liste)
+--   auras privées     : affaiblissements de boss cachés aux addons, que le jeu dessine lui-même sur la case
 -- Performance : plusieurs changements d'auras dans la même image ne déclenchent qu'une seule mise à jour.
 
 local _, Z = ...
@@ -15,6 +17,8 @@ local GetUnitAuras = C_UnitAuras.GetUnitAuras
 local GetAuraDuration = C_UnitAuras.GetAuraDuration
 local GetAuraCount = C_UnitAuras.GetAuraApplicationDisplayCount
 local GetDispelColor = C_UnitAuras.GetAuraDispelTypeColor
+local AddPrivateAnchor = C_UnitAuras.AddPrivateAuraAnchor
+local RemovePrivateAnchor = C_UnitAuras.RemovePrivateAuraAnchor
 local SORT = Enum.UnitAuraSortRule and Enum.UnitAuraSortRule.Default
 local REMAINING = Enum.StatusBarTimerDirection and Enum.StatusBarTimerDirection.RemainingTime
 local IMMEDIATE = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.Immediate
@@ -127,6 +131,78 @@ function Z.HideAuras(b)
 	end
 	if b.bigIcon then b.bigIcon:Hide() end
 	if b.buffIcon then b.buffIcon:Hide() end
+	if b.glow then b.glow:Hide() end
+end
+
+-- Contour lumineux qui pulse autour de la case. Le cadre porteur reçoit l'opacité décidée par le jeu,
+-- la bordure à l'intérieur porte l'animation : les deux ne se gênent pas.
+local function GetGlow(b)
+	if b.glow then return b.glow end
+	local glow = CreateFrame("Frame", nil, b.over)
+	glow:SetAllPoints()
+	glow:SetFrameLevel(b.over:GetFrameLevel() + 2)
+	local border = UI.Border(glow, 2, 2)
+	border:SetColor(1, 0.82, 0.25, 1)
+	local pulse = border:CreateAnimationGroup()
+	pulse:SetLooping("BOUNCE")
+	local fade = pulse:CreateAnimation("Alpha")
+	fade:SetFromAlpha(1)
+	fade:SetToAlpha(0.3)
+	fade:SetDuration(0.6)
+	glow:SetScript("OnShow", function() pulse:Play() end)
+	pulse:Play()
+	b.glow = glow
+	return glow
+end
+
+----------------------------------------------------------------------------------------------------
+-- Auras privées : le jeu cache certains affaiblissements de boss aux addons, mais accepte de les dessiner
+-- lui-même à une place qu'on lui indique (une « ancre »). Lyorune ne sait ni lesquels ni combien : il réserve
+-- deux emplacements. Les ancres suivent le joueur de la case et sont refaites quand un réglage change.
+----------------------------------------------------------------------------------------------------
+local PRIVATE_SLOTS = 2
+local PRIVATE_OFFSETS = { CENTER = { 0, 0 }, TOP = { 0, -2 }, BOTTOM = { 0, 2 }, LEFT = { 2, 0 }, RIGHT = { -2, 0 } }
+
+function Z.AnchorPrivateAuras(b)
+	if b.privateAnchors then
+		for _, id in ipairs(b.privateAnchors) do pcall(RemovePrivateAnchor, id) end
+		b.privateAnchors = nil
+	end
+	local db = Z.db
+	if not (b.unit and db.privateAuras and AddPrivateAnchor and RemovePrivateAnchor) then
+		if b.privateHolder then b.privateHolder:Hide() end
+		return
+	end
+
+	local size, point = db.privateAuraSize, db.privateAuraPoint
+	local offset = PRIVATE_OFFSETS[point] or PRIVATE_OFFSETS.CENTER
+	local holder = b.privateHolder
+	if not holder then
+		holder = CreateFrame("Frame", nil, b.over)
+		holder:SetFrameLevel(b.over:GetFrameLevel() + 5) -- au-dessus des icônes de Lyorune
+		b.privateHolder = holder
+	end
+	holder:SetSize(PRIVATE_SLOTS * (size + 2) - 2, size)
+	holder:ClearAllPoints()
+	holder:SetPoint(point, b.over, point, offset[1], offset[2])
+	holder:Show()
+
+	b.privateAnchors = {}
+	for index = 1, PRIVATE_SLOTS do
+		local ok, id = pcall(AddPrivateAnchor, {
+			unitToken = b.unit,
+			auraIndex = index,
+			parent = holder,
+			showCountdownFrame = true,
+			showCountdownNumbers = false,
+			iconInfo = {
+				iconWidth = size,
+				iconHeight = size,
+				iconAnchor = { point = "LEFT", relativeTo = holder, relativePoint = "LEFT", offsetX = (index - 1) * (size + 2), offsetY = 0 },
+			},
+		})
+		if ok and id then b.privateAnchors[#b.privateAnchors + 1] = id end
+	end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -145,17 +221,31 @@ local function IsIgnored(aura)
 	return not issecret(name) and Z.db.ignoredNames[name]
 end
 
--- Affaiblissement à montrer en grand : liste personnelle, ou marqué « boss » par le jeu
+-- Affaiblissement important : d'abord ceux de ma liste (nom lisible), puis ceux marqués « boss » par le jeu.
+-- Renvoie l'aura, « le jeu décide » (marque secrète en combat), et « de ma liste ».
 local function FindImportant(harmful)
 	for i = 1, #harmful do
-		local aura = harmful[i]
-		local name, boss = aura.name, aura.isBossAura
-		if not issecret(name) and Z.db.importantNames[name] then return aura end
-		if not issecret(boss) and boss then return aura end
+		local name = harmful[i].name
+		if not issecret(name) and Z.db.importantNames[name] then return harmful[i], false, true end
+	end
+	for i = 1, #harmful do
+		local boss = harmful[i].isBossAura
+		if not issecret(boss) and boss then return harmful[i] end
 	end
 	-- En combat ces informations peuvent être secrètes : on laisse le jeu décider de la visibilité
 	local first = harmful[1]
 	if first and issecret(first.isBossAura) then return first, true end
+end
+
+-- Son d'alerte : une fois par affaiblissement de ma liste posé sur un joueur, au plus toutes les 2 secondes
+local lastAlert = 0
+local function ImportantSound(b, aura, fromList)
+	local name = fromList and aura.name or nil
+	if name and name ~= b.alertedName and Z.db.importantSound and GetTime() - lastAlert > 2 then
+		lastAlert = GetTime()
+		PlaySound(SOUNDKIT and SOUNDKIT.RAID_WARNING or 8959, "Master")
+	end
+	b.alertedName = name
 end
 
 local lastSound = 0
@@ -260,10 +350,12 @@ local function UpdateAuras(b)
 	end
 	for i = shown + 1, #b.debuffs do b.debuffs[i]:Hide() end
 
-	-- 4. Affaiblissement important, en grand sur la gauche
-	local important, gameDecides
-	if db.bossDebuffs and harmful then important, gameDecides = FindImportant(harmful) end
-	if important then
+	-- 4. Affaiblissement important : en grand sur la gauche, contour lumineux, son
+	local important, gameDecides, fromList
+	if harmful and (db.bossDebuffs or db.importantGlow or db.importantSound) then
+		important, gameDecides, fromList = FindImportant(harmful)
+	end
+	if important and db.bossDebuffs then
 		b.bigList = b.bigList or {}
 		b.bigIcon = GetIcon(b, b.bigList, 1, "LEFT", 3, 0, 1, 1.6)
 		ShowAura(b.bigIcon, unit, important)
@@ -271,6 +363,14 @@ local function UpdateAuras(b)
 	elseif b.bigIcon then
 		b.bigIcon:Hide()
 	end
+	if important and db.importantGlow then
+		local glow = GetGlow(b)
+		if gameDecides then glow:SetAlphaFromBoolean(important.isBossAura, 1, 0) else glow:SetAlpha(1) end
+		glow:Show()
+	elseif b.glow then
+		b.glow:Hide()
+	end
+	ImportantSound(b, important or {}, fromList)
 
 	-- 5. Buff de groupe manquant, hors combat
 	local missing = FindMissingBuff(b, unit)

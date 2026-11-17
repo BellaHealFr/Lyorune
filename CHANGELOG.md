@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.8.0] - 2026-11-17
+
+### Ajouté
+
+- Auras privées des boss : le jeu les dessine lui-même sur la case, taille et place réglables ([#9](https://github.com/BellaHealFr/Lyorune/issues/9)).
+- Absorption de soins : bande rouge sombre au bout de la vie, calculée par le jeu, juste en combat ([#10](https://github.com/BellaHealFr/Lyorune/issues/10)).
+- Icônes d'invocation en cours et de joueur dans une autre phase ([#11](https://github.com/BellaHealFr/Lyorune/issues/11)).
+- Infobulle au survol d'une case : la liste de vos clics et touches, hors combat ([#12](https://github.com/BellaHealFr/Lyorune/issues/12)).
+- Contour lumineux pour un affaiblissement important, même en combat pour ceux des boss, et son pour ceux de votre liste ([#13](https://github.com/BellaHealFr/Lyorune/issues/13)).
+
 ## [1.7.0] - 2026-11-17
 
 ### Ajouté
@@ -164,6 +174,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0
 [1.5.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.3...v1.5.4

@@ -14,6 +14,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 |---|---|
 | Light green at the end of the bar | Heals are already on their way |
 | Light strip at the bottom of the bar | They have a shield |
+| Dark red at the end of the health | A debuff "eats" that part of their health: your heals fill it first, before they count |
 | Blue bar under the health | Their mana (everyone, by default; height adjustable in the Indicators tab) |
 | Flashing red overlay | Their health is low |
 | Red border | They are being attacked |
@@ -24,8 +25,14 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Small icons at the top left | Your heals over time on them |
 | Icons at the bottom right | Their debuffs |
 | Large icon on the left | An important debuff (boss, or your own list) |
+| Pulsing golden outline | An important debuff is applied (with a sound for those in your list, if you turn it on) |
+| Icons drawn by the game (in the centre, by default) | Boss debuffs the game hides from addons: it shows them itself on the frame |
 | Grey icon at the bottom left | They lack your group buff (shown out of combat) |
 | Resurrection icon in the centre | Someone is resurrecting them |
+| Summon icon in the centre | A summon is offered to them, or they accepted or declined it |
+| Phase icon in the centre | They are in another phase: they seem close, but your spells cannot reach them |
+
+Hover a frame out of combat: the tooltip shows the player, then the list of your clicks and keys with the spell or macro of each.
 
 ## 2. Healing with one click
 
@@ -148,6 +155,13 @@ Type `/lyorune test`, or click "5 players", "10 players", "25 players" or "40 pl
 **Indicators** tab: every element of the frame has its checkbox. Nothing is mandatory. You can, for example, only show the debuffs you can dispel, or replace the heal over time icons with thin bars.
 
 **Lists** tab: add one of your spells to track, a debuff that should never be shown, or a debuff to show as a large icon. Type the exact name, then Enter. Click a name to remove it.
+
+### In dungeons and raids
+
+- **Boss private auras**: some boss debuffs are hidden from addons. The game still agrees to draw them itself on the frame: choose their size and position (centre, top, bottom, left or right). Two at most per player.
+- **Heal absorb**: the dark red band at the end of the health shows what a debuff "eats". Your heals fill it first. The amount comes from the game and stays accurate in combat.
+- **Glow and sound**: a debuff from your "Highlight" list, or a boss debuff, surrounds the frame with a golden outline. The sound, once turned on, plays for those in your list.
+  Good to know: in combat the game often hides boss debuff names. Lyorune then cannot tell which one is applied: the outline still works (the game itself decides whether it is a boss debuff), the sound does not.
 
 ## 9. Announcements and sounds
 

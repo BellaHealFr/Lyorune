@@ -13,6 +13,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 |---|---|
 | Vert clair au bout de la barre | Des soins sont déjà en route |
 | Bande claire en bas de la barre | Il a un bouclier |
+| Rouge sombre au bout de la vie | Un affaiblissement « mange » cette part de vie : vos soins la remplissent d'abord, avant de compter |
 | Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur réglable dans l'onglet Indicateurs) |
 | Voile rouge qui clignote | Sa vie est basse |
 | Bordure rouge | Il est attaqué |
@@ -23,8 +24,14 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Petites icônes en haut à gauche | Vos soins sur la durée posés sur lui |
 | Icônes en bas à droite | Ses affaiblissements |
 | Grande icône à gauche | Un affaiblissement important (boss, ou votre liste) |
+| Contour doré qui pulse | Un affaiblissement important est posé (avec un son pour ceux de votre liste, si vous l'activez) |
+| Icônes dessinées par le jeu (au centre, par défaut) | Des affaiblissements de boss que le jeu cache aux addons : il les montre lui-même sur la case |
 | Icône grise en bas à gauche | Il lui manque votre buff de groupe (visible hors combat) |
 | Icône de résurrection au centre | Quelqu'un est en train de le relever |
+| Icône d'invocation au centre | Une invocation lui est proposée, ou il l'a acceptée ou refusée |
+| Icône de phase au centre | Il est dans une autre phase : il semble proche, mais vos sorts ne l'atteignent pas |
+
+Survolez une case hors combat : l'infobulle montre le joueur, puis la liste de vos clics et touches avec le sort ou la macro de chacun.
 
 ## 2. Soigner d'un clic
 
@@ -147,6 +154,13 @@ Onglet **Apparence** :
 Onglet **Indicateurs** : chaque élément de la case a sa case à cocher. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper, ou remplacer les icônes de soins sur la durée par des barres fines.
 
 Onglet **Listes** : ajoutez un de vos sorts à suivre, un affaiblissement à ne jamais afficher, ou un affaiblissement à montrer en grand. Tapez le nom exact, puis Entrée. Cliquez sur un nom pour le retirer.
+
+### En donjon et en raid
+
+- **Auras privées des boss** : certains affaiblissements de boss sont cachés aux addons. Le jeu accepte pourtant de les dessiner lui-même sur la case : choisissez leur taille et leur place (au centre, en haut, en bas, à gauche ou à droite). Deux au plus par joueur.
+- **Absorption de soins** : la bande rouge sombre au bout de la vie montre ce qu'un affaiblissement « mange ». Vos soins la remplissent d'abord. Le montant vient du jeu, il reste juste en combat.
+- **Contour lumineux et son** : un affaiblissement de votre liste « À mettre en avant », ou d'un boss, entoure la case d'un contour doré. Le son, à activer, part pour ceux de votre liste.
+  À savoir : en combat, le jeu cache souvent le nom des affaiblissements de boss. Lyorune ne peut alors pas savoir lequel est posé : le contour reste possible (le jeu décide lui-même s'il s'agit d'un boss), le son non.
 
 ## 9. Annonces et sons
 

@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.8.0] - 2026-11-17
+
+### Added
+
+- Boss private auras: the game draws them itself on the frame, adjustable size and position ([#9](https://github.com/BellaHealFr/Lyorune/issues/9)).
+- Heal absorb: dark red band at the end of the health, computed by the game, accurate in combat ([#10](https://github.com/BellaHealFr/Lyorune/issues/10)).
+- Icons for a pending summon and for a player in another phase ([#11](https://github.com/BellaHealFr/Lyorune/issues/11)).
+- Tooltip when hovering a frame: the list of your clicks and keys, out of combat ([#12](https://github.com/BellaHealFr/Lyorune/issues/12)).
+- Glowing outline for an important debuff, even in combat for boss debuffs, and a sound for those in your list ([#13](https://github.com/BellaHealFr/Lyorune/issues/13)).
+
 ## [1.7.0] - 2026-11-17
 
 ### Added
@@ -164,6 +174,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0
 [1.5.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.3...v1.5.4

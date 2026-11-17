@@ -8,6 +8,20 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.8.0", date = "2026-11-17",
+		added = {
+			"Auras privées des boss : le jeu les dessine lui-même sur la case, taille et place réglables (#9).",
+			"Absorption de soins : bande rouge sombre au bout de la vie, calculée par le jeu, juste en combat (#10).",
+			"Icônes d'invocation en cours et de joueur dans une autre phase (#11).",
+			"Infobulle au survol d'une case : la liste de vos clics et touches, hors combat (#12).",
+			"Contour lumineux pour un affaiblissement important, même en combat pour ceux des boss, et son pour ceux de votre liste (#13).",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.7.0", date = "2026-11-17",
 		added = {
 			"En raid, un cadre par groupe avec son numéro au-dessus (« Groupe 1 » à « Groupe 8 »), ou le nom du rôle en rangement par rôle ; réglage pour les masquer (#6).",

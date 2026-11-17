@@ -76,12 +76,28 @@ Z.translations.enUS = {
 	["Icônes des affaiblissements"] = "Debuff icons", ["Affaiblissements affichés"] = "Debuffs shown",
 	["Dissipables par moi"] = "Dispellable by me", ["Affaiblissement important en grand"] = "Large icon for important debuffs",
 	["Ceux des boss, et ceux de votre liste (onglet Listes)."] = "Boss debuffs, and those in your list (Lists tab).",
+	["Absorption de soins"] = "Heal absorb",
+	["Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat."] = "Dark red band at the end of the health bar: the part a debuff \"eats\" before your heals count. Computed by the game, visible in combat.",
+	["Invocation en cours, autre phase"] = "Pending summon, other phase",
+	["Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte)."] = "Icon in the middle of the cell: summon offered, accepted or declined, or a player in another phase (seemingly close, but out of reach).",
+	["Mes clics dans l'infobulle"] = "My clicks in the tooltip",
+	["Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro."] = "When hovering a cell, out of combat: each click and key with its spell or macro.",
+	["Mes clics"] = "My clicks",
+	["Contour lumineux si important"] = "Glow for important debuffs",
+	["La case s'entoure d'un contour doré qui pulse. Marche en combat pour les affaiblissements de boss : le jeu décide lui-même."] = "The cell gets a pulsing golden outline. Works in combat for boss debuffs: the game decides by itself.",
+	["Son pour ceux de ma liste"] = "Sound for those in my list",
+	["Un son d'alerte quand un affaiblissement de la liste « À mettre en avant » est posé. En combat, le jeu cache souvent le nom des affaiblissements de boss : le son ne peut alors pas partir."] = "A warning sound when a debuff from the \"Highlight\" list is applied. In combat the game often hides boss debuff names: the sound cannot play then.",
+	["Auras privées des boss"] = "Boss private auras",
+	["Afficher les auras privées"] = "Show private auras",
+	["Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place choisie ici (deux au plus)."] = "Some boss debuffs are hidden from addons: the game draws them itself on the cell, where you choose here (two at most).",
+	["Taille des auras privées"] = "Private aura size", ["Place des auras privées"] = "Private aura position",
+	["Au centre"] = "Centre", ["En haut"] = "Top", ["En bas"] = "Bottom", ["À gauche"] = "Left", ["À droite"] = "Right",
 
 	-- Listes
 	["Mes sorts à suivre"] = "My spells to track", ["À ignorer"] = "Ignore", ["À mettre en avant"] = "Highlight",
 	["Sorts à vous, affichés avec vos soins sur la durée. Tapez le nom exact puis Entrée."] = "Your own spells, shown with your heals over time. Type the exact name then Enter.",
 	["Affaiblissements à ne jamais afficher."] = "Debuffs that are never shown.",
-	["Affaiblissements affichés en grand sur la case."] = "Debuffs shown as a large icon on the cell.",
+	["Affaiblissements affichés en grand, avec contour lumineux et son (onglet Indicateurs)."] = "Debuffs shown as a large icon, with glow and sound (Indicators tab).",
 	["Cliquez pour retirer de la liste."] = "Click to remove from the list.",
 
 	-- Clics
@@ -267,8 +283,10 @@ Z.translations.enUS = {
 	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
-			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs.",
+			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements.\n\n"
+			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
+			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a frame out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
@@ -370,4 +388,9 @@ Z.translations.enUS = {
 	["Barre de mana affichée pour tous par défaut, hauteur réglable (#8)."] = "Mana bar shown for everyone by default, adjustable height (#8).",
 	["Bouton de la mini-carte à la même taille que ceux des autres addons."] = "Minimap button now the same size as other addons' buttons.",
 	["La couleur de dissipation ne cache plus le nom ni la vie : contour coloré et voile léger (#4)."] = "The dispel colour no longer hides the name or health: coloured outline and light tint (#4).",
+	["Auras privées des boss : le jeu les dessine lui-même sur la case, taille et place réglables (#9)."] = "Boss private auras: the game draws them itself on the frame, adjustable size and position (#9).",
+	["Absorption de soins : bande rouge sombre au bout de la vie, calculée par le jeu, juste en combat (#10)."] = "Heal absorb: dark red band at the end of the health, computed by the game, accurate in combat (#10).",
+	["Icônes d'invocation en cours et de joueur dans une autre phase (#11)."] = "Icons for a pending summon and for a player in another phase (#11).",
+	["Infobulle au survol d'une case : la liste de vos clics et touches, hors combat (#12)."] = "Tooltip when hovering a frame: the list of your clicks and keys, out of combat (#12).",
+	["Contour lumineux pour un affaiblissement important, même en combat pour ceux des boss, et son pour ceux de votre liste (#13)."] = "Glowing outline for an important debuff, even in combat for boss debuffs, and a sound for those in your list (#13).",
 }

@@ -23,6 +23,8 @@ Z.requiredAPI = {
 	"C_ClassColor.GetClassColor", "C_Spell.GetSpellName", "C_Spell.GetSpellTexture",
 	"C_Timer.After", "C_Timer.NewTicker",
 	"RegisterStateDriver", "UnregisterStateDriver", "SecureCmdOptionParse",
+	"C_UnitAuras.AddPrivateAuraAnchor", "C_UnitAuras.RemovePrivateAuraAnchor",
+	"C_IncomingSummon.IncomingSummonStatus", "UnitPhaseReason",
 }
 
 function Z:MissingAPI()

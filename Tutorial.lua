@@ -51,7 +51,9 @@ local steps = {
 		text = "|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
-			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements.",
+			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements.\n\n"
+			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
+			.. "Survolez une case hors combat : l'infobulle rappelle vos clics.",
 		target = function() return Z.buttons[1] end,
 	},
 	{

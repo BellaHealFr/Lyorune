@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.7.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.8.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -63,6 +63,14 @@ Z.defaults = {
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	showTooltip = true,
+	clickTooltip = true,       -- mes clics et touches dans l'infobulle d'une case (hors combat)
+	showHealAbsorb = true,     -- part de vie « mangée » par un affaiblissement avant que les soins comptent
+	showSummonPhase = true,    -- icône d'invocation en cours, ou de joueur dans une autre phase
+	privateAuras = true,       -- auras privées des boss, dessinées par le jeu sur la case
+	privateAuraSize = 20,      -- leur taille, en pixels
+	privateAuraPoint = "CENTER", -- leur place sur la case
+	importantGlow = true,      -- contour lumineux quand un affaiblissement important est posé
+	importantSound = false,    -- son quand un affaiblissement de la liste « À mettre en avant » est posé
 
 	-- Clics
 	castOnDown = true,         -- lancer le sort dès l'appui
@@ -101,7 +109,7 @@ Z.defaults = {
 Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
-	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 10, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
+	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 10, 1 }, privateAuraSize = { 12, 40, 2 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 }
 
 Z.choices = {
@@ -119,6 +127,7 @@ Z.choices = {
 	hotStyle = { { "ICONS", "Icônes" }, { "BARS", "Barres fines" } },
 	debuffMode = { { "ALL", "Tous" }, { "DISPEL", "Dissipables par moi" } },
 	manaBars = { { "OFF", "Personne" }, { "HEALERS", "Soigneurs" }, { "ALL", "Tous" } },
+	privateAuraPoint = { { "CENTER", "Au centre" }, { "TOP", "En haut" }, { "BOTTOM", "En bas" }, { "LEFT", "À gauche" }, { "RIGHT", "À droite" } },
 	alertChannel = { { "SAY", "Dire" }, { "GROUP", "Groupe ou raid" } },
 	language = { { "AUTO", "Automatique" }, { "frFR", "Français" }, { "enUS", "English" } },
 }

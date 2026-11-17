@@ -38,7 +38,7 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 |:-:|---|---|
 | <img src="docs/images/runes/s.png" alt="" width="40"> | **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. |
 | <img src="docs/images/runes/t.png" alt="" width="40"> | **Touches au survol** | Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. |
-| <img src="docs/images/runes/u.png" alt="" width="40"> | **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers, mana, soins sur la durée, affaiblissements, vie basse, menace, portée. |
+| <img src="docs/images/runes/u.png" alt="" width="40"> | **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers, absorption de soins, mana, soins sur la durée, affaiblissements, auras privées des boss, invocation, vie basse, menace, portée. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dissiper sans chercher** | La case se colore quand vous pouvez retirer une magie, une malédiction, une maladie ou un poison. |
 | <img src="docs/images/runes/r.png" alt="" width="40"> | **Relever sans changer de touche** | Sur un joueur mort, votre clic de soin lance votre résurrection. Personne ne reste au sol. |
 | <img src="docs/images/runes/g.png" alt="" width="40"> | **À votre goût** | Cinq thèmes, contraste élevé, transparence, taille, rangement par groupe ou par rôle, cadres séparés pour les tanks et les familiers. |

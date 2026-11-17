@@ -14,7 +14,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 0 | 1.5.5 | Vérification en jeu des versions 1.4.2 à 1.5.4 | En cours |
 | 1 | 1.6.0 | Bibliothèque de macros, clics par spécialisation | Publiée |
 | 2 | 1.7.0 | Bases de l'interface | Publiée |
-| 3 | 1.8.0 | Utile en donjon | À faire |
+| 3 | 1.8.0 | Utile en donjon | Publiée |
 | 4 | 1.9.0 | Forme des cases, couleurs de classe, runes | À faire |
 | 5 | 1.10.0 | Soins sur la durée et indicateurs | À faire |
 | 6 | 1.11.0 | Échelle, éditeur de placement, couleurs de l'interface | À faire |
@@ -52,11 +52,15 @@ macro sur une case (1023 caractères retenus).
 À vérifier en jeu : un cadre par groupe en raid (filtres du jeu), étiquettes, Alt/Ctrl/Maj, position par personnage.
 
 ## Étape 3 : utile en donjon (1.8.0)
-- [ ] Auras privées des boss sur les cases (#9)
-- [ ] Absorption de soins sur la barre de vie (#10)
-- [ ] Icônes d'invocation et d'autre phase (#11)
-- [ ] Infobulle des clics au survol d'une case (#12)
-- [ ] Sons et lueurs par affaiblissement (#13)
+- [x] Auras privées des boss sur les cases (#9)
+- [x] Absorption de soins sur la barre de vie (#10)
+- [x] Icônes d'invocation et d'autre phase (#11)
+- [x] Infobulle des clics au survol d'une case (#12)
+- [x] Sons et lueurs par affaiblissement (#13) : contour pour la liste « À mettre en avant » et les affaiblissements
+  de boss (même en combat, le jeu décide) ; son pour ceux de la liste, seulement quand le jeu laisse lire le nom.
+
+À vérifier en jeu : place et taille des auras privées, bande d'absorption de soins, icônes d'invocation et de phase,
+contour et son en donjon.
 
 ## Étape 4 : forme des cases, couleurs de classe, runes (1.9.0)
 - [ ] Barre, Tuile, Carré, Bandeau, avec vignettes de démonstration et bouton « Voir en vrai » (#14)
