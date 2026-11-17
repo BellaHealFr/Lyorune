@@ -30,7 +30,7 @@ local step = function(label, fn) local ok, err = pcall(fn) print((ok and "OK    
 step("demarrage", function()
   FireEvent("ADDON_LOADED", "Lyorune")
   FireEvent("PLAYER_LOGIN")
-  assert(Z.header and #Z.headers == 3, "en-tetes")
+  assert(Z.header and #Z.headers == 11, "en-tetes")
 end)
 
 step("clics par defaut et resurrection automatique", function()
@@ -74,7 +74,7 @@ step("evenements de vie", function()
   assert(Z.buttons[1].text:GetText() == "-200")
   assert(Z.buttons[1].powerShown == true, "barre de mana du soigneur")
   Z.db.manaBars = "OFF" Z:Refresh() assert(Z.buttons[1].powerShown == false)
-  Z.db.manaBars = "HEALERS" Z:Refresh()
+  Z.db.manaBars = "ALL" Z:Refresh()
 end)
 
 step("auras", function()
@@ -170,11 +170,11 @@ step("reglages d'apparence et de rangement", function()
   assert(Z.buttons[1].text:GetText() == "80%", Z.buttons[1].text:GetText())
   assert(Z.header:GetAttribute("groupBy") == "ASSIGNEDROLE" and Z.header:GetAttribute("point") == "LEFT")
   assert(Z.header:GetAttribute("groupingOrder") == "HEALER,TANK,DAMAGER,NONE", Z.header:GetAttribute("groupingOrder"))
-  assert(Z.headers[2]:IsShown() and Z.headers[3]:IsShown() and Z.headers[2]:GetAttribute("roleFilter") == "TANK")
+  assert(LyoruneTanks:IsShown() and LyorunePets:IsShown() and LyoruneTanks:GetAttribute("roleFilter") == "TANK")
   assert(Z:Theme().id == "CONTRAST")
   Z.db.highContrast = false Z.db.showTanks = false Z.db.showPets = false Z.db.text = "NONE" Z.db.color = "CLASS" Z.db.layout = "GROUP" Z.db.horizontal = false
   Z:Refresh()
-  assert(not Z.headers[2]:IsShown())
+  assert(not LyoruneTanks:IsShown())
   Z.db.text = "DEFICIT" Z:Refresh()
 end)
 
@@ -447,14 +447,15 @@ step("affichage des cadres : toujours, ou en combat seulement", function()
   assert(Z.header:IsShown(), "toujours : affiche en combat")
   COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
   assert(#Z.choices.visibility == 2, "deux choix seulement")
-  assert(not Z.headers[2]:IsShown(), "un cadre coupe reste masque")
+  assert(not LyoruneTanks:IsShown(), "un cadre coupe reste masque")
   -- la poignee refusee en combat ne doit rien demander au jeu en fin de glissement
   local stopped = 0
   Z.anchor.StopMovingOrSizing = function() stopped = stopped + 1 end
   Z.anchor.StartMoving = function() end
-  COMBAT = true Z.anchor:Run("OnDragStart") Z.anchor:Run("OnDragStop")
+  local handle = Z.header.handle
+  COMBAT = true handle:Run("OnDragStart") handle:Run("OnDragStop")
   assert(stopped == 0, "StopMovingOrSizing appele en combat")
-  COMBAT = false Z.anchor:Run("OnDragStart") Z.anchor:Run("OnDragStop")
+  COMBAT = false handle:Run("OnDragStart") handle:Run("OnDragStop")
   assert(stopped == 1)
   -- releve automatique de l'etat des cadres, et erreur d'habillage ecrite au journal
   Z.db.frameStateLogout = nil FireEvent("PLAYER_LOGOUT")
@@ -539,23 +540,23 @@ step("partage, profils prets a l'emploi, reinitialisation", function()
   local code = Z:Export()
   assert(code:match("^Lyorune2;") and not code:find(" "), code)
   Z.db.theme = "NEON" Z.db.width = 60 Z.db.manaText = "x" Z.db.smooth = true Z.db.clicks.PRIEST = {} Z.db.hoverKeys.PRIEST = {} Z.db.ignoredNames = {} Z.db.roleOrder = "TANK,HEALER,DAMAGER"
-  local pos = Z.db.pos
+  local pos = Z.char.pos
   local ok, message = Z:Import("  " .. code .. "\n")
   assert(ok, message)
   assert(Z.db.theme == "HEROIC" and Z.db.width == 100 and Z.db.smooth == false and Z.db.roleOrder == "DAMAGER,HEALER,TANK")
   assert(Z.db.manaText == "Plus de mana ; = {mana} % !", Z.db.manaText)
   assert(Z.db.clicks.PRIEST["ctrl-1"] == "Prière de guérison" and Z.db.ignoredNames["Mal de mer"])
   assert(Z.db.hoverKeys.PRIEST[2].key == "BUTTON7" and Z.db.hoverKeys.PRIEST[2].spell == "Soins rapides")
-  assert(Z.buttons[1]:GetAttribute("ctrl-spell1") == "Prière de guérison" and Z.db.pos == pos)
+  assert(Z.buttons[1]:GetAttribute("ctrl-spell1") == "Prière de guérison" and Z.char.pos == pos)
   assert(not Z:Import("bonjour"))
   assert(not Z:Import("Lyorune2;width=sabc;theme=sFAUX;inconnu=n5;c.PRIEST.zz=sX;roleOrder=sTANK;l.pos=sX"))
   ok = Z:Import("Lyorune1;width=n9999;height=n-5;pos=sHACK;tutorialDone=bfalse;language=senUS")
-  assert(ok and Z.db.width == 180 and Z.db.height == 24 and type(Z.db.pos) == "table" and Z.db.tutorialDone == true and Z.db.language == "AUTO")
+  assert(ok and Z.db.width == 180 and Z.db.height == 24 and Z.db.pos == nil and Z.char.pos == pos and Z.db.tutorialDone == true and Z.db.language == "AUTO")
   assert(Z:ApplyPreset("COMPACT") and Z.db.width == 64 and Z.db.hotStyle == "BARS" and Z.db.clicks.PRIEST["ctrl-1"])
   assert(not Z:ApplyPreset("INCONNU"))
   Z.db.errors = { { message = "garde" } }
   Z:ResetAll()
-  assert(Z.db.width == 86 and Z.db.theme == "PURE" and Z.db.pos == pos and Z.db.errors[1].message == "garde")
+  assert(Z.db.width == 86 and Z.db.theme == "PURE" and Z.char.pos == pos and Z.db.errors[1].message == "garde")
   assert(Z.db.clicks.PRIEST["1"] == "Soins rapides" and next(Z.db.ignoredNames) == nil, "reinitialisation")
   Z.db.autoRes = false Z:ApplyClicks()
 end)
@@ -721,6 +722,77 @@ step("anglais : visite guidee, nouveautes, messages", function()
   assert(Z.englishTexts.manaText:find("{mana}", 1, true) and Z.englishTexts.resText:find("{nom}", 1, true))
   Z.db.language = "AUTO" Z:SetLanguage()
   assert(Z:ReportURL():find("bug.yml", 1, true) and Z.L["Suivant"] == "Suivant")
+end)
+
+step("etape 2 : cadres par groupe, etiquettes, verrou, position par personnage, mana", function()
+  -- seul ou en groupe : un seul cadre ; en raid : un cadre par groupe, choisi par le jeu lui-meme
+  local raid1, raid3 = LyoruneRaid1, LyoruneRaid3
+  assert(Z.header:IsShown() and not raid1:IsShown(), "hors raid : le cadre unique")
+  RAID = true Z:Refresh()
+  assert(not Z.header:IsShown() and raid1:IsShown() and raid3:IsShown(), "en raid : un cadre par groupe")
+  assert(raid3:GetAttribute("groupFilter") == "3" and raid3:GetAttribute("roleFilter") == nil and raid3:GetAttribute("maxColumns") == 1)
+  assert(raid3.handle.text:GetText() == Z.L["Groupe %d"]:format(3), raid3.handle.text:GetText())
+  -- etiquette : seulement sur un groupe qui a des joueurs
+  assert(not raid3.handle:IsShown(), "etiquette sur un groupe vide")
+  local b = CreateFrame("Button", "LyoruneRaid3UnitButton1", raid3)
+  b:Hide() raid3:InitButton(b:GetName()) raid3:SetAttribute("child1", b) b:SetAttribute("unit", "raid11") b:Show()
+  assert(raid3.handle:IsShown(), "etiquette absente sur un groupe occupe")
+  -- rangement par role : un cadre par role, dans l'ordre choisi
+  Z.db.layout = "ROLE" Z.db.roleOrder = "HEALER,TANK,DAMAGER" Z:Refresh()
+  assert(raid1:GetAttribute("roleFilter") == "HEALER" and raid1:GetAttribute("groupFilter") == nil and raid1.handle.text:GetText() == Z.L["Soigneurs"])
+  assert(LyoruneRaid4:GetAttribute("roleFilter") == "NONE" and LyoruneRaid4:IsShown() and not LyoruneRaid5:IsShown())
+  Z.db.layout = "GROUP" Z.db.roleOrder = "TANK,HEALER,DAMAGER" Z:Refresh()
+  assert(LyoruneRaid5:IsShown() and LyoruneRaid5:GetAttribute("groupFilter") == "5")
+  -- verrou : libre, verrouille, ou avec une touche
+  local moved = 0
+  Z.anchor.StartMoving = function(self) self.started = true end
+  Z.anchor.StopMovingOrSizing = function() moved = moved + 1 end
+  Z.db.lockMode = "LOCKED" Z:Refresh()
+  raid3.handle:Run("OnDragStart") raid3.handle:Run("OnDragStop")
+  assert(moved == 0, "deplace alors que verrouille")
+  Z.db.showGroupLabels = false Z:Refresh()
+  assert(not raid3.handle:IsShown(), "etiquette masquee par le reglage")
+  Z.db.lockMode = "CTRL" Z:Refresh()
+  raid3.handle:Run("OnDragStart") raid3.handle:Run("OnDragStop") assert(moved == 0, "deplace sans la touche")
+  CTRL = true FireEvent("MODIFIER_STATE_CHANGED")
+  assert(raid3.handle:IsShown(), "l'etiquette revient quand on maintient la touche")
+  raid3.handle:Run("OnDragStart") raid3.handle:Run("OnDragStop") assert(moved == 1, "Ctrl + glisser")
+  CTRL = false FireEvent("MODIFIER_STATE_CHANGED")
+  assert(not raid3.handle:IsShown())
+  Z.db.showGroupLabels = true Z.db.lockMode = "FREE" Z:Refresh()
+  -- la position est rangee dans la sauvegarde du personnage
+  assert(LyoruneCharDB.pos == Z.char.pos and Z.char.pos[1] == "CENTER" and LyoruneDB.pos == nil)
+  SlashCmdList.LYORUNE("verrou") assert(Z.db.lockMode == "LOCKED")
+  SlashCmdList.LYORUNE("verrou") assert(Z.db.lockMode == "FREE")
+  SlashCmdList.LYORUNE("reset") assert(Z.char.pos[2] == -320)
+  RAID = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(Z.header:IsShown() and not raid1:IsShown(), "retour au groupe")
+  -- mana : pour tous par defaut, hauteur reglable
+  assert(Z.defaults.manaBars == "ALL" and Z.limits.powerHeight)
+  Z.db.powerHeight = 7 Z:Refresh() assert(Z.buttons[1].power:GetHeight() == 7)
+  Z.db.powerHeight = 4 Z:Refresh()
+  -- dissipation : le voile est pose sous le texte, plus dans le cadre de la bordure
+  local cell = Z.buttons[1]
+  Z.ShowDispel(cell, true, 0.2, 0.6, 1, 1)
+  assert(cell.dispel:IsShown() and cell.dispel.fill:IsShown() and cell.dispel.fill:GetParent() == cell.over)
+  Z.ShowDispel(cell, false) assert(not cell.dispel.fill:IsShown())
+  -- mini-carte : meme gabarit que les autres boutons
+  assert(LyoruneMinimapButton:GetWidth() == 31 and LyoruneMinimapButton.icon:GetWidth() == 18)
+end)
+
+step("etape 2 : reprise des anciens reglages", function()
+  local db = { locked = true, lastVersion = "1.6.0", manaBars = "HEALERS", pos = { "TOPLEFT", 10, -10 } }
+  local savedDB, savedChar = LyoruneDB, LyoruneCharDB
+  LyoruneDB, LyoruneCharDB = db, nil
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(db.locked == nil and db.lockMode == "LOCKED" and db.manaBars == "ALL", "migration des reglages")
+  assert(db.pos == nil and LyoruneCharDB.pos[1] == "TOPLEFT", "l'ancienne position revient au premier personnage")
+  LyoruneCharDB = nil FireEvent("ADDON_LOADED", "Lyorune")
+  assert(LyoruneCharDB.pos[1] == "CENTER" and LyoruneCharDB.pos[2] == -320, "un personnage neuf part de la position par defaut")
+  db.manaBars = "HEALERS" db.lastVersion = "1.7.0" FireEvent("ADDON_LOADED", "Lyorune")
+  assert(db.manaBars == "HEALERS", "un choix fait apres la 1.7.0 est respecte")
+  LyoruneDB, LyoruneCharDB = savedDB, savedChar
+  FireEvent("ADDON_LOADED", "Lyorune")
 end)
 
 step("aucune variable globale imprevue", function()

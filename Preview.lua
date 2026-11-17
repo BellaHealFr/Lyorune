@@ -77,10 +77,10 @@ local function Fill(cell, index)
 	-- Dissipation possible sur un joueur sur six
 	local dispel = db.showDispel and not dead and index % 6 == 3 and DISPEL_COLORS[math.floor(index / 6) % #DISPEL_COLORS + 1]
 	if dispel then
-		cell.dispel:SetColor(dispel[1], dispel[2], dispel[3], 1)
-		cell.dispel.fill:SetVertexColor(dispel[1], dispel[2], dispel[3], 1)
+		Z.ShowDispel(cell, true, dispel[1], dispel[2], dispel[3], 1)
+	else
+		Z.ShowDispel(cell, false)
 	end
-	cell.dispel:SetShown(dispel and true or false)
 
 	-- Soins sur la durée d'exemple, avec les icônes de mes vrais sorts
 	Z.HideAuras(cell)

@@ -8,6 +8,21 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.7.0", date = "2026-11-17",
+		added = {
+			"En raid, un cadre par groupe avec son numéro au-dessus (« Groupe 1 » à « Groupe 8 »), ou le nom du rôle en rangement par rôle ; réglage pour les masquer (#6).",
+			"Déplacement des cadres au choix : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj, par n'importe quelle étiquette de groupe (#7).",
+			"Position des cadres gardée pour chaque personnage ; un nouveau personnage part de la position par défaut (#5).",
+		},
+		improved = {
+			"Barre de mana affichée pour tous par défaut, hauteur réglable (#8).",
+			"Bouton de la mini-carte à la même taille que ceux des autres addons.",
+		},
+		fixed = {
+			"La couleur de dissipation ne cache plus le nom ni la vie : contour coloré et voile léger (#4).",
+		},
+	},
+	{
 		version = "1.6.0", date = "2026-11-17",
 		added = {
 			"Bibliothèque « Mes macros » : une macro écrite une fois, posée sur autant de clics et de touches que vous voulez (#23).",

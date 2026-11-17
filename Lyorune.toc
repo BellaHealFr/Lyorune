@@ -5,11 +5,12 @@
 ## Author: BellaDroode
 ## X-License: Tous droits réservés (voir LICENSE)
 ## X-Website: https://github.com/BellaHealFr/Lyorune
-## Version: 1.6.0
+## Version: 1.7.0
 ## IconTexture: Interface\AddOns\Lyorune\Media\Logo
 ## Category-frFR: Portraits d'unités
 ## Category-enUS: Unit Frames
 ## SavedVariables: LyoruneDB
+## SavedVariablesPerCharacter: LyoruneCharDB
 ## OptionalDeps: LibStub, LibSharedMedia-3.0, SharedMedia, ElvUI_Libraries
 ## AddonCompartmentFunc: Lyorune_OnAddonCompartmentClick
 

@@ -231,13 +231,10 @@ local function UpdateAuras(b)
 
 	local color = toDispel and db.showDispel and GetDispelColor(unit, toDispel.auraInstanceID, dispelCurve)
 	if color then
-		local r, g, bl, a = color:GetRGBA()
-		b.dispel:SetColor(r, g, bl, a)
-		b.dispel.fill:SetVertexColor(r, g, bl, a)
 		if not b.dispel:IsShown() then DispelSound() end
-		b.dispel:Show()
+		Z.ShowDispel(b, true, color:GetRGBA())
 	else
-		b.dispel:Hide()
+		Z.ShowDispel(b, false)
 	end
 
 	-- 3. Icônes d'affaiblissements : celui à dissiper en premier

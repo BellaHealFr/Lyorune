@@ -18,13 +18,7 @@ local function Send(text, channel, target)
 	return pcall(C_ChatInfo.SendAddonMessage, PREFIX, text, channel, target)
 end
 
--- "1.10.2" -> 11002, pour comparer deux versions
-local function VersionNumber(text)
-	local major, minor, patch = tostring(text):match("^(%d+)%.(%d+)%.?(%d*)")
-	if not major then return 0 end
-	return tonumber(major) * 10000 + tonumber(minor) * 100 + (tonumber(patch) or 0)
-end
-Z.VersionNumber = VersionNumber
+local VersionNumber = Z.VersionNumber -- Core.lua
 
 local function AnnounceVersion()
 	if not IsInGroup() or GetTime() - lastAnnounce < 60 then return end

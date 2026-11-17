@@ -172,7 +172,7 @@ local function LayoutBars(b)
 	local inset = Z:Theme().borderSize
 	b.hp:ClearAllPoints()
 	b.hp:SetPoint("TOPLEFT", inset, -inset)
-	b.hp:SetPoint("BOTTOMRIGHT", -inset, inset + (b.powerShown and 4 or 0))
+	b.hp:SetPoint("BOTTOMRIGHT", -inset, inset + (b.powerShown and db.powerHeight + 1 or 0))
 end
 
 -- Rôle : icône, et barre de mana pour les soigneurs (ou tous) selon l'option
@@ -336,6 +336,7 @@ local function Style(b)
 	b.absorb:SetStatusBarColor(unpack(theme.absorb))
 	b.absorb:SetShown(db.showAbsorb)
 	b.power:SetStatusBarTexture(texture)
+	b.power:SetHeight(db.powerHeight)
 	b.bg:SetVertexColor(unpack(theme.bg))
 	b.border:SetThickness(theme.borderSize)
 	b.border:SetColor(theme.border[1], theme.border[2], theme.border[3], 1)
@@ -452,15 +453,31 @@ function Z.BuildVisuals(b)
 	b.threat:SetColor(1, 0.15, 0.15, 1)
 	b.threat:Hide()
 	b.dispel = UI.Border(over, 2)
-	b.dispel.fill = UI.Tex(b.dispel, "ARTWORK", 1, 1, 1, 0.30)
-	b.dispel.fill:SetAllPoints()
 	b.dispel:Hide()
+	-- Voile léger de la couleur du type, posé SOUS le nom et la vie : ils restent toujours lisibles
+	b.dispel.fill = UI.Tex(over, "ARTWORK", 1, 1, 1, 1)
+	b.dispel.fill:SetAllPoints()
+	b.dispel.fill:SetAlpha(0.18)
+	b.dispel.fill:Hide()
 	b.selected = UI.Border(over, 1)
 	b.selected:SetColor(1, 1, 1, 1)
 	b.selected:SetAlpha(0)
 
 	b.hots, b.hotBars, b.debuffs = {}, {}, {}
 end
+
+-- Dissipation possible : contour et voile de la couleur du type (shown = false : rien)
+function Z.ShowDispel(b, shown, r, g, bl, a)
+	if shown then
+		b.dispel:SetColor(r, g, bl, a)
+		b.dispel.fill:SetVertexColor(r, g, bl, a)
+	end
+	b.dispel:SetShown(shown)
+	b.dispel.fill:SetShown(shown)
+end
+
+-- Une case apparaît ou disparaît : l'étiquette de son groupe suit (pas d'étiquette sur un groupe vide)
+local function MembersChanged() if Z.UpdateHandles then Z.UpdateHandles() end end
 
 -- Création d'une case : le jeu crée le bouton sécurisé, Lyorune l'habille.
 local function InitButton(_, name)
@@ -472,6 +489,8 @@ local function InitButton(_, name)
 	b:SetScript("OnEvent", OnEvent)
 	b:HookScript("OnAttributeChanged", OnAttributeChanged)
 	b:HookScript("OnShow", UpdateAll)
+	b:HookScript("OnShow", MembersChanged)
+	b:HookScript("OnHide", MembersChanged)
 	b:HookScript("OnEnter", OnEnter)
 	b:HookScript("OnLeave", OnLeave)
 
@@ -481,14 +500,29 @@ local function InitButton(_, name)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Les cadres. Chacun a une poignée de déplacement et un en-tête sécurisé du jeu, qui crée et range
--- une case par joueur, même en plein combat (aucun calcul de placement côté addon).
+-- Les cadres. Chacun est un en-tête sécurisé du jeu, qui crée et range une case par joueur, même en plein
+-- combat (aucun calcul de placement côté addon).
+--   Seul ou en groupe : un seul cadre, « Groupe ».
+--   En raid : un cadre par groupe (1 à 8), ou par rôle en rangement par rôle, chacun avec son étiquette.
+-- Le jeu choisit lui-même lesquels afficher (règle de visibilité), même si le raid se forme en plein combat.
+-- Les étiquettes servent de poignées : n'importe quel numéro de groupe déplace tout le cadre principal.
 ----------------------------------------------------------------------------------------------------
+local RAID_GROUPS = 8
+local LABEL_SPACE = 14 -- place gardée au-dessus des cases pour les étiquettes
+local ROLE_LABELS = { TANK = "Tanks", HEALER = "Soigneurs", DAMAGER = "Dégâts", NONE = "Sans rôle" }
+
 local frameDefs = {
-	{ key = "main", name = "LyoruneHeader", template = "SecureGroupHeaderTemplate", pos = "pos", label = "Lyorune" },
-	{ key = "tanks", name = "LyoruneTanks", template = "SecureGroupHeaderTemplate", pos = "tankPos", label = "Tanks", option = "showTanks" },
-	{ key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets" },
+	{ key = "main", name = "LyoruneHeader", template = "SecureGroupHeaderTemplate", pos = "pos", label = "Groupe" },
 }
+for i = 1, RAID_GROUPS do
+	frameDefs[#frameDefs + 1] = { key = "raid" .. i, raid = i, name = "LyoruneRaid" .. i, template = "SecureGroupHeaderTemplate", pos = "pos" }
+end
+frameDefs[#frameDefs + 1] = { key = "tanks", name = "LyoruneTanks", template = "SecureGroupHeaderTemplate", pos = "tankPos", label = "Tanks", option = "showTanks", always = true }
+frameDefs[#frameDefs + 1] = { key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets", always = true }
+
+local raidHeaders = {}
+local anchors = {}   -- un point d'attache invisible par position enregistrée (cadre principal, tanks, familiers)
+local unlockNote     -- mention discrète « déverrouillé »
 
 -- La première ligne nomme Lyorune : le jeu la cite si ce code échoue, et le journal d'erreurs la reconnaît.
 local CONFIG_SNIPPET = [[-- Lyorune
@@ -507,81 +541,152 @@ local CONFIG_SNIPPET = [[-- Lyorune
 -- name », et plus aucune case n'est créée). Les attributs _onenter et _onleave des nouvelles cases passent donc par
 -- la liste « _initialAttributeNames » de l'en-tête, que le jeu recopie lui-même (voir CreateHeader et Clicks.lua).
 
-local function CreateAnchor(def)
-	local anchor = CreateFrame("Frame", def.name .. "Anchor", UIParent)
-	anchor:SetSize(86, 16)
-	anchor:SetMovable(true)
-	anchor:SetClampedToScreen(true)
-	anchor:RegisterForDrag("LeftButton")
-	anchor.bg = UI.Tex(anchor, "BACKGROUND", UI.bg[1], UI.bg[2], UI.bg[3], 0.9)
-	anchor.bg:SetAllPoints()
-	anchor.line = UI.Tex(anchor, "ARTWORK", UI.accent[1], UI.accent[2], UI.accent[3])
-	anchor.line:SetPoint("BOTTOMLEFT")
-	anchor.line:SetPoint("BOTTOMRIGHT")
-	anchor.line:SetHeight(1)
-	anchor.label = UI.Text(anchor, 10)
-	anchor.label:SetPoint("CENTER", 0, 1)
-	anchor.label:SetText(L[def.label])
-	anchor:SetScript("OnDragStart", function(self)
-		if InCombatLockdown() then
-			Z:Print(L["impossible de déplacer les cadres en combat."])
-		else
-			self.moving = true
-			self:StartMoving()
-		end
+----------------------------------------------------------------------------------------------------
+-- Verrou : libre, verrouillé, ou déplaçable en maintenant Alt, Ctrl ou Maj. Jamais en combat.
+----------------------------------------------------------------------------------------------------
+local MODIFIERS = { ALT = "IsAltKeyDown", CTRL = "IsControlKeyDown", SHIFT = "IsShiftKeyDown" }
+local MODIFIER_NAMES = { ALT = "Alt", CTRL = "Ctrl", SHIFT = "Maj" }
+
+local function CanMove()
+	if InCombatLockdown() then return false end
+	if db.lockMode == "FREE" then return true end
+	local check = MODIFIERS[db.lockMode]
+	return check and _G[check]() or false
+end
+
+local function Members(h)
+	local count, index = 0, 1
+	local child = h:GetAttribute("child1")
+	while child do
+		if child:IsShown() then count = count + 1 end
+		index = index + 1
+		child = h:GetAttribute("child" .. index)
+	end
+	return count
+end
+
+-- Étiquette d'un cadre : visible si l'option est cochée, ou le temps de déplacer les cadres
+local function UpdateHandle(h)
+	local handle = h.handle
+	local movable = CanMove()
+	local wanted = (db.showGroupLabels or movable) and h.labelText ~= nil
+	if wanted and not h.def.always then wanted = Members(h) > 0 end
+	handle:SetShown(wanted)
+	handle:EnableMouse(db.lockMode ~= "LOCKED")
+	handle.line:SetShown(movable)
+end
+
+local function UpdateHandles()
+	if not db then return end
+	local mainShown = false
+	for _, h in ipairs(Z.headers) do
+		UpdateHandle(h)
+		if h.def.pos == "pos" and h.handle:IsVisible() then mainShown = true end
+	end
+	if unlockNote then
+		unlockNote:SetShown(mainShown and db.lockMode == "FREE" and not InCombatLockdown() and not Z.previewActive)
+	end
+end
+Z.UpdateHandles = UpdateHandles
+
+local function GetAnchor(key)
+	local anchor = anchors[key]
+	if not anchor then
+		anchor = CreateFrame("Frame", nil, UIParent)
+		anchor:SetSize(1, 1)
+		anchor:SetMovable(true)
+		anchor:SetClampedToScreen(true)
+		anchors[key] = anchor
+	end
+	return anchor
+end
+
+local function CreateHandle(h, def)
+	local handle = CreateFrame("Frame", def.name .. "Label", h)
+	handle:SetHeight(12)
+	handle:SetPoint("BOTTOMLEFT", h, "TOPLEFT", 0, 2)
+	handle.text = UI.Text(handle, 10)
+	handle.text:SetAllPoints()
+	handle.text:SetWordWrap(false)
+	handle.text:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+	handle.line = UI.Tex(handle, "ARTWORK", UI.accent[1], UI.accent[2], UI.accent[3], 0.6) -- souligné : déplaçable
+	handle.line:SetPoint("BOTTOMLEFT", 6, -1)
+	handle.line:SetPoint("BOTTOMRIGHT", -6, -1)
+	handle.line:SetHeight(1)
+	handle:RegisterForDrag("LeftButton")
+	handle:SetScript("OnDragStart", function()
+		if InCombatLockdown() then return Z:Print(L["impossible de déplacer les cadres en combat."]) end
+		if not CanMove() then return end
+		local anchor = anchors[def.pos]
+		anchor.moving = true
+		anchor:StartMoving()
 	end)
-	anchor:SetScript("OnDragStop", function(self)
-		if not self.moving then return end -- glissement refusé en combat : rien à arrêter
-		self.moving = false
-		if InCombatLockdown() then return end -- le combat a commencé pendant le glissement : le jeu a déjà figé la poignée
-		self:StopMovingOrSizing()
-		local point, _, _, x, y = self:GetPoint(1)
-		db[def.pos] = { point, x, y }
+	handle:SetScript("OnDragStop", function()
+		local anchor = anchors[def.pos]
+		if not anchor.moving then return end -- glissement refusé : rien à arrêter
+		anchor.moving = false
+		if InCombatLockdown() then return end -- le combat a commencé pendant le glissement : le jeu a déjà figé le cadre
+		anchor:StopMovingOrSizing()
+		local point, _, _, x, y = anchor:GetPoint(1)
+		Z.char[def.pos] = { point, x, y }
 	end)
-	anchor:SetScript("OnMouseUp", function(_, button)
+	handle:SetScript("OnMouseUp", function(_, button)
 		if button == "RightButton" then Z:ToggleOptions() end
 	end)
-	anchor:SetScript("OnEnter", function(self)
+	handle:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		GameTooltip:SetText(L[def.label], UI.accent[1], UI.accent[2], UI.accent[3])
-		GameTooltip:AddLine(L["Glisser : déplacer les cadres"], 1, 1, 1)
+		GameTooltip:SetText(h.labelText or "", UI.accent[1], UI.accent[2], UI.accent[3])
+		if db.lockMode == "FREE" then
+			GameTooltip:AddLine(L["Glisser : déplacer les cadres"], 1, 1, 1)
+		elseif MODIFIERS[db.lockMode] then
+			GameTooltip:AddLine(L["Maintenir %s et glisser : déplacer les cadres"]:format(L[MODIFIER_NAMES[db.lockMode]]), 1, 1, 1)
+		end
 		GameTooltip:AddLine(L["Clic droit : options"], 1, 1, 1)
 		GameTooltip:Show()
 	end)
-	anchor:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	return anchor
+	handle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	handle:Hide()
+	return handle
 end
 
 local function CreateHeader(def)
 	local h = CreateFrame("Frame", def.name, UIParent, def.template)
 	h:Hide() -- on règle tout avant d'afficher : les cases sont créées au premier affichage
 	h.def = def
-	h.anchor = CreateAnchor(def)
+	h.labelText = def.label and L[def.label]
+	h.handle = CreateHandle(h, def)
+	GetAnchor(def.pos)
 	-- Une erreur pendant l'habillage d'une case est écrite au journal, même si un autre addon a pris la main
 	-- sur le gestionnaire d'erreurs du jeu.
 	h.InitButton = function(self, name) Z:Try("habillage d'une case", InitButton, self, name) end
-	h:SetPoint("TOPLEFT", h.anchor, "BOTTOMLEFT", 0, -3)
 	h:SetAttribute("template", "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate")
 	h:SetAttribute("showPlayer", true)
-	h:SetAttribute("showParty", true)
-	h:SetAttribute("showRaid", true)
+	h:SetAttribute("showParty", not def.raid)
+	h:SetAttribute("showRaid", def.key ~= "main") -- en raid, les cadres par groupe prennent le relais
 	h:SetAttribute("sortMethod", "INDEX")
 	h:SetAttribute("initialConfigFunction", CONFIG_SNIPPET)
 	h:SetAttribute("_initialAttributeNames", "_onenter,_onleave")
 	h:SetAttribute("_initialAttribute-_onenter", "self:ClearBindings()")
 	h:SetAttribute("_initialAttribute-_onleave", "self:ClearBindings()")
 	if def.key == "tanks" then h:SetAttribute("roleFilter", "TANK") end
+	h:HookScript("OnShow", UpdateHandles)
+	h:HookScript("OnHide", UpdateHandles)
 	Z.headers[#Z.headers + 1] = h
+	if def.raid then raidHeaders[def.raid] = h end
 	return h
 end
 
 -- Quand afficher un cadre. La règle est confiée au jeu, qui l'applique seul, même en plein combat :
 -- Lyorune n'a donc jamais à afficher ou masquer un cadre pendant un combat (le jeu le lui interdirait).
-local function VisibilityRule()
-	if Z.previewActive then -- mode test : les vrais cadres reviennent d'eux-mêmes si un combat commence
-		return "[combat] show; hide"
+-- En mode test, les vrais cadres reviennent d'eux-mêmes si un combat commence.
+local function VisibilityRule(def)
+	local combat = Z.previewActive or db.visibility == "COMBAT"
+	if def.raid then
+		return combat and "[group:raid,combat] show; hide" or "[group:raid] show; hide"
+	elseif def.key == "main" then
+		return combat and "[group:raid] hide; [combat] show; hide" or "[group:raid] hide; show"
 	end
-	return db.visibility == "COMBAT" and "[combat] show; hide" or "show"
+	return combat and "[combat] show; hide" or "show"
 end
 
 local function ApplyLayout()
@@ -590,11 +695,26 @@ local function ApplyLayout()
 		b:ClearAllPoints()
 		b:SetSize(width, height)
 	end
+	local gap = (db.showGroupLabels or db.lockMode == "FREE") and LABEL_SPACE or 0
+	local roles
+	if db.layout == "ROLE" then
+		roles = {}
+		for role in (db.roleOrder .. ",NONE"):gmatch("[^,]+") do roles[#roles + 1] = role end
+	end
+
+	for key, anchor in pairs(anchors) do
+		local pos = Z.char[key]
+		anchor:ClearAllPoints()
+		anchor:SetPoint(pos[1], UIParent, pos[1], pos[2], pos[3])
+	end
 
 	for _, h in ipairs(Z.headers) do
 		local def = h.def
+		local enabled = not def.option or db[def.option]
+		if def.label then h.labelText = L[def.label] end -- suit le changement de langue
 		h:SetAttribute("z-width", width)
 		h:SetAttribute("z-height", height)
+		h:SetAttribute("maxColumns", 8)
 		if def.key == "main" then
 			if db.layout == "ROLE" then
 				h:SetAttribute("groupBy", "ASSIGNEDROLE")
@@ -604,6 +724,19 @@ local function ApplyLayout()
 				h:SetAttribute("groupingOrder", "1,2,3,4,5,6,7,8")
 			end
 			h:SetAttribute("showSolo", db.showSolo)
+		elseif def.raid then
+			if roles then -- un cadre par rôle, dans l'ordre choisi
+				local role = roles[def.raid]
+				enabled = role ~= nil
+				h:SetAttribute("groupFilter", nil)
+				h:SetAttribute("roleFilter", role)
+				h.labelText = role and L[ROLE_LABELS[role]]
+			else
+				h:SetAttribute("roleFilter", nil)
+				h:SetAttribute("groupFilter", tostring(def.raid))
+				h:SetAttribute("maxColumns", 1)
+				h.labelText = L["Groupe %d"]:format(def.raid)
+			end
 		end
 		if db.horizontal then
 			h:SetAttribute("point", "LEFT")
@@ -618,10 +751,22 @@ local function ApplyLayout()
 		end
 		h:SetAttribute("columnSpacing", db.spacing)
 		h:SetAttribute("unitsPerColumn", 5)
-		h:SetAttribute("maxColumns", 8)
 
-		if not def.option or db[def.option] then
-			local rule = VisibilityRule()
+		-- Placement : les cadres de raid se suivent ; un groupe vide ne laisse pas de trou
+		h:ClearAllPoints()
+		local previous = def.raid and raidHeaders[def.raid - 1]
+		if previous and db.horizontal then
+			h:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -(db.spacing + gap))
+		elseif previous then
+			h:SetPoint("TOPLEFT", previous, "TOPRIGHT", db.spacing, 0)
+		else
+			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", 0, -gap)
+		end
+		h.handle:SetWidth(width)
+		h.handle.text:SetText(h.labelText or "")
+
+		if enabled then
+			local rule = VisibilityRule(def)
 			RegisterStateDriver(h, "visibility", rule)
 			h:SetShown(SecureCmdOptionParse(rule) == "show") -- tout de suite, sans attendre le prochain contrôle du jeu
 		else
@@ -629,14 +774,8 @@ local function ApplyLayout()
 			h:Hide()
 		end
 		h:SetAlpha(db.frameAlpha / 100)
-
-		local pos = db[def.pos]
-		h.anchor:ClearAllPoints()
-		h.anchor:SetPoint(pos[1], UIParent, pos[1], pos[2], pos[3])
-		local handle = (not def.option or db[def.option]) and not db.locked
-		h.anchor:SetAlpha(handle and 1 or 0)
-		h.anchor:EnableMouse(handle)
 	end
+	UpdateHandles()
 end
 
 -- Masque les cadres de groupe du jeu (option, expérimental). Un /reload les rétablit une fois l'option décochée.
@@ -673,15 +812,17 @@ end
 -- /lyorune diag : état de chaque cadre, pour comprendre un cadre vide sans avoir à deviner
 function Z:DiagnoseFrames()
 	for _, h in ipairs(Z.headers) do
-		local created, shown, dressed = 0, 0, 0
-		while h:GetAttribute("child" .. (created + 1)) do
-			created = created + 1
-			local b = h:GetAttribute("child" .. created)
-			if b:IsShown() then shown = shown + 1 end
-			if b.hp then dressed = dressed + 1 end
+		if not h.def.raid or IsInRaid() then -- hors raid, les cadres par groupe restent vides : inutile de les citer
+			local created, shown, dressed = 0, 0, 0
+			while h:GetAttribute("child" .. (created + 1)) do
+				created = created + 1
+				local b = h:GetAttribute("child" .. created)
+				if b:IsShown() then shown = shown + 1 end
+				if b.hp then dressed = dressed + 1 end
+			end
+			Z:Print(L["cadre %s : %s, cases créées %d, habillées %d, affichées %d."]:format(h.labelText or h.def.key,
+				h:IsShown() and L["affiché"] or L["masqué"], created, dressed, shown))
 		end
-		Z:Print(L["cadre %s : %s, cases créées %d, habillées %d, affichées %d."]:format(L[h.def.label],
-			h:IsShown() and L["affiché"] or L["masqué"], created, dressed, shown))
 	end
 end
 
@@ -704,15 +845,15 @@ function Z:FrameState()
 		("%s, Lyorune %s, combat=%s, groupe=%s, raid=%s, membres=%s, joueur existe=%s, cases habillees=%d"):format(
 			date("%Y-%m-%d %H:%M:%S"), Z.version, tostring(InCombatLockdown()), tostring(IsInGroup()), tostring(IsInRaid()),
 			tostring(GetNumGroupMembers()), tostring(UnitExists("player")), #buttons),
-		("reglages : visibility=%s showSolo=%s locked=%s frameAlpha=%s test=%s"):format(tostring(db.visibility),
-			tostring(db.showSolo), tostring(db.locked), tostring(db.frameAlpha), tostring(Z.previewActive)),
+		("reglages : visibility=%s showSolo=%s lockMode=%s frameAlpha=%s test=%s"):format(tostring(db.visibility),
+			tostring(db.showSolo), tostring(db.lockMode), tostring(db.frameAlpha), tostring(Z.previewActive)),
 	}
 	for _, h in ipairs(Z.headers) do
 		lines[#lines + 1] = ("cadre %s : %s | showSolo=%s showPlayer=%s showParty=%s showRaid=%s groupBy=%s visibilite=%s"):format(
 			h.def.key, Describe(h), tostring(h:GetAttribute("showSolo")), tostring(h:GetAttribute("showPlayer")),
 			tostring(h:GetAttribute("showParty")), tostring(h:GetAttribute("showRaid")), tostring(h:GetAttribute("groupBy")),
 			tostring(h:GetAttribute("state-visibility")))
-		lines[#lines + 1] = "  poignee : " .. Describe(h.anchor)
+		lines[#lines + 1] = "  etiquette : " .. Describe(h.handle)
 		local index = 1
 		while h:GetAttribute("child" .. index) and index <= 5 do
 			local b = h:GetAttribute("child" .. index)
@@ -762,7 +903,19 @@ function Z:CreateFrames()
 
 	for _, def in ipairs(frameDefs) do CreateHeader(def) end
 	Z.header = Z.headers[1]
-	Z.anchor = Z.header.anchor
+	Z.anchor = anchors.pos
+
+	-- Mention discrète au-dessus des étiquettes tant que les cadres se déplacent librement
+	unlockNote = CreateFrame("Frame", nil, UIParent)
+	unlockNote:SetSize(120, 10)
+	unlockNote:SetPoint("BOTTOMLEFT", Z.anchor, "TOPLEFT", 1, 0)
+	unlockNote.text = UI.Text(unlockNote, 9)
+	unlockNote.text:SetPoint("BOTTOMLEFT")
+	unlockNote.text:SetText(L["déverrouillé"])
+	unlockNote.text:SetTextColor(0.6, 0.64, 0.7)
+	unlockNote:SetAlpha(0.8)
+	unlockNote:Hide()
+
 	ApplyLayout()
 	HideBlizzardFrames()
 
@@ -792,6 +945,13 @@ function Z:CreateFrames()
 	-- Entrée et sortie de combat : les buffs manquants ne se lisent que hors combat
 	Z:On("PLAYER_REGEN_ENABLED", ForVisible(Z.QueueAuras))
 	Z:On("PLAYER_REGEN_DISABLED", ForVisible(Z.QueueAuras))
+	-- Étiquettes : masquées pendant un combat si elles ne servaient qu'au déplacement, revenues ensuite ;
+	-- en mode « Alt, Ctrl ou Maj », elles apparaissent le temps de maintenir la touche
+	Z:On("PLAYER_REGEN_DISABLED", UpdateHandles)
+	Z:On("PLAYER_REGEN_ENABLED", UpdateHandles)
+	Z:On("MODIFIER_STATE_CHANGED", function()
+		if MODIFIERS[db.lockMode] then UpdateHandles() end
+	end)
 
 	local function ReadyCheck(active)
 		return function()

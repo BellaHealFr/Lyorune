@@ -56,13 +56,15 @@ local steps = {
 	},
 	{
 		title = "Placer les cadres",
-		text = "Faites glisser la poignée |cff33dd88Lyorune|r pour déplacer les cadres où vous voulez.\n\n"
-			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît.\n\n"
+		text = "Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
+			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
+			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
+			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
 			.. "Dans l'onglet Cadres, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
-		target = function() return Z.anchor end,
+		target = function() return Z.header.handle end,
 		before = function()
-			if Z.db.locked then
-				Z.db.locked = false
+			if Z.db.lockMode ~= "FREE" then
+				Z.db.lockMode = "FREE"
 				Z:Refresh()
 			end
 		end,

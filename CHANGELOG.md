@@ -6,6 +6,23 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.7.0] - 2026-11-17
+
+### Ajouté
+
+- En raid, un cadre par groupe avec son numéro au-dessus (« Groupe 1 » à « Groupe 8 »), ou le nom du rôle en rangement par rôle ; réglage pour les masquer ([#6](https://github.com/BellaHealFr/Lyorune/issues/6)).
+- Déplacement des cadres au choix : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj, par n'importe quelle étiquette de groupe ([#7](https://github.com/BellaHealFr/Lyorune/issues/7)).
+- Position des cadres gardée pour chaque personnage ; un nouveau personnage part de la position par défaut ([#5](https://github.com/BellaHealFr/Lyorune/issues/5)).
+
+### Amélioré
+
+- Barre de mana affichée pour tous par défaut, hauteur réglable ([#8](https://github.com/BellaHealFr/Lyorune/issues/8)).
+- Bouton de la mini-carte à la même taille que ceux des autres addons.
+
+### Corrigé
+
+- La couleur de dissipation ne cache plus le nom ni la vie : contour coloré et voile léger ([#4](https://github.com/BellaHealFr/Lyorune/issues/4)).
+
 ## [1.6.0] - 2026-11-17
 
 ### Ajouté
@@ -147,6 +164,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0
 [1.5.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.2...v1.5.3

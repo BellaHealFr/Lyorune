@@ -18,7 +18,15 @@ Z.translations.enUS = {
 	["Rangement"] = "Sorting", ["Rangement des joueurs"] = "Player sorting", ["Ordre des rôles"] = "Role order",
 	["Utilisé quand le rangement est « Par rôle »."] = "Used when sorting is set to \"By role\".",
 	["Sens des groupes"] = "Group direction", ["Position"] = "Position",
-	["Verrouiller la position (cache les poignées)"] = "Lock position (hides the handles)",
+	["Déplacement des cadres"] = "Moving the frames",
+	["Libre : glisser une étiquette « Groupe ». Verrouillé : rien ne bouge. Avec Alt, Ctrl ou Maj : maintenir la touche puis glisser. Jamais en combat."] = "Free: drag a \"Group\" label. Locked: nothing moves. With Alt, Ctrl or Shift: hold the key, then drag. Never in combat.",
+	["Libre"] = "Free", ["Verrouillé"] = "Locked", ["Avec Alt"] = "With Alt", ["Avec Ctrl"] = "With Ctrl", ["Avec Maj"] = "With Shift",
+	["Numéro de groupe au-dessus des cases"] = "Group number above the cells",
+	["« Groupe 1 » à « Groupe 8 » en raid, ou le rôle en rangement par rôle. Décoché, l'étiquette ne revient que pour déplacer les cadres."] = "\"Group 1\" to \"Group 8\" in a raid, or the role when sorting by role. Unticked, the label only comes back to move the frames.",
+	["Groupe"] = "Group", ["Groupe %d"] = "Group %d", ["Dégâts"] = "Damage", ["Sans rôle"] = "No role",
+	["Alt"] = "Alt", ["Ctrl"] = "Ctrl",
+	["Maintenir %s et glisser : déplacer les cadres"] = "Hold %s and drag: move the frames",
+	["déverrouillé"] = "unlocked",
 	["Remettre les cadres au centre"] = "Move frames back to the centre",
 	["Cadres affichés"] = "Shown frames", ["Mon cadre quand je suis seul"] = "My own frame when solo",
 	["Afficher les cadres"] = "Show the frames", ["Toujours"] = "Always",
@@ -55,6 +63,7 @@ Z.translations.enUS = {
 	["Vie et mana"] = "Health and mana", ["Soins en route"] = "Incoming heals", ["Bouclier d'absorption"] = "Absorb shield",
 	["Voile rouge clignotant quand la vie est basse"] = "Flashing red overlay at low health",
 	["Seuil de vie basse (%)"] = "Low health threshold (%)", ["Barre de mana"] = "Mana bar",
+	["Hauteur de la barre de mana"] = "Mana bar height",
 	["Personne"] = "Nobody", ["Soigneurs"] = "Healers", ["Tous"] = "Everyone",
 	["Icône de rôle (tank, soigneur)"] = "Role icon (tank, healer)", ["Marqueur de raid"] = "Raid marker",
 	["Bordure rouge quand il est attaqué"] = "Red border when attacked",
@@ -233,7 +242,7 @@ Z.translations.enUS = {
 	["Mort"] = "Dead", ["Fantôme"] = "Ghost", ["Déco"] = "Offline",
 	["modification appliquée à la fin du combat."] = "change applied when combat ends.",
 	["position verrouillée."] = "position locked.", ["position réinitialisée."] = "position reset.",
-	["position déverrouillée : faites glisser la poignée « Lyorune »."] = "position unlocked: drag the \"Lyorune\" handle.",
+	["position déverrouillée : faites glisser une étiquette « Groupe »."] = "position unlocked: drag a \"Group\" label.",
 	["impossible de déplacer les cadres en combat."] = "frames cannot be moved in combat.",
 	["le mode test n'est pas disponible en combat."] = "test mode is not available in combat.",
 	["Mode test : faux groupe. /lyorune test pour quitter."] = "Test mode: fake group. /lyorune test to leave.",
@@ -260,10 +269,12 @@ Z.translations.enUS = {
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements."] =
 		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs.",
-	["Faites glisser la poignée |cff33dd88Lyorune|r pour déplacer les cadres où vous voulez.\n\n"
-			.. "Une fois satisfait, cochez « Verrouiller la position » dans les options : la poignée disparaît.\n\n"
+	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
+			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
+			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
+			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
 			.. "Dans l'onglet Cadres, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat."] =
-		"Drag the |cff33dd88Lyorune|r handle to move the frames wherever you like.\n\nOnce you are happy, tick \"Lock position\" in the options: the handle disappears.\n\nIn the Frames tab, \"Show the frames\" lets you see them all the time, or only in combat.",
+		"Drag the |cff33dd88Group|r label above the cells to move the frames wherever you like. In a raid, each group has its number, and any of them moves the whole set.\n\nOnce you are happy, pick \"Locked\" in \"Moving the frames\" (Frames tab), or \"With Alt\" to move them only while holding the key.\n\nIn the Frames tab, \"Show the frames\" lets you see them all the time, or only in combat.",
 	["Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
@@ -353,4 +364,10 @@ Z.translations.enUS = {
 	["Clics et touches propres à chaque spécialisation, qui changent tout seuls avec les talents (#21)."] = "Clicks and keys for each specialization, switching by themselves with your talents (#21).",
 	["Une commande de macro sans cible vise la case ; [@mouseover] marche tel quel."] = "A macro command without a target aims at the frame; [@mouseover] works as it is.",
 	["Vos anciennes macros sont rangées toutes seules dans la bibliothèque."] = "Your previous macros are moved into the library by themselves.",
+	["En raid, un cadre par groupe avec son numéro au-dessus (« Groupe 1 » à « Groupe 8 »), ou le nom du rôle en rangement par rôle ; réglage pour les masquer (#6)."] = "In a raid, one frame per group with its number above (\"Group 1\" to \"Group 8\"), or the role name when sorting by role; a setting hides them (#6).",
+	["Déplacement des cadres au choix : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj, par n'importe quelle étiquette de groupe (#7)."] = "Choose how the frames move: free, locked, or while holding Alt, Ctrl or Shift, by any group label (#7).",
+	["Position des cadres gardée pour chaque personnage ; un nouveau personnage part de la position par défaut (#5)."] = "Frame position kept for each character; a new character starts from the default position (#5).",
+	["Barre de mana affichée pour tous par défaut, hauteur réglable (#8)."] = "Mana bar shown for everyone by default, adjustable height (#8).",
+	["Bouton de la mini-carte à la même taille que ceux des autres addons."] = "Minimap button now the same size as other addons' buttons.",
+	["La couleur de dissipation ne cache plus le nom ni la vie : contour coloré et voile léger (#4)."] = "The dispel colour no longer hides the name or health: coloured outline and light tint (#4).",
 }

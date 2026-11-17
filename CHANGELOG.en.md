@@ -6,6 +6,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.7.0] - 2026-11-17
+
+### Added
+
+- In a raid, one frame per group with its number above ("Group 1" to "Group 8"), or the role name when sorting by role; a setting hides them ([#6](https://github.com/BellaHealFr/Lyorune/issues/6)).
+- Choose how the frames move: free, locked, or while holding Alt, Ctrl or Shift, by any group label ([#7](https://github.com/BellaHealFr/Lyorune/issues/7)).
+- Frame position kept for each character; a new character starts from the default position ([#5](https://github.com/BellaHealFr/Lyorune/issues/5)).
+
+### Improved
+
+- Mana bar shown for everyone by default, adjustable height ([#8](https://github.com/BellaHealFr/Lyorune/issues/8)).
+- Minimap button now the same size as other addons' buttons.
+
+### Fixed
+
+- The dispel colour no longer hides the name or health: coloured outline and light tint ([#4](https://github.com/BellaHealFr/Lyorune/issues/4)).
+
 ## [1.6.0] - 2026-11-17
 
 ### Added
@@ -147,6 +164,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.4...v1.6.0
 [1.5.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.2...v1.5.3

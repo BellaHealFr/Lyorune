@@ -1,6 +1,7 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Faux client minimal pour faire tourner Lyorune hors du jeu (détection des erreurs Lua).
 MISSING = {}
+RAID = false
 local frames = {}
 local Obj = {}
 Obj.__index = function(t, k)
@@ -174,10 +175,19 @@ function DeleteMacro(index) assert(not COMBAT) table.remove(MACROS, index - 120)
 function PickupMacro(index) PICKED = MACROS[index - 120].name end
 -- Règles de visibilité : le faux client les réévalue à chaque changement de combat (voir FireEvent dans run.py)
 STATE_DRIVERS = {}
+-- Règle « [cond,cond] action; [cond] action; action » : conditions combat et group:raid
 function SecureCmdOptionParse(rule)
-	local inCombat, otherwise = rule:match("^%[combat%] (%a+); (%a+)$")
-	if inCombat then return COMBAT and inCombat or otherwise end
-	return rule
+	for clause in (rule .. ";"):gmatch("%s*([^;]+);") do
+		local conds, action = clause:match("^%[(.-)%]%s*(%a+)$")
+		if not conds then return clause:match("^%s*(%a+)") end
+		local ok = true
+		for cond in conds:gmatch("[^,]+") do
+			if cond == "combat" then ok = ok and COMBAT == true
+			elseif cond == "group:raid" then ok = ok and RAID == true
+			else error("condition inconnue du faux client : " .. cond) end
+		end
+		if ok then return action end
+	end
 end
 function RegisterStateDriver(frame, state, rule) assert(state == "visibility") STATE_DRIVERS[frame] = rule end
 function UnregisterStateDriver(frame) STATE_DRIVERS[frame] = nil end
@@ -204,7 +214,7 @@ function UnitLevel() return 60 end
 function GetLocale() return "frFR" end
 function GetTime() return NOW end
 function IsInGroup() return GROUPED end
-function IsInRaid() return false end
+function IsInRaid() return RAID or false end
 function IsInInstance() return INSTANCE end
 function GetNumGroupMembers() return 5 end
 function GetRealZoneText() return "Hurlevent" end

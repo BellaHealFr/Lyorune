@@ -178,7 +178,8 @@ local function SimpleTabs()
 				{ "cycle", "roleOrder", "Ordre des rôles", nil, "Utilisé quand le rangement est « Par rôle »." },
 				{ "cycle", "horizontal", "Sens des groupes" },
 				{ "head", "Position" },
-				{ "check", "locked", "Verrouiller la position (cache les poignées)" },
+				{ "cycle", "lockMode", "Déplacement des cadres", nil, "Libre : glisser une étiquette « Groupe ». Verrouillé : rien ne bouge. Avec Alt, Ctrl ou Maj : maintenir la touche puis glisser. Jamais en combat." },
+				{ "check", "showGroupLabels", "Numéro de groupe au-dessus des cases", "« Groupe 1 » à « Groupe 8 » en raid, ou le rôle en rangement par rôle. Décoché, l'étiquette ne revient que pour déplacer les cadres." },
 				{ "button", "Remettre les cadres au centre", function() SlashCmdList.LYORUNE("reset") end },
 			},
 			{
@@ -225,6 +226,7 @@ local function SimpleTabs()
 				{ "check", "lowHealth", "Voile rouge clignotant quand la vie est basse" },
 				{ "step", "lowHealthAt", "Seuil de vie basse (%)" },
 				{ "cycle", "manaBars", "Barre de mana" },
+				{ "step", "powerHeight", "Hauteur de la barre de mana" },
 				{ "head", "Joueur" },
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
 				{ "check", "showMarker", "Marqueur de raid" },

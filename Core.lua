@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.6.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.7.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -32,11 +32,9 @@ Z.defaults = {
 	showPets = false,          -- cadre séparé pour les familiers
 	autoShrink = false,        -- réduire les cases en grand raid
 	hideBlizzard = false,      -- masquer les cadres de groupe du jeu
-	locked = false,
+	lockMode = "FREE",         -- déplacement des cadres : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj
+	showGroupLabels = true,    -- « Groupe 1 »... au-dessus de chaque colonne (ou le rôle en rangement par rôle)
 	frameAlpha = 100,          -- opacité générale, en %
-	pos = { "CENTER", -320, 60 },
-	tankPos = { "CENTER", -320, 200 },
-	petPos = { "CENTER", -320, -160 },
 	minimapButton = true,      -- bouton au bord de la mini-carte
 	minimapAngle = 215,        -- sa place autour de la mini-carte, en degrés
 
@@ -62,7 +60,8 @@ Z.defaults = {
 	bossDebuffs = true,        -- affaiblissement important en grand
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
-	manaBars = "HEALERS",      -- barre de mana : personne, soigneurs, tous
+	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
+	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	showTooltip = true,
 
 	-- Clics
@@ -102,7 +101,7 @@ Z.defaults = {
 Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
-	lowHealthAt = { 10, 60, 5 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
+	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 10, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 }
 
 Z.choices = {
@@ -113,6 +112,7 @@ Z.choices = {
 		{ "DAMAGER,TANK,HEALER", "Dégâts, tank, soin" }, { "DAMAGER,HEALER,TANK", "Dégâts, soin, tank" },
 	},
 	horizontal = { { false, "En colonnes" }, { true, "En lignes" } },
+	lockMode = { { "FREE", "Libre" }, { "LOCKED", "Verrouillé" }, { "ALT", "Avec Alt" }, { "CTRL", "Avec Ctrl" }, { "SHIFT", "Avec Maj" } },
 	visibility = { { "ALWAYS", "Toujours" }, { "COMBAT", "En combat seulement" } },
 	color = { { "CLASS", "Classe" }, { "HEALTH", "Vie restante" } },
 	text = { { "DEFICIT", "Vie manquante" }, { "PERCENT", "Pourcentage" }, { "NONE", "Aucun" } },
@@ -124,8 +124,15 @@ Z.choices = {
 }
 
 -- Réglages propres à l'ordinateur ou au personnage : ni partagés, ni réinitialisés avec le reste
-Z.private = { pos = true, tankPos = true, petPos = true, minimapAngle = true, tutorialDone = true, language = true,
+Z.private = { minimapAngle = true, tutorialDone = true, language = true,
 	macros = true } -- mes macros : jamais partagées, jamais effacées par la réinitialisation
+
+-- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.
+Z.charDefaults = {
+	pos = { "CENTER", -320, 60 },
+	tankPos = { "CENTER", -320, 200 },
+	petPos = { "CENTER", -320, -160 },
+}
 
 ----------------------------------------------------------------------------------------------------
 -- Traduction : Z.L["texte français"] renvoie la traduction si elle existe, sinon le texte lui-même
@@ -196,6 +203,35 @@ local function FillDefaults(db)
 	if db.rangeAlpha <= 1 then db.rangeAlpha = Z.defaults.rangeAlpha end -- ancien format (fraction)
 end
 
+-- "1.10.2" -> 11002, pour comparer deux versions
+function Z.VersionNumber(text)
+	local major, minor, patch = tostring(text):match("^(%d+)%.(%d+)%.?(%d*)")
+	if not major then return 0 end
+	return tonumber(major) * 10000 + tonumber(minor) * 100 + (tonumber(patch) or 0)
+end
+
+-- Réglages venus d'une version plus ancienne
+local function Migrate(db)
+	if db.locked ~= nil then -- avant la 1.7.0 : une simple case « verrouiller »
+		if db.locked == true and db.lockMode == nil then db.lockMode = "LOCKED" end
+		db.locked = nil
+	end
+	-- 1.7.0 : la barre de mana passe à « Tous » par défaut, une seule fois, pour ceux qui gardaient l'ancien défaut
+	if db.lastVersion and Z.VersionNumber(db.lastVersion) < 10700 and db.manaBars == "HEALERS" then db.manaBars = "ALL" end
+end
+
+-- Position par personnage. Le premier personnage connecté après la 1.7.0 garde l'ancienne position commune.
+local function LoadCharacter(db)
+	LyoruneCharDB = LyoruneCharDB or {}
+	local char = LyoruneCharDB
+	for key, value in pairs(Z.charDefaults) do
+		if type(db[key]) == "table" and char[key] == nil then char[key] = db[key] end
+		db[key] = nil
+		if type(char[key]) ~= "table" then char[key] = CopyTable(value) end
+	end
+	Z.char = char
+end
+
 -- Textes des annonces proposés à un joueur dont le jeu n'est pas en français (il peut les réécrire)
 Z.englishTexts = {
 	manaText = "Low mana: {mana}%! Let me drink.",
@@ -211,7 +247,9 @@ Z:On("ADDON_LOADED", function(name)
 			if LyoruneDB[key] == nil then LyoruneDB[key] = text end
 		end
 	end
+	Migrate(LyoruneDB)
 	FillDefaults(LyoruneDB)
+	LoadCharacter(LyoruneDB)
 	Z.db = LyoruneDB
 	Z:SetLanguage()
 end)
@@ -284,11 +322,11 @@ function Z.Command(msg)
 	if msg == "tuto" or msg == "tutoriel" or msg == "aide" then
 		Z:StartTutorial()
 	elseif msg == "verrou" or msg == "lock" then
-		Z.db.locked = not Z.db.locked
+		Z.db.lockMode = Z.db.lockMode == "LOCKED" and "FREE" or "LOCKED"
 		Z:Refresh()
-		Z:Print(Z.db.locked and Z.L["position verrouillée."] or Z.L["position déverrouillée : faites glisser la poignée « Lyorune »."])
+		Z:Print(Z.db.lockMode == "LOCKED" and Z.L["position verrouillée."] or Z.L["position déverrouillée : faites glisser une étiquette « Groupe »."])
 	elseif msg == "reset" then
-		for _, key in ipairs({ "pos", "tankPos", "petPos" }) do Z.db[key] = CopyTable(Z.defaults[key]) end
+		for key, value in pairs(Z.charDefaults) do Z.char[key] = CopyTable(value) end
 		Z:Refresh()
 		Z:Print(Z.L["position réinitialisée."])
 	elseif msg == "test" then

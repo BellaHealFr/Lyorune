@@ -13,11 +13,11 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 |---|---|
 | Vert clair au bout de la barre | Des soins sont déjà en route |
 | Bande claire en bas de la barre | Il a un bouclier |
-| Barre bleue sous la vie | Sa mana (soigneurs, par défaut) |
+| Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur réglable dans l'onglet Indicateurs) |
 | Voile rouge qui clignote | Sa vie est basse |
 | Bordure rouge | Il est attaqué |
 | Bordure blanche | C'est votre cible |
-| Cadre bleu, violet, brun ou vert | Une magie, une malédiction, une maladie ou un poison que VOUS pouvez retirer |
+| Contour et léger voile bleu, violet, brun ou vert | Une magie, une malédiction, une maladie ou un poison que VOUS pouvez retirer (le nom et la vie restent lisibles) |
 | Case estompée | Il est hors de portée |
 | « Mort », « Fantôme », « Déco » | Il est mort, en fantôme, ou déconnecté (sa case reste en place) |
 | Petites icônes en haut à gauche | Vos soins sur la durée posés sur lui |
@@ -118,11 +118,14 @@ Avec l'option « Le même clic relève un joueur mort » (onglet Clics, cochée 
 
 ## 5. Placer et dimensionner les cadres
 
-- **Déplacer** : faites glisser la petite poignée « Lyorune » au-dessus des cases. Une fois satisfait, cochez « Verrouiller la position » (onglet Cadres) : la poignée disparaît.
+- **Déplacer** : faites glisser l'étiquette « Groupe » au-dessus des cases. En raid, chaque groupe a sa colonne et son numéro (« Groupe 1 » à « Groupe 8 »), ou le nom du rôle en rangement par rôle : n'importe quelle étiquette déplace l'ensemble.
+- **Verrou** : « Déplacement des cadres » (onglet Cadres) propose « Libre », « Verrouillé », ou « Avec Alt », « Avec Ctrl », « Avec Maj » : les cadres ne bougent alors que si vous maintenez la touche. Tant qu'ils sont libres, une petite mention « déverrouillé » apparaît au-dessus. On ne peut jamais les déplacer en combat.
+- **Chaque personnage a sa place** : la position est gardée pour chaque personnage, même après une déconnexion. Un nouveau personnage part de la position par défaut.
+- **Sans étiquettes** : décochez « Numéro de groupe au-dessus des cases ». Elles reviennent seulement le temps de déplacer les cadres.
 - **Taille** : onglet Cadres, « Largeur », « Hauteur », « Espacement ».
 - **Rangement** : par groupe ou par rôle. Par rôle, choisissez l'ordre (tank, soin, dégâts, ou une autre des six combinaisons).
 - **Tanks et familiers** : chacun peut avoir son propre cadre, déplaçable séparément.
-- **Quand les afficher** : « Afficher les cadres » (onglet Cadres) propose « Toujours » ou « En combat seulement ». « Toujours » garde les cadres à l'écran, en combat comme hors combat, y compris quand vous jouez seul en quête (avec « Mon cadre quand je suis seul » coché). « En combat seulement » les fait apparaître au début de chaque combat et disparaître à la fin. La poignée reste visible tant que la position n'est pas verrouillée.
+- **Quand les afficher** : « Afficher les cadres » (onglet Cadres) propose « Toujours » ou « En combat seulement ». « Toujours » garde les cadres à l'écran, en combat comme hors combat, y compris quand vous jouez seul en quête (avec « Mon cadre quand je suis seul » coché). « En combat seulement » les fait apparaître au début de chaque combat et disparaître à la fin. Les étiquettes s'affichent avec les cadres.
 - **Un cadre reste vide ?** Tapez `/lyorune diag` : Lyorune écrit dans le chat l'état de chaque cadre. Copiez ces lignes dans votre signalement (`/lyorune bug`).
 - **Grand raid** : « Réduire les cases en grand raid » rétrécit les cases au-delà de 10 puis de 25 joueurs.
 

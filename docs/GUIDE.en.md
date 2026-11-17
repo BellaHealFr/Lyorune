@@ -14,11 +14,11 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 |---|---|
 | Light green at the end of the bar | Heals are already on their way |
 | Light strip at the bottom of the bar | They have a shield |
-| Blue bar under the health | Their mana (healers, by default) |
+| Blue bar under the health | Their mana (everyone, by default; height adjustable in the Indicators tab) |
 | Flashing red overlay | Their health is low |
 | Red border | They are being attacked |
 | White border | They are your target |
-| Blue, purple, brown or green outline | A magic effect, a curse, a disease or a poison that YOU can remove |
+| Blue, purple, brown or green outline and light tint | A magic effect, a curse, a disease or a poison that YOU can remove (the name and health stay readable) |
 | Faded frame | They are out of range |
 | "Dead", "Ghost", "Offline" | They are dead, a ghost, or disconnected (their frame stays in place) |
 | Small icons at the top left | Your heals over time on them |
@@ -119,11 +119,14 @@ With the option "The same click resurrects a dead player" (Clicks tab, ticked by
 
 ## 5. Moving and sizing the frames
 
-- **Move**: drag the small "Lyorune" handle above the frames. Once you are happy, tick "Lock position" (Frames tab): the handle disappears.
+- **Move**: drag the "Group" label above the frames. In a raid, each group has its own column and number ("Group 1" to "Group 8"), or the role name when sorting by role: any label moves the whole set.
+- **Lock**: "Moving the frames" (Frames tab) offers "Free", "Locked", or "With Alt", "With Ctrl", "With Shift": the frames then only move while you hold the key. While they are free, a small "unlocked" note shows above them. They can never be moved in combat.
+- **Each character has its own place**: the position is kept for each character, even after logging out. A new character starts from the default position.
+- **Without labels**: untick "Group number above the cells". They only come back while you move the frames.
 - **Size**: Frames tab, "Width", "Height", "Spacing".
 - **Sorting**: by group or by role. By role, choose the order (tank, healer, damage, or any of the six combinations).
 - **Tanks and pets**: each can have its own frame, moved separately.
-- **When to show them**: "Show the frames" (Frames tab) offers "Always" or "In combat only". "Always" keeps the frames on screen, in and out of combat, including when you quest alone (with "My own frame when solo" ticked). "In combat only" makes them appear when a fight starts and disappear when it ends. The handle stays visible as long as the position is not locked.
+- **When to show them**: "Show the frames" (Frames tab) offers "Always" or "In combat only". "Always" keeps the frames on screen, in and out of combat, including when you quest alone (with "My own frame when solo" ticked). "In combat only" makes them appear when a fight starts and disappear when it ends. The labels show along with the frames.
 - **A frame stays empty?** Type `/lyorune diag`: Lyorune writes the state of each frame in the chat. Copy those lines into your report (`/lyorune bug`).
 - **Large raids**: "Shrink cells in large raids" makes the frames smaller above 10, then above 25 players.
 

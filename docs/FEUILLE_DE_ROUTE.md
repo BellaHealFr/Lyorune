@@ -13,7 +13,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 |---|---|---|---|
 | 0 | 1.5.5 | Vérification en jeu des versions 1.4.2 à 1.5.4 | En cours |
 | 1 | 1.6.0 | Bibliothèque de macros, clics par spécialisation | Publiée |
-| 2 | 1.7.0 | Bases de l'interface | À faire |
+| 2 | 1.7.0 | Bases de l'interface | Publiée |
 | 3 | 1.8.0 | Utile en donjon | À faire |
 | 4 | 1.9.0 | Forme des cases, couleurs de classe, runes | À faire |
 | 5 | 1.10.0 | Soins sur la durée et indicateurs | À faire |
@@ -42,11 +42,14 @@ Si tout est bon, l'étape se ferme sans nouvelle version. Sinon, les corrections
 macro sur une case (1023 caractères retenus).
 
 ## Étape 2 : bases de l'interface (1.7.0)
-- [ ] Le cadre de dissipation ne cache plus le nom ni la vie (#4)
-- [ ] Position des cadres gardée par personnage ; un personnage neuf part de la position par défaut (#5)
-- [ ] Numéro de groupe au-dessus de chaque colonne, ou le rôle en rangement par rôle (#6)
-- [ ] Verrou au choix : libre, verrouillé, ou déplaçable en maintenant Alt, Ctrl ou Maj (#7)
-- [ ] Barre de mana affichée par défaut, de la largeur de la barre de vie, hauteur réglable (#8)
+- [x] Le cadre de dissipation ne cache plus le nom ni la vie (#4)
+- [x] Position des cadres gardée par personnage ; un personnage neuf part de la position par défaut (#5)
+- [x] Numéro de groupe au-dessus de chaque colonne, ou le rôle en rangement par rôle (#6)
+- [x] Verrou au choix : libre, verrouillé, ou déplaçable en maintenant Alt, Ctrl ou Maj (#7)
+- [x] Barre de mana affichée par défaut, de la largeur de la barre de vie, hauteur réglable (#8)
+- [x] Bouton de la mini-carte à la taille des autres boutons (signalé en cours d'étape)
+
+À vérifier en jeu : un cadre par groupe en raid (filtres du jeu), étiquettes, Alt/Ctrl/Maj, position par personnage.
 
 ## Étape 3 : utile en donjon (1.8.0)
 - [ ] Auras privées des boss sur les cases (#9)
