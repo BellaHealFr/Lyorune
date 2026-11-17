@@ -241,7 +241,8 @@ function GetLocale() return "frFR" end
 function GetTime() return NOW end
 function IsInGroup() return GROUPED end
 function IsInRaid() return RAID or false end
-function IsInInstance() return INSTANCE end
+INSTANCE_TYPE = "none"
+function IsInInstance() return INSTANCE, INSTANCE_TYPE end
 function GetNumGroupMembers() return 5 end
 function GetRealZoneText() return "Hurlevent" end
 function GetBuildInfo() return "1.60.1", "70938", "Nov 1 2026", INTERFACE or 16001 end

@@ -89,7 +89,7 @@ local steps = {
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
-			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n"
+			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite.",
 		target = function() return Z:OptionsWindow() end,

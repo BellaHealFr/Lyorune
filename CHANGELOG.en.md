@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.0] - 2026-11-17
+
+### Added
+
+- Copy part of a profile (Profiles tab, "Copy..." button): Frames, Appearance, Indicators or Heals, as you choose, from one profile to another; the rest of the target profile stays as it is ([#44](https://github.com/BellaHealFr/Lyorune/issues/44)).
+- Automatic profiles in battlegrounds and arenas, for each specialization; with nothing chosen, the profile set for the group size applies ([#44](https://github.com/BellaHealFr/Lyorune/issues/44)).
+
 ## [1.22.0] - 2026-11-17
 
 ### Added
@@ -333,6 +340,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.19.0...v1.20.0

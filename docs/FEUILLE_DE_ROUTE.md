@@ -30,7 +30,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 14 | 1.20.0 | Joueurs épinglés, signal sur une case, chef et assistants | Publiée (v1.20.0) |
 | 15 | 1.21.0 | Clics plus sûrs : clics du jeu en conflit, bijou et arrêt d'incantation | Publiée (v1.21.0) |
 | 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | Publiée (v1.22.0) |
-| 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | À faire |
+| 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | Publiée (v1.23.0) |
 | 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -164,9 +164,11 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
   au choix (`Cast.lua`, coupé au départ)
 
 ## Étape 17 : profils (1.23.0)
-- [ ] Copier seulement une partie d'un profil vers un autre (clics, apparence, cadres, soins) avec un choix par
-  partie
-- [ ] Profils automatiques en champ de bataille et en arène, en plus de la taille du groupe et de la spécialisation
+- [x] Copier seulement une partie d'un profil vers un autre, avec un choix par partie : Cadres, Apparence,
+  Indicateurs, Soins (les onglets dont un profil garde les réglages ; les clics n'en font pas partie). Bouton
+  « Copier... » de l'onglet Profils
+- [x] Profils automatiques en champ de bataille et en arène, en plus de la taille du groupe et de la spécialisation
+  (tableau en 6 lignes et 2 colonnes ; sans choix, la règle de la taille du groupe s'applique)
 
 ## Étape 18 : demandes d'aide entre joueurs (1.24.0)
 - [ ] Demander l'Innervation (druide) ou l'Infusion de puissance (prêtre) : la case du joueur qui demande s'allume

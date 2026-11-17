@@ -275,12 +275,17 @@ end
 -- annonces n'en font pas partie (Z.notInProfile, Core.lua) : ils restent les mêmes quel que soit le profil.
 -- Le profil en cours est enregistré tout seul avant d'en changer et à la déconnexion : ce que l'on règle pendant
 -- qu'il est actif lui appartient.
--- Profils automatiques : pour 5, 10, 25 et 40 joueurs, le profil voulu, pour chaque spécialisation. La seconde
--- spécialisation reprend le choix de la première quand rien n'est choisi pour elle. Le changement se fait sans
--- /reload, à la fin du combat si besoin.
+-- Profils automatiques : pour 5, 10, 25 et 40 joueurs, en champ de bataille et en arène (#44), le profil voulu,
+-- pour chaque spécialisation. La seconde spécialisation reprend le choix de la première quand rien n'est choisi
+-- pour elle ; en champ de bataille ou en arène sans choix, la règle de la taille du groupe s'applique. Le changement
+-- se fait sans /reload, à la fin du combat si besoin.
+-- Copie d'une partie (#44) : les réglages d'un onglet (Cadres, Apparence, Indicateurs, Soins) d'un profil vers un
+-- autre. La partie d'un réglage est l'onglet où il se règle (Z.TabOfSetting, Options.lua) : un nouveau réglage
+-- suit tout seul son onglet.
 ----------------------------------------------------------------------------------------------------
 local MAX_PROFILES, MAX_NAME = 20, 24
-Z.profileSizes = { "5", "10", "25", "40" }
+Z.profileSizes = { "5", "10", "25", "40", "BG", "ARENA" }
+Z.profileParts = { "Cadres", "Apparence", "Indicateurs", "Soins" }
 
 local function InProfile(key)
 	return Z.defaults[key] ~= nil and not Z.notInProfile[key]
@@ -359,6 +364,40 @@ function Z:LoadProfile(name)
 	return true
 end
 
+-- Partie d'un réglage du profil : l'onglet où il se règle. Ce qui n'est sur aucun de ces onglets (forme, bouton
+-- « Placer les éléments », mode performance de l'onglet Aide) est rangé ici.
+local OTHER_PART = { shape = "Apparence", placement = "Cadres", cornerSpells = "Soins", perfMode = "Cadres" }
+
+function Z.ProfilePart(key)
+	if not InProfile(key) then return nil end
+	return OTHER_PART[key] or (Z.TabOfSetting and Z.TabOfSetting(key)) or "Apparence"
+end
+
+-- Copie les parties choisies (parts.Cadres = true...) du profil « from » vers le profil « to ». Le profil en cours
+-- est lu et changé en direct. Renvoie true et le message, ou false et la raison.
+function Z:CopyProfileParts(from, to, parts)
+	local L = Z.L
+	local profiles, active = Z.db.profiles, Z.db.activeProfile
+	if not (from and profiles[from] and to and profiles[to]) then return false, L["Choisissez deux profils enregistrés."] end
+	if from == to then return false, L["Choisissez deux profils différents."] end
+	local any = false
+	for _, part in ipairs(Z.profileParts) do any = any or parts[part] == true end
+	if not any then return false, L["Cochez au moins une partie à copier."] end
+	local source = from == active and Snapshot() or profiles[from]
+	local count = 0
+	for key in pairs(Z.defaults) do
+		local part = Z.ProfilePart(key)
+		if part and parts[part] then
+			local value = Accept(key, source[key])
+			if value == nil then value = Accept(key, Z.defaults[key]) end -- absent d'un profil ancien : valeur d'origine
+			if to == active then Z.db[key] = value else profiles[to][key] = value end
+			count = count + 1
+		end
+	end
+	if to == active then Z:Refresh() end
+	return true, (L["%d réglages copiés de « %s » vers « %s »."]):format(count, from, to)
+end
+
 function Z:DeleteProfile(name)
 	if not Z.db.profiles[name] then return false end
 	Z.db.profiles[name] = nil
@@ -378,6 +417,24 @@ function Z.GroupSize()
 	return members <= 10 and "10" or members <= 25 and "25" or "40"
 end
 
+-- Combat entre joueurs : « BG » en champ de bataille, « ARENA » en arène, sinon nil
+function Z.PvPKind()
+	local _, kind = IsInInstance()
+	return kind == "pvp" and "BG" or kind == "arena" and "ARENA" or nil
+end
+
+-- Où l'on est, pour les profils automatiques : le champ de bataille ou l'arène, sinon la taille du groupe
+function Z.Situation()
+	return Z.PvPKind() or Z.GroupSize()
+end
+
+-- Nom lisible d'une situation : « 25 joueurs », « champ de bataille », « arène »
+function Z.SituationLabel(size)
+	local L = Z.L
+	if size == "BG" then return L["champ de bataille"] elseif size == "ARENA" then return L["arène"] end
+	return (L["%s joueurs"]):format(size)
+end
+
 -- Règles d'une spécialisation (1 ou 2), créées au besoin
 function Z:ProfileRules(group)
 	local set = (group or 1) > 1 and Z.class .. group or Z.class
@@ -386,13 +443,18 @@ function Z:ProfileRules(group)
 end
 
 -- Le profil voulu maintenant, ou nil (aucun choix : on garde les réglages du moment)
+-- Ordre : ma spécialisation puis la 1re, d'abord pour le champ de bataille ou l'arène, puis pour la taille du groupe.
 function Z:WantedProfile()
-	local size, group = Z.GroupSize(), Z:SpecGroup()
-	local rules = Z.db.autoProfiles
-	local own = group > 1 and rules[Z.class .. group]
-	local name = own and own[size]
-	if not name then name = rules[Z.class] and rules[Z.class][size] end
-	if name and Z.db.profiles[name] then return name end
+	local group, rules = Z:SpecGroup(), Z.db.autoProfiles
+	local own, first = group > 1 and rules[Z.class .. group], rules[Z.class]
+	for _, size in ipairs({ Z.PvPKind() or false, Z.GroupSize() }) do
+		if size then
+			for _, set in ipairs({ own or false, first or false }) do
+				local name = set and set[size]
+				if name and Z.db.profiles[name] then return name end
+			end
+		end
+	end
 end
 
 -- Appelé quand le groupe change de taille, à la connexion et au changement de spécialisation
@@ -403,7 +465,7 @@ function Z:CheckAutoProfile()
 	Z:Safe("profile", function()
 		local wanted = Z:WantedProfile() -- le groupe a pu changer encore pendant le combat
 		if wanted and wanted ~= Z.db.activeProfile and Z:LoadProfile(wanted) then
-			Z:Print((Z.L["profil « %s » appliqué (%s joueurs)."]):format(wanted, Z.GroupSize()))
+			Z:Print((Z.L["profil « %s » appliqué (%s)."]):format(wanted, Z.SituationLabel(Z.Situation())))
 			if Z.RefreshProfiles then Z.RefreshProfiles() end
 		end
 	end)
@@ -411,14 +473,18 @@ end
 
 do
 	local lastSize
-	Z:On("GROUP_ROSTER_UPDATE", function()
-		local size = Z.GroupSize()
-		if size == lastSize then return end -- rien à faire tant que le palier ne change pas
+	-- Rien à faire tant que la situation ne change pas (palier du groupe, entrée ou sortie d'un champ de bataille)
+	local function Changed()
+		local size = Z.Situation()
+		if size == lastSize then return end
 		lastSize = size
 		Z:CheckAutoProfile()
-	end)
+	end
+	Z:On("GROUP_ROSTER_UPDATE", Changed)
+	Z:On("PLAYER_ENTERING_WORLD", Changed)
+	Z:On("ZONE_CHANGED_NEW_AREA", Changed)
 	Z:On("PLAYER_LOGIN", function()
-		lastSize = Z.GroupSize()
+		lastSize = Z.Situation()
 		Z:CheckAutoProfile()
 	end)
 	for _, event in ipairs({ "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_SPECIALIZATION_CHANGED" }) do

@@ -236,7 +236,7 @@ Z.translations.enUS = {
 	-- Profils
 	["Profils prêts à l'emploi"] = "Ready-made profiles", ["Donjon (5 joueurs)"] = "Dungeon (5 players)", ["Raid"] = "Raid",
 	["Compact"] = "Compact", ["Grand et lisible"] = "Large and readable",
-	["Un point de départ en un clic. Seules la taille et la disposition changent ; vos clics sont conservés."] = "A starting point in one click. Only size and layout change; your clicks are kept.",
+	["Taille et disposition seulement ; vos clics restent."] = "Size and layout only; your clicks stay.",
 	["Remise à zéro"] = "Reset", ["Reprendre les clics proposés pour ma classe"] = "Restore the suggested clicks for my class",
 	["Tout réinitialiser"] = "Reset everything", ["Cliquez encore pour confirmer"] = "Click again to confirm",
 	["Remet tous les réglages d'origine. La position des cadres est conservée."] = "Restores every default setting. Frame positions are kept.",
@@ -372,10 +372,10 @@ Z.translations.enUS = {
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
-			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage, qui relève qui.\n"
+			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -542,7 +542,7 @@ Z.translations.enUS = {
 	["Tapez un nom, puis Enregistrer sous : vos réglages d'apparence du moment deviennent ce profil (nouveau, ou remplacé)."] = "Type a name, then Save as: your current appearance settings become this profile (new, or replaced).",
 	["Profils automatiques"] = "Automatic profiles",
 	["Changer de profil tout seul"] = "Switch profile automatically",
-	["Selon la taille du groupe et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat."] = "Based on group size and your specialization, without /reload. In combat, the switch waits for the end of the fight.",
+	["Selon la taille du groupe, le champ de bataille ou l'arène, et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat."] = "Based on group size, battleground or arena, and your specialization, without /reload. In combat, the switch waits for the end of the fight.",
 	["Seul, 5"] = "Solo, 5",
 	["Spé. %d"] = "Spec %d",
 	["comme 1"] = "as 1",
@@ -552,7 +552,29 @@ Z.translations.enUS = {
 	["Remet tous les réglages d'origine. La position des cadres et vos profils enregistrés sont conservés."] = "Restores every original setting. Frame positions and your saved profiles are kept.",
 	["Nom de profil vide ou trop long (24 caractères au plus)."] = "Profile name empty or too long (24 characters at most).",
 	["%d profils au plus : supprimez-en un d'abord."] = "%d profiles at most: delete one first.",
-	["profil « %s » appliqué (%s joueurs)."] = "profile \"%s\" applied (%s players).",
+	["profil « %s » appliqué (%s)."] = "profile \"%s\" applied (%s).",
+	["%s joueurs"] = "%s players",
+	["champ de bataille"] = "battleground",
+	["arène"] = "arena",
+	["10 joueurs"] = "10 players",
+	["25 joueurs"] = "25 players",
+	["40 joueurs"] = "40 players",
+	["Champ de bataille"] = "Battleground",
+	["Arène"] = "Arena",
+	["selon la taille"] = "by size",
+	["Rien de choisi : le profil prévu pour la taille du groupe s'applique."] = "Nothing chosen: the profile set for the group size applies.",
+	["Copier..."] = "Copy...",
+	["Copier"] = "Copy",
+	["De"] = "From",
+	["Vers"] = "To",
+	["Copier une partie d'un profil"] = "Copy part of a profile",
+	["Copier seulement une partie d'un profil vers un autre : Cadres, Apparence, Indicateurs ou Soins, au choix."] = "Copy only part of a profile to another one: Frames, Appearance, Indicators or Heals, as you choose.",
+	["Parties à copier : les réglages de l'onglet du même nom."] = "Parts to copy: the settings of the tab with the same name.",
+	["Le profil d'arrivée prend ces réglages ; ses autres parties ne changent pas. Si c'est le profil en cours, les cadres changent tout de suite."] = "The target profile takes these settings; its other parts do not change. If it is the current profile, the frames change right away.",
+	["Choisissez deux profils enregistrés."] = "Choose two saved profiles.",
+	["Choisissez deux profils différents."] = "Choose two different profiles.",
+	["Cochez au moins une partie à copier."] = "Tick at least one part to copy.",
+	["%d réglages copiés de « %s » vers « %s »."] = "%d settings copied from \"%s\" to \"%s\".",
 	["Mes profils (onglet Profils) : vos réglages d'apparence enregistrés sous un nom, chargés en un clic ; le profil en cours garde tout seul ce que vous y réglez. Clics, macros, listes et annonces n'en font pas partie (#24)."] = "My profiles (Profiles tab): your appearance settings saved under a name, loaded in one click; the current profile keeps what you change in it by itself. Clicks, macros, lists and announcements are not part of it (#24).",
 	["Profils automatiques : un profil pour 5, 10, 25 et 40 joueurs et pour chaque spécialisation, appliqué tout seul sans /reload, à la fin du combat si besoin (#24)."] = "Automatic profiles: one profile for 5, 10, 25 and 40 players and for each specialization, applied by itself without /reload, at the end of combat if needed (#24).",
 	["Cases de la cible, de la cible de la cible et de la focalisation, chacune avec son interrupteur (onglet Cadres), dans un petit cadre « Cible » déplaçable, avec vos clics ; un ennemi est en rouge (#25)."] = "Cells for your target, your target's target and your focus, each with its own switch (Frames tab), in a small movable \"Target\" frame, with your clicks; an enemy is red (#25).",
@@ -658,4 +680,6 @@ Z.translations.enUS = {
 	["le joueur survolé reçoit mes buffs uniques"] = "the hovered player gets my single-target buffs",
 	["Buffs à poser sur une seule personne : tant que votre Bouclier de terre (chaman) ou vos Épines (druide) ne sont sur personne, le panneau des buffs manquants propose une ligne pour le tank, ou pour le joueur choisi avec /lyorune porteur (#43)."] = "Buffs meant for a single person: as long as your Earth Shield (shaman) or Thorns (druid) is on nobody, the missing buffs panel offers a line for the tank, or for the player chosen with /lyorune bearer (#43).",
 	["Recharge globale et incantation (onglet Soins) : une fine barre sous les cadres, ou un anneau autour du curseur, montre le temps de recharge global et votre incantation en cours, même en combat (#43)."] = "Global cooldown and casting (Heals tab): a thin bar under the frames, or a ring around the cursor, shows the global cooldown and your current cast, even in combat (#43).",
+	["Copier une partie d'un profil (onglet Profils, bouton « Copier... ») : Cadres, Apparence, Indicateurs ou Soins, au choix, d'un profil vers un autre ; le reste du profil d'arrivée ne bouge pas (#44)."] = "Copy part of a profile (Profiles tab, \"Copy...\" button): Frames, Appearance, Indicators or Heals, as you choose, from one profile to another; the rest of the target profile stays as it is (#44).",
+	["Profils automatiques en champ de bataille et en arène, pour chaque spécialisation ; sans choix, le profil prévu pour la taille du groupe s'applique (#44)."] = "Automatic profiles in battlegrounds and arenas, for each specialization; with nothing chosen, the profile set for the group size applies (#44).",
 }

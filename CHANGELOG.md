@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.0] - 2026-11-17
+
+### Ajouté
+
+- Copier une partie d'un profil (onglet Profils, bouton « Copier... ») : Cadres, Apparence, Indicateurs ou Soins, au choix, d'un profil vers un autre ; le reste du profil d'arrivée ne bouge pas ([#44](https://github.com/BellaHealFr/Lyorune/issues/44)).
+- Profils automatiques en champ de bataille et en arène, pour chaque spécialisation ; sans choix, le profil prévu pour la taille du groupe s'applique ([#44](https://github.com/BellaHealFr/Lyorune/issues/44)).
+
 ## [1.22.0] - 2026-11-17
 
 ### Ajouté
@@ -333,6 +340,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.19.0...v1.20.0

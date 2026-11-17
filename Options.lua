@@ -505,6 +505,23 @@ local function SimpleTabs()
 	}
 end
 
+-- Onglet où se règle un réglage (Cadres, Apparence, Indicateurs, Soins), lu dans la liste ci-dessus : la copie
+-- d'une partie d'un profil s'en sert (Share.lua). Calculé une seule fois, au premier besoin.
+local settingTab
+function Z.TabOfSetting(key)
+	if not settingTab then
+		settingTab = {}
+		for name, columns in pairs(SimpleTabs()) do
+			for _, column in ipairs(columns) do
+				for _, item in ipairs(column) do
+					if item[1] == "check" or item[1] == "step" or item[1] == "cycle" then settingTab[item[2]] = name end
+				end
+			end
+		end
+	end
+	return settingTab[key]
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Onglet Listes : trois listes de noms de sorts
 ----------------------------------------------------------------------------------------------------
@@ -1123,6 +1140,78 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Onglet Profils
 ----------------------------------------------------------------------------------------------------
+-- Fenêtre « Copier une partie » (#44) : de quel profil, vers lequel, et quelles parties (un onglet chacune)
+local copyWindow
+local function OpenCopyWindow(onDone)
+	if copyWindow then
+		if copyWindow:IsShown() then return copyWindow:Close() end
+		copyWindow:Show()
+		return
+	end
+	local w = UI.Window("LyoruneProfileCopy", L["Copier une partie d'un profil"], 300, 270)
+	w:SetFrameStrata("FULLSCREEN_DIALOG")
+	w.beside = true -- à côté des options, sans les recouvrir
+	tinsert(UISpecialFrames, "LyoruneProfileCopy")
+	copyWindow = w
+	local from, to, parts = false, false, {}
+	local fromChoices, toChoices = {}, {}
+	local function Fill(list)
+		wipe(list)
+		for _, name in ipairs(Z:ProfileNames()) do list[#list + 1] = { name, name } end
+		if #list == 0 then list[1] = { false, L["(aucun)"] } end
+	end
+	Fill(fromChoices) Fill(toChoices) -- jamais vides : le sélecteur affiche tout de suite un choix
+	w.from = UI.Cycle(w, L["De"], fromChoices, function() return from end, function(value) from = value end)
+	w.from:SetWidth(268)
+	w.from:SetPoint("TOPLEFT", 16, -48)
+	w.to = UI.Cycle(w, L["Vers"], toChoices, function() return to end, function(value) to = value end)
+	w.to:SetWidth(268)
+	w.to:SetPoint("TOPLEFT", 16, -78)
+	local hint = UI.Label(w, 11, nil, "dim")
+	hint:SetPoint("TOPLEFT", 16, -112)
+	hint:SetWidth(268)
+	hint:SetJustifyH("LEFT")
+	hint:SetText(L["Parties à copier : les réglages de l'onglet du même nom."])
+	w.parts = {}
+	for i, part in ipairs(Z.profileParts) do
+		local check = UI.Check(w, L[part], function() return parts[part] end, function(value) parts[part] = value or nil end)
+		check:SetWidth(130)
+		check:SetPoint("TOPLEFT", 16 + ((i - 1) % 2) * 136, -136 - math.floor((i - 1) / 2) * 26)
+		w.parts[part] = check
+	end
+	local result = UI.Label(w, 11)
+	result:SetPoint("TOPLEFT", 16, -226)
+	result:SetWidth(268)
+	result:SetJustifyH("LEFT")
+	w.result = result
+	w.copy = UI.Button(w, L["Copier"], 268, 24, function()
+		local ok, message = Z:CopyProfileParts(from, to, parts)
+		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
+		if ok and onDone then onDone() end
+	end)
+	w.copy:SetPoint("TOPLEFT", 16, -192)
+	w.copy.label:SetJustifyH("CENTER")
+	w.copy.tip = L["Le profil d'arrivée prend ces réglages ; ses autres parties ne changent pas. Si c'est le profil en cours, les cadres changent tout de suite."]
+	w:HookScript("OnShow", function()
+		Fill(fromChoices) Fill(toChoices)
+		local names = Z:ProfileNames()
+		if not (from and Z.db.profiles[from]) then from = Z.db.profiles[Z.db.activeProfile] and Z.db.activeProfile or names[1] or false end
+		if not (to and Z.db.profiles[to]) or to == from then
+			to = false
+			for _, name in ipairs(names) do if name ~= from then to = name break end end
+		end
+		w.from:Update() w.to:Update()
+		for _, check in pairs(w.parts) do check:Update() end
+		result:SetText("")
+	end)
+	w:Show()
+end
+
+-- Pour les tests
+function Z:ProfileCopyWindow()
+	return copyWindow
+end
+
 local function BuildProfiles(page)
 	local right = COLUMN + 32
 	local result
@@ -1183,6 +1272,12 @@ local function BuildProfiles(page)
 	end)
 	delete:SetPoint("TOPLEFT", 106, -94)
 	delete.label:SetJustifyH("CENTER")
+	local copy = UI.Button(page, L["Copier..."], COLUMN - 212, 24, function() OpenCopyWindow(Refresh) end)
+	copy:SetPoint("TOPLEFT", 212, -94)
+	copy.label:SetJustifyH("CENTER")
+	copy.tip = L["Copier seulement une partie d'un profil vers un autre : Cadres, Apparence, Indicateurs ou Soins, au choix."]
+	Register(page.tabIndex, L["Copier une partie d'un profil"], copy)
+	page.copyButton = copy
 
 	local name
 	local function Save()
@@ -1206,22 +1301,26 @@ local function BuildProfiles(page)
 	local auto = Heading(page, "Profils automatiques")
 	auto:SetPoint("TOPLEFT", 0, -180)
 	Register(page.tabIndex, L["Profils automatiques"], auto)
-	local enable = BuildItem(page, { "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." })
+	local enable = BuildItem(page, { "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe, le champ de bataille ou l'arène, et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." })
 	enable:SetPoint("TOPLEFT", 0, -212)
-	local LABEL_W, CELL_W = 74, 56
-	for i, size in ipairs(Z.profileSizes) do
+	-- Une ligne par situation (taille du groupe, champ de bataille, arène), une colonne par spécialisation
+	local LABEL_W = 110
+	local CELL_W = (COLUMN - LABEL_W - 4) / 2
+	local SIZE_LABELS = { ["5"] = "Seul, 5", ["10"] = "10 joueurs", ["25"] = "25 joueurs", ["40"] = "40 joueurs", BG = "Champ de bataille", ARENA = "Arène" }
+	for group = 1, 2 do
 		local head = UI.Label(page, 11, nil, "accent")
-		head:SetPoint("TOPLEFT", LABEL_W + (i - 1) * (CELL_W + 4), -240)
+		head:SetPoint("TOPLEFT", LABEL_W + (group - 1) * (CELL_W + 4), -240)
 		head:SetWidth(CELL_W)
 		head:SetJustifyH("CENTER")
-		head:SetText(size == "5" and L["Seul, 5"] or size)
+		head:SetText(L["Spé. %d"]:format(group))
 	end
-	for group = 1, 2 do
-		local y = -256 - (group - 1) * 26
+	local CLICK_HINT = "\n|cff8a8f99" .. L["Clic : profil suivant, clic droit : précédent."] .. "|r"
+	for i, size in ipairs(Z.profileSizes) do
+		local y = -256 - (i - 1) * 24
 		local label = UI.Label(page, 11)
 		label:SetPoint("TOPLEFT", 0, y - 5)
-		label:SetText(L["Spé. %d"]:format(group))
-		for i, size in ipairs(Z.profileSizes) do
+		label:SetText(L[SIZE_LABELS[size]])
+		for group = 1, 2 do
 			local cell = UI.Button(page, "", CELL_W, 22, function(self, mouseButton)
 				local rules = Z:ProfileRules(group)
 				local list = { false } -- false : aucun profil
@@ -1236,34 +1335,37 @@ local function BuildProfiles(page)
 				Z:CheckAutoProfile()
 			end)
 			cell:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-			cell:SetPoint("TOPLEFT", LABEL_W + (i - 1) * (CELL_W + 4), y)
+			cell:SetPoint("TOPLEFT", LABEL_W + (group - 1) * (CELL_W + 4), y)
 			cell.label:SetJustifyH("CENTER")
 			cell.Update = function(self)
 				local wanted = Z:ProfileRules(group)[size]
-				self.label:SetText(wanted or (group == 2 and L["comme 1"] or "-"))
+				local pvp = size == "BG" or size == "ARENA"
+				self.label:SetText(wanted or (group == 2 and L["comme 1"] or pvp and L["selon la taille"] or "-"))
 				if wanted then
 					self.tip = wanted
 				elseif group == 2 then
 					self.tip = L["Rien de choisi : le profil de la spécialisation 1 s'applique."]
+				elseif pvp then
+					self.tip = L["Rien de choisi : le profil prévu pour la taille du groupe s'applique."]
 				else
 					self.tip = L["Aucun profil : les réglages du moment restent."]
 				end
+				self.tip = self.tip .. CLICK_HINT
 			end
 			cell.size, cell.group = size, group
 			cells[#cells + 1] = cell
 		end
 	end
 	page.profileCells = cells
-	Note(page, "Clic : profil suivant, clic droit : précédent.", 0, -312, COLUMN)
 
 	-- Colonne de gauche, 3 : points de départ
 	local presets = Heading(page, "Profils prêts à l'emploi")
-	presets:SetPoint("TOPLEFT", 0, -340)
+	presets:SetPoint("TOPLEFT", 0, -408)
 	Register(page.tabIndex, L["Profils prêts à l'emploi"], presets)
-	Note(page, "Un point de départ en un clic. Seules la taille et la disposition changent ; vos clics sont conservés.", 0, -370, COLUMN)
+	Note(page, "Taille et disposition seulement ; vos clics restent.", 0, -438, COLUMN)
 	for i, preset in ipairs(Z.presets) do
 		local button = UI.Button(page, L[preset[2]], 150, 24, function() Z:ApplyPreset(preset[1]) end)
-		button:SetPoint("TOPLEFT", ((i - 1) % 2) * 156, -406 - math.floor((i - 1) / 2) * 29)
+		button:SetPoint("TOPLEFT", ((i - 1) % 2) * 156, -462 - math.floor((i - 1) / 2) * 29)
 		button.label:SetJustifyH("CENTER")
 	end
 

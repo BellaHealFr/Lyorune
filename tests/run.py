@@ -2155,6 +2155,84 @@ step("etape 16 : buffs uniques, temps de recharge global", function()
   Z:Refresh()
 end)
 
+step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", function()
+  Z.db.profiles, Z.db.autoProfiles, Z.db.activeProfile, Z.db.autoProfile = {}, {}, "", false
+  -- chaque reglage d'un profil a sa partie, celle de l'onglet ou il se regle
+  local parts = {}
+  for _, part in ipairs(Z.profileParts) do parts[part] = true end
+  for key in pairs(Z.defaults) do
+    local part = Z.ProfilePart(key)
+    if Z.notInProfile[key] then assert(part == nil, "hors profil mais classe : " .. key)
+    else assert(parts[part], "partie inconnue pour " .. key .. " : " .. tostring(part)) end
+  end
+  assert(Z.ProfilePart("width") == "Cadres" and Z.ProfilePart("placement") == "Cadres" and Z.ProfilePart("layout") == "Cadres")
+  assert(Z.ProfilePart("shape") == "Apparence" and Z.ProfilePart("theme") == "Apparence" and Z.ProfilePart("rangeAlpha") == "Apparence")
+  assert(Z.ProfilePart("showRole") == "Indicateurs" and Z.ProfilePart("privateAuraSize") == "Indicateurs")
+  assert(Z.ProfilePart("hotSwipe") == "Soins" and Z.ProfilePart("cornerSpells") == "Soins" and Z.ProfilePart("missingBuffs") == "Soins")
+  assert(Z.ProfilePart("clicks") == nil and Z.ProfilePart("castIndicator") == nil and Z.ProfilePart("windowTheme") == nil, "hors profil")
+  -- deux profils, puis copie des Cadres seulement
+  Z.db.width, Z.db.shape, Z.db.showRole, Z.db.hotSwipe = 120, "BAR", false, false
+  assert(Z:SaveProfile("Arene"))
+  Z.db.width, Z.db.shape, Z.db.showRole, Z.db.hotSwipe = 90, "TILE", true, true
+  assert(Z:SaveProfile("Raid") and Z.db.activeProfile == "Raid")
+  local ok, message = Z:CopyProfileParts("Arene", "Raid", {})
+  assert(not ok and message:find("au moins une partie"), "aucune partie")
+  assert(not Z:CopyProfileParts("Raid", "Raid", { Cadres = true }), "meme profil")
+  assert(not Z:CopyProfileParts("Inconnu", "Raid", { Cadres = true }), "profil inconnu")
+  -- vers le profil en cours : applique tout de suite
+  ok, message = Z:CopyProfileParts("Arene", "Raid", { Cadres = true })
+  assert(ok and message:find("Arene", 1, true), "copie : " .. tostring(message))
+  assert(Z.db.width == 120 and Z.db.shape == "TILE" and Z.db.showRole == true, "seulement les cadres, en direct")
+  -- depuis le profil en cours : ses reglages du moment ; vers un profil enregistre : rien ne bouge a l'ecran
+  Z.db.showRole = false
+  assert(Z:CopyProfileParts("Raid", "Arene", { Indicateurs = true, Soins = true }))
+  assert(Z.db.profiles.Arene.showRole == false and Z.db.profiles.Arene.hotSwipe == true and Z.db.profiles.Arene.shape == "BAR")
+  assert(Z.db.profiles.Arene.width == 120 and Z.db.width == 120)
+  -- un profil ancien sans un reglage : la valeur d'origine
+  Z.db.profiles.Arene.hotCountdown = nil
+  assert(Z:CopyProfileParts("Arene", "Raid", { Soins = true }) and Z.db.hotCountdown == Z.defaults.hotCountdown)
+  -- champ de bataille et arene
+  assert(Z.Situation() == "5" and Z.PvPKind() == nil)
+  INSTANCE_TYPE = "pvp" assert(Z.Situation() == "BG")
+  INSTANCE_TYPE = "arena" assert(Z.Situation() == "ARENA")
+  assert(Z.SituationLabel("ARENA") == "arène" and Z.SituationLabel("25") == "25 joueurs")
+  INSTANCE_TYPE = "none"
+  Z.db.autoProfile = true
+  Z:ProfileRules(1)["5"], Z:ProfileRules(1).ARENA = "Raid", "Arene"
+  FireEvent("PLAYER_ENTERING_WORLD")
+  assert(Z.db.activeProfile == "Raid")
+  INSTANCE_TYPE = "arena" FireEvent("PLAYER_ENTERING_WORLD")
+  assert(Z.db.activeProfile == "Arene" and Z.db.shape == "BAR", "arene : son profil")
+  -- 2e specialisation sans choix pour l'arene : celui de la 1re avant la taille du groupe
+  SPEC_GROUP = 2 Z:ProfileRules(2)["5"] = "Raid" FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  assert(Z.db.activeProfile == "Arene", "2e specialisation : arene de la 1re")
+  SPEC_GROUP = 1 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  -- champ de bataille sans choix : la regle de la taille du groupe
+  INSTANCE_TYPE = "pvp" FireEvent("ZONE_CHANGED_NEW_AREA")
+  assert(Z.db.activeProfile == "Raid", "champ de bataille sans choix : taille du groupe")
+  INSTANCE_TYPE = "none" FireEvent("PLAYER_ENTERING_WORLD")
+  -- onglet Profils : 12 cases (6 situations, 2 specialisations), fenetre de copie
+  Z:ToggleOptions()
+  local page
+  for _, tab in ipairs(Z:OptionsTabs()) do if tab.page and tab.page.profileCells then page = tab.page end end
+  assert(page and #page.profileCells == 12, "cases du tableau")
+  local arena = page.profileCells[11]
+  assert(arena.size == "ARENA" and arena.group == 1 and arena.label:GetText() == "Arene", "case arene")
+  assert(page.profileCells[9].label:GetText() == "selon la taille", "champ de bataille sans choix")
+  page.copyButton:Run("OnClick", "LeftButton")
+  local w = Z:ProfileCopyWindow()
+  assert(w and w:IsShown(), "fenetre de copie")
+  assert(w.from.label and w.parts.Apparence, "fenetre complete")
+  Z.db.shape = "SQUARE"
+  w.parts.Apparence:Run("OnClick")
+  w.copy:Run("OnClick")
+  assert(Z.db.profiles.Arene.shape == "SQUARE" and w.result:GetText():find("copi"), "copie depuis la fenetre : " .. tostring(w.result:GetText()))
+  w:Close()
+  Z:ToggleOptions()
+  Z.db.profiles, Z.db.autoProfiles, Z.db.activeProfile, Z.db.autoProfile = {}, {}, "", false
+  Z:ResetAll()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi
