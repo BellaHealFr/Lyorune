@@ -144,6 +144,10 @@ Tapez `/lyorune test`, ou cliquez sur « 5 joueurs », « 10 joueurs », « 25 j
 
 Onglet **Apparence** :
 
+- **Forme des cases** : quatre vignettes montrent chaque forme avec vos couleurs. **Barre** (le nom à gauche, la vie à droite), **Tuile** (la forme d'origine), **Carré** (petit, pour les grands raids) et **Bandeau** (une ligne longue et fine). Un clic suffit : la taille, le texte et la barre de mana suivent. Vous retouchez ensuite chaque valeur dans l'onglet Cadres. « Revenir » annule le dernier choix, « Voir en vrai » affiche un faux groupe de 10 joueurs.
+- **Angles des cases** : droits ou arrondis, quelle que soit la forme.
+- **Fond et bordure par groupe** : chaque groupe est posé sur son propre fond, aux couleurs du thème.
+- **Couleurs de classe** : « Vives » (par défaut) pour des couleurs franches et lumineuses, ou « Naturelles » pour celles du jeu.
 - **Thème** : Néon, Épuré, Verre, Classique ou Héroïque.
 - **Transparence** : trois préréglages en un clic, « Discret », « Semi-transparent », « Bien visible », puis les réglages fins (opacité des cadres, opacité hors de portée, luminosité).
 - **Contraste élevé** : fond noir, bordure blanche, texte plus gros.

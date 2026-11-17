@@ -16,7 +16,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 2 | 1.7.0 | Bases de l'interface | Publiée |
 | 3 | 1.8.0 | Utile en donjon | Publiée |
 | 3 bis | 1.8.1 | Échanges entre joueurs plus sûrs | Publiée (v1.8.1) |
-| 4 | 1.9.0 | Forme des cases, couleurs de classe, runes | À faire |
+| 4 | 1.9.0 | Forme des cases, angles, couleurs de classe | Publiée (v1.9.0) |
 | 5 | 1.10.0 | Soins sur la durée et indicateurs | À faire |
 | 6 | 1.11.0 | Échelle, éditeur de placement, couleurs de l'interface | À faire |
 | 7 | 1.12.0 | Clics et raccourcis | À faire |
@@ -70,11 +70,11 @@ contour et son en donjon.
 - [x] Macros de barres : ne jamais toucher une macro du joueur (#37)
 - [x] Contrôles de sécurité avant chaque publication (#38)
 
-## Étape 4 : forme des cases, couleurs de classe, runes (1.9.0)
-- [ ] Barre, Tuile, Carré, Bandeau, avec vignettes de démonstration et bouton « Voir en vrai » (#14)
-- [ ] Angles droits ou arrondis (#15)
-- [ ] Couleurs de classe plus vives, intensité au choix (#32)
-- [ ] Animation des runes plus visible, discrète mais inoubliable (#33)
+## Étape 4 : forme des cases, angles, couleurs de classe (1.9.0)
+- [x] Barre, Tuile, Carré, Bandeau, avec vignettes de démonstration et bouton « Voir en vrai » (#14)
+- [x] Angles droits ou arrondis (#15), fond et bordure par groupe
+- [x] Couleurs de classe plus vives, intensité au choix (#32)
+- Animation des runes (#33) : reportée à la refonte de la fenêtre d'options et du tutoriel (demande de l'auteur).
 
 ## Étape 5 : soins sur la durée et indicateurs (1.10.0)
 - [ ] Décompte chiffré, cercle, icône qui s'efface, charges, et combinaisons (#16)

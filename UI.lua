@@ -67,16 +67,53 @@ function UI.Text(parent, size, flags)
 	return fs
 end
 
+-- Angles arrondis : une petite image (Media/Angle*.tga, dessinée par outils/angles.py) dont le jeu étire le milieu
+-- en gardant les coins à leur taille. Aucun masque, aucun calcul : une seule texture de plus par élément.
+local MEDIA = "Interface\\AddOns\\Lyorune\\Media\\"
+local CORNER = 6 -- marge des coins dans l'image, en pixels (MARGE dans outils/angles.py)
+UI.ROUND = MEDIA .. "Angle"
+
+-- Texture aux coins arrondis : file = UI.ROUND (plein), ou UI.ROUND .. "1" / "2" (contour)
+function UI.RoundTex(parent, layer, file)
+	local t = parent:CreateTexture(nil, layer or "BACKGROUND")
+	t:SetTexture(file or UI.ROUND)
+	if t.SetTextureSliceMargins then t:SetTextureSliceMargins(CORNER, CORNER, CORNER, CORNER) end
+	return t
+end
+
+-- Retrait des barres à l'intérieur d'une case : leurs coins carrés ne dépassent jamais d'un angle arrondi
+function UI.Inset(borderSize, rounded)
+	return rounded and math.max(borderSize, 2) or borderSize
+end
+
 -- Bordure de « size » pixels autour de parent, décalée de « outset » vers l'extérieur
 local function BorderSetColor(self, r, g, b, a)
 	for i = 1, 4 do self[i]:SetVertexColor(r, g, b, a or 1) end
+	if self.round then self.round:SetVertexColor(r, g, b, a or 1) end
+	self.color = { r, g, b, a or 1 }
 end
 
 local function BorderSetThickness(self, size)
+	self.size = size
 	self[1]:SetHeight(size)
 	self[2]:SetHeight(size)
 	self[3]:SetPoint("TOPLEFT", 0, -size) self[3]:SetPoint("BOTTOMLEFT", 0, size) self[3]:SetWidth(size)
 	self[4]:SetPoint("TOPRIGHT", 0, -size) self[4]:SetPoint("BOTTOMRIGHT", 0, size) self[4]:SetWidth(size)
+	if self.round then self.round:SetTexture(UI.ROUND .. (size >= 2 and "2" or "1")) end
+end
+
+-- Angles droits (quatre traits) ou arrondis (une image de contour)
+local function BorderSetRounded(self, rounded)
+	rounded = rounded and true or false
+	if rounded and not self.round then
+		self.round = UI.RoundTex(self, "OVERLAY", UI.ROUND .. "1")
+		self.round:SetAllPoints()
+		if self.color then self.round:SetVertexColor(unpack(self.color)) end
+		BorderSetThickness(self, self.size)
+	end
+	for i = 1, 4 do self[i]:SetShown(not rounded) end
+	if self.round then self.round:SetShown(rounded) end
+	self.rounded = rounded
 end
 
 function UI.Border(parent, size, outset)
@@ -89,6 +126,7 @@ function UI.Border(parent, size, outset)
 	f[2]:SetPoint("BOTTOMLEFT") f[2]:SetPoint("BOTTOMRIGHT")
 	f.SetColor = BorderSetColor
 	f.SetThickness = BorderSetThickness
+	f.SetRounded = BorderSetRounded
 	f:SetThickness(size)
 	return f
 end

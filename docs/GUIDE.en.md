@@ -145,6 +145,10 @@ Type `/lyorune test`, or click "5 players", "10 players", "25 players" or "40 pl
 
 **Look** tab:
 
+- **Cell shape**: four thumbnails show each shape in your colours. **Bar** (name on the left, health on the right), **Tile** (the original shape), **Square** (small, for large raids) and **Strip** (one long, thin line). One click is enough: size, text and mana bar follow. You then fine-tune each value in the Frames tab. "Undo" cancels the last choice, "See it live" shows a fake group of 10 players.
+- **Cell corners**: square or rounded, whatever the shape.
+- **Background and border per group**: each group sits on its own background, in the theme's colours.
+- **Class colors**: "Vivid" (default) for bold, bright colours, or "Natural" for the game's own.
 - **Theme**: Neon, Clean, Glass, Classic or Heroic (flat and modern, lightly embossed, glassy, like the game's raid frames, or textured with a golden border).
 - **Transparency**: three one-click presets, "Subtle", "Semi-transparent", "Clearly visible", then the fine settings (frame opacity, out-of-range opacity, brightness).
 - **High contrast**: black background, white border, larger text.

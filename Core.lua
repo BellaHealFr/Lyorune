@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.8.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.9.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -39,12 +39,16 @@ Z.defaults = {
 	minimapAngle = 215,        -- sa place autour de la mini-carte, en degrés
 
 	-- Apparence
+	shape = "TILE",            -- forme des cases : Barre, Tuile, Carré, Bandeau (chacune règle taille, texte et mana)
+	corners = "SHARP",         -- angles des cases : droits ou arrondis
+	groupPanel = false,        -- fond et bordure autour de chaque groupe
 	theme = "PURE", texture = "THEME",
 	color = "CLASS",           -- couleur des barres : classe, ou vie restante
 	text = "DEFICIT",          -- texte de vie
 	fontSize = 11,
 	smooth = true,             -- barres animées
 	brightness = 100,          -- luminosité des barres, en %
+	classIntensity = "VIVID",  -- couleurs de classe : naturelles (celles du jeu) ou vives
 	highContrast = false,      -- mode contraste élevé
 	rangeAlpha = 35,           -- opacité d'un joueur hors de portée, en %
 
@@ -120,6 +124,9 @@ Z.choices = {
 		{ "DAMAGER,TANK,HEALER", "Dégâts, tank, soin" }, { "DAMAGER,HEALER,TANK", "Dégâts, soin, tank" },
 	},
 	horizontal = { { false, "En colonnes" }, { true, "En lignes" } },
+	shape = { { "BAR", "Barre" }, { "TILE", "Tuile" }, { "SQUARE", "Carré" }, { "BANNER", "Bandeau" } },
+	corners = { { "SHARP", "Droits" }, { "ROUND", "Arrondis" } },
+	classIntensity = { { "NATURAL", "Naturelles" }, { "VIVID", "Vives" } },
 	lockMode = { { "FREE", "Libre" }, { "LOCKED", "Verrouillé" }, { "ALT", "Avec Alt" }, { "CTRL", "Avec Ctrl" }, { "SHIFT", "Avec Maj" } },
 	visibility = { { "ALWAYS", "Toujours" }, { "COMBAT", "En combat seulement" } },
 	color = { { "CLASS", "Classe" }, { "HEALTH", "Vie restante" } },

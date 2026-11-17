@@ -52,13 +52,10 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Mises à jour d'une case. « b » est la case, b.unit son joueur ("raid7", "party2", "player"...)
 ----------------------------------------------------------------------------------------------------
+-- Couleur de classe, naturelle ou vive selon le réglage (Z.ClassColor, Themes.lua)
 local function ClassColor(unit)
 	local _, class = UnitClass(unit)
-	if class then
-		local color = C_ClassColor.GetClassColor(class)
-		if color then return color.r, color.g, color.b end
-	end
-	return 0.6, 0.6, 0.6
+	return Z.ClassColor(class)
 end
 
 -- Soins en route, bouclier, et absorption de soins : trois montants calculés par le jeu, lisibles en combat
@@ -176,7 +173,7 @@ end
 
 -- Place la barre de vie selon le thème, et la barre de mana si elle est affichée
 local function LayoutBars(b)
-	local inset = Z:Theme().borderSize
+	local inset = UI.Inset(Z:Theme().borderSize, db.corners == "ROUND")
 	b.hp:ClearAllPoints()
 	b.hp:SetPoint("TOPLEFT", inset, -inset)
 	b.hp:SetPoint("BOTTOMRIGHT", -inset, inset + (b.powerShown and db.powerHeight + 1 or 0))
@@ -369,29 +366,65 @@ end
 ----------------------------------------------------------------------------------------------------
 local HEAL_ABSORB_COLOR = { 0.45, 0.02, 0.10, 0.75 } -- rouge sombre, si le thème n'en donne pas
 
+-- Voiles posés sur toute la case : à l'intérieur des angles quand ils sont arrondis
+local function Cover(texture, inset)
+	texture:ClearAllPoints()
+	texture:SetPoint("TOPLEFT", inset, -inset)
+	texture:SetPoint("BOTTOMRIGHT", -inset, inset)
+end
+
+-- Nom, vie et rôle selon la forme : au centre (Tuile, Carré) ou sur une ligne (Barre, Bandeau)
+local function PlaceTexts(b, width, icon)
+	b.name:ClearAllPoints()
+	b.text:ClearAllPoints()
+	b.role:ClearAllPoints()
+	if Z:Shape().inline then
+		b.role:SetPoint("LEFT", b.hp, "LEFT", 3, 0)
+		b.name:SetPoint("LEFT", b.hp, "LEFT", icon + 3, 0)
+		b.name:SetJustifyH("LEFT")
+		b.name:SetWidth(math.max(20, width - icon - 46))
+		b.text:SetPoint("RIGHT", b.hp, "RIGHT", -4, 0)
+	else
+		b.role:SetPoint("TOPRIGHT", -2, -2)
+		b.name:SetPoint("CENTER", 0, 3)
+		b.name:SetJustifyH("CENTER")
+		b.name:SetWidth(width - 8)
+		b.text:SetPoint("BOTTOM", 0, 5)
+	end
+end
+
 local function Style(b)
 	local theme = Z:Theme()
 	local texture = UI.BarTexture()
 	local width, height = Z.CellSize()
+	local rounded = db.corners == "ROUND"
+	local inset = UI.Inset(theme.borderSize, rounded)
 	LayoutBars(b)
 	b.hp:SetStatusBarTexture(texture)
 	b.incoming:SetStatusBarTexture(texture)
 	b.incoming:SetStatusBarColor(unpack(theme.incoming))
-	b.incoming:SetWidth(width - 2 * theme.borderSize)
+	b.incoming:SetWidth(width - 2 * inset)
 	b.incoming:SetShown(db.showIncoming)
 	b.absorb:SetStatusBarTexture(UI.WHITE)
 	b.absorb:SetStatusBarColor(unpack(theme.absorb))
 	b.absorb:SetShown(db.showAbsorb)
 	b.healAbsorb:SetStatusBarTexture(texture)
 	b.healAbsorb:SetStatusBarColor(unpack(theme.healAbsorb or HEAL_ABSORB_COLOR))
-	b.healAbsorb:SetWidth(width - 2 * theme.borderSize)
+	b.healAbsorb:SetWidth(width - 2 * inset)
 	b.healAbsorb:SetShown(db.showHealAbsorb)
 	b.power:SetStatusBarTexture(texture)
 	b.power:SetHeight(db.powerHeight)
 	b.bg:SetVertexColor(unpack(theme.bg))
+	b.bgRound:SetVertexColor(unpack(theme.bg))
+	b.bg:SetShown(not rounded)
+	b.bgRound:SetShown(rounded)
 	b.border:SetThickness(theme.borderSize)
 	b.border:SetColor(theme.border[1], theme.border[2], theme.border[3], 1)
-	b.shade:SetGradient("VERTICAL", CreateColor(0, 0, 0, theme.shade[1]), CreateColor(1, 1, 1, theme.shade[2]))
+	for _, border in ipairs({ b.border, b.threat, b.dispel, b.selected, b.glow and b.glow.border }) do border:SetRounded(rounded) end
+	for _, veil in ipairs({ b.hover, b.low.fill, b.dispel.fill }) do Cover(veil, rounded and inset or 0) end
+	-- Couleurs vives : un relief plus léger, pour ne pas ternir la couleur de la classe
+	local shade = db.classIntensity == "VIVID" and 0.5 or 1
+	b.shade:SetGradient("VERTICAL", CreateColor(0, 0, 0, theme.shade[1] * shade), CreateColor(1, 1, 1, theme.shade[2]))
 	b.dim:SetAlpha(1 - db.brightness / 100)
 	b.low:SetShown(db.lowHealth)
 	if not db.lowHealth then b.low.fill:SetAlpha(0) end
@@ -399,10 +432,10 @@ local function Style(b)
 	local size = db.fontSize + (theme.fontBonus or 0)
 	b.name:SetFont(theme.font, size, theme.flags)
 	b.text:SetFont(theme.font, size - 1, theme.flags)
-	b.name:SetWidth(width - 8)
 
-	local icon = math.floor(height * 0.30 + 0.5)
+	local icon = math.max(10, math.floor(height * 0.30 + 0.5))
 	b.iconSize = icon
+	PlaceTexts(b, width, icon)
 	b.role:SetSize(icon - 2, icon - 2)
 	b.marker:SetSize(icon, icon)
 	b.center:SetSize(icon + 8, icon + 8)
@@ -418,6 +451,9 @@ Z.StyleButton = Style
 function Z.BuildVisuals(b)
 	b.bg = UI.Tex(b, "BACKGROUND", 0.07, 0.07, 0.09, 1)
 	b.bg:SetAllPoints()
+	b.bgRound = UI.RoundTex(b, "BACKGROUND") -- le même fond, aux angles arrondis (réglage)
+	b.bgRound:SetAllPoints()
+	b.bgRound:Hide()
 
 	-- Vie
 	local hp = CreateFrame("StatusBar", nil, b)
@@ -535,6 +571,37 @@ function Z.ShowDispel(b, shown, r, g, bl, a)
 	b.dispel.fill:SetShown(shown)
 end
 
+-- Fond et bordure d'un groupe (réglage « groupPanel ») : posé sous les cases, aux couleurs du thème.
+-- Sert aux vrais cadres comme au mode test.
+local PANEL_OUTSET = 3
+
+function Z.BuildPanel(parent)
+	local panel = CreateFrame("Frame", nil, parent)
+	panel:SetFrameLevel(parent:GetFrameLevel()) -- les cases, au-dessus, le recouvrent
+	panel.bg = UI.Tex(panel, "BACKGROUND")
+	panel.bg:SetAllPoints()
+	panel.bgRound = UI.RoundTex(panel, "BACKGROUND")
+	panel.bgRound:SetAllPoints()
+	panel.border = UI.Border(panel, 1)
+	panel:Hide()
+	return panel
+end
+
+-- Place le fond autour de first (coin haut gauche) et last (coin bas droit), puis l'habille
+function Z.StylePanel(panel, first, last)
+	local theme, rounded = Z:Theme(), db.corners == "ROUND"
+	panel:ClearAllPoints()
+	panel:SetPoint("TOPLEFT", first, "TOPLEFT", -PANEL_OUTSET, PANEL_OUTSET)
+	panel:SetPoint("BOTTOMRIGHT", last or first, "BOTTOMRIGHT", PANEL_OUTSET, -PANEL_OUTSET)
+	local r, g, bl = theme.bg[1], theme.bg[2], theme.bg[3]
+	panel.bg:SetVertexColor(r, g, bl, 0.75)
+	panel.bgRound:SetVertexColor(r, g, bl, 0.75)
+	panel.bg:SetShown(not rounded)
+	panel.bgRound:SetShown(rounded)
+	panel.border:SetColor(theme.border[1], theme.border[2], theme.border[3], 0.9)
+	panel.border:SetRounded(rounded)
+end
+
 -- Une case apparaît ou disparaît : l'étiquette de son groupe suit (pas d'étiquette sur un groupe vide)
 local function MembersChanged() if Z.UpdateHandles then Z.UpdateHandles() end end
 
@@ -629,8 +696,10 @@ local function UpdateHandle(h)
 	local handle = h.handle
 	local movable = CanMove()
 	local wanted = (db.showGroupLabels or movable) and h.labelText ~= nil
-	if wanted and not h.def.always then wanted = Members(h) > 0 end
+	local occupied = Members(h) > 0
+	if wanted and not h.def.always then wanted = occupied end
 	handle:SetShown(wanted)
+	h.panel:SetShown(db.groupPanel and occupied)
 	handle:EnableMouse(db.lockMode ~= "LOCKED")
 	handle.line:SetShown(movable)
 end
@@ -714,6 +783,7 @@ local function CreateHeader(def)
 	h.def = def
 	h.labelText = def.label and L[def.label]
 	h.handle = CreateHandle(h, def)
+	h.panel = Z.BuildPanel(h)
 	GetAnchor(def.pos)
 	-- Une erreur pendant l'habillage d'une case est écrite au journal, même si un autre addon a pris la main
 	-- sur le gestionnaire d'erreurs du jeu.
@@ -814,15 +884,18 @@ local function ApplyLayout()
 		-- Placement : les cadres de raid se suivent ; un groupe vide ne laisse pas de trou
 		h:ClearAllPoints()
 		local previous = def.raid and raidHeaders[def.raid - 1]
+		local apart = db.spacing + (db.groupPanel and 2 * PANEL_OUTSET or 0) -- deux fonds de groupe ne se touchent pas
 		if previous and db.horizontal then
-			h:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -(db.spacing + gap))
+			h:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -(apart + gap))
 		elseif previous then
-			h:SetPoint("TOPLEFT", previous, "TOPRIGHT", db.spacing, 0)
+			h:SetPoint("TOPLEFT", previous, "TOPRIGHT", apart, 0)
 		else
 			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", 0, -gap)
 		end
 		h.handle:SetWidth(width)
 		h.handle.text:SetText(h.labelText or "")
+		Z.StylePanel(h.panel, h)
+		h.handle:SetPoint("BOTTOMLEFT", h, "TOPLEFT", 0, db.groupPanel and PANEL_OUTSET + 2 or 2)
 
 		if enabled then
 			local rule = VisibilityRule(def)
@@ -944,6 +1017,7 @@ function Z:Refresh()
 	if Z.RefreshPreview then Z:RefreshPreview() end
 	if Z.RefreshMinimap then Z:RefreshMinimap() end
 	if Z.RefreshRunes then Z:RefreshRunes() end
+	if Z.RefreshShapes then Z:RefreshShapes() end
 end
 
 function Z:CreateFrames()

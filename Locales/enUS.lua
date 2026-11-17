@@ -299,14 +299,14 @@ Z.translations.enUS = {
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
 			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
-			.. "|cff33dd88Apparence|r : thème, couleurs, luminosité, texte.\n"
+			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: theme, colours, brightness, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -318,6 +318,19 @@ Z.translations.enUS = {
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
 
 	-- Thèmes
+	-- Forme des cases, angles, couleurs (1.9.0)
+	["Forme des cases"] = "Cell shape", ["Barre"] = "Bar", ["Tuile"] = "Tile", ["Carré"] = "Square", ["Bandeau"] = "Strip",
+	["Cases de %d x %d, texte %d."] = "Cells of %d x %d, text %d.",
+	["Chaque valeur se retouche ensuite dans l'onglet Cadres."] = "Each value can then be fine-tuned in the Frames tab.",
+	["Revenir"] = "Undo", ["Rétablit la forme et les tailles d'avant le dernier choix."] = "Restores the shape and sizes from before the last choice.",
+	["Voir en vrai"] = "See it live",
+	["Affiche un faux groupe de 10 joueurs avec la forme choisie. Recliquez pour le fermer."] = "Shows a fake group of 10 players with the chosen shape. Click again to close it.",
+	["Angles des cases"] = "Cell corners", ["Droits"] = "Square", ["Arrondis"] = "Rounded",
+	["Droits ou arrondis, pour toutes les formes et tous les thèmes."] = "Square or rounded, for every shape and every theme.",
+	["Fond et bordure par groupe"] = "Background and border per group",
+	["Chaque groupe (ou chaque rôle) est posé sur un fond aux couleurs du thème."] = "Each group (or each role) sits on a background in the theme's colors.",
+	["Couleurs de classe"] = "Class colors", ["Naturelles"] = "Natural", ["Vives"] = "Vivid",
+	["Naturelles : celles du jeu. Vives : plus franches et plus lumineuses, chaque classe garde sa teinte."] = "Natural: the game's colors. Vivid: bolder and brighter, each class keeps its hue.",
 	["Néon"] = "Neon", ["Épuré"] = "Clean", ["Verre"] = "Glass", ["Classique"] = "Classic", ["Héroïque"] = "Heroic",
 
 	-- Messages du chat et journal d'erreurs
@@ -398,4 +411,8 @@ Z.translations.enUS = {
 	["Rapport de bug et journal d'erreurs : noms de personnages et de royaumes remplacés (#36)."] = "Bug report and error log: character and realm names are replaced (#36).",
 	["Macros des barres de sorts : Lyorune ne touche plus qu'aux macros qu'il a créées, jamais à une macro du joueur nommée « Lyo: » (#37)."] = "Action bar macros: Lyorune only touches the macros it created, never a player macro named \"Lyo:\" (#37).",
 	["Contrôles de sécurité avant chaque publication : codes et messages abîmés, fonctions interdites, contenu de l'archive (#38)."] = "Security checks before each release: damaged codes and messages, forbidden functions, archive contents (#38).",
+	["Forme des cases au choix : Barre, Tuile, Carré ou Bandeau, avec des vignettes dessinées en direct, un bouton « Revenir » et un bouton « Voir en vrai » (#14)."] = "Choice of cell shape: Bar, Tile, Square or Strip, with live thumbnails, an \"Undo\" button and a \"See it live\" button (#14).",
+	["Angles des cases droits ou arrondis, pour toutes les formes et tous les thèmes (#15)."] = "Square or rounded cell corners, for every shape and every theme (#15).",
+	["Fond et bordure par groupe, aux couleurs du thème (#14)."] = "Background and border per group, in the theme's colours (#14).",
+	["Couleurs de classe plus vives par défaut, ou naturelles au choix (#32)."] = "Brighter class colours by default, or natural ones if you prefer (#32).",
 }

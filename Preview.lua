@@ -18,7 +18,7 @@ local DISPEL_COLORS = { { 0.20, 0.60, 1.00 }, { 0.65, 0.20, 1.00 }, { 0.10, 0.85
 local function Fill(cell, index)
 	local db, L = Z.db, Z.L
 	local class = CLASSES[(index - 1) % #CLASSES + 1]
-	local color = C_ClassColor.GetClassColor(class) or { r = 0.6, g = 0.6, b = 0.6 }
+	local r, g, b = Z.ClassColor(class)
 	local health = HEALTH[(index - 1) % #HEALTH + 1]
 	local dead = health == 0
 
@@ -32,11 +32,11 @@ local function Fill(cell, index)
 		cell.text:SetTextColor(0.95, 0.35, 0.35)
 	else
 		if db.color == "CLASS" then
-			cell.hp:SetStatusBarColor(color.r, color.g, color.b)
+			cell.hp:SetStatusBarColor(r, g, b)
 			cell.name:SetTextColor(1, 1, 1)
 		else
 			cell.hp:SetStatusBarColor(1 - health / 100, health / 100 * 0.8, 0.2)
-			cell.name:SetTextColor(color.r, color.g, color.b)
+			cell.name:SetTextColor(r, g, b)
 		end
 		cell.text:SetTextColor(1, 1, 1)
 		if db.text == "DEFICIT" then
@@ -112,10 +112,11 @@ local function Fill(cell, index)
 	end
 end
 
--- Range les fausses cases comme le ferait le jeu : par paquets de cinq
+-- Range les fausses cases comme le ferait le jeu : par paquets de cinq, chaque paquet sur son fond (réglage)
 local function Layout()
 	local db = Z.db
 	local width, height = Z.CellSize()
+	local apart = db.groupPanel and 6 or 0 -- même écart que les vrais cadres entre deux fonds de groupe
 	for index, cell in ipairs(cells) do
 		local shown = index <= size
 		cell:SetShown(shown)
@@ -123,15 +124,28 @@ local function Layout()
 			local group, slot = math.floor((index - 1) / 5), (index - 1) % 5
 			local x, y
 			if db.horizontal then
-				x, y = slot * (width + db.spacing), -group * (height + db.spacing)
+				x, y = slot * (width + db.spacing), -group * (height + db.spacing + apart)
 			else
-				x, y = group * (width + db.spacing), -slot * (height + db.spacing)
+				x, y = group * (width + db.spacing + apart), -slot * (height + db.spacing)
 			end
 			cell:ClearAllPoints()
 			cell:SetPoint("TOPLEFT", container, "TOPLEFT", x, y)
 			cell:SetSize(width, height)
 			Z.StyleButton(cell)
 			Fill(cell, index)
+		end
+	end
+	for group = 1, 8 do
+		local first = cells[(group - 1) * 5 + 1]
+		local wanted = db.groupPanel and first and first:IsShown()
+		local panel = container.panels[group]
+		if wanted and not panel then
+			panel = Z.BuildPanel(container)
+			container.panels[group] = panel
+		end
+		if panel then
+			if wanted then Z.StylePanel(panel, first, cells[math.min(group * 5, size)]) end
+			panel:SetShown(wanted and true or false)
 		end
 	end
 	container:SetAlpha(db.frameAlpha / 100)
@@ -163,6 +177,7 @@ function Z:TogglePreview(wanted)
 		container = CreateFrame("Frame", "LyorunePreview", UIParent)
 		container:SetSize(10, 10)
 		container:SetPoint("TOPLEFT", Z.anchor, "BOTTOMLEFT", 0, -3)
+		container.panels = {}
 		container.label = UI.Text(container, 11)
 		container.label:SetPoint("BOTTOMLEFT", Z.anchor, "TOPLEFT", 0, 3)
 		container.label:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])

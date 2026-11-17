@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.9.0] - 2026-11-17
+
+### Added
+
+- Choice of cell shape: Bar, Tile, Square or Strip, with live thumbnails, an "Undo" button and a "See it live" button ([#14](https://github.com/BellaHealFr/Lyorune/issues/14)).
+- Square or rounded cell corners, for every shape and every theme ([#15](https://github.com/BellaHealFr/Lyorune/issues/15)).
+- Background and border per group, in the theme's colours ([#14](https://github.com/BellaHealFr/Lyorune/issues/14)).
+
+### Improved
+
+- Brighter class colours by default, or natural ones if you prefer ([#32](https://github.com/BellaHealFr/Lyorune/issues/32)).
+
 ## [1.8.1] - 2026-11-17
 
 ### Improved
@@ -187,6 +199,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0

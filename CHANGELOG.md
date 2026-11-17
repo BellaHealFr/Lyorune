@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.9.0] - 2026-11-17
+
+### Ajouté
+
+- Forme des cases au choix : Barre, Tuile, Carré ou Bandeau, avec des vignettes dessinées en direct, un bouton « Revenir » et un bouton « Voir en vrai » ([#14](https://github.com/BellaHealFr/Lyorune/issues/14)).
+- Angles des cases droits ou arrondis, pour toutes les formes et tous les thèmes ([#15](https://github.com/BellaHealFr/Lyorune/issues/15)).
+- Fond et bordure par groupe, aux couleurs du thème ([#14](https://github.com/BellaHealFr/Lyorune/issues/14)).
+
+### Amélioré
+
+- Couleurs de classe plus vives par défaut, ou naturelles au choix ([#32](https://github.com/BellaHealFr/Lyorune/issues/32)).
+
 ## [1.8.1] - 2026-11-17
 
 ### Amélioré
@@ -187,6 +199,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.6.0...v1.7.0

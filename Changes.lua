@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.9.0", date = "2026-11-17",
+		added = {
+			"Forme des cases au choix : Barre, Tuile, Carré ou Bandeau, avec des vignettes dessinées en direct, un bouton « Revenir » et un bouton « Voir en vrai » (#14).",
+			"Angles des cases droits ou arrondis, pour toutes les formes et tous les thèmes (#15).",
+			"Fond et bordure par groupe, aux couleurs du thème (#14).",
+		},
+		improved = {
+			"Couleurs de classe plus vives par défaut, ou naturelles au choix (#32).",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.8.1", date = "2026-11-17",
 		added = {
 		},

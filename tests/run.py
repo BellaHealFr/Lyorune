@@ -915,6 +915,55 @@ step("etape 3 : auras privees, absorption de soins, invocation, phase, infobulle
   Z.db.importantNames = {} Z.db.importantSound = false PlaySound = playSound
 end)
 
+step("etape 4 : forme des cases, angles, fond par groupe, couleurs de classe", function()
+  local b = Z.buttons[1]
+  local saved = {} for _, k in ipairs({ "shape", "width", "height", "fontSize", "powerHeight" }) do saved[k] = Z.db[k] end
+  -- #14 formes : chacune regle les valeurs existantes, dans leurs limites ; Revenir retablit l'etat d'avant
+  assert(Z.defaults.shape == "TILE" and Z.shapes.TILE.width == Z.defaults.width and Z.shapes.TILE.height == Z.defaults.height)
+  for _, choice in ipairs(Z.choices.shape) do
+    local shape = assert(Z.shapes[choice[1]], "forme sans reglages : " .. choice[1])
+    for _, key in ipairs(Z.shapeKeys) do
+      local limit = Z.limits[key]
+      assert(shape[key] >= limit[1] and shape[key] <= limit[2], "forme " .. choice[1] .. " hors limites : " .. key)
+    end
+  end
+  Z:ApplyShape("BANNER")
+  assert(Z.db.shape == "BANNER" and Z.db.width == 170 and Z.db.height == 24 and Z.header:GetAttribute("z-height") == 24)
+  assert(b.iconSize >= 10, "icones lisibles sur une case basse")
+  Z:ApplyShape("SQUARE") Z:UndoShape()
+  assert(Z.db.shape == "BANNER" and Z.db.width == 170, "Revenir retablit la forme d'avant")
+  Z:UndoShape() assert(Z.db.shape == "BANNER", "rien a retablir")
+  -- vignettes dans l'onglet Apparence, dessinees avec les reglages du moment
+  Z:ToggleOptions("Apparence")
+  local picker = assert(Z.shapePicker, "vignettes des formes")
+  assert(#picker.thumbs == 4 and picker.thumbs[4].chosen and not picker.thumbs[2].chosen)
+  picker.thumbs[2]:Run("OnClick")
+  assert(Z.db.shape == "TILE" and Z.db.width == 86 and picker.thumbs[2].chosen)
+  picker.undo:Run("OnClick") assert(Z.db.shape == "BANNER")
+  picker.real:Run("OnClick") assert(Z.previewActive, "Voir en vrai lance le mode test")
+  picker.real:Run("OnClick") assert(not Z.previewActive)
+  Z:ToggleOptions()
+  for k, v in pairs(saved) do Z.db[k] = v end
+  -- #15 angles arrondis : fond et bordures arrondis, barres en retrait
+  Z.db.corners = "ROUND" Z:Refresh()
+  assert(b.bgRound:IsShown() and not b.bg:IsShown() and b.border.rounded and b.threat.rounded and b.selected.rounded)
+  assert(b.border.round:IsShown() and not b.border[1]:IsShown())
+  Z.db.corners = "SHARP" Z:Refresh()
+  assert(b.bg:IsShown() and not b.bgRound:IsShown() and not b.border.rounded and b.border[1]:IsShown())
+  -- fond et bordure par groupe : seulement sur un groupe occupe
+  Z.db.groupPanel = true Z:Refresh()
+  assert(LyoruneRaid3.panel:IsShown(), "fond du groupe")
+  assert(not LyoruneRaid6.panel:IsShown(), "pas de fond sur un groupe vide")
+  Z:TogglePreview(10) assert(LyorunePreview.panels[1]:IsShown() and LyorunePreview.panels[2]:IsShown()) Z:TogglePreview()
+  Z.db.groupPanel = false Z:Refresh() assert(not LyoruneRaid3.panel:IsShown())
+  -- #32 couleurs de classe : vives plus saturees que celles du jeu, meme teinte
+  local nr, ng, nb Z.db.classIntensity = "NATURAL" nr, ng, nb = Z.ClassColor("DRUID")
+  Z.db.classIntensity = "VIVID" local vr, vg, vb = Z.ClassColor("DRUID")
+  assert(vr - vb > nr - nb and vr >= vg and vg >= vb, "couleur vive")
+  for _, v in ipairs({ vr, vg, vb }) do assert(v >= 0 and v <= 1) end
+  assert(select(1, Z.ClassColor(nil)) == 0.6, "classe inconnue")
+end)
+
 step("etape 2 : reprise des anciens reglages", function()
   local db = { locked = true, lastVersion = "1.6.0", manaBars = "HEALERS", pos = { "TOPLEFT", 10, -10 } }
   local savedDB, savedChar = LyoruneDB, LyoruneCharDB

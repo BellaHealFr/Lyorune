@@ -124,7 +124,7 @@ C_SpellBook = {
 	GetSpellBookItemInfo = function(slot) return { itemType = 1, isPassive = false, spellID = ({ 2061, 139, 17, 527 })[slot] } end,
 }
 C_CurveUtil = { CreateColorCurve = function() return new("Curve") end }
-C_ClassColor = { GetClassColor = function() return { r = 1, g = 1, b = 1 } end }
+C_ClassColor = { GetClassColor = function(class) if class == "DRUID" then return { r = 1, g = 0.49, b = 0.04 } end return { r = 1, g = 1, b = 1 } end }
 AURAS = {}
 C_UnitAuras = {
 	GetUnitAuras = function(unit, filter, count)

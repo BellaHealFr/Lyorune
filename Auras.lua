@@ -143,6 +143,8 @@ local function GetGlow(b)
 	glow:SetFrameLevel(b.over:GetFrameLevel() + 2)
 	local border = UI.Border(glow, 2, 2)
 	border:SetColor(1, 0.82, 0.25, 1)
+	border:SetRounded(Z.db.corners == "ROUND")
+	glow.border = border
 	local pulse = border:CreateAnimationGroup()
 	pulse:SetLooping("BOUNCE")
 	local fade = pulse:CreateAnimation("Alpha")

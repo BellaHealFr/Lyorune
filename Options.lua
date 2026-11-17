@@ -87,6 +87,7 @@ end
 --   { "cycle", cle, "Libellé", choix }        choix (liste dans Z.choices, ou fournie)
 --   { "button", "Libellé", fonction, "aide" } bouton
 --   { "note", "Texte", hauteur }              explication
+--   { "custom", fonction }                    élément dessiné à part : fonction(page) renvoie le cadre
 ----------------------------------------------------------------------------------------------------
 local function BuildItem(page, item)
 	local kind, widget = item[1], nil
@@ -115,6 +116,8 @@ local function BuildItem(page, item)
 		widget = CreateFrame("Frame", nil, page)
 		widget:SetSize(COLUMN, item[3] or 30)
 		Note(widget, item[2], 0, 0, COLUMN)
+	elseif kind == "custom" then
+		widget = item[2](page)
 	end
 	if widget.SetWidth and kind ~= "button" then widget:SetWidth(COLUMN) end
 	return widget
@@ -153,15 +156,174 @@ local function PreviewButton(count)
 	return { "button", count .. " " .. L["joueurs"], function() Z:TogglePreview(count) end }
 end
 
+-- Les valeurs affichées suivent un changement fait par un bouton
+local function RefreshShownPages()
+	for _, tab in ipairs(tabs) do
+		if tab.page and tab.page:IsShown() then tab.page:Hide() tab.page:Show() end
+	end
+end
+
 -- Préréglage de transparence : opacité des cadres et opacité hors de portée
 local function OpacityButton(label, frameAlpha, rangeAlpha)
 	return { "button", label, function()
 		Z.db.frameAlpha, Z.db.rangeAlpha = frameAlpha, rangeAlpha
 		Z:Refresh()
-		for _, tab in ipairs(tabs) do -- les valeurs affichées suivent
-			if tab.page and tab.page:IsShown() then tab.page:Hide() tab.page:Show() end
-		end
+		RefreshShownPages()
 	end }
+end
+
+----------------------------------------------------------------------------------------------------
+-- Forme des cases : une vignette par forme, dessinée en direct avec le thème, les angles et les couleurs
+-- choisis. Un clic choisit la forme ; « Revenir » rétablit l'état d'avant ; « Voir en vrai » lance le mode test.
+----------------------------------------------------------------------------------------------------
+local THUMB_W, THUMB_H = 150, 62
+local thumbs = {}
+
+-- Une fausse case à la taille réelle de la forme, réduite pour tenir dans la vignette
+local function DrawThumb(thumb)
+	local shape, db, theme = Z.shapes[thumb.id], Z.db, Z:Theme()
+	local rounded = db.corners == "ROUND"
+	local inset = UI.Inset(theme.borderSize, rounded)
+	local cell = thumb.cell
+	cell:SetSize(shape.width, shape.height)
+	cell:SetScale(math.min(1, (THUMB_W - 20) / shape.width, (THUMB_H - 22) / shape.height))
+	cell.bg:SetVertexColor(unpack(theme.bg))
+	cell.bgRound:SetVertexColor(unpack(theme.bg))
+	cell.bg:SetShown(not rounded)
+	cell.bgRound:SetShown(rounded)
+	cell.border:SetThickness(theme.borderSize)
+	cell.border:SetColor(theme.border[1], theme.border[2], theme.border[3], 1)
+	cell.border:SetRounded(rounded)
+
+	local mana = db.manaBars ~= "OFF"
+	cell.hp:ClearAllPoints()
+	cell.hp:SetPoint("TOPLEFT", inset, -inset)
+	cell.hp:SetPoint("BOTTOMRIGHT", -inset, inset + (mana and shape.powerHeight + 1 or 0))
+	cell.hp:SetStatusBarTexture(UI.BarTexture())
+	cell.hp:SetStatusBarColor(Z.ClassColor(Z.class))
+	cell.power:SetStatusBarTexture(UI.BarTexture())
+	cell.power:SetStatusBarColor(0.25, 0.50, 1)
+	cell.power:SetHeight(shape.powerHeight)
+	cell.power:SetShown(mana)
+
+	local size = shape.fontSize + (theme.fontBonus or 0)
+	cell.name:SetFont(theme.font, size, theme.flags)
+	cell.text:SetFont(theme.font, size - 1, theme.flags)
+	cell.name:ClearAllPoints()
+	cell.text:ClearAllPoints()
+	if shape.inline then
+		cell.name:SetPoint("LEFT", cell.hp, "LEFT", 4, 0)
+		cell.text:SetPoint("RIGHT", cell.hp, "RIGHT", -4, 0)
+	else
+		cell.name:SetPoint("CENTER", 0, 3)
+		cell.text:SetPoint("BOTTOM", 0, 5)
+	end
+	cell.name:SetWidth(shape.inline and shape.width - 46 or shape.width - 8)
+	cell.name:SetJustifyH(shape.inline and "LEFT" or "CENTER")
+	cell.text:SetShown(db.text ~= "NONE")
+
+	local chosen = db.shape == thumb.id
+	thumb.chosen = chosen
+	thumb.border:SetColor(unpack(chosen and UI.accent or UI.line))
+	thumb.label:SetTextColor(unpack(chosen and UI.accent or UI.dim))
+end
+
+local function BuildThumb(parent, id, label)
+	local thumb = CreateFrame("Button", nil, parent)
+	thumb:SetSize(THUMB_W, THUMB_H)
+	thumb.id = id
+	thumb.bg = UI.Tex(thumb, "BACKGROUND", UI.panel[1], UI.panel[2], UI.panel[3])
+	thumb.bg:SetAllPoints()
+	thumb.border = UI.Border(thumb, 1)
+	thumb.label = UI.Text(thumb, 11)
+	thumb.label:SetPoint("BOTTOMLEFT", 6, 4)
+	thumb.label:SetText(L[label])
+
+	local cell = CreateFrame("Frame", nil, thumb)
+	cell:SetPoint("CENTER", 0, 6)
+	cell.bg = UI.Tex(cell, "BACKGROUND")
+	cell.bg:SetAllPoints()
+	cell.bgRound = UI.RoundTex(cell, "BACKGROUND")
+	cell.bgRound:SetAllPoints()
+	cell.hp = CreateFrame("StatusBar", nil, cell)
+	cell.hp:SetStatusBarTexture(UI.WHITE)
+	cell.hp:SetMinMaxValues(0, 100)
+	cell.hp:SetValue(72)
+	cell.power = CreateFrame("StatusBar", nil, cell)
+	cell.power:SetStatusBarTexture(UI.WHITE)
+	cell.power:SetPoint("TOPLEFT", cell.hp, "BOTTOMLEFT", 0, -1)
+	cell.power:SetPoint("TOPRIGHT", cell.hp, "BOTTOMRIGHT", 0, -1)
+	cell.power:SetMinMaxValues(0, 100)
+	cell.power:SetValue(60)
+	local over = CreateFrame("Frame", nil, cell)
+	over:SetAllPoints()
+	over:SetFrameLevel(cell.hp:GetFrameLevel() + 3)
+	cell.border = UI.Border(over, 1)
+	cell.name = UI.Text(over, 11)
+	cell.name:SetWordWrap(false)
+	cell.name:SetText(UnitName("player") or L["Joueur"])
+	cell.text = UI.Text(over, 10)
+	cell.text:SetText("-2,4K")
+	thumb.cell = cell
+
+	thumb:SetScript("OnClick", function(self)
+		PlaySound(SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or 856)
+		Z:ApplyShape(self.id)
+		RefreshShownPages()
+	end)
+	thumb:SetScript("OnEnter", function(self)
+		local shape = Z.shapes[self.id]
+		self.border:SetColor(unpack(UI.accent))
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(L[label], UI.accent[1], UI.accent[2], UI.accent[3])
+		GameTooltip:AddLine(L["Cases de %d x %d, texte %d."]:format(shape.width, shape.height, shape.fontSize), 1, 1, 1)
+		GameTooltip:AddLine(L["Chaque valeur se retouche ensuite dans l'onglet Cadres."], 0.6, 0.64, 0.7, true)
+		GameTooltip:Show()
+	end)
+	thumb:SetScript("OnLeave", function(self)
+		self.border:SetColor(unpack(self.chosen and UI.accent or UI.line))
+		GameTooltip:Hide()
+	end)
+	return thumb
+end
+
+local function ShapePicker(page)
+	local picker = CreateFrame("Frame", nil, page)
+	picker:SetSize(COLUMN, 2 * THUMB_H + 6 + 30)
+	for index, choice in ipairs(Z.choices.shape) do
+		local thumb = BuildThumb(picker, choice[1], choice[2])
+		thumb:SetPoint("TOPLEFT", ((index - 1) % 2) * (THUMB_W + 10), -math.floor((index - 1) / 2) * (THUMB_H + 6))
+		thumbs[#thumbs + 1] = thumb
+	end
+	local undo = UI.Button(picker, L["Revenir"], THUMB_W, 24, function()
+		Z:UndoShape()
+		RefreshShownPages()
+	end)
+	undo:SetPoint("BOTTOMLEFT")
+	undo.label:SetJustifyH("CENTER")
+	undo.tip = L["Rétablit la forme et les tailles d'avant le dernier choix."]
+	local real = UI.Button(picker, L["Voir en vrai"], THUMB_W, 24, function()
+		Z:TogglePreview(not Z.previewActive and 10 or nil)
+	end)
+	real:SetPoint("BOTTOMLEFT", THUMB_W + 10, 0)
+	real.label:SetJustifyH("CENTER")
+	real.tip = L["Affiche un faux groupe de 10 joueurs avec la forme choisie. Recliquez pour le fermer."]
+	picker.Update = function()
+		for _, thumb in ipairs(thumbs) do DrawThumb(thumb) end
+		undo:SetAlpha(Z.shapeUndo and 1 or 0.4)
+		undo:EnableMouse(Z.shapeUndo ~= nil)
+	end
+	picker:SetScript("OnShow", picker.Update)
+	picker.thumbs, picker.undo, picker.real = thumbs, undo, real
+	Z.shapePicker = picker
+	picker:Update()
+	Register(page.tabIndex, L["Forme des cases"], picker)
+	return picker
+end
+
+-- Appelé après chaque changement d'option : les vignettes suivent le thème, les angles et les couleurs
+function Z:RefreshShapes()
+	if Z.shapePicker and Z.shapePicker:IsVisible() then Z.shapePicker:Update() end
 end
 
 local function SimpleTabs()
@@ -196,6 +358,10 @@ local function SimpleTabs()
 		},
 		Apparence = {
 			{
+				{ "head", "Forme des cases" },
+				{ "custom", ShapePicker },
+				{ "cycle", "corners", "Angles des cases", nil, "Droits ou arrondis, pour toutes les formes et tous les thèmes." },
+				{ "check", "groupPanel", "Fond et bordure par groupe", "Chaque groupe (ou chaque rôle) est posé sur un fond aux couleurs du thème." },
 				{ "head", "Style" },
 				{ "cycle", "theme", "Thème", ThemeChoices() },
 				{ "cycle", "texture", "Texture des barres", TextureChoices() },
@@ -208,6 +374,7 @@ local function SimpleTabs()
 			{
 				{ "head", "Couleurs et transparence" },
 				{ "cycle", "color", "Couleur des barres" },
+				{ "cycle", "classIntensity", "Couleurs de classe", nil, "Naturelles : celles du jeu. Vives : plus franches et plus lumineuses, chaque classe garde sa teinte." },
 				{ "step", "brightness", "Luminosité des barres (%)" },
 				{ "step", "frameAlpha", "Opacité des cadres (%)" },
 				{ "step", "rangeAlpha", "Opacité hors de portée (%)" },
