@@ -62,9 +62,9 @@ function Z:BugReport(answers)
 	local version, build, _, interface = GetBuildInfo()
 	local lines = {
 		("[Lyorune %s] jeu %s.%s (%s), %s"):format(Z.version, tostring(version), tostring(build), tostring(interface), tostring(GetLocale())),
-		("%s niveau %s, spé %s, %s, %s"):format(tostring(Z.class), tostring(UnitLevel("player")), Z:SpecName(),
+		("%s niveau %s, spé %s, %s, %s, %s"):format(tostring(Z.class), tostring(UnitLevel("player")), Z:SpecName(),
 			IsInRaid() and ("raid de " .. GetNumGroupMembers()) or IsInGroup() and "groupe" or "seul",
-			InCombatLockdown() and "en combat" or "hors combat"),
+			InCombatLockdown() and "en combat" or "hors combat", Z:InstanceState()),
 	}
 	for i, question in ipairs(QUESTIONS) do
 		local answer = answers and answers[i] or ""

@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.10", date = "2026-11-18",
+		added = {
+		},
+		improved = {
+			"Journal d'erreurs plus précis : la pile d'appels est prise au moment de l'erreur, et chaque entrée dit où vous étiez (extérieur, donjon, raid...) et si le jeu cachait les auras.",
+			"Le rapport de /lyorune bug indique aussi le lieu (extérieur, donjon, raid...).",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.23.9", date = "2026-11-18",
 		added = {
 		},

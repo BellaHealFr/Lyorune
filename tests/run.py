@@ -108,8 +108,21 @@ step("auras", function()
   Z.HotIcon = hotIcon
   assert(cells[1].hots[1] and cells[1].hots[1]:IsShown(), "une case en erreur arrete les autres")
   local logged = false
-  for _, e in ipairs(Z.db.errors) do if tostring(e.message):find("case fautive", 1, true) then logged = true end end
+  for _, e in ipairs(Z.db.errors) do
+    if tostring(e.message):find("case fautive", 1, true) then
+      logged = true
+      assert(type(e.instance) == "string" and e.instance ~= "", "contexte d'instance absent du journal")
+      assert(type(e.stack) == "string" and e.stack ~= "", "pile d'appels absente du journal")
+    end
+  end
   assert(logged, "erreur des auras absente du journal")
+  -- contexte : donjon et auras cachees par le jeu
+  local inInstance, secrets = IsInInstance, C_Secrets
+  IsInInstance = function() return true, "party" end
+  C_Secrets = { ShouldAurasBeSecret = function() return MakeSecret() end }
+  assert(Z:InstanceState() == "donjon, auras secrètes", Z:InstanceState())
+  IsInInstance, C_Secrets = inInstance, secrets
+  assert(Z:LogText():find("case fautive", 1, true), "journal lisible")
   Z:ClearLog()
   -- donjon : le detail des changements d'auras est secret (1 736 erreurs dans Logs\General.log, 17 novembre 2026).
   -- Les icones doivent quand meme se mettre a jour, sans aucune erreur.

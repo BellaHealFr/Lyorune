@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.10] - 2026-11-18
+
+### Improved
+
+- More precise error log: the call stack is taken when the error happens, and each entry tells where you were (outdoors, dungeon, raid...) and whether the game was hiding auras.
+- The /lyorune bug report also tells the location (outdoors, dungeon, raid...).
+
 ## [1.23.9] - 2026-11-18
 
 ### Improved
@@ -407,6 +414,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.10]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.9...v1.23.10
 [1.23.9]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.8...v1.23.9
 [1.23.8]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.7...v1.23.8
 [1.23.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.6...v1.23.7

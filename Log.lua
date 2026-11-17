@@ -79,6 +79,7 @@ function Z:Log(kind, message, stack)
 		combat = InCombatLockdown() and true or false,
 		group = IsInRaid() and ("raid de " .. GetNumGroupMembers()) or IsInGroup() and "groupe" or "seul",
 		zone = GetRealZoneText and GetRealZoneText() or "?",
+		instance = Z:InstanceState(),
 	})
 	while #db.errors > MAX_ENTRIES do table.remove(db.errors) end
 	Z.firstError = Z.firstError or db.errors[1] -- la première de la session : les suivantes en découlent souvent
@@ -89,18 +90,44 @@ function Z:Log(kind, message, stack)
 	logging = false
 end
 
+-- Pile d'appels prise AU MOMENT de l'erreur (xpcall) : elle montre la ligne fautive et le chemin qui y mène,
+-- pas seulement l'endroit où l'erreur a été rattrapée. Le jeu accepte des paramètres après le gestionnaire ;
+-- sinon (ancien client, tests hors jeu), pcall et la pile de l'appelant.
+local errorStack
+local function KeepStack(err)
+	errorStack = debugstack and debugstack(2, 12, 0) or nil
+	return err
+end
+local XPCALL_ARGS = select(2, xpcall(function(value) return value end, KeepStack, true)) == true
+
 -- Exécute fn. Une erreur est écrite au journal sans passer par le gestionnaire d'erreurs du jeu,
 -- qu'un autre addon peut avoir remplacé. Renvoie true si tout s'est bien passé.
 function Z:Try(label, fn, ...)
-	local ok, err = pcall(fn, ...)
+	local ok, err
+	errorStack = nil
+	if XPCALL_ARGS then ok, err = xpcall(fn, KeepStack, ...) else ok, err = pcall(fn, ...) end
 	if not ok then
 		if Z.db then
-			Z:Log("Erreur Lua", tostring(label) .. " : " .. tostring(err), debugstack(2, 8, 0))
+			Z:Log("Erreur Lua", tostring(label) .. " : " .. tostring(err), errorStack or debugstack(2, 8, 0))
 		else
 			print("|cff33dd88Lyorune|r : " .. tostring(label) .. " : " .. tostring(err)) -- avant le chargement des réglages
 		end
 	end
 	return ok
+end
+
+-- Où se trouve le joueur, et si le jeu cache les auras aux addons : « donjon, auras secrètes ».
+-- Beaucoup d'erreurs n'arrivent qu'en instance, où le jeu rend plus de valeurs secrètes.
+function Z:InstanceState()
+	local ok, text = pcall(function()
+		local inside, kind = IsInInstance()
+		local where = inside and ({ party = "donjon", raid = "raid", pvp = "champ de bataille", arena = "arène",
+			scenario = "scénario" })[kind] or (inside and tostring(kind)) or "extérieur"
+		local secrets = C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret()
+		if Z.IsSecret(secrets) or secrets == true then where = where .. ", auras secrètes" end
+		return where
+	end)
+	return ok and text or "?"
 end
 
 -- Spécialisation du joueur, si le jeu sait la donner
@@ -134,8 +161,9 @@ function Z:LogText()
 		lines[#lines + 1] = ("--- %d. %s (x%d) ---"):format(i, e.kind, e.count)
 		lines[#lines + 1] = "Message : " .. tostring(e.message)
 		lines[#lines + 1] = ("Première fois : %s, dernière fois : %s"):format(e.first, e.last)
-		lines[#lines + 1] = ("Contexte : Lyorune %s, jeu %s, %s niveau %s spé %s, %s, %s, %s"):format(tostring(e.lyorune), tostring(e.game),
-			tostring(e.class), tostring(e.level), tostring(e.spec), e.combat and "en combat" or "hors combat", tostring(e.group), tostring(e.zone))
+		lines[#lines + 1] = ("Contexte : Lyorune %s, jeu %s, %s niveau %s spé %s, %s, %s, %s (%s)"):format(tostring(e.lyorune), tostring(e.game),
+			tostring(e.class), tostring(e.level), tostring(e.spec), e.combat and "en combat" or "hors combat", tostring(e.group), tostring(e.zone),
+			tostring(e.instance or "?"))
 		if e.stack and e.stack ~= "" then lines[#lines + 1] = "Pile d'appels :\n" .. e.stack end
 	end
 	return Z:Anonymize(table.concat(lines, "\n")) -- Bug.lua : sans nom de joueur ni de royaume

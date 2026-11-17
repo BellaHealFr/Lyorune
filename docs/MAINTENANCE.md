@@ -26,8 +26,13 @@ Pour la personne qui corrige ou fait évoluer Lyorune. Aucune connaissance préa
 
 1. Le joueur tape `/lyorune erreurs`, clique sur « Tout sélectionner », copie (Ctrl+C) et envoie le texte.
    Le même journal se trouve dans `WTF\Account\<COMPTE>\SavedVariables\Lyorune.lua`, table `errors`.
-2. Chaque entrée donne le message, la pile d'appels (fichier et ligne), les versions de Lyorune et du jeu,
-   la classe, l'état de combat et la taille du groupe.
+2. Chaque entrée donne le message, la pile d'appels prise au moment de l'erreur (fichier et ligne), les versions
+   de Lyorune et du jeu, la classe, l'état de combat, la taille du groupe, la zone et le lieu (extérieur, donjon,
+   raid...), avec « auras secrètes » quand le jeu cache les auras aux addons.
+   Sur son propre ordinateur, `python outils/erreurs.py` (`--pile` pour la pile complète) rassemble en une fois :
+   le journal du jeu `Logs\General.log`, où le jeu écrit TOUTES les erreurs Lua même quand un autre addon a pris
+   le gestionnaire d'erreurs (BugGrabber, fourni avec Decursive), et le journal de Lyorune. Lire `General.log`
+   avant de relancer le jeu : il est réécrit au lancement.
 3. Les entrées « Action interdite en combat » désignent un appel protégé fait pendant un combat :
    il doit passer par `Z:Safe(clé, fonction)`, qui le remet à la fin du combat.
 4. Après correction, lancer les tests (voir plus bas).

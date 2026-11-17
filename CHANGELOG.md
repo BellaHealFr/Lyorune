@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.10] - 2026-11-18
+
+### Amélioré
+
+- Journal d'erreurs plus précis : la pile d'appels est prise au moment de l'erreur, et chaque entrée dit où vous étiez (extérieur, donjon, raid...) et si le jeu cachait les auras.
+- Le rapport de /lyorune bug indique aussi le lieu (extérieur, donjon, raid...).
+
 ## [1.23.9] - 2026-11-18
 
 ### Amélioré
@@ -407,6 +414,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.10]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.9...v1.23.10
 [1.23.9]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.8...v1.23.9
 [1.23.8]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.7...v1.23.8
 [1.23.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.6...v1.23.7
