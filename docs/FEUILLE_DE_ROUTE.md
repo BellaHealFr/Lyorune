@@ -31,7 +31,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 15 | 1.21.0 | Clics plus sûrs : clics du jeu en conflit, bijou et arrêt d'incantation | Publiée (v1.21.0) |
 | 16 | 1.22.0 | Buffs à poser sur une seule personne, temps de recharge global | Publiée (v1.22.0) |
 | 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | Publiée (v1.23.0) |
-| 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | À faire |
+| 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | Abandonnée (le jeu bloque les messages entre addons pendant un combat de boss) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -170,10 +170,10 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
 - [x] Profils automatiques en champ de bataille et en arène, en plus de la taille du groupe et de la spécialisation
   (tableau en 6 lignes et 2 colonnes ; sans choix, la règle de la taille du groupe s'applique)
 
-## Étape 18 : demandes d'aide entre joueurs (1.24.0)
-- [ ] Demander l'Innervation (druide) ou l'Infusion de puissance (prêtre) : la case du joueur qui demande s'allume
-  chez ceux qui ont Lyorune ; interrupteur, limites contre les abus ; à vérifier : les messages entre addons
-  passent-ils pendant un combat de boss sur ce client ?
+## Étape 18 : demandes d'aide entre joueurs (1.24.0), abandonnée
+- [x] Vérifié (17 novembre 2026) : pendant un combat de boss, une clé mythique+ et le JcJ coté, le jeu bloque les
+  messages entre addons et les messages du chat écrits par un addon (`C_ChatInfo.InChatMessagingLockdown()`).
+  La demande ne partirait pas au moment où elle sert. Décision de l'auteur : étape écartée.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
@@ -199,3 +199,5 @@ buffs manquants, appel « Prêt ? », résurrection en cours, alertes de mana, p
 - Conseiller de soins de zone et suivi des sorts lancés : indisponibles sur ce client.
 - Bouton de monture, cadres aimantés, protection contre les déconnexions : peu de gain pour la complexité ajoutée.
 - Conseil de rang de sort : en attente, tant qu'il n'est pas sûr que les rangs existent sur ce client.
+- Demande d'Innervation ou d'Infusion de puissance : le jeu bloque les messages entre addons pendant un combat de
+  boss, une clé mythique+ et le JcJ coté (vérifié le 17 novembre 2026).
