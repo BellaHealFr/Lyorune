@@ -15,9 +15,11 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Light green at the end of the bar | Heals are already on their way |
 | Light strip at the bottom of the bar | They have a shield |
 | Dark red at the end of the health | A debuff "eats" that part of their health: your heals fill it first, before they count |
-| Blue bar under the health | Their mana (everyone, by default; height and colour adjustable in the Indicators tab: blue, sky blue, purple, teal or white) |
+| Blue bar under the health | Their mana (everyone, by default; height and colour adjustable in the Indicators tab: blue, sky blue, purple, teal or white). With "Mana percentage in the bar", the % is written in it, even in combat |
 | Flashing red overlay | Their health is low |
 | Red border | They are being attacked |
+| Coloured line at the top of the health (if you turn it on) | Their threat: yellow, they climb a monster's list; orange, they are about to pull it; red, they have it |
+| Small coloured square in a corner | A spell you placed in that corner (Heals tab): it drains over time |
 | White border | They are your target |
 | Blue, purple, brown or green outline and light tint | A magic effect, a curse, a disease or a poison that YOU can remove (the name and health stay readable) |
 | Faded frame | They are out of range |
@@ -167,7 +169,20 @@ The macros, bug report, error log and news windows open next to the options wind
 
 ## 8. Choosing what is shown
 
-**Indicators** tab: every element of the frame has its checkbox. Nothing is mandatory. You can, for example, only show the debuffs you can dispel, or replace the heal over time icons with thin bars.
+**Indicators** tab: every element of the frame has its checkbox. Nothing is mandatory. You can, for example, only show the debuffs you can dispel.
+
+### Your heals over time (Heals tab)
+
+Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your heals over time and shields, plus the spells in your list.
+
+- **Icons or thin bars**: pick the display. On icons, four settings combine as you like:
+  - **Draining circle**: a shade turns as time passes;
+  - **Countdown in seconds**: the remaining seconds, drawn by the game;
+  - **Icon fades at the end**: during the last 6 seconds the icon fades. Time to recast;
+  - **Number of charges**: a small number when the heal has several.
+- **Cell corners**: place one of your spells in each corner. It becomes a small coloured square (green, blue, yellow, pink) that drains over time, and leaves the icon row. At a glance you see who lacks your Renew or Rejuvenation. Each class keeps its own corners: your druid and your priest never mix.
+
+Everything works in combat. The game hides aura names there, but Lyorune recognises your heals by their number, or by the spell you just cast. A heal it cannot recognise stays in the icon row, never in the wrong corner.
 
 **Lists** tab: add one of your spells to track, a debuff that should never be shown, or a debuff to show as a large icon. Type the exact name, then Enter. Click a name to remove it.
 

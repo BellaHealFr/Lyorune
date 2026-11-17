@@ -1,9 +1,10 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - Options.lua : la fenêtre /lyorune.
--- Huit onglets, un sujet par onglet, chaque réglage à un seul endroit :
+-- Neuf onglets, un sujet par onglet, chaque réglage à un seul endroit :
 --   Cadres       où et comment les cases sont rangées
 --   Apparence    à quoi elles ressemblent
 --   Indicateurs  ce qui s'affiche dessus
+--   Soins        mes soins sur la durée (icônes, décompte, fondu) et les coins de la case
 --   Listes       mes sorts à suivre, les affaiblissements à ignorer ou à mettre en avant
 --   Clics        souris, touches au survol
 --   Alertes      annonces dans le chat et sons
@@ -200,7 +201,7 @@ local function DrawThumb(thumb)
 	cell.hp:SetStatusBarTexture(UI.BarTexture())
 	cell.hp:SetStatusBarColor(Z.ClassColor(Z.class))
 	cell.power:SetStatusBarTexture(UI.BarTexture())
-	cell.power:SetStatusBarColor(0.25, 0.50, 1)
+	cell.power:SetStatusBarColor(unpack(Z.manaColors[db.manaColor] or Z.manaColors.BLUE))
 	cell.power:SetHeight(shape.powerHeight)
 	cell.power:SetShown(mana)
 
@@ -213,8 +214,8 @@ local function DrawThumb(thumb)
 		cell.name:SetPoint("LEFT", cell.hp, "LEFT", 4, 0)
 		cell.text:SetPoint("RIGHT", cell.hp, "RIGHT", -4, 0)
 	else
-		cell.name:SetPoint("CENTER", 0, 3)
-		cell.text:SetPoint("BOTTOM", 0, 5)
+		cell.name:SetPoint("CENTER", cell.hp, "CENTER", 0, 3)
+		cell.text:SetPoint("BOTTOM", cell.hp, "BOTTOM", 0, 4)
 	end
 	cell.name:SetWidth(shape.inline and shape.width - 46 or shape.width - 8)
 	cell.name:SetJustifyH(shape.inline and "LEFT" or "CENTER")
@@ -324,6 +325,33 @@ function Z:RefreshShapes()
 	if Z.shapePicker and Z.shapePicker:IsVisible() then Z.shapePicker:Update() end
 end
 
+-- Choix d'un coin : « Aucun », puis mes sorts suivis (ceux de ma classe et ma liste), par ordre alphabétique.
+-- Le réglage est gardé par classe : un prêtre et un druide ont chacun leurs coins.
+local function CornerPicker(point, label)
+	return { "custom", function(page)
+		local names = {}
+		for name in pairs(Z.trackedNames or {}) do names[#names + 1] = name end
+		for name in pairs(Z.db.extraTracked) do
+			if not (Z.trackedNames and Z.trackedNames[name]) then names[#names + 1] = name end
+		end
+		table.sort(names)
+		local choices = { { "", L["Aucun"] } }
+		for _, name in ipairs(names) do choices[#choices + 1] = { name, name } end
+		local widget = UI.Cycle(page, L[label], choices,
+			function() return Z.MyCorners()[point] or "" end,
+			function(value)
+				local all = Z.db.cornerSpells
+				all[Z.class] = all[Z.class] or {}
+				all[Z.class][point] = value ~= "" and value or nil
+				Z:Refresh()
+			end)
+		local color = Z.CORNER_COLORS[point]
+		widget.label:SetTextColor(color[1], color[2], color[3])
+		Register(page.tabIndex, L[label], widget)
+		return widget
+	end }
+end
+
 local function SimpleTabs()
 	return {
 		Cadres = {
@@ -398,19 +426,17 @@ local function SimpleTabs()
 				{ "cycle", "manaBars", "Barre de mana" },
 				{ "step", "powerHeight", "Hauteur de la barre de mana" },
 				{ "cycle", "manaColor", "Couleur de la barre de mana" },
+				{ "check", "manaPercent", "Pourcentage de mana dans la barre", "Le % de mana écrit au milieu de la barre, lisible en combat. La barre passe alors à 8 pixels de haut au moins." },
 				{ "head", "Joueur" },
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
 				{ "check", "showMarker", "Marqueur de raid" },
 				{ "check", "showThreat", "Bordure rouge quand il est attaqué" },
+				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la vie : jaune quand il monte dans la liste d'un monstre, orange juste avant qu'il le prenne, rouge quand il l'a." },
 				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte)." },
 				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },
 				{ "check", "clickTooltip", "Mes clics dans l'infobulle", "Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro." },
 			},
 			{
-				{ "head", "Mes soins" },
-				{ "check", "showHots", "Mes soins sur la durée" },
-				{ "cycle", "hotStyle", "Affichage des soins sur la durée" },
-				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
 				{ "head", "Affaiblissements" },
 				{ "check", "showDispel", "Cadre coloré quand je peux dissiper" },
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
@@ -422,6 +448,29 @@ local function SimpleTabs()
 				{ "check", "privateAuras", "Afficher les auras privées", "Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place choisie ici (deux au plus)." },
 				{ "step", "privateAuraSize", "Taille des auras privées" },
 				{ "cycle", "privateAuraPoint", "Place des auras privées" },
+			},
+		},
+		Soins = {
+			{
+				{ "head", "Mes soins sur la durée" },
+				{ "check", "showHots", "Mes soins sur la durée" },
+				{ "cycle", "hotStyle", "Affichage des soins sur la durée" },
+				{ "note", "Sur les icônes, à combiner comme vous voulez :", 22 },
+				{ "check", "hotSwipe", "Cercle qui se vide", "Sur les icônes de vos soins : un voile tourne et découvre l'icône à mesure que le temps passe." },
+				{ "check", "hotCountdown", "Décompte en secondes", "Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat)." },
+				{ "check", "hotFade", "Icône qui s'efface à la fin", "Pendant les 6 dernières secondes, l'icône pâlit peu à peu : c'est le moment de relancer." },
+				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges." },
+				{ "head", "Buffs" },
+				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
+			},
+			{
+				{ "head", "Coins de la case" },
+				{ "note", "Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de l'onglet Listes.", 74 },
+				CornerPicker("TOPLEFT", "En haut à gauche"),
+				CornerPicker("TOPRIGHT", "En haut à droite"),
+				CornerPicker("BOTTOMLEFT", "En bas à gauche"),
+				CornerPicker("BOTTOMRIGHT", "En bas à droite"),
+				{ "note", "En combat, le jeu cache le nom des auras : Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.", 74 },
 			},
 		},
 	}
@@ -1238,6 +1287,7 @@ local function Build()
 		{ name = "Cadres", columns = simple.Cadres },
 		{ name = "Apparence", columns = simple.Apparence },
 		{ name = "Indicateurs", columns = simple.Indicateurs },
+		{ name = "Soins", columns = simple.Soins },
 		{ name = "Listes", build = BuildLists },
 		{ name = "Clics", build = BuildClicks },
 		{ name = "Alertes", build = BuildAlerts },

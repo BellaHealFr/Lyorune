@@ -6,6 +6,19 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.11.0] - 2026-11-17
+
+### Ajouté
+
+- Onglet Soins : vos soins sur la durée avec cercle, décompte en secondes, icône qui s'efface à la fin et charges, à combiner comme vous voulez ([#16](https://github.com/BellaHealFr/Lyorune/issues/16)).
+- Coins de la case : un de vos sorts par coin, en petit carré de couleur qui se vide avec le temps, réglé pour chaque classe et reconnu même en combat ([#17](https://github.com/BellaHealFr/Lyorune/issues/17)).
+- Barre fine de menace en haut de la vie : jaune, orange puis rouge ([#17](https://github.com/BellaHealFr/Lyorune/issues/17)).
+- Pourcentage de mana écrit dans la barre de mana, lisible en combat ([#40](https://github.com/BellaHealFr/Lyorune/issues/40)).
+
+### Corrigé
+
+- Le texte de vie ne passe plus par-dessus la barre de mana en forme Tuile et Carré ([#40](https://github.com/BellaHealFr/Lyorune/issues/40)).
+
 ## [1.10.0] - 2026-11-17
 
 ### Ajouté
@@ -221,6 +234,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.11.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1

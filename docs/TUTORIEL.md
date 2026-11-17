@@ -14,9 +14,11 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Vert clair au bout de la barre | Des soins sont déjà en route |
 | Bande claire en bas de la barre | Il a un bouclier |
 | Rouge sombre au bout de la vie | Un affaiblissement « mange » cette part de vie : vos soins la remplissent d'abord, avant de compter |
-| Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur et couleur réglables dans l'onglet Indicateurs : bleu, bleu ciel, violet, turquoise ou blanc) |
+| Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur et couleur réglables dans l'onglet Indicateurs : bleu, bleu ciel, violet, turquoise ou blanc). Avec « Pourcentage de mana dans la barre », le % s'y écrit, même en combat |
 | Voile rouge qui clignote | Sa vie est basse |
 | Bordure rouge | Il est attaqué |
+| Trait de couleur en haut de la vie (si vous l'activez) | Sa menace : jaune, il monte dans la liste d'un monstre ; orange, il va le prendre ; rouge, il l'a |
+| Petit carré de couleur dans un coin | Un sort que vous avez placé dans ce coin (onglet Soins) : il se vide avec le temps |
 | Bordure blanche | C'est votre cible |
 | Contour et léger voile bleu, violet, brun ou vert | Une magie, une malédiction, une maladie ou un poison que VOUS pouvez retirer (le nom et la vie restent lisibles) |
 | Case estompée | Il est hors de portée |
@@ -166,7 +168,20 @@ Les fenêtres des macros, du rapport de bug, du journal et des nouveautés s'ouv
 
 ## 8. Choisir ce qui s'affiche
 
-Onglet **Indicateurs** : chaque élément de la case a sa case à cocher. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper, ou remplacer les icônes de soins sur la durée par des barres fines.
+Onglet **Indicateurs** : chaque élément de la case a sa case à cocher. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper.
+
+### Vos soins sur la durée (onglet Soins)
+
+Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit vos soins sur la durée et vos boucliers, plus les sorts de votre liste.
+
+- **Icônes ou barres fines** : choisissez l'affichage. Sur les icônes, quatre réglages se combinent comme vous voulez :
+  - **Cercle qui se vide** : un voile tourne à mesure que le temps passe ;
+  - **Décompte en secondes** : les secondes restantes, écrites par le jeu ;
+  - **Icône qui s'efface à la fin** : pendant les 6 dernières secondes, l'icône pâlit. C'est le moment de relancer ;
+  - **Nombre de charges** : un petit chiffre quand le soin en a plusieurs.
+- **Coins de la case** : placez un de vos sorts dans chaque coin. Il devient un petit carré de couleur (vert, bleu, jaune, rose) qui se vide avec le temps, et quitte la rangée d'icônes. D'un coup d'œil, vous voyez qui n'a pas votre Rénovation ou votre Récupération. Chaque classe garde ses propres coins : votre druide et votre prêtre ne se mélangent pas.
+
+Tout marche en combat. Le jeu y cache le nom des auras, mais Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.
 
 Onglet **Listes** : ajoutez un de vos sorts à suivre, un affaiblissement à ne jamais afficher, ou un affaiblissement à montrer en grand. Tapez le nom exact, puis Entrée. Cliquez sur un nom pour le retirer.
 

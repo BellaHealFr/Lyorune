@@ -145,11 +145,11 @@ step("combat avec valeurs secretes", function()
   FireEvent("PLAYER_REGEN_ENABLED") Z:Refresh() RunUpdates()
 end)
 
-step("options : huit onglets, recherche, libelles traduits", function()
+step("options : neuf onglets, recherche, libelles traduits", function()
   SlashCmdList.LYORUNE("")
   local w = Z:OptionsWindow()
   assert(w and w:IsShown())
-  for i = 1, 8 do w.Select(i) end
+  for i = 1, 9 do w.Select(i) end
   w.Select("Clics") w.Select("Inconnu")
   local labels = Z:OptionLabels()
   assert(#labels >= 45, "reglages recenses : " .. #labels)
@@ -1116,6 +1116,71 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
   card.close:Run("OnClick")
   local labels = table.concat(Z:OptionLabels(), "|")
   assert(labels:find("Thème des fenêtres", 1, true) and labels:find("Animations réduites", 1, true) and labels:find("Effets magiques", 1, true))
+end)
+
+step("etape 5 : soins sur la duree, coins, mana en %, menace", function()
+  local b = Z.buttons[1]
+  -- % de mana : ecrit par le jeu, barre de 8 pixels au moins, meme avec une hauteur reglee a 4
+  Z.db.manaBars, Z.db.powerHeight, Z.db.manaPercent = "ALL", 4, true Z:Refresh()
+  FireEvent("UNIT_POWER_UPDATE", "player")
+  assert(Z.PowerHeight() == 8 and b.power:GetHeight() == 8, "barre agrandie pour le %")
+  assert(b.powerText:IsShown() and b.powerText:GetText() == "60%", "pourcentage de mana : " .. tostring(b.powerText:GetText()))
+  SECRET = true FireEvent("UNIT_POWER_UPDATE", "player") SECRET = false
+  Z.db.manaPercent = false Z:Refresh() FireEvent("UNIT_POWER_UPDATE", "player")
+  assert(Z.PowerHeight() == 4 and not b.powerText:IsShown(), "barre simple")
+  -- barre fine de menace : couleur selon le niveau, cachee si le niveau est secret ou le reglage coupe
+  Z.db.threatBar = true Z:Refresh() FireEvent("UNIT_THREAT_SITUATION_UPDATE", "player")
+  assert(b.threatBar:IsShown(), "barre de menace")
+  SECRET = true FireEvent("UNIT_THREAT_SITUATION_UPDATE", "player") SECRET = false
+  assert(not b.threatBar:IsShown(), "menace secrete : rien d'invente")
+  Z.db.threatBar = false Z:Refresh() FireEvent("UNIT_THREAT_SITUATION_UPDATE", "player")
+  assert(not b.threatBar:IsShown())
+  -- #16 icones de mes soins : cercle, decompte, fondu, charges, combinables
+  AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 41, spellId = 139 } }
+  Z.db.hotSwipe, Z.db.hotCountdown, Z.db.hotFade, Z.db.hotCharges = false, true, true, false
+  Z:Refresh() FireEvent("UNIT_AURA", "player") RunUpdates()
+  local icon = b.hots[1]
+  assert(icon:IsShown() and icon.duration, "icone de soin")
+  assert(icon.count:GetText() == "", "charges coupees")
+  TICK() -- le fondu passe avec le controle de portee, sans boucle a lui
+  Z.db.hotSwipe, Z.db.hotCountdown, Z.db.hotFade, Z.db.hotCharges = true, false, false, true
+  Z:Refresh() RunUpdates()
+  -- #17 coins : un sort par coin et par classe ; il quitte la rangee d'icones
+  Z.db.cornerSpells.PRIEST = { TOPLEFT = "Rénovation" }
+  Z:Refresh() RunUpdates()
+  assert(b.corners and b.corners.TOPLEFT:IsShown(), "carre du coin")
+  assert(not b.hots[1]:IsShown(), "le sort du coin quitte la rangee")
+  assert(Z.CornerShift(b, "TOPLEFT") > 0 and Z.CornerShift(b, "BOTTOMRIGHT") == 0)
+  -- en combat : nom secret, mais numero d'aura retenu hors combat
+  SECRET = true
+  AURAS["HELPFUL|PLAYER"] = { { name = MakeSecret(), icon = 1, auraInstanceID = 41, spellId = MakeSecret() } }
+  FireEvent("UNIT_AURA", "player") RunUpdates()
+  assert(b.corners.TOPLEFT:IsShown(), "coin reconnu en combat par le numero d'aura")
+  -- en combat : soin lance pendant le combat, reconnu par mon sort lisible et l'aura qui apparait aussitot
+  AURAS["HELPFUL|PLAYER"] = { { name = MakeSecret(), icon = 1, auraInstanceID = 42, spellId = MakeSecret() } }
+  FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast", 139)
+  FireEvent("UNIT_AURA", "player", { addedAuras = { AURAS["HELPFUL|PLAYER"][1] }, removedAuraInstanceIDs = { 41 } }) RunUpdates()
+  assert(b.corners.TOPLEFT:IsShown(), "coin reconnu en combat par le sort lance")
+  -- soin inconnu en combat : il reste dans la rangee, jamais dans un coin au hasard
+  AURAS["HELPFUL|PLAYER"] = { { name = MakeSecret(), icon = 1, auraInstanceID = 43, spellId = MakeSecret() } }
+  FireEvent("UNIT_AURA", "player") RunUpdates()
+  assert(not b.corners.TOPLEFT:IsShown() and b.hots[1]:IsShown(), "soin inconnu dans la rangee")
+  SECRET = false
+  Z.db.cornerSpells.PRIEST = nil AURAS = {} Z:Refresh() RunUpdates()
+  assert(not b.corners.TOPLEFT:IsShown())
+  -- toutes les classes de soigneur de Forever ont des sorts suivis, donc des coins a choisir ; chacune garde les siens
+  for _, class in ipairs({ "PRIEST", "DRUID", "PALADIN", "SHAMAN" }) do
+    assert(#(Z.trackedSpells[class] or {}) >= 2, "sorts suivis manquants : " .. class)
+  end
+  Z.db.cornerSpells.DRUID = { TOPLEFT = "Récupération" } Z:Refresh() RunUpdates()
+  assert(Z.CornerShift(b, "TOPLEFT") == 0, "les coins du druide ne touchent pas le pretre")
+  Z.db.cornerSpells.DRUID = nil
+  -- options : les quatre coins et les nouveaux reglages sont trouvables par la recherche
+  Z:ToggleOptions("Indicateurs") Z:ToggleOptions()
+  local labels = table.concat(Z:OptionLabels(), "|")
+  for _, label in ipairs({ "Pourcentage de mana dans la barre", "Barre fine de menace", "Décompte en secondes", "Icône qui s'efface à la fin", "En haut à gauche", "En bas à droite" }) do
+    assert(labels:find(label, 1, true), "option absente : " .. label)
+  end
 end)
 
 step("etape 2 : reprise des anciens reglages", function()

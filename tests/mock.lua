@@ -140,7 +140,7 @@ C_SpellBook = {
 	GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 4 } end,
 	GetSpellBookItemInfo = function(slot) return { itemType = 1, isPassive = false, spellID = ({ 2061, 139, 17, 527 })[slot] } end,
 }
-C_CurveUtil = { CreateColorCurve = function() return new("Curve") end }
+C_CurveUtil = { CreateColorCurve = function() return new("Curve") end, CreateCurve = function() return new("Curve") end }
 C_ClassColor = { GetClassColor = function(class) if class == "DRUID" then return { r = 1, g = 0.49, b = 0.04 } end return { r = 1, g = 1, b = 1 } end }
 AURAS = {}
 C_UnitAuras = {
@@ -151,7 +151,9 @@ C_UnitAuras = {
 	GetAuraDuration = function() return new("Duration") end,
 	GetAuraApplicationDisplayCount = function() return "" end,
 	GetAuraDispelTypeColor = function() return CreateColor(0.2, 0.6, 1, 1) end,
+	IsAuraFilteredOutByInstanceID = function() return false end,
 }
+function UnitPowerPercent(u, p, predicted, curve) if curve == CurveConstants.ScaleTo100 then return 60 end return 0.6 end
 function CreateUnitHealPredictionCalculator() return new("Calc") end
 function UnitGetDetailedHealPrediction() end
 function UnitClass(u) return "Prêtre", "PRIEST" end
@@ -286,6 +288,7 @@ function UnitHasIncomingResurrection() return S(false) end
 function UnitPower() return S(MANA) end
 function UnitPowerMax() return S(1000) end
 function UnitPowerType() return S(0) end
+function UnitPowerPercent(u, p, predicted, curve) if curve == CurveConstants.ScaleTo100 then return S(60) end return S(0.6) end
 C_UnitAuras.GetAuraDispelTypeColor = function()
 	local c = { S(0.2), S(0.6), S(1), S(1) }
 	return { GetRGBA = function() return c[1], c[2], c[3], c[4] end }

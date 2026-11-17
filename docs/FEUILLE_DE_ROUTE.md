@@ -18,7 +18,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 3 bis | 1.8.1 | Échanges entre joueurs plus sûrs | Publiée (v1.8.1) |
 | 4 | 1.9.0 | Forme des cases, angles, couleurs de classe | Publiée (v1.9.0) |
 | 4 bis | 1.10.0 | Fenêtre d'options et tutoriel : 3 thèmes, runes animées | Publiée (v1.10.0) |
-| 5 | 1.11.0 | Soins sur la durée et indicateurs | À faire |
+| 5 | 1.11.0 | Soins sur la durée et indicateurs | Publiée (v1.11.0) |
 | 6 | 1.12.0 | Échelle, éditeur de placement | À faire |
 | 7 | 1.13.0 | Clics et raccourcis | À faire |
 | 8 | 1.14.0 | Profils automatiques, cible et focalisation | À faire |
@@ -93,8 +93,13 @@ de soin et leurs 5 habillages restent tels quels.
   cocher complet à toute échelle
 
 ## Étape 5 : soins sur la durée et indicateurs (1.11.0)
-- [ ] Décompte chiffré, cercle, icône qui s'efface, charges, et combinaisons (#16)
-- [ ] Indicateurs libres dans les coins de la case, barres fines (#17)
+- [x] À corriger en premier : le texte de vie (%) s'affiche par-dessus la barre de mana ; il doit rester dans la
+  barre de vie (demande de l'auteur, 17 novembre 2026)
+- [x] Barre de mana au choix : barre simple (comme aujourd'hui) ou barre avec le pourcentage de mana affiché
+  (demande de l'auteur, 17 novembre 2026, #40)
+- [x] Décompte chiffré, cercle, icône qui s'efface, charges, et combinaisons (#16)
+- [x] Indicateurs libres dans les coins de la case, barres fines (#17) : carrés par sort et par classe, reconnus en
+  combat ; barre fine de menace (le bouclier avait déjà sa bande) ; nouvel onglet « Soins »
 
 ## Étape 6 : échelle, éditeur de placement (1.12.0)
 - [ ] Échelle générale et placement au pixel près sur une case d'exemple (#18)

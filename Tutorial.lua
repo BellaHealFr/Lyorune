@@ -51,7 +51,8 @@ local steps = {
 		text = "|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
-			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements.\n\n"
+			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
+			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins).\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics.",
 		target = function() return Z.buttons[1] end,
@@ -86,6 +87,7 @@ local steps = {
 			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
+			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"

@@ -1,6 +1,7 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - Auras.lua : ce qui s'affiche sur une case à partir des auras du joueur.
 --   en haut à gauche  : mes soins sur la durée (icônes ou barres fines)
+--   dans les coins    : un carré de couleur par sort choisi (un de mes soins, réglage par classe)
 --   en bas à droite   : ses affaiblissements
 --   à gauche, en grand: un affaiblissement important (boss, ou liste personnelle)
 --   en bas à gauche   : un buff de groupe qui lui manque (hors combat)
@@ -22,6 +23,8 @@ local RemovePrivateAnchor = C_UnitAuras.RemovePrivateAuraAnchor
 local SORT = Enum.UnitAuraSortRule and Enum.UnitAuraSortRule.Default
 local REMAINING = Enum.StatusBarTimerDirection and Enum.StatusBarTimerDirection.RemainingTime
 local IMMEDIATE = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.Immediate
+local IsFilteredOut = C_UnitAuras.IsAuraFilteredOutByInstanceID
+local GetSpellName = C_Spell and C_Spell.GetSpellName
 
 local MAX_HOTS, MAX_DEBUFFS = 4, 2
 local BAR_COLORS = { { 0.35, 0.95, 0.45 }, { 0.30, 0.80, 1.00 }, { 1.00, 0.85, 0.30 }, { 1.00, 0.50, 0.85 } }
@@ -36,7 +39,15 @@ end
 -- ce qui fonctionne même quand le type est une valeur secrète.
 local dispelCurve
 
+local fadeCurve -- opacité d'une icône selon les secondes restantes : 1 jusqu'à 6 s, puis s'efface jusqu'à 0,3
+
 local function BuildCurve()
+	if C_CurveUtil.CreateCurve then
+		fadeCurve = C_CurveUtil.CreateCurve()
+		fadeCurve:SetType(Enum.LuaCurveType.Linear)
+		fadeCurve:AddPoint(0, 0.3)
+		fadeCurve:AddPoint(6, 1)
+	end
 	dispelCurve = C_CurveUtil.CreateColorCurve()
 	dispelCurve:SetType(Enum.LuaCurveType.Step)
 	dispelCurve:AddPoint(0, CreateColor(0, 0, 0, 0))
@@ -81,23 +92,50 @@ local function GetIcon(b, list, index, point, x, y, direction, scale)
 end
 Z.GetAuraIcon = GetIcon
 
-local function ShowAura(icon, unit, aura)
+-- mine : icône d'un de mes soins, qui suit les réglages cercle, décompte, fondu et charges
+local function ShowAura(icon, unit, aura, mine)
 	local id = aura.auraInstanceID
+	local db = Z.db
 	icon.texture:SetTexture(aura.icon)
 	icon.texture:SetDesaturated(false)
 	local duration = GetAuraDuration(unit, id)
+	icon.duration = mine and duration or nil
 	if duration then
 		icon.cooldown:SetCooldownFromDurationObject(duration)
 	else
 		icon.cooldown:Clear()
 	end
-	icon.count:SetText(GetAuraCount(unit, id, 2, 99))
+	-- Cercle et décompte sont dessinés par le jeu : ils marchent en combat, même sur une durée secrète
+	icon.cooldown:SetDrawSwipe(not mine or db.hotSwipe)
+	icon.cooldown:SetHideCountdownNumbers(not (mine and db.hotCountdown))
+	if mine and db.hotCountdown and icon.cooldown.SetCountdownFont and not icon.smallNumbers then
+		icon.smallNumbers = true
+		icon.cooldown:SetCountdownFont("GameFontHighlightSmallOutline")
+	end
+	icon.count:SetText((not mine or db.hotCharges) and GetAuraCount(unit, id, 2, 99) or "")
 	icon:SetAlpha(1)
+	if mine and db.hotFade then Z.FadeIcon(icon) end
 	icon:Show()
 end
 
+-- Icône qui s'efface : le jeu donne l'opacité à partir des secondes restantes (valeur parfois secrète)
+function Z.FadeIcon(icon)
+	local duration = icon.duration
+	if duration and fadeCurve and duration.EvaluateRemainingDuration then
+		local ok, alpha = pcall(duration.EvaluateRemainingDuration, duration, fadeCurve)
+		if ok and alpha then icon:SetAlpha(alpha) end
+	end
+end
+
+-- Appelé 2 fois par seconde avec le contrôle de portée, seulement si le réglage est coché
+function Z.FadeHots(b)
+	for _, icon in ipairs(b.hots) do
+		if icon:IsShown() then Z.FadeIcon(icon) end
+	end
+end
+
 -- Barre fine numéro « index » : elle se vide avec la durée restante du soin
-local function GetBar(b, index)
+local function GetBar(b, index, x)
 	local bar = b.hotBars[index]
 	if not bar then
 		bar = CreateFrame("StatusBar", nil, b.over)
@@ -110,7 +148,7 @@ local function GetBar(b, index)
 	end
 	bar:SetSize(math.floor(Z.CellSize() * 0.45), 3)
 	bar:ClearAllPoints()
-	bar:SetPoint("TOPLEFT", b.over, "TOPLEFT", 3, -3 - (index - 1) * 4)
+	bar:SetPoint("TOPLEFT", b.over, "TOPLEFT", x or 3, -3 - (index - 1) * 4)
 	return bar
 end
 Z.GetHotBar = GetBar
@@ -124,8 +162,146 @@ local function ShowBar(bar, unit, aura)
 	bar:Show()
 end
 
+----------------------------------------------------------------------------------------------------
+-- Coins : un carré de couleur par sort choisi. Il se vide avec la durée du soin, comme un sablier.
+----------------------------------------------------------------------------------------------------
+local CORNERS = { "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT" }
+Z.CORNERS = CORNERS
+local CORNER_COLORS = {
+	TOPLEFT = { 0.35, 0.95, 0.45 }, TOPRIGHT = { 0.30, 0.80, 1.00 },
+	BOTTOMLEFT = { 1.00, 0.85, 0.30 }, BOTTOMRIGHT = { 1.00, 0.50, 0.85 },
+}
+Z.CORNER_COLORS = CORNER_COLORS
+local CORNER_SIGN = { TOPLEFT = { 1, -1 }, TOPRIGHT = { -1, -1 }, BOTTOMLEFT = { 1, 1 }, BOTTOMRIGHT = { -1, 1 } }
+
+-- Mes coins pour la classe jouée : { TOPLEFT = "Récupération", ... }
+function Z.MyCorners()
+	return Z.db.cornerSpells[Z.class] or {}
+end
+
+-- Taille des carrés, et place que les autres icônes laissent libre quand un coin est pris
+local function CornerSize(b)
+	return math.max(6, math.floor((b.iconSize or 12) * 0.55 + 0.5))
+end
+function Z.CornerShift(b, point)
+	local name = Z.MyCorners()[point]
+	return (name and name ~= "") and CornerSize(b) + 2 or 0
+end
+
+local function GetCorner(b, point)
+	b.corners = b.corners or {}
+	local square = b.corners[point]
+	if not square then
+		square = CreateFrame("Frame", nil, b.over)
+		square:SetFrameLevel(b.over:GetFrameLevel() + 4)
+		square.fill = square:CreateTexture(nil, "ARTWORK")
+		square.fill:SetAllPoints()
+		square.border = UI.Border(square, 1, 1)
+		square.border:SetColor(0, 0, 0, 1)
+		square.cooldown = CreateFrame("Cooldown", nil, square, "CooldownFrameTemplate")
+		square.cooldown:SetAllPoints()
+		square.cooldown:SetReverse(true)
+		square.cooldown:SetHideCountdownNumbers(true)
+		square.cooldown:SetDrawEdge(false)
+		b.corners[point] = square
+	end
+	local size, sign = CornerSize(b), CORNER_SIGN[point]
+	local color = CORNER_COLORS[point]
+	square.fill:SetColorTexture(color[1], color[2], color[3], 1)
+	square:SetSize(size, size)
+	square:ClearAllPoints()
+	square:SetPoint(point, b.over, point, sign[1] * 2, sign[2] * 2)
+	return square
+end
+
+local function ShowCorner(square, unit, aura)
+	local duration = GetAuraDuration(unit, aura.auraInstanceID)
+	if duration then square.cooldown:SetCooldownFromDurationObject(duration) else square.cooldown:Clear() end
+	square:Show()
+end
+
+----------------------------------------------------------------------------------------------------
+-- Reconnaître mes soins en combat. Le jeu y cache le nom des auras, mais pas leur numéro (auraInstanceID) :
+--   1. un nom lu une fois (hors combat, ou sort resté lisible) est retenu pour ce numéro ;
+--   2. quand je lance un de mes sorts (mon propre sort reste lisible), les auras à moi qui apparaissent
+--      dans le même instant sur un joueur reçoivent ce nom.
+-- Rien n'est lu en boucle : seulement à l'arrivée d'une aura.
+----------------------------------------------------------------------------------------------------
+local known, knownCount = {}, 0       -- numéro d'aura -> nom de mon sort
+local lastCast, lastCastTime = nil, 0
+local CAST_WINDOW = 0.3               -- secondes entre mon sort et l'aura qu'il pose
+
+local function Remember(id, name)
+	if not id or not name or issecret(id) or issecret(name) then return end
+	if not known[id] then
+		knownCount = knownCount + 1
+		if knownCount > 400 then wipe(known) knownCount = 1 end -- garde-fou : jamais plus de 400 numéros
+	end
+	known[id] = name
+end
+
+-- Nom d'une de mes auras : lisible, sinon retrouvé par son numéro, sinon nil (secret et inconnu)
+local function AuraName(aura)
+	local name, id = aura.name, aura.auraInstanceID
+	if not issecret(name) then
+		Remember(id, name)
+		return name
+	end
+	if id and not issecret(id) then return known[id] end
+end
+Z.AuraName = AuraName
+
+local function IsMine(unit, id)
+	if not IsFilteredOut or not id or issecret(id) then return false end
+	local ok, out = pcall(IsFilteredOut, unit, id, "HELPFUL|PLAYER")
+	return ok and out == false
+end
+
+-- Appelé par la case à chaque UNIT_AURA, avec le détail des changements donné par le jeu
+function Z.NoteAuraChanges(b, info)
+	if type(info) ~= "table" then return end
+	if info.removedAuraInstanceIDs then
+		for _, id in ipairs(info.removedAuraInstanceIDs) do
+			if not issecret(id) and known[id] then
+				known[id] = nil
+				knownCount = knownCount - 1
+			end
+		end
+	end
+	if info.addedAuras then
+		local recent = lastCast and GetTime() - lastCastTime <= CAST_WINDOW
+		for _, aura in ipairs(info.addedAuras) do
+			local id = aura.auraInstanceID
+			if not issecret(aura.name) then
+				Remember(id, aura.name)
+			elseif recent and IsMine(b.unit, id) then
+				Remember(id, lastCast)
+			end
+		end
+	end
+end
+
+-- Mes sorts lancés : seul le nom de ceux que je suis (soins suivis ou coins) est gardé
+local function Wanted(name)
+	if Z.trackedNames[name] or Z.db.extraTracked[name] then return true end
+	for _, wanted in pairs(Z.MyCorners()) do
+		if wanted == name then return true end
+	end
+end
+
+local castWatcher = CreateFrame("Frame")
+castWatcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+castWatcher:SetScript("OnEvent", function(_, _, _, _, spellID)
+	if not spellID or issecret(spellID) or not GetSpellName or not Z.db then return end
+	local name = GetSpellName(spellID)
+	if name and not issecret(name) and Wanted(name) then
+		lastCast, lastCastTime = name, GetTime()
+	end
+end)
+
 -- Cache toutes les icônes d'une case (changement de style ou de taille)
 function Z.HideAuras(b)
+	if b.corners then for _, square in pairs(b.corners) do square:Hide() end end
 	for _, list in ipairs({ b.hots, b.hotBars, b.debuffs }) do
 		for _, element in ipairs(list) do element:Hide() end
 	end
@@ -285,23 +461,41 @@ local function UpdateAuras(b)
 	local unit = b.unit
 	local db = Z.db
 
-	-- 1. Mes soins sur la durée et boucliers
+	-- 1. Mes soins sur la durée et boucliers ; un sort placé dans un coin n'est plus dans la rangée
 	local shown = 0
 	local bars = db.hotStyle == "BARS"
-	if db.showHots and (next(Z.trackedNames) or next(db.extraTracked)) then
+	local cornerOf, used = {}, {}
+	for point, name in pairs(Z.MyCorners()) do
+		if name ~= "" then cornerOf[name] = point end
+	end
+	local wantCorners = next(cornerOf) ~= nil
+	if (db.showHots and (next(Z.trackedNames) or next(db.extraTracked))) or wantCorners then
 		local list = Auras(unit, "HELPFUL|PLAYER", 16)
+		local startX = 2 + Z.CornerShift(b, "TOPLEFT")
 		if list then
 			for i = 1, #list do
-				if IsTracked(list[i]) then
+				local aura = list[i]
+				local name = wantCorners and AuraName(aura)
+				local point = name and cornerOf[name]
+				if point then
+					if not used[point] then
+						used[point] = true
+						ShowCorner(GetCorner(b, point), unit, aura)
+					end
+				elseif db.showHots and shown < MAX_HOTS and IsTracked(aura) then
 					shown = shown + 1
 					if bars then
-						ShowBar(GetBar(b, shown), unit, list[i])
+						ShowBar(GetBar(b, shown, startX + 1), unit, aura)
 					else
-						ShowAura(GetIcon(b, b.hots, shown, "TOPLEFT", 2, -2, 1), unit, list[i])
+						ShowAura(GetIcon(b, b.hots, shown, "TOPLEFT", startX, -2, 1), unit, aura, true)
 					end
-					if shown == MAX_HOTS then break end
 				end
 			end
+		end
+	end
+	if b.corners then
+		for point, square in pairs(b.corners) do
+			if not used[point] then square:Hide() end
 		end
 	end
 	for i = (bars and 1 or shown + 1), #b.hots do b.hots[i]:Hide() end
@@ -331,12 +525,13 @@ local function UpdateAuras(b)
 
 	-- 3. Icônes d'affaiblissements : celui à dissiper en premier
 	shown = 0
+	local debuffX = -2 - Z.CornerShift(b, "BOTTOMRIGHT")
 	if db.showDebuffs and harmful then
 		local firstId = toDispel and toDispel.auraInstanceID
 		if issecret(firstId) then firstId = nil end
 		if toDispel then
 			shown = 1
-			ShowAura(GetIcon(b, b.debuffs, 1, "BOTTOMRIGHT", -2, 2, -1), unit, toDispel)
+			ShowAura(GetIcon(b, b.debuffs, 1, "BOTTOMRIGHT", debuffX, 2, -1), unit, toDispel)
 		end
 		if db.debuffMode == "ALL" then
 			for i = 1, #harmful do
@@ -345,7 +540,7 @@ local function UpdateAuras(b)
 				local id = aura.auraInstanceID
 				if not (firstId and not issecret(id) and id == firstId) and not IsIgnored(aura) then
 					shown = shown + 1
-					ShowAura(GetIcon(b, b.debuffs, shown, "BOTTOMRIGHT", -2, 2, -1), unit, aura)
+					ShowAura(GetIcon(b, b.debuffs, shown, "BOTTOMRIGHT", debuffX, 2, -1), unit, aura)
 				end
 			end
 		end
@@ -378,7 +573,7 @@ local function UpdateAuras(b)
 	local missing = FindMissingBuff(b, unit)
 	if missing then
 		b.buffList = b.buffList or {}
-		b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", 2, 2, 1)
+		b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", 2 + Z.CornerShift(b, "BOTTOMLEFT"), 2, 1)
 		b.buffIcon.texture:SetTexture(missing.icon)
 		b.buffIcon.texture:SetDesaturated(true)
 		b.buffIcon.border:SetColor(1, 0.2, 0.2, 1)

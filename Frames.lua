@@ -11,6 +11,7 @@ local UnitHealth, UnitHealthMax, UnitHealthPercent, UnitHealthMissing = UnitHeal
 local UnitIsConnected, UnitIsDeadOrGhost, UnitIsGhost, UnitInRange = UnitIsConnected, UnitIsDeadOrGhost, UnitIsGhost, UnitInRange
 local UnitGetDetailedHealPrediction, UnitPower, UnitPowerMax = UnitGetDetailedHealPrediction, UnitPower, UnitPowerMax
 local UnitPhaseReason = UnitPhaseReason
+local UnitPowerPercent = UnitPowerPercent
 local SummonStatus = C_IncomingSummon and C_IncomingSummon.IncomingSummonStatus
 
 local db
@@ -146,10 +147,23 @@ local function UpdateHealth(b)
 	UpdatePrediction(b)
 end
 
+-- Hauteur réelle de la barre de mana : 8 pixels au moins quand le pourcentage y est écrit, pour qu'il se lise
+local PERCENT_HEIGHT = 8
+function Z.PowerHeight()
+	return db.manaPercent and math.max(db.powerHeight, PERCENT_HEIGHT) or db.powerHeight
+end
+
 local function UpdatePower(b)
 	if not b.powerShown then return end
 	b.power:SetMinMaxValues(0, UnitPowerMax(b.unit, MANA))
 	b.power:SetValue(UnitPower(b.unit, MANA))
+	-- Le pourcentage est calculé par le jeu : il reste lisible en combat, même quand la mana est secrète
+	if db.manaPercent and UnitPowerPercent and CurveConstants and CurveConstants.ScaleTo100 then
+		b.powerText:SetFormattedText("%.0f%%", UnitPowerPercent(b.unit, MANA, false, CurveConstants.ScaleTo100))
+		b.powerText:Show()
+	else
+		b.powerText:Hide()
+	end
 end
 
 local function UpdateName(b)
@@ -170,10 +184,16 @@ local function UpdateRange(b)
 	end
 end
 
--- Bordure rouge : ce joueur a l'attention d'un monstre
+-- Menace : bordure rouge quand ce joueur a l'attention d'un monstre, et barre fine en haut de la vie
+-- (jaune : il monte dans la liste, orange : il va la prendre, rouge : il l'a)
+local THREAT_COLORS = { { 1, 0.85, 0.25 }, { 1, 0.50, 0.10 }, { 1, 0.12, 0.12 } }
 local function UpdateThreat(b)
-	local situation = db.showThreat and UnitThreatSituation(b.unit)
-	b.threat:SetShown(situation and not issecret(situation) and situation >= 2 or false)
+	local situation = (db.showThreat or db.threatBar) and UnitThreatSituation(b.unit)
+	if issecret(situation) then situation = nil end
+	b.threat:SetShown(db.showThreat and situation and situation >= 2 or false)
+	local color = db.threatBar and situation and THREAT_COLORS[situation]
+	if color then b.threatBar:SetColorTexture(color[1], color[2], color[3], 0.95) end
+	b.threatBar:SetShown(color and true or false)
 end
 
 -- Place la barre de vie selon le thème, et la barre de mana si elle est affichée
@@ -181,7 +201,7 @@ local function LayoutBars(b)
 	local inset = UI.Inset(Z:Theme().borderSize, db.corners == "ROUND")
 	b.hp:ClearAllPoints()
 	b.hp:SetPoint("TOPLEFT", inset, -inset)
-	b.hp:SetPoint("BOTTOMRIGHT", -inset, inset + (b.powerShown and db.powerHeight + 1 or 0))
+	b.hp:SetPoint("BOTTOMRIGHT", -inset, inset + (b.powerShown and Z.PowerHeight() + 1 or 0))
 end
 
 -- Rôle : icône, et barre de mana pour les soigneurs (ou tous) selon l'option
@@ -301,7 +321,7 @@ local unitEvents = {
 	UNIT_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
 	UNIT_HEAL_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
 	UNIT_PHASE = UpdateCenter,
-	UNIT_AURA = function(b) Z.QueueAuras(b) end,
+	UNIT_AURA = function(b, _, info) Z.NoteAuraChanges(b, info) Z.QueueAuras(b) end,
 	UNIT_CONNECTION = UpdateAll,
 	UNIT_NAME_UPDATE = UpdateName,
 	UNIT_FLAGS = UpdateState,
@@ -319,8 +339,8 @@ do
 	probe:UnregisterAllEvents()
 end
 
-local function OnEvent(b, event)
-	if b.unit then (unitEvents[event] or powerEvents[event])(b) end
+local function OnEvent(b, event, ...)
+	if b.unit then (unitEvents[event] or powerEvents[event])(b, ...) end
 end
 
 -- L'en-tête sécurisé du jeu attribue un joueur à la case en changeant son attribut « unit »
@@ -390,11 +410,12 @@ local function PlaceTexts(b, width, icon)
 		b.name:SetWidth(math.max(20, width - icon - 46))
 		b.text:SetPoint("RIGHT", b.hp, "RIGHT", -4, 0)
 	else
-		b.role:SetPoint("TOPRIGHT", -2, -2)
-		b.name:SetPoint("CENTER", 0, 3)
+		b.role:SetPoint("TOPRIGHT", -2 - Z.CornerShift(b, "TOPRIGHT"), -2)
+		-- Accrochés à la barre de vie : ils remontent avec elle quand la barre de mana s'affiche
+		b.name:SetPoint("CENTER", b.hp, "CENTER", 0, 3)
 		b.name:SetJustifyH("CENTER")
 		b.name:SetWidth(width - 8)
-		b.text:SetPoint("BOTTOM", 0, 5)
+		b.text:SetPoint("BOTTOM", b.hp, "BOTTOM", 0, 4)
 	end
 end
 
@@ -420,7 +441,9 @@ local function Style(b)
 	b.power:SetStatusBarTexture(texture)
 	-- Couleur posée après la texture : le jeu remet en blanc toute nouvelle texture de barre
 	b.power:SetStatusBarColor(unpack(Z.manaColors[db.manaColor] or Z.manaColors.BLUE))
-	b.power:SetHeight(db.powerHeight)
+	b.power:SetHeight(Z.PowerHeight())
+	b.powerText:SetFont(theme.font, PERCENT_HEIGHT, "OUTLINE")
+	b.threatBar:SetHeight(math.max(2, math.floor(height / 18)))
 	b.bg:SetVertexColor(unpack(theme.bg))
 	b.bgRound:SetVertexColor(unpack(theme.bg))
 	b.bg:SetShown(not rounded)
@@ -497,6 +520,11 @@ function Z.BuildVisuals(b)
 	power:Hide()
 	b.power = power
 	b.powerShown = false
+	-- Pourcentage de mana, écrit au milieu de la barre (réglage)
+	b.powerText = power:CreateFontString(nil, "OVERLAY")
+	b.powerText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+	b.powerText:SetPoint("CENTER", power, "CENTER", 0, 0)
+	b.powerText:Hide()
 
 	-- Tout ce qui se pose par-dessus les barres
 	local over = CreateFrame("Frame", nil, b)
@@ -531,11 +559,11 @@ function Z.BuildVisuals(b)
 	b.low = low
 
 	b.name = UI.Text(over, 11)
-	b.name:SetPoint("CENTER", 0, 3)
+	b.name:SetPoint("CENTER", hp, "CENTER", 0, 3)
 	b.name:SetWordWrap(false)
 
 	b.text = UI.Text(over, 10)
-	b.text:SetPoint("BOTTOM", 0, 5)
+	b.text:SetPoint("BOTTOM", hp, "BOTTOM", 0, 4)
 
 	b.role = over:CreateTexture(nil, "ARTWORK")
 	b.role:SetPoint("TOPRIGHT", -2, -2)
@@ -554,6 +582,13 @@ function Z.BuildVisuals(b)
 	b.threat = UI.Border(over, 1, 1)
 	b.threat:SetColor(1, 0.15, 0.15, 1)
 	b.threat:Hide()
+
+	-- Barre fine de menace, collée en haut de la vie (réglage)
+	b.threatBar = over:CreateTexture(nil, "ARTWORK")
+	b.threatBar:SetPoint("TOPLEFT", hp, "TOPLEFT")
+	b.threatBar:SetPoint("TOPRIGHT", hp, "TOPRIGHT")
+	b.threatBar:SetHeight(2)
+	b.threatBar:Hide()
 	b.dispel = UI.Border(over, 2)
 	b.dispel:Hide()
 	-- Voile léger de la couleur du type, posé SOUS le nom et la vie : ils restent toujours lisibles
@@ -1116,5 +1151,9 @@ function Z:CreateFrames()
 	Z:On("PLAYER_LOGOUT", function() Z:SaveFrameState("frameStateLogout") end)
 
 	-- Portée : le seul contrôle périodique de l'addon (2 fois par seconde, coût négligeable)
-	C_Timer.NewTicker(0.5, ForVisible(UpdateRange))
+	-- Le même passage efface peu à peu les icônes de mes soins qui finissent (réglage « hotFade »)
+	C_Timer.NewTicker(0.5, ForVisible(function(b)
+		UpdateRange(b)
+		if db.hotFade then Z.FadeHots(b) end
+	end))
 end

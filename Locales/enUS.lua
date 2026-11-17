@@ -75,6 +75,23 @@ Z.translations.enUS = {
 	["Personne"] = "Nobody", ["Soigneurs"] = "Healers", ["Tous"] = "Everyone",
 	["Icône de rôle (tank, soigneur)"] = "Role icon (tank, healer)", ["Marqueur de raid"] = "Raid marker",
 	["Bordure rouge quand il est attaqué"] = "Red border when attacked",
+	["Pourcentage de mana dans la barre"] = "Mana percentage in the bar",
+	["Le % de mana écrit au milieu de la barre, lisible en combat. La barre passe alors à 8 pixels de haut au moins."] = "Mana % written in the middle of the bar, readable in combat. The bar then becomes at least 8 pixels tall.",
+	["Barre fine de menace"] = "Thin threat bar",
+	["Trait de couleur en haut de la vie : jaune quand il monte dans la liste d'un monstre, orange juste avant qu'il le prenne, rouge quand il l'a."] = "Coloured line at the top of the health bar: yellow when they climb a monster's threat list, orange just before they pull it, red when they have it.",
+	["Cercle qui se vide"] = "Draining circle",
+	["Sur les icônes de vos soins : un voile tourne et découvre l'icône à mesure que le temps passe."] = "On your heal icons: a shade turns and uncovers the icon as time passes.",
+	["Décompte en secondes"] = "Countdown in seconds",
+	["Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat)."] = "On your heal icons: the remaining seconds, drawn by the game (visible in combat).",
+	["Icône qui s'efface à la fin"] = "Icon fades at the end",
+	["Pendant les 6 dernières secondes, l'icône pâlit peu à peu : c'est le moment de relancer."] = "During the last 6 seconds the icon slowly fades: time to recast.",
+	["Nombre de charges"] = "Number of charges",
+	["Petit chiffre en bas de l'icône quand votre soin a plusieurs charges."] = "Small number at the bottom of the icon when your heal has several charges.",
+	["Coins de la case"] = "Cell corners", ["Soins"] = "Heals", ["Buffs"] = "Buffs",
+	["Sur les icônes, à combiner comme vous voulez :"] = "On the icons, combine as you like:",
+	["Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de l'onglet Listes."] = "One of your spells per corner: a coloured square that drains over time. The spell then leaves the icon row. Each class keeps its own corners; the list offers your class spells and those of the Lists tab.",
+	["En combat, le jeu cache le nom des auras : Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin."] = "In combat the game hides aura names: Lyorune recognises your heals by their number, or by the spell you just cast. A heal it cannot recognise stays in the icon row, never in the wrong corner.",
+	["En haut à gauche"] = "Top left", ["En haut à droite"] = "Top right", ["En bas à gauche"] = "Bottom left", ["En bas à droite"] = "Bottom right",
 	["Infobulle au survol (hors combat)"] = "Tooltip on hover (out of combat)",
 	["Mes soins"] = "My heals", ["Mes soins sur la durée"] = "My heals over time",
 	["Affichage des soins sur la durée"] = "Heal over time display", ["Icônes"] = "Icons", ["Barres fines"] = "Thin bars",
@@ -291,10 +308,11 @@ Z.translations.enUS = {
 	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée.\n\n"
-			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements.\n\n"
+			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
+			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins).\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a frame out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range.\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab).\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a frame out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
@@ -309,12 +327,13 @@ Z.translations.enUS = {
 			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
+			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -434,4 +453,9 @@ Z.translations.enUS = {
 	["Visite guidée : les étapes glissent, une rune par étape, l'élément présenté est entouré de runes (#39)."] = "Guided tour: steps slide in, one rune per step, the element shown is framed with runes (#39).",
 	["Couleurs de l'interface accordées au bleu givre et à l'or du logo (#19)."] = "Interface colours matched to the logo's frost blue and gold (#19).",
 	["Les fenêtres des macros, du rapport de bug, du journal et des nouveautés s'ouvrent à côté des options au lieu de les recouvrir."] = "The macros, bug report, error log and news windows open next to the options instead of covering them.",
+	["Onglet Soins : vos soins sur la durée avec cercle, décompte en secondes, icône qui s'efface à la fin et charges, à combiner comme vous voulez (#16)."] = "Heals tab: your heals over time with draining circle, countdown in seconds, icon that fades at the end and charges, combine as you like (#16).",
+	["Coins de la case : un de vos sorts par coin, en petit carré de couleur qui se vide avec le temps, réglé pour chaque classe et reconnu même en combat (#17)."] = "Cell corners: one of your spells per corner, as a small coloured square that drains over time, set for each class and recognised even in combat (#17).",
+	["Barre fine de menace en haut de la vie : jaune, orange puis rouge (#17)."] = "Thin threat bar at the top of the health: yellow, orange then red (#17).",
+	["Pourcentage de mana écrit dans la barre de mana, lisible en combat (#40)."] = "Mana percentage written in the mana bar, readable in combat (#40).",
+	["Le texte de vie ne passe plus par-dessus la barre de mana en forme Tuile et Carré (#40)."] = "The health text no longer overlaps the mana bar in the Tile and Square shapes (#40).",
 }

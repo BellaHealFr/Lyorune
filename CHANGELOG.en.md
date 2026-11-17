@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.11.0] - 2026-11-17
+
+### Added
+
+- Heals tab: your heals over time with draining circle, countdown in seconds, icon that fades at the end and charges, combine as you like ([#16](https://github.com/BellaHealFr/Lyorune/issues/16)).
+- Cell corners: one of your spells per corner, as a small coloured square that drains over time, set for each class and recognised even in combat ([#17](https://github.com/BellaHealFr/Lyorune/issues/17)).
+- Thin threat bar at the top of the health: yellow, orange then red ([#17](https://github.com/BellaHealFr/Lyorune/issues/17)).
+- Mana percentage written in the mana bar, readable in combat ([#40](https://github.com/BellaHealFr/Lyorune/issues/40)).
+
+### Fixed
+
+- The health text no longer overlaps the mana bar in the Tile and Square shapes ([#40](https://github.com/BellaHealFr/Lyorune/issues/40)).
+
 ## [1.10.0] - 2026-11-17
 
 ### Added
@@ -221,6 +234,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.11.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1

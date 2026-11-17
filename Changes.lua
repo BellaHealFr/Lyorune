@@ -8,6 +8,20 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.11.0", date = "2026-11-17",
+		added = {
+			"Onglet Soins : vos soins sur la durée avec cercle, décompte en secondes, icône qui s'efface à la fin et charges, à combiner comme vous voulez (#16).",
+			"Coins de la case : un de vos sorts par coin, en petit carré de couleur qui se vide avec le temps, réglé pour chaque classe et reconnu même en combat (#17).",
+			"Barre fine de menace en haut de la vie : jaune, orange puis rouge (#17).",
+			"Pourcentage de mana écrit dans la barre de mana, lisible en combat (#40).",
+		},
+		improved = {
+		},
+		fixed = {
+			"Le texte de vie ne passe plus par-dessus la barre de mana en forme Tuile et Carré (#40).",
+		},
+	},
+	{
 		version = "1.10.0", date = "2026-11-17",
 		added = {
 			"Couleur de la barre de mana au choix (onglet Indicateurs) : bleu par défaut, bleu ciel, violet, turquoise ou blanc.",

@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.10.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.11.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -60,6 +60,12 @@ Z.defaults = {
 	showMarker = true,         -- marqueur de raid
 	showDispel = true,         -- cadre coloré de dissipation
 	showHots = true, hotStyle = "ICONS",
+	hotSwipe = true,           -- icônes de mes soins : cercle qui se vide
+	hotCountdown = false,      -- icônes de mes soins : secondes restantes, écrites par le jeu
+	hotFade = false,           -- icônes de mes soins : l'icône s'efface pendant les 6 dernières secondes
+	hotCharges = true,         -- icônes de mes soins : nombre de charges
+	cornerSpells = {},         -- un de mes sorts par coin de case, par classe : cornerSpells.DRUID.TOPLEFT = "Récupération"
+	threatBar = false,         -- barre fine de menace en haut de la vie (jaune, orange, rouge)
 	showDebuffs = true, debuffMode = "ALL",
 	bossDebuffs = true,        -- affaiblissement important en grand
 	lowHealth = true, lowHealthAt = 25,
@@ -67,6 +73,7 @@ Z.defaults = {
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
+	manaPercent = false,       -- pourcentage de mana écrit dans la barre (elle passe alors à 8 pixels au moins)
 	showTooltip = true,
 	clickTooltip = true,       -- mes clics et touches dans l'infobulle d'une case (hors combat)
 	showHealAbsorb = true,     -- part de vie « mangée » par un affaiblissement avant que les soins comptent
