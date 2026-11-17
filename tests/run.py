@@ -925,6 +925,12 @@ step("etape 2 : cadres par groupe, etiquettes, verrou, position par personnage, 
   for _, choice in ipairs(Z.choices.manaColor) do assert(Z.manaColors[choice[1]], "teinte manquante : " .. choice[1]) end
   Z.db.manaColor = "PURPLE" Z:Refresh() assert(bar._barColor[1] == Z.manaColors.PURPLE[1], "mana violette")
   Z.db.manaColor = "BLUE" Z:Refresh()
+  -- barre de mana haute, jusqu'a 60 pixels ; la vie garde toujours 10 pixels de la case
+  assert(Z.limits.powerHeight[2] == 60, "hauteur de mana limitee a " .. Z.limits.powerHeight[2])
+  local height = Z.db.height
+  Z.db.powerHeight, Z.db.height = 30, 60 Z:Refresh() assert(Z.buttons[1].power:GetHeight() == 30, "mana de 30 pixels")
+  Z.db.powerHeight, Z.db.height = 60, 40 Z:Refresh() assert(Z.buttons[1].power:GetHeight() == 30, "la vie doit garder 10 pixels")
+  Z.db.height = height
   Z.db.powerHeight = 4 Z:Refresh()
   -- dissipation : le voile est pose sous le texte, plus dans le cadre de la bordure
   local cell = Z.buttons[1]

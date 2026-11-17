@@ -16,7 +16,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Vert clair au bout de la barre | Des soins sont déjà en route |
 | Bande claire en bas de la barre | Il a un bouclier |
 | Rouge sombre au bout de la vie | Un affaiblissement « mange » cette part de vie : vos soins la remplissent d'abord, avant de compter |
-| Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur et couleur réglables dans l'onglet Indicateurs : bleu, bleu ciel, violet, turquoise ou blanc). Avec « Pourcentage de mana dans la barre », le % s'y écrit, même en combat |
+| Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur de 2 à 60 pixels et couleur réglables dans l'onglet Indicateurs ; la vie garde toujours au moins 10 pixels de la case : bleu, bleu ciel, violet, turquoise ou blanc). Avec « Pourcentage de mana dans la barre », le % s'y écrit, même en combat |
 | Voile rouge qui clignote | Sa vie est basse |
 | Bordure rouge | Il est attaqué |
 | Trait de couleur en haut de la vie (si vous l'activez) | Sa menace : jaune, il monte dans la liste d'un monstre ; orange, il va le prendre ; rouge, il l'a |

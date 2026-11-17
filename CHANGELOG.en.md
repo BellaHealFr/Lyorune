@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.12] - 2026-11-18
+
+### Improved
+
+- Mana bar height adjustable from 2 to 60 pixels (10 at most before); the health bar always keeps at least 10 pixels of the cell.
+
 ## [1.23.11] - 2026-11-18
 
 ### Improved
@@ -420,6 +426,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12
 [1.23.11]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.10...v1.23.11
 [1.23.10]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.9...v1.23.10
 [1.23.9]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.8...v1.23.9

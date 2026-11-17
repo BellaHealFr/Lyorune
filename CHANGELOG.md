@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.12] - 2026-11-18
+
+### Amélioré
+
+- Hauteur de la barre de mana réglable de 2 à 60 pixels (10 au plus auparavant) ; la barre de vie garde toujours au moins 10 pixels de la case.
+
 ## [1.23.11] - 2026-11-18
 
 ### Amélioré
@@ -420,6 +426,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12
 [1.23.11]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.10...v1.23.11
 [1.23.10]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.9...v1.23.10
 [1.23.9]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.8...v1.23.9

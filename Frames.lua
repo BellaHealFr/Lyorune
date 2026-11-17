@@ -164,10 +164,13 @@ local function UpdateHealth(b)
 	UpdatePrediction(b)
 end
 
--- Hauteur réelle de la barre de mana : 8 pixels au moins quand le pourcentage y est écrit, pour qu'il se lise
-local PERCENT_HEIGHT = 8
+-- Hauteur réelle de la barre de mana : 8 pixels au moins quand le pourcentage y est écrit, pour qu'il se lise.
+-- Elle prend sa place dans la case : la barre de vie en garde toujours au moins MIN_HEALTH pixels.
+local PERCENT_HEIGHT, MIN_HEALTH = 8, 10
 function Z.PowerHeight()
-	return db.manaPercent and math.max(db.powerHeight, PERCENT_HEIGHT) or db.powerHeight
+	local height = db.manaPercent and math.max(db.powerHeight, PERCENT_HEIGHT) or db.powerHeight
+	local _, cellHeight = Z.CellSize()
+	return math.max(2, math.min(height, cellHeight - MIN_HEALTH))
 end
 
 local function UpdatePower(b)

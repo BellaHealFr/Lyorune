@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.12", date = "2026-11-18",
+		added = {
+		},
+		improved = {
+			"Hauteur de la barre de mana réglable de 2 à 60 pixels (10 au plus auparavant) ; la barre de vie garde toujours au moins 10 pixels de la case.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.23.11", date = "2026-11-18",
 		added = {
 		},
