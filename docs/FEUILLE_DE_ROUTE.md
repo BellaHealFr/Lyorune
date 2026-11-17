@@ -17,7 +17,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 3 | 1.8.0 | Utile en donjon | Publiée |
 | 3 bis | 1.8.1 | Échanges entre joueurs plus sûrs | Publiée (v1.8.1) |
 | 4 | 1.9.0 | Forme des cases, angles, couleurs de classe | Publiée (v1.9.0) |
-| 4 bis | 1.10.0 | Fenêtre d'options et tutoriel : 3 thèmes, runes animées | À faire (prioritaire) |
+| 4 bis | 1.10.0 | Fenêtre d'options et tutoriel : 3 thèmes, runes animées | Publiée (v1.10.0) |
 | 5 | 1.11.0 | Soins sur la durée et indicateurs | À faire |
 | 6 | 1.12.0 | Échelle, éditeur de placement | À faire |
 | 7 | 1.13.0 | Clics et raccourcis | À faire |
@@ -80,14 +80,17 @@ contour et son en donjon.
 ## Étape 4 bis : fenêtre d'options et tutoriel, 3 thèmes et runes animées (1.10.0)
 Prioritaire. Seules la fenêtre d'options, la visite guidée et les petites fenêtres de Lyorune changent : les cases
 de soin et leurs 5 habillages restent tels quels.
-- [ ] 3 thèmes de fenêtre au choix : Moderne (par défaut), Classique, MMORPG (pierre sombre et or), changés en
+- [x] 3 thèmes de fenêtre au choix : Moderne (par défaut), Classique, MMORPG (pierre sombre et or), changés en
   direct, contraste du texte vérifié pour chacun, mode contraste élevé conservé (#39)
-- [ ] Couleurs de l'interface accordées à l'or et au bleu du logo (#19)
-- [ ] Inscription runique : même phrase, runes qui s'écrivent à l'ouverture, lueur et halo, respiration au repos,
+- [x] Couleurs de l'interface accordées à l'or et au bleu du logo (#19)
+- [x] Inscription runique : même phrase, runes qui s'écrivent à l'ouverture, lueur et halo, respiration au repos,
   vague au survol avant la traduction, couleurs selon le thème (#33)
-- [ ] Animations douces de la fenêtre (ouverture, onglets, survol) et du tutoriel (étapes qui glissent, une rune
+- [x] Animations douces de la fenêtre (ouverture, onglets, survol) et du tutoriel (étapes qui glissent, une rune
   par étape, élément présenté entouré de runes) ; séparateurs runiques et logo dans l'en-tête (#39)
-- [ ] Réglage « Animations réduites » : fondus courts seulement, runes fixes (#39)
+- [x] Réglage « Animations réduites » : fondus courts seulement, runes fixes (#39)
+- [x] Effets magiques (interrupteur) : cercle runique derrière le logo, particules de l'en-tête, étincelle de soin, couleur du thème, au plus 3 éclairs par seconde (#39)
+- [x] Après l'essai en jeu : barre de mana bleue (elle restait blanche) et sa couleur au choix, bord des cases à
+  cocher complet à toute échelle
 
 ## Étape 5 : soins sur la durée et indicateurs (1.11.0)
 - [ ] Décompte chiffré, cercle, icône qui s'efface, charges, et combinaisons (#16)

@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.9.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.10.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -66,6 +66,7 @@ Z.defaults = {
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
+	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
 	showTooltip = true,
 	clickTooltip = true,       -- mes clics et touches dans l'infobulle d'une case (hors combat)
 	showHealAbsorb = true,     -- part de vie « mangée » par un affaiblissement avant que les soins comptent
@@ -106,6 +107,9 @@ Z.defaults = {
 	versionNotice = true,      -- prévenir si un membre du groupe a une version plus récente
 	acceptConfigs = true,      -- accepter qu'un joueur me propose sa configuration
 	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
+	windowTheme = "MODERN",    -- thème des fenêtres de Lyorune (pas des cases) : Moderne, Classique, MMORPG
+	reduceMotion = false,      -- animations réduites : fondus courts seulement, rien en boucle
+	magicEffects = true,       -- effets magiques des fenêtres : cercle runique, particules, étincelle de soin
 	errorNotice = true,        -- message discret (une fois par session) quand Lyorune rencontre une erreur
 	tutorialDone = false,
 }
@@ -134,8 +138,10 @@ Z.choices = {
 	hotStyle = { { "ICONS", "Icônes" }, { "BARS", "Barres fines" } },
 	debuffMode = { { "ALL", "Tous" }, { "DISPEL", "Dissipables par moi" } },
 	manaBars = { { "OFF", "Personne" }, { "HEALERS", "Soigneurs" }, { "ALL", "Tous" } },
+	manaColor = { { "BLUE", "Bleu" }, { "SKY", "Bleu ciel" }, { "PURPLE", "Violet" }, { "TEAL", "Turquoise" }, { "WHITE", "Blanc" } },
 	privateAuraPoint = { { "CENTER", "Au centre" }, { "TOP", "En haut" }, { "BOTTOM", "En bas" }, { "LEFT", "À gauche" }, { "RIGHT", "À droite" } },
 	alertChannel = { { "SAY", "Dire" }, { "GROUP", "Groupe ou raid" } },
+	windowTheme = { { "MODERN", "Moderne" }, { "CLASSIC", "Classique" }, { "MMO", "MMORPG" } },
 	language = { { "AUTO", "Automatique" }, { "frFR", "Français" }, { "enUS", "English" } },
 }
 
@@ -268,6 +274,7 @@ Z:On("ADDON_LOADED", function(name)
 	LoadCharacter(LyoruneDB)
 	Z.db = LyoruneDB
 	Z:SetLanguage()
+	Z.UI.ApplySkin()
 end)
 
 Z:On("PLAYER_LOGIN", function()

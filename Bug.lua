@@ -89,6 +89,8 @@ function Z:ShowBug()
 	local UI, L = Z.UI, Z.L
 	if not window then
 		window = UI.Window("LyoruneBug", L["Signaler un bug"], 600, 520)
+		window.beside = true -- à côté des options, jamais dessous ni par-dessus
+		window:SetFrameStrata("FULLSCREEN_DIALOG")
 		tinsert(UISpecialFrames, "LyoruneBug")
 		window.answers = {}
 
@@ -113,13 +115,14 @@ function Z:ShowBug()
 		local title = UI.Text(window, 12)
 		title:SetPoint("TOPLEFT", 16, -200)
 		title:SetText(L["Rapport prêt à envoyer (Ctrl+C pour copier) :"])
-		title:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+		UI.Paint(title, "accent")
 
 		local scroll = CreateFrame("ScrollFrame", nil, window)
 		scroll:SetPoint("TOPLEFT", 16, -220)
 		scroll:SetPoint("BOTTOMRIGHT", -16, 110)
-		scroll.bg = UI.Tex(scroll, "BACKGROUND", UI.panel[1], UI.panel[2], UI.panel[3])
+		scroll.bg = UI.Paint(UI.Tex(scroll, "BACKGROUND"), "panel")
 		scroll.bg:SetAllPoints()
+		UI.Field(scroll, scroll.bg) -- zone de texte habillée selon le thème
 		scroll:EnableMouseWheel(true)
 		scroll:SetScript("OnMouseWheel", function(self, delta)
 			local position = self:GetVerticalScroll() - delta * 40

@@ -204,13 +204,16 @@ function Z:ShowLog()
 	local UI = Z.UI
 	if not window then
 		window = UI.Window("LyoruneLog", "Journal d'erreurs", 660, 440)
+		window.beside = true -- à côté des options, jamais dessous ni par-dessus
+		window:SetFrameStrata("FULLSCREEN_DIALOG")
 		tinsert(UISpecialFrames, "LyoruneLog")
 
 		local scroll = CreateFrame("ScrollFrame", nil, window)
 		scroll:SetPoint("TOPLEFT", 14, -44)
 		scroll:SetPoint("BOTTOMRIGHT", -14, 50)
-		scroll.bg = UI.Tex(scroll, "BACKGROUND", UI.panel[1], UI.panel[2], UI.panel[3])
+		scroll.bg = UI.Paint(UI.Tex(scroll, "BACKGROUND"), "panel")
 		scroll.bg:SetAllPoints()
+		UI.Field(scroll, scroll.bg) -- zone de texte habillée selon le thème
 		scroll:EnableMouseWheel(true)
 		scroll:SetScript("OnMouseWheel", function(self, delta)
 			local position = self:GetVerticalScroll() - delta * 60
@@ -241,7 +244,7 @@ function Z:ShowLog()
 		clear.label:SetJustifyH("CENTER")
 		local hint = UI.Text(window, 11)
 		hint:SetPoint("LEFT", clear, "RIGHT", 12, 0)
-		hint:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+		UI.Paint(hint, "dim")
 		hint:SetText(Z.L["Ctrl+C pour copier, puis collez le texte à la personne qui vous aide."])
 	end
 	window.edit:SetText(Z:LogText())

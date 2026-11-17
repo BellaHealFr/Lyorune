@@ -51,7 +51,14 @@ Z.translations.enUS = {
 	-- Apparence
 	["Style"] = "Style", ["Thème"] = "Theme", ["Texture des barres"] = "Bar texture", ["Celle du thème"] = "Theme default",
 	["Contraste élevé"] = "High contrast",
-	["Fond noir, bordure blanche, texte plus gros : pour une lecture facile."] = "Black background, white border, larger text: easier to read.",
+	["Fond noir, bordure blanche, texte plus gros : pour une lecture facile. S'applique aussi aux fenêtres de Lyorune."] = "Black background, white border, larger text: easier to read. Also applies to Lyorune's windows.",
+	["Fenêtres de Lyorune"] = "Lyorune windows", ["Thème des fenêtres"] = "Window theme",
+	["Moderne"] = "Modern", ["Classique"] = "Classic", ["MMORPG"] = "MMORPG",
+	["Options, visite guidée et petites fenêtres (pas les cases). Moderne : net, bleu givre et or. Classique : comme les fenêtres du jeu. MMORPG : pierre sombre, cadre doré et runes gravées."] = "Options, guided tour and small windows (not the cells). Modern: clean, frost blue and gold. Classic: like the game's own windows. MMORPG: dark stone, golden frame and carved runes.",
+	["Animations réduites"] = "Reduced motion",
+	["Seulement des fondus courts : runes fixes, logo immobile, rien ne bouge en boucle. La lueur au survol reste."] = "Short fades only: still runes, still logo, nothing moves in a loop. The hover glow stays.",
+	["Effets magiques"] = "Magic effects",
+	["Cercle runique qui tourne derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change. Couleur du thème, jamais sur les cases de soin. Coupés par « Animations réduites »."] = "Rune circle turning behind the logo, motes of light in the header, a spark when a setting changes. Theme colour, never on the healing cells. Turned off by \"Reduced motion\".",
 	["Barres animées"] = "Animated bars", ["Texte"] = "Text", ["Texte de vie"] = "Health text", ["Taille du texte"] = "Text size",
 	["Couleurs et transparence"] = "Colours and transparency", ["Couleur des barres"] = "Bar colour",
 	["Luminosité des barres (%)"] = "Bar brightness (%)", ["Opacité des cadres (%)"] = "Frame opacity (%)",
@@ -64,6 +71,7 @@ Z.translations.enUS = {
 	["Voile rouge clignotant quand la vie est basse"] = "Flashing red overlay at low health",
 	["Seuil de vie basse (%)"] = "Low health threshold (%)", ["Barre de mana"] = "Mana bar",
 	["Hauteur de la barre de mana"] = "Mana bar height",
+	["Couleur de la barre de mana"] = "Mana bar colour", ["Bleu"] = "Blue", ["Bleu ciel"] = "Sky blue", ["Violet"] = "Purple", ["Turquoise"] = "Teal", ["Blanc"] = "White",
 	["Personne"] = "Nobody", ["Soigneurs"] = "Healers", ["Tous"] = "Everyone",
 	["Icône de rôle (tank, soigneur)"] = "Role icon (tank, healer)", ["Marqueur de raid"] = "Raid marker",
 	["Bordure rouge quand il est attaqué"] = "Red border when attacked",
@@ -299,14 +307,14 @@ Z.translations.enUS = {
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
 			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
-			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte.\n"
+			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : profils prêts à l'emploi, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, sorting, tanks, pets, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: mouse, hover keys, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: ready-made profiles, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -415,4 +423,15 @@ Z.translations.enUS = {
 	["Angles des cases droits ou arrondis, pour toutes les formes et tous les thèmes (#15)."] = "Square or rounded cell corners, for every shape and every theme (#15).",
 	["Fond et bordure par groupe, aux couleurs du thème (#14)."] = "Background and border per group, in the theme's colours (#14).",
 	["Couleurs de classe plus vives par défaut, ou naturelles au choix (#32)."] = "Brighter class colours by default, or natural ones if you prefer (#32).",
+	["Trois thèmes pour les fenêtres de Lyorune : Moderne (par défaut), Classique et MMORPG, changés en direct ; le contraste élevé s'y applique aussi (#39)."] = "Three themes for Lyorune's windows: Modern (default), Classic and MMORPG, switched live; high contrast applies to them too (#39).",
+	["Inscription runique animée : les runes s'écrivent à l'ouverture, une lueur avec halo les parcourt, une vague de lumière au survol avant la traduction, couleurs selon le thème (#33)."] = "Animated runic inscription: the runes write themselves on opening, a haloed glow runs along them, a wave of light on hover before the translation, colours by theme (#33).",
+	["Effets magiques (interrupteur dans Apparence) : cercle runique derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change, couleur du thème (#39)."] = "Magic effects (switch in Appearance): rune circle behind the logo, motes of light in the header, a spark when a setting changes, theme colour (#39).",
+	["Le bord droit de certaines cases à cocher disparaissait selon l'échelle de l'interface : chaque trait de bordure garde au moins un pixel."] = "The right edge of some checkboxes vanished depending on the UI scale: every border line now keeps at least one pixel.",
+	["Couleur de la barre de mana au choix (onglet Indicateurs) : bleu par défaut, bleu ciel, violet, turquoise ou blanc."] = "Mana bar colour of your choice (Indicators tab): blue by default, sky blue, purple, teal or white.",
+	["La barre de mana restait blanche au lieu de bleue."] = "The mana bar stayed white instead of blue.",
+	["Réglage « Animations réduites » : fondus courts seulement, runes et logo immobiles (#39)."] = "\"Reduced motion\" setting: short fades only, still runes and logo (#39).",
+	["Fenêtres plus douces : ouverture en fondu, barre d'onglet qui glisse, survol lumineux, rune de confirmation, séparateurs runiques, logo dans l'en-tête (#39)."] = "Smoother windows: fade-in opening, sliding tab bar, glowing hover, confirmation rune, runic dividers, logo in the header (#39).",
+	["Visite guidée : les étapes glissent, une rune par étape, l'élément présenté est entouré de runes (#39)."] = "Guided tour: steps slide in, one rune per step, the element shown is framed with runes (#39).",
+	["Couleurs de l'interface accordées au bleu givre et à l'or du logo (#19)."] = "Interface colours matched to the logo's frost blue and gold (#19).",
+	["Les fenêtres des macros, du rapport de bug, du journal et des nouveautés s'ouvrent à côté des options au lieu de les recouvrir."] = "The macros, bug report, error log and news windows open next to the options instead of covering them.",
 }

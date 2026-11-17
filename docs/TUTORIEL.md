@@ -14,7 +14,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Vert clair au bout de la barre | Des soins sont déjà en route |
 | Bande claire en bas de la barre | Il a un bouclier |
 | Rouge sombre au bout de la vie | Un affaiblissement « mange » cette part de vie : vos soins la remplissent d'abord, avant de compter |
-| Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur réglable dans l'onglet Indicateurs) |
+| Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur et couleur réglables dans l'onglet Indicateurs : bleu, bleu ciel, violet, turquoise ou blanc) |
 | Voile rouge qui clignote | Sa vie est basse |
 | Bordure rouge | Il est attaqué |
 | Bordure blanche | C'est votre cible |
@@ -150,8 +150,19 @@ Onglet **Apparence** :
 - **Couleurs de classe** : « Vives » (par défaut) pour des couleurs franches et lumineuses, ou « Naturelles » pour celles du jeu.
 - **Thème** : Néon, Épuré, Verre, Classique ou Héroïque.
 - **Transparence** : trois préréglages en un clic, « Discret », « Semi-transparent », « Bien visible », puis les réglages fins (opacité des cadres, opacité hors de portée, luminosité).
-- **Contraste élevé** : fond noir, bordure blanche, texte plus gros.
+- **Contraste élevé** : fond noir, bordure blanche, texte plus gros. Il vaut aussi pour les fenêtres de Lyorune.
 - **Texte de vie** : vie manquante, pourcentage, ou rien.
+
+Rubrique **Fenêtres de Lyorune** (à droite du même onglet) : elle habille la fenêtre d'options, la visite guidée et les petites fenêtres, jamais les cases.
+
+- **Thème des fenêtres** : trois habillages complets, chacun avec son cadre, ses boutons, ses cases à cocher et ses titres de rubrique. Le changement est immédiat, sans `/reload`, et l'en-tête (logo, nom, version) ne bouge pas.
+  - **Moderne** (par défaut) : fond sombre et net aux angles arrondis, boutons plats, bleu givre et or du logo.
+  - **Classique** : comme les fenêtres du jeu, avec le cadre de boîte de dialogue, les boutons rouges et les cases à cocher du jeu, des onglets en relief et des champs de saisie creusés.
+  - **MMORPG** : un grimoire, avec un fond de pierre voilé derrière le texte, une bordure dorée, une rune gravée dans chaque angle, des plaques de bronze au biseau doré en guise de boutons (elles s'enfoncent au clic), des onglets ciselés, des champs de saisie creusés, des cases cerclées d'or et marquées d'une rune et des titres de rubrique en écriture ancienne.
+- **Animations réduites** : les fenêtres s'ouvrent en simple fondu, les runes et le logo restent immobiles, rien ne bouge en boucle. Pratique si le mouvement vous gêne.
+- **Effets magiques** (activés par défaut) : un cercle de runes tourne lentement derrière le logo et s'illumine à l'ouverture, de petites particules de lumière montent dans l'en-tête, et une étincelle s'élève quand vous changez un réglage. Ils prennent la couleur du thème (givre en Moderne, or en Classique, braise en MMORPG) et ne touchent jamais aux cases de soin. « Animations réduites » les coupe aussi.
+
+Les fenêtres des macros, du rapport de bug, du journal et des nouveautés s'ouvrent à côté de la fenêtre d'options, sans la recouvrir.
 
 ## 8. Choisir ce qui s'affiche
 
@@ -203,7 +214,7 @@ Vous n'en voulez pas ? Décochez « Bouton sur la mini-carte » dans l'onglet Ai
 
 ## 14. L'inscription runique
 
-Au bas de la fenêtre d'options, une ligne de runes dorées s'illumine de temps en temps, de gauche à droite. Passez la souris dessus : les runes s'éclairent et leur traduction apparaît. C'est la phrase que Muradin déchiffre sur le socle de Deuillegivre dans Warcraft III.
+Au bas de la fenêtre d'options, une ligne de runes s'écrit à l'ouverture, une rune après l'autre, puis une lueur la parcourt de temps en temps, de gauche à droite. Passez la souris dessus : une vague de lumière part du centre, puis la traduction apparaît. Ses couleurs suivent le thème des fenêtres : bleu givre, or doux, ou braise avec quelques étincelles. C'est la phrase que Muradin déchiffre sur le socle de Deuillegivre dans Warcraft III.
 
 Elle ne sert à rien d'autre qu'au plaisir des yeux. Pour la retirer, décochez « Inscription runique au bas de cette fenêtre » dans l'onglet Aide.
 

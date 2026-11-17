@@ -43,14 +43,12 @@ end
 local function Heading(parent, text)
 	local f = CreateFrame("Frame", nil, parent)
 	f:SetSize(COLUMN, 24)
-	local label = UI.Text(f, 13)
-	label:SetPoint("BOTTOMLEFT", 0, 4)
+	local label = UI.Heading(f, 13)
+	label:SetPoint("BOTTOMLEFT", 0, 6)
 	label:SetText(L[text])
-	label:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
-	local line = UI.Tex(f, "ARTWORK", UI.line[1], UI.line[2], UI.line[3])
-	line:SetPoint("BOTTOMLEFT")
-	line:SetPoint("BOTTOMRIGHT")
-	line:SetHeight(1)
+	local divider = UI.Divider(f) -- trait fin coupé par une rune
+	divider:SetPoint("BOTTOMLEFT", 0, -4)
+	divider:SetPoint("BOTTOMRIGHT", 0, -4)
 	return f
 end
 
@@ -60,7 +58,7 @@ local function Note(parent, text, x, y, width)
 	note:SetWidth(width or (WIDTH - 48))
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)
-	note:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+	UI.Paint(note, "dim")
 	note:SetText(L[text])
 	return note
 end
@@ -232,7 +230,7 @@ local function BuildThumb(parent, id, label)
 	local thumb = CreateFrame("Button", nil, parent)
 	thumb:SetSize(THUMB_W, THUMB_H)
 	thumb.id = id
-	thumb.bg = UI.Tex(thumb, "BACKGROUND", UI.panel[1], UI.panel[2], UI.panel[3])
+	thumb.bg = UI.Paint(UI.Tex(thumb, "BACKGROUND"), "panel")
 	thumb.bg:SetAllPoints()
 	thumb.border = UI.Border(thumb, 1)
 	thumb.label = UI.Text(thumb, 11)
@@ -365,7 +363,7 @@ local function SimpleTabs()
 				{ "head", "Style" },
 				{ "cycle", "theme", "Thème", ThemeChoices() },
 				{ "cycle", "texture", "Texture des barres", TextureChoices() },
-				{ "check", "highContrast", "Contraste élevé", "Fond noir, bordure blanche, texte plus gros : pour une lecture facile." },
+				{ "check", "highContrast", "Contraste élevé", "Fond noir, bordure blanche, texte plus gros : pour une lecture facile. S'applique aussi aux fenêtres de Lyorune." },
 				{ "check", "smooth", "Barres animées" },
 				{ "head", "Texte" },
 				{ "cycle", "text", "Texte de vie" },
@@ -383,6 +381,10 @@ local function SimpleTabs()
 				OpacityButton("Discret", 55, 25),
 				OpacityButton("Semi-transparent", 80, 35),
 				OpacityButton("Bien visible", 100, 45),
+				{ "head", "Fenêtres de Lyorune" },
+				{ "cycle", "windowTheme", "Thème des fenêtres", nil, "Options, visite guidée et petites fenêtres (pas les cases). Moderne : net, bleu givre et or. Classique : comme les fenêtres du jeu. MMORPG : pierre sombre, cadre doré et runes gravées." },
+				{ "check", "reduceMotion", "Animations réduites", "Seulement des fondus courts : runes fixes, logo immobile, rien ne bouge en boucle. La lueur au survol reste." },
+				{ "check", "magicEffects", "Effets magiques", "Cercle runique qui tourne derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change. Couleur du thème, jamais sur les cases de soin. Coupés par « Animations réduites »." },
 			},
 		},
 		Indicateurs = {
@@ -395,6 +397,7 @@ local function SimpleTabs()
 				{ "step", "lowHealthAt", "Seuil de vie basse (%)" },
 				{ "cycle", "manaBars", "Barre de mana" },
 				{ "step", "powerHeight", "Hauteur de la barre de mana" },
+				{ "cycle", "manaColor", "Couleur de la barre de mana" },
 				{ "head", "Joueur" },
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
 				{ "check", "showMarker", "Marqueur de raid" },
@@ -602,7 +605,7 @@ local function OpenPicker(title, onChoose, current, spellsOnly)
 		macro.tip = L["Plusieurs actions en un clic : écrivez vos macros une fois, posez-les sur autant de clics que vous voulez."]
 		picker.hint = UI.Text(picker, 11)
 		picker.hint:SetPoint("BOTTOMLEFT", 14, 44)
-		picker.hint:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+		UI.Paint(picker.hint, "dim")
 		picker.hint:SetText(L["Ou tapez le nom exact d'un sort, puis Entrée :"])
 		picker.edit = UI.Edit(picker, 344, function(text)
 			if text ~= "" then Choose(text) end
@@ -664,7 +667,7 @@ local function OpenPicker(title, onChoose, current, spellsOnly)
 
 	if not picker.macroHead then
 		picker.macroHead = UI.Text(picker, 11)
-		picker.macroHead:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+		UI.Paint(picker.macroHead, "accent")
 		picker.macroHead:SetText(L["Mes macros :"])
 	end
 	local shown = math.min(#macros, 40)
@@ -719,7 +722,7 @@ local function CaptureKey(button, onKey)
 		end
 		RefreshClicks()
 	end
-	button.label:SetText("|cff33dd88" .. L["Appuyez..."] .. "|r")
+	button.label:SetText("|cff" .. UI.Hex("accent") .. L["Appuyez..."] .. "|r")
 	button:EnableKeyboard(true)
 	button:EnableMouseWheel(true)
 	button:SetScript("OnKeyDown", function(_, key)
@@ -739,7 +742,7 @@ local function BuildClicks(page)
 	-- Spécialisation dont on voit les clics, et copie depuis l'autre
 	specLabel = UI.Text(page, 11)
 	specLabel:SetPoint("TOPRIGHT", 0, 0)
-	specLabel:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+	UI.Paint(specLabel, "accent")
 	specCopy = UI.Button(page, L["Copier l'autre spécialisation"], 200, 18, function()
 		Z:CopyOtherSpec()
 		RefreshClicks()
@@ -753,7 +756,7 @@ local function BuildClicks(page)
 		local head = UI.Text(page, 12)
 		head:SetPoint("TOP", page, "TOPLEFT", left + (column - 1) * (cellWidth + 4) + cellWidth / 2, top + 18)
 		head:SetText(L[modifier[2]])
-		head:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+		UI.Paint(head, "accent")
 	end
 	for row, button in ipairs(Z.clickButtons) do
 		local y = top - (row - 1) * (cellHeight + 4)
@@ -1047,13 +1050,18 @@ local function BuildHelp(page)
 
 	local commands = Heading(page, "Commandes")
 	commands:SetPoint("TOPLEFT", 0, -256)
-	local list = UI.Text(page, 12)
+	local list = UI.Label(page, 12)
 	list:SetPoint("TOPLEFT", commands, "BOTTOMLEFT", 0, -8)
 	list:SetJustifyH("LEFT")
 	list:SetSpacing(4)
-	list:SetText("|cff33dd88/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n|cff33dd88/lyorune test|r  " .. L["mode test (faux groupe)"]
-		.. "\n|cff33dd88/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n|cff33dd88/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
-		.. "\n|cff33dd88/lyorune bug|r  " .. L["signaler un bug"] .. "\n|cff33dd88/lyorune diag|r  " .. L["compatibilité avec le jeu"])
+	local function Commands() -- les commandes prennent la couleur d'accent du thème de fenêtre
+		local c = "|cff" .. UI.Hex("accent")
+		list:SetText(c .. "/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n" .. c .. "/lyorune test|r  " .. L["mode test (faux groupe)"]
+			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
+			.. "\n" .. c .. "/lyorune bug|r  " .. L["signaler un bug"] .. "\n" .. c .. "/lyorune diag|r  " .. L["compatibilité avec le jeu"])
+	end
+	Commands()
+	UI.OnSkin(Commands)
 
 	local items = {
 		{ "head", "Découvrir" },
@@ -1086,7 +1094,7 @@ local function BuildPage(index)
 	if tab.page then return end
 	tab.page = CreateFrame("Frame", nil, window)
 	tab.page:SetPoint("TOPLEFT", 24, -92)
-	tab.page:SetPoint("BOTTOMRIGHT", -24, 20)
+	tab.page:SetPoint("BOTTOMRIGHT", -24, 30)
 	tab.page.tabIndex = index
 	tab.page:Hide()
 	if tab.columns then
@@ -1096,7 +1104,25 @@ local function BuildPage(index)
 	end
 end
 
-local function Select(index)
+-- Barre lumineuse sous l'onglet actif : elle glisse de l'ancien onglet au nouveau (0,2 s)
+local function MoveIndicator(index)
+	local bar, from = window.indicator, window.indicator.index
+	bar.slide:Stop()
+	bar.index = index
+	local start = tabs[from or index].button
+	bar:ClearAllPoints()
+	bar:SetPoint("TOPLEFT", start, "BOTTOMLEFT", 0, -1)
+	bar:SetPoint("TOPRIGHT", start, "BOTTOMRIGHT", 0, -1)
+	if from and from ~= index and not UI.Calm() and window:IsShown() then
+		bar.move:SetOffset((index - from) * window.tabStep, 0)
+		bar.slide:Play()
+	else
+		bar.slide:GetScript("OnFinished")()
+	end
+end
+
+local current
+local function Select(index, quiet)
 	if type(index) == "string" then -- par nom : Z:ToggleOptions("Clics")
 		for i, tab in ipairs(tabs) do
 			if tab.name == index then index = i end
@@ -1104,9 +1130,38 @@ local function Select(index)
 		if type(index) == "string" then index = 1 end
 	end
 	BuildPage(index)
+	local changed = current ~= index
+	current = index
 	for i, tab in ipairs(tabs) do
 		if tab.page then tab.page:SetShown(i == index) end
 		tab.button.bg:SetVertexColor(unpack(i == index and UI.line or UI.panel))
+		tab.button.label:SetTextColor(unpack(i == index and UI.accent or UI.btext))
+		UI.SetTab(tab.button, i == index) -- image d'onglet (normal ou actif) en Classique et MMORPG
+	end
+	-- La barre lumineuse appartient au thème Moderne : les onglets texturés montrent eux-mêmes l'actif
+	local kit = UI.Kit()
+	window.indicator:SetShown(kit == "MODERN" or kit == "FLAT")
+	MoveIndicator(index)
+	-- La page entre en fondu en montant de 6 pixels (0,2 s) ; simple fondu en animations réduites
+	local page = tabs[index].page
+	if changed and not quiet then
+		if not page.enter then
+			page.enter = page:CreateAnimationGroup()
+			page.drop = page.enter:CreateAnimation("Translation")
+			page.drop:SetDuration(0)
+			page.drop:SetOrder(1)
+			page.rise = page.enter:CreateAnimation("Translation")
+			page.rise:SetDuration(0.2)
+			page.rise:SetSmoothing("OUT")
+			page.rise:SetOrder(2)
+			page.fade = UI.AlphaAnim(page.enter, 0, 1, 0.2, "OUT", 2)
+		end
+		local calm = UI.Calm()
+		page.drop:SetOffset(0, calm and 0 or -6)
+		page.rise:SetOffset(0, calm and 0 or 6)
+		page.fade:SetDuration(calm and 0.15 or 0.2)
+		page.enter:Stop()
+		page.enter:Play()
 	end
 	if picker then picker:Hide() end
 end
@@ -1116,21 +1171,21 @@ local function BuildSearch()
 	local results = CreateFrame("Frame", nil, window)
 	results:SetFrameStrata("FULLSCREEN_DIALOG")
 	results:SetSize(260, 10)
-	results.bg = UI.Tex(results, "BACKGROUND", UI.bg[1], UI.bg[2], UI.bg[3], 0.98)
+	results.bg = UI.Paint(UI.Tex(results, "BACKGROUND"), "bg", 0.98)
 	results.bg:SetAllPoints()
 	results.border = UI.Border(results, 1)
-	results.border:SetColor(UI.line[1], UI.line[2], UI.line[3])
+	UI.Paint(results.border, "line")
 	results.rows = {}
 	results:Hide()
 
-	local flash = UI.Tex(window, "OVERLAY", UI.accent[1], UI.accent[2], UI.accent[3], 0.35)
+	local flash = UI.Paint(UI.Tex(window, "OVERLAY"), "accent", 0.35)
 	flash:Hide()
 
 	local edit = UI.Edit(window, 170)
-	edit:SetPoint("TOPRIGHT", -42, -11)
+	edit:SetPoint("TOPRIGHT", -44, -12)
 	edit.placeholder = UI.Text(edit, 11)
 	edit.placeholder:SetPoint("LEFT", 6, 0)
-	edit.placeholder:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+	UI.Paint(edit.placeholder, "dim")
 	edit.placeholder:SetText(L["Rechercher un réglage..."])
 	results:SetPoint("TOPRIGHT", edit, "BOTTOMRIGHT", 0, -2)
 
@@ -1176,6 +1231,7 @@ end
 local function Build()
 	window = UI.Window("LyoruneOptions", "Lyorune  |cff8a8f99" .. Z.version .. "|r", WIDTH, HEIGHT)
 	tinsert(UISpecialFrames, "LyoruneOptions")
+	UI.main = window -- les fenêtres secondaires s'ouvrent à côté d'elle (UI.PlaceBeside)
 
 	local simple = SimpleTabs()
 	tabs = {
@@ -1189,15 +1245,46 @@ local function Build()
 		{ name = "Aide", build = BuildHelp },
 	}
 	local tabWidth = math.floor((WIDTH - 48 - (#tabs - 1) * 4) / #tabs)
+	window.tabStep = tabWidth + 4
 	for i, tab in ipairs(tabs) do
 		tab.button = UI.Button(window, L[tab.name], tabWidth, 26, function() Select(i) end)
 		tab.button:SetPoint("TOPLEFT", 24 + (i - 1) * (tabWidth + 4), -50)
 		tab.button.label:SetJustifyH("CENTER")
 	end
+
+	-- Barre lumineuse de l'onglet actif
+	local bar = UI.Paint(UI.Tex(window, "OVERLAY"), "accent")
+	bar:SetHeight(2)
+	bar.slide = bar:CreateAnimationGroup()
+	bar.move = bar.slide:CreateAnimation("Translation")
+	bar.move:SetDuration(0.2)
+	bar.move:SetSmoothing("OUT")
+	bar.slide:SetScript("OnFinished", function()
+		local target = tabs[bar.index].button
+		bar:ClearAllPoints()
+		bar:SetPoint("TOPLEFT", target, "BOTTOMLEFT", 0, -1)
+		bar:SetPoint("TOPRIGHT", target, "BOTTOMRIGHT", 0, -1)
+	end)
+	window.indicator = bar
+
+	-- Logo dans l'en-tête : il respire lentement (coupé par « Animations réduites »)
+	local logo = window:CreateTexture(nil, "ARTWORK")
+	logo:SetTexture("Interface\\AddOns\\Lyorune\\Media\\Logo")
+	logo:SetSize(26, 26)
+	logo:SetPoint("TOPLEFT", 16, -11)
+	window.title:SetPoint("TOPLEFT", 48, -16)
+	window.logo, window.breath = logo, UI.Breathe(logo, 0.85, 12) -- souffle doux et lent : 12 s par respiration
+	window:HookScript("OnShow", function() if not UI.Calm() then window.breath:Play() end end)
+	window:HookScript("OnHide", function() window.breath:Stop() end)
+
+	-- Changement de thème : l'onglet actif reprend ses couleurs, sans rejouer d'animation
+	UI.OnSkin(function() if current then Select(current, true) end end)
+
 	BuildSearch()
+	window.magic = UI.HeaderMagic(window, logo, window.search)
 	if Z.RefreshRunes then Z:RefreshRunes(window) end
 	window.Select = Select
-	Select(1)
+	Select(1, true)
 end
 
 -- Z:ToggleOptions() ouvre ou ferme. Z:ToggleOptions("Clics") ouvre sur un onglet.
@@ -1218,6 +1305,11 @@ end
 
 function Z:ClickCell(key)
 	return cells[key]
+end
+
+-- Pour les tests : les onglets et leurs boutons
+function Z:OptionsTabs()
+	return tabs
 end
 
 function Z:OptionsWindow()

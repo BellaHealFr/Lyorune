@@ -15,7 +15,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Light green at the end of the bar | Heals are already on their way |
 | Light strip at the bottom of the bar | They have a shield |
 | Dark red at the end of the health | A debuff "eats" that part of their health: your heals fill it first, before they count |
-| Blue bar under the health | Their mana (everyone, by default; height adjustable in the Indicators tab) |
+| Blue bar under the health | Their mana (everyone, by default; height and colour adjustable in the Indicators tab: blue, sky blue, purple, teal or white) |
 | Flashing red overlay | Their health is low |
 | Red border | They are being attacked |
 | White border | They are your target |
@@ -151,8 +151,19 @@ Type `/lyorune test`, or click "5 players", "10 players", "25 players" or "40 pl
 - **Class colors**: "Vivid" (default) for bold, bright colours, or "Natural" for the game's own.
 - **Theme**: Neon, Clean, Glass, Classic or Heroic (flat and modern, lightly embossed, glassy, like the game's raid frames, or textured with a golden border).
 - **Transparency**: three one-click presets, "Subtle", "Semi-transparent", "Clearly visible", then the fine settings (frame opacity, out-of-range opacity, brightness).
-- **High contrast**: black background, white border, larger text.
+- **High contrast**: black background, white border, larger text. It also applies to Lyorune's windows.
 - **Health text**: missing health, percentage, or nothing.
+
+**Lyorune windows** section (on the right of the same tab): it dresses the options window, the guided tour and the small windows, never the cells.
+
+- **Window theme**: three complete looks, each with its own frame, buttons, checkboxes and section titles. The change is immediate, no `/reload`, and the header (logo, name, version) stays put.
+  - **Modern** (default): dark, clean background with rounded corners, flat buttons, frost blue and the logo's gold.
+  - **Classic**: like the game's own windows, with the game's dialog frame, red buttons and checkboxes, raised tabs and sunken input fields.
+  - **MMORPG**: a grimoire, with a stone background veiled behind the text, a golden border, a rune carved in each corner, bronze plates with a golden bevel as buttons (they sink when clicked), chased tabs, sunken input fields, gold-rimmed checkboxes marked with a rune and section titles in an ancient script.
+- **Reduced motion**: windows open with a simple fade, runes and logo stay still, nothing moves in a loop. Handy if motion bothers you.
+- **Magic effects** (on by default): a rune circle slowly turns behind the logo and lights up when the window opens, small motes of light rise in the header, and a spark rises when you change a setting. They take the theme colour (frost in Modern, gold in Classic, ember in MMORPG) and never touch the healing cells. "Reduced motion" turns them off too.
+
+The macros, bug report, error log and news windows open next to the options window instead of covering it.
 
 ## 8. Choosing what is shown
 
@@ -204,7 +215,7 @@ Do not want it? Untick "Minimap button" in the Help tab. The `/lyorune` command 
 
 ## 14. The runic inscription
 
-At the bottom of the options window, a line of golden runes lights up from time to time, from left to right. Hover it: the runes brighten and their translation appears. It is the sentence Muradin reads on Frostmourne's dais in Warcraft III: "Whomsoever takes up this blade shall wield power eternal."
+At the bottom of the options window, a line of runes writes itself as the window opens, one rune after another, then a glow runs along it from time to time, from left to right. Hover it: a wave of light spreads from the centre, then the translation appears. Its colours follow the window theme: frost blue, soft gold, or embers with a few sparks. It is the sentence Muradin reads on Frostmourne's dais in Warcraft III: "Whomsoever takes up this blade shall wield power eternal."
 
 It is there for the pleasure of the eyes only. To remove it, untick "Runic inscription at the bottom of this window" in the Help tab.
 

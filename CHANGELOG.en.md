@@ -6,6 +6,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.10.0] - 2026-11-17
+
+### Added
+
+- Mana bar colour of your choice (Indicators tab): blue by default, sky blue, purple, teal or white.
+- Three themes for Lyorune's windows: Modern (default), Classic and MMORPG, switched live; high contrast applies to them too ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Animated runic inscription: the runes write themselves on opening, a haloed glow runs along them, a wave of light on hover before the translation, colours by theme ([#33](https://github.com/BellaHealFr/Lyorune/issues/33)).
+- "Reduced motion" setting: short fades only, still runes and logo ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Magic effects (switch in Appearance): rune circle behind the logo, motes of light in the header, a spark when a setting changes, theme colour ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+
+### Improved
+
+- Smoother windows: fade-in opening, sliding tab bar, glowing hover, confirmation rune, runic dividers, logo in the header ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Guided tour: steps slide in, one rune per step, the element shown is framed with runes ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Interface colours matched to the logo's frost blue and gold ([#19](https://github.com/BellaHealFr/Lyorune/issues/19)).
+
+### Fixed
+
+- The mana bar stayed white instead of blue.
+- The right edge of some checkboxes vanished depending on the UI scale: every border line now keeps at least one pixel.
+- The macros, bug report, error log and news windows open next to the options instead of covering them.
+
 ## [1.9.0] - 2026-11-17
 
 ### Added
@@ -199,6 +221,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0

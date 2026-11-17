@@ -84,7 +84,7 @@ local steps = {
 		title = "Régler Lyorune",
 		text = "Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
 			.. "|cff33dd88Cadres|r : taille, rangement, tanks, familiers, mode test.\n"
-			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte.\n"
+			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer.\n"
 			.. "|cff33dd88Clics|r : souris, touches au survol, mes macros, spécialisations.\n"
@@ -108,6 +108,33 @@ local steps = {
 	},
 }
 
+-- Runes de la progression et des angles du cadre (index dans Media/Runes.tga)
+local PROGRESS = { 4, 9, 17, 22, 15, 10, 20, 16 }
+
+-- Les mots en vert des textes prennent l'accent du thème de fenêtre, sauf l'étiquette « Groupe »
+-- des cadres de soin, qui garde sa couleur à l'écran
+local function Accent(text)
+	local color = "|cff" .. UI.Hex("accent")
+	return (text:gsub("|cff33dd88(%a*)", function(word)
+		if word == "Groupe" or word == "Group" then return nil end
+		return color .. word
+	end))
+end
+
+-- Étapes vues : runes allumées ; étape en cours : rune qui respire ; à venir : runes éteintes
+local function Progress(index)
+	local gold, dim = UI.gold, UI.line
+	for i, rune in ipairs(card.runes) do
+		rune.breath:Stop()
+		if i <= index then
+			rune:SetVertexColor(gold[1], gold[2], gold[3], 1)
+		else
+			rune:SetVertexColor(dim[1], dim[2], dim[3], 0.9)
+		end
+		if i == index and not UI.Calm() then rune.breath:Play() end
+	end
+end
+
 local function Finish()
 	local step = steps[current]
 	if step and step.after then step.after() end
@@ -125,9 +152,11 @@ local function Show(index)
 	if step.before then step.before() end
 
 	local L = Z.L
+	local wasShown = card:IsShown()
 	card.title:SetText(L[step.title])
-	card.body:SetText(type(step.text) == "function" and step.text() or L[step.text])
+	card.body:SetText(Accent(type(step.text) == "function" and step.text() or L[step.text]))
 	card.progress:SetText(index .. " / " .. #steps)
+	Progress(index)
 	card.back:SetShown(index > 1)
 	card.next.label:SetText(index == #steps and L["Terminer"] or L["Suivant"])
 	card:SetHeight(card.body:GetStringHeight() + 112)
@@ -140,7 +169,8 @@ local function Show(index)
 		highlight:SetPoint("TOPLEFT", target, "TOPLEFT", -5, 5)
 		highlight:SetPoint("BOTTOMRIGHT", target, "BOTTOMRIGHT", 5, -5)
 		highlight:Show()
-		highlight.pulse:Play()
+		highlight.pulse:Stop()
+		if not UI.Calm() then highlight.pulse:Play() end
 		if target:GetWidth() > 400 then
 			card:SetPoint("TOPLEFT", target, "TOPRIGHT", 14, 0)
 		else
@@ -151,48 +181,74 @@ local function Show(index)
 		card:SetPoint("CENTER", UIParent, "CENTER", 0, 120)
 	end
 	card:Show()
+	-- D'une étape à l'autre, la carte glisse de 12 pixels en fondu (0,25 s) ; simple fondu en animations réduites
+	if wasShown then
+		local calm = UI.Calm()
+		card.from:SetOffset(calm and 0 or 12, 0)
+		card.to:SetOffset(calm and 0 or -12, 0)
+		card.fade:SetDuration(calm and 0.15 or 0.25)
+		card.slide:Stop()
+		card.slide:Play()
+	end
 end
 
 local function Build()
 	card = UI.Window("LyoruneTutorial", "", 380, 220)
 	card:SetFrameStrata("FULLSCREEN_DIALOG")
 	card.close:SetScript("OnClick", Finish)
-	card.title:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
 
-	card.body = UI.Text(card, 12)
+	card.slide = card:CreateAnimationGroup()
+	card.from = card.slide:CreateAnimation("Translation")
+	card.from:SetDuration(0)
+	card.from:SetOrder(1)
+	card.to = card.slide:CreateAnimation("Translation")
+	card.to:SetDuration(0.25)
+	card.to:SetSmoothing("OUT")
+	card.to:SetOrder(2)
+	card.fade = UI.AlphaAnim(card.slide, 0, 1, 0.25, "OUT", 2)
+
+	card.body = UI.Label(card, 12)
 	card.body:SetPoint("TOPLEFT", 16, -46)
 	card.body:SetWidth(348)
 	card.body:SetJustifyH("LEFT")
 	card.body:SetSpacing(3)
 
-	card.progress = UI.Text(card, 11)
-	card.progress:SetPoint("BOTTOMLEFT", 16, 20)
-	card.progress:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+	-- Une rune par étape : allumée une fois vue, celle de l'étape en cours respire
+	card.runes = {}
+	for i = 1, #steps do
+		local rune = UI.Rune(card, "ARTWORK", PROGRESS[(i - 1) % #PROGRESS + 1], 11)
+		rune:SetPoint("BOTTOMLEFT", 16 + (i - 1) * 14, 22)
+		rune.breath = UI.Breathe(rune, 0.35, 1.6)
+		card.runes[i] = rune
+	end
+	card.progress = UI.Label(card, 11, nil, "dim")
+	card.progress:SetPoint("LEFT", card.runes[#steps], "RIGHT", 8, 0)
 
 	card.next = UI.Button(card, Z.L["Suivant"], 96, 26, function()
 		if current == #steps then Finish() else Show(current + 1) end
 	end)
 	card.next:SetPoint("BOTTOMRIGHT", -14, 14)
 	card.next.label:SetJustifyH("CENTER")
-	card.next.bg:SetVertexColor(UI.accent[1] * 0.45, UI.accent[2] * 0.45, UI.accent[3] * 0.45)
+	UI.Paint(card.next.bg, "accent", 1, 0.45)
 
 	card.back = UI.Button(card, Z.L["Précédent"], 96, 26, function() Show(current - 1) end)
 	card.back:SetPoint("RIGHT", card.next, "LEFT", -6, 0)
 	card.back.label:SetJustifyH("CENTER")
 
-	-- Cadre lumineux qui pulse autour de l'élément présenté
+	-- Cadre de runes qui pulse doucement autour de l'élément présenté (cycle de 1,4 s)
 	highlight = CreateFrame("Frame", nil, UIParent)
 	highlight:SetFrameStrata("FULLSCREEN")
 	highlight.border = UI.Border(highlight, 2)
-	highlight.border:SetColor(UI.accent[1], UI.accent[2], UI.accent[3], 1)
-	highlight.pulse = highlight:CreateAnimationGroup()
-	highlight.pulse:SetLooping("BOUNCE")
-	local fade = highlight.pulse:CreateAnimation("Alpha")
-	fade:SetFromAlpha(1)
-	fade:SetToAlpha(0.25)
-	fade:SetDuration(0.7)
-	fade:SetSmoothing("IN_OUT")
+	UI.Paint(highlight.border, "accent", 1)
+	highlight.runes = {}
+	for i, corner in ipairs({ "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT" }) do
+		local rune = UI.Paint(UI.Rune(highlight, "OVERLAY", PROGRESS[i], 14), "gold")
+		rune:SetPoint("CENTER", highlight, corner)
+		highlight.runes[i] = rune
+	end
+	highlight.pulse = UI.Breathe(highlight, 0.3, 1.4)
 	highlight:Hide()
+	UI.OnSkin(function() if current then Progress(current) end end)
 end
 
 function Z:StartTutorial()

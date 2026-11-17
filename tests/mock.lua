@@ -65,6 +65,18 @@ function Obj:Fetch() return "tex" end
 function Obj:StartMoving() end
 function Obj:StopMovingOrSizing() end
 function Obj:ClearFocus() end
+-- Couleurs, police et animations : notées pour que les tests puissent les vérifier
+function Obj:GetObjectType() return self._kind end
+function Obj:SetVertexColor(r, g, b, a) self._color = { r, g, b, a } end
+function Obj:SetTextColor(r, g, b, a) self._color = { r, g, b, a } end
+function Obj:SetFont(file, size) self._font, self._size = file, size return true end
+function Obj:SetTexture(t) self._tex = t end
+function Obj:SetStatusBarColor(r, g, b, a) self._barColor = { r, g, b, a } end
+function Obj:SetBackdrop(b) self._backdrop = b end
+function Obj:SetPoint(...) self._point = { ... } end
+function Obj:Play() self._playing = true end
+function Obj:Stop() self._playing = false end
+function Obj:IsPlaying() return self._playing or false end
 
 function FireEvent(e, ...)
 	if e == "PLAYER_REGEN_DISABLED" or e == "PLAYER_REGEN_ENABLED" then ApplyStateDrivers() end
@@ -87,8 +99,13 @@ GameTooltip = new("GameTooltip", "GameTooltip")
 function CreateFrame(kind, name, parent) return new(kind, name, parent) end
 function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a, GetRGB = function() return r, g, b end, GetRGBA = function() return r, g, b, a end } end
 function CopyTable(t) local c = {} for k, v in pairs(t) do c[k] = type(v) == "table" and CopyTable(v) or v end return c end
+PixelUtil = {
+	SetWidth = function(t, w, pixels) t._w, t._pixels = w, pixels end,
+	SetHeight = function(t, h, pixels) t._h, t._pixels = h, pixels end,
+}
 tinsert = table.insert
 UISpecialFrames = {}
+BackdropTemplateMixin = {}
 SlashCmdList = {}
 STANDARD_TEXT_FONT = "font"
 READY_CHECK_READY_TEXTURE, READY_CHECK_NOT_READY_TEXTURE, READY_CHECK_WAITING_TEXTURE = "r", "n", "w"

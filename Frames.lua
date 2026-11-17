@@ -19,6 +19,11 @@ Z.buttons = buttons
 Z.headers = {}       -- cadre principal, tanks, familiers
 
 local MANA = 0
+-- Teintes de la barre de mana (réglage « manaColor ») : bleu par défaut, comme dans le jeu
+Z.manaColors = {
+	BLUE = { 0.25, 0.50, 1.00 }, SKY = { 0.40, 0.75, 1.00 }, PURPLE = { 0.62, 0.42, 1.00 },
+	TEAL = { 0.20, 0.82, 0.82 }, WHITE = { 0.88, 0.90, 0.95 },
+}
 local SMOOTH = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.ExponentialEaseOut
 local smoothing      -- SMOOTH ou nil selon l'option
 local rangeAlpha = 0.35
@@ -350,7 +355,7 @@ local function OnEnter(b)
 	end
 	if clicks then
 		GameTooltip:AddLine(" ")
-		GameTooltip:AddLine(L["Mes clics"], UI.accent[1], UI.accent[2], UI.accent[3])
+		GameTooltip:AddLine(L["Mes clics"], UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
 		for _, line in ipairs(clicks) do GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1) end
 	end
 	GameTooltip:Show()
@@ -413,6 +418,8 @@ local function Style(b)
 	b.healAbsorb:SetWidth(width - 2 * inset)
 	b.healAbsorb:SetShown(db.showHealAbsorb)
 	b.power:SetStatusBarTexture(texture)
+	-- Couleur posée après la texture : le jeu remet en blanc toute nouvelle texture de barre
+	b.power:SetStatusBarColor(unpack(Z.manaColors[db.manaColor] or Z.manaColors.BLUE))
 	b.power:SetHeight(db.powerHeight)
 	b.bg:SetVertexColor(unpack(theme.bg))
 	b.bgRound:SetVertexColor(unpack(theme.bg))
@@ -736,8 +743,8 @@ local function CreateHandle(h, def)
 	handle.text = UI.Text(handle, 10)
 	handle.text:SetAllPoints()
 	handle.text:SetWordWrap(false)
-	handle.text:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
-	handle.line = UI.Tex(handle, "ARTWORK", UI.accent[1], UI.accent[2], UI.accent[3], 0.6) -- souligné : déplaçable
+	handle.text:SetTextColor(UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
+	handle.line = UI.Tex(handle, "ARTWORK", UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3], 0.6) -- souligné : déplaçable
 	handle.line:SetPoint("BOTTOMLEFT", 6, -1)
 	handle.line:SetPoint("BOTTOMRIGHT", -6, -1)
 	handle.line:SetHeight(1)
@@ -763,7 +770,7 @@ local function CreateHandle(h, def)
 	end)
 	handle:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		GameTooltip:SetText(h.labelText or "", UI.accent[1], UI.accent[2], UI.accent[3])
+		GameTooltip:SetText(h.labelText or "", UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
 		if db.lockMode == "FREE" then
 			GameTooltip:AddLine(L["Glisser : déplacer les cadres"], 1, 1, 1)
 		elseif MODIFIERS[db.lockMode] then
@@ -1005,6 +1012,8 @@ end
 
 -- Appelé après chaque changement d'option
 function Z:Refresh()
+	-- Thème des fenêtres en premier : il ne dépend pas des cases, une erreur plus bas ne doit pas l'empêcher
+	if Z.UI.SkinChanged() then Z:Try("thème des fenêtres", Z.UI.ApplySkin) end
 	smoothing = db.smooth and SMOOTH or nil
 	rangeAlpha = db.rangeAlpha / 100
 	BuildCurves()

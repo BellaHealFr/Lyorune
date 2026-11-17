@@ -746,7 +746,7 @@ end)
 
 step("inscription runique", function()
   local strip = Z:RuneStrip()
-  assert(strip and #strip.base == 47 and #strip.waves == 47, "runes : " .. tostring(strip and #strip.base))
+  assert(strip and #strip.base == 47 and #strip.glows == 47 and #strip.halos == 47, "runes : " .. tostring(strip and #strip.base))
   assert(strip:GetParent() == Z:OptionsWindow())
   strip:Run("OnShow") strip:Run("OnEnter") strip:Run("OnLeave") strip:Run("OnHide")
   Z.db.showRunes = false Z:Refresh() assert(not strip:IsShown(), "runes encore visibles")
@@ -837,6 +837,12 @@ step("etape 2 : cadres par groupe, etiquettes, verrou, position par personnage, 
   -- mana : pour tous par defaut, hauteur reglable
   assert(Z.defaults.manaBars == "ALL" and Z.limits.powerHeight)
   Z.db.powerHeight = 7 Z:Refresh() assert(Z.buttons[1].power:GetHeight() == 7)
+  -- Couleur de la barre de mana : bleue par défaut (posée après la texture, sinon le jeu la laisse blanche), au choix
+  local bar = Z.buttons[1].power
+  assert(Z.db.manaColor == "BLUE" and bar._barColor[3] == Z.manaColors.BLUE[3] and bar._barColor[1] < 0.5, "mana blanche")
+  for _, choice in ipairs(Z.choices.manaColor) do assert(Z.manaColors[choice[1]], "teinte manquante : " .. choice[1]) end
+  Z.db.manaColor = "PURPLE" Z:Refresh() assert(bar._barColor[1] == Z.manaColors.PURPLE[1], "mana violette")
+  Z.db.manaColor = "BLUE" Z:Refresh()
   Z.db.powerHeight = 4 Z:Refresh()
   -- dissipation : le voile est pose sous le texte, plus dans le cadre de la bordure
   local cell = Z.buttons[1]
@@ -962,6 +968,154 @@ step("etape 4 : forme des cases, angles, fond par groupe, couleurs de classe", f
   assert(vr - vb > nr - nb and vr >= vg and vg >= vb, "couleur vive")
   for _, v in ipairs({ vr, vg, vb }) do assert(v >= 0 and v <= 1) end
   assert(select(1, Z.ClassColor(nil)) == 0.6, "classe inconnue")
+end)
+
+step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function()
+  local UI = Z.UI
+  -- Contraste (WCAG) : texte 4,5:1 sur le fond et sur les boutons, texte secondaire et accent 3:1
+  local function lum(c)
+    local function ch(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+    return 0.2126 * ch(c[1]) + 0.7152 * ch(c[2]) + 0.0722 * ch(c[3])
+  end
+  local function ratio(a, b) local x, y = lum(a), lum(b) if x < y then x, y = y, x end return (x + 0.05) / (y + 0.05) end
+  for name, skin in pairs(UI.skins) do
+    for _, role in ipairs(UI.ROLES) do assert(skin[role] and #skin[role] == 3, name .. " sans " .. role) end
+    assert(ratio(skin.text, skin.bg) >= 4.5 and ratio(skin.text, skin.panel) >= 4.5, name .. " : texte peu lisible")
+    assert(ratio(skin.dim, skin.bg) >= 3 and ratio(skin.accent, skin.bg) >= 3, name .. " : texte secondaire peu lisible")
+    assert(ratio(skin.btext, skin.panel) >= 4.5, name .. " : texte des boutons peu lisible")
+    assert(skin.kit and skin.headFont and skin.headSize and skin.runeBase and skin.runeGlow, name .. " incomplet")
+    assert(skin.headFont == "STANDARD" or skin.headFont:match("^Fonts\\[%u_]+%.TTF$"), name .. " : chemin de police abime : " .. skin.headFont)
+  end
+  for key, path in pairs(UI.GAME) do assert(path:match("^Interface\\%a+\\[%w%-]+$"), "texture du jeu abimee : " .. key) end
+  assert(Z.db.windowTheme == "MODERN" and Z.db.reduceMotion == false)
+
+  -- Changement de thème en direct, fenêtre ouverte : tout est repeint, rien n'est créé en double
+  Z:ToggleOptions("Apparence")
+  local w = Z:OptionsWindow()
+  local count = #UI.Windows()
+  local handle = Z.header.handle
+  local titleFont, titleSize = w.title._font, w.title._size
+  local sample = UI.Check(w, "essai", function() return true end, function() end)
+  local button = w.close
+  for _, theme in ipairs({ "CLASSIC", "MMO", "MODERN" }) do
+    Z.db.windowTheme = theme Z:Refresh()
+    local skin = UI.skins[theme]
+    assert(UI.skinName == theme and UI.accent[1] == skin.accent[1], theme)
+    assert(w.title._color[1] == skin.accent[1] and w.bg._color[1] == skin.bg[1], theme .. " : fenêtre non repeinte")
+    -- Un thème complet : cadre, boutons et cases changent vraiment, pas seulement leurs couleurs
+    assert(w.round:IsShown() == (theme == "MODERN") and w.shade:IsShown() == (theme == "MMO"), theme .. " : cadre")
+    assert(w._backdrop == (theme ~= "MODERN" and w._backdrop or nil), theme .. " : cadre du jeu")
+    assert((w._backdrop and w._backdrop.edgeFile) == (theme == "CLASSIC" and UI.GAME.dialogEdge or theme == "MMO" and UI.GAME.goldEdge or nil), theme .. " : bordure")
+    local layers = button.layers or {}
+    assert(button.bg:IsShown() == (theme == "MODERN"), theme .. " : bouton plat")
+    assert((layers.gameUp and layers.gameUp:IsShown() or false) == (theme == "CLASSIC"), theme .. " : bouton du jeu")
+    assert((layers.plate and layers.plate:IsShown() or false) == (theme == "MMO"), theme .. " : plaque doree")
+    local tab = Z:OptionsTabs()[2].button
+    local tabLayer = tab.layers and tab.layers[theme .. "TabActive"]
+    assert(theme == "MODERN" or (tabLayer and tabLayer:IsShown() and tabLayer._tex == UI.SKIN[theme].tabActive), theme .. " : onglet actif")
+    assert(w.indicator:IsShown() == (theme == "MODERN"), theme .. " : barre d'onglet")
+    local field = w.search.layers and w.search.layers[theme]
+    assert(theme == "MODERN" or (field and field:IsShown() and field._tex == UI.SKIN[theme].field), theme .. " : champ creuse")
+    assert(sample.mark._tex == (theme == "CLASSIC" and UI.GAME.check or theme == "MMO" and UI.RUNES or UI.WHITE), theme .. " : case a cocher")
+    assert(w.title._font == titleFont and w.title._size == titleSize, theme .. " : l'en-tete change de taille")
+    assert(w.indicator._color[2] == skin.accent[2], theme .. " : onglet actif")
+    assert(handle.text._color[1] == UI.frameAccent[1], "les etiquettes des cadres de soin ont suivi le theme")
+  end
+  assert(w.ornate and not w.ornate:IsShown(), "ornements du theme MMORPG restes visibles")
+  -- Tout ce qui est noté est repeint (sauf l'onglet actif, recoloré exprès : fond et libellé)
+  local painted, order = UI.Painted()
+  local wrong = 0
+  for _, obj in ipairs(order) do
+    local e, c = painted[obj], obj._color
+    if c and math.abs(c[1] - UI[e[1]][1] * (e[3] or 1)) > 0.001 then wrong = wrong + 1 end
+  end
+  assert(#order > 500 and wrong <= 2, "elements non repeints : " .. wrong)
+  assert(getmetatable(painted) == nil, "la liste des elements peints ne doit pas etre faible")
+  assert(#UI.Windows() == count, "fenetre en double")
+  w:Hide() w:Show()
+  Z.db.highContrast = true Z:Refresh()
+  assert(UI.bg[1] == 0 and UI.text[1] == 1 and w.bg:IsShown(), "contraste eleve")
+  Z.db.highContrast = false Z:Refresh()
+  assert(UI.Hex("accent") == "73c7ff", UI.Hex("accent"))
+
+  -- Réglage changé : une rune s'allume à côté
+  local c = UI.Check(UIParent, "essai", function() return false end, function() end)
+  c:Run("OnClick")
+  assert(c.confirm and c.confirm:IsPlaying())
+  -- Bordure des cases : chaque trait garde au moins un vrai pixel (bord droit qui disparaissait en jeu)
+  for i = 1, 4 do assert(c.border[i]._pixels == 1, "trait " .. i .. " de la case arrondi a zero") end
+
+  -- Effets magiques : étincelle avec la rune, cercle et particules de l'en-tête, au plus 3 éclairs par seconde
+  assert(Z.db.magicEffects == true and UI.Magic())
+  NOW = NOW + 5 c:Run("OnClick")
+  assert(c.spark and c.sparkRise:IsPlaying() and c.spark._tex == UI.MAGIC_SPARK, "etincelle de soin")
+  assert(c.spark._color[1] == UI.skin.runeGlow[1], "etincelle : couleur du theme")
+  local m = w.magic
+  assert(m and m.circle:IsShown() and m.spin:IsPlaying() and m.rises[1]:IsPlaying(), "cercle et particules")
+  Z.db.windowTheme = "MMO" Z:Refresh()
+  assert(m.motes[1]._color[2] == UI.skins.MMO.runeGlow[2], "particules : couleur du theme")
+  Z.db.windowTheme = "MODERN" Z:Refresh()
+  NOW = NOW + 5
+  local allowed = 0
+  for _ = 1, 5 do if UI.Flash() then allowed = allowed + 1 end end
+  assert(allowed == 3, "plus de 3 eclairs par seconde")
+  NOW = NOW + 1
+  assert(UI.Flash(), "eclair refuse une seconde plus tard")
+  for _, setting in ipairs({ "reduceMotion", "magicEffects" }) do
+    Z.db[setting] = setting == "reduceMotion" Z:Refresh()
+    assert(not UI.Magic() and not m.circle:IsShown() and not m.spin:IsPlaying() and not m.rises[1]:IsPlaying(), setting)
+    c.sparkRise:Stop() c:Run("OnClick")
+    assert(not c.sparkRise:IsPlaying(), setting .. " : etincelle")
+    Z.db.reduceMotion, Z.db.magicEffects = false, true Z:Refresh()
+  end
+  assert(m.spin:IsPlaying() and m.circle:IsShown(), "effets revenus")
+  w:Hide() m.Stop() w:Show()
+  assert(m.spin:IsPlaying(), "effets a la reouverture")
+
+  -- Runes : même phrase, animations jouées à l'ouverture, arrêtées à la fermeture, aucune en animations réduites
+  local spelled = 0
+  for _, rune in ipairs(Z:SpellRunes()) do if rune then spelled = spelled + 1 end end
+  assert(spelled == 47)
+  local strip = Z:RuneStrip()
+  strip:Run("OnShow")
+  assert(strip.writes[1]:IsPlaying() and strip.waves[1]:IsPlaying() and strip.breath:IsPlaying())
+  strip:Run("OnHide")
+  assert(not strip.waves[1]:IsPlaying() and not strip.breath:IsPlaying())
+  Z.db.reduceMotion = true Z:Refresh()
+  strip:Run("OnShow")
+  assert(not strip.writes[1]:IsPlaying() and not strip.waves[1]:IsPlaying() and not strip.breath:IsPlaying(), "runes animees")
+  assert(not w.breath:IsPlaying(), "logo anime")
+  strip:Run("OnEnter") strip:Run("OnLeave")
+  assert(not strip.waves[1]:IsPlaying())
+  Z.db.reduceMotion = false Z:Refresh()
+
+  -- Fenêtres secondaires : à côté des options au lieu de les recouvrir
+  w.GetLeft = function() return 300 end w.GetRight = function() return 1000 end w.GetTop = function() return 900 end
+  UIParent.GetWidth = function() return 1920 end UIParent.GetHeight = function() return 1080 end
+  if LyoruneBug then LyoruneBug:Hide() end
+  Z:ShowBug()
+  local p = LyoruneBug._point
+  assert(LyoruneBug.beside and p[1] == "TOPLEFT" and p[2] == w and p[3] == "TOPRIGHT", "rapport de bug par-dessus les options")
+  UIParent.GetWidth = function() return 1300 end
+  LyoruneBug:Hide() Z:ShowBug()
+  p = LyoruneBug._point
+  assert(p[2] == UIParent, "pas la place : contre le bord le plus degage")
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  LyoruneBug:Hide()
+
+  -- Tutoriel : une rune par étape, l'étape en cours respire, la carte glisse
+  Z:StartTutorial()
+  local card = LyoruneTutorial
+  assert(#card.runes == 8 and card.runes[1].breath:IsPlaying())
+  card.next:Run("OnClick")
+  assert(card.slide:IsPlaying() and card.runes[2].breath:IsPlaying() and not card.runes[1].breath:IsPlaying())
+  assert(card.runes[1]._color[1] == UI.gold[1], "etape vue eteinte")
+  for _ = 1, 3 do card.next:Run("OnClick") end
+  local body = card.body:GetText()
+  assert(body:find("|cff33dd88Groupe", 1, true) and not body:find("|cff33dd88/", 1, true), "couleurs du tutoriel")
+  card.close:Run("OnClick")
+  local labels = table.concat(Z:OptionLabels(), "|")
+  assert(labels:find("Thème des fenêtres", 1, true) and labels:find("Animations réduites", 1, true) and labels:find("Effets magiques", 1, true))
 end)
 
 step("etape 2 : reprise des anciens reglages", function()

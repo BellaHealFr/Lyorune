@@ -180,7 +180,7 @@ function Z:TogglePreview(wanted)
 		container.panels = {}
 		container.label = UI.Text(container, 11)
 		container.label:SetPoint("BOTTOMLEFT", Z.anchor, "TOPLEFT", 0, 3)
-		container.label:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+		container.label:SetTextColor(UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
 		Z:On("PLAYER_REGEN_DISABLED", Stop)
 	end
 	for index = #cells + 1, size do

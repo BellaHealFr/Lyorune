@@ -413,7 +413,7 @@ end
 local function Field(parent, text, x, y)
 	local label = UI.Text(parent, 11)
 	label:SetPoint("TOPLEFT", x, y)
-	label:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+	UI.Paint(label, "accent")
 	label:SetText(L[text])
 	return label
 end
@@ -431,6 +431,7 @@ end
 local function BuildWindow()
 	win = UI.Window("LyoruneMacros", L["Mes macros"], 620, 500)
 	win:SetFrameStrata("FULLSCREEN_DIALOG")
+	win.beside = true -- à côté des options, sans les recouvrir
 	tinsert(UISpecialFrames, "LyoruneMacros")
 	win.offset = 0
 
@@ -490,7 +491,7 @@ local function BuildWindow()
 		win.rows[i] = row
 	end
 	local hint = Block(win, 14, -98 - ROWS * 24 - 6, 186)
-	hint:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+	UI.Paint(hint, "dim")
 	hint:SetText(L["Glissez une macro sur une case de l'onglet Clics, ou choisissez-la en cliquant sur la case."])
 
 	-- Colonne de droite : la macro choisie
@@ -508,10 +509,11 @@ local function BuildWindow()
 	local box = CreateFrame("Frame", nil, win)
 	box:SetPoint("TOPLEFT", x, -72)
 	box:SetSize(width, 140)
-	box.bg = UI.Tex(box, "BACKGROUND", UI.panel[1], UI.panel[2], UI.panel[3])
+	box.bg = UI.Paint(UI.Tex(box, "BACKGROUND"), "panel")
 	box.bg:SetAllPoints()
 	box.border = UI.Border(box, 1)
-	box.border:SetColor(UI.line[1], UI.line[2], UI.line[3])
+	UI.Paint(box.border, "line")
+	UI.Field(box, box.bg, box.border) -- zone de texte habillée selon le thème
 	local edit = CreateFrame("EditBox", nil, box)
 	edit:SetMultiLine(true)
 	edit:SetAutoFocus(false)
@@ -525,9 +527,9 @@ local function BuildWindow()
 	win.edit = edit
 	win.count = UI.Text(win, 11)
 	win.count:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -4)
-	win.count:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+	UI.Paint(win.count, "dim")
 	local help = Block(win, x, -218, width - 70)
-	help:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+	UI.Paint(help, "dim")
 	help:SetText(L["{cible} est le joueur de la case. Une commande sans cible vise la case."])
 
 	Field(win, "Vérification", x, -244)
@@ -648,7 +650,7 @@ function Z:OpenMacroImport()
 		importer:SetFrameStrata("FULLSCREEN_DIALOG")
 		tinsert(UISpecialFrames, "LyoruneMacroImport")
 		importer.note = Block(importer, 14, -42, 344)
-		importer.note:SetTextColor(UI.dim[1], UI.dim[2], UI.dim[3])
+		UI.Paint(importer.note, "dim")
 		importer.note:SetText(L["Cliquez sur une macro : elle est copiée dans votre bibliothèque. [@mouseover] y vise la case."])
 		importer.icons = {}
 	end

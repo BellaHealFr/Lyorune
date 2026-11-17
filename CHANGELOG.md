@@ -6,6 +6,28 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.10.0] - 2026-11-17
+
+### Ajouté
+
+- Couleur de la barre de mana au choix (onglet Indicateurs) : bleu par défaut, bleu ciel, violet, turquoise ou blanc.
+- Trois thèmes pour les fenêtres de Lyorune : Moderne (par défaut), Classique et MMORPG, changés en direct ; le contraste élevé s'y applique aussi ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Inscription runique animée : les runes s'écrivent à l'ouverture, une lueur avec halo les parcourt, une vague de lumière au survol avant la traduction, couleurs selon le thème ([#33](https://github.com/BellaHealFr/Lyorune/issues/33)).
+- Réglage « Animations réduites » : fondus courts seulement, runes et logo immobiles ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Effets magiques (interrupteur dans Apparence) : cercle runique derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change, couleur du thème ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+
+### Amélioré
+
+- Fenêtres plus douces : ouverture en fondu, barre d'onglet qui glisse, survol lumineux, rune de confirmation, séparateurs runiques, logo dans l'en-tête ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Visite guidée : les étapes glissent, une rune par étape, l'élément présenté est entouré de runes ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Couleurs de l'interface accordées au bleu givre et à l'or du logo ([#19](https://github.com/BellaHealFr/Lyorune/issues/19)).
+
+### Corrigé
+
+- La barre de mana restait blanche au lieu de bleue.
+- Le bord droit de certaines cases à cocher disparaissait selon l'échelle de l'interface : chaque trait de bordure garde au moins un pixel.
+- Les fenêtres des macros, du rapport de bug, du journal et des nouveautés s'ouvrent à côté des options au lieu de les recouvrir.
+
 ## [1.9.0] - 2026-11-17
 
 ### Ajouté
@@ -199,6 +221,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.10.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.7.0...v1.8.0
