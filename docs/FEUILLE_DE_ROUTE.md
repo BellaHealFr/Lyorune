@@ -190,8 +190,9 @@ Grille de chaque lot :
 - règles de l'addon : chaque réglage une seule fois, aucun cadre du jeu touché, ajout de classes possible ;
 - textes : français et anglais présents et justes, aucun tiret cadratin.
 
-- [ ] Vérification automatique de tout l'addon : fonctions appelées mais absentes, réglages absents de
-  `Z.defaults`, événements écoutés sans traitement, valeurs secrètes comparées, tirets cadratins
+- [x] Vérification automatique de tout l'addon : fonctions appelées mais absentes, réglages absents de
+  `Z.defaults`, événements écoutés sans traitement, valeurs secrètes comparées, tirets cadratins. Gardée dans
+  `tests/run.py` (étape « revue »). Bug trouvé : le mode test à 25 ou 40 ne réduisait pas les cases (1.23.1)
 - [ ] Lot 1 : Core, Log, Data
 - [ ] Lot 2 : Frames, 1re moitié
 - [ ] Lot 3 : Frames, 2e moitié

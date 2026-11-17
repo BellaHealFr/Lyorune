@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.1] - 2026-11-17
+
+### Corrigé
+
+- Mode test à 25 ou 40 joueurs : avec « Réduire les cases en grand raid », les cases rétrécissent comme dans un vrai raid ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.0] - 2026-11-17
 
 ### Ajouté
@@ -340,6 +346,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.0...v1.23.1
 [1.23.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.20.0...v1.21.0

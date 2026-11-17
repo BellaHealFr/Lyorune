@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.1", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Mode test à 25 ou 40 joueurs : avec « Réduire les cases en grand raid », les cases rétrécissent comme dans un vrai raid (#46).",
+		},
+	},
+	{
 		version = "1.23.0", date = "2026-11-17",
 		added = {
 			"Copier une partie d'un profil (onglet Profils, bouton « Copier... ») : Cadres, Apparence, Indicateurs ou Soins, au choix, d'un profil vers un autre ; le reste du profil d'arrivée ne bouge pas (#44).",

@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.1] - 2026-11-17
+
+### Fixed
+
+- Test mode with 25 or 40 players: with "Shrink cells in large raids", cells now shrink like in a real raid ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.0] - 2026-11-17
 
 ### Added
@@ -340,6 +346,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.0...v1.23.1
 [1.23.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.20.0...v1.21.0

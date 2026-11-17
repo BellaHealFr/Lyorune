@@ -2233,6 +2233,19 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
   Z:ResetAll()
 end)
 
+step("revue 1.23.1 : le mode test a 40 montre des cases reduites comme un vrai raid", function()
+  local width, shrink = Z.db.width, Z.db.autoShrink
+  Z.db.width, Z.db.autoShrink = 100, true
+  Z:TogglePreview(40)
+  assert(Z.previewActive and Z.CellSize() == 70, "40 faux joueurs : 70 % et non " .. tostring(Z.CellSize()))
+  Z:TogglePreview(25) assert(Z.CellSize() == 85, "25 faux joueurs : 85 %")
+  Z:TogglePreview(5) assert(Z.CellSize() == 100, "5 faux joueurs : taille normale")
+  Z:TogglePreview()
+  assert(not Z.previewActive and Z.CellSize() == (GetNumGroupMembers() > 10 and 85 or 100), "hors mode test : le vrai groupe")
+  Z.db.width, Z.db.autoShrink = width, shrink
+  Z:Refresh()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi
@@ -2317,4 +2330,29 @@ for f in files + ['Locales/' + name for name in os.listdir(os.path.join(addon, '
     if f != 'Alerts.lua' and re.search(r'\bSendChatMessage\b', text):
         found.append('SendChatMessage dans %s' % f)
 print(('  OK    securite : aucune fonction interdite') if not found else ('  ERREUR securite : ' + ', '.join(found)))
-sys.exit(1 if rt.eval('FAILED') or found else 0)
+
+# Revue du code (étape 19) : ce qu'un œil rate facilement, vérifié sur tout l'addon à chaque essai.
+#   - une fonction de Z appelée alors qu'elle n'existe nulle part (erreur au premier appel, parfois en combat)
+#   - un champ de Z lu alors que rien ne l'écrit (il vaut toujours nil : code mort ou oubli)
+#   - une clé de Z.limits, Z.choices, Z.notInProfile ou Z.private absente de Z.defaults (réglage décrit une seule fois)
+def sans_commentaires(s):
+    s = re.sub(r'--\[(=*)\[.*?\]\1\]', '', s, flags=re.S)
+    return re.sub(r'--[^\n]*', '', s)
+code = '\n'.join(sans_commentaires(read(os.path.join(addon, f))) for f in files)
+ecrits = set(re.findall(r'function\s+Z[.:](\w+)', code)) | set(re.findall(r'\bZ\.(\w+)\s*=', code))
+revue = ['Z:%s() appelée mais absente' % n for n in sorted(set(re.findall(r'\bZ[.:](\w+)\s*\(', code)) - ecrits)]
+revue += ['Z.%s lu mais jamais écrit' % n for n in sorted(set(re.findall(r'\bZ\.(\w+)', code)) - ecrits - {'db', 'char'})]
+def cles(nom):
+    core = sans_commentaires(read(os.path.join(addon, 'Core.lua')))
+    debut = core.index(nom + ' = {') + len(nom) + 4
+    profondeur, plat = 0, ''
+    for c in core[debut:core.index('\n}', debut)]:
+        if c == '{': profondeur += 1
+        elif c == '}': profondeur -= 1
+        elif profondeur == 0: plat += c
+    return set(re.findall(r'\b(\w+)\s*=', plat))
+defauts = cles('Z.defaults')
+for nom in ('Z.limits', 'Z.choices', 'Z.notInProfile', 'Z.private'):
+    revue += ['%s.%s absent de Z.defaults' % (nom, k) for k in sorted(cles(nom) - defauts)]
+print(('  OK    revue : fonctions, champs et reglages coherents') if not revue else ('  ERREUR revue : ' + ', '.join(revue)))
+sys.exit(1 if rt.eval('FAILED') or found or revue else 0)

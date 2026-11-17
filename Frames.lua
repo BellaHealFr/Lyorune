@@ -46,15 +46,16 @@ end
 
 local healthCurve, hideWhenFullCurve, lowHealthCurve, healCalculator
 
--- Taille d'une case, réduite en grand raid si l'option est cochée
+-- Taille d'une case, réduite en grand raid si l'option est cochée.
+-- En mode test, on compte les faux joueurs : l'aperçu à 40 montre la vraie taille d'un raid de 40.
 local function ShrinkFactor()
 	if not db.autoShrink then return 1 end
-	local members = GetNumGroupMembers()
+	local members = Z.previewActive and Z:PreviewSize() or GetNumGroupMembers()
 	return members > 25 and 0.7 or members > 10 and 0.85 or 1
 end
 
 function Z.CellSize()
-	local factor = Z.previewFactor or ShrinkFactor()
+	local factor = ShrinkFactor()
 	return math.floor(db.width * factor + 0.5), math.floor(db.height * factor + 0.5)
 end
 
