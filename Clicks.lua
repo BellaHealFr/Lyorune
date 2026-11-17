@@ -55,6 +55,27 @@ function Z:ClickLabel(key)
 	return label
 end
 
+-- MES MACROS DU JEU. La valeur « @macro:Nom » lance une macro de la fenêtre /macro du joueur. Elle est relue à
+-- chaque changement : la modifier dans /macro suffit. {cible} et [@mouseover] y désignent le joueur de la case.
+function Z.GameMacro(value)
+	return type(value) == "string" and value:match("^@macro:(.+)$") or nil
+end
+
+-- Les macros du joueur (compte puis personnage), sans celles que Lyorune crée lui-même
+function Z:GameMacros()
+	local list = {}
+	if not GetNumMacros then return list end
+	local account, character = GetNumMacros()
+	local first = MAX_ACCOUNT_MACROS or 120
+	local function add(index)
+		local name, icon = GetMacroInfo(index)
+		if name and name ~= "" and name:sub(1, 4) ~= "Lyo:" then list[#list + 1] = { name = name, icon = icon, index = index } end
+	end
+	for index = 1, account do add(index) end
+	for index = first + 1, first + character do add(index) end
+	return list
+end
+
 function Z.IsMacro(value)
 	return type(value) == "string" and value:sub(1, 1) == "/"
 end
@@ -99,6 +120,13 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix)
 		attributes[prefix .. "type" .. suffix] = "target"
 	elseif value == "@menu" then
 		attributes[prefix .. "type" .. suffix] = "togglemenu"
+	elseif Z.GameMacro(value) then -- une macro de la fenêtre /macro : son texte du moment
+		local index = GetMacroIndexByName and GetMacroIndexByName(Z.GameMacro(value)) or 0
+		local body = index > 0 and GetMacroBody(index)
+		if body and body ~= "" then
+			attributes[prefix .. "type" .. suffix] = "macro"
+			attributes[prefix .. "macrotext" .. suffix] = MacroText(body)
+		end
 	elseif Z.IsMacro(value) then -- macro du joueur : envoyée telle quelle, sans la résurrection automatique
 		attributes[prefix .. "type" .. suffix] = "macro"
 		attributes[prefix .. "macrotext" .. suffix] = MacroText(value)
@@ -174,7 +202,7 @@ function Z:ApplyClicks()
 end
 
 ----------------------------------------------------------------------------------------------------
--- MACROS POUR LES BARRES DE SORTS (option « barMacros »). Pour chaque sort ou macro de mes clics, Lyorune
+-- MACROS POUR LES BARRES DE SORTS (option « actionBarMacros »). Pour chaque sort ou macro de mes clics, Lyorune
 -- crée une vraie macro du jeu, rangée dans l'onglet du personnage de la fenêtre /macro, à glisser dans une
 -- barre. Elle vise le joueur sous la souris (une case ou un personnage), sinon la cible, sinon moi.
 -- Lyorune ne crée, ne modifie et ne retire que SES macros : leur nom commence par « Lyo: ».
@@ -235,7 +263,7 @@ local function EachOwnMacro(fn)
 end
 
 function Z:SyncBarMacros()
-	if not macrosReady or not Z.db.barMacros or not (CreateMacro and GetNumMacros) then return end
+	if not macrosReady or not Z.db.actionBarMacros or not (CreateMacro and GetNumMacros) then return end
 	if InCombatLockdown() then -- le jeu interdit de créer une macro en combat
 		Z:Safe("macros", function() Z:SyncBarMacros() end)
 		return
@@ -276,9 +304,25 @@ function Z:StartBarMacros()
 	local function Ready()
 		if macrosReady then return end
 		macrosReady = true
+		-- La 1.5.1 créait ces macros d'office : on retire celles qu'elle a posées sans qu'on le lui demande
+		if Z.db.barMacros ~= nil and not InCombatLockdown() then
+			Z.db.barMacros = nil
+			if not Z.db.actionBarMacros then Z:RemoveBarMacros() end
+		end
 		Z:SyncBarMacros()
 	end
-	Z:On("UPDATE_MACROS", Ready)
+	local function UsesGameMacro()
+		for _, value in pairs(Z:GetClicks()) do
+			if Z.GameMacro(value) then return true end
+		end
+		for _, entry in ipairs(Z:GetHoverKeys()) do
+			if Z.GameMacro(entry.spell) then return true end
+		end
+	end
+	Z:On("UPDATE_MACROS", function()
+		Ready()
+		if UsesGameMacro() then Z:ApplyClicks() end -- une de mes macros a peut-être changé : on relit son texte
+	end)
 	C_Timer.After(5, Ready)
 end
 

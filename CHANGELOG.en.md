@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.5.4] - 2026-11-17
+
+### Added
+
+- Your own game macros on a click: the spell picker shows the macros you wrote in /macro.
+
+### Improved
+
+- Action bar macros are no longer created automatically: tick the box in the Clicks tab if you want them. Those created by 1.5.1 are removed.
+
 ## [1.5.3] - 2026-11-17
 
 ### Improved
@@ -123,6 +133,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.5.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.5.0...v1.5.1

@@ -25,7 +25,7 @@ local searchIndex = {}      -- { texte en minuscules, numéro d'onglet, élémen
 ----------------------------------------------------------------------------------------------------
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
 ----------------------------------------------------------------------------------------------------
-local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, barMacros = true }
+local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true }
 
 local function Option(key)
 	return function() return Z.db[key] end, function(value)
@@ -310,6 +310,7 @@ local cells, hoverRows, barIcons = {}, {}, {}
 local function SpellText(value)
 	if value == "@target" then return L["Cibler"] end
 	if value == "@menu" then return L["Menu du joueur"] end
+	if Z.GameMacro(value) then return "|cffffd060" .. L["Macro"] .. "|r " .. Z.GameMacro(value) end
 	if Z.IsMacro(value) then return "|cffffd060" .. L["Macro"] .. "|r " .. (value:match("[^\n]*$") or "") end -- dernière ligne : le sort
 	return value
 end
@@ -424,7 +425,7 @@ function RefreshClicks()
 		row:SetShown(i <= #keys + 1) -- une seule ligne vide à la fois
 	end
 	-- Macros pour les barres de sorts : une icône par macro tenue à jour par Lyorune
-	local macros = Z.db.barMacros and Z:BarMacros() or {}
+	local macros = Z.db.actionBarMacros and Z:BarMacros() or {}
 	for i, icon in ipairs(barIcons) do
 		local macro = macros[i]
 		icon.macro = macro
@@ -520,10 +521,11 @@ local function OpenPicker(title, onChoose, current)
 	picker.title:SetText(title)
 	picker.edit:SetText("")
 
-	local spells = Z:KnownSpells()
+	-- Les sorts connus, puis les macros que le joueur a écrites dans la fenêtre /macro du jeu
+	local spells, macros = Z:KnownSpells(), Z:GameMacros()
 	local perRow, size = 10, 32
-	for i, spell in ipairs(spells) do
-		local icon = picker.icons[i]
+	local function Place(index, slot, top)
+		local icon = picker.icons[index]
 		if not icon then
 			icon = CreateFrame("Button", nil, picker)
 			icon:SetSize(size, size)
@@ -534,24 +536,59 @@ local function OpenPicker(title, onChoose, current)
 			icon:SetScript("OnEnter", function(self)
 				self.border:SetColor(UI.accent[1], UI.accent[2], UI.accent[3])
 				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-				GameTooltip:SetSpellByID(self.spell.id)
+				if self.spell then
+					GameTooltip:SetSpellByID(self.spell.id)
+				else
+					GameTooltip:SetText(self.macro.name, UI.accent[1], UI.accent[2], UI.accent[3])
+					GameTooltip:AddLine(GetMacroBody(self.macro.index), 1, 1, 1)
+					GameTooltip:AddLine(L["Pour viser le joueur de la case, écrivez [@mouseover] ou {cible} dans la macro."], 0.6, 0.6, 0.65, true)
+				end
 				GameTooltip:Show()
 			end)
 			icon:SetScript("OnLeave", function(self)
 				self.border:SetColor(0, 0, 0)
 				GameTooltip:Hide()
 			end)
-			icon:SetScript("OnClick", function(self) picker.Choose(self.spell.name) end)
-			picker.icons[i] = icon
+			icon:SetScript("OnClick", function(self)
+				picker.Choose(self.spell and self.spell.name or "@macro:" .. self.macro.name)
+			end)
+			picker.icons[index] = icon
 		end
-		icon.spell = spell
-		icon.texture:SetTexture(spell.icon)
-		icon:SetPoint("TOPLEFT", 14 + ((i - 1) % perRow) * (size + 2.5), -74 - math.floor((i - 1) / perRow) * (size + 3))
+		icon:ClearAllPoints()
+		icon:SetPoint("TOPLEFT", 14 + ((slot - 1) % perRow) * (size + 2.5), top - math.floor((slot - 1) / perRow) * (size + 3))
 		icon:Show()
+		return icon
 	end
-	for i = #spells + 1, #picker.icons do picker.icons[i]:Hide() end
 
-	picker:SetHeight(74 + math.ceil(#spells / perRow) * (size + 3) + 72)
+	local top = -74
+	for i, spell in ipairs(spells) do
+		local icon = Place(i, i, top)
+		icon.spell, icon.macro = spell, nil
+		icon.texture:SetTexture(spell.icon)
+	end
+	top = top - math.ceil(#spells / perRow) * (size + 3)
+
+	if not picker.macroHead then
+		picker.macroHead = UI.Text(picker, 11)
+		picker.macroHead:SetTextColor(UI.accent[1], UI.accent[2], UI.accent[3])
+		picker.macroHead:SetText(L["Mes macros du jeu (fenêtre /macro) :"])
+	end
+	local shown = math.min(#macros, 40)
+	picker.macroHead:SetShown(shown > 0)
+	if shown > 0 then
+		picker.macroHead:ClearAllPoints()
+		picker.macroHead:SetPoint("TOPLEFT", 14, top - 6)
+		top = top - 24
+		for i = 1, shown do
+			local icon = Place(#spells + i, i, top)
+			icon.spell, icon.macro = nil, macros[i]
+			icon.texture:SetTexture(macros[i].icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+		end
+		top = top - math.ceil(shown / perRow) * (size + 3)
+	end
+	for i = #spells + shown + 1, #picker.icons do picker.icons[i]:Hide() end
+
+	picker:SetHeight(-top + 72)
 	picker:ClearAllPoints()
 	picker:SetPoint("CENTER", window, "CENTER")
 	picker:Show()
@@ -661,7 +698,7 @@ local function BuildClicks(page)
 		{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
 		{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés." },
 		{ "head", "Macros pour vos barres de sorts" },
-		{ "check", "barMacros", "Créer une macro par sort de mes clics", "Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro." },
+		{ "check", "actionBarMacros", "Créer une macro par sort de mes clics", "Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro." },
 		{ "note", "Cliquez sur une icône, puis déposez-la dans une barre de sorts. La macro vise le joueur sous la souris, sinon votre cible, sinon vous.", 44 },
 	}
 	local y = -196
@@ -673,7 +710,7 @@ local function BuildClicks(page)
 	y = y - BuildBarIcons(page, x, y) - 4
 	local remove = BuildItem(page, { "button", "Retirer les macros de Lyorune", function()
 		Z:RemoveBarMacros()
-		Z.db.barMacros = false
+		Z.db.actionBarMacros = false
 		page:Hide() page:Show() -- la case à cocher et les icônes suivent
 	end, "Supprime les macros « Lyo: » et décoche l'option. Vos autres macros ne sont pas touchées." })
 	remove:SetPoint("TOPLEFT", x, y)

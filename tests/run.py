@@ -245,7 +245,9 @@ end)
 
 step("macros pour les barres de sorts", function()
   local function find(name) local i = GetMacroIndexByName(name) return i > 0 and GetMacroBody(i) or nil end
-  MACROS[#MACROS + 1] = { name = "Ma macro", body = "/dance" } -- une macro du joueur : jamais touchée
+  assert(Z.db.actionBarMacros == false and #MACROS == 0, "aucune macro ne doit etre creee sans qu'on le demande")
+  MACROS[#MACROS + 1] = { name = "Ma macro", icon = 134400, body = "/dance" } -- une macro du joueur : jamais touchée
+  Z.db.actionBarMacros = true
   Z:SetClick("1", "Soins rapides") Z:SetClick("ctrl-2", "Résurrection")
   assert(find("Lyo:Soins rapide") == "#showtooltip Soins rapides\n/cast [@mouseover,help,nodead][help,nodead] [@player] Soins rapides", tostring(find("Lyo:Soins rapide")))
   assert(find("Lyo:Résurrectio") == "#showtooltip Résurrection\n/cast [@mouseover,help,dead][help,dead] Résurrection", tostring(find("Lyo:Résurrectio")))
@@ -271,13 +273,43 @@ step("macros pour les barres de sorts", function()
   end
   assert(shown == #Z:BarMacros() and shown > 0 and PICKED == "Lyo:Soins rapide", "icones des macros : " .. shown)
   -- option coupee : plus aucune creation ; le bouton de retrait ne retire que les macros de Lyorune
-  Z.db.barMacros = false Z:SetClick("alt-5", "Prière") assert(not find("Lyo:Prière"))
+  Z.db.actionBarMacros = false Z:SetClick("alt-5", "Prière") assert(not find("Lyo:Prière"))
   Z:SetClick("alt-5", nil)
   Z:RemoveBarMacros()
   assert(#MACROS == 1 and MACROS[1].name == "Ma macro", "retrait : " .. #MACROS)
-  Z.db.barMacros = true Z:ApplyClicks() assert(find("Lyo:Soins rapide"))
+  Z.db.actionBarMacros = true Z:ApplyClicks() assert(find("Lyo:Soins rapide"))
   Z:SetClick("ctrl-2", nil)
+  Z.db.actionBarMacros = false Z:RemoveBarMacros()
   Z:ToggleOptions()
+  -- une macro creee d'office par la 1.5.1 est retiree une fois, sans toucher aux autres
+  assert(#MACROS == 1 and MACROS[1].name == "Ma macro")
+end)
+
+step("mes macros du jeu sur un clic", function()
+  local b = Z.buttons[1]
+  MACROS[#MACROS + 1] = { name = "Bijou soin", icon = 134400, body = "#showtooltip\n/use 13\n/cast [{cible}] Soins rapides" }
+  local list = Z:GameMacros()
+  assert(#list == 2 and list[2].name == "Bijou soin" and list[2].index == 122, "liste de mes macros")
+  Z:SetClick("alt-4", "@macro:Bijou soin")
+  assert(b:GetAttribute("alt-type4") == "macro")
+  assert(b:GetAttribute("alt-macrotext4") == "#showtooltip\n/use 13\n/cast [@mouseover] Soins rapides", tostring(b:GetAttribute("alt-macrotext4")))
+  -- je modifie la macro dans /macro : le clic suit
+  MACROS[2].body = "/cast [@mouseover] Soins" FireEvent("UPDATE_MACROS")
+  assert(b:GetAttribute("alt-macrotext4") == "/cast [@mouseover] Soins", "macro modifiee non relue")
+  -- macro supprimee du jeu : le clic ne fait plus rien, sans erreur
+  table.remove(MACROS, 2) FireEvent("UPDATE_MACROS")
+  assert(b:GetAttribute("alt-type4") == nil)
+  assert(not Z:Export():find("macro", 1, true), "une macro du jeu ne doit pas etre exportee")
+  local before = Z:GetClicks()["1"]
+  Z:Import("Lyorune2;c." .. Z.class .. ".1=s%40macro%3AMa%20macro;width=n90")
+  assert(Z:GetClicks()["1"] == before, "macro du jeu importee")
+  Z.db.width = 86 Z:Refresh()
+  -- la fenetre de choix montre mes macros, pas celles de Lyorune
+  MACROS[#MACROS + 1] = { name = "Lyo:Test", icon = 1, body = "/dance" }
+  assert(#Z:GameMacros() == 1)
+  table.remove(MACROS)
+  Z:SetClick("alt-4", nil)
+  table.remove(MACROS, 1)
 end)
 
 step("combat : report des changements", function()

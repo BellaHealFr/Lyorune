@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.5.4", date = "2026-11-17",
+		added = {
+			"Vos propres macros du jeu sur un clic : la fenêtre de choix d'un sort montre les macros que vous avez écrites dans /macro.",
+		},
+		improved = {
+			"Les macros pour les barres de sorts ne sont plus créées d'office : cochez la case dans l'onglet Clics si vous les voulez. Celles créées par la 1.5.1 sont retirées.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.5.3", date = "2026-11-17",
 		added = {
 		},

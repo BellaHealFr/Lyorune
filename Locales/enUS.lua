@@ -85,6 +85,8 @@ Z.translations.enUS = {
 	["Clics de souris : cliquez sur une cellule pour choisir le sort, ou une macro, lancé sur la case d'un joueur. Enregistrés par classe."] = "Mouse clicks: click a cell to pick the spell, or a macro, cast on a player's frame. Saved per class.",
 	["Macro"] = "Macro", ["Macro..."] = "Macro...", ["Annuler"] = "Cancel", ["Nom du sort"] = "Spell name",
 	["Enregistrer la macro"] = "Save the macro",
+	["Mes macros du jeu (fenêtre /macro) :"] = "My game macros (/macro window):",
+	["Pour viser le joueur de la case, écrivez [@mouseover] ou {cible} dans la macro."] = "To aim at the player of the frame, write [@mouseover] or {cible} in the macro.",
 	["Macros pour vos barres de sorts"] = "Macros for your action bars",
 	["Créer une macro par sort de mes clics"] = "Create one macro per spell of my clicks",
 	["Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro."] = "Lyorune creates and keeps up to date real game macros (their name starts with \"Lyo:\"), stored in /macro, in your character's tab. It never touches any other macro.",
@@ -306,4 +308,6 @@ Z.translations.enUS = {
 	["Les cadres s'affichent de nouveau : le jeu refusait de créer les cases, seul comme en groupe."] = "The frames show up again: the game refused to create the cells, solo as well as in a group.",
 	["La fenêtre d'options est plus haute, pour que les macros des barres de sorts tiennent dans l'onglet Clics."] = "The options window is taller, so that the action bar macros fit in the Clicks tab.",
 	["Une erreur dans un onglet des options ne cache plus les autres réglages, et elle est notée au journal."] = "An error in one options tab no longer hides the other settings, and it is written to the log.",
+	["Vos propres macros du jeu sur un clic : la fenêtre de choix d'un sort montre les macros que vous avez écrites dans /macro."] = "Your own game macros on a click: the spell picker shows the macros you wrote in /macro.",
+	["Les macros pour les barres de sorts ne sont plus créées d'office : cochez la case dans l'onglet Clics si vous les voulez. Celles créées par la 1.5.1 sont retirées."] = "Action bar macros are no longer created automatically: tick the box in the Clicks tab if you want them. Those created by 1.5.1 are removed.",
 }

@@ -52,11 +52,20 @@ Click a template, change whatever you like, then "Save the macro". You can also 
 /cast [{cible}] Rejuvenation
 ```
 
-### Ready-made macros for your action bars
+### Using your own game macros
 
-Lyorune creates a real game macro by itself for each spell of your clicks. You have nothing to write.
+Already wrote macros in the game's `/macro` window? Put them on a click:
 
-1. Open the **Clicks** tab: under "Macros for your action bars", one icon per macro.
+1. **Clicks** tab, click a cell of the table (or "Spell" of a hover key).
+2. Below your spells, the "My game macros" row shows your macros: click the one you want.
+
+For the macro to aim at the player of the frame, write `[@mouseover]` or `{cible}` in it, for example `/cast [@mouseover] Rejuvenation`. If you edit the macro in `/macro`, the click follows by itself.
+
+### Ready-made macros for your action bars (optional)
+
+If you ask for it, Lyorune creates a real game macro for each spell of your clicks. Nothing is created until the box is ticked.
+
+1. **Clicks** tab, tick "Create one macro per spell of my clicks": one icon per macro appears.
 2. Click an icon, then drop it on an action bar. You also find them in `/macro`, in your character's tab: their name starts with "Lyo:".
 
 The macro heals the player under your mouse (a frame or a character), otherwise your target, otherwise yourself. It updates when you change your clicks. Lyorune never touches your other macros. To do without them, untick "Create one macro per spell of my clicks" or click "Remove Lyorune's macros".

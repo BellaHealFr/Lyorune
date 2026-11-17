@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.5.3"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.5.4"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -67,7 +67,7 @@ Z.defaults = {
 
 	-- Clics
 	castOnDown = true,         -- lancer le sort dès l'appui
-	barMacros = true,          -- créer une macro du jeu par sort de mes clics, pour les barres de sorts
+	actionBarMacros = false,   -- créer une macro du jeu par sort de mes clics, pour les barres de sorts (à la demande)
 	autoRes = true,            -- le même clic relève un joueur mort
 	externalClicks = false,    -- laisser Clique ou le clic-soin du jeu gérer les cases
 	clicks = {},               -- clics de souris par classe : clicks.PRIEST["shift-1"] = "Rénovation"
