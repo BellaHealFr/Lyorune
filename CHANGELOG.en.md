@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.3] - 2026-11-17
+
+### Fixed
+
+- A ready check started again less than 5 seconds after the previous one keeps its answers on the cells.
+- The out of sight eye no longer stays on a cell when the game gives it to another player.
+
 ## [1.23.2] - 2026-11-17
 
 ### Fixed
@@ -353,6 +360,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.2...v1.23.3
 [1.23.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.1...v1.23.2
 [1.23.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.0...v1.23.1
 [1.23.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.22.0...v1.23.0

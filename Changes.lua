@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.3", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Un appel « Prêt ? » relancé moins de 5 secondes après le précédent garde ses réponses sur les cases.",
+			"L'œil « hors de vue » ne reste plus sur une case quand le jeu la donne à un autre joueur.",
+		},
+	},
+	{
 		version = "1.23.2", date = "2026-11-17",
 		added = {
 		},

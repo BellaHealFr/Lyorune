@@ -195,8 +195,8 @@ Grille de chaque lot :
   `tests/run.py` (étape « revue »). Bug trouvé : le mode test à 25 ou 40 ne réduisait pas les cases (1.23.1)
 - [x] Lot 1 : Core, Log, Data. Bugs : une action en erreur à la fin du combat bloquait les suivantes ;
   « Vider le journal » laissait /lyorune bug signaler l'erreur effacée (1.23.2)
-- [ ] Lot 2 : Frames, 1re moitié
-- [ ] Lot 3 : Frames, 2e moitié
+- [x] Lot 2 : Frames, 1re moitié. Bug : l'œil « hors de vue » restait sur une case donnée à un autre joueur (1.23.3)
+- [x] Lot 3 : Frames, 2e moitié. Bug : un appel « Prêt ? » relancé dans les 5 secondes perdait ses réponses (1.23.3)
 - [ ] Lot 4 : Auras, Alerts
 - [ ] Lot 5 : Clicks
 - [ ] Lot 6 : Macros

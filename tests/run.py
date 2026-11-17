@@ -2264,6 +2264,33 @@ step("revue 1.23.2 : fin du combat et journal vide", function()
   assert(Z:BugReport():find("Aucune erreur technique", 1, true), "erreur effacee encore signalee")
 end)
 
+step("revue 1.23.3 : appel Pret relance, oeil hors de vue qui change de joueur", function()
+  local b for _, x in ipairs(Z.buttons) do if x.unit and x.unit ~= "player" and x:IsVisible() and not x.extra then b = x break end end
+  assert(b, "case d'un autre joueur")
+  -- un appel relancé moins de 5 s après la fin du premier garde ses réponses
+  local oldAfter, later = C_Timer.After, {}
+  C_Timer.After = function(_, f) later[#later + 1] = f end
+  FireEvent("READY_CHECK") FireEvent("READY_CHECK_FINISHED")
+  FireEvent("READY_CHECK")
+  for _, f in ipairs(later) do f() end
+  assert(b.readyCheck and b.center:IsShown(), "le minuteur du premier appel a efface le second")
+  later = {} FireEvent("READY_CHECK_FINISHED")
+  for _, f in ipairs(later) do f() end
+  C_Timer.After = oldAfter
+  assert(not b.readyCheck, "reponses jamais effacees apres le dernier appel")
+  -- l'œil hors de vue ne suit pas la case quand le jeu la donne à un autre joueur
+  Z.db.losHint = true
+  C_Timer.After = function() end
+  Z.MarkOutOfSight(b)
+  C_Timer.After = oldAfter
+  assert(b.losUntil, "oeil absent")
+  local unit = b.unit
+  b:SetAttribute("unit", "player") b:SetAttribute("unit", unit)
+  assert(not b.losUntil, "oeil reste sur la case donnee a un autre joueur")
+  Z.db.losHint = Z.defaults.losHint
+  Z:Refresh() RunUpdates()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

@@ -685,4 +685,6 @@ Z.translations.enUS = {
 	["Mode test à 25 ou 40 joueurs : avec « Réduire les cases en grand raid », les cases rétrécissent comme dans un vrai raid (#46)."] = "Test mode with 25 or 40 players: with \"Shrink cells in large raids\", cells now shrink like in a real raid (#46).",
 	["Fin du combat : si une modification remise à plus tard échoue, les autres (clics, disposition, profil) s'appliquent quand même (#46)."] = "End of combat: if one postponed change fails, the others (clicks, layout, profile) still apply (#46).",
 	["« Vider le journal » : /lyorune bug ne signale plus une erreur déjà effacée (#46)."] = "\"Clear log\": /lyorune bug no longer reports an error that was already cleared (#46).",
+	["Un appel « Prêt ? » relancé moins de 5 secondes après le précédent garde ses réponses sur les cases."] = "A ready check started again less than 5 seconds after the previous one keeps its answers on the cells.",
+	["L'œil « hors de vue » ne reste plus sur une case quand le jeu la donne à un autre joueur."] = "The out of sight eye no longer stays on a cell when the game gives it to another player.",
 }

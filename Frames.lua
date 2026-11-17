@@ -421,6 +421,7 @@ end
 local function OnAttributeChanged(b, name, value)
 	if name ~= "unit" or b.unit == value then return end
 	b.unit = value
+	b.losUntil = nil -- l'œil « hors de vue » concernait le joueur d'avant : il ne suit pas la case
 	b:UnregisterAllEvents()
 	if b.powerShown then
 		b.powerShown = false
@@ -1414,6 +1415,9 @@ function Z:CreateFrames()
 		if MODIFIERS[db.lockMode] then UpdateHandles() end
 	end)
 
+	-- Les réponses restent 5 secondes après la fin de l'appel. Un appel relancé entre-temps garde les siennes :
+	-- chaque appel a son numéro, et l'effacement prévu pour un appel fini ne touche pas au suivant.
+	local readyCheckNumber = 0
 	local function ReadyCheck(active)
 		return function()
 			for _, b in ipairs(buttons) do
@@ -1422,9 +1426,15 @@ function Z:CreateFrames()
 			end
 		end
 	end
-	Z:On("READY_CHECK", ReadyCheck(true))
+	local clearReadyCheck = ReadyCheck(false)
+	Z:On("READY_CHECK", function() readyCheckNumber = readyCheckNumber + 1 ReadyCheck(true)() end)
 	Z:On("READY_CHECK_CONFIRM", ReadyCheck(true))
-	Z:On("READY_CHECK_FINISHED", function() C_Timer.After(5, ReadyCheck(false)) end)
+	Z:On("READY_CHECK_FINISHED", function()
+		local finished = readyCheckNumber
+		C_Timer.After(5, function()
+			if finished == readyCheckNumber then clearReadyCheck() end
+		end)
+	end)
 
 	-- Soin refusé car hors de vue : message d'erreur du jeu, et mes incantations pour le relier au bon clic
 	Z:On("UI_ERROR_MESSAGE", OnGameError)
