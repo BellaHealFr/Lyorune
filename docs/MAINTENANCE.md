@@ -105,3 +105,11 @@ Outils :
 | `.github/workflows/` | Tests à chaque envoi sur GitHub, publication à chaque étiquette `v1.3.0` |
 
 Le travail restant est suivi dans `docs/FEUILLE_DE_ROUTE.md`.
+
+## Code de création d'une case : jamais d'attribut « _ »
+
+Le code `CONFIG_SNIPPET` de `Frames.lua` est exécuté par le jeu pour chaque nouvelle case. Dans ce code, le jeu refuse
+`self:SetAttribute` sur tout attribut dont le nom commence par `_` (erreur « Invalid attribute name »), et la case
+n'est alors jamais créée : le cadre reste vide, sans aucune erreur au nom de Lyorune (défaut des versions 1.2 à 1.5.1).
+Les attributs `_onenter` et `_onleave` passent par `_initialAttributeNames` et `_initialAttribute-...` sur l'en-tête.
+Un test le contrôle. En cas de cadre vide, lire la table `frameState` du fichier `SavedVariables\Lyorune.lua`.

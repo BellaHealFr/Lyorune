@@ -501,10 +501,11 @@ local CONFIG_SNIPPET = [[-- Lyorune
 	for i = 1, header:GetAttribute("z-count") or 0 do
 		self:SetAttribute(header:GetAttribute("z-key" .. i), header:GetAttribute("z-value" .. i))
 	end
-	self:SetAttribute("_onenter", header:GetAttribute("z-onenter"))
-	self:SetAttribute("_onleave", "self:ClearBindings()")
 	header:CallMethod("InitButton", self:GetName())
 ]]
+-- Attention : dans ce code, le jeu refuse tout attribut dont le nom commence par « _ » (erreur « Invalid attribute
+-- name », et plus aucune case n'est créée). Les attributs _onenter et _onleave des nouvelles cases passent donc par
+-- la liste « _initialAttributeNames » de l'en-tête, que le jeu recopie lui-même (voir CreateHeader et Clicks.lua).
 
 local function CreateAnchor(def)
 	local anchor = CreateFrame("Frame", def.name .. "Anchor", UIParent)
@@ -566,6 +567,9 @@ local function CreateHeader(def)
 	h:SetAttribute("showRaid", true)
 	h:SetAttribute("sortMethod", "INDEX")
 	h:SetAttribute("initialConfigFunction", CONFIG_SNIPPET)
+	h:SetAttribute("_initialAttributeNames", "_onenter,_onleave")
+	h:SetAttribute("_initialAttribute-_onenter", "self:ClearBindings()")
+	h:SetAttribute("_initialAttribute-_onleave", "self:ClearBindings()")
 	if def.key == "tanks" then h:SetAttribute("roleFilter", "TANK") end
 	Z.headers[#Z.headers + 1] = h
 	return h

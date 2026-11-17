@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.5.2", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Les cadres s'affichent de nouveau : le jeu refusait de créer les cases, seul comme en groupe.",
+		},
+	},
+	{
 		version = "1.5.1", date = "2026-11-17",
 		added = {
 			"Macros pour vos barres de sorts : Lyorune crée et tient à jour une vraie macro du jeu pour chaque sort de vos clics. Onglet Clics : cliquez sur son icône puis déposez-la dans une barre.",

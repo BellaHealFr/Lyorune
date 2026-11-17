@@ -303,4 +303,5 @@ Z.translations.enUS = {
 	["Un code de configuration reçu d'un autre joueur ne peut contenir que des noms de sorts, jamais une commande."] = "A configuration code received from another player can only hold spell names, never a command.",
 	["Macros pour vos barres de sorts : Lyorune crée et tient à jour une vraie macro du jeu pour chaque sort de vos clics. Onglet Clics : cliquez sur son icône puis déposez-la dans une barre."] = "Macros for your action bars: Lyorune creates and keeps up to date a real game macro for each spell of your clicks. Clicks tab: click its icon, then drop it on an action bar.",
 	["Le rapport de /lyorune erreurs décrit maintenant l'état de chaque cadre."] = "The /lyorune erreurs report now describes the state of each frame.",
+	["Les cadres s'affichent de nouveau : le jeu refusait de créer les cases, seul comme en groupe."] = "The frames show up again: the game refused to create the cells, solo as well as in a group.",
 }

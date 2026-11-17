@@ -147,6 +147,7 @@ function Z:ApplyClicks()
 		end
 	end
 	attributes["_onenter"] = onEnter
+	attributes["_onleave"] = "self:ClearBindings()"
 
 	-- Cases existantes
 	for _, b in ipairs(Z.buttons) do
@@ -160,14 +161,14 @@ function Z:ApplyClicks()
 	for _, h in ipairs(Z.headers) do
 		local count = 0
 		for name, value in pairs(attributes) do
-			if name ~= "_onenter" then
+			if name:sub(1, 1) ~= "_" then -- les attributs « _ » passent par _initialAttribute (voir Frames.lua)
 				count = count + 1
 				h:SetAttribute("z-key" .. count, name)
 				h:SetAttribute("z-value" .. count, value)
 			end
 		end
 		h:SetAttribute("z-count", count)
-		h:SetAttribute("z-onenter", onEnter)
+		h:SetAttribute("_initialAttribute-_onenter", onEnter)
 	end
 	Z:SyncBarMacros()
 end
