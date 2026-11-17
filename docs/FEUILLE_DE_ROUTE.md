@@ -203,8 +203,9 @@ Grille de chaque lot :
   « aucune macro » une fois des macros créées (1.23.5)
 - [x] Lot 7 : Buffs, Cast, Preview. Bugs : un sort refusé pendant une incantation cachait la barre ou l'anneau ;
   couronne du chef absente du mode test et de la fenêtre de placement (chemin d'image abîmé) (1.23.5)
-- [ ] Lot 8 : Share, Comm
-- [ ] Lot 9 : UI
+- [x] Lot 8 : Share, Comm. Bug : 80 résurrections réussies dont le joueur avait quitté le groupe remplissaient
+  la liste « qui relève qui » pour toute la session (1.23.6)
+- [x] Lot 9 : UI. Aucun bug
 - [ ] Lot 10 : Options, 1re moitié
 - [ ] Lot 11 : Options, 2e moitié
 - [ ] Lot 12 : Placement, Perf, Bug, Minimap

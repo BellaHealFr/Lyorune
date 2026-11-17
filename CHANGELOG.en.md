@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.6] - 2026-11-17
+
+### Fixed
+
+- Who resurrects whom: the list no longer fills up for the whole session when resurrected players leave the group ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.5] - 2026-11-17
 
 ### Fixed
@@ -375,6 +381,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.5...v1.23.6
 [1.23.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.4...v1.23.5
 [1.23.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.3...v1.23.4
 [1.23.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.2...v1.23.3

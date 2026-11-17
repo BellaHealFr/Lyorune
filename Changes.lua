@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.6", date = "2026-11-17",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"« Qui relève qui » : la liste ne se remplit plus pour toute la session quand des joueurs relevés quittent le groupe (#46).",
+		},
+	},
+	{
 		version = "1.23.5", date = "2026-11-17",
 		added = {
 		},

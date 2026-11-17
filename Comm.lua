@@ -197,6 +197,14 @@ end
 local function StartRes(target, from, by)
 	EndRes(from, false) -- un soigneur relève un seul joueur à la fois
 	local key = Key(target)
+	if not rezzers[key] and rezzerCount >= MAX_ENTRIES then
+		-- liste pleine : les entrées périmées partent d'abord (un mort qui a quitté le groupe ne se relève
+		-- jamais sous nos yeux, son entrée resterait sinon pour toujours)
+		local now = GetTime()
+		for old, entry in pairs(rezzers) do
+			if now >= entry.ends then rezzers[old], rezzerCount = nil, rezzerCount - 1 end
+		end
+	end
 	if not rezzers[key] then
 		if rezzerCount >= MAX_ENTRIES then return end
 		rezzerCount = rezzerCount + 1

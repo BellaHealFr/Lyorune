@@ -692,4 +692,5 @@ Z.translations.enUS = {
 	["La couronne du chef s'affiche dans le mode test et dans la fenêtre « Placer les éléments de la case »."] = "The leader crown now shows in test mode and in the \"Place the cell elements\" window.",
 	["Mes macros : effacer le mot avant « : » dans une condition ([:shift]) ne fait plus d'erreur."] = "My macros: erasing the word before \":\" in a condition ([:shift]) no longer causes an error.",
 	["Importer de /macro : la fenêtre ne dit plus « aucune macro » quand des macros ont été créées depuis."] = "Import from /macro: the window no longer says \"no macro\" when macros were created since.",
+	["« Qui relève qui » : la liste ne se remplit plus pour toute la session quand des joueurs relevés quittent le groupe (#46)."] = "Who resurrects whom: the list no longer fills up for the whole session when resurrected players leave the group (#46).",
 }

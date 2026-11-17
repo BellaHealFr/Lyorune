@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.6] - 2026-11-17
+
+### Corrigé
+
+- « Qui relève qui » : la liste ne se remplit plus pour toute la session quand des joueurs relevés quittent le groupe ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+
 ## [1.23.5] - 2026-11-17
 
 ### Corrigé
@@ -375,6 +381,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.5...v1.23.6
 [1.23.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.4...v1.23.5
 [1.23.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.3...v1.23.4
 [1.23.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.2...v1.23.3
