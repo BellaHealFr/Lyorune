@@ -112,16 +112,46 @@ local function Fill(cell, index)
 	end
 end
 
--- Range les fausses cases comme le ferait le jeu : par paquets de cinq, chaque paquet sur son fond (réglage)
+-- Ordre des faux joueurs, comme le jeu le ferait : trié dans chaque groupe de cinq, ou dans toute la grille.
+-- Renvoie la liste des numéros de faux joueurs, place par place.
+local function Order()
+	local db, L = Z.db, Z.L
+	local classRank, rank = {}, 0
+	for class in Z.ClassOrder():gmatch("[^,]+") do rank = rank + 1; classRank[class] = rank end
+	local function name(i) return L["Joueur"] .. " " .. i end
+	local function before(a, b)
+		if db.sortOrder == "CLASS" then
+			local ca = classRank[CLASSES[(a - 1) % #CLASSES + 1]] or 99
+			local cb = classRank[CLASSES[(b - 1) % #CLASSES + 1]] or 99
+			if ca ~= cb then return ca < cb end
+		end
+		if db.sortOrder == "INDEX" then return a < b end
+		return name(a) < name(b)
+	end
+	local order, block = {}, db.layout == "GRID" and size or 5
+	for first = 1, size, block do
+		local chunk = {}
+		for i = first, math.min(first + block - 1, size) do chunk[#chunk + 1] = i end
+		table.sort(chunk, before)
+		for _, i in ipairs(chunk) do order[#order + 1] = i end
+	end
+	return order
+end
+
+-- Range les fausses cases comme le ferait le jeu : par paquets de cinq, chaque paquet sur son fond (réglage),
+-- ou en une seule grille de la hauteur choisie
 local function Layout()
 	local db = Z.db
 	local width, height = Z.CellSize()
-	local apart = db.groupPanel and 6 or 0 -- même écart que les vrais cadres entre deux fonds de groupe
-	for index, cell in ipairs(cells) do
-		local shown = index <= size
+	local grid = db.layout == "GRID"
+	local perColumn = grid and db.gridSize or 5
+	local apart = (db.groupPanel and not grid) and 6 or 0 -- même écart que les vrais cadres entre deux fonds de groupe
+	local order = Order()
+	for place, cell in ipairs(cells) do
+		local shown = place <= size
 		cell:SetShown(shown)
 		if shown then
-			local group, slot = math.floor((index - 1) / 5), (index - 1) % 5
+			local group, slot = math.floor((place - 1) / perColumn), (place - 1) % perColumn
 			local x, y
 			if db.horizontal then
 				x, y = slot * (width + db.spacing), -group * (height + db.spacing + apart)
@@ -132,19 +162,30 @@ local function Layout()
 			cell:SetPoint("TOPLEFT", container, "TOPLEFT", x, y)
 			cell:SetSize(width, height)
 			Z.StyleButton(cell)
-			Fill(cell, index)
+			Fill(cell, order[place])
 		end
 	end
 	for group = 1, 8 do
 		local first = cells[(group - 1) * 5 + 1]
 		local wanted = db.groupPanel and first and first:IsShown()
+		local last = cells[math.min(group * 5, size)]
+		if grid then -- un seul fond pour toute la grille, posé sur un cadre invisible de sa taille
+			wanted = wanted and group == 1
+			local columns, rows = math.ceil(size / perColumn), math.min(size, perColumn)
+			if db.horizontal then columns, rows = rows, columns end
+			container.box = container.box or CreateFrame("Frame", nil, container)
+			container.box:ClearAllPoints()
+			container.box:SetPoint("TOPLEFT", container, "TOPLEFT")
+			container.box:SetSize(columns * width + (columns - 1) * db.spacing, rows * height + (rows - 1) * db.spacing)
+			first, last = container.box, container.box
+		end
 		local panel = container.panels[group]
 		if wanted and not panel then
 			panel = Z.BuildPanel(container)
 			container.panels[group] = panel
 		end
 		if panel then
-			if wanted then Z.StylePanel(panel, first, cells[math.min(group * 5, size)]) end
+			if wanted then Z.StylePanel(panel, first, last) end
 			panel:SetShown(wanted and true or false)
 		end
 	end

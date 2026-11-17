@@ -41,7 +41,13 @@ Z.translations.enUS = {
 	["Expérimental. Pour les faire revenir, décochez puis tapez /reload."] = "Experimental. To bring them back, untick then type /reload.",
 	["Mode test"] = "Test mode", ["joueurs"] = "players", ["Joueur"] = "Player",
 	["Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer."] = "Shows a fake group to tune the look. Click again to close it.",
-	["Par groupe"] = "By group", ["Par rôle"] = "By role", ["En colonnes"] = "Columns", ["En lignes"] = "Rows",
+	["Par groupe"] = "By group", ["Par rôle"] = "By role", ["Grille"] = "Grid",
+	["Ordre du groupe"] = "Group order", ["Par nom"] = "By name", ["Par classe, puis nom"] = "By class, then name",
+	["Ordre dans chaque bloc"] = "Order in each block", ["Chaque groupe garde sa place"] = "Each group keeps its place",
+	["Cases par colonne en grille"] = "Cells per column in grid",
+	["Par groupe : un bloc par groupe de raid. Par rôle : un bloc par rôle. Grille : tout le raid d'un seul tenant, sans trou entre les groupes."] = "By group: one block per raid group. By role: one block per role. Grid: the whole raid in one piece, with no gap between groups.",
+	["Le jeu tient l'ordre à jour tout seul, même en combat. En rangement par rôle, « par classe » range par nom."] = "The game keeps the order up to date by itself, even in combat. When arranged by role, \"by class\" sorts by name.",
+	["Rangement par groupe : le groupe 3 reste en 3e colonne même si le groupe 2 est vide. Décoché, les groupes se resserrent."] = "Arranged by group: group 3 stays in the 3rd column even if group 2 is empty. Unchecked, groups close up.", ["En colonnes"] = "Columns", ["En lignes"] = "Rows",
 	["Tank, soin, dégâts"] = "Tank, healer, damage", ["Tank, dégâts, soin"] = "Tank, damage, healer",
 	["Soin, tank, dégâts"] = "Healer, tank, damage", ["Soin, dégâts, tank"] = "Healer, damage, tank",
 	["Dégâts, tank, soin"] = "Damage, tank, healer", ["Dégâts, soin, tank"] = "Damage, healer, tank",
@@ -341,7 +347,7 @@ Z.translations.enUS = {
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement, tanks, familiers, cible et focalisation, mode test.\n"
+			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu) et les coins.\n"
@@ -350,7 +356,7 @@ Z.translations.enUS = {
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe, partage.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading) and the corners.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group, sharing.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -531,4 +537,8 @@ Z.translations.enUS = {
 	["Mes profils (onglet Profils) : vos réglages d'apparence enregistrés sous un nom, chargés en un clic ; le profil en cours garde tout seul ce que vous y réglez. Clics, macros, listes et annonces n'en font pas partie (#24)."] = "My profiles (Profiles tab): your appearance settings saved under a name, loaded in one click; the current profile keeps what you change in it by itself. Clicks, macros, lists and announcements are not part of it (#24).",
 	["Profils automatiques : un profil pour 5, 10, 25 et 40 joueurs et pour chaque spécialisation, appliqué tout seul sans /reload, à la fin du combat si besoin (#24)."] = "Automatic profiles: one profile for 5, 10, 25 and 40 players and for each specialization, applied by itself without /reload, at the end of combat if needed (#24).",
 	["Cases de la cible, de la cible de la cible et de la focalisation, chacune avec son interrupteur (onglet Cadres), dans un petit cadre « Cible » déplaçable, avec vos clics ; un ennemi est en rouge (#25)."] = "Cells for your target, your target's target and your focus, each with its own switch (Frames tab), in a small movable \"Target\" frame, with your clicks; an enemy is red (#25).",
+	["Rangement en grille (onglet Cadres) : tout le raid d'un seul bloc, sans trou entre les groupes, avec le nombre de cases par colonne au choix (#26)."] = "Grid layout (Frames tab): the whole raid in one block, with no gap between groups, and a chosen number of cells per column (#26).",
+	["Ordre dans chaque bloc : l'ordre du groupe, par nom, ou par classe puis par nom ; le jeu le tient à jour tout seul, même en combat (#26)."] = "Order in each block: group order, by name, or by class then name; the game keeps it up to date by itself, even in combat (#26).",
+	["Chaque groupe garde sa place : en rangement par groupe, un groupe reste dans sa colonne même si le précédent est vide (#26)."] = "Each group keeps its place: when arranged by group, a group stays in its column even if the one before is empty (#26).",
+	["Le mode test montre la grille et l'ordre choisis (#26)."] = "Test mode shows the chosen grid and order (#26).",
 }

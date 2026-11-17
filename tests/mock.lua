@@ -159,6 +159,9 @@ function UnitPowerPercent(u, p, predicted, curve) if curve == CurveConstants.Sca
 function CreateUnitHealPredictionCalculator() return new("Calc") end
 function UnitGetDetailedHealPrediction() end
 function UnitClass(u) return "Prêtre", "PRIEST" end
+local GAME_CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER" }
+function GetNumClasses() return #GAME_CLASSES end
+function GetClassInfo(i) return GAME_CLASSES[i], GAME_CLASSES[i], i end
 function UnitName(u) return "Joueur-" .. u end
 function UnitExists(u) return true end
 function UnitHealth() return 800 end

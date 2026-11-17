@@ -1515,6 +1515,63 @@ step("etape 8 : profils automatiques, cible et focalisation", function()
   assert(not focus:IsShown() and not tot:IsShown() and STATE_DRIVERS[LyoruneExtra] == nil, "tout coupe")
 end)
 
+step("etape 9 : mode panneau, mode grille, tri", function()
+  local raid1, raid2, raid3 = LyoruneRaid1, LyoruneRaid2, LyoruneRaid3
+  RAID = true Z:Refresh()
+  -- #26 tri : confie au jeu (ordre du groupe par defaut, comme avant)
+  assert(raid3:GetAttribute("sortMethod") == "INDEX" and raid3:GetAttribute("groupBy") == nil, "ordre du groupe")
+  Z.db.sortOrder = "NAME" Z:Refresh()
+  assert(raid3:GetAttribute("sortMethod") == "NAME" and raid3:GetAttribute("groupBy") == nil, "par nom")
+  Z.db.sortOrder = "CLASS" Z:Refresh()
+  local order = raid3:GetAttribute("groupingOrder")
+  assert(raid3:GetAttribute("groupBy") == "CLASS" and raid3:GetAttribute("sortMethod") == "NAME", "par classe puis nom")
+  for _, class in ipairs({ "PRIEST", "DRUID", "PALADIN", "SHAMAN", "EVOKER", "MONK" }) do
+    assert(("," .. order .. ","):find("," .. class .. ",", 1, true), "classe absente du tri : " .. class)
+  end
+  assert(LyoruneTanks:GetAttribute("groupBy") == "CLASS" and LyorunePets:GetAttribute("groupBy") == nil, "tanks par classe, familiers par nom")
+  -- par role : le role d'abord, puis la classe dans chaque cadre de role
+  Z.db.layout = "ROLE" Z:Refresh()
+  assert(raid1:GetAttribute("roleFilter") == "TANK" and raid1:GetAttribute("groupBy") == "CLASS")
+  RAID = false Z:Refresh()
+  assert(Z.header:GetAttribute("groupBy") == "ASSIGNEDROLE" and Z.header:GetAttribute("sortMethod") == "NAME", "groupe par role : nom dans chaque role")
+  Z.db.layout = "GROUP" Z:Refresh()
+  assert(Z.header:GetAttribute("groupBy") == "CLASS", "groupe de 5 par classe")
+  Z.db.sortOrder = "INDEX" Z:Refresh()
+  assert(Z.header:GetAttribute("groupBy") == "GROUP" and Z.header:GetAttribute("sortMethod") == "INDEX", "retour a l'ordre du groupe")
+  -- chaque groupe garde sa place : le groupe 3 ne se colle plus au groupe 2
+  RAID = true Z:Refresh()
+  assert(raid3._point[2] == raid2, "par defaut les groupes se suivent")
+  Z.db.keepGroupPlace = true Z:Refresh()
+  local w = Z.CellSize()
+  assert(raid3._point[2] ~= raid2 and raid3._point[4] == 2 * (w + Z.db.spacing), "groupe 3 a son rang : " .. tostring(raid3._point[4]))
+  Z.db.horizontal = true Z:Refresh()
+  assert(raid3._point[4] == 0 and raid3._point[5] < raid2._point[5], "en lignes aussi")
+  Z.db.horizontal, Z.db.keepGroupPlace = false, false
+  -- grille : un seul cadre pour tout le raid, de la hauteur choisie
+  Z.db.layout, Z.db.gridSize = "GRID", 8 Z:Refresh()
+  assert(raid1:IsShown() and not raid2:IsShown() and not raid3:IsShown(), "un seul cadre")
+  assert(raid1:GetAttribute("groupFilter") == "1,2,3,4,5,6,7,8" and raid1:GetAttribute("roleFilter") == nil)
+  assert(raid1:GetAttribute("unitsPerColumn") == 8 and raid1:GetAttribute("maxColumns") == 5, "8 par colonne, 5 colonnes")
+  assert(raid1:GetAttribute("groupBy") == "GROUP" and raid1.handle.text:GetText() == Z.L["Raid"])
+  Z.db.gridSize = 99 Z:Refresh() -- valeur abimee : une seule colonne, aucune erreur
+  assert(raid1:GetAttribute("maxColumns") == 1)
+  -- mode test : la grille et le tri se voient aussi
+  RAID = false Z.db.gridSize, Z.db.sortOrder, Z.db.groupPanel = 4, "CLASS", true
+  Z:TogglePreview(10)
+  assert(Z.previewActive and LyorunePreview.box, "fond de la grille")
+  local cw, ch = Z.CellSize()
+  assert(math.abs(LyorunePreview.box:GetWidth() - (3 * cw + 2 * Z.db.spacing)) < 0.01, "3 colonnes de 4")
+  Z:TogglePreview(10)
+  assert(not Z.previewActive)
+  -- options : les nouveaux reglages sont dans la recherche
+  local labels = table.concat(Z:OptionLabels(), "|")
+  for _, label in ipairs({ "Ordre dans chaque bloc", "Chaque groupe garde sa place", "Cases par colonne en grille" }) do
+    assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+  end
+  Z.db.layout, Z.db.gridSize, Z.db.sortOrder, Z.db.groupPanel = "GROUP", 5, "INDEX", false
+  Z:Refresh()
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

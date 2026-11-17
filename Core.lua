@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.14.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.15.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -25,7 +25,10 @@ Z.defaults = {
 	width = 86, height = 42, spacing = 3,
 	scale = 100,               -- échelle générale de tous les cadres, en %
 	placement = {},            -- place de chaque élément de la case, par forme, en pixels : placement.TILE.name = { 3, -2 }
-	layout = "GROUP",          -- rangement : par groupe de raid ou par rôle
+	layout = "GROUP",          -- rangement : par groupe de raid, par rôle, ou en une seule grille
+	sortOrder = "INDEX",       -- ordre dans chaque bloc : celui du groupe, par nom, ou par classe puis nom
+	keepGroupPlace = false,    -- en raid, chaque groupe garde sa place, même vide (rangement par groupe)
+	gridSize = 5,              -- en grille : nombre de cases par colonne (ou par ligne)
 	roleOrder = "TANK,HEALER,DAMAGER", -- ordre des rôles quand le rangement est « par rôle »
 	horizontal = false,        -- false : groupes en colonnes, true : en lignes
 	showSolo = true,           -- afficher mon cadre quand je suis seul
@@ -136,12 +139,13 @@ Z.defaults = {
 Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
-	scale = { 50, 200, 5 }, placement = { -40, 40, 1 }, -- placement : décalage d'un élément, dans chaque sens
+	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1 }, -- placement : décalage d'un élément, dans chaque sens
 	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 10, 1 }, privateAuraSize = { 12, 40, 2 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 }
 
 Z.choices = {
-	layout = { { "GROUP", "Par groupe" }, { "ROLE", "Par rôle" } },
+	layout = { { "GROUP", "Par groupe" }, { "ROLE", "Par rôle" }, { "GRID", "Grille" } },
+	sortOrder = { { "INDEX", "Ordre du groupe" }, { "NAME", "Par nom" }, { "CLASS", "Par classe, puis nom" } },
 	roleOrder = {
 		{ "TANK,HEALER,DAMAGER", "Tank, soin, dégâts" }, { "TANK,DAMAGER,HEALER", "Tank, dégâts, soin" },
 		{ "HEALER,TANK,DAMAGER", "Soin, tank, dégâts" }, { "HEALER,DAMAGER,TANK", "Soin, dégâts, tank" },

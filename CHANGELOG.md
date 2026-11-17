@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.15.0] - 2026-11-17
+
+### Ajouté
+
+- Rangement en grille (onglet Cadres) : tout le raid d'un seul bloc, sans trou entre les groupes, avec le nombre de cases par colonne au choix ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+- Ordre dans chaque bloc : l'ordre du groupe, par nom, ou par classe puis par nom ; le jeu le tient à jour tout seul, même en combat ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+- Chaque groupe garde sa place : en rangement par groupe, un groupe reste dans sa colonne même si le précédent est vide ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+
+### Amélioré
+
+- Le mode test montre la grille et l'ordre choisis ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+
 ## [1.14.0] - 2026-11-17
 
 ### Ajouté
@@ -257,6 +269,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.15.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.11.0...v1.12.0

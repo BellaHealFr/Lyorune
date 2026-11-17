@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.15.0] - 2026-11-17
+
+### Added
+
+- Grid layout (Frames tab): the whole raid in one block, with no gap between groups, and a chosen number of cells per column ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+- Order in each block: group order, by name, or by class then name; the game keeps it up to date by itself, even in combat ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+- Each group keeps its place: when arranged by group, a group stays in its column even if the one before is empty ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+
+### Improved
+
+- Test mode shows the chosen grid and order ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+
 ## [1.14.0] - 2026-11-17
 
 ### Added
@@ -257,6 +269,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.15.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.11.0...v1.12.0

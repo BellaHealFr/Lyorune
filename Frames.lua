@@ -941,6 +941,33 @@ local function LayoutExtra(h, width, height)
 	return count > 0
 end
 
+-- Toutes les classes du jeu, dans l'ordre du jeu : lues au jeu lui-même, une classe ajoutée est donc rangée
+-- sans rien changer ici. Le jeu ne montre pas un joueur dont la classe manque à la liste : elle doit être complète.
+local classOrder
+local function ClassOrder()
+	if classOrder then return classOrder end
+	local list, seen = {}, {}
+	local function add(class)
+		if class and not seen[class] then seen[class] = true; list[#list + 1] = class end
+	end
+	for i = 1, (GetNumClasses and GetNumClasses() or 0) do add(select(2, GetClassInfo(i))) end
+	for _, class in ipairs(CLASS_SORT_ORDER or {}) do add(class) end
+	for class in pairs(Z.dispelSpells or {}) do add(class) end -- classes décrites dans Data.lua
+	classOrder = table.concat(list, ",")
+	return classOrder
+end
+Z.ClassOrder = ClassOrder
+
+-- Ordre des joueurs dans un cadre, confié au jeu : il le tient à jour seul, même en plein combat.
+-- groupBy et groupingOrder rangent d'abord par paquets (groupe, rôle ou classe), sortMethod trie dans chaque paquet.
+local function ApplySort(h, groupBy, groupingOrder)
+	local sort = db.sortOrder
+	if sort == "CLASS" and not groupBy then groupBy, groupingOrder = "CLASS", ClassOrder() end
+	h:SetAttribute("groupBy", groupBy)
+	h:SetAttribute("groupingOrder", groupingOrder)
+	h:SetAttribute("sortMethod", sort == "INDEX" and "INDEX" or "NAME")
+end
+
 local function ApplyLayout()
 	local width, height = Z.CellSize()
 	for _, b in ipairs(buttons) do
@@ -948,6 +975,8 @@ local function ApplyLayout()
 		b:SetSize(width, height)
 	end
 	local gap = (db.showGroupLabels or db.lockMode == "FREE") and LABEL_SPACE or 0
+	local grid = db.layout == "GRID"
+	local perColumn = grid and db.gridSize or 5
 	local roles
 	if db.layout == "ROLE" then
 		roles = {}
@@ -967,29 +996,42 @@ local function ApplyLayout()
 		if def.label then h.labelText = L[def.label] end -- suit le changement de langue
 		h:SetAttribute("z-width", width)
 		h:SetAttribute("z-height", height)
-		h:SetAttribute("maxColumns", 8)
+		h:SetAttribute("maxColumns", math.ceil(40 / perColumn))
 		if def.key == "main" then
-			if db.layout == "ROLE" then
-				h:SetAttribute("groupBy", "ASSIGNEDROLE")
-				h:SetAttribute("groupingOrder", db.roleOrder .. ",NONE")
+			if db.layout == "ROLE" then -- le rôle d'abord ; « par classe » devient alors « par nom » dans chaque rôle
+				ApplySort(h, "ASSIGNEDROLE", db.roleOrder .. ",NONE")
+			elseif db.sortOrder == "INDEX" then
+				ApplySort(h, "GROUP", "1,2,3,4,5,6,7,8")
 			else
-				h:SetAttribute("groupBy", "GROUP")
-				h:SetAttribute("groupingOrder", "1,2,3,4,5,6,7,8")
+				ApplySort(h)
 			end
 			h:SetAttribute("showSolo", db.showSolo)
 		elseif def.raid then
-			if roles then -- un cadre par rôle, dans l'ordre choisi
+			if grid then -- une seule grille pour tout le raid : le premier cadre prend tout le monde
+				enabled = def.raid == 1
+				h:SetAttribute("roleFilter", nil)
+				h:SetAttribute("groupFilter", "1,2,3,4,5,6,7,8")
+				if db.sortOrder == "INDEX" then ApplySort(h, "GROUP", "1,2,3,4,5,6,7,8") else ApplySort(h) end
+				h.labelText = L["Raid"]
+			elseif roles then -- un cadre par rôle, dans l'ordre choisi
 				local role = roles[def.raid]
 				enabled = role ~= nil
 				h:SetAttribute("groupFilter", nil)
 				h:SetAttribute("roleFilter", role)
+				ApplySort(h)
 				h.labelText = role and L[ROLE_LABELS[role]]
 			else
 				h:SetAttribute("roleFilter", nil)
 				h:SetAttribute("groupFilter", tostring(def.raid))
 				h:SetAttribute("maxColumns", 1)
+				ApplySort(h)
 				h.labelText = L["Groupe %d"]:format(def.raid)
 			end
+		elseif def.key == "pets" then -- un familier n'a pas de classe de joueur : seulement le nom
+			h:SetAttribute("groupBy", nil)
+			h:SetAttribute("sortMethod", db.sortOrder == "INDEX" and "INDEX" or "NAME")
+		elseif def.key == "tanks" then
+			ApplySort(h)
 		end
 		if db.horizontal then
 			h:SetAttribute("point", "LEFT")
@@ -1003,13 +1045,19 @@ local function ApplyLayout()
 			h:SetAttribute("columnAnchorPoint", "LEFT")
 		end
 		h:SetAttribute("columnSpacing", db.spacing)
-		h:SetAttribute("unitsPerColumn", 5)
+		h:SetAttribute("unitsPerColumn", perColumn) -- 5 par groupe, ou la taille choisie en grille
 
-		-- Placement : les cadres de raid se suivent ; un groupe vide ne laisse pas de trou
+		-- Placement : les cadres de raid se suivent ; un groupe vide ne laisse pas de trou, sauf si chaque groupe
+		-- garde sa place : il est alors posé à son rang, que les groupes d'avant soient remplis ou non.
 		h:ClearAllPoints()
 		local previous = def.raid and raidHeaders[def.raid - 1]
 		local apart = db.spacing + (db.groupPanel and 2 * PANEL_OUTSET or 0) -- deux fonds de groupe ne se touchent pas
-		if previous and db.horizontal then
+		local fixed = def.raid and db.keepGroupPlace and db.layout == "GROUP"
+		if fixed and db.horizontal then
+			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", 0, -gap - (def.raid - 1) * (height + apart + gap))
+		elseif fixed then
+			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", (def.raid - 1) * (width + apart), -gap)
+		elseif previous and db.horizontal then
 			h:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -(apart + gap))
 		elseif previous then
 			h:SetPoint("TOPLEFT", previous, "TOPRIGHT", apart, 0)
