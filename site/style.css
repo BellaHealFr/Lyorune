@@ -174,3 +174,4 @@ footer nav { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
 @media (prefers-reduced-motion: reduce) { .voie, .voie:hover { transition: none; transform: none; } }
 
 .credit { text-align: center; color: var(--doux); font-size: 13px; margin: 10px 0 0; }
+footer .visites { margin-top: 10px; font-size: 13px; letter-spacing: .02em; }

@@ -291,9 +291,24 @@
     </nav>
     <p>Copyright © 2026 BellaDroode. Tous droits réservés.<br>
       World of Warcraft et Blizzard Entertainment sont des marques de Blizzard Entertainment, Inc. Lyorune est un projet indépendant.</p>
+    <p class="visites" id="visites" hidden></p>
   </div>
 </footer>
 
 <script src="animations.js?v=__BUILD__" defer></script>
+<!-- Compteur de visiteurs uniques : GoatCounter, sans cookie, aucune donnée personnelle gardée -->
+<script data-goatcounter="https://lyorune.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script>
+  fetch('https://lyorune.goatcounter.com/counter/TOTAL.json')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      var n = d && parseInt(String(d.count).replace(/\D/g, ''), 10);
+      if (!n) return;
+      var p = document.getElementById('visites');
+      p.textContent = n.toLocaleString('fr') + ' ' + (n > 1 ? 'visiteurs uniques depuis l’ouverture du site' : 'visiteur unique depuis l’ouverture du site');
+      p.hidden = false;
+    })
+    .catch(function () {});
+</script>
 </body>
 </html>
