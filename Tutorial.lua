@@ -34,7 +34,7 @@ local steps = {
 		title = "Une case par joueur",
 		text = "La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé.\n\n"
 			.. "Le |cff73ff99vert clair|r au bout de la barre montre les soins déjà en route. "
-			.. "La |cff8cd9ffbande bleue|r en bas est un bouclier.",
+			.. "La |cff8cd9ffbande claire|r en bas est un bouclier.",
 		target = function() return Z.buttons[1] end,
 	},
 	{

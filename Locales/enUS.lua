@@ -45,8 +45,8 @@ Z.translations.enUS = {
 	["Ordre dans chaque bloc"] = "Order in each block", ["Chaque groupe garde sa place"] = "Each group keeps its place",
 	["Cases par colonne en grille"] = "Cells per column in grid",
 	["Par groupe : un bloc par groupe de raid. Par rôle : un bloc par rôle. Grille : tout le raid d'un seul tenant, sans trou entre les groupes."] = "By group: one block per raid group. By role: one block per role. Grid: the whole raid in one piece, with no gap between groups.",
-	["Le jeu tient l'ordre à jour tout seul, même en combat. En rangement par rôle, « par classe » range par nom."] = "The game keeps the order up to date by itself, even in combat. When arranged by role, \"by class\" sorts by name.",
-	["Rangement par groupe : le groupe 3 reste en 3e colonne même si le groupe 2 est vide. Décoché, les groupes se resserrent."] = "Arranged by group: group 3 stays in the 3rd column even if group 2 is empty. Unchecked, groups close up.", ["En colonnes"] = "Columns", ["En lignes"] = "Rows",
+	["Le jeu tient l'ordre à jour tout seul, même en combat. En rangement par rôle, « par classe » range par nom."] = "The game keeps the order up to date by itself, even in combat. When sorting by role, \"by class\" sorts by name.",
+	["Rangement par groupe : le groupe 3 reste en 3e colonne même si le groupe 2 est vide. Décoché, les groupes se resserrent."] = "When sorting by group: group 3 stays in the 3rd column even if group 2 is empty. Unticked, groups close up.", ["En colonnes"] = "Columns", ["En lignes"] = "Rows",
 	["Tank, soin, dégâts"] = "Tank, healer, damage", ["Tank, dégâts, soin"] = "Tank, damage, healer",
 	["Soin, tank, dégâts"] = "Healer, tank, damage", ["Soin, dégâts, tank"] = "Healer, damage, tank",
 	["Dégâts, tank, soin"] = "Damage, tank, healer", ["Dégâts, soin, tank"] = "Damage, healer, tank",
@@ -83,7 +83,7 @@ Z.translations.enUS = {
 	["Pourcentage de mana dans la barre"] = "Mana percentage in the bar",
 	["Le % de mana écrit au milieu de la barre, lisible en combat. La barre passe alors à 8 pixels de haut au moins."] = "Mana % written in the middle of the bar, readable in combat. The bar then becomes at least 8 pixels tall.",
 	["Barre fine de menace"] = "Thin threat bar",
-	["Trait de couleur en haut de la vie : jaune quand il monte dans la liste d'un monstre, orange juste avant qu'il le prenne, rouge quand il l'a."] = "Coloured line at the top of the health bar: yellow when they climb a monster's threat list, orange just before they pull it, red when they have it.",
+	["Trait de couleur en haut de la barre de vie : jaune quand le joueur prend de la menace sur un monstre, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui."] = "Coloured line at the top of the health bar: yellow when the player builds threat on a monster, orange when the monster is about to turn on them, red when the monster is attacking them.",
 	["Cercle qui se vide"] = "Draining circle",
 	["Sur les icônes de vos soins : un voile tourne et découvre l'icône à mesure que le temps passe."] = "On your heal icons: a shade turns and uncovers the icon as time passes.",
 	["Décompte en secondes"] = "Countdown in seconds",
@@ -142,7 +142,7 @@ Z.translations.enUS = {
 	["Touches au survol"] = "Hover keys", ["Comportement"] = "Behaviour",
 	["Ou tapez le nom exact d'un sort, puis Entrée :"] = "Or type a spell's exact name, then Enter:",
 	["Macro"] = "Macro", ["macro"] = "macro", ["touche"] = "key",
-	["Clics de la spécialisation %d"] = "Clicks of specialization %d",
+	["Clics de la spécialisation %d"] = "Specialization %d clicks",
 	["Mêmes clics dans toutes les spécialisations"] = "Same clicks in every specialization",
 	["Copier l'autre spécialisation"] = "Copy the other specialization",
 	["Remplace les clics et les touches de cette spécialisation par ceux de l'autre."] = "Replaces this specialization's clicks and keys with the other one's.",
@@ -150,7 +150,7 @@ Z.translations.enUS = {
 	["Bouton %s"] = "Button %s", ["Molette haut"] = "Wheel up", ["Molette bas"] = "Wheel down", ["Espace"] = "Space", ["Tab"] = "Tab",
 	["Entrée"] = "Enter", ["Retour arrière"] = "Backspace", ["Suppr"] = "Delete", ["Inser"] = "Insert", ["Début"] = "Home", ["Fin"] = "End",
 	["Page haut"] = "Page up", ["Page bas"] = "Page down", ["Haut"] = "Up", ["Bas"] = "Down", ["Gauche"] = "Left", ["Droite"] = "Right",
-	["Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée."] = "One click or key per line, as many as you like, with Alt, Ctrl, Shift or any combination. The spell goes to the hovered frame.",
+	["Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée."] = "One click or key per line, as many as you like, with Alt, Ctrl, Shift or any combination. The spell goes to the hovered cell.",
 	["Ajouter un clic ou une touche"] = "Add a click or a key",
 	["Cliquez ici ou appuyez sur une touche..."] = "Click here or press a key...",
 	["Cliquez, puis faites la combinaison voulue sur ce bouton : un clic (avec Alt, Ctrl, Maj...), une touche du clavier, un bouton de souris supplémentaire ou la molette. Échap : annuler."] = "Click, then do the combination you want on this button: a click (with Alt, Ctrl, Shift...), a keyboard key, an extra mouse button or the wheel. Escape: cancel.",
@@ -161,7 +161,7 @@ Z.translations.enUS = {
 	["Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser."] = "Free left click: target. Free right click: player menu. Drag a spell from your spellbook onto a line to set it.",
 	["... et %d autre(s) : onglet Clics."] = "... and %d more: Clicks tab.",
 	["Nouveau sort sans clic :"] ="New spell without a click:", ["Attribuer"] = "Assign", ["Ne plus proposer ce sort."] = "Stop suggesting this spell.",
-	["Puis faites sur le bouton « Ajouter » le clic ou la touche qui lancera ce sort."] = "Then do, on the \"Add\" button, the click or key that will cast this spell.",
+	["Puis, sur le bouton « Ajouter », faites le clic ou la touche qui lancera ce sort."] = "Then, on the \"Add\" button, do the click or key that will cast this spell.",
 	["Signaler un nouveau sort sans clic"] = "Report a new spell without a click",
 	["Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de cet onglet avec le bouton « Attribuer »."] = "When you learn a spell usable on an ally that has no click or key yet: a message, and the spell at the top of this tab with the \"Assign\" button.",
 	["nouveau sort sans clic : %s. Onglet Clics des options, bouton « Attribuer »."] = "new spell without a click: %s. Clicks tab of the options, \"Assign\" button.",
@@ -175,18 +175,18 @@ Z.translations.enUS = {
 	["Importer de /macro"] = "Import from /macro",
 	["Une macro écrite pour vous : cochez ce que vous voulez, Lyorune écrit le texte."] = "A macro written for you: tick what you want, Lyorune writes the text.",
 	["Copie une macro de la fenêtre /macro du jeu. Vous pouvez aussi la glisser depuis /macro sur cette liste."] = "Copies a macro from the game's /macro window. You can also drag it from /macro onto this list.",
-	["Glissez une macro sur une case de l'onglet Clics, ou choisissez-la en cliquant sur la case."] = "Drag a macro onto a cell of the Clicks tab, or pick it by clicking the cell.",
+	["Glissez une macro sur une ligne de l'onglet Clics, ou cliquez sur le sort d'une ligne pour la choisir."] = "Drag a macro onto a line of the Clicks tab, or click the spell of a line to pick it.",
 	["Nom"] = "Name", ["Enregistrer"] = "Save", ["Supprimer"] = "Delete",
-	["{cible} est le joueur de la case. Une commande sans cible vise la case."] = "{cible} is the player of the frame. A command without a target aims at the frame.",
+	["{cible} est le joueur de la case. Une commande sans cible vise la case."] = "{cible} is the player in the cell. A command without a target aims at the cell.",
 	["Vérification"] = "Check", ["Envoyé au jeu"] = "Sent to the game", ["Posée sur"] = "Used on",
 	["Aucune faute trouvée."] = "No mistake found.",
 	["Aucune macro : cliquez sur Nouvelle."] = "No macro yet: click New.",
 	["aucun clic ni touche, dans cette spécialisation"] = "no click or key, in this specialization",
-	["Une commande sans cible vise la case"] = "A command without a target aims at the frame",
+	["Une commande sans cible vise la case"] = "A command without a target aims at the cell",
 	["Décochez pour que vos macros partent exactement comme écrites, comme dans la fenêtre /macro."] = "Untick to send your macros exactly as written, as in the /macro window.",
 	["Supprime la macro et vide les clics qui l'utilisaient."] = "Deletes the macro and clears the clicks that used it.",
 	["Une autre macro porte déjà ce nom."] = "Another macro already has this name.",
-	["Cliquez sur une macro : elle est copiée dans votre bibliothèque. [@mouseover] y vise la case."] = "Click a macro: it is copied into your library. [@mouseover] in it aims at the frame.",
+	["Cliquez sur une macro : elle est copiée dans votre bibliothèque. [@mouseover] y vise la case."] = "Click a macro: it is copied into your library. [@mouseover] in it aims at the cell.",
 	["Aucune macro dans la fenêtre /macro du jeu."] = "No macro in the game's /macro window.",
 	["La macro est vide."] = "The macro is empty.",
 	["Trop longue : %d caractères, %d au plus."] = "Too long: %d characters, %d at most.",
@@ -232,7 +232,7 @@ Z.translations.enUS = {
 	["Son quand ma mana est faible"] = "Sound when my mana is low",
 	["Votre mana est lisible : l'annonce part au seuil exact."] = "Your mana is readable: the announcement goes out at the exact threshold.",
 	["Aucun de vos sorts ne coûte près de ce seuil : essayez un autre seuil."] = "None of your spells costs close to this threshold: try another threshold.",
-	["Le jeu cache votre mana : l'annonce part quand %s manque de mana, soit vers %d %%."] = "The game hides your mana: the announcement goes out when %s lacks mana, around %d%%.",
+	["Le jeu cache votre mana : l'annonce part quand vous n'avez plus assez de mana pour %s, soit vers %d %%. L'annonce de mana remontée ne peut donc pas partir."] = "The game hides your mana: the announcement goes out when you no longer have enough mana for %s, around %d%%. So the mana back announcement cannot go out.",
 	["Dans les textes, {mana} est remplacé par votre pourcentage de mana et {nom} par le joueur relevé. Les annonces ne partent qu'en groupe. Règle du jeu : hors instance, un addon ne peut pas écrire en /dire tout seul ; l'annonce part alors dans le canal du groupe ou du raid."] = "In the texts, {mana} is replaced by your mana percentage and {nom} by the resurrected player. Announcements are only sent while grouped. Game rule: outside instances an addon cannot write in /say on its own; the announcement then goes to the party or raid channel.",
 
 	-- Profils
@@ -312,12 +312,12 @@ Z.translations.enUS = {
 	["Me prévenir quand Lyorune rencontre une erreur"] = "Tell me when Lyorune hits an error",
 	["Un seul message discret par session, jamais de fenêtre."] = "One discreet message per session, never a window.",
 	["Lyorune a rencontré un problème. Tapez |cff33dd88/lyorune bug|r pour le signaler."] = "Lyorune ran into a problem. Type |cff33dd88/lyorune bug|r to report it.",
-	["Que faisais-tu quand c'est arrivé ?"] = "What were you doing when it happened?",
+	["Que faisiez-vous quand c'est arrivé ?"] = "What were you doing when it happened?",
 	["Que s'est-il passé ?"] = "What happened?",
 	["Est-ce que ça se reproduit à chaque fois ?"] = "Does it happen every time?",
 	["Rapport prêt à envoyer (Ctrl+C pour copier) :"] = "Report ready to send (Ctrl+C to copy):",
-	["Colle ton rapport ici :"] = "Paste your report here:",
-	["Aucune erreur technique enregistrée : pense à joindre une capture d'écran du défaut."] = "No technical error recorded: remember to attach a screenshot of the glitch.",
+	["Collez votre rapport ici :"] = "Paste your report here:",
+	["Aucune erreur technique enregistrée : pensez à joindre une capture d'écran du défaut."] = "No technical error recorded: remember to attach a screenshot of the glitch.",
 	["Tout sélectionner"] = "Select all",
 
 	["Nouveau"] = "New", ["Amélioré"] = "Improved", ["Corrigé"] = "Fixed",
@@ -334,7 +334,7 @@ Z.translations.enUS = {
 
 	-- Visite guidée (les clés reprennent exactement les textes de Tutorial.lua)
 	["Bienvenue dans Lyorune"] = "Welcome to Lyorune",
-	["Une case par joueur"] = "One frame per player",
+	["Une case par joueur"] = "One cell per player",
 	["Soigner d'un clic"] = "Heal with one click",
 	["Ce que disent les couleurs"] = "What the colours say",
 	["Placer les cadres"] = "Placing the frames",
@@ -343,11 +343,11 @@ Z.translations.enUS = {
 	["C'est parti"] = "Off you go",
 	["Lyorune affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
 			.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/lyorune tuto|r."] =
-		"Lyorune shows your group as frames and lets you heal with a single click.\n\nThis tour takes one minute. You can restart it with |cff33dd88/lyorune tuto|r.",
+		"Lyorune shows your group as cells and lets you heal with a single click.\n\nThis tour takes one minute. You can restart it with |cff33dd88/lyorune tuto|r.",
 	["La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé.\n\n"
 			.. "Le |cff73ff99vert clair|r au bout de la barre montre les soins déjà en route. "
-			.. "La |cff8cd9ffbande bleue|r en bas est un bouclier."] =
-		"The coloured bar is the player's health: the shorter it is, the more hurt they are.\n\nThe |cff73ff99light green|r at the end of the bar shows heals already on their way. The |cff8cd9ffblue strip|r at the bottom is a shield.",
+			.. "La |cff8cd9ffbande claire|r en bas est un bouclier."] =
+		"The coloured bar is the player's health: the shorter it is, the more hurt they are.\n\nThe |cff73ff99light green|r at the end of the bar shows heals already on their way. The |cff8cd9fflight strip|r at the bottom is a shield.",
 	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
@@ -355,7 +355,7 @@ Z.translations.enUS = {
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins).\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a frame: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded frame: out of range (footprints: far away; an eye: out of sight).\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab).\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a frame out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab).\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a cell out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
@@ -377,14 +377,14 @@ Z.translations.enUS = {
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting (group, role, grid) and order, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a cell.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur."] =
 		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Clicks tab. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click).\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
-	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a frame to cast a spell on that player, without targeting them.",
+	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a cell to cast a spell on that player, without targeting them.",
 	["Aucun sort n'est encore attribué : vous les choisirez dans l'onglet Clics des options."] = "No spell is assigned yet: you will choose them in the Clicks tab of the options.",
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
 
@@ -413,9 +413,9 @@ Z.translations.enUS = {
 	["Angles des cases"] = "Cell corners", ["Droits"] = "Square", ["Arrondis"] = "Rounded",
 	["Droits ou arrondis, pour toutes les formes et tous les thèmes."] = "Square or rounded, for every shape and every theme.",
 	["Fond et bordure par groupe"] = "Background and border per group",
-	["Chaque groupe (ou chaque rôle) est posé sur un fond aux couleurs du thème."] = "Each group (or each role) sits on a background in the theme's colors.",
-	["Couleurs de classe"] = "Class colors", ["Naturelles"] = "Natural", ["Vives"] = "Vivid",
-	["Naturelles : celles du jeu. Vives : plus franches et plus lumineuses, chaque classe garde sa teinte."] = "Natural: the game's colors. Vivid: bolder and brighter, each class keeps its hue.",
+	["Chaque groupe (ou chaque rôle) est posé sur un fond aux couleurs du thème."] = "Each group (or each role) sits on a background in the theme's colours.",
+	["Couleurs de classe"] = "Class colours", ["Naturelles"] = "Natural", ["Vives"] = "Vivid",
+	["Naturelles : celles du jeu. Vives : plus franches et plus lumineuses, chaque classe garde sa teinte."] = "Natural: the game's colours. Vivid: bolder and brighter, each class keeps its hue.",
 	["Néon"] = "Neon", ["Épuré"] = "Clean", ["Verre"] = "Glass", ["Classique"] = "Classic", ["Héroïque"] = "Heroic",
 
 	-- Messages du chat et journal d'erreurs
@@ -447,12 +447,12 @@ Z.translations.enUS = {
 	["Soins sur la durée en icônes ou en barres fines, affaiblissements importants en grand."] = "Heals over time as icons or thin bars, important debuffs shown large.",
 	["Touches au survol, résurrection automatique sur le clic de soin."] = "Hover keys, automatic resurrection on the heal click.",
 	["Listes personnelles : sorts à suivre, affaiblissements à ignorer ou à mettre en avant."] = "Personal lists: spells to track, debuffs to ignore or to highlight.",
-	["Luminosité, opacité, contraste élevé, réduction automatique des cases en grand raid."] = "Brightness, opacity, high contrast, automatic frame shrinking in large raids.",
+	["Luminosité, opacité, contraste élevé, réduction automatique des cases en grand raid."] = "Brightness, opacity, high contrast, automatic cell shrinking in large raids.",
 	["Profils prêts à l'emploi, envoi direct de sa configuration à un joueur, tout réinitialiser."] = "Ready-made profiles, direct sending of your configuration to a player, reset everything.",
 	["Traduction anglaise des options."] = "English translation of the options.",
 	["Avertissement quand un membre du groupe a une version plus récente."] = "Warning when a group member has a newer version.",
 	["Options rangées en huit onglets, avec une recherche."] = "Options sorted into eight tabs, with a search box.",
-	["Votre propre case n'est plus estompée comme si vous étiez hors de portée."] = "Your own frame is no longer faded as if you were out of range.",
+	["Votre propre case n'est plus estompée comme si vous étiez hors de portée."] = "Your own cell is no longer faded as if you were out of range.",
 	["Cinq thèmes, annonces de mana et de résurrection, partage de configuration par code."] = "Five themes, mana and resurrection announcements, configuration sharing by code.",
 	["Journal d'erreurs (/lyorune erreurs) et contrôle de compatibilité (/lyorune diag)."] = "Error log (/lyorune erreurs) and compatibility check (/lyorune diag).",
 	["Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel."] = "First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.",
@@ -478,7 +478,7 @@ Z.translations.enUS = {
 	["Assistant de macro à cases à cocher, import depuis /macro, glisser-déposer sur les cases."] = "Checkbox macro wizard, import from /macro, drag and drop onto the cells.",
 	["Vérification de la macro pendant la saisie, et aperçu du texte exact envoyé au jeu."] = "The macro is checked while you type, with a preview of the exact text sent to the game.",
 	["Clics et touches propres à chaque spécialisation, qui changent tout seuls avec les talents (#21)."] = "Clicks and keys for each specialization, switching by themselves with your talents (#21).",
-	["Une commande de macro sans cible vise la case ; [@mouseover] marche tel quel."] = "A macro command without a target aims at the frame; [@mouseover] works as it is.",
+	["Une commande de macro sans cible vise la case ; [@mouseover] marche tel quel."] = "A macro command without a target aims at the cell; [@mouseover] works as it is.",
 	["Vos anciennes macros sont rangées toutes seules dans la bibliothèque."] = "Your previous macros are moved into the library by themselves.",
 	["En raid, un cadre par groupe avec son numéro au-dessus (« Groupe 1 » à « Groupe 8 »), ou le nom du rôle en rangement par rôle ; réglage pour les masquer (#6)."] = "In a raid, one frame per group with its number above (\"Group 1\" to \"Group 8\"), or the role name when sorting by role; a setting hides them (#6).",
 	["Déplacement des cadres au choix : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj, par n'importe quelle étiquette de groupe (#7)."] = "Choose how the frames move: free, locked, or while holding Alt, Ctrl or Shift, by any group label (#7).",
@@ -486,10 +486,10 @@ Z.translations.enUS = {
 	["Barre de mana affichée pour tous par défaut, hauteur réglable (#8)."] = "Mana bar shown for everyone by default, adjustable height (#8).",
 	["Bouton de la mini-carte à la même taille que ceux des autres addons."] = "Minimap button now the same size as other addons' buttons.",
 	["La couleur de dissipation ne cache plus le nom ni la vie : contour coloré et voile léger (#4)."] = "The dispel colour no longer hides the name or health: coloured outline and light tint (#4).",
-	["Auras privées des boss : le jeu les dessine lui-même sur la case, taille et place réglables (#9)."] = "Boss private auras: the game draws them itself on the frame, adjustable size and position (#9).",
+	["Auras privées des boss : le jeu les dessine lui-même sur la case, taille et place réglables (#9)."] = "Boss private auras: the game draws them itself on the cell, adjustable size and position (#9).",
 	["Absorption de soins : bande rouge sombre au bout de la vie, calculée par le jeu, juste en combat (#10)."] = "Heal absorb: dark red band at the end of the health, computed by the game, accurate in combat (#10).",
 	["Icônes d'invocation en cours et de joueur dans une autre phase (#11)."] = "Icons for a pending summon and for a player in another phase (#11).",
-	["Infobulle au survol d'une case : la liste de vos clics et touches, hors combat (#12)."] = "Tooltip when hovering a frame: the list of your clicks and keys, out of combat (#12).",
+	["Infobulle au survol d'une case : la liste de vos clics et touches, hors combat (#12)."] = "Tooltip when hovering a cell: the list of your clicks and keys, out of combat (#12).",
 	["Contour lumineux pour un affaiblissement important, même en combat pour ceux des boss, et son pour ceux de votre liste (#13)."] = "Glowing outline for an important debuff, even in combat for boss debuffs, and a sound for those in your list (#13).",
 	["Configurations reçues : seulement d'un membre du groupe, de la guilde ou d'un ami, une par minute au plus, avec le royaume de l'expéditeur ; une fenêtre ouverte n'est plus remplacée et le bouton Importer attend deux secondes. Les phrases des annonces et les textures inconnues ne sont plus partagées (#34)."] = "Received configurations: only from a group member, guild member or friend, at most one a minute, with the sender's realm; an open window is no longer replaced and the Import button waits two seconds. Announcement sentences and unknown textures are no longer shared (#34).",
 	["Avis de nouvelle version : il faut deux joueurs différents et un numéro vraisemblable ; le message cite la page officielle (#35)."] = "New version notice: two different players and a plausible number are needed; the message names the official page (#35).",
@@ -502,7 +502,7 @@ Z.translations.enUS = {
 	["Couleurs de classe plus vives par défaut, ou naturelles au choix (#32)."] = "Brighter class colours by default, or natural ones if you prefer (#32).",
 	["Trois thèmes pour les fenêtres de Lyorune : Moderne (par défaut), Classique et MMORPG, changés en direct ; le contraste élevé s'y applique aussi (#39)."] = "Three themes for Lyorune's windows: Modern (default), Classic and MMORPG, switched live; high contrast applies to them too (#39).",
 	["Inscription runique animée : les runes s'écrivent à l'ouverture, une lueur avec halo les parcourt, une vague de lumière au survol avant la traduction, couleurs selon le thème (#33)."] = "Animated runic inscription: the runes write themselves on opening, a haloed glow runs along them, a wave of light on hover before the translation, colours by theme (#33).",
-	["Effets magiques (interrupteur dans Apparence) : cercle runique derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change, couleur du thème (#39)."] = "Magic effects (switch in Appearance): rune circle behind the logo, motes of light in the header, a spark when a setting changes, theme colour (#39).",
+	["Effets magiques (interrupteur dans Apparence) : cercle runique derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change, couleur du thème (#39)."] = "Magic effects (switch in the Look tab): rune circle behind the logo, motes of light in the header, a spark when a setting changes, theme colour (#39).",
 	["Le bord droit de certaines cases à cocher disparaissait selon l'échelle de l'interface : chaque trait de bordure garde au moins un pixel."] = "The right edge of some checkboxes vanished depending on the UI scale: every border line now keeps at least one pixel.",
 	["Couleur de la barre de mana au choix (onglet Indicateurs) : bleu par défaut, bleu ciel, violet, turquoise ou blanc."] = "Mana bar colour of your choice (Indicators tab): blue by default, sky blue, purple, teal or white.",
 	["La barre de mana restait blanche au lieu de bleue."] = "The mana bar stayed white instead of blue.",
@@ -570,7 +570,7 @@ Z.translations.enUS = {
 	["De"] = "From",
 	["Vers"] = "To",
 	["Copier une partie d'un profil"] = "Copy part of a profile",
-	["Copier seulement une partie d'un profil vers un autre : Cadres, Apparence, Indicateurs ou Soins, au choix."] = "Copy only part of a profile to another one: Frames, Appearance, Indicators or Heals, as you choose.",
+	["Copier seulement une partie d'un profil vers un autre : Cadres, Apparence, Indicateurs ou Soins, au choix."] = "Copy only part of a profile to another one: Frames, Look, Indicators or Heals, as you choose.",
 	["Parties à copier : les réglages de l'onglet du même nom."] = "Parts to copy: the settings of the tab with the same name.",
 	["Le profil d'arrivée prend ces réglages ; ses autres parties ne changent pas. Si c'est le profil en cours, les cadres changent tout de suite."] = "The target profile takes these settings; its other parts do not change. If it is the current profile, the frames change right away.",
 	["Choisissez deux profils enregistrés."] = "Choose two saved profiles.",
@@ -582,7 +582,7 @@ Z.translations.enUS = {
 	["Cases de la cible, de la cible de la cible et de la focalisation, chacune avec son interrupteur (onglet Cadres), dans un petit cadre « Cible » déplaçable, avec vos clics ; un ennemi est en rouge (#25)."] = "Cells for your target, your target's target and your focus, each with its own switch (Frames tab), in a small movable \"Target\" frame, with your clicks; an enemy is red (#25).",
 	["Rangement en grille (onglet Cadres) : tout le raid d'un seul bloc, sans trou entre les groupes, avec le nombre de cases par colonne au choix (#26)."] = "Grid layout (Frames tab): the whole raid in one block, with no gap between groups, and a chosen number of cells per column (#26).",
 	["Ordre dans chaque bloc : l'ordre du groupe, par nom, ou par classe puis par nom ; le jeu le tient à jour tout seul, même en combat (#26)."] = "Order in each block: group order, by name, or by class then name; the game keeps it up to date by itself, even in combat (#26).",
-	["Chaque groupe garde sa place : en rangement par groupe, un groupe reste dans sa colonne même si le précédent est vide (#26)."] = "Each group keeps its place: when arranged by group, a group stays in its column even if the one before is empty (#26).",
+	["Chaque groupe garde sa place : en rangement par groupe, un groupe reste dans sa colonne même si le précédent est vide (#26)."] = "Each group keeps its place: when sorting by group, a group stays in its column even if the one before is empty (#26).",
 	["Le mode test montre la grille et l'ordre choisis (#26)."] = "Test mode shows the chosen grid and order (#26).",
 	-- 1.18.0 : mode performance, mesure
 	["Performances"] = "Performance", ["Mode performance"] = "Performance mode",
@@ -673,23 +673,23 @@ Z.translations.enUS = {
 	["Clic pris aussi par le jeu : si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune, un message le dit et la ligne passe en orange ; Lyorune ne touche jamais aux raccourcis du jeu (#42)."] = "Click the game also uses: if the game's click casting uses the same combination as a Lyorune click, a message says so and the line turns orange; Lyorune never touches the game's bindings (#42).",
 	["Temps de recharge global"] = "Global cooldown",
 	["Recharge globale et incantation"] = "Global cooldown and casting",
-	["Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat."] = "A thin bar under the frames, or a ring around the cursor, that follows the global cooldown (white) and your current cast (accent color): you know when the next heal can go, even in combat.",
+	["Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat."] = "A thin bar under the frames, or a ring around the cursor, that follows the global cooldown (white) and your current cast (accent colour): you know when the next heal can go, even in combat.",
 	["Barre sous les cadres"] = "Bar under the frames", ["Anneau au curseur"] = "Ring at the cursor",
 	["choisi"] = "chosen", ["tank"] = "tank",
-	["Un autre joueur : /lyorune porteur en survolant sa case."] = "Another player: /lyorune bearer while hovering their frame.",
+	["Un autre joueur : /lyorune porteur en survolant sa case."] = "Another player: /lyorune bearer while hovering their cell.",
 	["buffs uniques : de retour sur le tank."] = "single-target buffs: back on the tank.",
 	["buffs uniques : %s les recevra."] = "single-target buffs: %s will get them.",
 	["le joueur survolé reçoit mes buffs uniques"] = "the hovered player gets my single-target buffs",
 	["Buffs à poser sur une seule personne : tant que votre Bouclier de terre (chaman) ou vos Épines (druide) ne sont sur personne, le panneau des buffs manquants propose une ligne pour le tank, ou pour le joueur choisi avec /lyorune porteur (#43)."] = "Buffs meant for a single person: as long as your Earth Shield (shaman) or Thorns (druid) is on nobody, the missing buffs panel offers a line for the tank, or for the player chosen with /lyorune bearer (#43).",
 	["Recharge globale et incantation (onglet Soins) : une fine barre sous les cadres, ou un anneau autour du curseur, montre le temps de recharge global et votre incantation en cours, même en combat (#43)."] = "Global cooldown and casting (Heals tab): a thin bar under the frames, or a ring around the cursor, shows the global cooldown and your current cast, even in combat (#43).",
-	["Copier une partie d'un profil (onglet Profils, bouton « Copier... ») : Cadres, Apparence, Indicateurs ou Soins, au choix, d'un profil vers un autre ; le reste du profil d'arrivée ne bouge pas (#44)."] = "Copy part of a profile (Profiles tab, \"Copy...\" button): Frames, Appearance, Indicators or Heals, as you choose, from one profile to another; the rest of the target profile stays as it is (#44).",
+	["Copier une partie d'un profil (onglet Profils, bouton « Copier... ») : Cadres, Apparence, Indicateurs ou Soins, au choix, d'un profil vers un autre ; le reste du profil d'arrivée ne bouge pas (#44)."] = "Copy part of a profile (Profiles tab, \"Copy...\" button): Frames, Look, Indicators or Heals, as you choose, from one profile to another; the rest of the target profile stays as it is (#44).",
 	["Profils automatiques en champ de bataille et en arène, pour chaque spécialisation ; sans choix, le profil prévu pour la taille du groupe s'applique (#44)."] = "Automatic profiles in battlegrounds and arenas, for each specialization; with nothing chosen, the profile set for the group size applies (#44).",
 	["Mode test à 25 ou 40 joueurs : avec « Réduire les cases en grand raid », les cases rétrécissent comme dans un vrai raid (#46)."] = "Test mode with 25 or 40 players: with \"Shrink cells in large raids\", cells now shrink like in a real raid (#46).",
 	["Fin du combat : si une modification remise à plus tard échoue, les autres (clics, disposition, profil) s'appliquent quand même (#46)."] = "End of combat: if one postponed change fails, the others (clicks, layout, profile) still apply (#46).",
-	["« Vider le journal » : /lyorune bug ne signale plus une erreur déjà effacée (#46)."] = "\"Clear log\": /lyorune bug no longer reports an error that was already cleared (#46).",
+	["« Vider le journal » : /lyorune bug ne signale plus une erreur déjà effacée (#46)."] = "\"Clear the log\": /lyorune bug no longer reports an error that was already cleared (#46).",
 	["Un appel « Prêt ? » relancé moins de 5 secondes après le précédent garde ses réponses sur les cases."] = "A ready check started again less than 5 seconds after the previous one keeps its answers on the cells.",
 	["L'œil « hors de vue » ne reste plus sur une case quand le jeu la donne à un autre joueur."] = "The out of sight eye no longer stays on a cell when the game gives it to another player.",
-	["« Son quand ma mana est faible » fonctionne aussi quand les annonces de mana sont décochées (#46)."] = "\"Sound when my mana is low\" now also works when the mana announcements are unchecked (#46).",
+	["« Son quand ma mana est faible » fonctionne aussi quand les annonces de mana sont décochées (#46)."] = "\"Sound when my mana is low\" now also works when the mana announcements are unticked (#46).",
 	["Barre ou anneau d'incantation : un sort refusé pendant l'incantation (clics répétés) ne les cache plus (#46)."] = "Cast bar or ring: a spell refused during a cast (repeated clicks) no longer hides them (#46).",
 	["La couronne du chef s'affiche dans le mode test et dans la fenêtre « Placer les éléments de la case »."] = "The leader crown now shows in test mode and in the \"Place the cell elements\" window.",
 	["Mes macros : effacer le mot avant « : » dans une condition ([:shift]) ne fait plus d'erreur."] = "My macros: erasing the word before \":\" in a condition ([:shift]) no longer causes an error.",

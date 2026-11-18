@@ -877,7 +877,7 @@ step("anglais : visite guidee, nouveautes, messages", function()
   Z.db.language = "enUS" Z:SetLanguage()
   Z.db.tutorialDone = false Z:StartTutorial()
   local card = LyoruneTutorial
-  local titles = { "Welcome to Lyorune", "One frame per player", "Heal with one click", "What the colours say",
+  local titles = { "Welcome to Lyorune", "One cell per player", "Heal with one click", "What the colours say",
     "Placing the frames", "Trying without a group", "Setting up Lyorune", "Off you go" }
   for i = 1, 8 do
     assert(card.title:GetText() == titles[i], "titre " .. i .. " : " .. card.title:GetText())

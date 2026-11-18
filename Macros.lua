@@ -493,7 +493,7 @@ local function BuildWindow()
 	end
 	local hint = Block(win, 14, -98 - ROWS * 24 - 6, 186)
 	UI.Paint(hint, "dim")
-	hint:SetText(L["Glissez une macro sur une case de l'onglet Clics, ou choisissez-la en cliquant sur la case."])
+	hint:SetText(L["Glissez une macro sur une ligne de l'onglet Clics, ou cliquez sur le sort d'une ligne pour la choisir."])
 
 	-- Colonne de droite : la macro choisie
 	local x, width = 216, 390

@@ -122,7 +122,7 @@ function Z:ManaRulerText()
 	local name = C_Spell.GetSpellName(id) or "?"
 	local rank = C_Spell.GetSpellSubtext and C_Spell.GetSpellSubtext(id)
 	if rank and not issecret(rank) and rank ~= "" then name = name .. " (" .. rank .. ")" end
-	return L["Le jeu cache votre mana : l'annonce part quand %s manque de mana, soit vers %d %%."]:format(name, percent)
+	return L["Le jeu cache votre mana : l'annonce part quand vous n'avez plus assez de mana pour %s, soit vers %d %%. L'annonce de mana remontée ne peut donc pas partir."]:format(name, percent)
 end
 
 local function CheckMana()

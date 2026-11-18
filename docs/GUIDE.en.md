@@ -20,7 +20,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Blue bar under the health | Their mana (everyone, by default; height from 2 to 60 pixels and colour adjustable in the Indicators tab, the health always keeps at least 10 pixels of the cell: blue, sky blue, purple, teal or white). With "Mana percentage in the bar", the % is written in it, even in combat |
 | Flashing red overlay | Their health is low |
 | Red border | They are being attacked |
-| Coloured line at the top of the health (if you turn it on) | Their threat: yellow, they climb a monster's list; orange, they are about to pull it; red, they have it |
+| Coloured line at the top of the health (if you turn it on) | Their threat: yellow, they build threat on a monster; orange, the monster is about to turn on them; red, the monster is attacking them |
 | Small coloured square in a corner | A spell you placed in that corner (Heals tab): it drains over time |
 | White border | They are your target |
 | Blue, purple, brown or green outline and light tint | A magic effect, a curse, a disease or a poison that YOU can remove (the name and health stay readable) |

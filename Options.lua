@@ -471,7 +471,7 @@ local function SimpleTabs()
 				{ "check", "showMarker", "Marqueur de raid" },
 				{ "check", "showLeader", "Chef de groupe et assistants", "Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid." },
 				{ "check", "showThreat", "Bordure rouge quand il est attaqué" },
-				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la vie : jaune quand il monte dans la liste d'un monstre, orange juste avant qu'il le prenne, rouge quand il l'a." },
+				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la barre de vie : jaune quand le joueur prend de la menace sur un monstre, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui." },
 				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte)." },
 			},
 			{
@@ -980,7 +980,7 @@ local function BuildClicks(page)
 	end)
 	banner.assign:SetPoint("RIGHT", banner.dismiss, "LEFT", -4, 0)
 	banner.assign.label:SetJustifyH("CENTER")
-	banner.assign.tip = L["Puis faites sur le bouton « Ajouter » le clic ou la touche qui lancera ce sort."]
+	banner.assign.tip = L["Puis, sur le bouton « Ajouter », faites le clic ou la touche qui lancera ce sort."]
 	banner:Hide()
 	page.banner = banner
 

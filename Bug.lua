@@ -13,7 +13,7 @@ function Z:ReportURL()
 end
 
 local QUESTIONS = {
-	"Que faisais-tu quand c'est arrivé ?",
+	"Que faisiez-vous quand c'est arrivé ?",
 	"Que s'est-il passé ?",
 	"Est-ce que ça se reproduit à chaque fois ?",
 }
@@ -153,7 +153,7 @@ function Z:ShowBug()
 
 		local where = UI.Text(window, 12)
 		where:SetPoint("BOTTOMLEFT", 16, 50)
-		where:SetText(L["Colle ton rapport ici :"])
+		where:SetText(L["Collez votre rapport ici :"])
 		local link = UI.Edit(window, 568)
 		link:SetPoint("BOTTOMLEFT", 16, 20)
 		link:SetText(Z:ReportURL())
@@ -161,7 +161,7 @@ function Z:ShowBug()
 	end
 	for _, edit in ipairs(window.answers) do edit:SetText("") end
 	local hasError = (Z.firstError or (Z.db.errors or {})[1]) ~= nil
-	window.hint:SetText(hasError and "" or L["Aucune erreur technique enregistrée : pense à joindre une capture d'écran du défaut."])
+	window.hint:SetText(hasError and "" or L["Aucune erreur technique enregistrée : pensez à joindre une capture d'écran du défaut."])
 	window.Update()
 	window:Show()
 end

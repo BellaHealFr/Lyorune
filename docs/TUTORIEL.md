@@ -19,7 +19,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur de 2 à 60 pixels et couleur réglables dans l'onglet Indicateurs ; la vie garde toujours au moins 10 pixels de la case : bleu, bleu ciel, violet, turquoise ou blanc). Avec « Pourcentage de mana dans la barre », le % s'y écrit, même en combat |
 | Voile rouge qui clignote | Sa vie est basse |
 | Bordure rouge | Il est attaqué |
-| Trait de couleur en haut de la vie (si vous l'activez) | Sa menace : jaune, il monte dans la liste d'un monstre ; orange, il va le prendre ; rouge, il l'a |
+| Trait de couleur en haut de la vie (si vous l'activez) | Sa menace : jaune, il prend de la menace sur un monstre ; orange, le monstre va se tourner vers lui ; rouge, le monstre s'en prend à lui |
 | Petit carré de couleur dans un coin | Un sort que vous avez placé dans ce coin (onglet Soins) : il se vide avec le temps |
 | Bordure blanche | C'est votre cible |
 | Contour et léger voile bleu, violet, brun ou vert | Une magie, une malédiction, une maladie ou un poison que VOUS pouvez retirer (le nom et la vie restent lisibles) |
