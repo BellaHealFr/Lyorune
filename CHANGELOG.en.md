@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.24.0] - 2026-11-18
+
+### Added
+
+- Mana restored announcement even when the game hides your mana (WoW Forever): while you drink, Lyorune notes when each of your spells becomes usable again, works out how fast your mana comes back and announces when it reaches your chosen threshold.
+
+### Improved
+
+- Interface texts reviewed in French and English: clearer sentences and the same words from one screen to the next.
+
 ## [1.23.13] - 2026-11-18
 
 ### Added
@@ -81,7 +91,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Fixed
 
-- "Sound when my mana is low" now also works when the mana announcements are unchecked ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- "Sound when my mana is low" now also works when the mana announcements are unticked ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
 
 ## [1.23.3] - 2026-11-17
 
@@ -95,7 +105,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 ### Fixed
 
 - End of combat: if one postponed change fails, the others (clicks, layout, profile) still apply ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
-- "Clear log": /lyorune bug no longer reports an error that was already cleared ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
+- "Clear the log": /lyorune bug no longer reports an error that was already cleared ([#46](https://github.com/BellaHealFr/Lyorune/issues/46)).
 
 ## [1.23.1] - 2026-11-17
 
@@ -107,7 +117,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Added
 
-- Copy part of a profile (Profiles tab, "Copy..." button): Frames, Appearance, Indicators or Heals, as you choose, from one profile to another; the rest of the target profile stays as it is ([#44](https://github.com/BellaHealFr/Lyorune/issues/44)).
+- Copy part of a profile (Profiles tab, "Copy..." button): Frames, Look, Indicators or Heals, as you choose, from one profile to another; the rest of the target profile stays as it is ([#44](https://github.com/BellaHealFr/Lyorune/issues/44)).
 - Automatic profiles in battlegrounds and arenas, for each specialization; with nothing chosen, the profile set for the group size applies ([#44](https://github.com/BellaHealFr/Lyorune/issues/44)).
 
 ## [1.22.0] - 2026-11-17
@@ -180,7 +190,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - Grid layout (Frames tab): the whole raid in one block, with no gap between groups, and a chosen number of cells per column ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
 - Order in each block: group order, by name, or by class then name; the game keeps it up to date by itself, even in combat ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
-- Each group keeps its place: when arranged by group, a group stays in its column even if the one before is empty ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
+- Each group keeps its place: when sorting by group, a group stays in its column even if the one before is empty ([#26](https://github.com/BellaHealFr/Lyorune/issues/26)).
 
 ### Improved
 
@@ -230,7 +240,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 - Three themes for Lyorune's windows: Modern (default), Classic and MMORPG, switched live; high contrast applies to them too ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
 - Animated runic inscription: the runes write themselves on opening, a haloed glow runs along them, a wave of light on hover before the translation, colours by theme ([#33](https://github.com/BellaHealFr/Lyorune/issues/33)).
 - "Reduced motion" setting: short fades only, still runes and logo ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
-- Magic effects (switch in Appearance): rune circle behind the logo, motes of light in the header, a spark when a setting changes, theme colour ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
+- Magic effects (switch in the Look tab): rune circle behind the logo, motes of light in the header, a spark when a setting changes, theme colour ([#39](https://github.com/BellaHealFr/Lyorune/issues/39)).
 
 ### Improved
 
@@ -273,10 +283,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Added
 
-- Boss private auras: the game draws them itself on the frame, adjustable size and position ([#9](https://github.com/BellaHealFr/Lyorune/issues/9)).
+- Boss private auras: the game draws them itself on the cell, adjustable size and position ([#9](https://github.com/BellaHealFr/Lyorune/issues/9)).
 - Heal absorb: dark red band at the end of the health, computed by the game, accurate in combat ([#10](https://github.com/BellaHealFr/Lyorune/issues/10)).
 - Icons for a pending summon and for a player in another phase ([#11](https://github.com/BellaHealFr/Lyorune/issues/11)).
-- Tooltip when hovering a frame: the list of your clicks and keys, out of combat ([#12](https://github.com/BellaHealFr/Lyorune/issues/12)).
+- Tooltip when hovering a cell: the list of your clicks and keys, out of combat ([#12](https://github.com/BellaHealFr/Lyorune/issues/12)).
 - Glowing outline for an important debuff, even in combat for boss debuffs, and a sound for those in your list ([#13](https://github.com/BellaHealFr/Lyorune/issues/13)).
 
 ## [1.7.0] - 2026-11-17
@@ -307,7 +317,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Improved
 
-- A macro command without a target aims at the frame; [@mouseover] works as it is.
+- A macro command without a target aims at the cell; [@mouseover] works as it is.
 - Your previous macros are moved into the library by themselves.
 
 ## [1.5.4] - 2026-11-17
@@ -411,7 +421,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 - Heals over time as icons or thin bars, important debuffs shown large.
 - Hover keys, automatic resurrection on the heal click.
 - Personal lists: spells to track, debuffs to ignore or to highlight.
-- Brightness, opacity, high contrast, automatic frame shrinking in large raids.
+- Brightness, opacity, high contrast, automatic cell shrinking in large raids.
 - Ready-made profiles, direct sending of your configuration to a player, reset everything.
 - English translation of the options.
 - Warning when a group member has a newer version.
@@ -422,7 +432,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Fixed
 
-- Your own frame is no longer faded as if you were out of range.
+- Your own cell is no longer faded as if you were out of range.
 
 ## 1.1.0 - 2026-11-16
 
@@ -437,6 +447,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.24.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.13...v1.24.0
 [1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13
 [1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12
 [1.23.11]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.10...v1.23.11

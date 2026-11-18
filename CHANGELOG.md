@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.24.0] - 2026-11-18
+
+### Ajouté
+
+- Annonce de mana remontée même quand le jeu cache votre mana (WoW Forever) : pendant que vous buvez, Lyorune note le moment où chacun de vos sorts redevient utilisable, en tire la vitesse de remontée et annonce quand votre mana atteint le seuil choisi.
+
+### Amélioré
+
+- Textes de l'interface relus en français et en anglais : vouvoiement partout, phrases plus claires, mêmes mots d'un écran à l'autre.
+
 ## [1.23.13] - 2026-11-18
 
 ### Ajouté
@@ -437,6 +447,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.24.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.13...v1.24.0
 [1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13
 [1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12
 [1.23.11]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.10...v1.23.11

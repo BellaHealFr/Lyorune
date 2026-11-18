@@ -637,6 +637,46 @@ step("mana secrete : la regle a sorts annonce la mana faible", function()
   FireEvent("SPELLS_CHANGED") Z.db.manaThreshold = 20 MANA = 1000 FireEvent("UNIT_POWER_UPDATE", "player")
 end)
 
+step("mana secrete : mana remontee estimee par paliers", function()
+  local power, cost, usable, after, now0 = UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, C_Timer.After, NOW
+  UnitPower = function() return MakeSecret(MANA) end
+  local costs = { [139] = 50, [2061] = 190, [527] = 300, [17] = 450 } -- paliers 5, 19, 30 et 45 %
+  C_Spell.GetSpellPowerCost = function(id) return costs[id] and { { type = 0, cost = costs[id] } } or {} end
+  C_Spell.IsSpellUsable = function(id) local c = costs[id] or 0 return MANA >= c, MANA < c end
+  FireEvent("SPELLS_CHANGED") -- avant de garder les minuteurs : celui des nouveaux sorts doit partir
+  local timers = {} C_Timer.After = function(d, f) timers[#timers + 1] = { d = d, f = f } end
+  Z.db.manaThreshold = 20 Z.db.regenThreshold = 90 Z.db.manaAlert = true Z.db.regenAlert = true Z.db.alertChannel = "SAY"
+  Z:RefreshAlerts()
+  NOW = 2000 local n = #SENT
+  MANA = 600 FireEvent("UNIT_POWER_UPDATE", "player")
+  MANA = 150 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 1, "mana faible")
+  wipe(timers) -- la mesure de la remontee commence a l'alerte
+  NOW = 2010 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 19 % : un seul, pas encore de vitesse
+  assert(#timers == 0 and #SENT == n + 1, "minuteur sans vitesse connue")
+  NOW = 2020 MANA = 310 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 30 % : 11 de mana par seconde
+  assert(#timers == 1 and math.abs(timers[1].d - 600 / 11) < 0.01, "heure prevue : " .. tostring(timers[1] and timers[1].d))
+  NOW = 2025 MANA = 320 FireEvent("UNIT_POWER_UPDATE", "player") assert(#timers == 1, "pas de nouveau palier")
+  NOW = 2035 MANA = 460 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 45 % : calcul refait
+  assert(#timers == 2, "calcul refait au palier suivant")
+  MANA = 900 timers[1].f() assert(#SENT == n + 1, "ancien minuteur pas annule")
+  timers[2].f()
+  assert(#SENT == n + 2 and SENT[#SENT] == "SAY:Mana remontée (90 %), prêt à repartir !", tostring(SENT[#SENT]))
+  timers[2].f() assert(#SENT == n + 2, "annonce repetee")
+  -- mana depensee pendant la remontee : le minuteur ne dit rien
+  NOW = 2100 MANA = 150 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 3, "nouvelle mana faible")
+  NOW = 2110 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player")
+  NOW = 2120 MANA = 310 FireEvent("UNIT_POWER_UPDATE", "player")
+  MANA = 60 FireEvent("UNIT_POWER_UPDATE", "player")
+  timers[#timers].f() assert(#SENT == n + 3, "annonce apres une depense")
+  -- annonce de remontee decochee : aucun minuteur
+  Z.db.regenAlert = false Z:RefreshAlerts() local t = #timers
+  NOW = 2200 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player") MANA = 310 NOW = 2210 FireEvent("UNIT_POWER_UPDATE", "player")
+  assert(#timers == t, "minuteur alors que l'annonce est decochee")
+  Z.db.regenAlert = true Z:RefreshAlerts()
+  UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, C_Timer.After, NOW = power, cost, usable, after, now0
+  FireEvent("SPELLS_CHANGED") MANA = 1000 FireEvent("UNIT_POWER_UPDATE", "player")
+end)
+
 step("annonce de resurrection", function()
   Z.db.resAlert = true Z:RefreshAlerts()
   local n = #SENT
