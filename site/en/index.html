@@ -3,14 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lyorune, healing frames for WoW Forever</title>
-<meta name="description" content="Simple, fast and elegant healing frames for World of Warcraft: Forever: click-casting, dispels, incoming heals, profiles, themes.">
-<meta property="og:title" content="Lyorune">
-<meta property="og:description" content="The light that guides every healer. Healing frames for World of Warcraft: Forever.">
+<title>Lyorune: healing frames addon for WoW Forever (click casting, raid frames)</title>
+<meta name="description" content="Lyorune is a free healing frames addon for World of Warcraft: Forever: click casting, hover keys, dispels, incoming heals, range, missing buffs, low mana announcement, profiles and themes. Priest, druid, paladin, shaman.">
+<meta name="keywords" content="Lyorune, WoW Forever addon, healing frames, heal frames, raid frames, click casting, healer addon, World of Warcraft Forever, VuhDo alternative, HealBot alternative, Grid, dispel, priest, druid, paladin, shaman">
+<meta name="author" content="BellaDroode">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#070b17">
+<link rel="canonical" href="https://bellahealfr.github.io/Lyorune/en/">
+<link rel="alternate" hreflang="fr" href="https://bellahealfr.github.io/Lyorune/">
+<link rel="alternate" hreflang="en" href="https://bellahealfr.github.io/Lyorune/en/">
+<link rel="alternate" hreflang="x-default" href="https://bellahealfr.github.io/Lyorune/en/">
+<link rel="alternate" type="text/plain" title="Summary for AI" href="https://bellahealfr.github.io/Lyorune/llms.txt">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyorune">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:url" content="https://bellahealfr.github.io/Lyorune/en/">
+<meta property="og:title" content="Lyorune, healing frames for WoW Forever">
+<meta property="og:description" content="The light that guides every healer. Free healing frames addon for World of Warcraft: Forever.">
 <meta property="og:image" content="https://bellahealfr.github.io/Lyorune/images/logo.png">
-<link rel="icon" href="../images/logo.png">
-<link rel="alternate" hreflang="fr" href="../">
+<meta property="og:image:alt" content="Lyorune logo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lyorune, healing frames for WoW Forever">
+<meta name="twitter:description" content="Free healing frames addon for World of Warcraft: Forever.">
+<meta name="twitter:image" content="https://bellahealfr.github.io/Lyorune/images/logo.png">
+<link rel="icon" type="image/png" href="../images/logo.png">
+<link rel="apple-touch-icon" href="../images/logo.png">
 <link rel="stylesheet" href="../style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://bellahealfr.github.io/Lyorune/#addon",
+      "name": "Lyorune",
+      "alternateName": "Lyorune healing frames",
+      "description": "Free healing frames addon for World of Warcraft: Forever: click casting, hover keys, dispels, incoming heals, range, missing buffs, low mana announcement, profiles, themes and configuration sharing.",
+      "url": "https://bellahealfr.github.io/Lyorune/en/",
+      "image": "https://bellahealfr.github.io/Lyorune/images/logo.png",
+      "applicationCategory": "GameApplication",
+      "applicationSubCategory": "World of Warcraft addon",
+      "operatingSystem": "Windows, macOS",
+      "softwareVersion": "__VERSION__",
+      "dateModified": "__DATE__",
+      "inLanguage": ["en", "fr"],
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "downloadUrl": "https://github.com/BellaHealFr/Lyorune/releases/latest",
+      "installUrl": "https://github.com/BellaHealFr/Lyorune/releases/latest",
+      "codeRepository": "https://github.com/BellaHealFr/Lyorune",
+      "releaseNotes": "https://github.com/BellaHealFr/Lyorune/blob/main/CHANGELOG.en.md",
+      "softwareRequirements": "World of Warcraft: Forever (interface 16001)",
+      "featureList": ["Click casting with Shift, Ctrl, Alt", "Hover keys", "Incoming heals, shields and heal absorbs", "Dispel: magic, curse, disease, poison", "Range in three levels", "Missing buffs", "Resurrection on the same click", "Low mana announcement even when mana is hidden", "Profiles per group size, battleground, arena and specialization", "Five themes", "Test mode from 5 to 40 players", "Configuration sharing"],
+      "author": { "@id": "https://bellahealfr.github.io/Lyorune/#auteur" },
+      "sameAs": ["https://github.com/BellaHealFr/Lyorune"]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://bellahealfr.github.io/Lyorune/#auteur",
+      "name": "BellaDroode",
+      "url": "https://github.com/BellaHealFr"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "What is Lyorune?", "acceptedAnswer": { "@type": "Answer", "text": "Lyorune is a free healing frames addon for World of Warcraft: Forever. It shows your whole group or raid and casts your heals with one click on a player's frame." } },
+        { "@type": "Question", "name": "Which healing addon should I use on WoW Forever?", "acceptedAnswer": { "@type": "Answer", "text": "Lyorune is made for World of Warcraft: Forever (interface 16001). It is lighter than VuhDo and HealBot, handles values hidden in combat and suits priests, druids, paladins and shamans." } },
+        { "@type": "Question", "name": "Is Lyorune free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lyorune is free and is downloaded from its GitHub Releases page, its only official source." } },
+        { "@type": "Question", "name": "Does Lyorune work with ElvUI or Clique?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lyorune never changes the game's frames or other addons' frames. It runs alongside ElvUI, Clique and other interface addons." } },
+        { "@type": "Question", "name": "How do I install Lyorune?", "acceptedAnswer": { "@type": "Answer", "text": "Download the archive from GitHub, unzip it into World of Warcraft\\_forever_\\Interface\\AddOns\\ and start the game. A one-minute tutorial opens on first login." } }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -42,11 +109,11 @@
   </div>
 
   <section class="conteneur">
-    <div class="grille" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); text-align: center;">
-      <div><img src="../images/piliers/soigner.png" alt="" style="width:130px;margin:0 auto"><h3>HEAL</h3><p>with precision</p></div>
-      <div><img src="../images/piliers/proteger.png" alt="" style="width:130px;margin:0 auto"><h3>PROTECT</h3><p>your allies</p></div>
-      <div><img src="../images/piliers/anticiper.png" alt="" style="width:130px;margin:0 auto"><h3>ANTICIPATE</h3><p>every threat</p></div>
-      <div><img src="../images/piliers/indispensable.png" alt="" style="width:130px;margin:0 auto"><h3>BECOME</h3><p>indispensable</p></div>
+    <div class="grille piliers-en">
+      <div><img src="../images/piliers/soigner.png" alt=""><h3>HEAL</h3><p>with precision</p></div>
+      <div><img src="../images/piliers/proteger.png" alt=""><h3>PROTECT</h3><p>your allies</p></div>
+      <div><img src="../images/piliers/anticiper.png" alt=""><h3>ANTICIPATE</h3><p>every threat</p></div>
+      <div><img src="../images/piliers/indispensable.png" alt=""><h3>BECOME</h3><p>indispensable</p></div>
     </div>
   </section>
 
@@ -91,6 +158,15 @@
       <tr><td><code>/lyorune tuto</code></td><td>Restart the tutorial</td></tr>
       <tr><td><code>/lyorune bug</code></td><td>Report a problem</td></tr>
     </table>
+  </section>
+
+  <section id="faq" class="conteneur faq">
+    <h2>Frequently asked questions</h2>
+    <details><summary>What is Lyorune?</summary><p>Lyorune is a free healing frames addon for World of Warcraft: Forever. It shows your whole group or raid and casts your heals with one click on a player's frame.</p></details>
+    <details><summary>Which healing addon should I use on WoW Forever?</summary><p>Lyorune is made for World of Warcraft: Forever (interface 16001). It is lighter than VuhDo and HealBot, handles values hidden in combat and suits priests, druids, paladins and shamans.</p></details>
+    <details><summary>Is Lyorune free?</summary><p>Yes. Lyorune is free and is downloaded from its <a href="https://github.com/BellaHealFr/Lyorune/releases/latest">GitHub Releases page</a>, its only official source.</p></details>
+    <details><summary>Does Lyorune work with ElvUI or Clique?</summary><p>Yes. Lyorune never changes the game's frames or other addons' frames. It runs alongside ElvUI, Clique and other interface addons.</p></details>
+    <details><summary>How do I install Lyorune?</summary><p>Download the archive from GitHub, unzip it into <code>World of Warcraft\_forever_\Interface\AddOns\</code> and start the game. A one-minute tutorial opens on first login.</p></details>
   </section>
 
   <section class="conteneur auteur">

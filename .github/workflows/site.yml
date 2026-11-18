@@ -1,5 +1,6 @@
 # Publie la page de présentation de Lyorune (dossier site/) sur GitHub Pages.
 # Les images sont reprises de docs/images, pour n'en garder qu'un exemplaire dans le dépôt.
+# La version (Lyorune.toc) et la date du jour remplacent __VERSION__ et __DATE__ (données pour les moteurs de recherche).
 name: Site
 on:
   push:
@@ -7,6 +8,7 @@ on:
     paths:
       - "site/**"
       - "docs/images/**"
+      - "Lyorune.toc"
       - ".github/workflows/site.yml"
   workflow_dispatch:
 
@@ -35,6 +37,9 @@ jobs:
           cp docs/images/*.png public/images/
           cp -r docs/images/runes docs/images/piliers public/images/
           touch public/.nojekyll
+          version=$(grep -oP '## Version: \K\S+' Lyorune.toc)
+          date=$(date -u +%Y-%m-%d)
+          grep -rl -e __VERSION__ -e __DATE__ public --include='*.html' --include='*.xml' --include='*.txt'             | xargs sed -i "s/__VERSION__/$version/g; s/__DATE__/$date/g"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

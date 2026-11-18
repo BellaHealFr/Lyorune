@@ -3,14 +3,89 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lyorune, cadres de soin pour WoW Forever</title>
-<meta name="description" content="Cadres de soin simples, rapides et élégants pour World of Warcraft: Forever : clic-soin, dissipation, soins entrants, profils, thèmes.">
-<meta property="og:title" content="Lyorune">
-<meta property="og:description" content="La lumière qui guide chaque soigneur. Cadres de soin pour World of Warcraft: Forever.">
-<meta property="og:image" content="https://bellahealfr.github.io/Lyorune/images/logo.png">
-<link rel="icon" href="images/logo.png">
-<link rel="alternate" hreflang="en" href="en/">
+<title>Lyorune : addon de cadres de soin pour WoW Forever (clic-soin, heal frames)</title>
+<meta name="description" content="Lyorune est un addon gratuit de cadres de soin pour World of Warcraft: Forever : soin d'un clic, touches au survol, dissipation, soins entrants, portée, buffs manquants, annonce de mana faible, profils et thèmes. Prêtre, druide, paladin, chaman.">
+<meta name="keywords" content="Lyorune, addon WoW Forever, cadres de soin, heal frames, clic-soin, click casting, addon soigneur, World of Warcraft Forever, alternative VuhDo, alternative HealBot, Grid, dissipation, prêtre, druide, paladin, chaman">
+<meta name="author" content="BellaDroode">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#070b17">
+<link rel="canonical" href="https://bellahealfr.github.io/Lyorune/">
+<link rel="alternate" hreflang="fr" href="https://bellahealfr.github.io/Lyorune/">
+<link rel="alternate" hreflang="en" href="https://bellahealfr.github.io/Lyorune/en/">
+<link rel="alternate" hreflang="x-default" href="https://bellahealfr.github.io/Lyorune/en/">
+<link rel="alternate" type="text/plain" title="Résumé pour les IA" href="https://bellahealfr.github.io/Lyorune/llms.txt">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyorune">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="https://bellahealfr.github.io/Lyorune/">
+<meta property="og:title" content="Lyorune, cadres de soin pour WoW Forever">
+<meta property="og:description" content="La lumière qui guide chaque soigneur. Addon gratuit de cadres de soin pour World of Warcraft: Forever.">
+<meta property="og:image" content="https://bellahealfr.github.io/Lyorune/images/piliers.png">
+<meta property="og:image:alt" content="Soignez avec précision, protégez vos alliés, anticipez chaque menace, devenez indispensable">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lyorune, cadres de soin pour WoW Forever">
+<meta name="twitter:description" content="Addon gratuit de cadres de soin pour World of Warcraft: Forever.">
+<meta name="twitter:image" content="https://bellahealfr.github.io/Lyorune/images/piliers.png">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
 <link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://bellahealfr.github.io/Lyorune/#addon",
+      "name": "Lyorune",
+      "alternateName": "Lyorune healing frames",
+      "description": "Addon gratuit de cadres de soin pour World of Warcraft: Forever : soin d'un clic, touches au survol, dissipation, soins entrants, portée, buffs manquants, annonce de mana faible, profils, thèmes et partage de configuration.",
+      "url": "https://bellahealfr.github.io/Lyorune/",
+      "image": "https://bellahealfr.github.io/Lyorune/images/logo.png",
+      "applicationCategory": "GameApplication",
+      "applicationSubCategory": "World of Warcraft addon",
+      "operatingSystem": "Windows, macOS",
+      "softwareVersion": "__VERSION__",
+      "dateModified": "__DATE__",
+      "inLanguage": ["fr", "en"],
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "downloadUrl": "https://github.com/BellaHealFr/Lyorune/releases/latest",
+      "installUrl": "https://github.com/BellaHealFr/Lyorune/releases/latest",
+      "codeRepository": "https://github.com/BellaHealFr/Lyorune",
+      "releaseNotes": "https://github.com/BellaHealFr/Lyorune/blob/main/CHANGELOG.md",
+      "softwareRequirements": "World of Warcraft: Forever (interface 16001)",
+      "featureList": ["Soin d'un clic (click casting) avec Maj, Ctrl, Alt", "Touches au survol", "Soins entrants, boucliers et absorptions", "Dissipation : magie, malédiction, maladie, poison", "Portée en trois paliers", "Buffs manquants", "Résurrection sur le même clic", "Annonce de mana faible même quand la mana est cachée", "Profils par taille de groupe, champ de bataille, arène et spécialisation", "Cinq thèmes", "Mode test de 5 à 40 joueurs", "Partage de configuration"],
+      "author": { "@id": "https://bellahealfr.github.io/Lyorune/#auteur" },
+      "sameAs": ["https://github.com/BellaHealFr/Lyorune"]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://bellahealfr.github.io/Lyorune/#auteur",
+      "name": "BellaDroode",
+      "url": "https://github.com/BellaHealFr"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://bellahealfr.github.io/Lyorune/#site",
+      "url": "https://bellahealfr.github.io/Lyorune/",
+      "name": "Lyorune",
+      "inLanguage": "fr",
+      "publisher": { "@id": "https://bellahealfr.github.io/Lyorune/#auteur" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Qu'est-ce que Lyorune ?", "acceptedAnswer": { "@type": "Answer", "text": "Lyorune est un addon gratuit de cadres de soin pour World of Warcraft: Forever. Il affiche tout le groupe ou le raid et lance vos sorts de soin d'un clic sur la case d'un joueur." } },
+        { "@type": "Question", "name": "Quel addon de soin utiliser sur WoW Forever ?", "acceptedAnswer": { "@type": "Answer", "text": "Lyorune est fait pour World of Warcraft: Forever (interface 16001). Il est plus léger que VuhDo et HealBot, gère les valeurs cachées en combat et convient au prêtre, au druide, au paladin et au chaman." } },
+        { "@type": "Question", "name": "Lyorune est-il gratuit ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui. Lyorune est gratuit et se télécharge sur la page Releases de GitHub, sa seule source officielle." } },
+        { "@type": "Question", "name": "Lyorune fonctionne-t-il avec ElvUI ou Clique ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui. Lyorune ne modifie aucun cadre du jeu ni des autres addons. Il fonctionne à côté d'ElvUI, de Clique et des autres addons d'interface." } },
+        { "@type": "Question", "name": "Comment installer Lyorune ?", "acceptedAnswer": { "@type": "Answer", "text": "Téléchargez l'archive sur GitHub, décompressez-la dans World of Warcraft\\_forever_\\Interface\\AddOns\\ et lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion." } }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -86,6 +161,15 @@
       <tr><td><code>/lyorune tuto</code></td><td>Relancer le tutoriel</td></tr>
       <tr><td><code>/lyorune bug</code></td><td>Signaler un problème</td></tr>
     </table>
+  </section>
+
+  <section id="questions" class="conteneur faq">
+    <h2>Questions fréquentes</h2>
+    <details><summary>Qu'est-ce que Lyorune ?</summary><p>Lyorune est un addon gratuit de cadres de soin pour World of Warcraft: Forever. Il affiche tout le groupe ou le raid et lance vos sorts de soin d'un clic sur la case d'un joueur.</p></details>
+    <details><summary>Quel addon de soin utiliser sur WoW Forever ?</summary><p>Lyorune est fait pour World of Warcraft: Forever (interface 16001). Il est plus léger que VuhDo et HealBot, gère les valeurs cachées en combat et convient au prêtre, au druide, au paladin et au chaman.</p></details>
+    <details><summary>Lyorune est-il gratuit ?</summary><p>Oui. Lyorune est gratuit et se télécharge sur la page <a href="https://github.com/BellaHealFr/Lyorune/releases/latest">Releases de GitHub</a>, sa seule source officielle.</p></details>
+    <details><summary>Lyorune fonctionne-t-il avec ElvUI ou Clique ?</summary><p>Oui. Lyorune ne modifie aucun cadre du jeu ni des autres addons. Il fonctionne à côté d'ElvUI, de Clique et des autres addons d'interface.</p></details>
+    <details><summary>Comment installer Lyorune ?</summary><p>Téléchargez l'archive sur GitHub, décompressez-la dans <code>World of Warcraft\_forever_\Interface\AddOns\</code> et lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion.</p></details>
   </section>
 
   <section class="conteneur auteur">
