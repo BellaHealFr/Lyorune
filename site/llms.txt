@@ -16,6 +16,10 @@ Main features:
 - Profiles per group size, battleground, arena and specialization, applied automatically; partial copy; sharing by code or in game.
 - Test mode with a fake group of 5 to 40 players; built-in one-minute tutorial.
 
+Keywords: World of Warcraft, World of Warcraft: Forever, WoW Forever, WoW addon, Blizzard, MMORPG, healing frames, raid frames, party frames, click casting, healer addon, dungeon, raid, PvP, battleground, arena, alternative to VuhDo, HealBot, Grid and Cell.
+
+Video presentation (one minute): https://bellahealfr.github.io/Lyorune/video/lyorune-en.mp4 (English), https://bellahealfr.github.io/Lyorune/video/lyorune-fr.mp4 (French).
+
 Installation: download the archive from GitHub Releases, unzip it into `World of Warcraft\_forever_\Interface\AddOns\`, start the game. Main command: `/lyorune`.
 
 License: all rights reserved, free to use and share unchanged. GitHub Releases is the only official source.
