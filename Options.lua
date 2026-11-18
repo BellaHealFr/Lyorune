@@ -414,7 +414,6 @@ local function SimpleTabs()
 				{ "check", "showTargetTarget", "Case de la cible de ma cible", "Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change." },
 				{ "check", "showFocus", "Case de ma focalisation" },
 				{ "check", "showPinned", "Cadre des joueurs épinglés", "Un petit cadre « Épinglés » avec les joueurs de votre liste (onglet Listes), par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler." },
-				{ "check", "hideBlizzard", "Masquer les cadres de groupe du jeu", "Expérimental. Pour les faire revenir, décochez puis tapez /reload." },
 				{ "head", "Mode test" },
 				{ "note", "Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer.", 30 },
 				PreviewButton(5), PreviewButton(10), PreviewButton(25), PreviewButton(40),
@@ -1147,8 +1146,12 @@ local function BuildAlerts(page)
 	local mana = BuildItem(page, { "check", "soundMana", "Son quand ma mana est faible" })
 	mana:SetPoint("TOPLEFT", COLUMN + 32, -344)
 
+	-- WoW Forever cache ma mana aux addons : le sort qui sert de règle (Alerts.lua)
+	local rulerNote = Note(page, "", 0, -380)
+
 	local function Fill()
 		for key, edit in pairs(edits) do edit:SetText(Z.db[key]) end
+		rulerNote:SetText(Z:ManaRulerText())
 	end
 	page:SetScript("OnShow", Fill)
 	Fill()

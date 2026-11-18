@@ -157,7 +157,7 @@ C_UnitAuras = {
 	GetAuraDispelTypeColor = function() return CreateColor(0.2, 0.6, 1, 1) end,
 	IsAuraFilteredOutByInstanceID = function() return false end,
 }
-function UnitPowerPercent(u, p, predicted, curve) if curve == CurveConstants.ScaleTo100 then return 60 end return 0.6 end
+function UnitPowerPercent(u, p, predicted, curve) if curve == CurveConstants.ScaleTo100 then return 60 end return CreateColor(1, 1, 1, 1) end
 function CreateUnitHealPredictionCalculator() return new("Calc") end
 function UnitGetDetailedHealPrediction() end
 function UnitClass(u) return "Prêtre", "PRIEST" end
@@ -261,6 +261,7 @@ MEMORY = { Lyorune = 850, ElvUI = 12000 }
 function UpdateAddOnMemoryUsage() MEMORY._updated = true end
 function GetAddOnMemoryUsage(name) return MEMORY[name] or 0 end
 C_ChatInfo = { InChatMessagingLockdown = function() return false end }
+ERR_OUT_OF_MANA = "Pas assez de mana"
 
 ----------------------------------------------------------------------------------------------------
 -- Ajouts 1.2 : valeurs secrètes simulées, messages d'addon, touches
@@ -313,7 +314,10 @@ function UnitHasIncomingResurrection() return S(false) end
 function UnitPower() return S(MANA) end
 function UnitPowerMax() return S(1000) end
 function UnitPowerType() return S(0) end
-function UnitPowerPercent(u, p, predicted, curve) if curve == CurveConstants.ScaleTo100 then return S(60) end return S(0.6) end
+function UnitPowerPercent(u, p, predicted, curve)
+	if curve == CurveConstants.ScaleTo100 then return S(60) end
+	return { r = S(1), g = S(1), b = S(1), a = S(1) } -- courbe de couleurs : la couleur, secrète
+end
 C_UnitAuras.GetAuraDispelTypeColor = function()
 	local c = { S(0.2), S(0.6), S(1), S(1) }
 	return { GetRGBA = function() return c[1], c[2], c[3], c[4] end }

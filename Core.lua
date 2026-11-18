@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.23.12"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.23.13"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -41,7 +41,6 @@ Z.defaults = {
 	showPinned = true,         -- cadre « Épinglés » : les joueurs de ma liste (vide, il ne s'affiche pas)
 	pinned = {},               -- joueurs épinglés, par nom : pinned["Nom-Royaume"] = true
 	autoShrink = false,        -- réduire les cases en grand raid
-	hideBlizzard = false,      -- masquer les cadres de groupe du jeu
 	lockMode = "FREE",         -- déplacement des cadres : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj
 	showGroupLabels = true,    -- « Groupe 1 »... au-dessus de chaque colonne (ou le rôle en rangement par rôle)
 	frameAlpha = 100,          -- opacité générale, en %
@@ -194,7 +193,7 @@ Z.private = { minimapAngle = true, tutorialDone = true, wizardDone = true, langu
 -- Tous les autres (cadres, apparence, indicateurs, soins) suivent le profil. Un nouveau réglage d'apparence
 -- n'a donc rien à faire ici ; un nouveau réglage d'une autre sorte doit y être ajouté.
 Z.notInProfile = {
-	minimapButton = true, minimapAngle = true, hideBlizzard = true,
+	minimapButton = true, minimapAngle = true,
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
 	clickTrinkets = true, clickConflictAlert = true,

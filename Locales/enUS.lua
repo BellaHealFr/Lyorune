@@ -37,7 +37,6 @@ Z.translations.enUS = {
 	["Cadre séparé pour les tanks"] = "Separate frame for tanks",
 	["Un second cadre, déplaçable, qui ne montre que les tanks."] = "A second, movable frame that only shows tanks.",
 	["Cadre séparé pour les familiers"] = "Separate frame for pets",
-	["Masquer les cadres de groupe du jeu"] = "Hide the game's group frames",
 	["Expérimental. Pour les faire revenir, décochez puis tapez /reload."] = "Experimental. To bring them back, untick then type /reload.",
 	["Mode test"] = "Test mode", ["joueurs"] = "players", ["Joueur"] = "Player",
 	["Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer."] = "Shows a fake group to tune the look. Click again to close it.",
@@ -231,6 +230,9 @@ Z.translations.enUS = {
 	["Annoncer quand je ressuscite un joueur"] = "Announce when I resurrect a player",
 	["Sons"] = "Sounds", ["Son quand je peux dissiper un affaiblissement"] = "Sound when I can dispel a debuff",
 	["Son quand ma mana est faible"] = "Sound when my mana is low",
+	["Votre mana est lisible : l'annonce part au seuil exact."] = "Your mana is readable: the announcement goes out at the exact threshold.",
+	["Aucun de vos sorts ne coûte près de ce seuil : essayez un autre seuil."] = "None of your spells costs close to this threshold: try another threshold.",
+	["Le jeu cache votre mana : l'annonce part quand %s manque de mana, soit vers %d %%."] = "The game hides your mana: the announcement goes out when %s lacks mana, around %d%%.",
 	["Dans les textes, {mana} est remplacé par votre pourcentage de mana et {nom} par le joueur relevé. Les annonces ne partent qu'en groupe. Règle du jeu : hors instance, un addon ne peut pas écrire en /dire tout seul ; l'annonce part alors dans le canal du groupe ou du raid."] = "In the texts, {mana} is replaced by your mana percentage and {nom} by the resurrected player. Announcements are only sent while grouped. Game rule: outside instances an addon cannot write in /say on its own; the announcement then goes to the party or raid channel.",
 
 	-- Profils
@@ -371,11 +373,11 @@ Z.translations.enUS = {
 			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu), les coins, le panneau des buffs manquants (tank compris), la recharge globale.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
-			.. "|cff33dd88Alertes|r : annonces et sons.\n"
+			.. "|cff33dd88Alertes|r : annonces et sons, même quand le jeu cache votre mana.\n"
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, layout (group, role, grid) and sorting, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a frame.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
@@ -705,4 +707,7 @@ Z.translations.enUS = {
 	["Le rapport de /lyorune bug indique aussi le lieu (extérieur, donjon, raid...)."] = "The /lyorune bug report also tells the location (outdoors, dungeon, raid...).",
 	["Profil prêt à l'emploi « Compact » : vos soins sur la durée restent en icônes (les barres fines ne s'affichent que si vous les choisissez)."] = "\"Compact\" ready-made profile: your heals over time stay as icons (thin bars only show if you pick them).",
 	["Hauteur de la barre de mana réglable de 2 à 60 pixels (10 au plus auparavant) ; la barre de vie garde toujours au moins 10 pixels de la case."] = "Mana bar height adjustable from 2 to 60 pixels (10 at most before); the health bar always keeps at least 10 pixels of the cell.",
+	["Annonce et son de mana faible même quand le jeu cache votre mana (WoW Forever) : Lyorune prend dans votre grimoire le sort qui coûte à peu près votre seuil, et l'annonce part quand ce sort manque de mana, en combat aussi. Seuil approché ; l'onglet Alertes indique le sort choisi."] = "Low mana announcement and sound even when the game hides your mana (WoW Forever): Lyorune picks the spell in your spellbook that costs about your threshold, and the announcement goes out when that spell lacks mana, in combat too. Approximate threshold; the Alerts tab shows the chosen spell.",
+	["Un sort refusé en combat faute de mana déclenche aussi l'annonce de mana faible."] = "A spell refused in combat for lack of mana also triggers the low mana announcement.",
+	["Option « Masquer les cadres de groupe du jeu » retirée : Lyorune ne touche jamais aux cadres du jeu."] = "\"Hide the game's group frames\" option removed: Lyorune never touches the game's frames.",
 }

@@ -1216,21 +1216,6 @@ local function ApplyLayout()
 	UpdateHandles()
 end
 
--- Masque les cadres de groupe du jeu (option, expérimental). Un /reload les rétablit une fois l'option décochée.
-local blizzardHidden
-local function HideBlizzardFrames()
-	if blizzardHidden or not db.hideBlizzard or InCombatLockdown() then return end
-	blizzardHidden = CreateFrame("Frame")
-	blizzardHidden:Hide()
-	for _, name in ipairs({ "CompactRaidFrameManager", "CompactRaidFrameContainer", "CompactPartyFrame", "PartyFrame" }) do
-		local frame = _G[name]
-		if frame then
-			frame:UnregisterAllEvents()
-			frame:SetParent(blizzardHidden)
-		end
-	end
-end
-
 local function BuildCurves()
 	healthCurve = healthCurve or ColorCurve(false, {
 		0.0, 0.90, 0.15, 0.15, 1,
@@ -1319,7 +1304,6 @@ function Z:Refresh()
 	rangeAlpha = db.rangeAlpha / 100
 	BuildCurves()
 	Z:Safe("layout", ApplyLayout)
-	Z:Safe("blizzard", HideBlizzardFrames)
 	for _, b in ipairs(buttons) do
 		Style(b)
 		if b:IsVisible() then UpdateAll(b) end
@@ -1366,7 +1350,6 @@ function Z:CreateFrames()
 	unlockNote:Hide()
 
 	ApplyLayout()
-	HideBlizzardFrames()
 
 	-- Événements communs à toutes les cases
 	local function ForVisible(fn)

@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.13] - 2026-11-18
+
+### Ajouté
+
+- Annonce et son de mana faible même quand le jeu cache votre mana (WoW Forever) : Lyorune prend dans votre grimoire le sort qui coûte à peu près votre seuil, et l'annonce part quand ce sort manque de mana, en combat aussi. Seuil approché ; l'onglet Alertes indique le sort choisi.
+
+### Amélioré
+
+- Un sort refusé en combat faute de mana déclenche aussi l'annonce de mana faible.
+- Option « Masquer les cadres de groupe du jeu » retirée : Lyorune ne touche jamais aux cadres du jeu.
+
 ## [1.23.12] - 2026-11-18
 
 ### Amélioré
@@ -426,6 +437,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13
 [1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12
 [1.23.11]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.10...v1.23.11
 [1.23.10]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.9...v1.23.10

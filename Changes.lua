@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.23.13", date = "2026-11-18",
+		added = {
+			"Annonce et son de mana faible même quand le jeu cache votre mana (WoW Forever) : Lyorune prend dans votre grimoire le sort qui coûte à peu près votre seuil, et l'annonce part quand ce sort manque de mana, en combat aussi. Seuil approché ; l'onglet Alertes indique le sort choisi.",
+		},
+		improved = {
+			"Un sort refusé en combat faute de mana déclenche aussi l'annonce de mana faible.",
+			"Option « Masquer les cadres de groupe du jeu » retirée : Lyorune ne touche jamais aux cadres du jeu.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.23.12", date = "2026-11-18",
 		added = {
 		},

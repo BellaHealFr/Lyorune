@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.23.13] - 2026-11-18
+
+### Added
+
+- Low mana announcement and sound even when the game hides your mana (WoW Forever): Lyorune picks the spell in your spellbook that costs about your threshold, and the announcement goes out when that spell lacks mana, in combat too. Approximate threshold; the Alerts tab shows the chosen spell.
+
+### Improved
+
+- A spell refused in combat for lack of mana also triggers the low mana announcement.
+- "Hide the game's group frames" option removed: Lyorune never touches the game's frames.
+
 ## [1.23.12] - 2026-11-18
 
 ### Improved
@@ -426,6 +437,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13
 [1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12
 [1.23.11]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.10...v1.23.11
 [1.23.10]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.9...v1.23.10

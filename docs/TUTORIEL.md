@@ -241,6 +241,8 @@ Onglet **Alertes** : Lyorune peut annoncer que votre mana est faible, qu'elle es
 
 À savoir : hors des donjons et des raids, le jeu interdit à un addon d'écrire en /dire tout seul. L'annonce part alors dans le canal du groupe.
 
+**Mana faible sur WoW Forever** : le jeu cache votre mana aux addons, même hors combat. Il les laisse l'afficher (la barre bleue), mais pas la comparer à un seuil. Lyorune s'en sort ainsi : le jeu dit encore si un sort manque de mana. Lyorune prend dans votre grimoire le sort qui coûte à peu près votre seuil : quand ce sort manque de mana, votre mana est sous le seuil, et l'annonce part toute seule, en combat aussi. Le seuil est donc approché (par exemple 19 % pour 20 %) ; l'onglet Alertes indique le sort choisi. Un sort refusé en combat avec « Pas assez de mana » déclenche aussi l'annonce. « Mana remontée » ne part pas : aucun sort ne coûte 90 % de votre mana. Pendant certains combats de boss, le jeu bloque tous les messages d'addon : rien ne peut partir.
+
 ## 10. Profils et partage
 
 Onglet **Profils** :

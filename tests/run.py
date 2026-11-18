@@ -612,6 +612,31 @@ step("annonces de mana", function()
   MANA = 1000
 end)
 
+step("mana secrete : la regle a sorts annonce la mana faible", function()
+  local power, cost, usable, now0 = UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, NOW
+  UnitPower = function() return MakeSecret(MANA) end -- mana cachee, maximum lisible (1000)
+  local costs = { [2061] = 190, [139] = 50, [17] = 450 } -- seuil 20 % : seul 2061 (19 %) sert de regle
+  C_Spell.GetSpellPowerCost = function(id) return costs[id] and { { type = 0, cost = costs[id] } } or {} end
+  C_Spell.IsSpellUsable = function(id) local c = costs[id] or 0 return MANA >= c, MANA < c end
+  FireEvent("SPELLS_CHANGED")
+  Z.db.manaThreshold = 20 Z.db.manaAlert = true Z.db.alertChannel = "SAY" Z:RefreshAlerts()
+  NOW = 1000 local n = #SENT
+  MANA = 600 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n, "annonce trop tot")
+  MANA = 150 FireEvent("UNIT_POWER_UPDATE", "player")
+  assert(#SENT == n + 1 and SENT[#SENT] == "SAY:Mana faible : 19 % ! Laissez-moi boire.", tostring(SENT[#SENT]))
+  MANA = 140 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 1, "annonce repetee")
+  -- sort refuse en combat faute de mana, alors que la regle n'a rien dit (aucun sort assez proche du seuil)
+  MANA = 900 FireEvent("UNIT_POWER_UPDATE", "player") NOW = 1100
+  Z.db.manaThreshold = 80 COMBAT = true
+  FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 1, "regle sans sort proche du seuil")
+  FireEvent("UI_ERROR_MESSAGE", 50, "Hors de vue") assert(#SENT == n + 1, "autre erreur prise pour la mana")
+  FireEvent("UI_ERROR_MESSAGE", 50, ERR_OUT_OF_MANA)
+  assert(#SENT == n + 2 and SENT[#SENT]:match("^SAY:Mana faible : 80 %%"), "sort refuse faute de mana : " .. tostring(SENT[#SENT]))
+  COMBAT = false NOW = now0
+  UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable = power, cost, usable
+  FireEvent("SPELLS_CHANGED") Z.db.manaThreshold = 20 MANA = 1000 FireEvent("UNIT_POWER_UPDATE", "player")
+end)
+
 step("annonce de resurrection", function()
   Z.db.resAlert = true Z:RefreshAlerts()
   local n = #SENT
