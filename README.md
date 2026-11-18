@@ -140,6 +140,12 @@ Lyorune est né de cette idée. Derrière chaque barre de vie, je vois un compag
 
 Si Lyorune vous accompagne en donjon ou en raid, une étoile en haut de cette page me fera toujours plaisir. Bon jeu, et bons soins !
 
+## Venez jouer avec moi
+
+Je joue au sein de la guilde **La Taverne Nocturne** : une guilde PvE détendue et francophone, qui part en raid après 22h. *Quand le monde s'endort, nos aventures commencent.*
+
+Sur notre [serveur Discord](https://discord.gg/uRaEPTGePu), vous pouvez me retrouver pour discuter, jouer ensemble ou parler de Lyorune : une section lui est consacrée.
+
 ## Licence
 
 Copyright © 2026 BellaDroode. Tous droits réservés.

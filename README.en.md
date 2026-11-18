@@ -119,6 +119,12 @@ Lyorune grew out of that idea. Behind every health bar I see a companion, and he
 
 If Lyorune travels with you in dungeons or raids, a star at the top of this page will always make my day. Have fun, and happy healing!
 
+## Come and play with me
+
+I play in the guild **La Taverne Nocturne**: a relaxed, French-speaking PvE guild that raids after 10 pm (Paris time). *When the world falls asleep, our adventures begin.*
+
+On our [Discord server](https://discord.gg/uRaEPTGePu), you can find me to chat, play together or talk about Lyorune: a section is dedicated to it.
+
 ## License
 
 Copyright © 2026 BellaDroode. All rights reserved.
