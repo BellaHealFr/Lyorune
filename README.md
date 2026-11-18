@@ -14,6 +14,7 @@
 
 <p align="center">
 <a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>Télécharger</strong></a> ·
+<a href="https://bellahealfr.github.io/Lyorune/">Site</a> ·
 <a href="docs/TUTORIEL.md">Guide du joueur</a> ·
 <a href="docs/SIGNALER_UN_BUG.md">Signaler un bug</a> ·
 <a href="README.en.md">English</a>
