@@ -1,0 +1,43 @@
+# Publie la page de présentation de Lyorune (dossier site/) sur GitHub Pages.
+# Les images sont reprises de docs/images, pour n'en garder qu'un exemplaire dans le dépôt.
+name: Site
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "docs/images/**"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Assemblage de la page
+        run: |
+          mkdir -p public
+          cp -r site/. public/
+          mkdir -p public/images
+          cp docs/images/*.png public/images/
+          cp -r docs/images/runes docs/images/piliers public/images/
+          touch public/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+      - id: deploiement
+        uses: actions/deploy-pages@v4

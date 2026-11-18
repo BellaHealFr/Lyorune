@@ -8,6 +8,7 @@ ignore:
   - tests
   - outils
   - docs
+  - site
   - dist
   - .github
   - .editorconfig
