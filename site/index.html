@@ -299,16 +299,23 @@
 <!-- Compteur de visiteurs uniques : GoatCounter, sans cookie, aucune donnée personnelle gardée -->
 <script data-goatcounter="https://lyorune.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>
-  fetch('https://lyorune.goatcounter.com/counter/TOTAL.json')
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (d) {
-      var n = d && parseInt(String(d.count).replace(/\D/g, ''), 10);
+  // Total du site, ou somme des pages française et anglaise tant que GoatCounter n'a pas recalculé le total
+  (function () {
+    var base = 'https://lyorune.goatcounter.com/counter/';
+    function lire(chemin) {
+      return fetch(base + encodeURIComponent(chemin) + '.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { return (d && parseInt(String(d.count).replace(/\D/g, ''), 10)) || 0; })
+        .catch(function () { return 0; });
+    }
+    Promise.all([lire('TOTAL'), lire('/Lyorune'), lire('/Lyorune/en')]).then(function (v) {
+      var n = Math.max(v[0], v[1] + v[2]);
       if (!n) return;
       var p = document.getElementById('visites');
       p.textContent = n.toLocaleString('fr') + ' ' + (n > 1 ? 'visiteurs uniques depuis l’ouverture du site' : 'visiteur unique depuis l’ouverture du site');
       p.hidden = false;
-    })
-    .catch(function () {});
+    });
+  })();
 </script>
 </body>
 </html>
