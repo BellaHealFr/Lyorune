@@ -215,8 +215,10 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (rel) {
         if (!rel || !rel.tag_name) return;
-        var zip = (rel.assets || []).filter(function (a) { return /\.zip$/i.test(a.name); })[0];
         var version = rel.tag_name.replace(/^v/, '');
+        var zips = (rel.assets || []).filter(function (a) { return /\.zip$/i.test(a.name); });
+        // l'archive « Lyorune-X.Y.Z.zip » d'abord, sinon la première archive de la version
+        var zip = zips.filter(function (a) { return a.name === 'Lyorune-' + version + '.zip'; })[0] || zips[0];
         boutons.forEach(function (b) {
           if (zip) b.href = zip.browser_download_url;
           var mod = b.getAttribute('data-telecharger');
