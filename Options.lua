@@ -500,7 +500,7 @@ local function SimpleTabs()
 				{ "note", "Sur les icônes, à combiner comme vous voulez :", 22 },
 				{ "check", "hotSwipe", "Cercle qui se vide", "Sur les icônes de vos soins : un voile tourne et découvre l'icône à mesure que le temps passe." },
 				{ "check", "hotCountdown", "Décompte en secondes", "Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat)." },
-				{ "check", "hotFade", "Icône qui s'efface à la fin", "Pendant les 6 dernières secondes, l'icône pâlit peu à peu : c'est le moment de relancer." },
+				{ "check", "hotFade", "Icône qui s'efface à la fin", "Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer." },
 				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges." },
 				{ "head", "Buffs" },
 				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },

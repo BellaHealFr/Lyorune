@@ -2479,6 +2479,108 @@ step("revue 1.23.3 : appel Pret relance, oeil hors de vue qui change de joueur",
   Z:Refresh() RunUpdates()
 end)
 
+step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), meme quand les auras sont secretes", function()
+  -- faux conteneurs du jeu : ils notent les filtres recus
+  local oldCreate, oldSecrets, oldPlay = CreateFrame, C_Secrets, PlaySound
+  local boxes = {}
+  CreateFrame = function(kind, name, parent, template)
+    local f = oldCreate(kind, name, parent, template)
+    if kind ~= "AuraContainer" then return f end
+    assert(template == "LyoruneAuraBox", "modele du conteneur")
+    f.groups, f.slots, f.updates = {}, {}, 0
+    function f:AddAuraGroup(key, filter, options)
+      assert(options.templateNames[1] == "LyoruneAuraButton" and options.maxFrameCount >= 1 and options.layout.elementWidth)
+      self.groups[key] = { filter = filter }
+      options.initializeFrame(oldCreate("Button", nil, self)) -- le jeu habille un bouton
+    end
+    function f:SetAuraGroupFilterString(key, filter) self.groups[key].filter = filter end
+    function f:SetAuraGroupCandidateFilters(key, c) self.groups[key].candidates = c end
+    function f:AddAuraSlot(key, filter, options)
+      local button = oldCreate("Button", nil, self)
+      self.slots[key] = { filter = filter, button = button }
+      options.initializeFrame(button)
+      return button
+    end
+    function f:SetAuraSlotFilterString(key, filter) self.slots[key].filter = filter end
+    function f:SetAuraSlotCandidateFilters(key, c) self.slots[key].candidates = c end
+    function f:SetUnit(unit) self.unit = unit end
+    function f:UpdateAllAuras() self.updates = self.updates + 1 end
+    boxes[#boxes + 1] = f
+    return f
+  end
+  AuraContainerSortMethod = { Default = 0 } AuraContainerSortDirection = { Normal = 0 }
+  AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+  Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
+  local secret = false
+  C_Secrets = { ShouldAurasBeSecret = function() return secret end }
+  local read = {}
+  local oldGet = C_UnitAuras.GetUnitAuras
+  C_UnitAuras.GetUnitAuras = function(unit, filter, ...) read[filter] = true return oldGet(unit, filter, ...) end
+  local function finish()
+    CreateFrame, C_Secrets, PlaySound, C_UnitAuras.GetUnitAuras = oldCreate, oldSecrets, oldPlay, oldGet
+    AuraContainerSortMethod, AuraContainerSortDirection, AnchorUtil = nil, nil, nil
+    Enum.CustomAuraButtonDispelTypeTextureStyle = nil
+    Z.db.cornerSpells = {} Z.db.extraTracked = {} Z.db.ignoredNames = {} Z.db.showHots = true Z.db.soundDispel = false
+    AURAS = {}
+  end
+  local ok, err = pcall(function()
+    AURAS = {}
+    local b = CreateFrame("Button", "LyoruneHeaderUnitButton30", Z.header)
+    Z.header:InitButton(b:GetName())
+    b:SetAttribute("unit", "player")
+    assert(b.boxes, "conteneurs non crees")
+    local hots, slots, debuffs = b.boxes.hots, b.boxes.slots, b.boxes.debuffs
+    assert(hots.unit == "player" and slots.unit == "player" and hots.updates > 0, "conteneurs sans joueur")
+    -- mes soins suivis, par numero de sort
+    local g = hots.groups.hots
+    assert(g.filter == "HELPFUL|PLAYER" and g.candidates.includeSpellIDs[139], "Renovation absente du filtre des soins")
+    assert(slots.slots.dispel.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "bordure de dissipation")
+    assert(slots.slots.boss.candidates.isBossAura == true, "grande icone : auras de boss")
+    assert(debuffs.groups.dispellable.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "affaiblissement a dissiper en premier")
+    -- un coin prend le sort, qui quitte la rangee
+    Z.db.cornerSpells = { PRIEST = { TOPLEFT = "Rénovation" } } Z:Refresh()
+    assert(slots.slots.TOPLEFT.filter == "HELPFUL|PLAYER" and slots.slots.TOPLEFT.candidates.includeSpellIDs[139], "coin")
+    assert(not hots.groups.hots.candidates.includeSpellIDs[139], "sort du coin reste dans la rangee")
+    assert(slots.slots.TOPRIGHT.filter == "", "coin vide actif")
+    -- interrupteur : rien a montrer
+    Z.db.showHots = false Z:Refresh()
+    assert(hots.groups.hots.filter == "" and b.boxes.bars.groups.bars.filter == "", "soins affiches malgre l'interrupteur")
+    Z.db.showHots = true
+    -- liste par nom ou par numero : le numero tape sert tout de suite
+    Z.db.ignoredNames = { ["12345"] = true } Z:Refresh()
+    assert(debuffs.groups.others.candidates.excludeSpellIDs[12345], "affaiblissement ignore par son numero")
+    -- un nom de ma liste vu hors combat : son numero est retenu et le filtre mis a jour
+    Z.db.extraTracked = { ["Mon sort"] = true }
+    AURAS["HELPFUL|PLAYER"] = { { name = "Mon sort", icon = 1, auraInstanceID = 99, spellId = 4242 } }
+    Z.UpdateAurasNow(b)
+    assert(Z.db.auraIds["Mon sort"][4242], "numero non retenu")
+    assert(hots.groups.hots.candidates.includeSpellIDs[4242], "filtre non mis a jour avec le numero appris")
+    -- son de dissipation hors combat, une seule fois
+    local sounds = 0
+    PlaySound = function() sounds = sounds + 1 end
+    Z.db.soundDispel = true
+    AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = { { name = "Mal", icon = 4, auraInstanceID = 22, spellId = 98 } }
+    Z.UpdateAurasNow(b) Z.UpdateAurasNow(b)
+    assert(sounds == 1, "son de dissipation : " .. sounds)
+    -- auras secretes : Lyorune ne lit plus rien, le jeu affiche tout
+    secret = true read = {}
+    Z.UpdateAurasNow(b)
+    assert(not read["HARMFUL"] and not read["HELPFUL|PLAYER"], "lecture tentee alors que le jeu cache les auras")
+    assert(not b.hots[1] or not b.hots[1]:IsShown(), "ancienne icone affichee avec les conteneurs")
+    -- la case change de joueur : les conteneurs suivent
+    b:SetAttribute("unit", "party1")
+    assert(hots.unit == "party1" and debuffs.unit == "party1", "conteneurs restes sur l'ancien joueur")
+    Z.DiagnoseAuras() -- /lyorune auras décrit les conteneurs sans erreur
+    b:SetAttribute("unit", nil)
+    assert(hots.unit == "none", "conteneur sans joueur")
+    for _, e in ipairs(Z.db.errors or {}) do
+      assert(e.kind ~= "Conteneur d'auras" and e.kind ~= "filtres des auras", "journal : " .. tostring(e.message))
+    end
+  end)
+  finish()
+  assert(ok, err)
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

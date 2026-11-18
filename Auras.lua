@@ -28,6 +28,7 @@ local GetSpellName = C_Spell and C_Spell.GetSpellName
 
 local MAX_HOTS, MAX_DEBUFFS = 4, 2
 local BAR_COLORS = { { 0.35, 0.95, 0.45 }, { 0.30, 0.80, 1.00 }, { 1.00, 0.85, 0.30 }, { 1.00, 0.50, 0.85 } }
+Z.BAR_COLORS = BAR_COLORS
 
 -- Liste des auras d'un joueur pour un filtre donné (nil si le client refuse le filtre)
 local function Auras(unit, filter, count)
@@ -56,6 +57,12 @@ local function BuildCurve()
 	dispelCurve:AddPoint(3, CreateColor(0.75, 0.50, 0.10, 1)) -- maladie : brun
 	dispelCurve:AddPoint(4, CreateColor(0.10, 0.85, 0.20, 1)) -- poison : vert
 	dispelCurve:AddPoint(5, CreateColor(0, 0, 0, 0))
+end
+
+-- La même courbe sert aux conteneurs d'auras du jeu (Containers.lua)
+function Z.DispelCurve()
+	if not dispelCurve then BuildCurve() end
+	return dispelCurve
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -171,6 +178,7 @@ local CORNER_COLORS = {
 }
 Z.CORNER_COLORS = CORNER_COLORS
 local CORNER_SIGN = { TOPLEFT = { 1, -1 }, TOPRIGHT = { -1, -1 }, BOTTOMLEFT = { 1, 1 }, BOTTOMRIGHT = { -1, 1 } }
+Z.CORNER_SIGN = CORNER_SIGN
 
 -- Mes coins pour la classe jouée : { TOPLEFT = "Récupération", ... }
 function Z.MyCorners()
@@ -181,6 +189,7 @@ end
 local function CornerSize(b)
 	return math.max(6, math.floor((b.iconSize or 12) * 0.55 + 0.5))
 end
+Z.CornerSize = CornerSize
 function Z.CornerShift(b, point)
 	local name = Z.MyCorners()[point]
 	return (name and name ~= "") and CornerSize(b) + 2 or 0
@@ -519,7 +528,10 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Mise à jour des auras d'une case
 ----------------------------------------------------------------------------------------------------
-local function UpdateAuras(b)
+local UpdateAuras, UpdateBuffs
+
+-- Cases sans conteneurs (client qui n'en a pas) : Lyorune lit les auras et dessine lui-même les icônes
+local function UpdateWithReading(b)
 	local unit = b.unit
 	local db = Z.db
 	-- Case cible ou focalisation sur un ennemi : ni soins, ni dissipation, ni buffs à lui montrer
@@ -630,8 +642,52 @@ local function UpdateAuras(b)
 	end
 	ImportantSound(b, important or {}, fromList)
 
-	-- 5. Buff de groupe manquant, hors combat
-	-- (le panneau des buffs manquants, Buffs.lua, lit b.missingBuff)
+	UpdateBuffs(b, unit, enemy)
+end
+
+-- Cases à conteneurs (Containers.lua) : le jeu dessine toutes les icônes. Lyorune lit les auras seulement quand
+-- le jeu le permet (hors combat, ou en combat hors des zones protégées) : sons, numéros de sorts, buffs manquants.
+local function Readable()
+	local secret = C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret()
+	if issecret(secret) then return false end
+	return not secret
+end
+
+local function Learn(list)
+	if not list then return end
+	for i = 1, #list do Z.LearnAuraId(list[i].name, list[i].spellId) end
+end
+
+local function UpdateWithBoxes(b)
+	local unit, db = b.unit, Z.db
+	local enemy = b.extra and UnitCanAttack("player", unit)
+	if issecret(enemy) then enemy = false end
+	Z.ShowAuraBoxes(b, not enemy)
+	if not enemy and Readable() then
+		Learn(Auras(unit, "HELPFUL|PLAYER", 16))
+		local harmful = Auras(unit, "HARMFUL", 8)
+		Learn(harmful)
+		local dispellable = db.showDispel and Auras(unit, "HARMFUL|RAID_PLAYER_DISPELLABLE", 1)
+		local hasDispel = dispellable and dispellable[1] ~= nil or false
+		if hasDispel and not b.dispelHeard then DispelSound() end
+		b.dispelHeard = hasDispel
+		local important, gameDecides, fromList
+		if harmful and db.importantSound then important, gameDecides, fromList = FindImportant(harmful) end
+		if gameDecides then important = nil end
+		ImportantSound(b, important or {}, fromList)
+	end
+	UpdateBuffs(b, unit, enemy)
+end
+
+UpdateAuras = function(b)
+	if b.boxes then return UpdateWithBoxes(b) end
+	return UpdateWithReading(b)
+end
+
+-- Buff de groupe manquant et mes buffs uniques, hors combat
+-- (le panneau des buffs manquants, Buffs.lua, lit b.missingBuff)
+UpdateBuffs = function(b, unit, enemy)
+	local db = Z.db
 	local missing = not enemy and FindMissingBuff(b, unit) or nil
 	local uniques = not enemy and FindMyUniques(b, unit) or nil
 	if b.missingBuff ~= missing or b.myUniques ~= uniques then
@@ -685,4 +741,64 @@ end
 function Z.UpdateAurasNow(b)
 	if not dispelCurve then BuildCurve() end
 	UpdateAuras(b)
+end
+
+----------------------------------------------------------------------------------------------------
+-- Diagnostic (/lyorune auras) : ce que le jeu donne à Lyorune pour la case du joueur, étape par étape.
+-- À taper en combat quand des icônes manquent ; le résultat va aussi au journal (lu par outils/erreurs.py).
+----------------------------------------------------------------------------------------------------
+local function Describe(value)
+	if issecret(value) then return "secret" end
+	return tostring(value)
+end
+
+function Z.DiagnoseAuras()
+	local b
+	for _, button in ipairs(Z.buttons) do
+		if button.unit and UnitIsUnit(button.unit, "player") then b = button break end
+	end
+	b = b or Z.buttons[1]
+	local lines = {}
+	local function Add(text) lines[#lines + 1] = text end
+	Add("combat " .. tostring(InCombatLockdown()) .. ", auras lisibles " .. tostring(Readable()))
+	local box = b and b.boxes
+	Add("conteneurs du jeu : " .. (box and ("oui, joueur " .. Describe(box.hots.GetUnit and box.hots:GetUnit())
+		.. ", visibles " .. tostring(box.slots:IsVisible())) or b and b.boxesFailed and "création refusée"
+		or Z.HasAuraBoxes() and "pas encore créés" or "absents de ce client"))
+	if not (b and b.unit) then Add("aucune case") else
+		local unit, db = b.unit, Z.db
+		local tracked = 0
+		for _ in pairs(Z.trackedNames) do tracked = tracked + 1 end
+		Add(("case %s, visible %s, showHots %s, showDebuffs %s, sorts suivis %d"):format(unit, tostring(b:IsVisible()),
+			tostring(db.showHots), tostring(db.showDebuffs), tracked))
+		for _, filter in ipairs({ "HELPFUL|PLAYER", "HARMFUL" }) do
+			local ok, list = pcall(GetUnitAuras, unit, filter, 16, SORT, 1)
+			if not ok then
+				Add(filter .. " : erreur " .. tostring(list))
+			elseif issecret(list) then
+				Add(filter .. " : liste secrète")
+			elseif type(list) ~= "table" then
+				Add(filter .. " : " .. type(list))
+			else
+				Add(("%s : %d aura(s)"):format(filter, #list))
+				for i = 1, math.min(#list, 3) do
+					local aura = list[i]
+					if issecret(aura) then Add("  aura secrète") else
+						local okT, isTracked = pcall(IsTracked, aura)
+						Add(("  nom %s, icône %s, numéro %s, suivie %s"):format(Describe(aura.name), Describe(aura.icon),
+							Describe(aura.auraInstanceID), okT and Describe(isTracked) or "erreur"))
+					end
+				end
+			end
+		end
+		local hots, debuffs = 0, 0
+		for _, icon in ipairs(b.hots) do if icon:IsShown() then hots = hots + 1 end end
+		for _, icon in ipairs(b.debuffs) do if icon:IsShown() then debuffs = debuffs + 1 end end
+		Add(("icônes affichées : soins %d, affaiblissements %d, opacité du calque %s"):format(hots, debuffs,
+			Describe(b.over:GetEffectiveAlpha())))
+		local ok, err = pcall(UpdateAuras, b)
+		Add("mise à jour : " .. (ok and "sans erreur" or tostring(err)))
+	end
+	for _, text in ipairs(lines) do Z:Print(text) end
+	Z:Log("Diagnostic auras", table.concat(lines, " | "), "")
 end

@@ -89,7 +89,7 @@ Z.translations.enUS = {
 	["Décompte en secondes"] = "Countdown in seconds",
 	["Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat)."] = "On your heal icons: the remaining seconds, drawn by the game (visible in combat).",
 	["Icône qui s'efface à la fin"] = "Icon fades at the end",
-	["Pendant les 6 dernières secondes, l'icône pâlit peu à peu : c'est le moment de relancer."] = "During the last 6 seconds the icon slowly fades: time to recast.",
+	["Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer."] = "Near the end of the heal, the icon darkens: time to recast.",
 	["Nombre de charges"] = "Number of charges",
 	["Petit chiffre en bas de l'icône quand votre soin a plusieurs charges."] = "Small number at the bottom of the icon when your heal has several charges.",
 	["Coins de la case"] = "Cell corners", ["Soins"] = "Heals", ["Buffs"] = "Buffs",
@@ -352,10 +352,11 @@ Z.translations.enUS = {
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
-			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins).\n\n"
+			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins). "
+			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab).\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a cell out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a cell out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "

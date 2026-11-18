@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<!-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE. -->
+	<!-- Modèles des conteneurs d'auras du jeu : le jeu y dessine lui-même les auras, même quand il les cache aux addons. -->
+	<!-- Les textures de chaque bouton sont créées par Containers.lua. -->
+	<ScopedModifier useForbiddenObjectTable="true">
+		<AuraContainer name="LyoruneAuraBox" inherits="CustomAuraContainerTemplate" virtual="true" />
+		<AuraButton name="LyoruneAuraButton" inherits="CustomAuraButtonTemplate" virtual="true" />
+	</ScopedModifier>
+</Ui>

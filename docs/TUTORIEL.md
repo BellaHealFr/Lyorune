@@ -212,12 +212,12 @@ Onglet **Indicateurs** : chaque élément de la case a sa case à cocher. Rien n
 
 ### Vos soins sur la durée (onglet Soins)
 
-Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit vos soins sur la durée et vos boucliers, plus les sorts de votre liste.
+Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit vos soins sur la durée et vos boucliers, plus les sorts de votre liste. Ces icônes, comme celles des affaiblissements, des coins et la bordure de dissipation, sont dessinées par le jeu lui-même : elles restent visibles en plein combat, même quand le jeu cache les auras aux addons. Un sort de la liste des affaiblissements à ignorer ou importants peut s'écrire par son nom ou par son numéro ; un nom est reconnu en combat dès que Lyorune a vu l'affaiblissement une fois hors combat.
 
 - **Icônes ou barres fines** : choisissez l'affichage. Sur les icônes, quatre réglages se combinent comme vous voulez :
   - **Cercle qui se vide** : un voile tourne à mesure que le temps passe ;
   - **Décompte en secondes** : les secondes restantes, écrites par le jeu ;
-  - **Icône qui s'efface à la fin** : pendant les 6 dernières secondes, l'icône pâlit. C'est le moment de relancer ;
+  - **Icône qui s'efface à la fin** : vers la fin du soin, l'icône s'assombrit. C'est le moment de relancer ;
   - **Nombre de charges** : un petit chiffre quand le soin en a plusieurs.
 - **Coins de la case** : placez un de vos sorts dans chaque coin. Il devient un petit carré de couleur (vert, bleu, jaune, rose) qui se vide avec le temps, et quitte la rangée d'icônes. D'un coup d'œil, vous voyez qui n'a pas votre Rénovation ou votre Récupération. Chaque classe garde ses propres coins : votre druide et votre prêtre ne se mélangent pas.
 - **Panneau des buffs manquants** (prêtre, druide, mage) : hors combat, une petite fenêtre liste les joueurs à qui manque votre buff de groupe (Robustesse, Marque du fauve, Intelligence des arcanes). Un clic sur un nom lui lance le buff, sans le cibler ; un clic droit lance la version de groupe. Quand trois joueurs d'un même groupe n'ont pas le buff, une seule ligne « Groupe N » lance directement la version de groupe. Un joueur hors de portée est estompé. Le panneau se cache en combat et revient après ; la croix le ferme jusqu'à la fin du prochain combat. Déplacez-le par son titre : sa place est gardée pour chaque personnage. Il a son propre interrupteur, séparé de la petite icône grise sur la case.

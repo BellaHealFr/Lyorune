@@ -76,7 +76,7 @@ Z.defaults = {
 	showHots = true, hotStyle = "ICONS",
 	hotSwipe = true,           -- icônes de mes soins : cercle qui se vide
 	hotCountdown = false,      -- icônes de mes soins : secondes restantes, écrites par le jeu
-	hotFade = false,           -- icônes de mes soins : l'icône s'efface pendant les 6 dernières secondes
+	hotFade = false,           -- icônes de mes soins : l'icône s'assombrit vers la fin du soin
 	hotCharges = true,         -- icônes de mes soins : nombre de charges
 	cornerSpells = {},         -- un de mes sorts par coin de case, par classe : cornerSpells.DRUID.TOPLEFT = "Récupération"
 	threatBar = false,         -- barre fine de menace en haut de la vie (jaune, orange, rouge)
@@ -409,6 +409,7 @@ function Z.Command(msg)
 	if msg == "diag" then return Z:Diagnose() end
 	if msg == "bug" then return Z:ShowBug() end
 	if msg == "position" then return Z:DiagnosePosition() end
+	if msg == "auras" then return Z.DiagnoseAuras() end
 	if not Z.header then return end -- Lyorune n'a pas pu démarrer : seuls le journal et le diagnostic répondent
 	if msg == "tuto" or msg == "tutoriel" or msg == "aide" then
 		Z:StartTutorial()

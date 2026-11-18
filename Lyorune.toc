@@ -23,6 +23,8 @@ UI.lua
 Themes.lua
 Frames.lua
 Auras.lua
+Containers.xml
+Containers.lua
 Buffs.lua
 Cast.lua
 Clicks.lua

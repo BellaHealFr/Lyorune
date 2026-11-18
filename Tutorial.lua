@@ -51,7 +51,8 @@ local steps = {
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
-			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins).\n\n"
+			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins). "
+			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics.",
 		target = function() return Z.buttons[1] end,

@@ -438,6 +438,7 @@ local function OnAttributeChanged(b, name, value)
 		if b:IsVisible() then UpdateAll(b) end
 	end
 	Z.AnchorPrivateAuras(b) -- les auras privées suivent le joueur de la case
+	Z.BindAuraBoxes(b) -- les conteneurs d'auras du jeu aussi (Containers.lua)
 end
 
 -- Infobulle hors combat : le joueur (infobulle du jeu), puis mes clics et touches (option)
@@ -571,6 +572,7 @@ local function Style(b)
 	b.center:SetSize(icon + 8, icon + 8)
 	Z.HideAuras(b)
 	Z.AnchorPrivateAuras(b)
+	Z.StyleAuraBoxes(b)
 	if b.RegisterForClicks then b:RegisterForClicks(db.castOnDown and "AnyDown" or "AnyUp") end
 end
 Z.StyleButton = Style

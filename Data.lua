@@ -166,6 +166,8 @@ function Z:BuildData()
 		local name = Z.SpellName(id)
 		if name then Z.trackedNames[name] = true end
 	end
+	-- Les conteneurs d'auras du jeu filtrent par numéro de sort : ils suivent les sorts de la classe
+	if Z.RefreshAuraBoxes then Z.RefreshAuraBoxes() end
 
 	-- Premier lancement avec cette classe : on propose des clics
 	if Z.db.clicks[Z.class] == nil then

@@ -178,7 +178,7 @@ def addon_files():
     files += ['Media/' + name for name in sorted(os.listdir(os.path.join(ROOT, 'Media'))) if name.endswith('.tga')]
     for line in read('Lyorune.toc').splitlines():
         line = line.strip()
-        if line.endswith('.lua') and not line.startswith('#'):
+        if line.endswith(('.lua', '.xml')) and not line.startswith('#'):
             files.append(line.replace('\\', '/'))
     return files
 
@@ -204,7 +204,7 @@ def check_zip(path):
         for name in noms:
             if '..' in name or name.startswith('/') or '\\' in name:
                 problemes.append('chemin suspect : ' + name)
-            if not name.endswith(('.lua', '.toc', 'LICENSE')):
+            if not name.endswith(('.lua', '.xml', '.toc', 'LICENSE')):
                 continue
             texte = archive.read(name).decode('utf-8', 'replace')
             if archive.read(name) != io.open(os.path.join(ROOT, name[len('Lyorune/'):]), 'rb').read():
