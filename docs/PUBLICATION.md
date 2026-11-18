@@ -106,6 +106,51 @@ publication publique.
 
 Chaque fichier passe en revue (« Under Review ») avant d'être visible. Le support ne donne pas de délai.
 
+### État (18 novembre 2026)
+
+Projet **Lyorune Healing**, numéro **1815533** : seul le nom affiché sur CurseForge change, le dossier et l'addon
+restent `Lyorune`. Première version (1.24.0, WoW Forever 1.60.1, « Release ») envoyée à la main, en attente de
+modération.
+
+| Page | Adresse |
+|---|---|
+| Fichiers et état de la modération | https://authors.curseforge.com/#/projects/1815533/files |
+| Aperçu de la page publique | https://www.curseforge.com/wow/addons/lyorune-healing/preview |
+| Page publique (après validation) | https://www.curseforge.com/wow/addons/lyorune-healing |
+
+### Suivre la modération
+
+CurseForge n'offre pas d'accès public pour suivre un projet en attente : le suivi se fait dans le portail.
+
+1. Ouvrir la page « Fichiers » ci-dessus, connecté avec GitHub. La colonne « Status » passe par Uploading,
+   Processing, Under Review, puis **Approved** (accepté) ou **Rejected** (refusé, avec un message du modérateur).
+2. La cloche en haut à droite du portail et l'adresse e-mail du compte reçoivent la décision.
+3. Tant que le bandeau « This is a new project » reste affiché, le projet n'est visible que de l'auteur.
+
+En cas de refus : lire le motif, corriger (nom, description, logo, archive), puis renvoyer depuis le même projet.
+Les motifs les plus courants sont listés dans les règles de modération (lien en haut de cette section).
+
+### Mettre à jour le projet une fois accepté
+
+Une fois le projet accepté, les nouvelles versions partent automatiquement :
+
+1. Ajouter dans `Lyorune.toc` la ligne `## X-Curse-Project-ID: 1815533`.
+2. Dans le portail (Author Settings, onglet « API Tokens »), créer un jeton, puis l'ajouter dans les secrets du dépôt
+   GitHub sous le nom `CF_API_KEY` (Settings, Secrets and variables, Actions).
+3. Publier comme d'habitude (`python outils/publier.py X.Y.Z "nouveauté"`, puis l'étiquette). L'action
+   « Publication » envoie alors la même archive et les mêmes notes sur GitHub et sur CurseForge.
+4. **À la première version automatique**, ouvrir la page « Fichiers » et vérifier que la version du jeu est bien
+   « WoW Forever 1.60.1 ». Si l'outil de publication choisit une autre variante, corriger la version du fichier
+   dans le portail, puis régler l'outil avant la version suivante.
+5. Quand le jeu change de version (nouvelle valeur d'`Interface`), vérifier que CurseForge propose la nouvelle
+   version de Forever dans sa liste.
+
+Sans automatisation, la mise à jour à la main reste possible : page « Fichiers », « Add File », archive de `dist/`,
+version « WoW Forever 1.60.1 », type « Release », notes de la version en anglais.
+
+La description du projet (onglet « Description » du portail) suit les changements de l'addon, comme le README :
+la mettre à jour à chaque nouveauté visible. Le texte de départ est dans `dist/curseforge/description.md`.
+
 ### Plan
 
 1. Choisir le nom définitif (voir ci-dessus) et l'appliquer partout.
