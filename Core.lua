@@ -74,6 +74,7 @@ Z.defaults = {
 	pingCells = true,          -- la touche « signal » du jeu marque le joueur de la case survolée
 	showDispel = true,         -- cadre coloré de dissipation
 	showHots = true, hotStyle = "ICONS",
+	hotCount = 4,              -- nombre de mes soins sur la durée affichés par case (icônes ou barres)
 	hotSwipe = true,           -- icônes de mes soins : cercle qui se vide
 	hotCountdown = false,      -- icônes de mes soins : secondes restantes, écrites par le jeu
 	hotFade = false,           -- icônes de mes soins : l'icône s'assombrit vers la fin du soin
@@ -81,6 +82,7 @@ Z.defaults = {
 	cornerSpells = {},         -- un de mes sorts par coin de case, par classe : cornerSpells.DRUID.TOPLEFT = "Récupération"
 	threatBar = false,         -- barre fine de menace en haut de la vie (jaune, orange, rouge)
 	showDebuffs = true, debuffMode = "ALL",
+	debuffCount = 2,           -- nombre d'icônes d'affaiblissements par case (celui à dissiper d'abord, puis les autres)
 	bossDebuffs = true,        -- affaiblissement important en grand
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
@@ -153,7 +155,7 @@ Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
 	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1 }, -- placement : décalage d'un élément, dans chaque sens
-	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
+	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 }
 
 Z.choices = {

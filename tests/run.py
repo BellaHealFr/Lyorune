@@ -2487,6 +2487,9 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
       assert(not COMBAT, "conteneur cree en combat (refuse par le jeu)")
     end
     local f = oldCreate(kind, name, parent, template)
+    -- niveaux de cadre retenus (le faux client les ignore) : le premier plan doit passer devant les conteneurs
+    function f:SetFrameLevel(level) self.level = level end
+    function f:GetFrameLevel() return self.level or 1 end
     if kind ~= "AuraContainer" then return f end
     assert(template == "LyoruneAuraBox", "modele du conteneur")
     f.groups, f.slots, f.updates = {}, {}, 0
@@ -2580,6 +2583,17 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = { { name = "Mal", icon = 4, auraInstanceID = 22, spellId = 98 } }
     Z.UpdateAurasNow(b) Z.UpdateAurasNow(b)
     assert(sounds == 1, "son de dissipation : " .. sounds)
+
+    -- nombre d'icones regle par le joueur : conteneurs refaits hors combat
+    Z.db.hotCount, Z.db.debuffCount = 6, 4 Z:Refresh()
+    assert(b.boxes.hots.groups.hots.max == 6 and b.boxes.bars.groups.bars.max == 6, "nombre de soins non applique")
+    assert(b.boxes.debuffs.groups.dispellable.max == 1 and b.boxes.debuffs.groups.others.max == 3, "nombre d'affaiblissements")
+    Z.db.hotCount, Z.db.debuffCount = 4, 2 Z:Refresh()
+    assert(b.boxes.debuffs.groups.others.max == 1, "nombre d'affaiblissements non remis")
+    -- le nom et la vie restent lisibles : au-dessus des conteneurs, sous les auras privees
+    local level = b.top:GetFrameLevel()
+    for _, box in pairs(b.boxes) do assert(box:GetFrameLevel() < level, "conteneur au-dessus du nom") end
+    assert(b.name:GetParent() == b.top and b.text:GetParent() == b.top, "textes hors du premier plan")
 
     -- EN COMBAT : auras secretes, Lyorune ne lit plus rien, le jeu affiche tout
     COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")

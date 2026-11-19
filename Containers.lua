@@ -14,7 +14,6 @@ local _, Z = ...
 local issecret = Z.IsSecret
 
 local SPACING = 2
-local MAX_HOTS = 4
 
 -- Les conteneurs existent-ils dans ce client ? (lu à chaque fois : un changement de version du jeu suffit)
 function Z.HasAuraBoxes()
@@ -286,8 +285,8 @@ local function Plan(b)
 	end
 
 	if db.showHots and not Empty(hots) then
-		Group("hots", "hots", "HELPFUL|PLAYER", { includeSpellIDs = hots }, MAX_HOTS, 1, "LyoruneAuraIcon", "mine")
-		Group("bars", "bars", "HELPFUL|PLAYER", { includeSpellIDs = hots }, MAX_HOTS, 1, "LyoruneAuraBar", "bar")
+		Group("hots", "hots", "HELPFUL|PLAYER", { includeSpellIDs = hots }, db.hotCount, 1, "LyoruneAuraIcon", "mine")
+		Group("bars", "bars", "HELPFUL|PLAYER", { includeSpellIDs = hots }, db.hotCount, 1, "LyoruneAuraBar", "bar")
 	end
 	for _, point in ipairs(Z.CORNERS) do
 		if corners[point] then
@@ -295,7 +294,7 @@ local function Plan(b)
 		end
 	end
 
-	-- Celui que je peux dissiper d'abord, puis un autre (le total reste de deux)
+	-- Celui que je peux dissiper d'abord, puis les autres (réglage « debuffCount », deux au moins)
 	local excluded = NilIfEmpty(ignored)
 	if db.showDebuffs then
 		Group("debuffs", "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", { excludeSpellIDs = excluded }, 1, 1,
@@ -304,7 +303,7 @@ local function Plan(b)
 			local canDispel = {}
 			for kind in pairs(Z.canDispel or {}) do canDispel[kind] = true end
 			Group("debuffs", "others", "HARMFUL", { excludeSpellIDs = excluded, excludeDispelTypes = NilIfEmpty(canDispel) },
-				1, 2, "LyoruneAuraIcon", "other")
+				db.debuffCount - 1, 2, "LyoruneAuraIcon", "other")
 		end
 	end
 	if db.showDispel then Slot("dispel", "HARMFUL|RAID_PLAYER_DISPELLABLE", nil, "LyoruneAuraCover", "dispel") end
@@ -333,7 +332,8 @@ local function Signature(plan)
 			for key, value in pairs(entry.candidates or {}) do
 				candidates[key] = type(value) == "table" and "{" .. Sorted(value) .. "}" or tostring(value)
 			end
-			parts[#parts + 1] = (entry.box or "slot") .. ":" .. entry.key .. ":" .. entry.filter .. ":" .. Sorted(candidates)
+			parts[#parts + 1] = (entry.box or "slot") .. ":" .. entry.key .. ":" .. entry.filter .. ":" .. tostring(entry.max)
+				.. ":" .. Sorted(candidates)
 		end
 	end
 	return table.concat(parts, "|")
@@ -372,16 +372,16 @@ local function Place(b)
 	local dx, dy = Z.Offset("hots")
 	Call(boxes.hots, "ClearAllPoints")
 	Call(boxes.hots, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 2 + Z.CornerShift(b, "TOPLEFT") + dx, -2 + dy)
-	Call(boxes.hots, "SetSize", MAX_HOTS * (size + SPACING), size)
+	Call(boxes.hots, "SetSize", db.hotCount * (size + SPACING), size)
 
 	Call(boxes.bars, "ClearAllPoints")
 	Call(boxes.bars, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy - 3)
-	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), MAX_HOTS * 4)
+	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), db.hotCount * 4)
 
 	dx, dy = Z.Offset("debuffs")
 	Call(boxes.debuffs, "ClearAllPoints")
 	Call(boxes.debuffs, "SetPoint", "BOTTOMRIGHT", b.over, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT") + dx, 2 + dy)
-	Call(boxes.debuffs, "SetSize", 2 * (size + SPACING), size)
+	Call(boxes.debuffs, "SetSize", db.debuffCount * (size + SPACING), size)
 
 	Call(boxes.slots, "SetAllPoints", b.over)
 

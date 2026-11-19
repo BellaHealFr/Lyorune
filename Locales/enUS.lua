@@ -91,6 +91,7 @@ Z.translations.enUS = {
 	["Icône qui s'efface à la fin"] = "Icon fades at the end",
 	["Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer."] = "Near the end of the heal, the icon darkens: time to recast.",
 	["Nombre de charges"] = "Number of charges",
+	["Nombre de soins affichés"] = "Heals shown", ["Nombre d'affaiblissements"] = "Debuffs shown",
 	["Petit chiffre en bas de l'icône quand votre soin a plusieurs charges."] = "Small number at the bottom of the icon when your heal has several charges.",
 	["Coins de la case"] = "Cell corners", ["Soins"] = "Heals", ["Buffs"] = "Buffs",
 	["Sur les icônes, à combiner comme vous voulez :"] = "On the icons, combine as you like:",
@@ -371,14 +372,14 @@ Z.translations.enUS = {
 			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
 			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
-			.. "|cff33dd88Soins|r : vos soins sur la durée (décompte, fondu), les coins, le panneau des buffs manquants (tank compris), la recharge globale.\n"
+			.. "|cff33dd88Soins|r : vos soins sur la durée (nombre, décompte, fondu), les coins, le panneau des buffs manquants (tank compris), la recharge globale.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons, même quand le jeu cache votre mana.\n"
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting (group, role, grid) and order, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a cell.\n|cff33dd88Heals|r: your heals over time (countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting (group, role, grid) and order, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a cell.\n|cff33dd88Heals|r: your heals over time (number, countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"

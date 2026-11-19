@@ -26,7 +26,6 @@ local IMMEDIATE = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.Im
 local IsFilteredOut = C_UnitAuras.IsAuraFilteredOutByInstanceID
 local GetSpellName = C_Spell and C_Spell.GetSpellName
 
-local MAX_HOTS, MAX_DEBUFFS = 4, 2
 local BAR_COLORS = { { 0.35, 0.95, 0.45 }, { 0.30, 0.80, 1.00 }, { 1.00, 0.85, 0.30 }, { 1.00, 0.50, 0.85 } }
 Z.BAR_COLORS = BAR_COLORS
 
@@ -396,7 +395,7 @@ function Z.PrivateHolder(b)
 	local holder = b.privateHolder
 	if not holder then
 		holder = CreateFrame("Frame", nil, b.over)
-		holder:SetFrameLevel(b.over:GetFrameLevel() + 5) -- au-dessus des icônes de Lyorune
+		holder:SetFrameLevel(b.over:GetFrameLevel() + 6) -- au-dessus des icônes et des textes de la case
 		b.privateHolder = holder
 	end
 	holder:SetSize(PRIVATE_SLOTS * (size + 2) - 2, size)
@@ -558,7 +557,7 @@ local function UpdateWithReading(b)
 						used[point] = true
 						ShowCorner(GetCorner(b, point), unit, aura)
 					end
-				elseif db.showHots and shown < MAX_HOTS and IsTracked(aura) then
+				elseif db.showHots and shown < db.hotCount and IsTracked(aura) then
 					shown = shown + 1
 					if bars then
 						ShowBar(Z.HotBar(b, shown), unit, aura)
@@ -610,7 +609,7 @@ local function UpdateWithReading(b)
 		end
 		if db.debuffMode == "ALL" then
 			for i = 1, #harmful do
-				if shown == MAX_DEBUFFS then break end
+				if shown >= db.debuffCount then break end
 				local aura = harmful[i]
 				local id = aura.auraInstanceID
 				if not (firstId and not issecret(id) and id == firstId) and not IsIgnored(aura) then

@@ -91,7 +91,7 @@ local function Fill(cell, index)
 	if db.showHots and not dead and index % 3 ~= 0 then
 		local shown = 0
 		for _, id in ipairs(Z.trackedSpells[Z.class] or { 139, 774 }) do
-			if shown == 2 then break end
+			if shown == math.min(2, db.hotCount) then break end
 			shown = shown + 1
 			if db.hotStyle == "BARS" then
 				local bar = Z.HotBar(cell, shown)

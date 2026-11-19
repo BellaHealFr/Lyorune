@@ -212,8 +212,9 @@ Onglet **Indicateurs** : chaque élément de la case a sa case à cocher. Rien n
 
 ### Vos soins sur la durée (onglet Soins)
 
-Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit vos soins sur la durée et vos boucliers, plus les sorts de votre liste. Ces icônes, comme celles des affaiblissements, des coins et la bordure de dissipation, sont dessinées par le jeu lui-même : elles restent visibles en plein combat, même quand le jeu cache les auras aux addons. Un sort de la liste des affaiblissements à ignorer ou importants peut s'écrire par son nom ou par son numéro ; un nom est reconnu en combat dès que Lyorune a vu l'affaiblissement une fois hors combat.
+Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit vos soins sur la durée et vos boucliers, plus les sorts de votre liste. Ces icônes, comme celles des affaiblissements, des coins et la bordure de dissipation, sont dessinées par le jeu lui-même : elles restent visibles en plein combat, même quand le jeu cache les auras aux addons. Le nom et la vie restent toujours lisibles par-dessus. Un sort de la liste des affaiblissements à ignorer ou importants peut s'écrire par son nom ou par son numéro ; un nom est reconnu en combat dès que Lyorune a vu l'affaiblissement une fois hors combat.
 
+- **Nombre de soins affichés** : de 1 à 6 par case (4 au départ). Dans l'onglet Indicateurs, **Nombre d'affaiblissements** fait de même pour les affaiblissements : de 2 à 5 (2 au départ), celui que vous pouvez dissiper toujours en premier. Un changement fait en combat s'applique dès la fin du combat.
 - **Icônes ou barres fines** : choisissez l'affichage. Sur les icônes, quatre réglages se combinent comme vous voulez :
   - **Cercle qui se vide** : un voile tourne à mesure que le temps passe ;
   - **Décompte en secondes** : les secondes restantes, écrites par le jeu ;

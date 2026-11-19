@@ -660,26 +660,33 @@ function Z.BuildVisuals(b)
 	low:Hide()
 	b.low = low
 
-	b.name = UI.Text(over, 11)
+	-- Premier plan : nom, vie et signes restent lisibles au-dessus des icônes d'auras
+	-- (conteneurs du jeu jusqu'au niveau +4, auras privées des boss au niveau +6)
+	local top = CreateFrame("Frame", nil, over)
+	top:SetAllPoints()
+	top:SetFrameLevel(over:GetFrameLevel() + 5)
+	b.top = top
+
+	b.name = UI.Text(top, 11)
 	b.name:SetPoint("CENTER", hp, "CENTER", 0, 3)
 	b.name:SetWordWrap(false)
 
-	b.text = UI.Text(over, 10)
+	b.text = UI.Text(top, 10)
 	b.text:SetPoint("BOTTOM", hp, "BOTTOM", 0, 4)
 
-	b.role = over:CreateTexture(nil, "ARTWORK")
+	b.role = top:CreateTexture(nil, "ARTWORK")
 	b.role:SetPoint("TOPRIGHT", -2, -2)
 
-	b.leader = over:CreateTexture(nil, "OVERLAY") -- chef de groupe ou assistant
+	b.leader = top:CreateTexture(nil, "OVERLAY") -- chef de groupe ou assistant
 	b.leader:SetPoint("TOPLEFT", 2, -2)
 	b.leader:Hide()
 
-	b.marker = over:CreateTexture(nil, "ARTWORK")
+	b.marker = top:CreateTexture(nil, "ARTWORK")
 	b.marker:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 	b.marker:SetPoint("CENTER", over, "TOP", 0, -1)
 	b.marker:Hide()
 
-	b.center = over:CreateTexture(nil, "OVERLAY")
+	b.center = top:CreateTexture(nil, "OVERLAY")
 	b.center:SetPoint("CENTER")
 	b.center:Hide()
 
