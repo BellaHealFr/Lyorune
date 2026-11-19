@@ -14,7 +14,8 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Ce que vous voyez | Ce que cela veut dire |
 |---|---|
 | Vert clair au bout de la barre | Des soins sont déjà en route |
-| Bande claire en bas de la barre | Il a un bouclier |
+| Bande claire en bas de la barre | Il a un bouclier (au choix, onglet Apparence : à la suite de la vie, comme les cadres du jeu, avec un trait lumineux au bout quand le bouclier dépasse la vie manquante) |
+| Une boisson en bas à gauche | Ce soigneur est à court de mana (seuil au choix dans l'onglet Indicateurs, « Mana basse des soigneurs ») : marche en combat, même quand le jeu cache la mana |
 | Rouge sombre au bout de la vie | Un affaiblissement « mange » cette part de vie : vos soins la remplissent d'abord, avant de compter |
 | Barre bleue sous la vie | Sa mana (pour tous, par défaut ; hauteur de 2 à 60 pixels et couleur réglables dans l'onglet Indicateurs ; la vie garde toujours au moins 10 pixels de la case : bleu, bleu ciel, violet, turquoise ou blanc). Avec « Pourcentage de mana dans la barre », le % s'y écrit, même en combat |
 | Voile rouge qui clignote | Sa vie est basse |

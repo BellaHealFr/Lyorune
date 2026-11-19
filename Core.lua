@@ -67,6 +67,7 @@ Z.defaults = {
 	-- Indicateurs (chacun peut être coupé)
 	showIncoming = true,       -- soins en route
 	showAbsorb = true,         -- bouclier
+	absorbStyle = "BAND",      -- place du bouclier : bande en bas de la case, ou à la suite de la vie (comme les cadres du jeu)
 	showThreat = true,         -- bordure rouge de menace
 	showRole = true,           -- icône de rôle
 	showMarker = true,         -- marqueur de raid
@@ -91,6 +92,7 @@ Z.defaults = {
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
+	lowManaHealers = 20,       -- icône de boisson sur la case d'un soigneur sous ce % de mana (0 : jamais ; courbe du jeu, marche en combat)
 	manaPercent = false,       -- pourcentage de mana écrit dans la barre (elle passe alors à 8 pixels au moins)
 	showTooltip = true,
 	clickTooltip = true,       -- mes clics et touches dans l'infobulle d'une case (hors combat)
@@ -167,6 +169,8 @@ Z.choices = {
 		{ "DAMAGER,TANK,HEALER", "Dégâts, tank, soin" }, { "DAMAGER,HEALER,TANK", "Dégâts, soin, tank" },
 	},
 	horizontal = { { false, "En colonnes" }, { true, "En lignes" } },
+	lowManaHealers = { { 0, "Non" }, { 10, "Sous 10 %" }, { 20, "Sous 20 %" }, { 30, "Sous 30 %" }, { 40, "Sous 40 %" } },
+	absorbStyle = { { "BAND", "Bande en bas" }, { "FOLLOW", "À la suite de la vie" } },
 	shape = { { "BAR", "Barre" }, { "TILE", "Tuile" }, { "SQUARE", "Carré" }, { "BANNER", "Bandeau" } },
 	corners = { { "SHARP", "Droits" }, { "ROUND", "Arrondis" } },
 	classIntensity = { { "NATURAL", "Naturelles" }, { "VIVID", "Vives" } },

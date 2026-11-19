@@ -17,6 +17,7 @@ Z.placeElements = {
 	{ "marker", "Marqueur de raid" },
 	{ "leader", "Chef de groupe" },
 	{ "center", "Icône centrale" },
+	{ "lowMana", "Mana basse d'un soigneur" },
 	{ "hots", "Mes soins sur la durée" },
 	{ "debuffs", "Affaiblissements" },
 	{ "big", "Affaiblissement important" },
@@ -165,6 +166,8 @@ local function Draw()
 	cell.leader:Show()
 	cell.center:SetTexture(READY_CHECK_READY_TEXTURE)
 	cell.center:Show()
+	cell.lowMana:SetAlpha(1)
+	cell.lowMana:Show()
 
 	local spells = Z.trackedSpells[Z.class] or { 139, 774 }
 	for index = 1, 2 do

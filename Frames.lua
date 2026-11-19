@@ -44,7 +44,7 @@ local function ColorCurve(step, points)
 	return curve
 end
 
-local healthCurve, hideWhenFullCurve, lowHealthCurve, healCalculator
+local healthCurve, hideWhenFullCurve, lowHealthCurve, lowManaCurve, healCalculator
 
 -- Taille d'une case, réduite en grand raid si l'option est cochée.
 -- En mode test, on compte les faux joueurs : l'aperçu à 40 montre la vraie taille d'un raid de 40.
@@ -87,7 +87,10 @@ local function UpdatePrediction(b)
 	b.incoming:SetMinMaxValues(0, max)
 	b.incoming:SetValue((healCalculator:GetIncomingHeals()))
 	b.absorb:SetMinMaxValues(0, max)
-	b.absorb:SetValue((healCalculator:GetDamageAbsorbs()))
+	local absorbs, clamped = healCalculator:GetDamageAbsorbs()
+	b.absorb:SetValue(absorbs)
+	-- Bouclier plus grand que la vie manquante : le jeu le dit par un booléen (secret), branché sur l'opacité
+	if b.overAbsorb:IsShown() and clamped ~= nil then b.overAbsorb:SetAlphaFromBoolean(clamped, 1, 0) end
 	if healCalculator.GetHealAbsorbs then
 		b.healAbsorb:SetMinMaxValues(0, max)
 		b.healAbsorb:SetValue((healCalculator:GetHealAbsorbs()))
@@ -174,6 +177,8 @@ function Z.PowerHeight()
 end
 
 local function UpdatePower(b)
+	-- Icône de mana basse d'un soigneur : opacité donnée par la courbe du jeu, même quand la mana est secrète
+	if b.lowManaShown then b.lowMana:SetAlpha(UnitPowerPercent(b.unit, MANA, false, lowManaCurve).a) end
 	if not b.powerShown then return end
 	b.power:SetMinMaxValues(0, UnitPowerMax(b.unit, MANA))
 	b.power:SetValue(UnitPower(b.unit, MANA))
@@ -263,16 +268,25 @@ local function UpdateRole(b)
 		b.role:Hide()
 	end
 
-	local wanted = db.manaBars == "ALL" or (db.manaBars == "HEALERS" and role == "HEALER")
-	if wanted then
-		local powerType = UnitPowerType(unit)
-		if not issecret(powerType) and powerType ~= MANA then wanted = false end
-	end
+	local powerType = UnitPowerType(unit)
+	local hasMana = issecret(powerType) or powerType == MANA
+	local wanted = hasMana and (db.manaBars == "ALL" or (db.manaBars == "HEALERS" and role == "HEALER"))
 	if wanted ~= b.powerShown then
 		b.powerShown = wanted
 		b.power:SetShown(wanted)
 		LayoutBars(b)
-		if wanted then
+	end
+	-- Mana basse d'un soigneur (seulement si le jeu a UnitPowerPercent : jamais de comparaison de la mana)
+	local drop = (hasMana and (tonumber(db.lowManaHealers) or 0) > 0 and role == "HEALER" and UnitPowerPercent ~= nil) or false
+	if drop ~= b.lowManaShown then
+		b.lowManaShown = drop
+		b.lowMana:SetShown(drop)
+	end
+	-- Les événements de mana servent à la barre comme à l'icône
+	local listen = wanted or drop
+	if listen ~= b.powerListen then
+		b.powerListen = listen
+		if listen then
 			b:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
 			b:RegisterUnitEvent("UNIT_MAXPOWER", unit)
 		else
@@ -433,6 +447,8 @@ local function OnAttributeChanged(b, name, value)
 		b.power:Hide()
 		LayoutBars(b)
 	end
+	b.powerListen, b.lowManaShown = false, false -- événements retirés ci-dessus : UpdateRole les reprendra
+	b.lowMana:Hide()
 	if value then
 		for event in pairs(unitEvents) do b:RegisterUnitEvent(event, value) end
 		if b:IsVisible() then UpdateAll(b) end
@@ -516,6 +532,7 @@ local function PlaceTexts(b, width, icon)
 	end
 	Place(b.marker, "marker", "CENTER", b.over, "TOP", 0, -1)
 	Place(b.center, "center", "CENTER", b.over, "CENTER", 0, 0)
+	Place(b.lowMana, "lowMana", "BOTTOMLEFT", b.hp, "BOTTOMLEFT", 2, 2)
 end
 
 local function Style(b)
@@ -531,8 +548,24 @@ local function Style(b)
 	b.incoming:SetWidth(width - 2 * inset)
 	b.incoming:SetShown(db.showIncoming)
 	b.absorb:SetStatusBarTexture(UI.WHITE)
-	b.absorb:SetStatusBarColor(unpack(theme.absorb))
+	local follow = db.absorbStyle == "FOLLOW"
+	local shield = theme.absorb
+	b.absorb:SetStatusBarColor(shield[1], shield[2], shield[3], (shield[4] or 1) * (follow and 0.7 or 1))
 	b.absorb:SetShown(db.showAbsorb)
+	b.absorb:ClearAllPoints()
+	if follow then
+		-- À la suite des soins en route (ou de la vie s'ils sont coupés), comme les cadres du jeu
+		local after = db.showIncoming and b.incoming:GetStatusBarTexture() or b.hp:GetStatusBarTexture()
+		b.absorb:SetPoint("TOPLEFT", after, "TOPRIGHT")
+		b.absorb:SetPoint("BOTTOMLEFT", after, "BOTTOMRIGHT")
+		b.absorb:SetWidth(width - 2 * inset)
+	else
+		b.absorb:SetPoint("BOTTOMLEFT")
+		b.absorb:SetPoint("BOTTOMRIGHT")
+		b.absorb:SetHeight(3)
+	end
+	b.overAbsorb:SetShown(db.showAbsorb and follow)
+	b.overAbsorb:SetAlpha(0)
 	b.healAbsorb:SetStatusBarTexture(texture)
 	b.healAbsorb:SetStatusBarColor(unpack(theme.healAbsorb or HEAL_ABSORB_COLOR))
 	b.healAbsorb:SetWidth(width - 2 * inset)
@@ -570,6 +603,7 @@ local function Style(b)
 	b.leader:SetSize(badge, badge)
 	b.marker:SetSize(icon, icon)
 	b.center:SetSize(icon + 8, icon + 8)
+	b.lowMana:SetSize(icon - 1, icon - 1)
 	Z.HideAuras(b)
 	Z.AnchorPrivateAuras(b)
 	Z.StyleAuraBoxes(b)
@@ -612,6 +646,17 @@ function Z.BuildVisuals(b)
 	absorb:SetPoint("BOTTOMRIGHT")
 	absorb:SetHeight(3)
 	b.absorb = absorb
+	-- Bouclier plus grand que la vie manquante : trait lumineux au bout de la vie (style « à la suite de la vie »)
+	local overAbsorb = hp:CreateTexture(nil, "OVERLAY")
+	if not pcall(overAbsorb.SetAtlas, overAbsorb, "RaidFrame-Shield-Overshield") then
+		overAbsorb:SetColorTexture(1, 1, 1, 0.9)
+	end
+	overAbsorb:SetBlendMode("ADD")
+	overAbsorb:SetPoint("TOPRIGHT", hp, "TOPRIGHT", 3, 0)
+	overAbsorb:SetPoint("BOTTOMRIGHT", hp, "BOTTOMRIGHT", 3, 0)
+	overAbsorb:SetWidth(8)
+	overAbsorb:Hide()
+	b.overAbsorb = overAbsorb
 
 	-- Mana (soigneurs ou tous, selon l'option) : sous la barre de vie
 	local power = CreateFrame("StatusBar", nil, b)
@@ -689,6 +734,12 @@ function Z.BuildVisuals(b)
 	b.center = top:CreateTexture(nil, "OVERLAY")
 	b.center:SetPoint("CENTER")
 	b.center:Hide()
+
+	-- Mana basse d'un soigneur : une boisson, montrée par la courbe du jeu (UpdatePower)
+	b.lowMana = top:CreateTexture(nil, "OVERLAY")
+	b.lowMana:SetTexture("Interface\\Icons\\INV_Drink_07")
+	b.lowMana:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	b.lowMana:Hide()
 
 	-- Bordures : thème (toujours), rouge (menace), couleur du type (dissipation possible), blanche (ma cible)
 	b.border = UI.Border(over, 1)
@@ -1239,6 +1290,20 @@ local function BuildCurves()
 		0.0, 1, 1, 1, 1,
 		db.lowHealthAt / 100, 1, 1, 1, 0,
 	})
+	-- Mana basse d'un soigneur : visible sous le seuil seulement (la mana peut être secrète : jamais comparée)
+	lowManaCurve = ColorCurve(true, {
+		0.0, 1, 1, 1, 1,
+		(tonumber(db.lowManaHealers) or 0) / 100, 1, 1, 1, 0,
+	})
+	-- Bouclier à la suite de la vie : limité à la vie manquante, pour savoir quand il la dépasse
+	if healCalculator and healCalculator.SetDamageAbsorbClampMode and Enum.UnitDamageAbsorbClampMode then
+		local modes = Enum.UnitDamageAbsorbClampMode
+		local mode = modes.MaximumHealth
+		if db.absorbStyle == "FOLLOW" then
+			mode = (not db.showIncoming and modes.MissingHealthWithoutIncomingHeals) or modes.MissingHealth
+		end
+		healCalculator:SetDamageAbsorbClampMode(mode)
+	end
 end
 
 -- /lyorune diag : état de chaque cadre, pour comprendre un cadre vide sans avoir à deviner
@@ -1336,12 +1401,10 @@ function Z:CreateFrames()
 	if healCalculator.SetIncomingHealClampMode and Enum.UnitIncomingHealClampMode then
 		healCalculator:SetIncomingHealClampMode(Enum.UnitIncomingHealClampMode.MissingHealth)
 	end
-	if healCalculator.SetDamageAbsorbClampMode and Enum.UnitDamageAbsorbClampMode then
-		healCalculator:SetDamageAbsorbClampMode(Enum.UnitDamageAbsorbClampMode.MaximumHealth)
-	end
 	if healCalculator.SetHealAbsorbClampMode and Enum.UnitHealAbsorbClampMode then
 		healCalculator:SetHealAbsorbClampMode(Enum.UnitHealAbsorbClampMode.CurrentHealth) -- jamais plus que la vie
 	end
+	BuildCurves() -- refait maintenant que le calculateur existe : il prend la limite du bouclier (réglage absorbStyle)
 
 	for _, def in ipairs(frameDefs) do CreateHeader(def) end
 	Z.header = Z.headers[1]

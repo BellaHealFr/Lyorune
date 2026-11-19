@@ -91,7 +91,12 @@ Z.translations.enUS = {
 	["Icône qui s'efface à la fin"] = "Icon fades at the end",
 	["Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer."] = "Near the end of the heal, the icon darkens: time to recast.",
 	["Nombre de charges"] = "Number of charges",
-	["Nombre de soins affichés"] = "Heals shown", ["Nombre d'affaiblissements"] = "Debuffs shown",
+	["Nombre de soins affichés"] = "Heals shown",
+	["Place du bouclier"] = "Shield position", ["Bande en bas"] = "Band at the bottom", ["À la suite de la vie"] = "After the health",
+	["Bande en bas : un trait fin sous la vie. À la suite de la vie : comme les cadres du jeu, le bouclier prolonge la vie, et un trait lumineux s'allume au bout quand il dépasse la vie manquante."] = "Band at the bottom: a thin line under the health. After the health: like the game's frames, the shield extends the health, and a bright line lights up at the end when it is larger than the missing health.",
+	["Mana basse des soigneurs"] = "Healers' low mana", ["Non"] = "No", ["Sous 10 %"] = "Below 10%", ["Sous 20 %"] = "Below 20%", ["Sous 30 %"] = "Below 30%", ["Sous 40 %"] = "Below 40%",
+	["Mana basse d'un soigneur"] = "Healer's low mana",
+	["Une icône de boisson sur la case d'un soigneur dont la mana passe sous ce seuil. Le jeu la calcule lui-même : elle marche en combat, même quand la mana est cachée."] = "A drink icon on the frame of a healer whose mana drops below this threshold. The game works it out itself: it works in combat, even when mana is hidden.", ["Nombre d'affaiblissements"] = "Debuffs shown",
 	["Petit chiffre en bas de l'icône quand votre soin a plusieurs charges."] = "Small number at the bottom of the icon when your heal has several charges.",
 	["Coins de la case"] = "Cell corners", ["Soins"] = "Heals", ["Buffs"] = "Buffs",
 	["Sur les icônes, à combiner comme vous voulez :"] = "On the icons, combine as you like:",
@@ -371,7 +376,7 @@ Z.translations.enUS = {
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
 			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
-			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case.\n"
+			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case, dont la mana basse des autres soigneurs.\n"
 			.. "|cff33dd88Soins|r : vos soins sur la durée (nombre, décompte, fondu), les coins, le panneau des buffs manquants (tank compris), la recharge globale.\n"
 			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
 			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
@@ -379,7 +384,7 @@ Z.translations.enUS = {
 			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
 			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting (group, role, grid) and order, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a cell.\n|cff33dd88Heals|r: your heals over time (number, countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
+		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting (group, role, grid) and order, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a cell, including other healers' low mana.\n|cff33dd88Heals|r: your heals over time (number, countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"

@@ -72,6 +72,10 @@ local function Fill(cell, index)
 	end
 	cell.power:SetMinMaxValues(0, 100)
 	cell.power:SetValue(65)
+	-- Un soigneur sur deux est à court de mana ; un bouclier dépasse la vie manquante
+	cell.lowMana:SetAlpha(1)
+	cell.lowMana:SetShown((tonumber(db.lowManaHealers) or 0) > 0 and role == "HEALER" and index % 10 == 2 and not dead)
+	cell.overAbsorb:SetAlpha((index % 5 == 2 and health >= 75) and 1 or 0)
 
 	cell.threat:SetShown(db.showThreat and slot == 0 and not dead)
 	cell.low.fill:SetAlpha((db.lowHealth and not dead and health <= db.lowHealthAt) and 1 or 0)

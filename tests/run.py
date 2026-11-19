@@ -2663,6 +2663,55 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
   assert(ok, err)
 end)
 
+step("1.24.1 : mana basse des soigneurs, bouclier a la suite de la vie", function()
+  local b = CreateFrame("Button", "LyoruneHeaderUnitButton95", Z.header)
+  Z.header:InitButton(b:GetName())
+  local oldRole, oldBars = UnitGroupRolesAssigned, Z.db.manaBars
+  local ok, err = pcall(function()
+    Z.db.manaBars = "OFF" -- l'icone marche sans la barre de mana
+    b:SetAttribute("unit", "party1")
+    Z:Refresh()
+    -- soigneur : la boisson suit la courbe du jeu, les evenements de mana sont ecoutes
+    assert(b.lowManaShown and b.lowMana:IsShown() and b.powerListen, "boisson absente sur un soigneur")
+    assert(b.lowMana:GetAlpha() == 1, "opacite non donnee par la courbe")
+    assert(not b.powerShown, "barre de mana affichee malgre le reglage")
+    -- pas soigneur : rien
+    UnitGroupRolesAssigned = function() return "DAMAGER" end
+    Z:Refresh()
+    assert(not b.lowMana:IsShown() and not b.powerListen, "boisson sur un joueur qui ne soigne pas")
+    UnitGroupRolesAssigned = oldRole
+    -- reglage sur « Non »
+    Z.db.lowManaHealers = 0 Z:Refresh()
+    assert(not b.lowMana:IsShown(), "boisson affichee malgre « Non »")
+    Z.db.lowManaHealers = 20 Z:Refresh()
+    -- changement de joueur : l'icone ne reste pas sur la case
+    b:SetAttribute("unit", nil)
+    assert(not b.lowMana:IsShown() and not b.lowManaShown, "boisson restee sur une case vide")
+    b:SetAttribute("unit", "party1") Z:Refresh()
+    assert(b.lowMana:IsShown(), "boisson non revenue")
+    -- bouclier : bande en bas, ou a la suite de la vie avec le trait du bouclier en trop
+    assert(not b.overAbsorb:IsShown(), "trait du bouclier en trop en style bande")
+    Z.db.absorbStyle = "FOLLOW" Z:Refresh()
+    assert(b.overAbsorb:IsShown(), "trait du bouclier en trop absent")
+    Z.cellUpdates.prediction(b)
+    Z.db.showAbsorb = false Z:Refresh()
+    assert(not b.overAbsorb:IsShown(), "trait affiche sans bouclier")
+    Z.db.showAbsorb, Z.db.absorbStyle = true, "BAND" Z:Refresh()
+    assert(not b.overAbsorb:IsShown(), "trait reste en style bande")
+    -- options, recherche et placement
+    local labels = table.concat(Z:OptionLabels(), "|")
+    for _, label in ipairs({ "Mana basse des soigneurs", "Place du bouclier" }) do
+      assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+    end
+    assert(Z.IsPlaceElement("lowMana"), "boisson absente de l'editeur de placement")
+  end)
+  UnitGroupRolesAssigned, Z.db.manaBars = oldRole, oldBars
+  Z.db.lowManaHealers, Z.db.absorbStyle, Z.db.showAbsorb = 20, "BAND", true
+  b:SetAttribute("unit", nil)
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi
