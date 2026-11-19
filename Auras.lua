@@ -787,8 +787,8 @@ local function Diagnose(Add)
 					local aura = list[i]
 					if issecret(aura) then Add("  aura secrète") else
 						local okT, isTracked = pcall(IsTracked, aura)
-						Add(("  nom %s, icône %s, numéro %s, suivie %s"):format(Describe(aura.name), Describe(aura.icon),
-							Describe(aura.auraInstanceID), okT and Describe(isTracked) or "erreur"))
+						Add(("  nom %s, icône %s, sort %s, instance %s, suivie %s"):format(Describe(aura.name), Describe(aura.icon),
+							Describe(aura.spellId), Describe(aura.auraInstanceID), okT and Describe(isTracked) or "erreur"))
 					end
 				end
 			end

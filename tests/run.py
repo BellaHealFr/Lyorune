@@ -2479,34 +2479,37 @@ step("revue 1.23.3 : appel Pret relance, oeil hors de vue qui change de joueur",
   Z:Refresh() RunUpdates()
 end)
 
-step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), meme quand les auras sont secretes", function()
-  -- faux conteneurs du jeu : ils notent les filtres recus
+step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors combat, groupe de toute taille", function()
+  -- faux conteneurs du jeu : ils notent les filtres recus et refusent ce que le vrai jeu refuse
   local oldCreate, oldSecrets, oldPlay = CreateFrame, C_Secrets, PlaySound
-  local boxes = {}
   CreateFrame = function(kind, name, parent, template)
+    if kind == "AuraContainer" then
+      assert(not COMBAT, "conteneur cree en combat (refuse par le jeu)")
+    end
     local f = oldCreate(kind, name, parent, template)
     if kind ~= "AuraContainer" then return f end
     assert(template == "LyoruneAuraBox", "modele du conteneur")
     f.groups, f.slots, f.updates = {}, {}, 0
     function f:AddAuraGroup(key, filter, options)
+      assert(self.unit, "groupe ajoute avant SetUnit")
+      assert(not self.enabled, "groupe ajoute apres SetEnabled")
       assert(options.templateNames[1]:match("^LyoruneAura%u") and options.maxFrameCount >= 1 and options.layout.elementWidth)
-      self.groups[key] = { filter = filter }
+      self.groups[key] = { filter = filter, candidates = options.candidateFilters or {}, max = options.maxFrameCount }
       options.initializeFrame(oldCreate("Button", nil, self)) -- le jeu habille un bouton
     end
-    function f:SetAuraGroupFilterString(key, filter) self.groups[key].filter = filter end
-    function f:SetAuraGroupCandidateFilters(key, c) self.groups[key].candidates = c end
-    function f:SetAuraGroupMaxFrameCount(key, n) self.groups[key].max = n end
     function f:AddAuraSlot(key, filter, options)
+      assert(self.unit and not self.enabled, "place fixe ajoutee dans le mauvais ordre")
       local button = oldCreate("Button", nil, self)
-      self.slots[key] = { filter = filter, button = button }
+      self.slots[key] = { filter = filter, button = button, candidates = options.candidateFilters or {} }
       options.initializeFrame(button)
       return button
     end
-    function f:SetAuraSlotFilterString(key, filter) self.slots[key].filter = filter end
-    function f:SetAuraSlotCandidateFilters(key, c) self.slots[key].candidates = c end
+    function f:SetEnabled(on)
+      assert(not COMBAT, "SetEnabled en combat (refuse par le jeu)")
+      self.enabled = on
+    end
     function f:SetUnit(unit) self.unit = unit end
     function f:UpdateAllAuras() self.updates = self.updates + 1 end
-    boxes[#boxes + 1] = f
     return f
   end
   AuraContainerSortMethod = { Default = 0 } AuraContainerSortDirection = { Normal = 0 }
@@ -2517,46 +2520,59 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), meme quand les 
   local read = {}
   local oldGet = C_UnitAuras.GetUnitAuras
   C_UnitAuras.GetUnitAuras = function(unit, filter, ...) read[filter] = true return oldGet(unit, filter, ...) end
+  local made = {}
   local function finish()
     CreateFrame, C_Secrets, PlaySound, C_UnitAuras.GetUnitAuras = oldCreate, oldSecrets, oldPlay, oldGet
     AuraContainerSortMethod, AuraContainerSortDirection, AnchorUtil = nil, nil, nil
     Enum.CustomAuraButtonDispelTypeTextureStyle = nil
     Z.db.cornerSpells = {} Z.db.extraTracked = {} Z.db.ignoredNames = {} Z.db.showHots = true Z.db.soundDispel = false
-    AURAS = {}
+    COMBAT = false AURAS = {}
+    for _, button in ipairs(made) do pcall(button.SetAttribute, button, "unit", nil) end
+  end
+  local function NewCell(index, unit)
+    local b = CreateFrame("Button", "LyoruneHeaderUnitButton" .. index, Z.header)
+    Z.header:InitButton(b:GetName())
+    made[#made + 1] = b
+    if unit then b:SetAttribute("unit", unit) end
+    return b
   end
   local ok, err = pcall(function()
     AURAS = {}
-    local b = CreateFrame("Button", "LyoruneHeaderUnitButton30", Z.header)
-    Z.header:InitButton(b:GetName())
-    b:SetAttribute("unit", "player")
+    local b = NewCell(30, "player")
     assert(b.boxes, "conteneurs non crees")
     local hots, slots, debuffs = b.boxes.hots, b.boxes.slots, b.boxes.debuffs
-    assert(hots.unit == "player" and slots.unit == "player" and hots.updates > 0, "conteneurs sans joueur")
+    assert(hots.unit == "player" and slots.unit == "player" and hots.enabled and hots.updates > 0, "conteneurs sans joueur")
     -- mes soins suivis, par numero de sort
     local g = hots.groups.hots
     assert(g.filter == "HELPFUL|PLAYER" and g.candidates.includeSpellIDs[139], "Renovation absente du filtre des soins")
     assert(slots.slots.dispel.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "bordure de dissipation")
     assert(slots.slots.boss.candidates.isBossAura == true, "grande icone : auras de boss")
     assert(debuffs.groups.dispellable.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "affaiblissement a dissiper en premier")
-    -- un coin prend le sort, qui quitte la rangee
+    -- reglages inchanges : aucune reconstruction
+    Z:Refresh()
+    assert(b.boxes.hots == hots, "conteneurs refaits sans raison")
+    -- un coin prend le sort, qui quitte la rangee (reconstruction hors combat)
     Z.db.cornerSpells = { PRIEST = { TOPLEFT = "Rénovation" } } Z:Refresh()
+    assert(b.boxes.hots ~= hots and not hots:IsShown(), "ancien conteneur encore montre")
+    hots, slots, debuffs = b.boxes.hots, b.boxes.slots, b.boxes.debuffs
     assert(slots.slots.TOPLEFT.filter == "HELPFUL|PLAYER" and slots.slots.TOPLEFT.candidates.includeSpellIDs[139], "coin")
     assert(not hots.groups.hots.candidates.includeSpellIDs[139], "sort du coin reste dans la rangee")
-    assert(slots.slots.TOPRIGHT.filter == "", "coin vide actif")
+    assert(not slots.slots.TOPRIGHT, "coin vide actif")
     -- interrupteur : rien a montrer
     Z.db.showHots = false Z:Refresh()
-    assert(hots.groups.hots.max == 0 and b.boxes.bars.groups.bars.max == 0, "soins affiches malgre l'interrupteur")
+    assert(not b.boxes.hots.groups.hots and not b.boxes.bars.groups.bars, "soins affiches malgre l'interrupteur")
     Z.db.showHots = true Z:Refresh()
-    assert(hots.groups.hots.max == 4, "soins non rallumes")
+    assert(b.boxes.hots.groups.hots.max == 4, "soins non rallumes")
     -- liste par nom ou par numero : le numero tape sert tout de suite
     Z.db.ignoredNames = { ["12345"] = true } Z:Refresh()
-    assert(debuffs.groups.others.candidates.excludeSpellIDs[12345], "affaiblissement ignore par son numero")
+    assert(b.boxes.debuffs.groups.others.candidates.excludeSpellIDs[12345], "affaiblissement ignore par son numero")
     -- un nom de ma liste vu hors combat : son numero est retenu et le filtre mis a jour
     Z.db.extraTracked = { ["Mon sort"] = true }
     AURAS["HELPFUL|PLAYER"] = { { name = "Mon sort", icon = 1, auraInstanceID = 99, spellId = 4242 } }
     Z.UpdateAurasNow(b)
+    RunUpdates()
     assert(Z.db.auraIds["Mon sort"][4242], "numero non retenu")
-    assert(hots.groups.hots.candidates.includeSpellIDs[4242], "filtre non mis a jour avec le numero appris")
+    assert(b.boxes.hots.groups.hots.candidates.includeSpellIDs[4242], "filtre non mis a jour avec le numero appris")
     -- son de dissipation hors combat, une seule fois
     local sounds = 0
     PlaySound = function() sounds = sounds + 1 end
@@ -2564,19 +2580,43 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), meme quand les 
     AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = { { name = "Mal", icon = 4, auraInstanceID = 22, spellId = 98 } }
     Z.UpdateAurasNow(b) Z.UpdateAurasNow(b)
     assert(sounds == 1, "son de dissipation : " .. sounds)
-    -- auras secretes : Lyorune ne lit plus rien, le jeu affiche tout
+
+    -- EN COMBAT : auras secretes, Lyorune ne lit plus rien, le jeu affiche tout
+    COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
     secret = true read = {}
     Z.UpdateAurasNow(b)
     assert(not read["HARMFUL"] and not read["HELPFUL|PLAYER"], "lecture tentee alors que le jeu cache les auras")
     assert(not b.hots[1] or not b.hots[1]:IsShown(), "ancienne icone affichee avec les conteneurs")
-    -- la case change de joueur : les conteneurs suivent
+    assert(b.boxes.hots:IsShown() and b.boxes.debuffs:IsShown(), "conteneurs caches en combat")
+    -- la case change de joueur en combat : les conteneurs suivent (SetUnit permis)
     b:SetAttribute("unit", "party1")
-    assert(hots.unit == "party1" and debuffs.unit == "party1", "conteneurs restes sur l'ancien joueur")
-    Z.DiagnoseAuras() -- /lyorune auras décrit les conteneurs sans erreur
+    assert(b.boxes.hots.unit == "party1" and b.boxes.debuffs.unit == "party1", "conteneurs restes sur l'ancien joueur")
+    -- reglage change en combat : rien n'est cree, la reconstruction attend la fin du combat
+    local kept = b.boxes.hots
+    Z.db.ignoredNames = { ["12345"] = true, ["777"] = true } Z:Refresh()
+    assert(b.boxes.hots == kept, "conteneur refait en combat")
+    -- le groupe grandit en combat : les nouvelles cases attendent la fin du combat, sans erreur
+    local late = NewCell(31, "party2")
+    assert(not late.boxes, "conteneur cree en combat")
+    COMBAT = false secret = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+    assert(late.boxes and late.boxes.hots.unit == "party2" and late.boxes.hots.enabled, "case arrivee en combat jamais construite")
+    assert(b.boxes.debuffs.groups.others.candidates.excludeSpellIDs[777], "reglage du combat non applique ensuite")
+
+    -- RAID DE 40 : chaque case a ses conteneurs, sur son joueur
+    for i = 1, 40 do NewCell(40 + i, "raid" .. i) end
+    for i = 1, 40 do
+      local cell = made[#made - 40 + i]
+      assert(cell.boxes and cell.boxes.hots.unit == "raid" .. i and cell.boxes.slots.enabled, "raid" .. i .. " sans conteneurs")
+    end
+    -- case videe : conteneurs caches
     b:SetAttribute("unit", nil)
-    assert(hots.unit == "none", "conteneur sans joueur")
+    assert(not b.boxes.hots:IsShown() and not b.boxes.debuffs:IsShown(), "conteneur sans joueur encore montre")
+    b:SetAttribute("unit", "player")
+    assert(b.boxes.debuffs:IsShown() and b.boxes.debuffs.unit == "player", "case remplie : conteneurs non rallumes")
+    Z.DiagnoseAuras() -- /lyorune auras decrit les conteneurs sans erreur
     for _, e in ipairs(Z.db.errors or {}) do
-      assert(e.kind ~= "Conteneur d'auras" and e.kind ~= "filtres des auras", "journal : " .. tostring(e.message))
+      assert(e.kind ~= "Conteneur d'auras" and e.kind ~= "filtres des auras" and e.kind ~= "conteneurs d'auras",
+        "journal : " .. tostring(e.message))
     end
   end)
   finish()

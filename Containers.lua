@@ -13,7 +13,6 @@
 local _, Z = ...
 local issecret = Z.IsSecret
 
-local BASE = 16          -- taille de construction d'une icône ; le conteneur est ensuite mis à l'échelle
 local SPACING = 2
 local MAX_HOTS = 4
 
@@ -264,12 +263,97 @@ local function DressBig(b)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Construction des conteneurs d'une case (une fois, à l'arrivée de son premier joueur)
+-- Construction des conteneurs d'une case.
+-- Règles du jeu, vérifiées sur Forever :
+--   * ordre : créer, ancrer, SetUnit, AddAuraGroup / AddAuraSlot, SetEnabled(true) en dernier ;
+--   * jamais de création ni de SetEnabled en combat : la construction attend la fin du combat ;
+--   * un filtre ne se modifie pas : un réglage changé reconstruit les conteneurs (l'ancien est caché).
 ----------------------------------------------------------------------------------------------------
+local function NilIfEmpty(set) if set and next(set) then return set end end
+
+-- Ce que les conteneurs d'une case doivent montrer, selon les réglages et la classe jouée.
+-- Chaque entrée : conteneur, clé, filtre du jeu, filtres de candidats, nombre (groupes) ou place fixe.
+local function Plan(b)
+	local db = Z.db
+	local hots, corners, ignored, important = Wanted()
+	local plan = { size = b.iconSize or 12, groups = {}, slots = {} }
+	local function Group(box, key, filter, candidates, max, index, template, dress)
+		table.insert(plan.groups, { box = box, key = key, filter = filter, candidates = candidates, max = max,
+			index = index, template = template, dress = dress })
+	end
+	local function Slot(key, filter, candidates, template, dress)
+		table.insert(plan.slots, { key = key, filter = filter, candidates = candidates, template = template, dress = dress })
+	end
+
+	if db.showHots and not Empty(hots) then
+		Group("hots", "hots", "HELPFUL|PLAYER", { includeSpellIDs = hots }, MAX_HOTS, 1, "LyoruneAuraIcon", "mine")
+		Group("bars", "bars", "HELPFUL|PLAYER", { includeSpellIDs = hots }, MAX_HOTS, 1, "LyoruneAuraBar", "bar")
+	end
+	for _, point in ipairs(Z.CORNERS) do
+		if corners[point] then
+			Slot(point, "HELPFUL|PLAYER", { includeSpellIDs = corners[point] }, "LyoruneAuraSquare", "corner")
+		end
+	end
+
+	-- Celui que je peux dissiper d'abord, puis un autre (le total reste de deux)
+	local excluded = NilIfEmpty(ignored)
+	if db.showDebuffs then
+		Group("debuffs", "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", { excludeSpellIDs = excluded }, 1, 1,
+			"LyoruneAuraIcon", "other")
+		if db.debuffMode == "ALL" then
+			local canDispel = {}
+			for kind in pairs(Z.canDispel or {}) do canDispel[kind] = true end
+			Group("debuffs", "others", "HARMFUL", { excludeSpellIDs = excluded, excludeDispelTypes = NilIfEmpty(canDispel) },
+				1, 2, "LyoruneAuraIcon", "other")
+		end
+	end
+	if db.showDispel then Slot("dispel", "HARMFUL|RAID_PLAYER_DISPELLABLE", nil, "LyoruneAuraCover", "dispel") end
+	if db.bossDebuffs or db.importantGlow then
+		Slot("boss", "HARMFUL", { isBossAura = true }, "LyoruneAuraBig", "big")
+		if not Empty(important) then
+			Slot("listed", "HARMFUL", { includeSpellIDs = important }, "LyoruneAuraBig", "big")
+		end
+	end
+	return plan
+end
+
+-- Empreinte d'un plan : deux plans égaux donnent le même texte (rien à reconstruire)
+local function Sorted(set)
+	local list = {}
+	for key, value in pairs(set or {}) do list[#list + 1] = tostring(key) .. "=" .. tostring(value) end
+	table.sort(list)
+	return table.concat(list, ",")
+end
+
+local function Signature(plan)
+	local parts = { plan.size }
+	for _, list in ipairs({ plan.groups, plan.slots }) do
+		for _, entry in ipairs(list) do
+			local candidates = {}
+			for key, value in pairs(entry.candidates or {}) do
+				candidates[key] = type(value) == "table" and "{" .. Sorted(value) .. "}" or tostring(value)
+			end
+			parts[#parts + 1] = (entry.box or "slot") .. ":" .. entry.key .. ":" .. entry.filter .. ":" .. Sorted(candidates)
+		end
+	end
+	return table.concat(parts, "|")
+end
+
+local function Dresser(b, entry)
+	local how = entry.dress
+	if how == "mine" then return function(button) DressIcon(button, true) end end
+	if how == "other" then return function(button) DressIcon(button, false) end end
+	if how == "bar" then return DressBar end
+	if how == "corner" then return DressCorner(b, entry.key) end
+	if how == "dispel" then return DressDispel(b) end
+	return DressBig(b)
+end
+
 local function NewBox(b, level)
 	local ok, box = pcall(CreateFrame, "AuraContainer", nil, b.over, "LyoruneAuraBox")
 	if not ok or not box then return end
-	Call(box, "EnableMouse", false)
+	Call(box, "SetMouseClickEnabled", false)
+	Call(box, "SetMouseMotionEnabled", false)
 	Call(box, "SetFrameLevel", b.over:GetFrameLevel() + level)
 	return box
 end
@@ -278,154 +362,35 @@ local function Flow(box, point, horizontal, vertical, axis)
 	Call(box, "SetFlowLayoutAnchorPoint", point)
 	Call(box, "SetFlowLayoutAxis", axis or AnchorUtil.FlowLayoutAxis.Horizontal)
 	Call(box, "SetFlowLayoutGrowthDirection", horizontal, vertical)
-	Call(box, "SetFlowLayoutPadding", 0, 0, 0, 0)
 end
 
--- Groupe d'auras : le jeu crée les boutons à la demande et les range lui-même
-local function Group(b, box, key, filter, max, index, template, width, height, dress)
-	b.boxButtons[key] = {}
-	local made = 0
-	Call(box, "AddAuraGroup", key, filter, {
-		maxFrameCount = max,
-		sortMethod = AuraContainerSortMethod.Default,
-		sortDirection = AuraContainerSortDirection and AuraContainerSortDirection.Normal,
-		templateNames = { template },
-		layout = { elementWidth = width, elementHeight = height, elementSpacing = SPACING, lineSpacing = SPACING, layoutIndex = index },
-		initializeFrame = function(button)
-			made = made + 1
-			dress(button, made)
-			table.insert(b.boxButtons[key], button)
-		end,
-	})
-end
-
--- Place fixe : un seul bouton, que Lyorune place lui-même
-local function Slot(b, key, filter, template, dress)
-	local button = Call(b.boxes.slots, "AddAuraSlot", key, filter, {
-		templateNames = { template },
-		initializeFrame = function(button) dress(button) end,
-	})
-	b.slots[key] = button
-	return button
-end
-
-local function Build(b)
-	b.boxes, b.boxButtons, b.slots = {}, {}, {}
-	local boxes = b.boxes
-	boxes.hots = NewBox(b, 1)
-	boxes.bars = NewBox(b, 1)
-	boxes.debuffs = NewBox(b, 1)
-	boxes.slots = NewBox(b, 4) -- au-dessus des icônes, sous les auras privées
-	if not (boxes.hots and boxes.bars and boxes.debuffs and boxes.slots) then
-		b.boxes = nil
-		return false
-	end
-	Call(boxes.slots, "SetAllPoints", b.over)
-	local DIR = AnchorUtil.FlowDirection
-	Flow(boxes.hots, "TOPLEFT", DIR.Right, DIR.Down)
-	Flow(boxes.bars, "TOPLEFT", DIR.Right, DIR.Down, AnchorUtil.FlowLayoutAxis.Vertical)
-	Flow(boxes.debuffs, "BOTTOMRIGHT", DIR.Left, DIR.Up)
-
-	Group(b, boxes.hots, "hots", "HELPFUL|PLAYER", MAX_HOTS, 1, "LyoruneAuraIcon", BASE, BASE,
-		function(button) DressIcon(button, true) end)
-	Group(b, boxes.bars, "bars", "HELPFUL|PLAYER", MAX_HOTS, 1, "LyoruneAuraBar", 1, 3, DressBar)
-	-- Celui que je peux dissiper d'abord, puis un autre (le total reste de deux, comme avant)
-	Group(b, boxes.debuffs, "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", 1, 1, "LyoruneAuraIcon", BASE, BASE,
-		function(button) DressIcon(button, false) end)
-	Group(b, boxes.debuffs, "others", "HARMFUL", 1, 2, "LyoruneAuraIcon", BASE, BASE,
-		function(button) DressIcon(button, false) end)
-
-	for _, point in ipairs(Z.CORNERS) do Slot(b, point, "HELPFUL|PLAYER", "LyoruneAuraSquare", DressCorner(b, point)) end
-	Slot(b, "dispel", "HARMFUL|RAID_PLAYER_DISPELLABLE", "LyoruneAuraCover", DressDispel(b))
-	Slot(b, "boss", "HARMFUL", "LyoruneAuraBig", DressBig(b))
-	Slot(b, "listed", "HARMFUL", "LyoruneAuraBig", DressBig(b))
-	return true
-end
-
-----------------------------------------------------------------------------------------------------
--- Réglages : filtres (que montrer) et places (où). Refait à chaque changement d'options.
-----------------------------------------------------------------------------------------------------
-local function NilIfEmpty(set) if set and next(set) then return set end end
-
--- Groupe coupé : aucune icône permise (le jeu ne connaît pas de filtre vide pour un groupe)
-local GROUP_MAX = { hots = MAX_HOTS, bars = MAX_HOTS, dispellable = 1, others = 1 }
-local function GroupFilter(box, key, filter, candidates)
-	if filter == "" then
-		Call(box, "SetAuraGroupMaxFrameCount", key, 0)
-		return
-	end
-	Call(box, "SetAuraGroupFilterString", key, filter)
-	Call(box, "SetAuraGroupCandidateFilters", key, candidates)
-	Call(box, "SetAuraGroupMaxFrameCount", key, GROUP_MAX[key])
-end
-
-local function SlotFilter(b, key, filter, candidates)
-	Call(b.boxes.slots, "SetAuraSlotFilterString", key, filter)
-	Call(b.boxes.slots, "SetAuraSlotCandidateFilters", key, candidates)
-end
-
-local function ApplyFilters(b)
-	local db = Z.db
-	local hots, corners, ignored, important = Wanted()
-	local boxes = b.boxes
-	local wantHots = db.showHots and not Empty(hots)
-	local hotFilter = wantHots and "HELPFUL|PLAYER" or ""
-	GroupFilter(boxes.hots, "hots", hotFilter, { includeSpellIDs = NilIfEmpty(hots) })
-	GroupFilter(boxes.bars, "bars", hotFilter, { includeSpellIDs = NilIfEmpty(hots) })
-	for _, point in ipairs(Z.CORNERS) do
-		local set = corners[point]
-		SlotFilter(b, point, set and "HELPFUL|PLAYER" or "", { includeSpellIDs = set })
-	end
-
-	local excluded = NilIfEmpty(ignored)
-	local canDispel = {}
-	for kind in pairs(Z.canDispel or {}) do canDispel[kind] = true end
-	GroupFilter(boxes.debuffs, "dispellable", db.showDebuffs and "HARMFUL|RAID_PLAYER_DISPELLABLE" or "",
-		{ excludeSpellIDs = excluded })
-	GroupFilter(boxes.debuffs, "others", (db.showDebuffs and db.debuffMode == "ALL") and "HARMFUL" or "",
-		{ excludeSpellIDs = excluded, excludeDispelTypes = NilIfEmpty(canDispel) })
-	SlotFilter(b, "dispel", db.showDispel and "HARMFUL|RAID_PLAYER_DISPELLABLE" or "", nil)
-
-	local wantImportant = db.bossDebuffs or db.importantGlow
-	SlotFilter(b, "boss", wantImportant and "HARMFUL" or "", { isBossAura = true })
-	SlotFilter(b, "listed", (wantImportant and not Empty(important)) and "HARMFUL" or "", { includeSpellIDs = NilIfEmpty(important) })
-end
-
+-- Places des conteneurs dans la case (les conteneurs ne sont pas protégés : refait librement)
 local function Place(b)
 	local db = Z.db
 	local boxes, size = b.boxes, b.iconSize or 12
-	local scale = size / BASE
 
-	-- Icônes : construites à 16 pixels, le conteneur est mis à l'échelle de la case.
-	-- Les décalages d'une ancre sont dans l'échelle du conteneur : on les divise.
 	local dx, dy = Z.Offset("hots")
-	local x, y = 2 + Z.CornerShift(b, "TOPLEFT") + dx, -2 + dy
-	Call(boxes.hots, "SetScale", scale)
 	Call(boxes.hots, "ClearAllPoints")
-	Call(boxes.hots, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", x / scale, y / scale)
-	Call(boxes.hots, "SetSize", MAX_HOTS * (BASE + SPACING), BASE)
+	Call(boxes.hots, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 2 + Z.CornerShift(b, "TOPLEFT") + dx, -2 + dy)
+	Call(boxes.hots, "SetSize", MAX_HOTS * (size + SPACING), size)
 
 	Call(boxes.bars, "ClearAllPoints")
 	Call(boxes.bars, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy - 3)
 	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), MAX_HOTS * 4)
 
-	local bars = db.hotStyle == "BARS"
-	Call(boxes.hots, "SetShown", not bars)
-	Call(boxes.bars, "SetShown", bars)
-
 	dx, dy = Z.Offset("debuffs")
-	x, y = -2 - Z.CornerShift(b, "BOTTOMRIGHT") + dx, 2 + dy
-	Call(boxes.debuffs, "SetScale", scale)
 	Call(boxes.debuffs, "ClearAllPoints")
-	Call(boxes.debuffs, "SetPoint", "BOTTOMRIGHT", b.over, "BOTTOMRIGHT", x / scale, y / scale)
-	Call(boxes.debuffs, "SetSize", 2 * (BASE + SPACING), BASE)
+	Call(boxes.debuffs, "SetPoint", "BOTTOMRIGHT", b.over, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT") + dx, 2 + dy)
+	Call(boxes.debuffs, "SetSize", 2 * (size + SPACING), size)
+
+	Call(boxes.slots, "SetAllPoints", b.over)
 
 	-- Boutons déjà créés par le jeu : seulement s'il nous laisse y toucher (sinon, à la prochaine occasion)
-	for _, point in ipairs(Z.CORNERS) do
-		if Open(b.slots[point]) then PlaceCorner(b, b.slots[point], point) end
-	end
-	for _, key in ipairs({ "boss", "listed" }) do
-		if Open(b.slots[key]) then PlaceBig(b, b.slots[key]) end
+	for key, button in pairs(b.slots) do
+		if Open(button) then
+			if Z.CORNER_SIGN[key] then PlaceCorner(b, button, key)
+			elseif key == "boss" or key == "listed" then PlaceBig(b, button) end
+		end
 	end
 	for _, button in ipairs(b.boxButtons.hots or {}) do
 		if Open(button) then StyleIcon(button, true) end
@@ -440,46 +405,150 @@ local function Place(b)
 	end
 end
 
+-- Montrés ou cachés : pas de joueur, ennemi visé, style d'icônes (icônes ou barres)
+local function Visibility(b)
+	if not b.boxes then return end
+	local shown = b.unit ~= nil and b.boxesShown ~= false
+	local bars = Z.db.hotStyle == "BARS"
+	Call(b.boxes.slots, "SetShown", shown)
+	Call(b.boxes.debuffs, "SetShown", shown)
+	Call(b.boxes.hots, "SetShown", shown and not bars)
+	Call(b.boxes.bars, "SetShown", shown and bars)
+end
+
 local function EachBox(b, method, ...)
 	for _, box in pairs(b.boxes) do Call(box, method, ...) end
+end
+
+-- Anciens conteneurs : cachés et oubliés (le jeu ne sait pas retirer un groupe)
+local function Drop(b)
+	if not b.boxes then return end
+	EachBox(b, "Hide")
+	b.boxes, b.boxButtons, b.slots, b.boxesSig = nil, nil, nil, nil
+end
+
+local function Build(b, plan)
+	b.boxes, b.boxButtons, b.slots = {}, {}, {}
+	local boxes = b.boxes
+	boxes.hots = NewBox(b, 1)
+	boxes.bars = NewBox(b, 1)
+	boxes.debuffs = NewBox(b, 1)
+	boxes.slots = NewBox(b, 4) -- au-dessus des icônes, sous les auras privées
+	if not (boxes.hots and boxes.bars and boxes.debuffs and boxes.slots) then error("création refusée") end
+
+	-- 1. ancrer
+	local DIR = AnchorUtil.FlowDirection
+	Flow(boxes.hots, "TOPLEFT", DIR.Right, DIR.Down)
+	Flow(boxes.bars, "TOPLEFT", DIR.Right, DIR.Down, AnchorUtil.FlowLayoutAxis.Vertical)
+	Flow(boxes.debuffs, "BOTTOMRIGHT", DIR.Left, DIR.Up)
+	Place(b)
+
+	-- 2. le joueur suivi, avant les groupes
+	for _, box in pairs(boxes) do
+		local ok, err = pcall(box.SetUnit, box, b.unit)
+		if not ok then error("SetUnit : " .. tostring(err)) end
+	end
+
+	-- 3. groupes et places fixes, filtres donnés à la création
+	local size = plan.size
+	for _, entry in ipairs(plan.groups) do
+		local list, made, dress = {}, 0, Dresser(b, entry)
+		b.boxButtons[entry.key] = list
+		local width, height = size, size
+		if entry.template == "LyoruneAuraBar" then width, height = math.floor(Z.CellSize() * 0.45), 3 end
+		local box = boxes[entry.box]
+		local ok, err = pcall(box.AddAuraGroup, box, entry.key, entry.filter, {
+			maxFrameCount = entry.max,
+			sortMethod = AuraContainerSortMethod.Default,
+			templateNames = { entry.template },
+			candidateFilters = entry.candidates,
+			layout = { elementWidth = width, elementHeight = height, elementSpacing = SPACING, lineSpacing = SPACING,
+				groupSpacing = SPACING, layoutIndex = entry.index },
+			initializeFrame = function(button)
+				made = made + 1
+				Call(button, "SetSize", width, height)
+				dress(button, made)
+				list[#list + 1] = button
+			end,
+		})
+		if not ok then error("AddAuraGroup " .. entry.key .. " : " .. tostring(err)) end
+	end
+	for _, entry in ipairs(plan.slots) do
+		local dress = Dresser(b, entry)
+		local box = boxes.slots
+		local ok, button = pcall(box.AddAuraSlot, box, entry.key, entry.filter, {
+			templateNames = { entry.template },
+			candidateFilters = entry.candidates,
+			initializeFrame = function(button) dress(button) end,
+		})
+		if not ok then error("AddAuraSlot " .. entry.key .. " : " .. tostring(button)) end
+		b.slots[entry.key] = button
+	end
+
+	-- 4. en dernier : le jeu se met à suivre les auras
+	EachBox(b, "SetEnabled", true)
+	Visibility(b)
+	EachBox(b, "UpdateAllAuras")
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Points d'entrée (Frames.lua, Auras.lua)
 ----------------------------------------------------------------------------------------------------
--- Le joueur de la case change : les conteneurs le suivent. Créés à la première fois.
-function Z.BindAuraBoxes(b)
-	if not b.boxes then
-		if b.boxesFailed or not Z.HasAuraBoxes() or not b.unit then return end
-		local ok, err = pcall(function()
-			assert(Build(b), "création refusée")
-			ApplyFilters(b)
-			Place(b)
-		end)
-		if not ok then
-			-- l'ancien affichage reste en place pour cette case
-			for _, box in pairs(b.boxes or {}) do Call(box, "SetUnit", "none") Call(box, "Hide") end
-			b.boxes, b.boxesFailed = nil, true
-			Z:Log("Conteneur d'auras", tostring(err), "")
-			return
-		end
-		Z.HideAuras(b)
-		Z.ShowDispel(b, false)
+local waiting = {} -- cases à construire à la fin du combat
+
+-- Construit ou reconstruit les conteneurs si le plan a changé ; en combat, attend la fin du combat
+local function Rebuild(b)
+	if b.boxesFailed or not Z.HasAuraBoxes() or not b.unit or not b.over then return end
+	local plan = Plan(b)
+	local signature = Signature(plan)
+	if b.boxes and b.boxesSig == signature then return end
+	if InCombatLockdown() then waiting[b] = true return end
+	waiting[b] = nil
+	Drop(b)
+	local ok, err = pcall(Build, b, plan)
+	if not ok then
+		-- l'ancien affichage reste en place pour cette case
+		Drop(b)
+		b.boxesFailed = true
+		Z:Log("Conteneur d'auras", tostring(err), "")
+		Z:Print("Conteneur d'auras : " .. tostring(err))
+		return
 	end
-	EachBox(b, "SetUnit", b.unit or "none")
-	EachBox(b, "SetEnabled", b.unit ~= nil)
+	b.boxesSig = signature
+	Z.HideAuras(b)
+	Z.ShowDispel(b, false)
+end
+
+Z:On("PLAYER_REGEN_ENABLED", function()
+	for b in pairs(waiting) do
+		waiting[b] = nil
+		Z:Try("conteneurs d'auras", Rebuild, b)
+	end
+end)
+
+-- Le joueur de la case change : les conteneurs le suivent (SetUnit est permis en combat)
+function Z.BindAuraBoxes(b)
+	if not b.boxes then return Rebuild(b) end
+	if b.unit then
+		for _, box in pairs(b.boxes) do
+			if not pcall(box.SetUnit, box, b.unit) then
+				-- refusé : ne jamais montrer les auras de l'ancien joueur
+				b.boxesShown, b.boxesSig = false, nil
+				waiting[b] = true
+			end
+		end
+	end
+	Visibility(b)
 	if b.unit then EachBox(b, "UpdateAllAuras") end
 end
 
--- Réglages changés (Frames.lua, Style) : filtres et places refaits
+-- Réglages changés (Frames.lua, Style) : reconstruction si les filtres ont changé, sinon les places
 function Z.StyleAuraBoxes(b)
+	Rebuild(b)
 	if not b.boxes then return end
-	local ok, err = pcall(function()
-		ApplyFilters(b)
-		Place(b)
-	end)
+	local ok, err = pcall(Place, b)
 	if not ok then Z:Log("Conteneur d'auras", tostring(err), "") end
-	if b.unit then EachBox(b, "UpdateAllAuras") end
+	Visibility(b)
 end
 
 -- Toutes les cases : nouveau numéro de sort appris, sorts de la classe changés
@@ -492,9 +561,7 @@ end
 function Z.ShowAuraBoxes(b, shown)
 	if not b.boxes then return end
 	if b.extra and shown then EachBox(b, "UpdateAllAuras") end
-	Call(b.boxes.slots, "SetShown", shown)
-	Call(b.boxes.debuffs, "SetShown", shown)
-	local bars = Z.db.hotStyle == "BARS"
-	Call(b.boxes.hots, "SetShown", shown and not bars)
-	Call(b.boxes.bars, "SetShown", shown and bars)
+	if b.boxesShown == shown then return end
+	b.boxesShown = shown
+	Visibility(b)
 end
