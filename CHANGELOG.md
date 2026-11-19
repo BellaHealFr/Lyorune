@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.25.1] - 2026-11-20
+
+### Amélioré
+
+- Mode test : un bouton Fermer au bout du bandeau, plus besoin de commande.
+- Mode test : le bandeau se déplace à la souris et emmène les vrais cadres avec lui (sauf si les cadres sont verrouillés).
+
+### Corrigé
+
+- Cases entièrement colorées (bleu, violet ou vert) quand un joueur avait un affaiblissement à dissiper : la vie reste visible sous un voile léger.
+- Mode test : couleurs de classe teintées de rouge.
+
 ## [1.25.0] - 2026-11-19
 
 ### Ajouté
@@ -464,6 +476,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.25.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.13...v1.24.0
 [1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13

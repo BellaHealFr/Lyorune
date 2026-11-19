@@ -727,4 +727,8 @@ Z.translations.enUS = {
 	["Tous les rangs de vos soins sont reconnus en combat, même un rang inférieur lancé par macro."] = "Every rank of your heals is recognised in combat, even a lower rank cast by macro.",
 	["Icônes de soins et d'affaiblissements de nouveau affichées, en combat comme hors combat, quelle que soit la taille du groupe."] = "Heal and debuff icons shown again, in and out of combat, whatever the group size.",
 	["Le nom et la vie restent lisibles devant les icônes d'auras ; la grande icône d'affaiblissement suit de nouveau son placement."] = "Name and health stay readable in front of aura icons; the big debuff icon follows its placement again.",
+	["Cases entièrement colorées (bleu, violet ou vert) quand un joueur avait un affaiblissement à dissiper : la vie reste visible sous un voile léger."] = "Frames fully colored (blue, purple or green) when a player had a debuff to dispel: health stays visible under a light veil.",
+	["Mode test : couleurs de classe teintées de rouge."] = "Test mode: class colors tinted red.",
+	["Mode test : un bouton Fermer au bout du bandeau, plus besoin de commande."] = "Test mode: a Close button at the end of the banner, no command needed.",
+	["Mode test : le bandeau se déplace à la souris et emmène les vrais cadres avec lui (sauf si les cadres sont verrouillés)."] = "Test mode: drag the banner with the mouse to move the real frames along with it (unless the frames are locked).",
 }

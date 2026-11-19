@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.25.1] - 2026-11-20
+
+### Improved
+
+- Test mode: a Close button at the end of the banner, no command needed.
+- Test mode: drag the banner with the mouse to move the real frames along with it (unless the frames are locked).
+
+### Fixed
+
+- Frames fully colored (blue, purple or green) when a player had a debuff to dispel: health stays visible under a light veil.
+- Test mode: class colors tinted red.
+
 ## [1.25.0] - 2026-11-19
 
 ### Added
@@ -464,6 +476,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.25.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.13...v1.24.0
 [1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13

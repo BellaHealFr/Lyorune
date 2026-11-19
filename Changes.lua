@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.25.1", date = "2026-11-20",
+		added = {
+		},
+		improved = {
+			"Mode test : un bouton Fermer au bout du bandeau, plus besoin de commande.",
+			"Mode test : le bandeau se déplace à la souris et emmène les vrais cadres avec lui (sauf si les cadres sont verrouillés).",
+		},
+		fixed = {
+			"Cases entièrement colorées (bleu, violet ou vert) quand un joueur avait un affaiblissement à dissiper : la vie reste visible sous un voile léger.",
+			"Mode test : couleurs de classe teintées de rouge.",
+		},
+	},
+	{
 		version = "1.25.0", date = "2026-11-19",
 		added = {
 			"Mana basse des soigneurs : une icône de boisson sur la case d'un soigneur à court de mana, même en combat (onglet Indicateurs).",
