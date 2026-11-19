@@ -752,19 +752,21 @@ local function Describe(value)
 	return tostring(value)
 end
 
-function Z.DiagnoseAuras()
+local function Diagnose(Add)
 	local b
 	for _, button in ipairs(Z.buttons) do
 		if button.unit and UnitIsUnit(button.unit, "player") then b = button break end
 	end
 	b = b or Z.buttons[1]
-	local lines = {}
-	local function Add(text) lines[#lines + 1] = text end
 	Add("combat " .. tostring(InCombatLockdown()) .. ", auras lisibles " .. tostring(Readable()))
 	local box = b and b.boxes
 	Add("conteneurs du jeu : " .. (box and ("oui, joueur " .. Describe(box.hots.GetUnit and box.hots:GetUnit())
-		.. ", visibles " .. tostring(box.slots:IsVisible())) or b and b.boxesFailed and "création refusée"
+		.. ", visibles " .. Describe(box.slots:IsVisible())) or b and b.boxesFailed and "création refusée"
 		or Z.HasAuraBoxes() and "pas encore créés" or "absents de ce client"))
+	if box then
+		local ok, err = pcall(Z.DescribeAuraBoxes, b, Add)
+		if not ok then Add("description des conteneurs impossible : " .. tostring(err)) end
+	end
 	if not (b and b.unit) then Add("aucune case") else
 		local unit, db = b.unit, Z.db
 		local tracked = 0
@@ -799,6 +801,14 @@ function Z.DiagnoseAuras()
 		local ok, err = pcall(UpdateAuras, b)
 		Add("mise à jour : " .. (ok and "sans erreur" or tostring(err)))
 	end
+end
+
+-- Chaque ligne est gardée au fur et à mesure : un plantage n'efface pas ce qui a déjà été trouvé
+function Z.DiagnoseAuras()
+	local lines = {}
+	-- une ligne devenue secrète (valeur du jeu mêlée au texte) est remplacée : rien ne doit planter
+	local ok, err = pcall(Diagnose, function(text) lines[#lines + 1] = issecret(text) and "(ligne secrète)" or tostring(text) end)
+	if not ok then lines[#lines + 1] = "diagnostic interrompu : " .. tostring(err) end
 	for _, text in ipairs(lines) do Z:Print(text) end
 	Z:Log("Diagnostic auras", table.concat(lines, " | "), "")
 end

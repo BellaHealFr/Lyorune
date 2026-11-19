@@ -1,9 +1,201 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 	<!-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE. -->
 	<!-- Modèles des conteneurs d'auras du jeu : le jeu y dessine lui-même les auras, même quand il les cache aux addons. -->
-	<!-- Les textures de chaque bouton sont créées par Containers.lua. -->
+	<!-- Les boutons sont des objets protégés du jeu : toutes leurs textures sont déclarées ici, jamais créées en Lua. -->
 	<ScopedModifier useForbiddenObjectTable="true">
 		<AuraContainer name="LyoruneAuraBox" inherits="CustomAuraContainerTemplate" virtual="true" />
-		<AuraButton name="LyoruneAuraButton" inherits="CustomAuraButtonTemplate" virtual="true" />
+
+		<!-- Icône d'aura : liseré noir, image, voile de fin de soin, cercle de durée, charges -->
+		<AuraButton name="LyoruneAuraIcon" inherits="CustomAuraButtonTemplate" virtual="true">
+			<Layers>
+				<Layer level="BACKGROUND">
+					<Texture parentKey="Edge" file="Interface\Buttons\WHITE8X8">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-1" y="1" />
+							<Anchor point="BOTTOMRIGHT" x="1" y="-1" />
+						</Anchors>
+						<Color r="0" g="0" b="0" a="1" />
+					</Texture>
+				</Layer>
+				<Layer level="ARTWORK">
+					<Texture parentKey="Icon" setAllPoints="true">
+						<TexCoords left="0.08" right="0.92" top="0.08" bottom="0.92" />
+					</Texture>
+				</Layer>
+				<Layer level="OVERLAY">
+					<Texture parentKey="Veil" file="Interface\Buttons\WHITE8X8" setAllPoints="true" hidden="true">
+						<Color r="0" g="0" b="0" a="0.55" />
+					</Texture>
+				</Layer>
+			</Layers>
+			<Frames>
+				<Cooldown parentKey="Cooldown" inherits="CooldownFrameTemplate" setAllPoints="true" reverse="true" hideCountdownNumbers="true" drawEdge="false" drawBling="false" />
+				<Frame parentKey="Texts" setAllPoints="true" enableMouse="false">
+					<Layers>
+						<Layer level="OVERLAY">
+							<FontString parentKey="Count" inherits="NumberFontNormalSmall">
+								<Anchors>
+									<Anchor point="BOTTOMRIGHT" x="2" y="-2" />
+								</Anchors>
+							</FontString>
+						</Layer>
+					</Layers>
+				</Frame>
+			</Frames>
+		</AuraButton>
+
+		<!-- Barre fine : elle se vide avec la durée restante -->
+		<AuraButton name="LyoruneAuraBar" inherits="CustomAuraButtonTemplate" virtual="true">
+			<Frames>
+				<StatusBar parentKey="Bar" enableMouse="false">
+					<Size x="40" y="3" />
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+					</Anchors>
+					<BarTexture file="Interface\Buttons\WHITE8X8" />
+					<Layers>
+						<Layer level="BACKGROUND">
+							<Texture parentKey="Back" file="Interface\Buttons\WHITE8X8" setAllPoints="true">
+								<Color r="0" g="0" b="0" a="0.6" />
+							</Texture>
+						</Layer>
+					</Layers>
+				</StatusBar>
+			</Frames>
+		</AuraButton>
+
+		<!-- Carré de coin : couleur du coin, qui se vide avec la durée du soin -->
+		<AuraButton name="LyoruneAuraSquare" inherits="CustomAuraButtonTemplate" virtual="true">
+			<Layers>
+				<Layer level="BACKGROUND">
+					<Texture parentKey="Edge" file="Interface\Buttons\WHITE8X8">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-1" y="1" />
+							<Anchor point="BOTTOMRIGHT" x="1" y="-1" />
+						</Anchors>
+						<Color r="0" g="0" b="0" a="1" />
+					</Texture>
+				</Layer>
+				<Layer level="ARTWORK">
+					<Texture parentKey="Fill" file="Interface\Buttons\WHITE8X8" setAllPoints="true" />
+				</Layer>
+			</Layers>
+			<Frames>
+				<Cooldown parentKey="Cooldown" inherits="CooldownFrameTemplate" setAllPoints="true" reverse="true" hideCountdownNumbers="true" drawEdge="false" drawBling="false" />
+			</Frames>
+		</AuraButton>
+
+		<!-- Bordure et voile de dissipation : le jeu leur donne la couleur du type -->
+		<AuraButton name="LyoruneAuraCover" inherits="CustomAuraButtonTemplate" virtual="true">
+			<Layers>
+				<Layer level="BACKGROUND">
+					<Texture parentKey="Fill" file="Interface\Buttons\WHITE8X8" setAllPoints="true" alpha="0.18" />
+				</Layer>
+				<Layer level="OVERLAY">
+					<Texture parentKey="Top" file="Interface\Buttons\WHITE8X8">
+						<Size y="2" />
+						<Anchors>
+							<Anchor point="TOPLEFT" />
+							<Anchor point="TOPRIGHT" />
+						</Anchors>
+					</Texture>
+					<Texture parentKey="Bottom" file="Interface\Buttons\WHITE8X8">
+						<Size y="2" />
+						<Anchors>
+							<Anchor point="BOTTOMLEFT" />
+							<Anchor point="BOTTOMRIGHT" />
+						</Anchors>
+					</Texture>
+					<Texture parentKey="Left" file="Interface\Buttons\WHITE8X8">
+						<Size x="2" />
+						<Anchors>
+							<Anchor point="TOPLEFT" y="-2" />
+							<Anchor point="BOTTOMLEFT" y="2" />
+						</Anchors>
+					</Texture>
+					<Texture parentKey="Right" file="Interface\Buttons\WHITE8X8">
+						<Size x="2" />
+						<Anchors>
+							<Anchor point="TOPRIGHT" y="-2" />
+							<Anchor point="BOTTOMRIGHT" y="2" />
+						</Anchors>
+					</Texture>
+				</Layer>
+			</Layers>
+		</AuraButton>
+
+		<!-- Affaiblissement important : le bouton couvre la case ; grande icône à gauche, contour doré qui pulse -->
+		<AuraButton name="LyoruneAuraBig" inherits="CustomAuraButtonTemplate" virtual="true">
+			<Frames>
+				<Frame parentKey="Face" enableMouse="false">
+					<Size x="20" y="20" />
+					<Anchors>
+						<Anchor point="LEFT" x="3" />
+					</Anchors>
+					<Layers>
+						<Layer level="BACKGROUND">
+							<Texture parentKey="Edge" file="Interface\Buttons\WHITE8X8">
+								<Anchors>
+									<Anchor point="TOPLEFT" x="-1" y="1" />
+									<Anchor point="BOTTOMRIGHT" x="1" y="-1" />
+								</Anchors>
+								<Color r="0" g="0" b="0" a="1" />
+							</Texture>
+						</Layer>
+						<Layer level="ARTWORK">
+							<Texture parentKey="Icon" setAllPoints="true">
+								<TexCoords left="0.08" right="0.92" top="0.08" bottom="0.92" />
+							</Texture>
+						</Layer>
+					</Layers>
+					<Frames>
+						<Cooldown parentKey="Cooldown" inherits="CooldownFrameTemplate" setAllPoints="true" reverse="true" hideCountdownNumbers="true" drawEdge="false" drawBling="false" />
+					</Frames>
+				</Frame>
+				<Frame parentKey="Glow" setAllPoints="true" enableMouse="false">
+					<Layers>
+						<Layer level="OVERLAY">
+							<Texture parentKey="Top" file="Interface\Buttons\WHITE8X8">
+								<Size y="2" />
+								<Anchors>
+									<Anchor point="TOPLEFT" x="-2" y="2" />
+									<Anchor point="TOPRIGHT" x="2" y="2" />
+								</Anchors>
+								<Color r="1" g="0.82" b="0.25" a="1" />
+							</Texture>
+							<Texture parentKey="Bottom" file="Interface\Buttons\WHITE8X8">
+								<Size y="2" />
+								<Anchors>
+									<Anchor point="BOTTOMLEFT" x="-2" y="-2" />
+									<Anchor point="BOTTOMRIGHT" x="2" y="-2" />
+								</Anchors>
+								<Color r="1" g="0.82" b="0.25" a="1" />
+							</Texture>
+							<Texture parentKey="Left" file="Interface\Buttons\WHITE8X8">
+								<Size x="2" />
+								<Anchors>
+									<Anchor point="TOPLEFT" x="-2" y="2" />
+									<Anchor point="BOTTOMLEFT" x="-2" y="-2" />
+								</Anchors>
+								<Color r="1" g="0.82" b="0.25" a="1" />
+							</Texture>
+							<Texture parentKey="Right" file="Interface\Buttons\WHITE8X8">
+								<Size x="2" />
+								<Anchors>
+									<Anchor point="TOPRIGHT" x="2" y="2" />
+									<Anchor point="BOTTOMRIGHT" x="2" y="-2" />
+								</Anchors>
+								<Color r="1" g="0.82" b="0.25" a="1" />
+							</Texture>
+						</Layer>
+					</Layers>
+					<Animations>
+						<AnimationGroup parentKey="Pulse" looping="BOUNCE">
+							<Alpha fromAlpha="1" toAlpha="0.3" duration="0.6" />
+						</AnimationGroup>
+					</Animations>
+				</Frame>
+			</Frames>
+		</AuraButton>
 	</ScopedModifier>
 </Ui>

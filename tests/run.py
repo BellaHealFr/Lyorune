@@ -2489,12 +2489,13 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), meme quand les 
     assert(template == "LyoruneAuraBox", "modele du conteneur")
     f.groups, f.slots, f.updates = {}, {}, 0
     function f:AddAuraGroup(key, filter, options)
-      assert(options.templateNames[1] == "LyoruneAuraButton" and options.maxFrameCount >= 1 and options.layout.elementWidth)
+      assert(options.templateNames[1]:match("^LyoruneAura%u") and options.maxFrameCount >= 1 and options.layout.elementWidth)
       self.groups[key] = { filter = filter }
       options.initializeFrame(oldCreate("Button", nil, self)) -- le jeu habille un bouton
     end
     function f:SetAuraGroupFilterString(key, filter) self.groups[key].filter = filter end
     function f:SetAuraGroupCandidateFilters(key, c) self.groups[key].candidates = c end
+    function f:SetAuraGroupMaxFrameCount(key, n) self.groups[key].max = n end
     function f:AddAuraSlot(key, filter, options)
       local button = oldCreate("Button", nil, self)
       self.slots[key] = { filter = filter, button = button }
@@ -2544,8 +2545,9 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), meme quand les 
     assert(slots.slots.TOPRIGHT.filter == "", "coin vide actif")
     -- interrupteur : rien a montrer
     Z.db.showHots = false Z:Refresh()
-    assert(hots.groups.hots.filter == "" and b.boxes.bars.groups.bars.filter == "", "soins affiches malgre l'interrupteur")
-    Z.db.showHots = true
+    assert(hots.groups.hots.max == 0 and b.boxes.bars.groups.bars.max == 0, "soins affiches malgre l'interrupteur")
+    Z.db.showHots = true Z:Refresh()
+    assert(hots.groups.hots.max == 4, "soins non rallumes")
     -- liste par nom ou par numero : le numero tape sert tout de suite
     Z.db.ignoredNames = { ["12345"] = true } Z:Refresh()
     assert(debuffs.groups.others.candidates.excludeSpellIDs[12345], "affaiblissement ignore par son numero")

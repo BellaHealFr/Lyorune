@@ -11,13 +11,11 @@
 -- Si le jeu n'a pas ces conteneurs, Auras.lua garde l'ancien affichage (lecture des auras).
 
 local _, Z = ...
-local UI = Z.UI
 local issecret = Z.IsSecret
 
 local BASE = 16          -- taille de construction d'une icône ; le conteneur est ensuite mis à l'échelle
 local SPACING = 2
 local MAX_HOTS = 4
-local BUTTON = "LyoruneAuraButton"
 
 -- Les conteneurs existent-ils dans ce client ? (lu à chaque fois : un changement de version du jeu suffit)
 function Z.HasAuraBoxes()
@@ -28,14 +26,52 @@ end
 -- Appel protégé d'une méthode du jeu : une erreur est notée une fois au journal, jamais avalée sans trace
 local logged = {}
 local function Call(object, method, ...)
-	local f = object and object[method]
+	local f = type(object) == "table" and object[method]
 	if not f then return end
 	local ok, result = pcall(f, object, ...)
 	if ok then return result end
 	if not logged[method] then
 		logged[method] = true
 		Z:Log("Conteneur d'auras", method .. " : " .. tostring(result), "")
+		Z:Print("Conteneur d'auras, " .. method .. " : " .. tostring(result))
 	end
+end
+
+-- Pour /lyorune auras : l'état de chaque conteneur de la case, tel que le jeu le voit
+local function Show(value)
+	if issecret(value) then return "secret" end
+	return tostring(value)
+end
+
+function Z.DescribeAuraBoxes(b, Add)
+	for _, name in ipairs({ "hots", "bars", "debuffs", "slots" }) do
+		local box = b.boxes[name]
+		local ok, text = pcall(function()
+			local point, relative, _, x, y = box:GetPoint()
+			return ("%s : montré %s, visible %s, actif %s, joueur %s, taille %dx%d, échelle %.2f, opacité %.2f, ancre %s %s %d %d"):format(
+				name, Show(box:IsShown()), Show(box:IsVisible()), Show(Call(box, "IsEnabled")), Show(Call(box, "GetUnit")),
+				box:GetWidth(), box:GetHeight(), box:GetScale(), box:GetEffectiveAlpha(), tostring(point),
+				tostring(relative and relative.GetName and relative:GetName() or relative), x or 0, y or 0)
+		end)
+		Add(ok and text or (name .. " : " .. tostring(text)))
+	end
+	-- Les boutons dessinés par le jeu peuvent répondre par des valeurs secrètes : tout passe par Show et pcall
+	local function Frame(button)
+		if not button then return "aucun" end
+		local ok, text = pcall(function()
+			return "montré " .. Show(button:IsShown()) .. ", visible " .. Show(button:IsVisible())
+				.. ", taille " .. Show(button:GetWidth()) .. " x " .. Show(button:GetHeight())
+				.. ", opacité " .. Show(button:GetEffectiveAlpha())
+		end)
+		return ok and text or ("illisible : " .. tostring(text))
+	end
+	for key, list in pairs(b.boxButtons) do
+		local box = (key == "hots" and b.boxes.hots) or (key == "bars" and b.boxes.bars) or b.boxes.debuffs
+		Add(("  groupe %s : boutons habillés %d, comptés par le jeu %s, premier %s"):format(key, #list,
+			Show(Call(box, "GetAuraGroupFrameCount", key)), Frame(Call(box, "GetAuraGroupFrame", key, 1))))
+	end
+	for key, button in pairs(b.slots) do Add("  place " .. key .. " : " .. Frame(button)) end
+	for method in pairs(logged) do Add("  erreur notée : " .. method) end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -121,73 +157,110 @@ function Z.LearnAuraId(name, id)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Habillage des boutons créés par le jeu. Chaque bouton reçoit ses textures une seule fois ;
--- les réglages (cercle, décompte, charges, fondu) sont repris à chaque changement d'options.
+-- Habillage des boutons créés par le jeu. Ce sont des objets protégés : leurs textures viennent toutes de
+-- Containers.xml. Lyorune ne les touche que pendant leur création (le jeu l'y autorise), ou plus tard quand
+-- le jeu répond qu'ils sont accessibles (CanBeAccessedInContext). Tout passe par Call : jamais d'erreur.
 ----------------------------------------------------------------------------------------------------
+-- Élément déclaré dans Containers.xml (nil s'il manque)
+local function Part(object, key)
+	return type(object) == "table" and object[key] or nil
+end
+
+local function Open(button)
+	return button ~= nil and Call(button, "CanBeAccessedInContext") == true
+end
+
 local function Silent(button)
 	Call(button, "EnableMouse", false) -- les clics vont à la case (clic-soin), jamais aux icônes
 	Call(button, "SetMouseClickEnabled", false)
 	Call(button, "SetMouseMotionEnabled", false)
 end
 
-local function NewCooldown(parent)
-	local cooldown = CreateFrame("Cooldown", nil, parent, "CooldownFrameTemplate")
-	cooldown:SetAllPoints()
-	cooldown:SetReverse(true)
-	cooldown:SetHideCountdownNumbers(true)
-	cooldown:SetDrawEdge(false)
-	return cooldown
+-- Réglages d'une icône : cercle, décompte, charges, voile de fin (seulement pour mes soins)
+local function StyleIcon(button, mine)
+	local db = Z.db
+	local cooldown = button.Cooldown
+	Call(cooldown, "SetDrawSwipe", not mine or db.hotSwipe)
+	Call(cooldown, "SetHideCountdownNumbers", not (mine and db.hotCountdown))
+	if mine and db.hotCountdown then Call(cooldown, "SetCountdownFont", "GameFontHighlightSmallOutline") end
+	Call(button.Texts, "SetAlpha", (not mine or db.hotCharges) and 1 or 0)
+	Call(button.Veil, "SetAlpha", (mine and db.hotFade) and 1 or 0)
 end
 
--- Icône d'aura : image, bordure, cercle de durée, charges ; mine = un de mes soins
+-- Icône d'aura ; mine = un de mes soins
 local function DressIcon(button, mine)
 	Silent(button)
-	local icon = button:CreateTexture(nil, "ARTWORK")
-	icon:SetAllPoints()
-	icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-	button.lyoBorder = UI.Border(button, 1, 1)
-	button.lyoCooldown = NewCooldown(button)
-	button.lyoCount = UI.Text(button.lyoBorder, 9, "OUTLINE")
-	button.lyoCount:SetPoint("BOTTOMRIGHT", 2, -2)
-	button.lyoMine = mine
-	Call(button, "SetIcon", icon)
-	Call(button, "SetDurationCooldown", button.lyoCooldown)
-	Call(button, "SetApplicationCount", button.lyoCount, {})
-	if mine then
-		-- Fin du soin : le jeu affiche ce voile pendant les derniers instants (réglage « hotFade »)
-		button.lyoVeil = button:CreateTexture(nil, "OVERLAY")
-		button.lyoVeil:SetAllPoints()
-		button.lyoVeil:SetColorTexture(0, 0, 0, 0.55)
-		Call(button, "AddPandemicRegion", button.lyoVeil)
-	end
+	Call(button.Texts, "SetFrameLevel", (Call(button.Cooldown, "GetFrameLevel") or 1) + 1)
+	Call(button, "SetIcon", button.Icon)
+	Call(button, "SetDurationCooldown", button.Cooldown)
+	Call(button, "SetApplicationCount", Part(button.Texts, "Count"), {})
+	-- Fin du soin : le jeu montre ce voile pendant les derniers instants (réglage « hotFade »)
+	if mine then Call(button, "AddPandemicRegion", button.Veil) end
+	StyleIcon(button, mine)
 end
 
-local function StyleIcon(button)
-	local db, mine = Z.db, button.lyoMine
-	local cooldown = button.lyoCooldown
-	cooldown:SetDrawSwipe(not mine or db.hotSwipe)
-	cooldown:SetHideCountdownNumbers(not (mine and db.hotCountdown))
-	if mine and db.hotCountdown and cooldown.SetCountdownFont and not button.lyoSmall then
-		button.lyoSmall = true
-		cooldown:SetCountdownFont("GameFontHighlightSmallOutline")
-	end
-	button.lyoCount:SetAlpha((not mine or db.hotCharges) and 1 or 0)
-	if button.lyoVeil then button.lyoVeil:SetAlpha(db.hotFade and 1 or 0) end
-end
-
--- Barre fine : elle se vide avec la durée restante, couleur selon son rang
+-- Barre fine : couleur selon son rang, largeur selon la case
 local function DressBar(button, index)
 	Silent(button)
-	local bar = CreateFrame("StatusBar", nil, button)
-	bar:SetPoint("TOPLEFT")
-	bar:SetHeight(3)
-	bar:SetStatusBarTexture(UI.WHITE)
-	local bg = UI.Tex(bar, "BACKGROUND", 0, 0, 0, 0.6)
-	bg:SetAllPoints()
 	local color = Z.BAR_COLORS[index] or Z.BAR_COLORS[1]
-	bar:SetStatusBarColor(color[1], color[2], color[3])
-	button.lyoBar = bar
-	Call(button, "SetDurationBar", bar, { direction = Enum.StatusBarTimerDirection and Enum.StatusBarTimerDirection.RemainingTime })
+	Call(button.Bar, "SetStatusBarColor", color[1], color[2], color[3])
+	Call(button.Bar, "SetWidth", math.floor(Z.CellSize() * 0.45))
+	Call(button, "SetDurationBar", button.Bar, { direction = Enum.StatusBarTimerDirection and Enum.StatusBarTimerDirection.RemainingTime })
+end
+
+-- Places fixes : position et taille, refaites à chaque changement d'options quand le jeu l'autorise
+local function PlaceCorner(b, button, point)
+	local size, sign = Z.CornerSize(b), Z.CORNER_SIGN[point]
+	Call(button, "SetSize", size, size)
+	Call(button, "ClearAllPoints")
+	Call(button, "SetPoint", point, b.boxes.slots, point, sign[1] * 2, sign[2] * 2)
+end
+
+local function PlaceBig(b, button)
+	local db = Z.db
+	local dx, dy = Z.Offset("big")
+	local big = math.floor((b.iconSize or 12) * 1.6 + 0.5)
+	Call(button, "SetAllPoints", b.boxes.slots)
+	Call(button.Face, "SetSize", big, big)
+	Call(button.Face, "ClearAllPoints")
+	Call(button.Face, "SetPoint", "LEFT", button, "LEFT", 3 + dx, dy)
+	Call(button.Face, "SetShown", db.bossDebuffs)
+	Call(button.Glow, "SetShown", db.importantGlow)
+end
+
+local function DressCorner(b, point)
+	return function(button)
+		Silent(button)
+		local color = Z.CORNER_COLORS[point]
+		Call(button.Fill, "SetVertexColor", color[1], color[2], color[3], 1)
+		Call(button, "SetDurationCooldown", button.Cooldown)
+		PlaceCorner(b, button, point)
+	end
+end
+
+local function DressDispel(b)
+	return function(button)
+		Silent(button)
+		Call(button, "SetAllPoints", b.boxes.slots)
+		local options = {
+			style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+			showWhenHarmful = true, showWhenHelpful = false,
+			customDispelColorCurve = Z.DispelCurve(),
+		}
+		for _, key in ipairs({ "Top", "Bottom", "Left", "Right", "Fill" }) do
+			Call(button, "AddDispelTypeTexture", button[key], options)
+		end
+	end
+end
+
+local function DressBig(b)
+	return function(button)
+		Silent(button)
+		Call(button, "SetIcon", Part(button.Face, "Icon"))
+		Call(button, "SetDurationCooldown", Part(button.Face, "Cooldown"))
+		Call(Part(button.Glow, "Pulse"), "Play")
+		PlaceBig(b, button)
+	end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -209,14 +282,14 @@ local function Flow(box, point, horizontal, vertical, axis)
 end
 
 -- Groupe d'auras : le jeu crée les boutons à la demande et les range lui-même
-local function Group(b, box, key, filter, max, index, width, height, dress)
+local function Group(b, box, key, filter, max, index, template, width, height, dress)
 	b.boxButtons[key] = {}
 	local made = 0
 	Call(box, "AddAuraGroup", key, filter, {
 		maxFrameCount = max,
 		sortMethod = AuraContainerSortMethod.Default,
 		sortDirection = AuraContainerSortDirection and AuraContainerSortDirection.Normal,
-		templateNames = { BUTTON },
+		templateNames = { template },
 		layout = { elementWidth = width, elementHeight = height, elementSpacing = SPACING, lineSpacing = SPACING, layoutIndex = index },
 		initializeFrame = function(button)
 			made = made + 1
@@ -227,82 +300,13 @@ local function Group(b, box, key, filter, max, index, width, height, dress)
 end
 
 -- Place fixe : un seul bouton, que Lyorune place lui-même
-local function Slot(b, key, filter, dress)
+local function Slot(b, key, filter, template, dress)
 	local button = Call(b.boxes.slots, "AddAuraSlot", key, filter, {
-		templateNames = { BUTTON },
+		templateNames = { template },
 		initializeFrame = function(button) dress(button) end,
 	})
 	b.slots[key] = button
 	return button
-end
-
-local function DressCorner(point)
-	return function(button)
-		Silent(button)
-		button.lyoFill = button:CreateTexture(nil, "ARTWORK")
-		button.lyoFill:SetAllPoints()
-		local color = Z.CORNER_COLORS[point]
-		button.lyoFill:SetColorTexture(color[1], color[2], color[3], 1)
-		local border = UI.Border(button, 1, 1)
-		border:SetColor(0, 0, 0, 1)
-		button.lyoCooldown = NewCooldown(button)
-		Call(button, "SetDurationCooldown", button.lyoCooldown)
-	end
-end
-
--- Bordure et voile de dissipation : le jeu leur donne la couleur du type (courbe de Lyorune)
-local function DressDispel(b)
-	return function(button)
-		Silent(button)
-		button:SetAllPoints(b.over)
-		local options = {
-			style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
-			showWhenHarmful = true, showWhenHelpful = false,
-			customDispelColorCurve = Z.DispelCurve(),
-		}
-		local border = UI.Border(button, 2)
-		border:SetRounded(true) -- crée l'image du contour arrondi, pour la confier au jeu elle aussi
-		border:SetRounded(Z.db.corners == "ROUND")
-		for i = 1, 4 do
-			border[i]:SetVertexColor(1, 1, 1, 1)
-			Call(button, "AddDispelTypeTexture", border[i], options)
-		end
-		Call(button, "AddDispelTypeTexture", border.round, options)
-		local fill = button:CreateTexture(nil, "BACKGROUND")
-		fill:SetAllPoints()
-		fill:SetColorTexture(1, 1, 1, 1)
-		fill:SetAlpha(0.18)
-		Call(button, "AddDispelTypeTexture", fill, options)
-		button.lyoBorder = border
-	end
-end
-
--- Affaiblissement important : grande icône à gauche, et contour lumineux qui pulse autour de la case
-local function DressImportant(b)
-	return function(button)
-		Silent(button)
-		button.lyoFace = CreateFrame("Frame", nil, button)
-		button.lyoFace:SetAllPoints()
-		local icon = button.lyoFace:CreateTexture(nil, "ARTWORK")
-		icon:SetAllPoints()
-		icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-		UI.Border(button.lyoFace, 1, 1)
-		local cooldown = NewCooldown(button.lyoFace)
-		Call(button, "SetIcon", icon)
-		Call(button, "SetDurationCooldown", cooldown)
-		local glow = CreateFrame("Frame", nil, button)
-		glow:SetAllPoints(b.over)
-		local border = UI.Border(glow, 2, 2)
-		border:SetColor(1, 0.82, 0.25, 1)
-		local pulse = border:CreateAnimationGroup()
-		pulse:SetLooping("BOUNCE")
-		local fade = pulse:CreateAnimation("Alpha")
-		fade:SetFromAlpha(1)
-		fade:SetToAlpha(0.3)
-		fade:SetDuration(0.6)
-		pulse:Play()
-		button.lyoGlow, button.lyoGlowBorder = glow, border
-	end
 end
 
 local function Build(b)
@@ -316,24 +320,25 @@ local function Build(b)
 		b.boxes = nil
 		return false
 	end
+	Call(boxes.slots, "SetAllPoints", b.over)
 	local DIR = AnchorUtil.FlowDirection
 	Flow(boxes.hots, "TOPLEFT", DIR.Right, DIR.Down)
 	Flow(boxes.bars, "TOPLEFT", DIR.Right, DIR.Down, AnchorUtil.FlowLayoutAxis.Vertical)
 	Flow(boxes.debuffs, "BOTTOMRIGHT", DIR.Left, DIR.Up)
 
-	Group(b, boxes.hots, "hots", "HELPFUL|PLAYER", MAX_HOTS, 1, BASE, BASE, function(button) DressIcon(button, true) StyleIcon(button) end)
-	Group(b, boxes.bars, "bars", "HELPFUL|PLAYER", MAX_HOTS, 1, 1, 3, function(button, index)
-		DressBar(button, index)
-		button.lyoBar:SetWidth(math.floor(Z.CellSize() * 0.45))
-	end)
+	Group(b, boxes.hots, "hots", "HELPFUL|PLAYER", MAX_HOTS, 1, "LyoruneAuraIcon", BASE, BASE,
+		function(button) DressIcon(button, true) end)
+	Group(b, boxes.bars, "bars", "HELPFUL|PLAYER", MAX_HOTS, 1, "LyoruneAuraBar", 1, 3, DressBar)
 	-- Celui que je peux dissiper d'abord, puis un autre (le total reste de deux, comme avant)
-	Group(b, boxes.debuffs, "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", 1, 1, BASE, BASE, function(button) DressIcon(button) StyleIcon(button) end)
-	Group(b, boxes.debuffs, "others", "HARMFUL", 1, 2, BASE, BASE, function(button) DressIcon(button) StyleIcon(button) end)
+	Group(b, boxes.debuffs, "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", 1, 1, "LyoruneAuraIcon", BASE, BASE,
+		function(button) DressIcon(button, false) end)
+	Group(b, boxes.debuffs, "others", "HARMFUL", 1, 2, "LyoruneAuraIcon", BASE, BASE,
+		function(button) DressIcon(button, false) end)
 
-	for _, point in ipairs(Z.CORNERS) do Slot(b, point, "HELPFUL|PLAYER", DressCorner(point)) end
-	Slot(b, "dispel", "HARMFUL|RAID_PLAYER_DISPELLABLE", DressDispel(b))
-	Slot(b, "boss", "HARMFUL", DressImportant(b))
-	Slot(b, "listed", "HARMFUL", DressImportant(b))
+	for _, point in ipairs(Z.CORNERS) do Slot(b, point, "HELPFUL|PLAYER", "LyoruneAuraSquare", DressCorner(b, point)) end
+	Slot(b, "dispel", "HARMFUL|RAID_PLAYER_DISPELLABLE", "LyoruneAuraCover", DressDispel(b))
+	Slot(b, "boss", "HARMFUL", "LyoruneAuraBig", DressBig(b))
+	Slot(b, "listed", "HARMFUL", "LyoruneAuraBig", DressBig(b))
 	return true
 end
 
@@ -342,9 +347,16 @@ end
 ----------------------------------------------------------------------------------------------------
 local function NilIfEmpty(set) if set and next(set) then return set end end
 
+-- Groupe coupé : aucune icône permise (le jeu ne connaît pas de filtre vide pour un groupe)
+local GROUP_MAX = { hots = MAX_HOTS, bars = MAX_HOTS, dispellable = 1, others = 1 }
 local function GroupFilter(box, key, filter, candidates)
+	if filter == "" then
+		Call(box, "SetAuraGroupMaxFrameCount", key, 0)
+		return
+	end
 	Call(box, "SetAuraGroupFilterString", key, filter)
 	Call(box, "SetAuraGroupCandidateFilters", key, candidates)
+	Call(box, "SetAuraGroupMaxFrameCount", key, GROUP_MAX[key])
 end
 
 local function SlotFilter(b, key, filter, candidates)
@@ -388,60 +400,44 @@ local function Place(b)
 	-- Les décalages d'une ancre sont dans l'échelle du conteneur : on les divise.
 	local dx, dy = Z.Offset("hots")
 	local x, y = 2 + Z.CornerShift(b, "TOPLEFT") + dx, -2 + dy
-	boxes.hots:SetScale(scale)
-	boxes.hots:ClearAllPoints()
-	boxes.hots:SetPoint("TOPLEFT", b.over, "TOPLEFT", x / scale, y / scale)
-	boxes.hots:SetSize(MAX_HOTS * (BASE + SPACING), BASE)
+	Call(boxes.hots, "SetScale", scale)
+	Call(boxes.hots, "ClearAllPoints")
+	Call(boxes.hots, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", x / scale, y / scale)
+	Call(boxes.hots, "SetSize", MAX_HOTS * (BASE + SPACING), BASE)
 
-	boxes.bars:ClearAllPoints()
-	boxes.bars:SetPoint("TOPLEFT", b.over, "TOPLEFT", 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy - 3)
-	boxes.bars:SetSize(math.floor(Z.CellSize() * 0.45), MAX_HOTS * 4)
+	Call(boxes.bars, "ClearAllPoints")
+	Call(boxes.bars, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy - 3)
+	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), MAX_HOTS * 4)
 
 	local bars = db.hotStyle == "BARS"
-	boxes.hots:SetShown(not bars)
-	boxes.bars:SetShown(bars)
+	Call(boxes.hots, "SetShown", not bars)
+	Call(boxes.bars, "SetShown", bars)
 
 	dx, dy = Z.Offset("debuffs")
 	x, y = -2 - Z.CornerShift(b, "BOTTOMRIGHT") + dx, 2 + dy
-	boxes.debuffs:SetScale(scale)
-	boxes.debuffs:ClearAllPoints()
-	boxes.debuffs:SetPoint("BOTTOMRIGHT", b.over, "BOTTOMRIGHT", x / scale, y / scale)
-	boxes.debuffs:SetSize(2 * (BASE + SPACING), BASE)
+	Call(boxes.debuffs, "SetScale", scale)
+	Call(boxes.debuffs, "ClearAllPoints")
+	Call(boxes.debuffs, "SetPoint", "BOTTOMRIGHT", b.over, "BOTTOMRIGHT", x / scale, y / scale)
+	Call(boxes.debuffs, "SetSize", 2 * (BASE + SPACING), BASE)
 
-	boxes.slots:SetAllPoints(b.over)
-	local cornerSize = Z.CornerSize(b)
+	-- Boutons déjà créés par le jeu : seulement s'il nous laisse y toucher (sinon, à la prochaine occasion)
 	for _, point in ipairs(Z.CORNERS) do
-		local square, sign = b.slots[point], Z.CORNER_SIGN[point]
-		if square then
-			square:SetSize(cornerSize, cornerSize)
-			square:ClearAllPoints()
-			square:SetPoint(point, b.over, point, sign[1] * 2, sign[2] * 2)
-		end
+		if Open(b.slots[point]) then PlaceCorner(b, b.slots[point], point) end
 	end
-
-	dx, dy = Z.Offset("big")
-	local big = math.floor(size * 1.6 + 0.5)
 	for _, key in ipairs({ "boss", "listed" }) do
-		local button = b.slots[key]
-		if button then
-			button:SetSize(big, big)
-			button:ClearAllPoints()
-			button:SetPoint("LEFT", b.over, "LEFT", 3 + dx, dy)
-			if button.lyoFace then
-				button.lyoFace:SetAlpha(db.bossDebuffs and 1 or 0)
-				button.lyoGlow:SetAlpha(db.importantGlow and 1 or 0)
-				button.lyoGlowBorder:SetRounded(db.corners == "ROUND")
-			end
+		if Open(b.slots[key]) then PlaceBig(b, b.slots[key]) end
+	end
+	for _, button in ipairs(b.boxButtons.hots or {}) do
+		if Open(button) then StyleIcon(button, true) end
+	end
+	for _, key in ipairs({ "dispellable", "others" }) do
+		for _, button in ipairs(b.boxButtons[key] or {}) do
+			if Open(button) then StyleIcon(button, false) end
 		end
 	end
-	local dispel = b.slots.dispel
-	if dispel and dispel.lyoBorder then dispel.lyoBorder:SetRounded(db.corners == "ROUND") end
-
-	for _, button in ipairs(b.boxButtons.hots or {}) do StyleIcon(button) end
-	for _, key in ipairs({ "dispellable", "others" }) do
-		for _, button in ipairs(b.boxButtons[key] or {}) do StyleIcon(button) end
+	for _, button in ipairs(b.boxButtons.bars or {}) do
+		if Open(button) then Call(button.Bar, "SetWidth", math.floor(Z.CellSize() * 0.45)) end
 	end
-	for _, button in ipairs(b.boxButtons.bars or {}) do button.lyoBar:SetWidth(math.floor(Z.CellSize() * 0.45)) end
 end
 
 local function EachBox(b, method, ...)
@@ -496,9 +492,9 @@ end
 function Z.ShowAuraBoxes(b, shown)
 	if not b.boxes then return end
 	if b.extra and shown then EachBox(b, "UpdateAllAuras") end
-	b.boxes.slots:SetShown(shown)
-	b.boxes.debuffs:SetShown(shown)
+	Call(b.boxes.slots, "SetShown", shown)
+	Call(b.boxes.debuffs, "SetShown", shown)
 	local bars = Z.db.hotStyle == "BARS"
-	b.boxes.hots:SetShown(shown and not bars)
-	b.boxes.bars:SetShown(shown and bars)
+	Call(b.boxes.hots, "SetShown", shown and not bars)
+	Call(b.boxes.bars, "SetShown", shown and bars)
 end
