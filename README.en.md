@@ -14,6 +14,7 @@
 
 <p align="center">
 <a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>Download</strong></a> ·
+<a href="https://www.curseforge.com/wow/addons/lyorune-healing">CurseForge</a> ·
 <a href="https://bellahealfr.github.io/Lyorune/en/">Website</a> ·
 <a href="docs/GUIDE.en.md">Player guide</a> ·
 <a href="docs/SIGNALER_UN_BUG.md#reporting-a-bug-english">Report a bug</a> ·
@@ -76,7 +77,7 @@ In game, hover the runes: they light up and their translation appears. If they d
 
 ## Installation
 
-1. Download the latest version from the [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest) page. It is the only official source (see [SECURITY.md](SECURITY.md)).
+1. Download the latest version from the [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest) page or from [CurseForge](https://www.curseforge.com/wow/addons/lyorune-healing) (project "Lyorune Healing", updated at the same time). These are the only two official sources (see [SECURITY.md](SECURITY.md)). With the CurseForge app, updates install on their own.
 2. Unzip it into `World of Warcraft\_forever_\Interface\AddOns\`. You should get a `Lyorune` folder.
 3. Start the game. A one-minute tutorial opens on first login, and off you go.
 

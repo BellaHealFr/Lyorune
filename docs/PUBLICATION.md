@@ -106,11 +106,12 @@ publication publique.
 
 Chaque fichier passe en revue (« Under Review ») avant d'être visible. Le support ne donne pas de délai.
 
-### État (18 novembre 2026)
+### État (20 novembre 2026)
 
 Projet **Lyorune Healing**, numéro **1815533** : seul le nom affiché sur CurseForge change, le dossier et l'addon
-restent `Lyorune`. Première version (1.24.0, WoW Forever 1.60.1, « Release ») envoyée à la main, en attente de
-modération.
+restent `Lyorune`. Projet **accepté** : les versions 1.24.0 et 1.25.0 (envoyées à la main) sont « Approved ».
+Description bilingue (anglais d'abord, puis français complet) et résumé à jour. `Lyorune.toc` porte
+`## X-Curse-Project-ID: 1815533` : l'envoi automatique ne manque plus que du secret `CF_API_KEY` (étape 2 ci-dessous).
 
 | Page | Adresse |
 |---|---|
@@ -148,8 +149,13 @@ Une fois le projet accepté, les nouvelles versions partent automatiquement :
 Sans automatisation, la mise à jour à la main reste possible : page « Fichiers », « Add File », archive de `dist/`,
 version « WoW Forever 1.60.1 », type « Release », notes de la version en anglais.
 
-La description du projet (onglet « Description » du portail) suit les changements de l'addon, comme le README :
-la mettre à jour à chaque nouveauté visible. Le texte de départ est dans `dist/curseforge/description.md`.
+La description du projet (onglet « Description » du portail, en Markdown) suit les changements de l'addon, comme le
+README : la mettre à jour à chaque nouveauté visible. Le texte est dans `dist/curseforge/description.md` : partie
+anglaise d'abord (exigée par CurseForge), puis la version française complète. Le résumé d'une ligne (onglet
+« General ») doit rester en anglais ; il précise que l'addon existe en français.
+
+Ce que voient les joueurs sur CurseForge : la description bilingue, et pour chaque version les notes de `RELEASE.md`
+(français puis anglais), envoyées par l'outil de publication avec l'archive.
 
 ### Plan
 

@@ -6,7 +6,7 @@ Seule la dernière version publiée de Lyorune reçoit des corrections.
 
 ## Où télécharger Lyorune
 
-La seule source officielle est la page du projet sur GitHub : https://github.com/BellaHealFr/Lyorune/releases/latest. Toute autre adresse, ou un fichier envoyé par un joueur, peut contenir une copie modifiée. Lyorune ne vous demandera jamais de télécharger quoi que ce soit ailleurs.
+Il n'y a que deux sources officielles, mises à jour en même temps : la page du projet sur GitHub (https://github.com/BellaHealFr/Lyorune/releases/latest) et la page CurseForge « Lyorune Healing » (https://www.curseforge.com/wow/addons/lyorune-healing), publiée par BellaDroode. Toute autre adresse, ou un fichier envoyé par un joueur, peut contenir une copie modifiée. Lyorune ne vous demandera jamais de télécharger quoi que ce soit ailleurs.
 
 ## Ce que fait Lyorune avec vos données
 
