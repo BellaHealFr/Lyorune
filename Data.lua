@@ -6,6 +6,7 @@
 -- AJOUTER UNE CLASSE (par exemple si WoW Forever en introduit une) : tout se passe dans ce fichier.
 --   1. Z.dispelSpells.MACLASSE  = { Magic = { id }, Curse = { id }, Disease = { id }, Poison = { id } }
 --   2. Z.trackedSpells.MACLASSE = { id, id, ... }      -- ses soins sur la durée et boucliers
+--      Z.spellRanks[id] = { id, id, ... }             -- leurs autres rangs, s'ils en ont (voir plus bas)
 --   3. Z.clickDefaults.MACLASSE = { ["1"] = { id }, ["shift-1"] = { id }, ... }
 --   4. Z.resSpells et Z.classRes : son sort de résurrection, s'il en a un
 --   5. Z.raidBuffs.MACLASSE : ses buffs de groupe, s'il en a
@@ -31,6 +32,19 @@ Z.trackedSpells = {
 	DRUID   = { 774, 8936, 408120, 2893 },             -- Récupération, Rétablissement, Croissance sauvage, Abolir le poison
 	PALADIN = { 1022, 6940, 1044, 19752 },             -- Bénédictions de protection, de sacrifice, de liberté, Intervention divine
 	SHAMAN  = { 22419, 408514 },                       -- Remous, Bouclier de terre
+}
+
+-- Autres rangs des sorts suivis : sur WoW Forever, chaque rang a son propre numéro, et les conteneurs d'auras
+-- du jeu (Containers.lua) ne montrent que les numéros donnés. Avec tous les rangs, un rang inférieur lancé
+-- exprès (macro) ou un rang appris en plein combat s'affiche aussitôt. Un numéro dont le nom, lu dans le jeu,
+-- n'est pas celui du sort est ignoré (Z:BuildData) : une erreur ici ne peut rien afficher de faux.
+Z.spellRanks = {
+	[139]  = { 6074, 6075, 6076, 6077, 6078, 10927, 10928, 10929, 25315 },     -- Rénovation
+	[17]   = { 592, 600, 3747, 6065, 6066, 10898, 10899, 10900, 10901 },      -- Mot de pouvoir : Bouclier
+	[774]  = { 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299 }, -- Récupération
+	[8936] = { 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 },              -- Rétablissement
+	[1022] = { 5599, 10278 },                                                  -- Bénédiction de protection
+	[6940] = { 20729 },                                                        -- Bénédiction de sacrifice
 }
 
 -- Clics proposés au premier lancement. Pour chaque case, le premier sort connu de la liste est retenu.
@@ -165,6 +179,19 @@ function Z:BuildData()
 	for _, id in ipairs(Z.trackedSpells[Z.class] or {}) do
 		local name = Z.SpellName(id)
 		if name then Z.trackedNames[name] = true end
+	end
+	-- Tous les rangs connus du jeu, rangés par nom : Z.rankIds["Récupération"] = { [774] = true, [1058] = true... }
+	Z.rankIds = {}
+	for base, ranks in pairs(Z.spellRanks) do
+		local name = Z.SpellName(base)
+		if name then
+			local set = Z.rankIds[name] or {}
+			set[base] = true
+			for _, id in ipairs(ranks) do
+				if Z.SpellName(id) == name then set[id] = true end
+			end
+			Z.rankIds[name] = set
+		end
 	end
 	-- Les conteneurs d'auras du jeu filtrent par numéro de sort : ils suivent les sorts de la classe
 	if Z.RefreshAuraBoxes then Z.RefreshAuraBoxes() end

@@ -2551,6 +2551,18 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     assert(slots.slots.dispel.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "bordure de dissipation")
     assert(slots.slots.boss.candidates.isBossAura == true, "grande icone : auras de boss")
     assert(debuffs.groups.dispellable.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "affaiblissement a dissiper en premier")
+    -- tous les rangs d'un sort suivi, verifies par leur nom dans le jeu
+    local oldName = C_Spell.GetSpellName
+    C_Spell.GetSpellName = function(id)
+      if id == 6074 then return "Rénovation" elseif id == 6075 then return "Autre sort" end
+      return oldName(id)
+    end
+    Z:BuildData() Z:Refresh()
+    C_Spell.GetSpellName = oldName
+    assert(b.boxes.hots.groups.hots.candidates.includeSpellIDs[6074], "rang 2 de Renovation absent")
+    assert(not b.boxes.hots.groups.hots.candidates.includeSpellIDs[6075], "numero au mauvais nom garde")
+    Z:BuildData() Z:Refresh()
+    hots, slots, debuffs = b.boxes.hots, b.boxes.slots, b.boxes.debuffs
     -- reglages inchanges : aucune reconstruction
     Z:Refresh()
     assert(b.boxes.hots == hots, "conteneurs refaits sans raison")

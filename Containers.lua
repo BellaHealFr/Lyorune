@@ -74,7 +74,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 -- Numéros de sorts. Le jeu filtre par numéro, Lyorune connaît des noms (réglages, listes).
--- Un nom donne : le nombre tapé par le joueur, le sort de mon grimoire, et les numéros vus sur les auras
+-- Un nom donne : le nombre tapé par le joueur, le sort de mon grimoire, tous ses rangs (Z.spellRanks), et les numéros vus sur les auras
 -- quand elles étaient lisibles (hors combat), gardés dans LyoruneDB.auraIds pour les sessions suivantes.
 ----------------------------------------------------------------------------------------------------
 local function Seen()
@@ -88,6 +88,7 @@ local function AddIds(set, name)
 	if number then set[number] = true return end
 	local info = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(name)
 	if type(info) == "table" and info.spellID then set[info.spellID] = true end
+	for id in pairs(Z.rankIds and Z.rankIds[name] or {}) do set[id] = true end -- tous les rangs (Data.lua)
 	local seen = Seen()[name]
 	if type(seen) == "table" then
 		for id in pairs(seen) do set[id] = true end
