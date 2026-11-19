@@ -33,6 +33,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 17 | 1.23.0 | Profils : copie d'une partie, profils JcJ | Publiée (v1.23.0) |
 | 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | Abandonnée (le jeu bloque les messages entre addons pendant un combat de boss) |
 | 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | Publiée (v1.23.8) |
+| 20 | 1.26.0 | Nouvelle fenêtre d'options : chapitres, case témoin, réglages changés, lumière de soin | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -216,6 +217,22 @@ Grille de chaque lot :
   posée par la page des formes ; la visite guidée laissait les cadres déverrouillés (1.23.8)
 
 Les boutons sécurisés ne sont pas simulés hors jeu : ce qui touche aux clics en combat reste à confirmer en jeu.
+
+## Étape 20 : nouvelle fenêtre d'options (1.26.0)
+Demande de l'auteur (20 novembre 2026) : une fenêtre d'options plus lisible et plus facile à régler, modernisée,
+avec un côté magique qui rappelle le soin. Le fonctionnement de l'addon ne change pas, ni aucun réglage : seule leur
+place change. La phrase en runes est gardée. Travail par lots, un lot par session, publié en une seule fois.
+- [ ] Barre latérale à 11 chapitres rangés par tâche (Accueil, Disposition, Apparence, Vie et portée, Mes soins,
+  Affaiblissements, Joueurs, Clics, Alertes, Profils et partage, Fenêtre et aide), une colonne qui défile
+- [ ] Réglages courants d'abord, « Réglages fins » repliables, réglages dépendants grisés, explication visible
+  sous le nom quand il ne suffit pas
+- [ ] Case témoin qui suit chaque réglage en direct, avec le faux groupe et le mode test à côté
+- [ ] Rune d'or sur chaque réglage changé (un clic le rétablit), liste des réglages changés dans l'Accueil,
+  « Rétablir cette page »
+- [ ] Recherche dans les noms et les explications, qui mène au réglage
+- [ ] Lumière de soin dans l'en-tête, rune du chapitre ouvert, étincelle sur la case témoin ; 3 thèmes, contraste
+  élevé, « Effets magiques » et « Animations réduites » respectés
+- [ ] Tutoriel, visite guidée et traduction anglaise à jour
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
