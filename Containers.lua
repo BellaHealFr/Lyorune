@@ -241,14 +241,19 @@ local function DressDispel(b)
 	return function(button)
 		Silent(button)
 		Call(button, "SetAllPoints", b.boxes.slots)
-		local options = {
-			style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
-			showWhenHarmful = true, showWhenHelpful = false,
-			customDispelColorCurve = Z.DispelCurve(),
-		}
-		for _, key in ipairs({ "Top", "Bottom", "Left", "Right", "Fill" }) do
-			Call(button, "AddDispelTypeTexture", button[key], options)
+		local function Options(veil)
+			return {
+				style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+				showWhenHarmful = true, showWhenHelpful = false,
+				customDispelColorCurve = Z.DispelCurve(veil),
+			}
 		end
+		local edge = Options(false)
+		for _, key in ipairs({ "Top", "Bottom", "Left", "Right" }) do
+			Call(button, "AddDispelTypeTexture", button[key], edge)
+		end
+		-- voile léger : la vie reste visible dessous (une opacité pleine cachait toute la barre)
+		Call(button, "AddDispelTypeTexture", button.Fill, Options(true))
 	end
 end
 

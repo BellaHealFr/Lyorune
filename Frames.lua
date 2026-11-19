@@ -758,7 +758,6 @@ function Z.BuildVisuals(b)
 	-- Voile léger de la couleur du type, posé SOUS le nom et la vie : ils restent toujours lisibles
 	b.dispel.fill = UI.Tex(over, "ARTWORK", 1, 1, 1, 1)
 	b.dispel.fill:SetAllPoints()
-	b.dispel.fill:SetAlpha(0.18)
 	b.dispel.fill:Hide()
 	b.selected = UI.Border(over, 1)
 	b.selected:SetColor(1, 1, 1, 1)
@@ -767,11 +766,14 @@ function Z.BuildVisuals(b)
 	b.hots, b.hotBars, b.debuffs = {}, {}, {}
 end
 
--- Dissipation possible : contour et voile de la couleur du type (shown = false : rien)
+-- Dissipation possible : contour et voile de la couleur du type (shown = false : rien).
+-- Sur une texture, SetVertexColor remplace aussi l'opacité : le voile reçoit donc la sienne ici,
+-- sinon il devient opaque et cache la vie.
 function Z.ShowDispel(b, shown, r, g, bl, a)
 	if shown then
 		b.dispel:SetColor(r, g, bl, a)
-		b.dispel.fill:SetVertexColor(r, g, bl, a)
+		-- couleur venue du jeu en donjon : son opacité peut être secrète (aucun calcul permis), elle vaut alors 1
+		b.dispel.fill:SetVertexColor(r, g, bl, issecret(a) and Z.DISPEL_VEIL or (a or 1) * Z.DISPEL_VEIL)
 	end
 	b.dispel:SetShown(shown)
 	b.dispel.fill:SetShown(shown)
@@ -1001,29 +1003,37 @@ local function CreateHandle(h, def)
 	handle.line:SetPoint("BOTTOMLEFT", 6, -1)
 	handle.line:SetPoint("BOTTOMRIGHT", -6, -1)
 	handle.line:SetHeight(1)
+	Z.MakeDragHandle(handle, def.pos, function() return h.labelText or "" end)
+	handle:Hide()
+	return handle
+end
+
+-- Rend un cadre (étiquette « Groupe », bandeau du mode test) capable de déplacer une position enregistrée,
+-- selon le verrou choisi (libre, verrouillé, ou avec Alt, Ctrl ou Maj). title() donne le titre de l'infobulle.
+function Z.MakeDragHandle(handle, pos, title)
 	handle:RegisterForDrag("LeftButton")
 	handle:SetScript("OnDragStart", function()
 		if InCombatLockdown() then return Z:Print(L["impossible de déplacer les cadres en combat."]) end
 		if not CanMove() then return end
-		local anchor = anchors[def.pos]
+		local anchor = anchors[pos]
 		anchor.moving = true
 		anchor:StartMoving()
 	end)
 	handle:SetScript("OnDragStop", function()
-		local anchor = anchors[def.pos]
+		local anchor = anchors[pos]
 		if not anchor.moving then return end -- glissement refusé : rien à arrêter
 		anchor.moving = false
 		if InCombatLockdown() then return end -- le combat a commencé pendant le glissement : le jeu a déjà figé le cadre
 		anchor:StopMovingOrSizing()
 		local point, _, _, x, y = anchor:GetPoint(1)
-		Z.char[def.pos] = { point, x, y }
+		Z.char[pos] = { point, x, y }
 	end)
 	handle:SetScript("OnMouseUp", function(_, button)
 		if button == "RightButton" then Z:ToggleOptions() end
 	end)
 	handle:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		GameTooltip:SetText(h.labelText or "", UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
+		GameTooltip:SetText(title(), UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
 		if db.lockMode == "FREE" then
 			GameTooltip:AddLine(L["Glisser : déplacer les cadres"], 1, 1, 1)
 		elseif MODIFIERS[db.lockMode] then
@@ -1033,8 +1043,6 @@ local function CreateHandle(h, def)
 		GameTooltip:Show()
 	end)
 	handle:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	handle:Hide()
-	return handle
 end
 
 local function CreateHeader(def)

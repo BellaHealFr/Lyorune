@@ -89,7 +89,7 @@
 		<AuraButton name="LyoruneAuraCover" inherits="CustomAuraButtonTemplate" virtual="true">
 			<Layers>
 				<Layer level="BACKGROUND">
-					<Texture parentKey="Fill" file="Interface\Buttons\WHITE8X8" setAllPoints="true" alpha="0.18" />
+					<Texture parentKey="Fill" file="Interface\Buttons\WHITE8X8" setAllPoints="true" />
 				</Layer>
 				<Layer level="OVERLAY">
 					<Texture parentKey="Top" file="Interface\Buttons\WHITE8X8">

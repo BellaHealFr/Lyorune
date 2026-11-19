@@ -48,6 +48,7 @@ function Obj:SetHeight(h) self._h = h end
 function Obj:GetWidth() return self._w end
 function Obj:GetHeight() return self._h end
 function Obj:GetStringHeight() return 60 end
+function Obj:GetStringWidth() return 120 end
 function Obj:GetFrameLevel() return 1 end
 function Obj:GetName() return self._name end
 function Obj:GetParent() return self._parent end
@@ -67,11 +68,13 @@ function Obj:StopMovingOrSizing() end
 function Obj:ClearFocus() end
 -- Couleurs, police et animations : notées pour que les tests puissent les vérifier
 function Obj:GetObjectType() return self._kind end
-function Obj:SetVertexColor(r, g, b, a) self._color = { r, g, b, a } end
+function Obj:SetVertexColor(r, g, b, a) self._color = { r, g, b, a } if a ~= nil then self._alpha = a end end -- comme le jeu : l'opacité de la couleur remplace celle de la texture
 function Obj:SetTextColor(r, g, b, a) self._color = { r, g, b, a } end
 function Obj:SetFont(file, size) self._font, self._size = file, size return true end
 function Obj:SetTexture(t) self._tex = t end
 function Obj:SetAlpha(a) self._alpha = a end
+function Obj:SetMinMaxValues(lo, hi) self._min, self._max = lo, hi end
+function Obj:SetValue(v) self._value = v end
 function Obj:GetAlpha() return self._alpha or 1 end
 function Obj:SetStatusBarColor(r, g, b, a) self._barColor = { r, g, b, a } end
 function Obj:SetBackdrop(b) self._backdrop = b end

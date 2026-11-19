@@ -85,7 +85,7 @@ local steps = {
 		title = "Essayer sans groupe",
 		text = "Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
-			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat.",
+			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Glissez son bandeau pour le déplacer ; le bouton |cff33dd88Fermer|r, au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat.",
 		target = function() return LyorunePreview end,
 		before = function() if not Z.previewActive then Z:TogglePreview(10) end end,
 		after = function() if Z.previewActive then Z:TogglePreview() end end,

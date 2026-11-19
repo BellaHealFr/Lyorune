@@ -335,7 +335,9 @@ Z.translations.enUS = {
 	["position déverrouillée : faites glisser une étiquette « Groupe »."] = "position unlocked: drag a \"Group\" label.",
 	["impossible de déplacer les cadres en combat."] = "frames cannot be moved in combat.",
 	["le mode test n'est pas disponible en combat."] = "test mode is not available in combat.",
-	["Mode test : faux groupe. /lyorune test pour quitter."] = "Test mode: fake group. /lyorune test to leave.",
+	["Mode test : faux groupe."] = "Test mode: fake group.",
+	["Fermer"] = "Close",
+	["Quitte le mode test et réaffiche vos vrais cadres. Clic droit sur le bouton de la mini-carte ou /lyorune test font de même."] = "Leaves test mode and shows your real frames again. Right-clicking the minimap button or /lyorune test does the same.",
 	[" affiche aussi des cadres de groupe. Les deux fonctionnent ensemble ; pour éviter les doublons, désactivez les cadres de groupe et de raid dans ses options."] = " also shows group frames. Both work together; to avoid duplicates, turn off its party and raid frames in its options.",
 
 	-- Visite guidée (les clés reprennent exactement les textes de Tutorial.lua)
@@ -371,8 +373,8 @@ Z.translations.enUS = {
 		"Drag the |cff33dd88Group|r label above the cells to move the frames wherever you like. In a raid, each group has its number, and any of them moves the whole set.\n\nOnce you are happy, pick \"Locked\" in \"Moving the frames\" (Frames tab), or \"With Alt\" to move them only while holding the key.\n\nIn the Frames tab, \"Show the frames\" lets you see them all the time, or only in combat.",
 	["Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
-			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Il se ferme tout seul en combat."] =
-		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. It closes by itself in combat.",
+			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Glissez son bandeau pour le déplacer ; le bouton |cff33dd88Fermer|r, au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat."] =
+		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. Drag its banner to move it; the |cff33dd88Close|r button at the end of the banner leaves it; it also closes by itself in combat.",
 	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
 			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
 			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"

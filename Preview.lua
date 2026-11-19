@@ -54,6 +54,9 @@ local function Fill(cell, index)
 	cell.incoming:SetValue((not dead and health < 90 and index % 2 == 0) and 15 or 0)
 	cell.absorb:SetMinMaxValues(0, 100)
 	cell.absorb:SetValue((not dead and index % 5 == 2) and 30 or 0)
+	-- Absorption de soins : bornes données, sinon le jeu dessine la barre pleine et teinte toute la case en rouge
+	cell.healAbsorb:SetMinMaxValues(0, 100)
+	cell.healAbsorb:SetValue(0)
 
 	-- Rôles : un tank et un soigneur par groupe de cinq
 	local slot = (index - 1) % 5
@@ -223,9 +226,19 @@ local function EnsureCells(count)
 		container:SetSize(10, 10)
 		container:SetPoint("TOPLEFT", Z.anchor, "BOTTOMLEFT", 0, -3)
 		container.panels = {}
-		container.label = UI.Text(container, 11)
-		container.label:SetPoint("BOTTOMLEFT", Z.anchor, "TOPLEFT", 0, 3)
+		-- Bandeau « Mode test » : il se fait glisser comme les étiquettes « Groupe » et déplace les vrais cadres
+		container.banner = CreateFrame("Frame", nil, container)
+		container.banner:SetPoint("BOTTOMLEFT", Z.anchor, "TOPLEFT", 0, 3)
+		container.banner:SetHeight(14)
+		container.label = UI.Text(container.banner, 11)
+		container.label:SetPoint("LEFT")
 		container.label:SetTextColor(UI.frameAccent[1], UI.frameAccent[2], UI.frameAccent[3])
+		Z.MakeDragHandle(container.banner, "pos", function() return Z.L["Mode test : faux groupe."] end)
+		-- Bouton pour quitter le mode test à la souris, au bout du bandeau
+		container.close = UI.Button(container, Z.L["Fermer"], 60, 18, Stop)
+		container.close:SetPoint("LEFT", container.label, "RIGHT", 8, 0)
+		container.close.label:SetJustifyH("CENTER")
+		container.close.tip = Z.L["Quitte le mode test et réaffiche vos vrais cadres. Clic droit sur le bouton de la mini-carte ou /lyorune test font de même."]
 		Z:On("PLAYER_REGEN_DISABLED", Stop)
 		container:Hide()
 	end
@@ -250,7 +263,9 @@ function Z:TogglePreview(wanted)
 	end
 	size = wanted or size
 	EnsureCells(size)
-	container.label:SetText(Z.L["Mode test : faux groupe. /lyorune test pour quitter."])
+	container.label:SetText(Z.L["Mode test : faux groupe."])
+	container.banner:SetWidth(container.label:GetStringWidth() + 2)
+	container.banner:EnableMouse(Z.db.lockMode ~= "LOCKED")
 	Z.previewActive = true
 	container:Show()
 	Z:Refresh() -- masque les vrais cadres et dessine les faux

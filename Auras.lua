@@ -37,7 +37,8 @@ end
 
 -- Couleur selon le type : 1 magie, 2 malédiction, 3 maladie, 4 poison. Le jeu fait la correspondance,
 -- ce qui fonctionne même quand le type est une valeur secrète.
-local dispelCurve
+local dispelCurve, veilCurve
+Z.DISPEL_VEIL = 0.18 -- opacité du voile de dissipation posé sur la vie (la vie reste visible dessous)
 
 local fadeCurve -- opacité d'une icône selon les secondes restantes : 1 jusqu'à 6 s, puis s'efface jusqu'à 0,3
 
@@ -48,20 +49,27 @@ local function BuildCurve()
 		fadeCurve:AddPoint(0, 0.3)
 		fadeCurve:AddPoint(6, 1)
 	end
-	dispelCurve = C_CurveUtil.CreateColorCurve()
-	dispelCurve:SetType(Enum.LuaCurveType.Step)
-	dispelCurve:AddPoint(0, CreateColor(0, 0, 0, 0))
-	dispelCurve:AddPoint(1, CreateColor(0.20, 0.60, 1.00, 1)) -- magie : bleu
-	dispelCurve:AddPoint(2, CreateColor(0.65, 0.20, 1.00, 1)) -- malédiction : violet
-	dispelCurve:AddPoint(3, CreateColor(0.75, 0.50, 0.10, 1)) -- maladie : brun
-	dispelCurve:AddPoint(4, CreateColor(0.10, 0.85, 0.20, 1)) -- poison : vert
-	dispelCurve:AddPoint(5, CreateColor(0, 0, 0, 0))
+	-- Le jeu pose la couleur ET l'opacité de la courbe sur la texture (son opacité propre est remplacée) :
+	-- le voile a donc sa propre courbe, aux mêmes couleurs mais presque transparente
+	local function Colors(alpha)
+		local curve = C_CurveUtil.CreateColorCurve()
+		curve:SetType(Enum.LuaCurveType.Step)
+		curve:AddPoint(0, CreateColor(0, 0, 0, 0))
+		curve:AddPoint(1, CreateColor(0.20, 0.60, 1.00, alpha)) -- magie : bleu
+		curve:AddPoint(2, CreateColor(0.65, 0.20, 1.00, alpha)) -- malédiction : violet
+		curve:AddPoint(3, CreateColor(0.75, 0.50, 0.10, alpha)) -- maladie : brun
+		curve:AddPoint(4, CreateColor(0.10, 0.85, 0.20, alpha)) -- poison : vert
+		curve:AddPoint(5, CreateColor(0, 0, 0, 0))
+		return curve
+	end
+	dispelCurve = Colors(1)
+	veilCurve = Colors(Z.DISPEL_VEIL)
 end
 
--- La même courbe sert aux conteneurs d'auras du jeu (Containers.lua)
-function Z.DispelCurve()
+-- Les mêmes courbes servent aux conteneurs d'auras du jeu (Containers.lua) : veil = true pour le voile
+function Z.DispelCurve(veil)
 	if not dispelCurve then BuildCurve() end
-	return dispelCurve
+	return veil and veilCurve or dispelCurve
 end
 
 ----------------------------------------------------------------------------------------------------

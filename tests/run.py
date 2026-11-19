@@ -1001,7 +1001,24 @@ step("etape 2 : cadres par groupe, etiquettes, verrou, position par personnage, 
   local cell = Z.buttons[1]
   Z.ShowDispel(cell, true, 0.2, 0.6, 1, 1)
   assert(cell.dispel:IsShown() and cell.dispel.fill:IsShown() and cell.dispel.fill:GetParent() == cell.over)
+  -- le voile reste leger : la couleur donnee a la texture remplace son opacite (bug des cases toutes vertes)
+  assert(cell.dispel.fill:GetAlpha() < 0.5, "voile de dissipation opaque : la vie est cachee")
+  Z.ShowDispel(cell, true, 0.2, 0.6, 1, MakeSecret()) assert(cell.dispel.fill:GetAlpha() < 0.5, "opacite secrete")
+  assert(Z.DispelCurve(true) ~= Z.DispelCurve(), "le voile des conteneurs doit avoir sa courbe transparente")
   Z.ShowDispel(cell, false) assert(not cell.dispel.fill:IsShown())
+  -- mode test : barre d'absorption de soins vide (sinon toute la case est teintee de rouge), bouton Fermer
+  Z:TogglePreview(10)
+  local fake = Z:PreviewCells(10)[1]
+  assert(fake.healAbsorb._value == 0 and fake.healAbsorb._max == 100, "absorption de soins du mode test sans bornes")
+  assert(LyorunePreview.close, "bouton Fermer du mode test absent")
+  -- le bandeau du mode test se fait glisser et deplace les vrais cadres (meme position enregistree)
+  local lockMode = Z.db.lockMode
+  Z.db.lockMode = "FREE" Z.char.pos = nil
+  LyorunePreview.banner:Run("OnDragStart") LyorunePreview.banner:Run("OnDragStop")
+  assert(Z.char.pos and Z.char.pos[1] == "CENTER", "bandeau du mode test non deplacable")
+  Z.db.lockMode = lockMode
+  LyorunePreview.close:Run("OnClick", "LeftButton")
+  assert(not Z.previewActive and not LyorunePreview:IsShown(), "le bouton Fermer doit quitter le mode test")
   -- mini-carte : meme gabarit que les autres boutons
   assert(LyoruneMinimapButton:GetWidth() == 31 and LyoruneMinimapButton.icon:GetWidth() == 18)
 end)

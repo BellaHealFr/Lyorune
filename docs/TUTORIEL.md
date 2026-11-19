@@ -180,7 +180,7 @@ Avec l'option « Le même clic relève un joueur mort » (onglet Clics, cochée 
 
 ## 6. Essayer sans groupe : le mode test
 
-Tapez `/lyorune test`, ou cliquez sur « 5 joueurs », « 10 joueurs », « 25 joueurs » ou « 40 joueurs » dans l'onglet Cadres. Un faux groupe apparaît, avec des blessés, des soins en route et des affaiblissements : réglez l'apparence à votre goût, tout change en direct. Le mode test se ferme tout seul si un combat commence.
+Tapez `/lyorune test`, ou cliquez sur « 5 joueurs », « 10 joueurs », « 25 joueurs » ou « 40 joueurs » dans l'onglet Cadres. Un faux groupe apparaît, avec des blessés, des soins en route et des affaiblissements : réglez l'apparence à votre goût, tout change en direct. Faites glisser le bandeau « Mode test » pour déplacer le faux groupe : vos vrais cadres prendront la même place (même verrou que les étiquettes « Groupe »). Pour le quitter, cliquez sur « Fermer » au bout du bandeau « Mode test », au-dessus des cases (ou retapez `/lyorune test`). Il se ferme aussi tout seul si un combat commence.
 
 ## 7. Apparence
 
