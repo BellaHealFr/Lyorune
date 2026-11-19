@@ -2584,6 +2584,20 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     Z.UpdateAurasNow(b) Z.UpdateAurasNow(b)
     assert(sounds == 1, "son de dissipation : " .. sounds)
 
+    -- placement des elements : la grande icone (bouton protege) refait les conteneurs, la rangee de soins
+    -- (conteneur libre) se deplace sans reconstruction
+    local kept = b.boxes.slots
+    Z.SetOffset("big", 6, -3) Z:Refresh()
+    assert(b.boxes.slots ~= kept, "grande icone deplacee sans reconstruction")
+    kept = b.boxes.hots
+    Z.SetOffset("hots", 4, -2) Z:Refresh()
+    assert(b.boxes.hots == kept, "conteneur refait pour un simple deplacement")
+    Z.SetOffset("big", 0, 0) Z.SetOffset("hots", 0, 0) Z:Refresh()
+    -- reglage des icones (decompte) : applique par reconstruction
+    kept = b.boxes.hots
+    Z.db.hotCountdown = not Z.db.hotCountdown Z:Refresh()
+    assert(b.boxes.hots ~= kept, "decompte change sans reconstruction")
+    Z.db.hotCountdown = not Z.db.hotCountdown Z:Refresh()
     -- nombre d'icones regle par le joueur : conteneurs refaits hors combat
     Z.db.hotCount, Z.db.debuffCount = 6, 4 Z:Refresh()
     assert(b.boxes.hots.groups.hots.max == 6 and b.boxes.bars.groups.bars.max == 6, "nombre de soins non applique")

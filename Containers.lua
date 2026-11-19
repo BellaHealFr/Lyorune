@@ -275,7 +275,13 @@ local function NilIfEmpty(set) if set and next(set) then return set end end
 local function Plan(b)
 	local db = Z.db
 	local hots, corners, ignored, important = Wanted()
-	local plan = { size = b.iconSize or 12, groups = {}, slots = {} }
+	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place de la grande
+	-- icône, taille des coins, largeur des barres, réglages des icônes. Un changement reconstruit les conteneurs.
+	local bigX, bigY = Z.Offset("big")
+	local look = table.concat({ bigX, bigY, Z.CornerSize(b), math.floor(Z.CellSize() * 0.45),
+		tostring(db.hotSwipe), tostring(db.hotCountdown), tostring(db.hotFade), tostring(db.hotCharges),
+		tostring(db.bossDebuffs), tostring(db.importantGlow) }, ",")
+	local plan = { size = b.iconSize or 12, look = look, groups = {}, slots = {} }
 	local function Group(box, key, filter, candidates, max, index, template, dress)
 		table.insert(plan.groups, { box = box, key = key, filter = filter, candidates = candidates, max = max,
 			index = index, template = template, dress = dress })
@@ -325,7 +331,7 @@ local function Sorted(set)
 end
 
 local function Signature(plan)
-	local parts = { plan.size }
+	local parts = { plan.size, plan.look }
 	for _, list in ipairs({ plan.groups, plan.slots }) do
 		for _, entry in ipairs(list) do
 			local candidates = {}
