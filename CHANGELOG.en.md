@@ -6,6 +6,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.25.0] - 2026-11-19
+
+### Added
+
+- Healers' low mana: a drink icon on the frame of a healer running out of mana, even in combat (Indicators tab).
+- Shield as a band or after the health, with a bright line when it is larger than the missing health (Look tab).
+
+### Improved
+
+- Number of icons of your choice: 1 to 6 heals, 2 to 5 debuffs.
+- Every rank of your heals is recognised in combat, even a lower rank cast by macro.
+
+### Fixed
+
+- Heal and debuff icons shown again, in and out of combat, whatever the group size.
+- Name and health stay readable in front of aura icons; the big debuff icon follows its placement again.
+
 ## [1.24.0] - 2026-11-18
 
 ### Added
@@ -447,6 +464,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.25.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.13...v1.24.0
 [1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13
 [1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12

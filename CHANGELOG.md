@@ -6,6 +6,23 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.25.0] - 2026-11-19
+
+### Ajouté
+
+- Mana basse des soigneurs : une icône de boisson sur la case d'un soigneur à court de mana, même en combat (onglet Indicateurs).
+- Bouclier au choix en bande ou à la suite de la vie, avec un trait lumineux quand il dépasse la vie manquante (onglet Apparence).
+
+### Amélioré
+
+- Nombre d'icônes au choix : de 1 à 6 soins, de 2 à 5 affaiblissements.
+- Tous les rangs de vos soins sont reconnus en combat, même un rang inférieur lancé par macro.
+
+### Corrigé
+
+- Icônes de soins et d'affaiblissements de nouveau affichées, en combat comme hors combat, quelle que soit la taille du groupe.
+- Le nom et la vie restent lisibles devant les icônes d'auras ; la grande icône d'affaiblissement suit de nouveau son placement.
+
 ## [1.24.0] - 2026-11-18
 
 ### Ajouté
@@ -447,6 +464,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.25.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.13...v1.24.0
 [1.23.13]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.12...v1.23.13
 [1.23.12]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.11...v1.23.12

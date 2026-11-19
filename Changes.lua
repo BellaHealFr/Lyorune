@@ -8,6 +8,21 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.25.0", date = "2026-11-19",
+		added = {
+			"Mana basse des soigneurs : une icône de boisson sur la case d'un soigneur à court de mana, même en combat (onglet Indicateurs).",
+			"Bouclier au choix en bande ou à la suite de la vie, avec un trait lumineux quand il dépasse la vie manquante (onglet Apparence).",
+		},
+		improved = {
+			"Nombre d'icônes au choix : de 1 à 6 soins, de 2 à 5 affaiblissements.",
+			"Tous les rangs de vos soins sont reconnus en combat, même un rang inférieur lancé par macro.",
+		},
+		fixed = {
+			"Icônes de soins et d'affaiblissements de nouveau affichées, en combat comme hors combat, quelle que soit la taille du groupe.",
+			"Le nom et la vie restent lisibles devant les icônes d'auras ; la grande icône d'affaiblissement suit de nouveau son placement.",
+		},
+	},
+	{
 		version = "1.24.0", date = "2026-11-18",
 		added = {
 			"Annonce de mana remontée même quand le jeu cache votre mana (WoW Forever) : pendant que vous buvez, Lyorune note le moment où chacun de vos sorts redevient utilisable, en tire la vitesse de remontée et annonce quand votre mana atteint le seuil choisi.",

@@ -7,7 +7,7 @@ Lyorune shows the whole group or raid as frames and casts the healer's spells wi
 Main features:
 - Click casting: every mouse button, alone or with Shift, Ctrl, Alt, casts a chosen spell on a player's frame; a trinket can go with the spell.
 - Hover keys: a keyboard key, extra mouse button or wheel casts a spell on the hovered frame.
-- Everything at a glance: health, incoming heals, shields, heal absorbs, mana, heals over time, debuffs, boss private auras, threat, range in three levels, global cooldown, casting bar or ring.
+- Everything at a glance: health, incoming heals, shields, heal absorbs, mana, other healers' low mana, heals over time and debuffs (drawn by the game, visible in combat), boss private auras, threat, range in three levels, global cooldown, casting bar or ring.
 - Dispels: the frame lights up for magic, curse, disease or poison.
 - Resurrection on the same click on a dead player.
 - Missing buffs panel out of combat.
