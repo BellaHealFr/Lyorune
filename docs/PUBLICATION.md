@@ -111,7 +111,8 @@ Chaque fichier passe en revue (« Under Review ») avant d'être visible. Le sup
 Projet **Lyorune Healing**, numéro **1815533** : seul le nom affiché sur CurseForge change, le dossier et l'addon
 restent `Lyorune`. Projet **accepté** : les versions 1.24.0 et 1.25.0 (envoyées à la main) sont « Approved ».
 Description bilingue (anglais d'abord, puis français complet) et résumé à jour. `Lyorune.toc` porte
-`## X-Curse-Project-ID: 1815533` : l'envoi automatique ne manque plus que du secret `CF_API_KEY` (étape 2 ci-dessous).
+`## X-Curse-Project-ID: 1815533` et le secret `CF_API_KEY` est en place : chaque étiquette de version publie aussi sur
+CurseForge. À vérifier au premier envoi automatique (1.25.1) : version du jeu « 1.60.1 » sur la page « Files ».
 
 | Page | Adresse |
 |---|---|
