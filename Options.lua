@@ -1,27 +1,35 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - Options.lua : la fenêtre /lyorune.
--- Neuf onglets, un sujet par onglet, chaque réglage à un seul endroit :
---   Cadres       où et comment les cases sont rangées
---   Apparence    à quoi elles ressemblent
---   Indicateurs  ce qui s'affiche dessus
---   Soins        mes soins sur la durée (icônes, décompte, fondu) et les coins de la case
---   Listes       mes sorts à suivre, les affaiblissements à ignorer ou à mettre en avant
---   Clics        souris, touches au survol
---   Alertes      annonces dans le chat et sons
---   Profils      profils prêts à l'emploi, partage, réinitialisation
---   Aide         tutoriel, légende, journal, langue
--- Les onglets simples sont décrits par une liste (table TABS) : ajouter un réglage = ajouter une ligne.
--- La recherche (en haut à droite) retrouve un réglage par son nom.
+-- Une barre latérale de onze chapitres, un sujet par chapitre, chaque réglage à un seul endroit :
+--   Accueil             de quoi bien commencer
+--   Disposition         où et comment les cases sont rangées
+--   Apparence           à quoi elles ressemblent
+--   Vie et portée       barre de vie, barre de mana, portée
+--   Mes soins           mes soins sur la durée, les coins de la case, la recharge globale
+--   Affaiblissements    dissipation, icônes, importants, auras privées, listes
+--   Joueurs             rôle, menace, buffs, survol
+--   Clics               souris, touches au survol, macros
+--   Alertes             annonces dans le chat et sons
+--   Profils et partage  profils, partage, synchronisation
+--   Fenêtre et aide     cette fenêtre, la langue, l'aide
+-- Chaque chapitre est une page qui défile, décrite par une liste (Chapters) : ajouter un réglage = ajouter une
+-- ligne. Les réglages fins de chaque partie sont repliés sous « Réglages fins (n) ».
+-- La recherche (en haut à droite) retrouve un réglage par son nom ou son explication.
 
 local _, Z = ...
 local UI = Z.UI
 local L = Z.L
 
-local WIDTH, HEIGHT = 700, 650
-local COLUMN = 310          -- largeur d'une colonne de réglages
+local WIDTH, HEIGHT = 1080, 708
+local SIDE = 212            -- largeur de la barre latérale
+local HEAD = 58             -- en-tête : logo, titre, recherche
+local FOOT = 34             -- bas de la fenêtre : inscription runique
+local ROW = 520             -- largeur d'une ligne de réglage
+local FINE = 14             -- retrait des réglages fins
+local COLUMN = 310          -- largeur d'une colonne des pages dessinées à part (Clics, Alertes, Profils...)
 local window, picker
-local tabs
-local searchIndex = {}      -- { texte en minuscules, numéro d'onglet, élément, libellé }
+local chapters
+local searchIndex = {}      -- { text, more, chapter, widget, label, block } : nom, explications, chapitre, élément
 
 ----------------------------------------------------------------------------------------------------
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
@@ -38,8 +46,13 @@ local function Option(key)
 	end
 end
 
-local function Register(tabIndex, label, widget)
-	searchIndex[#searchIndex + 1] = { label:lower(), tabIndex, widget, label }
+-- Un réglage retrouvable par la recherche. page : la page du chapitre, ou un bloc dessiné à part (page.isBlock) ;
+-- more : ses explications (phrase visible et infobulle), cherchées aussi.
+local function Register(page, label, widget, more)
+	local entry = { text = label:lower(), more = (more or ""):lower(), chapter = page.tabIndex, widget = widget,
+		label = label, block = page.isBlock and page or nil }
+	searchIndex[#searchIndex + 1] = entry
+	return entry
 end
 
 local function Heading(parent, text)
@@ -57,7 +70,7 @@ end
 local function Note(parent, text, x, y, width)
 	local note = UI.Text(parent, 11)
 	note:SetPoint("TOPLEFT", x, y)
-	note:SetWidth(width or (WIDTH - 48))
+	note:SetWidth(width or ROW)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)
 	UI.Paint(note, "dim")
@@ -70,6 +83,7 @@ local function Tip(widget, text)
 	local target = widget.button or widget
 	target.tip = L[text]
 	if target ~= widget.button and not target:GetScript("OnEnter") then
+		target:EnableMouse(true) -- choix côte à côte : la ligne entière montre l'aide
 		target:SetScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_TOP")
 			GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
@@ -80,68 +94,104 @@ local function Tip(widget, text)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Construction d'un onglet à partir de sa description
---   { "head", "Titre" }                       titre de section
---   { "check", cle, "Libellé", "aide" }       case à cocher
+-- Construction d'une ligne de réglage à partir de sa description
+--   { "head", "Titre" }                       titre (pages dessinées à part ; ailleurs, le titre de la partie)
+--   { "check", cle, "Libellé", "aide" }       interrupteur
+--   { "seg", cle, "Libellé", nil, "aide" }    choix côte à côte, 2 à 4 possibilités (liste dans Z.choices)
 --   { "step", cle, "Libellé" }                nombre (limites dans Z.limits)
---   { "cycle", cle, "Libellé", choix }        choix (liste dans Z.choices, ou fournie)
+--   { "cycle", cle, "Libellé", choix, "aide" } choix (liste dans Z.choices, ou fournie)
 --   { "button", "Libellé", fonction, "aide" } bouton
+--   { "buttons", { bouton, bouton... } }      boutons côte à côte (même description que « button »)
 --   { "note", "Texte", hauteur }              explication
 --   { "custom", fonction }                    élément dessiné à part : fonction(page) renvoie le cadre
+--   { "block", fonction, hauteur }            page dessinée à part en deux colonnes : fonction(bloc)
+-- Champs nommés, tous facultatifs :
+--   desc = "Phrase"     une phrase visible sous le nom, quand le nom ne suffit pas (l'aide reste en infobulle)
+--   fine = true         réglage fin : replié sous « Réglages fins (n) »
+--   dep = { cle, v }    réglage qui n'a d'effet que si le réglage cle vaut v ("!v" : tout sauf v)
 ----------------------------------------------------------------------------------------------------
-local function BuildItem(page, item)
+local function TranslatedChoices(list)
+	local choices = {}
+	for _, choice in ipairs(list) do choices[#choices + 1] = { choice[1], L[choice[2]] } end
+	return choices
+end
+
+local function Describe(widget, text, width)
+	local desc = UI.Label(widget, 11, nil, "dim")
+	desc:SetPoint("TOPLEFT", widget, "BOTTOMLEFT", 0, -1)
+	desc:SetWidth(width - 70)
+	desc:SetJustifyH("LEFT")
+	desc:SetSpacing(2)
+	desc:SetText(L[text])
+	widget.desc = desc
+end
+
+local function BuildButton(page, item)
+	local button = UI.Button(page, L[item[2]], item.width or 200, 24, item[3])
+	button.label:SetJustifyH("CENTER")
+	button.tip = item[4] and L[item[4]]
+	Register(page, L[item[2]], button, item[4] and L[item[4]])
+	return button
+end
+
+local function BuildItem(page, item, width)
 	local kind, widget = item[1], nil
+	width = width or COLUMN
+	local tip = item[(kind == "seg" or kind == "cycle") and 5 or 4]
+	local more = (item.desc and L[item.desc] or "") .. " " .. (type(tip) == "string" and L[tip] or "")
 	if kind == "head" then
 		widget = Heading(page, item[2])
 	elseif kind == "check" then
-		widget = UI.Check(page, L[item[3]], Option(item[2]))
+		widget = UI.Switch(page, L[item[3]], Option(item[2]))
 		Tip(widget, item[4])
-		Register(page.tabIndex, L[item[3]], widget)
+		Register(page, L[item[3]], widget, more).key = item[2]
+	elseif kind == "seg" then
+		widget = UI.Segmented(page, L[item[3]], TranslatedChoices(Z.choices[item[2]]), Option(item[2]))
+		Tip(widget, item[5])
+		Register(page, L[item[3]], widget, more).key = item[2]
 	elseif kind == "step" then
 		local limit = Z.limits[item[2]]
 		widget = UI.Stepper(page, L[item[3]], limit[1], limit[2], limit[3], Option(item[2]))
-		Register(page.tabIndex, L[item[3]], widget)
+		Register(page, L[item[3]], widget, more).key = item[2]
 	elseif kind == "cycle" then
-		local choices = {}
-		for _, choice in ipairs(item[4] or Z.choices[item[2]]) do choices[#choices + 1] = { choice[1], L[choice[2]] } end
-		widget = UI.Cycle(page, L[item[3]], choices, Option(item[2]))
+		widget = UI.Cycle(page, L[item[3]], TranslatedChoices(item[4] or Z.choices[item[2]]), Option(item[2]))
 		Tip(widget, item[5])
-		Register(page.tabIndex, L[item[3]], widget)
+		Register(page, L[item[3]], widget, more).key = item[2]
 	elseif kind == "button" then
-		widget = UI.Button(page, L[item[2]], 200, 24, item[3])
-		widget.label:SetJustifyH("CENTER")
-		widget.tip = item[4] and L[item[4]]
-		Register(page.tabIndex, L[item[2]], widget)
+		widget = BuildButton(page, item)
+	elseif kind == "buttons" then
+		widget = CreateFrame("Frame", nil, page)
+		widget:SetSize(width, 24)
+		widget.buttons = {}
+		local each = math.floor((width - 6 * (#item[2] - 1)) / #item[2])
+		for i, sub in ipairs(item[2]) do
+			sub.width = math.min(each, 160)
+			local button = BuildButton(page, sub)
+			button:SetParent(widget)
+			button:SetPoint("TOPLEFT", (i - 1) * (sub.width + 6), 0)
+			widget.buttons[i] = button
+		end
 	elseif kind == "note" then
 		widget = CreateFrame("Frame", nil, page)
-		widget:SetSize(COLUMN, item[3] or 30)
-		Note(widget, item[2], 0, 0, COLUMN)
+		widget:SetSize(width, item[3] or 30)
+		Note(widget, item[2], 0, 0, width)
 	elseif kind == "custom" then
 		widget = item[2](page)
+	elseif kind == "block" then
+		-- Page dessinée à part (Clics, Alertes, Profils...) : remise en une colonne avec les nouvelles briques au lot 3
+		widget = CreateFrame("Frame", nil, page)
+		widget:SetSize(2 * COLUMN + 32, item[3])
+		widget.tabIndex, widget.isBlock = page.tabIndex, true
+		item[2](widget)
+		return widget
 	end
-	if widget.SetWidth and kind ~= "button" then widget:SetWidth(COLUMN) end
+	if widget.SetWidth and kind ~= "button" then widget:SetWidth(width) end
+	if item.desc then Describe(widget, item.desc, width) end
 	return widget
 end
 
-local function BuildColumns(page, columns)
-	for index, column in ipairs(columns) do
-		local x, y = (index - 1) * (COLUMN + 32), 0
-		for _, item in ipairs(column) do
-			-- Un réglage qui échoue est noté au journal et ne cache pas les suivants
-			Z:Try("option " .. tostring(item[2]), function()
-				local widget = BuildItem(page, item)
-				widget:SetPoint("TOPLEFT", page, "TOPLEFT", x, y)
-				y = y - widget:GetHeight() - 7
-			end)
-		end
-		page.used = math.max(page.used or 0, -y) -- hauteur occupée par la plus longue colonne (contrôlée par les tests)
-		page.heights = page.heights or {}
-		page.heights[index] = -y
-	end
-end
-
 ----------------------------------------------------------------------------------------------------
--- Onglets décrits par une liste
+-- Chapitres décrits par une liste
 ----------------------------------------------------------------------------------------------------
 local function ThemeChoices()
 	local list = {}
@@ -159,10 +209,21 @@ local function PreviewButton(count)
 	return { "button", count .. " " .. L["joueurs"], function() Z:TogglePreview(count) end }
 end
 
--- Les valeurs affichées suivent un changement fait par un bouton
+-- Les valeurs affichées suivent un changement fait par un bouton : chaque ligne de la page ouverte se remet à
+-- jour, les pages dessinées à part se remplissent de nouveau
 local function RefreshShownPages()
-	for _, tab in ipairs(tabs) do
-		if tab.page and tab.page:IsShown() then tab.page:Hide() tab.page:Show() end
+	for _, chapter in ipairs(chapters or {}) do
+		local page = chapter.page
+		if page and page.scroll:IsShown() then
+			for _, part in ipairs(page.parts) do
+				local widget = part.widget
+				if widget.isBlock then
+					if widget:IsShown() then widget:Hide() widget:Show() end
+				elseif widget.Update then
+					widget:Update()
+				end
+			end
+		end
 	end
 end
 
@@ -320,7 +381,7 @@ local function ShapePicker(page)
 	picker.thumbs, picker.undo, picker.real = thumbs, undo, real
 	Z.shapePicker = picker
 	picker:Update()
-	Register(page.tabIndex, L["Forme des cases"], picker)
+	Register(page, L["Forme des cases"], picker).key = "shape"
 	return picker
 end
 
@@ -376,174 +437,13 @@ local function CornerPicker(point, label)
 		end)
 		local color = Z.CORNER_COLORS[point]
 		widget.label:SetTextColor(color[1], color[2], color[3])
-		Register(page.tabIndex, L[label], widget)
+		Register(page, L[label], widget)
 		return widget
 	end }
 end
 
-local function SimpleTabs()
-	return {
-		Cadres = {
-			{
-				{ "head", "Taille des cases" },
-				{ "step", "width", "Largeur" },
-				{ "step", "height", "Hauteur" },
-				{ "step", "spacing", "Espacement" },
-				{ "step", "scale", "Échelle générale (%)" },
-				{ "button", "Placer les éléments de la case...", function() Z:OpenPlacement() end, "Nom, texte de vie, icônes : décalez chaque élément au pixel près sur une case d'exemple agrandie." },
-				{ "check", "autoShrink", "Réduire les cases en grand raid", "Au-delà de 10 joueurs les cases rétrécissent de 15 %, au-delà de 25 de 30 %." },
-				{ "head", "Rangement" },
-				{ "cycle", "layout", "Rangement des joueurs", nil, "Par groupe : un bloc par groupe de raid. Par rôle : un bloc par rôle. Grille : tout le raid d'un seul tenant, sans trou entre les groupes." },
-				{ "cycle", "sortOrder", "Ordre dans chaque bloc", nil, "Le jeu tient l'ordre à jour tout seul, même en combat. En rangement par rôle, « par classe » range par nom." },
-				{ "cycle", "roleOrder", "Ordre des rôles", nil, "Utilisé quand le rangement est « Par rôle »." },
-				{ "check", "keepGroupPlace", "Chaque groupe garde sa place", "Rangement par groupe : le groupe 3 reste en 3e colonne même si le groupe 2 est vide. Décoché, les groupes se resserrent." },
-				{ "step", "gridSize", "Cases par colonne en grille" },
-				{ "cycle", "horizontal", "Sens des groupes" },
-				{ "head", "Position" },
-				{ "cycle", "lockMode", "Déplacement des cadres", nil, "Libre : glisser une étiquette « Groupe ». Verrouillé : rien ne bouge. Avec Alt, Ctrl ou Maj : maintenir la touche puis glisser. Jamais en combat." },
-				{ "check", "showGroupLabels", "Numéro de groupe au-dessus des cases", "« Groupe 1 » à « Groupe 8 » en raid, ou le rôle en rangement par rôle. Décoché, l'étiquette ne revient que pour déplacer les cadres." },
-				{ "button", "Remettre les cadres au centre", function() SlashCmdList.LYORUNE("reset") end },
-			},
-			{
-				{ "head", "Cadres affichés" },
-				{ "cycle", "visibility", "Afficher les cadres", nil, "En permanence (pratique pour se soigner en quête, en combat comme hors combat), ou seulement pendant les combats : les cadres apparaissent alors tout seuls au début du combat." },
-				{ "check", "showSolo", "Mon cadre quand je suis seul" },
-				{ "check", "showTanks", "Cadre séparé pour les tanks", "Un second cadre, déplaçable, qui ne montre que les tanks." },
-				{ "check", "showPets", "Cadre séparé pour les familiers" },
-				{ "check", "showTarget", "Case de ma cible", "Dans un petit cadre « Cible », déplaçable : mêmes clics et même apparence que les autres cases. Un ennemi est en rouge, sans icônes." },
-				{ "check", "showTargetTarget", "Case de la cible de ma cible", "Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change." },
-				{ "check", "showFocus", "Case de ma focalisation" },
-				{ "check", "showPinned", "Cadre des joueurs épinglés", "Un petit cadre « Épinglés » avec les joueurs de votre liste (onglet Listes), par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler." },
-				{ "head", "Mode test" },
-				{ "note", "Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer.", 30 },
-				PreviewButton(5), PreviewButton(10), PreviewButton(25), PreviewButton(40),
-			},
-		},
-		Apparence = {
-			{
-				{ "head", "Forme des cases" },
-				{ "custom", ShapePicker },
-				{ "cycle", "corners", "Angles des cases", nil, "Droits ou arrondis, pour toutes les formes et tous les thèmes." },
-				{ "check", "groupPanel", "Fond et bordure par groupe", "Chaque groupe (ou chaque rôle) est posé sur un fond aux couleurs du thème." },
-				{ "head", "Style" },
-				{ "cycle", "theme", "Thème", ThemeChoices() },
-				{ "cycle", "texture", "Texture des barres", TextureChoices() },
-				{ "check", "highContrast", "Contraste élevé", "Fond noir, bordure blanche, texte plus gros : pour une lecture facile. S'applique aussi aux fenêtres de Lyorune." },
-				{ "check", "smooth", "Barres animées" },
-				{ "cycle", "absorbStyle", "Place du bouclier", nil, "Bande en bas : un trait fin sous la vie. À la suite de la vie : comme les cadres du jeu, le bouclier prolonge la vie, et un trait lumineux s'allume au bout quand il dépasse la vie manquante." },
-				{ "head", "Texte" },
-				{ "cycle", "text", "Texte de vie" },
-				{ "step", "fontSize", "Taille du texte" },
-			},
-			{
-				{ "head", "Couleurs et transparence" },
-				{ "cycle", "color", "Couleur des barres" },
-				{ "cycle", "classIntensity", "Couleurs de classe", nil, "Naturelles : celles du jeu. Vives : plus franches et plus lumineuses, chaque classe garde sa teinte." },
-				{ "step", "brightness", "Luminosité des barres (%)" },
-				{ "step", "frameAlpha", "Opacité des cadres (%)" },
-				{ "step", "rangeAlpha", "Opacité hors de portée (%)" },
-				{ "check", "farHint", "Joueur très loin : empreintes", "Trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (plus de 100 mètres environ : case encore plus estompée, empreintes au centre)." },
-				{ "check", "losHint", "Soin refusé, hors de vue : un œil", "Quand le jeu refuse votre soin parce que le joueur est derrière un pilier ou un mur, un œil apparaît 3 secondes au centre de sa case." },
-				{ "head", "Préréglages de transparence" },
-				{ "note", "Un rendu en un clic, à ajuster ensuite avec les trois réglages ci-dessus.", 30 },
-				OpacityButton("Discret", 55, 25),
-				OpacityButton("Semi-transparent", 80, 35),
-				OpacityButton("Bien visible", 100, 45),
-				{ "head", "Fenêtres de Lyorune" },
-				{ "cycle", "windowTheme", "Thème des fenêtres", nil, "Options, visite guidée et petites fenêtres (pas les cases). Moderne : net, bleu givre et or. Classique : comme les fenêtres du jeu. MMORPG : pierre sombre, cadre doré et runes gravées." },
-				{ "check", "reduceMotion", "Animations réduites", "Seulement des fondus courts : runes fixes, logo immobile, rien ne bouge en boucle. La lueur au survol reste." },
-				{ "check", "magicEffects", "Effets magiques", "Cercle runique qui tourne derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change. Couleur du thème, jamais sur les cases de soin. Coupés par « Animations réduites »." },
-			},
-		},
-		Indicateurs = {
-			{
-				{ "head", "Vie et mana" },
-				{ "check", "showIncoming", "Soins en route" },
-				{ "check", "showAbsorb", "Bouclier d'absorption" },
-				{ "check", "showHealAbsorb", "Absorption de soins", "Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat." },
-				{ "check", "lowHealth", "Voile rouge clignotant quand la vie est basse" },
-				{ "step", "lowHealthAt", "Seuil de vie basse (%)" },
-				{ "cycle", "manaBars", "Barre de mana" },
-				{ "step", "powerHeight", "Hauteur de la barre de mana" },
-				{ "cycle", "manaColor", "Couleur de la barre de mana" },
-				{ "cycle", "lowManaHealers", "Mana basse des soigneurs", nil, "Une icône de boisson sur la case d'un soigneur dont la mana passe sous ce seuil. Le jeu la calcule lui-même : elle marche en combat, même quand la mana est cachée." },
-				{ "check", "manaPercent", "Pourcentage de mana dans la barre", "Le % de mana écrit au milieu de la barre, lisible en combat. La barre passe alors à 8 pixels de haut au moins." },
-				{ "head", "Joueur" },
-				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
-				{ "check", "showMarker", "Marqueur de raid" },
-				{ "check", "showLeader", "Chef de groupe et assistants", "Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid." },
-				{ "check", "showThreat", "Bordure rouge quand il est attaqué" },
-				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la barre de vie : jaune quand le joueur prend de la menace sur un monstre, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui." },
-				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte)." },
-			},
-			{
-				{ "head", "Affaiblissements" },
-				{ "check", "showDispel", "Cadre coloré quand je peux dissiper" },
-				{ "check", "showDebuffs", "Icônes des affaiblissements" },
-				{ "cycle", "debuffMode", "Affaiblissements affichés" },
-				{ "step", "debuffCount", "Nombre d'affaiblissements" },
-				{ "check", "bossDebuffs", "Affaiblissement important en grand", "Ceux des boss, et ceux de votre liste (onglet Listes)." },
-				{ "check", "importantGlow", "Contour lumineux si important", "La case s'entoure d'un contour doré qui pulse. Marche en combat pour les affaiblissements de boss : le jeu décide lui-même." },
-				{ "check", "importantSound", "Son pour ceux de ma liste", "Un son d'alerte quand un affaiblissement de la liste « À mettre en avant » est posé. En combat, le jeu cache souvent le nom des affaiblissements de boss : le son ne peut alors pas partir." },
-				{ "head", "Auras privées des boss" },
-				{ "check", "privateAuras", "Afficher les auras privées", "Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place choisie ici (deux au plus)." },
-				{ "step", "privateAuraSize", "Taille des auras privées" },
-				{ "cycle", "privateAuraPoint", "Place des auras privées" },
-				{ "head", "Au survol d'une case" },
-				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },
-				{ "check", "clickTooltip", "Mes clics dans l'infobulle", "Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro." },
-				{ "check", "pingCells", "Signal du jeu sur une case", "Survolez une case et appuyez sur la touche de signal du jeu : le joueur est marqué pour tout le groupe, sans viser son personnage." },
-			},
-		},
-		Soins = {
-			{
-				{ "head", "Mes soins sur la durée" },
-				{ "check", "showHots", "Mes soins sur la durée" },
-				{ "cycle", "hotStyle", "Affichage des soins sur la durée" },
-				{ "step", "hotCount", "Nombre de soins affichés" },
-				{ "note", "Sur les icônes, à combiner comme vous voulez :", 22 },
-				{ "check", "hotSwipe", "Cercle qui se vide", "Sur les icônes de vos soins : un voile tourne et découvre l'icône à mesure que le temps passe." },
-				{ "check", "hotCountdown", "Décompte en secondes", "Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat)." },
-				{ "check", "hotFade", "Icône qui s'efface à la fin", "Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer." },
-				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges." },
-				{ "head", "Buffs" },
-				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
-				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat." },
-				{ "head", "Temps de recharge global" },
-				{ "cycle", "castIndicator", "Recharge globale et incantation", nil, "Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat." },
-			},
-			{
-				{ "head", "Coins de la case" },
-				{ "note", "Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de l'onglet Listes.", 74 },
-				CornerPicker("TOPLEFT", "En haut à gauche"),
-				CornerPicker("TOPRIGHT", "En haut à droite"),
-				CornerPicker("BOTTOMLEFT", "En bas à gauche"),
-				CornerPicker("BOTTOMRIGHT", "En bas à droite"),
-				{ "note", "En combat, le jeu cache le nom des auras : Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.", 74 },
-			},
-		},
-	}
-end
-
--- Onglet où se règle un réglage (Cadres, Apparence, Indicateurs, Soins), lu dans la liste ci-dessus : la copie
--- d'une partie d'un profil s'en sert (Share.lua). Calculé une seule fois, au premier besoin.
-local settingTab
-function Z.TabOfSetting(key)
-	if not settingTab then
-		settingTab = {}
-		for name, columns in pairs(SimpleTabs()) do
-			for _, column in ipairs(columns) do
-				for _, item in ipairs(column) do
-					if item[1] == "check" or item[1] == "step" or item[1] == "cycle" then settingTab[item[2]] = name end
-				end
-			end
-		end
-	end
-	return settingTab[key]
-end
-
 ----------------------------------------------------------------------------------------------------
--- Onglet Listes : trois listes de noms de sorts
+-- Listes de sorts et de joueurs (chapitre Affaiblissements, en attendant leur place dans chaque chapitre)
 ----------------------------------------------------------------------------------------------------
 local function ListEditor(page, x, title, hint, key, clean)
 	local width = 151
@@ -584,7 +484,7 @@ local function ListEditor(page, x, title, hint, key, clean)
 		row.tip = L["Cliquez pour retirer de la liste."]
 		rows[i] = row
 	end
-	Register(page.tabIndex, L[title], edit)
+	Register(page, L[title], edit)
 	return Fill, rows
 end
 
@@ -611,7 +511,7 @@ local function BuildLists(page)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Onglet Clics
+-- Page des clics (chapitre Clics)
 ----------------------------------------------------------------------------------------------------
 local rows, barIcons = {}, {}
 local VISIBLE_ROWS = 13     -- lignes de raccourcis visibles ; la molette fait défiler les autres
@@ -953,8 +853,8 @@ local function BuildClicks(page)
 	add.label:SetJustifyH("CENTER")
 	add.tip = L["Cliquez, puis faites la combinaison voulue sur ce bouton : un clic (avec Alt, Ctrl, Maj...), une touche du clavier, un bouton de souris supplémentaire ou la molette. Échap : annuler."]
 	add:SetPoint("TOPLEFT", 0, -40)
-	Register(page.tabIndex, L["Ajouter un clic ou une touche"], add)
-	Register(page.tabIndex, L["Touches au survol"], add)
+	Register(page, L["Ajouter un clic ou une touche"], add)
+	Register(page, L["Touches au survol"], add)
 	page.add = add
 
 	-- Nouveau sort appris, sans aucun raccourci (option « newSpellAlert »)
@@ -1104,14 +1004,14 @@ local function BuildClicks(page)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Onglet Alertes
+-- Page des annonces et des sons (chapitre Alertes)
 ----------------------------------------------------------------------------------------------------
 local function BuildAlerts(page)
 	local edits = {}
 	local function Block(y, label, enableKey, textKey, thresholdKey, test)
 		local check = UI.Check(page, L[label], Option(enableKey))
 		check:SetPoint("TOPLEFT", 0, y)
-		Register(page.tabIndex, L[label], check)
+		Register(page, L[label], check)
 		if thresholdKey then
 			local limit = Z.limits[thresholdKey]
 			local stepper = UI.Stepper(page, L["Seuil (%)"], limit[1], limit[2], limit[3], Option(thresholdKey))
@@ -1162,9 +1062,9 @@ local function BuildAlerts(page)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Onglet Profils
+-- Page des profils et du partage (chapitre Profils et partage)
 ----------------------------------------------------------------------------------------------------
--- Fenêtre « Copier une partie » (#44) : de quel profil, vers lequel, et quelles parties (un onglet chacune)
+-- Fenêtre « Copier une partie » (#44) : de quel profil, vers lequel, et quelles parties (un chapitre chacune)
 local copyWindow
 local function OpenCopyWindow(onDone)
 	if copyWindow then
@@ -1172,7 +1072,7 @@ local function OpenCopyWindow(onDone)
 		copyWindow:Show()
 		return
 	end
-	local w = UI.Window("LyoruneProfileCopy", L["Copier une partie d'un profil"], 300, 270)
+	local w = UI.Window("LyoruneProfileCopy", L["Copier une partie d'un profil"], 320, 300)
 	w:SetFrameStrata("FULLSCREEN_DIALOG")
 	w.beside = true -- à côté des options, sans les recouvrir
 	tinsert(UISpecialFrames, "LyoruneProfileCopy")
@@ -1186,34 +1086,34 @@ local function OpenCopyWindow(onDone)
 	end
 	Fill(fromChoices) Fill(toChoices) -- jamais vides : le sélecteur affiche tout de suite un choix
 	w.from = UI.Cycle(w, L["De"], fromChoices, function() return from end, function(value) from = value end)
-	w.from:SetWidth(268)
+	w.from:SetWidth(288)
 	w.from:SetPoint("TOPLEFT", 16, -48)
 	w.to = UI.Cycle(w, L["Vers"], toChoices, function() return to end, function(value) to = value end)
-	w.to:SetWidth(268)
+	w.to:SetWidth(288)
 	w.to:SetPoint("TOPLEFT", 16, -78)
 	local hint = UI.Label(w, 11, nil, "dim")
 	hint:SetPoint("TOPLEFT", 16, -112)
-	hint:SetWidth(268)
+	hint:SetWidth(288)
 	hint:SetJustifyH("LEFT")
-	hint:SetText(L["Parties à copier : les réglages de l'onglet du même nom."])
+	hint:SetText(L["Parties à copier : les réglages du chapitre du même nom."])
 	w.parts = {}
 	for i, part in ipairs(Z.profileParts) do
 		local check = UI.Check(w, L[part], function() return parts[part] end, function(value) parts[part] = value or nil end)
-		check:SetWidth(130)
-		check:SetPoint("TOPLEFT", 16 + ((i - 1) % 2) * 136, -136 - math.floor((i - 1) / 2) * 26)
+		check:SetWidth(140)
+		check:SetPoint("TOPLEFT", 16 + ((i - 1) % 2) * 148, -136 - math.floor((i - 1) / 2) * 26)
 		w.parts[part] = check
 	end
 	local result = UI.Label(w, 11)
-	result:SetPoint("TOPLEFT", 16, -226)
-	result:SetWidth(268)
+	result:SetPoint("TOPLEFT", 16, -256)
+	result:SetWidth(288)
 	result:SetJustifyH("LEFT")
 	w.result = result
-	w.copy = UI.Button(w, L["Copier"], 268, 24, function()
+	w.copy = UI.Button(w, L["Copier"], 288, 24, function()
 		local ok, message = Z:CopyProfileParts(from, to, parts)
 		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
 		if ok and onDone then onDone() end
 	end)
-	w.copy:SetPoint("TOPLEFT", 16, -192)
+	w.copy:SetPoint("TOPLEFT", 16, -222)
 	w.copy.label:SetJustifyH("CENTER")
 	w.copy.tip = L["Le profil d'arrivée prend ces réglages ; ses autres parties ne changent pas. Si c'est le profil en cours, les cadres changent tout de suite."]
 	w:HookScript("OnShow", function()
@@ -1243,7 +1143,7 @@ local function BuildProfiles(page)
 	-- Colonne de gauche, 1 : mes profils (#24)
 	local mine = Heading(page, "Mes profils")
 	mine:SetPoint("TOPLEFT")
-	Register(page.tabIndex, L["Mes profils"], mine)
+	Register(page, L["Mes profils"], mine)
 	Note(page, "Vos réglages d'apparence, enregistrés sous un nom. Clics, macros, listes et annonces n'en font pas partie : ils ne changent jamais avec le profil.", 0, -30, COLUMN)
 
 	local choices, selected = { { false, L["(aucun)"] } }, false -- remplie par Refresh
@@ -1299,8 +1199,8 @@ local function BuildProfiles(page)
 	local copy = UI.Button(page, L["Copier..."], COLUMN - 212, 24, function() OpenCopyWindow(Refresh) end)
 	copy:SetPoint("TOPLEFT", 212, -94)
 	copy.label:SetJustifyH("CENTER")
-	copy.tip = L["Copier seulement une partie d'un profil vers un autre : Cadres, Apparence, Indicateurs ou Soins, au choix."]
-	Register(page.tabIndex, L["Copier une partie d'un profil"], copy)
+	copy.tip = L["Copier seulement une partie d'un profil vers un autre : un ou plusieurs chapitres, de Disposition à Joueurs."]
+	Register(page, L["Copier une partie d'un profil"], copy)
 	page.copyButton = copy
 
 	local name
@@ -1319,12 +1219,12 @@ local function BuildProfiles(page)
 	save:SetPoint("LEFT", name, "RIGHT", 6, 0)
 	save.label:SetJustifyH("CENTER")
 	save.tip = L["Tapez un nom, puis Enregistrer sous : vos réglages d'apparence du moment deviennent ce profil (nouveau, ou remplacé)."]
-	Register(page.tabIndex, L["Enregistrer sous"], save)
+	Register(page, L["Enregistrer sous"], save)
 
 	-- Colonne de gauche, 2 : profils automatiques, pour chaque taille de groupe et chaque spécialisation
 	local auto = Heading(page, "Profils automatiques")
 	auto:SetPoint("TOPLEFT", 0, -180)
-	Register(page.tabIndex, L["Profils automatiques"], auto)
+	Register(page, L["Profils automatiques"], auto)
 	local enable = BuildItem(page, { "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe, le champ de bataille ou l'arène, et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." })
 	enable:SetPoint("TOPLEFT", 0, -212)
 	-- Une ligne par situation (taille du groupe, champ de bataille, arène), une colonne par spécialisation
@@ -1385,7 +1285,7 @@ local function BuildProfiles(page)
 	-- Colonne de gauche, 3 : points de départ
 	local presets = Heading(page, "Profils prêts à l'emploi")
 	presets:SetPoint("TOPLEFT", 0, -408)
-	Register(page.tabIndex, L["Profils prêts à l'emploi"], presets)
+	Register(page, L["Profils prêts à l'emploi"], presets)
 	Note(page, "Taille et disposition seulement ; vos clics restent.", 0, -438, COLUMN)
 	for i, preset in ipairs(Z.presets) do
 		local button = UI.Button(page, L[preset[2]], 150, 24, function() Z:ApplyPreset(preset[1]) end)
@@ -1421,7 +1321,7 @@ local function BuildProfiles(page)
 	reset:SetPoint("TOPLEFT", right, -324)
 	reset.label:SetJustifyH("CENTER")
 	reset.tip = L["Remet tous les réglages d'origine. La position des cadres et vos profils enregistrés sont conservés."]
-	Register(page.tabIndex, L["Tout réinitialiser"], reset)
+	Register(page, L["Tout réinitialiser"], reset)
 	-- Sauvegarde avant import (#29) : grisé tant qu'aucun import n'a eu lieu
 	undo = UI.Button(page, L["Annuler l'import"], HALF, 24, function()
 		local ok, message = Z:UndoImport()
@@ -1431,7 +1331,7 @@ local function BuildProfiles(page)
 	undo:SetPoint("LEFT", reset, "RIGHT", 6, 0)
 	undo.label:SetJustifyH("CENTER")
 	undo.tip = L["Remet la configuration d'avant le dernier import (code collé ou configuration reçue). Aussi : /lyorune annuler."]
-	Register(page.tabIndex, L["Annuler l'import"], undo)
+	Register(page, L["Annuler l'import"], undo)
 
 	-- Entre joueurs (#29) : un interrupteur général, et sous lui chaque fonction, grisée quand il est coupé
 	local sync = Heading(page, "Entre joueurs")
@@ -1476,7 +1376,7 @@ local function BuildProfiles(page)
 	-- Colonne de droite : partage
 	local exportHead = Heading(page, "Donner ma configuration")
 	exportHead:SetPoint("TOPLEFT", right, 0)
-	Register(page.tabIndex, L["Donner ma configuration"], exportHead)
+	Register(page, L["Donner ma configuration"], exportHead)
 	Note(page, "Code à copier (Ctrl+C) et à envoyer : chuchotement, Discord...", right, -30, COLUMN)
 	local export = UI.Edit(page, COLUMN)
 	export:SetPoint("TOPLEFT", right, -52)
@@ -1500,7 +1400,7 @@ local function BuildProfiles(page)
 
 	local importHead = Heading(page, "Recevoir une configuration")
 	importHead:SetPoint("TOPLEFT", right, -140)
-	Register(page.tabIndex, L["Recevoir une configuration"], importHead)
+	Register(page, L["Recevoir une configuration"], importHead)
 	Note(page, "Collez le code reçu (Ctrl+V), puis Importer. Votre position à l'écran est conservée.", right, -170, COLUMN)
 	local import
 	local function DoImport()
@@ -1530,7 +1430,7 @@ local function BuildProfiles(page)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Onglet Aide
+-- Lire une case et commandes (chapitre Fenêtre et aide)
 ----------------------------------------------------------------------------------------------------
 local function BuildHelp(page)
 	local legend = {
@@ -1574,119 +1474,367 @@ local function BuildHelp(page)
 	end
 	Commands()
 	UI.OnSkin(Commands)
+end
 
-	local items = {
-		{ "head", "Découvrir" },
-		{ "button", "Lancer le tutoriel", function() window:Hide() Z:StartTutorial() end },
-		{ "button", "Assistant de départ", function() window:Hide() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." },
-		{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
-		{ "check", "showNews", "Montrer les nouveautés après une mise à jour" },
-		{ "head", "Autour de Lyorune" },
-		{ "check", "minimapButton", "Bouton sur la mini-carte", "Clic gauche : options. Clic droit : mode test. Faites-le glisser pour le déplacer." },
-		{ "check", "showRunes", "Inscription runique au bas de cette fenêtre", "Passez la souris sur les runes pour lire leur traduction." },
-		{ "head", "Performances" },
-		{ "check", "perfMode", "Mode performance", "Pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde au lieu de deux, icônes des soins et des affaiblissements regroupées (un dixième de seconde de retard au plus). Rien ne disparaît. Peut être gardé dans un profil de raid." },
-		{ "button", "Mesurer les performances", function() Z:ShowMeasure() end, "Fait tourner Lyorune sur un faux groupe de 5, 25 et 40 joueurs, et compare sa mémoire et son temps aux autres addons de soin chargés. Hors combat. Aussi : /lyorune mesure." },
-		{ "head", "Un souci ?" },
-		{ "button", "Signaler un bug", function() Z:ShowBug() end, "Trois questions, et un rapport prêt à copier. Fonctionne aussi pour un défaut d'affichage." },
-		{ "button", "Journal d'erreurs", function() Z:ShowLog() end, "Le journal note chaque erreur avec son contexte. Copiez-le pour obtenir de l'aide." },
-		{ "check", "errorNotice", "Me prévenir quand Lyorune rencontre une erreur", "Un seul message discret par session, jamais de fenêtre." },
-		{ "head", "Langue" },
-		{ "cycle", "language", "Langue de Lyorune", nil, "Le changement s'applique après /reload." },
+----------------------------------------------------------------------------------------------------
+-- Les chapitres : nom, rune de l'atlas (1 à 24, ordre de outils/runes.py), phrase sous le titre, anciens noms
+-- d'onglet encore acceptés (Z:ToggleOptions("Clics") du tutoriel), parties { titre, lignes }.
+-- Les pages dessinées à part (Clics, Alertes, Profils, listes, légende) y sont posées telles quelles en attendant
+-- d'être remises en une colonne.
+----------------------------------------------------------------------------------------------------
+local function Chapters()
+	return {
+		{ name = "Accueil", rune = 19, intro = "Votre profil, vos réglages changés et de quoi bien commencer.", sections = {
+			{ "Découvrir", {
+				{ "button", "Lancer le tutoriel", function() window:Hide() Z:StartTutorial() end },
+				{ "button", "Assistant de départ", function() window:Hide() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." },
+				{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
+			} },
+		} },
+		{ name = "Disposition", rune = 5, old = { "Cadres" }, intro = "Où et comment les cases sont rangées à l'écran.", sections = {
+			{ "Taille des cases", {
+				{ "step", "width", "Largeur" },
+				{ "step", "height", "Hauteur" },
+				{ "step", "scale", "Échelle générale (%)" },
+				{ "button", "Placer les éléments de la case...", function() Z:OpenPlacement() end, "Nom, texte de vie, icônes : décalez chaque élément au pixel près sur une case d'exemple agrandie." },
+				{ "step", "spacing", "Espacement", fine = true },
+				{ "check", "autoShrink", "Réduire les cases en grand raid", desc = "Au-delà de 10 joueurs les cases rétrécissent de 15 %, au-delà de 25 de 30 %.", fine = true },
+			} },
+			{ "Rangement", {
+				{ "seg", "layout", "Rangement des joueurs", nil, "Par groupe : un bloc par groupe de raid. Par rôle : un bloc par rôle. Grille : tout le raid d'un seul tenant, sans trou entre les groupes." },
+				{ "cycle", "sortOrder", "Ordre dans chaque bloc", nil, "Le jeu tient l'ordre à jour tout seul, même en combat. En rangement par rôle, « par classe » range par nom." },
+				{ "cycle", "roleOrder", "Ordre des rôles", desc = "Utilisé quand le rangement est « Par rôle ».", fine = true, dep = { "layout", "ROLE" } },
+				{ "check", "keepGroupPlace", "Chaque groupe garde sa place", "Rangement par groupe : le groupe 3 reste en 3e colonne même si le groupe 2 est vide. Décoché, les groupes se resserrent.", fine = true, dep = { "layout", "GROUP" } },
+				{ "step", "gridSize", "Cases par colonne en grille", fine = true, dep = { "layout", "GRID" } },
+				{ "seg", "horizontal", "Sens des groupes", fine = true },
+			} },
+			{ "Position", {
+				{ "cycle", "lockMode", "Déplacement des cadres", nil, "Libre : glisser une étiquette « Groupe ». Verrouillé : rien ne bouge. Avec Alt, Ctrl ou Maj : maintenir la touche puis glisser. Jamais en combat.", desc = "Jamais en combat." },
+				{ "check", "showGroupLabels", "Numéro de groupe au-dessus des cases", "« Groupe 1 » à « Groupe 8 » en raid, ou le rôle en rangement par rôle. Décoché, l'étiquette ne revient que pour déplacer les cadres." },
+				{ "button", "Remettre les cadres au centre", function() SlashCmdList.LYORUNE("reset") end },
+			} },
+			{ "Cadres affichés", {
+				{ "seg", "visibility", "Afficher les cadres", nil, "En permanence (pratique pour se soigner en quête, en combat comme hors combat), ou seulement pendant les combats : les cadres apparaissent alors tout seuls au début du combat." },
+				{ "check", "showSolo", "Mon cadre quand je suis seul" },
+				{ "check", "showTanks", "Cadre séparé pour les tanks", desc = "Un second cadre, déplaçable, qui ne montre que les tanks." },
+				{ "check", "showTarget", "Case de ma cible", "Dans un petit cadre « Cible », déplaçable : mêmes clics et même apparence que les autres cases. Un ennemi est en rouge, sans icônes." },
+				{ "check", "showPets", "Cadre séparé pour les familiers", fine = true },
+				{ "check", "showTargetTarget", "Case de la cible de ma cible", "Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change.", fine = true },
+				{ "check", "showFocus", "Case de ma focalisation", fine = true },
+				{ "check", "showPinned", "Cadre des joueurs épinglés", "Un petit cadre « Épinglés » avec les joueurs de votre liste (onglet Listes), par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler.", desc = "Pour épingler : survolez une case et tapez /lyorune epingler.", fine = true },
+			} },
+			{ "Mode test", {
+				{ "note", "Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer.", 22 },
+				{ "buttons", { PreviewButton(5), PreviewButton(10), PreviewButton(25), PreviewButton(40) } },
+			} },
+		} },
+		{ name = "Apparence", rune = 14, intro = "À quoi ressemblent les cases.", sections = {
+			{ "Forme des cases", {
+				{ "custom", ShapePicker },
+				{ "seg", "corners", "Angles des cases", nil, "Droits ou arrondis, pour toutes les formes et tous les thèmes." },
+				{ "check", "groupPanel", "Fond et bordure par groupe", "Chaque groupe (ou chaque rôle) est posé sur un fond aux couleurs du thème.", fine = true },
+			} },
+			{ "Style", {
+				{ "cycle", "theme", "Thème", ThemeChoices() },
+				{ "check", "highContrast", "Contraste élevé", "Fond noir, bordure blanche, texte plus gros : pour une lecture facile. S'applique aussi aux fenêtres de Lyorune.", desc = "Fond noir, bordure blanche, texte plus gros." },
+				{ "cycle", "texture", "Texture des barres", TextureChoices(), fine = true },
+				{ "check", "smooth", "Barres animées", fine = true },
+			} },
+			{ "Couleurs et transparence", {
+				{ "seg", "color", "Couleur des barres" },
+				{ "seg", "classIntensity", "Couleurs de classe", nil, "Naturelles : celles du jeu. Vives : plus franches et plus lumineuses, chaque classe garde sa teinte.", dep = { "color", "CLASS" } },
+				{ "step", "frameAlpha", "Opacité des cadres (%)" },
+				{ "step", "rangeAlpha", "Opacité hors de portée (%)" },
+				{ "step", "brightness", "Luminosité des barres (%)", fine = true },
+				{ "note", "Un rendu en un clic, à ajuster ensuite avec les trois réglages ci-dessus.", 22, fine = true },
+				{ "buttons", { OpacityButton("Discret", 55, 25), OpacityButton("Semi-transparent", 80, 35), OpacityButton("Bien visible", 100, 45) }, fine = true },
+			} },
+			{ "Texte", {
+				{ "seg", "text", "Texte de vie" },
+				{ "step", "fontSize", "Taille du texte" },
+			} },
+		} },
+		{ name = "Vie et portée", rune = 16, old = { "Indicateurs" }, intro = "Ce que la barre de vie et la barre de mana vous disent.", sections = {
+			{ "Vie", {
+				{ "check", "showIncoming", "Soins en route", desc = "La part de vie que les soins en cours vont rendre." },
+				{ "check", "showAbsorb", "Bouclier d'absorption" },
+				{ "seg", "absorbStyle", "Place du bouclier", nil, "Bande en bas : un trait fin sous la vie. À la suite de la vie : comme les cadres du jeu, le bouclier prolonge la vie, et un trait lumineux s'allume au bout quand il dépasse la vie manquante.", dep = { "showAbsorb", true } },
+				{ "check", "lowHealth", "Voile rouge clignotant quand la vie est basse" },
+				{ "step", "lowHealthAt", "Seuil de vie basse (%)", fine = true, dep = { "lowHealth", true } },
+				{ "check", "showHealAbsorb", "Absorption de soins", "Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat.", desc = "Bande rouge sombre : la part qu'un affaiblissement mange avant vos soins.", fine = true },
+			} },
+			{ "Mana", {
+				{ "seg", "manaBars", "Barre de mana" },
+				{ "cycle", "lowManaHealers", "Mana basse des soigneurs", nil, "Une icône de boisson sur la case d'un soigneur dont la mana passe sous ce seuil. Le jeu la calcule lui-même : elle marche en combat, même quand la mana est cachée.", desc = "Une icône de boisson, même en combat." },
+				{ "step", "powerHeight", "Hauteur de la barre de mana", fine = true, dep = { "manaBars", "!OFF" } },
+				{ "cycle", "manaColor", "Couleur de la barre de mana", fine = true, dep = { "manaBars", "!OFF" } },
+				{ "check", "manaPercent", "Pourcentage de mana dans la barre", "Le % de mana écrit au milieu de la barre, lisible en combat. La barre passe alors à 8 pixels de haut au moins.", fine = true, dep = { "manaBars", "!OFF" } },
+			} },
+			{ "Portée", {
+				{ "check", "farHint", "Joueur très loin : empreintes", "Trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (plus de 100 mètres environ : case encore plus estompée, empreintes au centre).", desc = "Au-delà de 100 mètres environ, la case s'estompe encore et montre des empreintes." },
+				{ "check", "losHint", "Soin refusé, hors de vue : un œil", "Quand le jeu refuse votre soin parce que le joueur est derrière un pilier ou un mur, un œil apparaît 3 secondes au centre de sa case." },
+			} },
+		} },
+		{ name = "Mes soins", rune = 23, old = { "Soins" }, intro = "Ce que vous voyez de vos soins posés sur les joueurs.", sections = {
+			{ "Mes soins sur la durée", {
+				{ "check", "showHots", "Mes soins sur la durée" },
+				{ "seg", "hotStyle", "Affichage des soins sur la durée", dep = { "showHots", true } },
+				{ "step", "hotCount", "Nombre de soins affichés", dep = { "showHots", true } },
+				{ "check", "hotSwipe", "Cercle qui se vide", "Sur les icônes de vos soins : un voile tourne et découvre l'icône à mesure que le temps passe.", fine = true, dep = { "showHots", true } },
+				{ "check", "hotCountdown", "Décompte en secondes", "Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat).", fine = true, dep = { "showHots", true } },
+				{ "check", "hotFade", "Icône qui s'efface à la fin", "Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer.", fine = true, dep = { "showHots", true } },
+				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges.", fine = true, dep = { "showHots", true } },
+			} },
+			{ "Coins de la case", {
+				{ "note", "Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de l'onglet Listes.", 46 },
+				CornerPicker("TOPLEFT", "En haut à gauche"),
+				CornerPicker("TOPRIGHT", "En haut à droite"),
+				CornerPicker("BOTTOMLEFT", "En bas à gauche"),
+				CornerPicker("BOTTOMRIGHT", "En bas à droite"),
+				{ "note", "En combat, le jeu cache le nom des auras : Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.", 46, fine = true },
+			} },
+			{ "Temps de recharge global", {
+				{ "cycle", "castIndicator", "Recharge globale et incantation", nil, "Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat." },
+			} },
+		} },
+		{ name = "Affaiblissements", rune = 3, old = { "Listes" }, intro = "Les affaiblissements à voir, à dissiper ou à surveiller.", sections = {
+			{ "Dissipation", {
+				{ "check", "showDispel", "Cadre coloré quand je peux dissiper", desc = "Bleu magie, violet malédiction, vert poison, brun maladie." },
+			} },
+			{ "Icônes", {
+				{ "check", "showDebuffs", "Icônes des affaiblissements" },
+				{ "seg", "debuffMode", "Affaiblissements affichés", dep = { "showDebuffs", true } },
+				{ "step", "debuffCount", "Nombre d'affaiblissements", fine = true, dep = { "showDebuffs", true } },
+			} },
+			{ "Importants", {
+				{ "check", "bossDebuffs", "Affaiblissement important en grand", "Ceux des boss, et ceux de votre liste (onglet Listes)." },
+				{ "check", "importantGlow", "Contour lumineux si important", "La case s'entoure d'un contour doré qui pulse. Marche en combat pour les affaiblissements de boss : le jeu décide lui-même." },
+				{ "check", "importantSound", "Son pour ceux de ma liste", "Un son d'alerte quand un affaiblissement de la liste « À mettre en avant » est posé. En combat, le jeu cache souvent le nom des affaiblissements de boss : le son ne peut alors pas partir.", fine = true },
+			} },
+			{ "Auras privées des boss", {
+				{ "check", "privateAuras", "Afficher les auras privées", "Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place choisie ici (deux au plus).", desc = "Le jeu les dessine lui-même sur la case." },
+				{ "step", "privateAuraSize", "Taille des auras privées", fine = true, dep = { "privateAuras", true } },
+				{ "cycle", "privateAuraPoint", "Place des auras privées", fine = true, dep = { "privateAuras", true } },
+			} },
+			{ "Listes", {
+				{ "block", BuildLists, 420 },
+			} },
+		} },
+		{ name = "Joueurs", rune = 18, intro = "Qui est qui dans le groupe, et ce qui leur manque.", sections = {
+			{ "Sur la case", {
+				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
+				{ "check", "showMarker", "Marqueur de raid" },
+				{ "check", "showLeader", "Chef de groupe et assistants", desc = "Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid." },
+				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte).", fine = true },
+			} },
+			{ "Menace", {
+				{ "check", "showThreat", "Bordure rouge quand il est attaqué" },
+				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la barre de vie : jaune quand le joueur prend de la menace sur un monstre, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui.", fine = true },
+			} },
+			{ "Buffs", {
+				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", desc = "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
+				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat." },
+			} },
+			{ "Au survol d'une case", {
+				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },
+				{ "check", "clickTooltip", "Mes clics dans l'infobulle", "Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro.", fine = true },
+				{ "check", "pingCells", "Signal du jeu sur une case", "Survolez une case et appuyez sur la touche de signal du jeu : le joueur est marqué pour tout le groupe, sans viser son personnage.", fine = true },
+			} },
+		} },
+		{ name = "Clics", rune = 1, intro = "Un clic sur une case, un sort lancé.", sections = {
+			{ nil, { { "block", BuildClicks, 520 } } },
+		} },
+		{ name = "Alertes", rune = 4, intro = "Annonces dans le chat et sons.", sections = {
+			{ nil, { { "block", BuildAlerts, 420 } } },
+		} },
+		{ name = "Profils et partage", rune = 20, old = { "Profils" }, intro = "Vos profils, le partage avec vos amis et la synchronisation.", sections = {
+			{ nil, { { "block", BuildProfiles, 540 } } },
+		} },
+		{ name = "Fenêtre et aide", rune = 21, old = { "Aide" }, intro = "Cette fenêtre, la langue, et de l'aide si besoin.", sections = {
+			{ "Fenêtres de Lyorune", {
+				{ "seg", "windowTheme", "Thème des fenêtres", nil, "Options, visite guidée et petites fenêtres (pas les cases). Moderne : net, bleu givre et or. Classique : comme les fenêtres du jeu. MMORPG : pierre sombre, cadre doré et runes gravées.", desc = "Options, visite guidée et petites fenêtres (pas les cases)." },
+				{ "check", "magicEffects", "Effets magiques", "Cercle runique qui tourne derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change. Couleur du thème, jamais sur les cases de soin. Coupés par « Animations réduites ».", desc = "Lumière dans l'en-tête, cercle runique, étincelle quand un réglage change." },
+				{ "check", "reduceMotion", "Animations réduites", "Seulement des fondus courts : runes fixes, logo immobile, rien ne bouge en boucle. La lueur au survol reste." },
+				{ "check", "showRunes", "Inscription runique au bas de cette fenêtre", "Passez la souris sur les runes pour lire leur traduction." },
+				{ "check", "minimapButton", "Bouton sur la mini-carte", "Clic gauche : options. Clic droit : mode test. Faites-le glisser pour le déplacer.", fine = true },
+				{ "cycle", "language", "Langue de Lyorune", desc = "Le changement s'applique après /reload.", fine = true },
+			} },
+			{ "Aide", {
+				{ "check", "showNews", "Montrer les nouveautés après une mise à jour" },
+				{ "buttons", {
+					{ "button", "Signaler un bug", function() Z:ShowBug() end, "Trois questions, et un rapport prêt à copier. Fonctionne aussi pour un défaut d'affichage." },
+					{ "button", "Journal d'erreurs", function() Z:ShowLog() end, "Le journal note chaque erreur avec son contexte. Copiez-le pour obtenir de l'aide." },
+				} },
+				{ "check", "errorNotice", "Me prévenir quand Lyorune rencontre une erreur", desc = "Un seul message discret par session, jamais de fenêtre.", fine = true },
+				{ "check", "perfMode", "Mode performance", "Pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde au lieu de deux, icônes des soins et des affaiblissements regroupées (un dixième de seconde de retard au plus). Rien ne disparaît. Peut être gardé dans un profil de raid.", fine = true },
+				{ "button", "Mesurer les performances", function() Z:ShowMeasure() end, "Fait tourner Lyorune sur un faux groupe de 5, 25 et 40 joueurs, et compare sa mémoire et son temps aux autres addons de soin chargés. Hors combat. Aussi : /lyorune mesure.", fine = true },
+			} },
+			{ nil, { { "block", BuildHelp, 490 } } },
+		} },
 	}
-	local y = 0
-	for _, item in ipairs(items) do
-		local widget = BuildItem(page, item)
-		widget:SetPoint("TOPLEFT", COLUMN + 32, y)
-		y = y - widget:GetHeight() - 7
+end
+
+-- Chapitre où se règle un réglage, lu dans la liste ci-dessus : la copie d'une partie d'un profil s'en sert
+-- (Share.lua). Calculé une seule fois, au premier besoin.
+local settingChapter
+function Z.TabOfSetting(key)
+	if not settingChapter then
+		settingChapter = {}
+		for _, chapter in ipairs(Chapters()) do
+			for _, section in ipairs(chapter.sections) do
+				for _, item in ipairs(section[2]) do
+					local kind = item[1]
+					if kind == "check" or kind == "seg" or kind == "step" or kind == "cycle" then settingChapter[item[2]] = chapter.name end
+				end
+			end
+		end
 	end
+	return settingChapter[key]
 end
 
 ----------------------------------------------------------------------------------------------------
--- Fenêtre, onglets et recherche
+-- Fenêtre, barre latérale, pages qui défilent et recherche
 ----------------------------------------------------------------------------------------------------
-local function BuildPage(index)
-	local tab = tabs[index]
-	if tab.page then return end
-	tab.page = CreateFrame("Frame", nil, window)
-	tab.page:SetPoint("TOPLEFT", 24, -92)
-	tab.page:SetPoint("BOTTOMRIGHT", -24, 30)
-	tab.page.tabIndex = index
-	tab.page:Hide()
-	if tab.columns then
-		BuildColumns(tab.page, tab.columns)
-	else
-		Z:Try("onglet " .. tab.name, tab.build, tab.page)
+-- Un chapitre par son nom, ou par l'ancien nom de son onglet
+local function ChapterIndex(name)
+	for i, chapter in ipairs(chapters) do
+		if chapter.name == name then return i end
+		for _, old in ipairs(chapter.old or {}) do
+			if old == name then return i end
+		end
 	end
 end
 
--- Barre lumineuse sous l'onglet actif : elle glisse de l'ancien onglet au nouveau (0,2 s)
-local function MoveIndicator(index)
-	local bar, from = window.indicator, window.indicator.index
-	bar.slide:Stop()
-	bar.index = index
-	local start = tabs[from or index].button
-	bar:ClearAllPoints()
-	bar:SetPoint("TOPLEFT", start, "BOTTOMLEFT", 0, -1)
-	bar:SetPoint("TOPRIGHT", start, "BOTTOMRIGHT", 0, -1)
-	if from and from ~= index and not UI.Calm() and window:IsShown() then
-		bar.move:SetOffset((index - from) * window.tabStep, 0)
-		bar.slide:Play()
-	else
-		bar.slide:GetScript("OnFinished")()
+-- Hauteur d'une ligne : l'élément, et sa phrase d'explication dessous
+local function PartHeight(part)
+	local widget = part.widget
+	return widget:GetHeight() + (widget.desc and widget.desc:GetStringHeight() + 3 or 0)
+end
+
+-- Range la page de haut en bas ; les réglages fins d'une partie repliée sont cachés
+local function Layout(page)
+	local y = page.top
+	for _, part in ipairs(page.parts) do
+		local shown = not part.fold or part.fold:IsOpen()
+		part.widget:SetShown(shown)
+		if shown then
+			y = y - (part.before or 0)
+			part.widget:ClearAllPoints()
+			part.widget:SetPoint("TOPLEFT", page.content, "TOPLEFT", part.fold and FINE or 0, y)
+			part.y = -y
+			y = y - PartHeight(part) - 8
+		end
 	end
+	page.used = -y -- hauteur occupée (contrôlée par les tests)
+	page.scroll:SetContentHeight(-y + 12)
+end
+
+-- Page d'un chapitre, construite à sa première ouverture
+local function BuildChapter(index)
+	local chapter = chapters[index]
+	if chapter.page then return chapter.page end
+	local scroll = UI.Scroll(window)
+	scroll:SetPoint("TOPLEFT", SIDE + 28, -HEAD - 10)
+	scroll:SetPoint("BOTTOMRIGHT", -18, FOOT)
+	scroll:Hide()
+	local content = scroll.content
+	content.tabIndex = index
+	local page = { scroll = scroll, content = content, parts = {}, blocks = {}, top = -64 }
+	chapter.page = page
+
+	-- En-tête : la rune du chapitre, son nom, une phrase
+	page.rune = UI.Paint(UI.Rune(content, "ARTWORK", chapter.rune, 30), "gold")
+	page.rune:SetPoint("TOPLEFT", 2, -4)
+	page.title = UI.Title(content, 20)
+	page.title:SetPoint("TOPLEFT", 46, -2)
+	page.title:SetText(L[chapter.name])
+	page.intro = UI.Label(content, 12, nil, "dim")
+	page.intro:SetPoint("TOPLEFT", 46, -30)
+	page.intro:SetText(L[chapter.intro])
+
+	for s, section in ipairs(chapter.sections) do
+		if section[1] then
+			local head = Heading(content, section[1])
+			head:SetWidth(ROW)
+			page.parts[#page.parts + 1] = { widget = head, before = s > 1 and 14 or 0 }
+		end
+		local fine = {}
+		for _, item in ipairs(section[2]) do
+			-- Un réglage qui échoue est noté au journal et ne cache pas les suivants
+			Z:Try("option " .. tostring(type(item[2]) == "string" and item[2] or item[1]), function()
+				local widget = BuildItem(content, item, item.fine and ROW - FINE or ROW)
+				local part = { widget = widget, item = item }
+				widget.part = part
+				if widget.isBlock then page.blocks[#page.blocks + 1] = widget end
+				if item.fine then fine[#fine + 1] = part else page.parts[#page.parts + 1] = part end
+			end)
+		end
+		if #fine > 0 then
+			local fold = UI.Fold(content, chapter.name .. "." .. s, #fine, function() Layout(page) end)
+			fold:SetWidth(ROW)
+			page.parts[#page.parts + 1] = { widget = fold }
+			for _, part in ipairs(fine) do
+				part.fold = fold
+				page.parts[#page.parts + 1] = part
+			end
+		end
+	end
+	Layout(page)
+	return page
+end
+
+-- La page entre en fondu en montant de 6 pixels (0,2 s) ; simple fondu en animations réduites
+local function Enter(scroll)
+	if not scroll.enter then
+		scroll.enter = scroll:CreateAnimationGroup()
+		scroll.drop = scroll.enter:CreateAnimation("Translation")
+		scroll.drop:SetDuration(0)
+		scroll.drop:SetOrder(1)
+		scroll.rise = scroll.enter:CreateAnimation("Translation")
+		scroll.rise:SetDuration(0.2)
+		scroll.rise:SetSmoothing("OUT")
+		scroll.rise:SetOrder(2)
+		scroll.fade = UI.AlphaAnim(scroll.enter, 0, 1, 0.2, "OUT", 2)
+	end
+	local calm = UI.Calm()
+	scroll.drop:SetOffset(0, calm and 0 or -6)
+	scroll.rise:SetOffset(0, calm and 0 or 6)
+	scroll.fade:SetDuration(calm and 0.15 or 0.2)
+	scroll.enter:Stop()
+	scroll.enter:Play()
 end
 
 local current
+-- Ouvre un chapitre, par son numéro ou son nom (Z:ToggleOptions("Clics")). Le chapitre ouvert est retenu pour
+-- la prochaine ouverture de la fenêtre.
 local function Select(index, quiet)
-	if type(index) == "string" then -- par nom : Z:ToggleOptions("Clics")
-		for i, tab in ipairs(tabs) do
-			if tab.name == index then index = i end
-		end
-		if type(index) == "string" then index = 1 end
-	end
-	BuildPage(index)
+	if type(index) == "string" then index = ChapterIndex(index) or 1 end
+	if not chapters[index] then index = 1 end
+	local page = BuildChapter(index)
 	local changed = current ~= index
 	current = index
-	for i, tab in ipairs(tabs) do
-		if tab.page then tab.page:SetShown(i == index) end
-		tab.button.bg:SetVertexColor(unpack(i == index and UI.line or UI.panel))
-		tab.button.label:SetTextColor(unpack(i == index and UI.accent or UI.btext))
-		UI.SetTab(tab.button, i == index) -- image d'onglet (normal ou actif) en Classique et MMORPG
-	end
-	-- La barre lumineuse appartient au thème Moderne : les onglets texturés montrent eux-mêmes l'actif
-	local kit = UI.Kit()
-	window.indicator:SetShown(kit == "MODERN" or kit == "FLAT")
-	MoveIndicator(index)
-	-- La page entre en fondu en montant de 6 pixels (0,2 s) ; simple fondu en animations réduites
-	local page = tabs[index].page
-	if changed and not quiet then
-		if not page.enter then
-			page.enter = page:CreateAnimationGroup()
-			page.drop = page.enter:CreateAnimation("Translation")
-			page.drop:SetDuration(0)
-			page.drop:SetOrder(1)
-			page.rise = page.enter:CreateAnimation("Translation")
-			page.rise:SetDuration(0.2)
-			page.rise:SetSmoothing("OUT")
-			page.rise:SetOrder(2)
-			page.fade = UI.AlphaAnim(page.enter, 0, 1, 0.2, "OUT", 2)
+	if Z.char then Z.char.optionChapter = chapters[index].name end
+	for i, chapter in ipairs(chapters) do
+		local other = chapter.page
+		if other and i ~= index then
+			for _, block in ipairs(other.blocks) do block:Hide() end
+			other.scroll:Hide()
 		end
-		local calm = UI.Calm()
-		page.drop:SetOffset(0, calm and 0 or -6)
-		page.rise:SetOffset(0, calm and 0 or 6)
-		page.fade:SetDuration(calm and 0.15 or 0.2)
-		page.enter:Stop()
-		page.enter:Play()
+		chapter.button:SetActive(i == index)
 	end
+	page.scroll:Show()
+	for _, block in ipairs(page.blocks) do block:Show() end -- une page dessinée à part se remplit à l'affichage
+	if changed and not quiet then Enter(page.scroll) end
 	if picker then picker:Hide() end
+	return page
 end
 
--- Recherche : liste les réglages dont le nom contient le texte tapé ; un clic y mène
+-- Recherche : les réglages dont le nom contient le texte tapé, puis ceux dont l'explication le contient. Un clic
+-- ouvre le chapitre, déplie les réglages fins si besoin, fait défiler jusqu'au réglage et le fait clignoter.
 local function BuildSearch()
 	local results = CreateFrame("Frame", nil, window)
 	results:SetFrameStrata("FULLSCREEN_DIALOG")
-	results:SetSize(260, 10)
+	results:SetSize(300, 10)
 	results.bg = UI.Paint(UI.Tex(results, "BACKGROUND"), "bg", 0.98)
 	results.bg:SetAllPoints()
 	results.border = UI.Border(results, 1)
@@ -1697,8 +1845,8 @@ local function BuildSearch()
 	local flash = UI.Paint(UI.Tex(window, "OVERLAY"), "accent", 0.35)
 	flash:Hide()
 
-	local edit = UI.Edit(window, 170)
-	edit:SetPoint("TOPRIGHT", -44, -12)
+	local edit = UI.Edit(window, 230)
+	edit:SetPoint("TOPRIGHT", -44, -13)
 	edit.placeholder = UI.Text(edit, 11)
 	edit.placeholder:SetPoint("LEFT", 6, 0)
 	UI.Paint(edit.placeholder, "dim")
@@ -1709,10 +1857,21 @@ local function BuildSearch()
 		results:Hide()
 		edit:SetText("")
 		edit:ClearFocus()
-		Select(entry[2])
+		local page = Select(entry.chapter)
+		local part = entry.widget.part or (entry.block and entry.block.part)
+		if part and part.fold and not part.fold:IsOpen() then part.fold:SetOpen(true) end -- la page se range de nouveau
+		if part and part.y then
+			local inside = 0 -- dans une page dessinée à part : la place du réglage dans le bloc
+			if entry.block then
+				local top, target = entry.block:GetTop(), entry.widget:GetTop()
+				if top and target then inside = top - target end
+			end
+			page.scroll:ScrollTo(part.y + inside - 30)
+		end
+		window.found = entry
 		flash:ClearAllPoints()
-		flash:SetPoint("TOPLEFT", entry[3], "TOPLEFT", -4, 3)
-		flash:SetPoint("BOTTOMRIGHT", entry[3], "BOTTOMRIGHT", 4, -3)
+		flash:SetPoint("TOPLEFT", entry.widget, "TOPLEFT", -4, 3)
+		flash:SetPoint("BOTTOMRIGHT", entry.widget, "BOTTOMRIGHT", 4, -3)
 		flash:Show()
 		C_Timer.After(1.5, function() flash:Hide() end)
 	end
@@ -1721,68 +1880,64 @@ local function BuildSearch()
 		local text = self:GetText():lower():match("^%s*(.-)%s*$")
 		self.placeholder:SetShown(text == "")
 		if #text < 2 then return results:Hide() end
-		for i = 1, #tabs do BuildPage(i) end -- la recherche couvre tous les onglets
+		for i = 1, #chapters do BuildChapter(i) end -- la recherche couvre tous les chapitres
 		local count = 0
-		for _, entry in ipairs(searchIndex) do
-			if count < 8 and entry[1]:find(text, 1, true) then
-				count = count + 1
-				local row = results.rows[count]
-				if not row then
-					row = UI.Button(results, "", 252, 22, function(button) Go(button.entry) end)
-					row:SetPoint("TOPLEFT", 4, -4 - (count - 1) * 24)
-					results.rows[count] = row
+		for pass = 1, 2 do -- d'abord par le nom, puis par l'explication
+			for _, entry in ipairs(searchIndex) do
+				local byName = entry.text:find(text, 1, true)
+				local hit = (pass == 1 and byName) or (pass == 2 and not byName and entry.more:find(text, 1, true))
+				if count < 8 and hit then
+					count = count + 1
+					local row = results.rows[count]
+					if not row then
+						row = UI.Button(results, "", 292, 22, function(button) Go(button.entry) end)
+						row:SetPoint("TOPLEFT", 4, -4 - (count - 1) * 24)
+						results.rows[count] = row
+					end
+					row.entry = entry
+					row.label:SetText(entry.label .. "  |cff8a8f99" .. L[chapters[entry.chapter].name] .. "|r")
+					row:Show()
 				end
-				row.entry = entry
-				row.label:SetText(entry[4] .. "  |cff8a8f99" .. L[tabs[entry[2]].name] .. "|r")
-				row:Show()
 			end
 		end
 		for i = count + 1, #results.rows do results.rows[i]:Hide() end
 		results:SetHeight(count * 24 + 8)
 		results:SetShown(count > 0)
 	end)
-	window.search = edit
+	window.search, window.results = edit, results
+end
+
+-- Hauteur de la fenêtre : jamais plus haute que l'écran moins 60 pixels, la page du chapitre défile
+function Z.OptionsHeight(screen)
+	screen = screen or 0
+	return screen > 400 and math.min(HEIGHT, math.floor(screen - 60)) or HEIGHT
 end
 
 local function Build()
-	window = UI.Window("LyoruneOptions", "Lyorune  |cff8a8f99" .. Z.version .. "|r", WIDTH, HEIGHT)
+	local height = Z.OptionsHeight(UIParent:GetHeight())
+	window = UI.Window("LyoruneOptions", "Lyorune  |cff8a8f99" .. Z.version .. "|r", WIDTH, height)
 	tinsert(UISpecialFrames, "LyoruneOptions")
 	UI.main = window -- les fenêtres secondaires s'ouvrent à côté d'elle (UI.PlaceBeside)
+	chapters = Chapters()
 
-	local simple = SimpleTabs()
-	tabs = {
-		{ name = "Cadres", columns = simple.Cadres },
-		{ name = "Apparence", columns = simple.Apparence },
-		{ name = "Indicateurs", columns = simple.Indicateurs },
-		{ name = "Soins", columns = simple.Soins },
-		{ name = "Listes", build = BuildLists },
-		{ name = "Clics", build = BuildClicks },
-		{ name = "Alertes", build = BuildAlerts },
-		{ name = "Profils", build = BuildProfiles },
-		{ name = "Aide", build = BuildHelp },
-	}
-	local tabWidth = math.floor((WIDTH - 48 - (#tabs - 1) * 4) / #tabs)
-	window.tabStep = tabWidth + 4
-	for i, tab in ipairs(tabs) do
-		tab.button = UI.Button(window, L[tab.name], tabWidth, 26, function() Select(i) end)
-		tab.button:SetPoint("TOPLEFT", 24 + (i - 1) * (tabWidth + 4), -50)
-		tab.button.label:SetJustifyH("CENTER")
+	-- Barre latérale : un bouton par chapitre (rune, nom, pastille des réglages changés)
+	local side = CreateFrame("Frame", nil, window)
+	side:SetPoint("TOPLEFT", 10, -HEAD)
+	side:SetPoint("BOTTOMLEFT", 10, FOOT)
+	side:SetWidth(SIDE - 10)
+	side.bg = UI.Tex(side, "BACKGROUND", 0, 0, 0, 0.18)
+	side.bg:SetAllPoints()
+	side.line = UI.Paint(UI.Tex(side, "ARTWORK"), "line")
+	side.line:SetWidth(1)
+	side.line:SetPoint("TOPRIGHT")
+	side.line:SetPoint("BOTTOMRIGHT")
+	window.side = side
+	local step = math.min(40, math.floor((height - HEAD - FOOT - 16) / #chapters))
+	for i, chapter in ipairs(chapters) do
+		chapter.button = UI.SideButton(side, chapter.rune, L[chapter.name], function() Select(i) end)
+		chapter.button:SetSize(SIDE - 20, step - 2)
+		chapter.button:SetPoint("TOPLEFT", 5, -8 - (i - 1) * step)
 	end
-
-	-- Barre lumineuse de l'onglet actif
-	local bar = UI.Paint(UI.Tex(window, "OVERLAY"), "accent")
-	bar:SetHeight(2)
-	bar.slide = bar:CreateAnimationGroup()
-	bar.move = bar.slide:CreateAnimation("Translation")
-	bar.move:SetDuration(0.2)
-	bar.move:SetSmoothing("OUT")
-	bar.slide:SetScript("OnFinished", function()
-		local target = tabs[bar.index].button
-		bar:ClearAllPoints()
-		bar:SetPoint("TOPLEFT", target, "BOTTOMLEFT", 0, -1)
-		bar:SetPoint("TOPRIGHT", target, "BOTTOMRIGHT", 0, -1)
-	end)
-	window.indicator = bar
 
 	-- Logo dans l'en-tête : il respire lentement (coupé par « Animations réduites »)
 	local logo = window:CreateTexture(nil, "ARTWORK")
@@ -1794,22 +1949,19 @@ local function Build()
 	window:HookScript("OnShow", function() if not UI.Calm() then window.breath:Play() end end)
 	window:HookScript("OnHide", function() window.breath:Stop() end)
 
-	-- Changement de thème : l'onglet actif reprend ses couleurs, sans rejouer d'animation
-	UI.OnSkin(function() if current then Select(current, true) end end)
-
 	BuildSearch()
 	window.magic = UI.HeaderMagic(window, logo, window.search)
 	if Z.RefreshRunes then Z:RefreshRunes(window) end
 	window.Select = Select
-	window.tabs = tabs -- les tests vérifient que chaque onglet tient dans la fenêtre
-	Select(1, true)
+	window.chapters = chapters
+	Select(Z.char and Z.char.optionChapter or 1, true) -- le chapitre de la dernière fois
 end
 
--- Z:ToggleOptions() ouvre ou ferme. Z:ToggleOptions("Clics") ouvre sur un onglet.
-function Z:ToggleOptions(tab)
+-- Z:ToggleOptions() ouvre ou ferme. Z:ToggleOptions("Clics") ouvre sur un chapitre (nom, ou ancien nom d'onglet).
+function Z:ToggleOptions(chapter)
 	if not window then Build() end
-	if tab then
-		Select(tab)
+	if chapter then
+		Select(chapter)
 		window:Show()
 	else
 		window:SetShown(not window:IsShown())
@@ -1821,27 +1973,40 @@ function Z:BarIcons()
 	return barIcons
 end
 
--- La ligne d'un raccourci dans l'onglet Clics (bouton du sort, puis la ligne) ; kind : "click" ou "key"
+-- La ligne d'un raccourci dans le chapitre Clics (bouton du sort, puis la ligne) ; kind : "click" ou "key"
 function Z:ClickCell(key, kind)
 	for _, row in ipairs(rows) do
 		if row.binding and row.binding.key == key and row.binding.kind == (kind or "click") then return row.spell, row end
 	end
 end
 
--- Pour les tests : les onglets et leurs boutons
+-- Pour les tests : les chapitres, leurs boutons et leurs pages
 function Z:OptionsTabs()
-	return tabs
+	return chapters
 end
 
 function Z:OptionsWindow()
 	return window
 end
 
--- Pour les tests : libellés de tous les réglages, après construction de tous les onglets
+-- Pour les tests : chapitres où chaque réglage a sa ligne (un réglage n'en a qu'une)
+function Z:OptionKeys()
+	Z:OptionLabels()
+	local keys = {}
+	for _, entry in ipairs(searchIndex) do
+		if entry.key then
+			keys[entry.key] = keys[entry.key] or {}
+			table.insert(keys[entry.key], chapters[entry.chapter].name)
+		end
+	end
+	return keys
+end
+
+-- Pour les tests : libellés de tous les réglages, après construction de tous les chapitres
 function Z:OptionLabels()
 	if not window then Build() end
-	for i = 1, #tabs do BuildPage(i) end
+	for i = 1, #chapters do BuildChapter(i) end
 	local labels = {}
-	for _, entry in ipairs(searchIndex) do labels[#labels + 1] = entry[4] end
+	for _, entry in ipairs(searchIndex) do labels[#labels + 1] = entry.label end
 	return labels
 end

@@ -26,6 +26,22 @@ print('fichiers charges :', len(files))
 scenario = r'''
 local Z = NS
 local step = function(label, fn) local ok, err = pcall(fn) print((ok and "OK    " or "ERREUR ") .. label .. (ok and "" or (" : " .. tostring(err)))) if not ok then FAILED = true end end
+-- Fenêtre d'options : le bloc dessiné à part qui porte ce champ (pages Clics, Profils...), tous les chapitres construits
+local function OptionBlock(field)
+  Z:OptionLabels()
+  for _, chapter in ipairs(Z:OptionsTabs()) do
+    for _, block in ipairs(chapter.page and chapter.page.blocks or {}) do if block[field] then return block end end
+  end
+end
+-- Chaque page de chapitre est rangée : la hauteur de son contenu suit ce qu'elle montre, elle défile au-delà
+local function CheckChapters()
+  for _, chapter in ipairs(Z:OptionsWindow().chapters) do
+    local page = chapter.page
+    if page then
+      assert(page.used > 64 and page.scroll.content:GetHeight() >= page.used, "page mal rangee : " .. chapter.name)
+    end
+  end
+end
 
 step("demarrage", function()
   FireEvent("ADDON_LOADED", "Lyorune")
@@ -181,11 +197,11 @@ step("combat avec valeurs secretes", function()
   FireEvent("PLAYER_REGEN_ENABLED") Z:Refresh() RunUpdates()
 end)
 
-step("options : neuf onglets, recherche, libelles traduits", function()
+step("options : onze chapitres, recherche, libelles traduits", function()
   SlashCmdList.LYORUNE("")
   local w = Z:OptionsWindow()
-  assert(w and w:IsShown())
-  for i = 1, 9 do w.Select(i) end
+  assert(w and w:IsShown() and #w.chapters == 11, "onze chapitres")
+  for i = 1, 11 do w.Select(i) end
   w.Select("Clics") w.Select("Inconnu")
   local labels = Z:OptionLabels()
   assert(#labels >= 45, "reglages recenses : " .. #labels)
@@ -1180,15 +1196,14 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
     assert(button.bg:IsShown() == (theme == "MODERN"), theme .. " : bouton plat")
     assert((layers.gameUp and layers.gameUp:IsShown() or false) == (theme == "CLASSIC"), theme .. " : bouton du jeu")
     assert((layers.plate and layers.plate:IsShown() or false) == (theme == "MMO"), theme .. " : plaque doree")
-    local tab = Z:OptionsTabs()[2].button
-    local tabLayer = tab.layers and tab.layers[theme .. "TabActive"]
-    assert(theme == "MODERN" or (tabLayer and tabLayer:IsShown() and tabLayer._tex == UI.SKIN[theme].tabActive), theme .. " : onglet actif")
-    assert(w.indicator:IsShown() == (theme == "MODERN"), theme .. " : barre d'onglet")
+    local side = Z:OptionsTabs()[3].button -- Apparence, le chapitre ouvert
+    assert(side.active and side.border:IsShown() and side.round:IsShown() == (theme == "MODERN"), theme .. " : chapitre ouvert")
+    assert(side.label._color[1] == (theme == "MODERN" and UI.text or UI.gold)[1], theme .. " : nom du chapitre ouvert")
+    assert(not Z:OptionsTabs()[2].button.border:IsShown(), theme .. " : chapitre ferme")
     local field = w.search.layers and w.search.layers[theme]
     assert(theme == "MODERN" or (field and field:IsShown() and field._tex == UI.SKIN[theme].field), theme .. " : champ creuse")
     assert(sample.mark._tex == (theme == "CLASSIC" and UI.GAME.check or theme == "MMO" and UI.RUNES or UI.WHITE), theme .. " : case a cocher")
     assert(w.title._font == titleFont and w.title._size == titleSize, theme .. " : l'en-tete change de taille")
-    assert(w.indicator._color[2] == skin.accent[2], theme .. " : onglet actif")
     assert(handle.text._color[1] == UI.frameAccent[1], "les etiquettes des cadres de soin ont suivi le theme")
   end
   assert(w.ornate and not w.ornate:IsShown(), "ornements du theme MMORPG restes visibles")
@@ -1625,11 +1640,10 @@ step("etape 8 : profils automatiques, cible et focalisation", function()
   assert(not Z:Export():find("Donjon", 1, true) and not Z:Export():find("autoProfile", 1, true))
   Z:ResetAll()
   assert(Z.db.profiles.Donjon and Z.db.activeProfile == "" and Z.db.autoProfile == false, "reinitialisation")
-  -- onglet Profils : les cases du tableau font tourner les profils
+  -- chapitre Profils et partage : les cases du tableau font tourner les profils
   Z:ToggleOptions()
-  local page
-  for _, tab in ipairs(Z:OptionsTabs()) do if tab.page and tab.page.profileCells then page = tab.page end end
-  assert(page, "onglet Profils construit")
+  local page = OptionBlock("profileCells")
+  assert(page, "chapitre Profils et partage construit")
   do
     local cell = page.profileCells[1]
     cell:Run("OnClick", "LeftButton")
@@ -2149,10 +2163,8 @@ step("etape 14 : joueurs epingles, signal, chef de groupe", function()
   for _, label in ipairs({ "Cadre des joueurs épinglés", "Chef de groupe et assistants", "Signal du jeu sur une case", "Joueurs épinglés" }) do
     assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
   end
-  -- chaque onglet tient dans la fenetre (528 pixels de haut)
-  for _, tab in ipairs(Z:OptionsWindow().tabs) do
-    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
-  end
+  -- chaque page de chapitre est rangee et defile
+  CheckChapters()
   for k, v in pairs(saved) do Z.db[k] = v end
   GROUP_NAMES.party2 = nil
   Z:Refresh() RunUpdates()
@@ -2238,9 +2250,7 @@ step("etape 15 : bijoux, arreter l'incantation, clic pour lancer du jeu", functi
   -- options
   local labels = table.concat(Z:OptionLabels(), "|")
   assert(labels:find("Signaler un clic pris aussi par le jeu", 1, true), "option de conflit absente")
-  for _, tab in ipairs(Z:OptionsWindow().tabs) do
-    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
-  end
+  CheckChapters()
   for k, v in pairs(saved) do Z.db[k] = v end
   Z:ApplyClicks()
 end)
@@ -2353,16 +2363,14 @@ step("etape 16 : buffs uniques, temps de recharge global", function()
   -- options
   local labels = table.concat(Z:OptionLabels(), "|")
   assert(labels:find("Recharge globale et incantation", 1, true), "option absente")
-  for _, tab in ipairs(Z:OptionsWindow().tabs) do
-    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
-  end
+  CheckChapters()
   for k, v in pairs(saved) do Z.db[k] = v end
   Z:Refresh()
 end)
 
 step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", function()
   Z.db.profiles, Z.db.autoProfiles, Z.db.activeProfile, Z.db.autoProfile = {}, {}, "", false
-  -- chaque reglage d'un profil a sa partie, celle de l'onglet ou il se regle
+  -- chaque reglage d'un profil a sa partie, celle du chapitre ou il se regle
   local parts = {}
   for _, part in ipairs(Z.profileParts) do parts[part] = true end
   for key in pairs(Z.defaults) do
@@ -2370,10 +2378,12 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
     if Z.notInProfile[key] then assert(part == nil, "hors profil mais classe : " .. key)
     else assert(parts[part], "partie inconnue pour " .. key .. " : " .. tostring(part)) end
   end
-  assert(Z.ProfilePart("width") == "Cadres" and Z.ProfilePart("placement") == "Cadres" and Z.ProfilePart("layout") == "Cadres")
+  assert(Z.ProfilePart("width") == "Disposition" and Z.ProfilePart("placement") == "Disposition" and Z.ProfilePart("layout") == "Disposition")
   assert(Z.ProfilePart("shape") == "Apparence" and Z.ProfilePart("theme") == "Apparence" and Z.ProfilePart("rangeAlpha") == "Apparence")
-  assert(Z.ProfilePart("showRole") == "Indicateurs" and Z.ProfilePart("privateAuraSize") == "Indicateurs")
-  assert(Z.ProfilePart("hotSwipe") == "Soins" and Z.ProfilePart("cornerSpells") == "Soins" and Z.ProfilePart("missingBuffs") == "Soins")
+  assert(Z.ProfilePart("showIncoming") == "Vie et portée" and Z.ProfilePart("farHint") == "Vie et portée")
+  assert(Z.ProfilePart("showRole") == "Joueurs" and Z.ProfilePart("privateAuraSize") == "Affaiblissements")
+  assert(Z.ProfilePart("hotSwipe") == "Mes soins" and Z.ProfilePart("cornerSpells") == "Mes soins" and Z.ProfilePart("missingBuffs") == "Joueurs")
+  assert(Z.ProfilePart("perfMode") == "Disposition", "mode performance")
   assert(Z.ProfilePart("clicks") == nil and Z.ProfilePart("castIndicator") == nil and Z.ProfilePart("windowTheme") == nil, "hors profil")
   -- deux profils, puis copie des Cadres seulement
   Z.db.width, Z.db.shape, Z.db.showRole, Z.db.hotSwipe = 120, "BAR", false, false
@@ -2382,20 +2392,20 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
   assert(Z:SaveProfile("Raid") and Z.db.activeProfile == "Raid")
   local ok, message = Z:CopyProfileParts("Arene", "Raid", {})
   assert(not ok and message:find("au moins une partie"), "aucune partie")
-  assert(not Z:CopyProfileParts("Raid", "Raid", { Cadres = true }), "meme profil")
-  assert(not Z:CopyProfileParts("Inconnu", "Raid", { Cadres = true }), "profil inconnu")
+  assert(not Z:CopyProfileParts("Raid", "Raid", { Disposition = true }), "meme profil")
+  assert(not Z:CopyProfileParts("Inconnu", "Raid", { Disposition = true }), "profil inconnu")
   -- vers le profil en cours : applique tout de suite
-  ok, message = Z:CopyProfileParts("Arene", "Raid", { Cadres = true })
+  ok, message = Z:CopyProfileParts("Arene", "Raid", { Disposition = true })
   assert(ok and message:find("Arene", 1, true), "copie : " .. tostring(message))
   assert(Z.db.width == 120 and Z.db.shape == "TILE" and Z.db.showRole == true, "seulement les cadres, en direct")
   -- depuis le profil en cours : ses reglages du moment ; vers un profil enregistre : rien ne bouge a l'ecran
   Z.db.showRole = false
-  assert(Z:CopyProfileParts("Raid", "Arene", { Indicateurs = true, Soins = true }))
+  assert(Z:CopyProfileParts("Raid", "Arene", { Joueurs = true, ["Mes soins"] = true }))
   assert(Z.db.profiles.Arene.showRole == false and Z.db.profiles.Arene.hotSwipe == true and Z.db.profiles.Arene.shape == "BAR")
   assert(Z.db.profiles.Arene.width == 120 and Z.db.width == 120)
   -- un profil ancien sans un reglage : la valeur d'origine
   Z.db.profiles.Arene.hotCountdown = nil
-  assert(Z:CopyProfileParts("Arene", "Raid", { Soins = true }) and Z.db.hotCountdown == Z.defaults.hotCountdown)
+  assert(Z:CopyProfileParts("Arene", "Raid", { ["Mes soins"] = true }) and Z.db.hotCountdown == Z.defaults.hotCountdown)
   -- champ de bataille et arene
   assert(Z.Situation() == "5" and Z.PvPKind() == nil)
   INSTANCE_TYPE = "pvp" assert(Z.Situation() == "BG")
@@ -2416,10 +2426,9 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
   INSTANCE_TYPE = "pvp" FireEvent("ZONE_CHANGED_NEW_AREA")
   assert(Z.db.activeProfile == "Raid", "champ de bataille sans choix : taille du groupe")
   INSTANCE_TYPE = "none" FireEvent("PLAYER_ENTERING_WORLD")
-  -- onglet Profils : 12 cases (6 situations, 2 specialisations), fenetre de copie
+  -- chapitre Profils et partage : 12 cases (6 situations, 2 specialisations), fenetre de copie
   Z:ToggleOptions()
-  local page
-  for _, tab in ipairs(Z:OptionsTabs()) do if tab.page and tab.page.profileCells then page = tab.page end end
+  local page = OptionBlock("profileCells")
   assert(page and #page.profileCells == 12, "cases du tableau")
   local arena = page.profileCells[11]
   assert(arena.size == "ARENA" and arena.group == 1 and arena.label:GetText() == "Arene", "case arene")
@@ -2920,6 +2929,110 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   end
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", function()
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast }
+  Z:ToggleOptions("Accueil")
+  local w = Z:OptionsWindow()
+  local chapters = w.chapters
+  -- Onze chapitres dans la barre latérale, dans l'ordre de la maquette, textes traduits
+  local names = { "Accueil", "Disposition", "Apparence", "Vie et portée", "Mes soins", "Affaiblissements", "Joueurs",
+    "Clics", "Alertes", "Profils et partage", "Fenêtre et aide" }
+  local missing, inChapters = {}, {}
+  local function Need(text) if text and not Z.translations.enUS[text] then missing[#missing + 1] = text end end
+  for i, chapter in ipairs(chapters) do
+    assert(chapter.name == names[i], "chapitre " .. i .. " : " .. chapter.name)
+    assert(chapter.button and chapter.rune >= 1 and chapter.rune <= 24, "bouton du chapitre " .. chapter.name)
+    Need(chapter.name) Need(chapter.intro)
+    for _, section in ipairs(chapter.sections) do
+      Need(section[1])
+      for _, item in ipairs(section[2]) do
+        Need(item.desc)
+        local kind = item[1]
+        if kind == "check" or kind == "seg" or kind == "step" or kind == "cycle" then
+          assert(Z.defaults[item[2]] ~= nil, "reglage inconnu : " .. item[2])
+          inChapters[item[2]] = chapter.name
+          assert(kind ~= "seg" or (#Z.choices[item[2]] >= 2 and #Z.choices[item[2]] <= 4), "trop de choix cote a cote : " .. item[2])
+          if item.dep then assert(Z.defaults[item.dep[1]] ~= nil, "reglage parent inconnu : " .. item.dep[1]) end
+        end
+      end
+    end
+  end
+  Need("Parties à copier : les réglages du chapitre du même nom.")
+  Need("Copier seulement une partie d'un profil vers un autre : un ou plusieurs chapitres, de Disposition à Joueurs.")
+  assert(#missing == 0, "sans traduction anglaise : " .. table.concat(missing, " | "))
+
+  -- Chaque réglage a une seule ligne, dans un seul chapitre ; aucun réglage simple n'est oublié
+  local keys = Z:OptionKeys()
+  for key, where in pairs(keys) do assert(#where == 1, "reglage en double : " .. key .. " (" .. table.concat(where, ", ") .. ")") end
+  for key, chapter in pairs(inChapters) do assert(keys[key] and keys[key][1] == chapter, "reglage sans ligne : " .. key) end
+  local elsewhere = { tutorialDone = true, wizardDone = true, minimapAngle = true, macroAutoTarget = true, -- réglés ailleurs
+    manaAlert = true, regenAlert = true, resAlert = true, manaThreshold = true, regenThreshold = true } -- page Alertes
+  for key, value in pairs(Z.defaults) do
+    if (type(value) == "boolean" or type(value) == "number" or Z.choices[key]) and not elsewhere[key] then
+      assert(keys[key], "reglage absent des options : " .. key)
+    end
+  end
+  for _, e in ipairs(Z.db.errors) do assert(not tostring(e.message):find("^option"), "erreur dans les options : " .. tostring(e.message)) end
+
+  -- Anciens noms d'onglet acceptés (tutoriel, guides) ; un seul chapitre visible, un seul bouton allumé ; le
+  -- chapitre ouvert est retenu pour la prochaine ouverture
+  for old, new in pairs({ Cadres = "Disposition", Indicateurs = "Vie et portée", Soins = "Mes soins", Listes = "Affaiblissements",
+    Profils = "Profils et partage", Aide = "Fenêtre et aide", Clics = "Clics", Inconnu = "Accueil" }) do
+    Z:ToggleOptions(old)
+    assert(Z.char.optionChapter == new, old .. " -> " .. tostring(Z.char.optionChapter))
+    local shown, lit = 0, 0
+    for _, chapter in ipairs(chapters) do
+      if chapter.page and chapter.page.scroll:IsShown() then shown = shown + 1 end
+      if chapter.button.active then lit = lit + 1 end
+    end
+    assert(shown == 1 and lit == 1, old .. " : " .. shown .. " pages, " .. lit .. " boutons")
+  end
+
+  -- Chaque chapitre s'ouvre sans erreur dans les 3 thèmes et en contraste élevé, et sa page est rangée
+  for _, theme in ipairs({ "CLASSIC", "MMO", "MODERN" }) do
+    Z.db.windowTheme = theme Z:Refresh()
+    for i = 1, #chapters do assert(w.Select(i) == chapters[i].page, theme .. " : " .. chapters[i].name) end
+  end
+  Z.db.highContrast = true Z:Refresh()
+  for i = 1, #chapters do w.Select(i) end
+  Z.db.highContrast = false Z:Refresh()
+  CheckChapters()
+
+  -- Réglages fins repliés sous « Réglages fins (n) » ; l'état est gardé pour le personnage
+  Z.char.optionFolds = {}
+  local page = w.Select("Mes soins")
+  local fold, fade
+  for _, part in ipairs(page.parts) do
+    if part.item and part.item[2] == "hotFade" then fade = part fold = part.fold end
+  end
+  assert(fold and fold.count == 4 and not fold:IsOpen() and not fade.widget:IsShown(), "reglages fins replies")
+  local closed = page.used
+  fold:Run("OnClick")
+  assert(fold:IsOpen() and fade.widget:IsShown() and page.used > closed and Z.char.optionFolds["Mes soins.1"], "reglages fins deplies")
+  fold:Run("OnClick")
+  assert(not fade.widget:IsShown() and page.used == closed, "reglages fins replies de nouveau")
+
+  -- Recherche : par le nom, puis par l'explication ; un résultat ouvre le chapitre, déplie, fait défiler
+  w.Select("Accueil")
+  w.search:SetText("moment de relancer") w.search:Run("OnTextChanged", true)
+  local row = w.results.rows[1]
+  assert(w.results:IsShown() and row:IsShown() and row.entry.label == "Icône qui s'efface à la fin", "recherche par l'explication")
+  row:Run("OnClick", "LeftButton")
+  assert(Z.char.optionChapter == "Mes soins" and fold:IsOpen() and fade.widget:IsShown(), "le resultat deplie les reglages fins")
+  assert(page.scroll.offset > 0 and w.found == row.entry and w.search:GetText() == "", "le resultat fait defiler la page")
+  fold:Run("OnClick")
+  w.search:SetText("ajouter un clic") w.search:Run("OnTextChanged", true)
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  assert(Z.char.optionChapter == "Clics", "reglage d'une page dessinee a part")
+
+  -- Fenêtre de 1080 x 708, jamais plus haute que l'écran moins 60 pixels
+  assert(w:GetWidth() == 1080 and Z.OptionsHeight(1080) == 708 and Z.OptionsHeight(700) == 640 and Z.OptionsHeight(nil) == 708, "hauteur")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
 end)
 
 step("aucune variable globale imprevue", function()
