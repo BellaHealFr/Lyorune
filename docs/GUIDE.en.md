@@ -17,7 +17,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Light green at the end of the bar | Heals are already on their way |
 | Light strip at the bottom of the bar | They have a shield |
 | Dark red at the end of the health | A debuff "eats" that part of their health: your heals fill it first, before they count |
-| Blue bar under the health | Their mana (everyone, by default; height from 2 to 60 pixels and colour adjustable in the Indicators tab, the health always keeps at least 10 pixels of the cell: blue, sky blue, purple, teal or white). With "Mana percentage in the bar", the % is written in it, even in combat |
+| Bar under the health | Their resource, in the game's colour: mana in blue, rage in red, energy in yellow, focus in orange; it follows the druid's form (everyone, by default; "Healers" shows only their mana; height from 2 to 60 pixels and colour adjustable in the Indicators tab, the health always keeps at least 10 pixels of the cell; mana colour: blue, sky blue, purple, teal or white). With "Mana percentage in the bar", the % is written in it, even in combat |
 | Flashing red overlay | Their health is low |
 | Red border | They are being attacked |
 | Coloured line at the top of the health (if you turn it on) | Their threat: yellow, they build threat on a monster; orange, the monster is about to turn on them; red, the monster is attacking them |

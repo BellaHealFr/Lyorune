@@ -2731,6 +2731,60 @@ step("1.24.1 : mana basse des soigneurs, bouclier a la suite de la vie", functio
   assert(ok, err)
 end)
 
+step("C7 : barre de ressource selon la classe (rage, energie, forme du druide), comme HealBot et VuhDo", function()
+  local b = CreateFrame("Button", "LyoruneHeaderUnitButton94", Z.header)
+  Z.header:InitButton(b:GetName())
+  local oldRole, oldBars = UnitGroupRolesAssigned, Z.db.manaBars
+  local ok, err = pcall(function()
+    Z.db.manaBars = "ALL"
+    UnitGroupRolesAssigned = function() return "TANK" end
+    -- guerrier : sa rage, en rouge, pas une barre de mana bleue
+    POWER_TYPE, POWER_TOKEN = 1, "RAGE"
+    b:SetAttribute("unit", "party1") Z:Refresh()
+    assert(b.powerShown and b.powerType == 1, "rage absente")
+    assert(b.power._barColor[1] == 1 and b.power._barColor[3] == 0, "rage pas en rouge")
+    -- druide qui passe en félin : l'événement du jeu suffit, énergie en jaune
+    POWER_TYPE, POWER_TOKEN = 3, "ENERGY"
+    FireEvent("UNIT_DISPLAYPOWER", "party1")
+    assert(b.powerType == 3 and b.power._barColor[2] == 1 and b.power._barColor[3] == 0, "forme de felin pas suivie")
+    -- retour en forme humaine : la mana, avec la teinte choisie
+    POWER_TYPE, POWER_TOKEN = nil, nil
+    FireEvent("UNIT_DISPLAYPOWER", "party1")
+    assert(b.powerType == 0 and b.power._barColor[3] == Z.manaColors.BLUE[3], "mana pas revenue")
+    -- un nouveau thème ou une autre texture garde la couleur de la ressource
+    POWER_TYPE, POWER_TOKEN = 3, "ENERGY"
+    FireEvent("UNIT_DISPLAYPOWER", "party1") Z:Refresh()
+    assert(b.power._barColor[3] == 0, "couleur de l'energie perdue au rafraichissement")
+    -- « Soigneurs » : seulement la mana des soigneurs
+    Z.db.manaBars = "HEALERS" Z:Refresh()
+    assert(not b.powerShown, "barre d'un tank avec « Soigneurs »")
+    -- changement de joueur : la ressource du joueur d'avant ne reste pas
+    POWER_TYPE, POWER_TOKEN = nil, nil
+    UnitGroupRolesAssigned = function() return "HEALER" end
+    b:SetAttribute("unit", nil) b:SetAttribute("unit", "party2") Z:Refresh()
+    assert(b.powerShown and b.powerType == 0 and b.power._barColor[3] == Z.manaColors.BLUE[3], "ressource du joueur d'avant")
+    -- réponse secrète : la mana, sans erreur
+    SECRET = true POWER_TYPE, POWER_TOKEN = 1, "RAGE"
+    FireEvent("UNIT_DISPLAYPOWER", "party2")
+    SECRET = false
+    assert(b.powerType == 0, "type secret mal lu")
+    POWER_TYPE, POWER_TOKEN = nil, nil
+    -- mode test : le guerrier et le voleur d'exemple ont leur rage et leur énergie
+    Z.db.manaBars = "ALL" Z:Refresh()
+    Z:TogglePreview(10)
+    local cells = Z:PreviewCells(10)
+    assert(cells[1].powerType == 1 and cells[1].power._barColor[1] == 1 and cells[1].power._barColor[3] == 0, "guerrier d'exemple en mana")
+    assert(cells[6].powerType == 3 and cells[6].power._barColor[3] == 0, "voleur d'exemple en mana")
+    assert(cells[2].powerType == 0 and cells[2].power._barColor[3] == Z.manaColors.BLUE[3], "pretre d'exemple sans mana")
+    Z:TogglePreview()
+  end)
+  POWER_TYPE, POWER_TOKEN, SECRET = nil, nil, false
+  UnitGroupRolesAssigned, Z.db.manaBars = oldRole, oldBars
+  b:SetAttribute("unit", nil)
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("securite : codes et messages abimes", function()
   -- des milliers de codes abîmés : jamais d'erreur, jamais de valeur hors des limites, jamais de texte libre
   Z.SetOffset("name", 3, -2) Z.SetOffset("debuffs", -40, 12, "BAR") -- des placements dans le code abîmé aussi

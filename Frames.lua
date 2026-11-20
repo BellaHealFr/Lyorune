@@ -25,6 +25,16 @@ Z.manaColors = {
 	BLUE = { 0.25, 0.50, 1.00 }, SKY = { 0.40, 0.75, 1.00 }, PURPLE = { 0.62, 0.42, 1.00 },
 	TEAL = { 0.20, 0.82, 0.82 }, WHITE = { 0.88, 0.90, 0.95 },
 }
+
+-- Couleur de la barre de ressource : la mana prend la teinte choisie (manaColor) ; rage, énergie, focalisation et les
+-- autres prennent la couleur des barres du jeu (PowerBarColor), comme chez les autres cadres de soin
+function Z.PowerColor(powerType, token)
+	if powerType ~= MANA then
+		local color = PowerBarColor and (PowerBarColor[token or ""] or PowerBarColor[powerType])
+		if color and color.r then return color.r, color.g, color.b end
+	end
+	return unpack(Z.manaColors[Z.db.manaColor] or Z.manaColors.BLUE)
+end
 -- Signal du jeu (ping) : un modèle du jeu rend la case sensible à la touche de signal, qui marque alors le
 -- joueur de la case pour tout le groupe. Absent d'un client plus ancien : les cases s'en passent.
 local PING_TEMPLATE = PingableType_UnitFrameMixin and ",PingableUnitFrameTemplate" or ""
@@ -180,11 +190,12 @@ local function UpdatePower(b)
 	-- Icône de mana basse d'un soigneur : opacité donnée par la courbe du jeu, même quand la mana est secrète
 	if b.lowManaShown then b.lowMana:SetAlpha(UnitPowerPercent(b.unit, MANA, false, lowManaCurve).a) end
 	if not b.powerShown then return end
-	b.power:SetMinMaxValues(0, UnitPowerMax(b.unit, MANA))
-	b.power:SetValue(UnitPower(b.unit, MANA))
+	local powerType = b.powerType or MANA -- la ressource du joueur : mana, rage, énergie...
+	b.power:SetMinMaxValues(0, UnitPowerMax(b.unit, powerType))
+	b.power:SetValue(UnitPower(b.unit, powerType))
 	-- Le pourcentage est calculé par le jeu : il reste lisible en combat, même quand la mana est secrète
 	if db.manaPercent and UnitPowerPercent and CurveConstants and CurveConstants.ScaleTo100 then
-		b.powerText:SetFormattedText("%.0f%%", UnitPowerPercent(b.unit, MANA, false, CurveConstants.ScaleTo100))
+		b.powerText:SetFormattedText("%.0f%%", UnitPowerPercent(b.unit, powerType, false, CurveConstants.ScaleTo100))
 		b.powerText:Show()
 	else
 		b.powerText:Hide()
@@ -253,7 +264,8 @@ local function LayoutBars(b)
 	b.hp:SetPoint("BOTTOMRIGHT", -inset, inset + (b.powerShown and Z.PowerHeight() + 1 or 0))
 end
 
--- Rôle : icône, et barre de mana pour les soigneurs (ou tous) selon l'option
+-- Rôle : icône, et barre de ressource pour les soigneurs (ou tous) selon l'option. Appelé aussi quand la
+-- ressource change (UNIT_DISPLAYPOWER : druide en forme d'ours ou de félin, véhicule).
 local function UpdateRole(b)
 	local unit = b.unit
 	local role = UnitGroupRolesAssigned(unit)
@@ -268,9 +280,17 @@ local function UpdateRole(b)
 		b.role:Hide()
 	end
 
-	local powerType = UnitPowerType(unit)
-	local hasMana = issecret(powerType) or powerType == MANA
-	local wanted = hasMana and (db.manaBars == "ALL" or (db.manaBars == "HEALERS" and role == "HEALER"))
+	-- La ressource montrée par le jeu pour ce joueur ; réponse secrète ou inconnue : la mana, comme avant
+	local powerType, token = UnitPowerType(unit)
+	if issecret(powerType) or type(powerType) ~= "number" then powerType, token = MANA, "MANA" end
+	if issecret(token) or type(token) ~= "string" then token = nil end
+	local hasMana = powerType == MANA
+	if powerType ~= b.powerType or token ~= b.powerToken then
+		b.powerType, b.powerToken = powerType, token
+		b.power:SetStatusBarColor(Z.PowerColor(powerType, token))
+	end
+	-- Tous : chaque joueur avec sa ressource ; Soigneurs : leur mana
+	local wanted = db.manaBars == "ALL" or (db.manaBars == "HEALERS" and role == "HEALER" and hasMana)
 	if wanted ~= b.powerShown then
 		b.powerShown = wanted
 		b.power:SetShown(wanted)
@@ -418,6 +438,7 @@ local unitEvents = {
 	UNIT_FLAGS = UpdateState,
 	UNIT_THREAT_SITUATION_UPDATE = UpdateThreat,
 	INCOMING_RESURRECT_CHANGED = UpdateCenter,
+	UNIT_DISPLAYPOWER = UpdateRole, -- forme du druide : énergie, rage ou mana
 }
 local powerEvents = { UNIT_POWER_UPDATE = UpdatePower, UNIT_MAXPOWER = UpdatePower }
 
@@ -448,6 +469,7 @@ local function OnAttributeChanged(b, name, value)
 		LayoutBars(b)
 	end
 	b.powerListen, b.lowManaShown = false, false -- événements retirés ci-dessus : UpdateRole les reprendra
+	b.powerType, b.powerToken = nil, nil -- la ressource du joueur d'avant : UpdateRole repose la sienne
 	b.lowMana:Hide()
 	if value then
 		for event in pairs(unitEvents) do b:RegisterUnitEvent(event, value) end
@@ -572,7 +594,7 @@ local function Style(b)
 	b.healAbsorb:SetShown(db.showHealAbsorb)
 	b.power:SetStatusBarTexture(texture)
 	-- Couleur posée après la texture : le jeu remet en blanc toute nouvelle texture de barre
-	b.power:SetStatusBarColor(unpack(Z.manaColors[db.manaColor] or Z.manaColors.BLUE))
+	b.power:SetStatusBarColor(Z.PowerColor(b.powerType or MANA, b.powerToken))
 	b.power:SetHeight(Z.PowerHeight())
 	b.powerText:SetFont(theme.font, PERCENT_HEIGHT, "OUTLINE")
 	b.threatBar:SetHeight(math.max(2, math.floor(height / 18)))

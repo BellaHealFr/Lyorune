@@ -316,7 +316,13 @@ function UnitIsUnit() return S(false) end
 function UnitHasIncomingResurrection() return S(false) end
 function UnitPower() return S(MANA) end
 function UnitPowerMax() return S(1000) end
-function UnitPowerType() return S(0) end
+-- Ressource du joueur (bug C7) : la mana, sauf si un test choisit POWER_TYPE et POWER_TOKEN
+function UnitPowerType() return S(POWER_TYPE or 0), S(POWER_TOKEN or "MANA") end
+-- Couleurs des barres de ressource du jeu, par nom et par numéro
+PowerBarColor = { MANA = { r = 0, g = 0, b = 1 }, RAGE = { r = 1, g = 0, b = 0 }, ENERGY = { r = 1, g = 1, b = 0 },
+	FOCUS = { r = 1, g = 0.5, b = 0.25 } }
+PowerBarColor[0], PowerBarColor[1], PowerBarColor[2], PowerBarColor[3] = PowerBarColor.MANA, PowerBarColor.RAGE,
+	PowerBarColor.FOCUS, PowerBarColor.ENERGY
 function UnitPowerPercent(u, p, predicted, curve)
 	if curve == CurveConstants.ScaleTo100 then return S(60) end
 	return { r = S(1), g = S(1), b = S(1), a = S(1) } -- courbe de couleurs : la couleur, secrète

@@ -76,6 +76,8 @@ Z.translations.enUS = {
 	["Voile rouge clignotant quand la vie est basse"] = "Flashing red overlay at low health",
 	["Seuil de vie basse (%)"] = "Low health threshold (%)", ["Barre de mana"] = "Mana bar",
 	["Hauteur de la barre de mana"] = "Mana bar height",
+	["Tous : chaque joueur avec sa ressource, à la couleur du jeu (mana, rage, énergie, focalisation...), qui suit la forme du druide. Soigneurs : leur mana seulement."] = "Everyone: each player with their own resource, in the game's colour (mana, rage, energy, focus...), following the druid's form. Healers: only their mana.",
+	["Seulement pour la mana : rage, énergie et les autres ressources gardent la couleur du jeu."] = "Mana only: rage, energy and the other resources keep the game's colour.",
 	["Couleur de la barre de mana"] = "Mana bar colour", ["Bleu"] = "Blue", ["Bleu ciel"] = "Sky blue", ["Violet"] = "Purple", ["Turquoise"] = "Teal", ["Blanc"] = "White",
 	["Personne"] = "Nobody", ["Soigneurs"] = "Healers", ["Tous"] = "Everyone",
 	["Icône de rôle (tank, soigneur)"] = "Role icon (tank, healer)", ["Marqueur de raid"] = "Raid marker",
