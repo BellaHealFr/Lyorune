@@ -34,6 +34,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | Abandonnée (le jeu bloque les messages entre addons pendant un combat de boss) |
 | 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | Publiée (v1.23.8) |
 | 20 | 1.26.0 | Nouvelle fenêtre d'options : chapitres, case témoin, réglages changés, lumière de soin | À faire |
+| 21 | 1.27.0 | Icônes à la mesure de chaque forme de case, taille réglable dans l'éditeur de placement | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -233,6 +234,25 @@ place change. La phrase en runes est gardée. Travail par lots, un lot par sessi
 - [ ] Lumière de soin dans l'en-tête, rune du chapitre ouvert, étincelle sur la case témoin ; 3 thèmes, contraste
   élevé, « Effets magiques » et « Animations réduites » respectés
 - [ ] Tutoriel, visite guidée et traduction anglaise à jour
+
+## Étape 21 : icônes à la mesure de chaque forme (1.27.0)
+Demande de l'auteur (20 novembre 2026) : régler la taille des icônes, pas seulement leur place, et des icônes qui
+s'adaptent à la forme de case choisie. Aujourd'hui, le nom, la vie et le rôle suivent la forme, mais les soins sur
+la durée (en haut à gauche) et les affaiblissements (en bas à droite) gardent la même place dans les 4 formes, avec
+une taille tirée de la seule hauteur de la case. Lu dans le code, à confirmer en jeu : en Barre et en Bandeau, ils
+recouvrent le rôle, le nom et la vie ; en Carré, une rangée de 4 soins (72 pixels) dépasse de la case (54 pixels).
+Décisions (carte blanche de l'auteur) : étape à part, après la 1.26.0 ; les auras privées gardent leur réglage de
+taille en pixels (un seul réglage), l'éditeur de placement les déplace seulement et renvoie à ce réglage.
+- [ ] Lot 1 : maquette des 4 formes avec la place et la taille des icônes, validée par l'auteur avant de coder
+- [ ] Lot 2 : place et taille d'origine des icônes écrites pour chaque forme dans `Z.shapes` (une forme ajoutée =
+  une ligne) ; une rangée trop large rapetisse ses icônes pour tenir dans la case au lieu d'en déborder ; test des
+  4 formes avec 1 à 6 soins et 2 à 5 affaiblissements, grand raid compris
+- [ ] Lot 3 : taille de l'élément choisi dans l'éditeur de placement (molette ou « - » et « + », de 50 à 200 %),
+  gardée par forme avec son décalage dans `Z.db.placement`, bornes dans `Z.limits`, partage de profil
+  (`Share.lua`) ; en combat, une taille changée attend la sortie du combat (conteneurs d'auras du jeu reconstruits
+  seulement hors combat) ; test
+- [ ] Lot 4 : essai en jeu en groupe de 5 et en raid, en combat ; guide du joueur, une ligne dans une carte
+  existante de la visite, anglais, `## Notes`, README, site, publication
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
