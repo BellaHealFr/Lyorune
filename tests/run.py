@@ -15,6 +15,7 @@ import re
 rt.globals().TOC_VERSION = re.search(r'## Version: (\S+)', read(os.path.join(addon, 'Lyorune.toc'))).group(1)
 rt.execute(read(os.path.join(here, 'mock.lua')))
 
+rt.globals().RUNES_LUA = read(os.path.join(addon, 'Runes.lua')) # rechargé à part (inscription pas encore construite)
 rt.execute('BEFORE = {} for k in pairs(_G) do BEFORE[k] = true end')
 files = [l.strip().replace('\\', '/') for l in read(os.path.join(addon, 'Lyorune.toc')).splitlines() if l.strip().endswith('.lua')]
 rt.execute('NS = {}')
@@ -4192,6 +4193,143 @@ step("refonte 1.26.0, lot 6c septies b : corrections d'Options.lua (relecture)",
   w:Hide() w:Run("OnHide")
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh() Z:ApplyClicks()
+end)
+
+step("refonte 1.26.0, lot 6c septies c : corrections de Tutorial.lua et Runes.lua (relecture)", function()
+  local w = Z:OptionsWindow()
+  local saved = { language = Z.db.language, lockMode = Z.db.lockMode, tutorialDone = Z.db.tutorialDone,
+    highContrast = Z.db.highContrast, absorbStyle = Z.db.absorbStyle, windowTheme = Z.db.windowTheme,
+    showRunes = Z.db.showRunes, theme = Z.db.theme }
+  Z.db.language = "AUTO" Z:SetLanguage()
+  w:Hide() w:Run("OnHide")
+  local card
+  local function Go(n) for _ = 1, n do card.next:Run("OnClick") end end
+
+  -- T1 : visite lancée fenêtre fermée jusqu'au bout : la copie d'« Annuler » prise par les cartes de la fenêtre est lâchée
+  Z:StartTutorial() card = LyoruneTutorial
+  Go(6)
+  assert(card.title:GetText() == "La fenêtre d'options" and w:IsShown() and Z:OptionsOpenedCopy(), "carte de la fenetre")
+  Go(4)
+  assert(card.title:GetText() == "C'est parti" and not w:IsShown())
+  Go(1)
+  assert(not card:IsShown() and not w:IsShown() and Z:OptionsOpenedCopy() == nil, "copie gardee apres la visite")
+
+  -- T2 a : /reload pendant la carte « Placer les cadres » : le verrou du joueur revient au chargement
+  Z.db.lockMode = "ALT" Z:StartTutorial() Go(4)
+  assert(card.title:GetText() == "Placer les cadres" and Z.db.lockMode == "FREE" and Z.db.lockBeforeTutorial == "ALT")
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(Z.db.lockMode == "ALT" and Z.db.lockBeforeTutorial == nil, "verrou perdu au rechargement : " .. tostring(Z.db.lockMode))
+  card.close:Run("OnClick")
+  assert(Z.db.lockMode == "ALT")
+  -- T2 b : « Verrouillé » choisi pendant la carte (elle le conseille) : gardé
+  Z:StartTutorial() Go(4)
+  Z.db.lockMode = "LOCKED"
+  Go(1)
+  assert(Z.db.lockMode == "LOCKED" and Z.db.lockBeforeTutorial == nil, "choix du joueur ecrase : " .. Z.db.lockMode)
+  card.close:Run("OnClick")
+  -- rechargement sans visite coupée : rien ne change
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(Z.db.lockMode == "LOCKED")
+
+  -- T3 : couleurs des soins en route et du bouclier lues dans le thème des cases, place du bouclier suivie
+  local function Hex(c) return ("%02x%02x%02x"):format(c[1] * 255 + 0.5, c[2] * 255 + 0.5, c[3] * 255 + 0.5) end
+  Z.db.highContrast = true Z.db.absorbStyle = "BAND" Z:Refresh()
+  Z:StartTutorial() Go(1)
+  local body = card.body:GetText()
+  assert(card.title:GetText() == "Une case par joueur")
+  assert(body:find("|cff" .. Hex(Z:Theme().absorb) .. "bande claire", 1, true) and body:find("|cff" .. Hex(Z:Theme().incoming), 1, true), body)
+  assert(not body:find("8cd9ff", 1, true) and not body:find("vert clair", 1, true), "couleurs de l'Epure en dur")
+  Z.db.highContrast = false Z.db.theme = "HEROIC" Z.db.absorbStyle = "FOLLOW" Z:Refresh()
+  card.back:Run("OnClick") Go(1)
+  body = card.body:GetText()
+  assert(body:find("|cff" .. Hex(Z:Theme().absorb) .. "part claire", 1, true) and body:find("prolonge", 1, true), body)
+  card.close:Run("OnClick")
+  Z.db.absorbStyle = saved.absorbStyle Z.db.theme = saved.theme Z.db.highContrast = saved.highContrast Z:Refresh()
+
+  -- T4 : aucune vraie case visible : les cartes des cases ouvrent le faux groupe et l'encadrent, puis le ferment
+  local button = Z.buttons[1]
+  button.IsVisible = function() return false end
+  Z:StartTutorial() Go(1)
+  local light = card.highlight
+  assert(Z.previewActive and Z:PreviewSize() == 5, "faux groupe pas ouvert")
+  assert(light:IsShown() and light._point[2] == Z:PreviewCells(1)[1], "faux groupe pas encadre")
+  Go(2)
+  assert(card.title:GetText() == "Ce que disent les couleurs" and Z.previewActive)
+  Go(1)
+  assert(card.title:GetText() == "Placer les cadres" and not Z.previewActive, "faux groupe laisse ouvert")
+  Go(1)
+  assert(Z.previewActive and light._point[2] == Z:PreviewCells(1)[1], "carte du mode test")
+  card.close:Run("OnClick")
+  assert(not Z.previewActive, "mode test laisse ouvert par la visite")
+  button.IsVisible = nil
+  -- T7 a : mode test ouvert par le joueur avant la visite : il reste ouvert
+  Z:TogglePreview(5)
+  Z:StartTutorial() Go(5)
+  assert(card.title:GetText() == "Essayer sans groupe" and Z.previewActive)
+  Go(1)
+  assert(Z.previewActive, "mode test du joueur ferme par la visite")
+  card.close:Run("OnClick")
+  assert(Z.previewActive) Z:TogglePreview()
+
+  -- T5 : Échap termine la visite comme la croix (fenêtre d'options rendue, copie gardée, verrou rendu)
+  local found
+  for _, name in ipairs(UISpecialFrames) do found = found or name == "LyoruneTutorial" end
+  assert(found, "carte absente de UISpecialFrames")
+  Z:ToggleOptions("Mes soins")
+  local copy = Z:OptionsOpenedCopy()
+  Z:StartTutorial() Go(7)
+  assert(card.title:GetText() == "Une page par chapitre" and w:IsShown())
+  w:Hide() w:Run("OnHide") card:Hide() card:Run("OnHide") -- Échap ferme les deux
+  assert(not Z:TutorialRunning(), "visite pas terminee par Echap")
+  assert(w:IsShown() and Z:OptionChapter() == "Mes soins" and Z:OptionsOpenedCopy() == copy, "fenetre pas rendue apres Echap")
+  w:Hide() w:Run("OnHide")
+  Z.db.lockMode = "SHIFT" Z:StartTutorial() Go(4)
+  card:Hide() card:Run("OnHide")
+  assert(not Z:TutorialRunning() and Z.db.lockMode == "SHIFT", "verrou pas rendu apres Echap")
+  card.close:Run("OnClick") -- déjà finie : sans effet
+
+  -- T6 : fenêtre fermée par sa croix sur une de ses cartes : le cadre lumineux part avec elle
+  Z:StartTutorial() Go(6)
+  assert(light:IsShown() and w:IsShown())
+  w:Hide() w:Run("OnHide")
+  assert(not light:IsShown() and card:IsShown(), "cadre lumineux seul a l'ecran")
+  card.close:Run("OnClick")
+
+  -- T7 b : thème des fenêtres changé pendant la visite : les mots d'accent suivent aussitôt
+  Z:StartTutorial()
+  Z.db.windowTheme = Z.db.windowTheme == "MMO" and "MODERN" or "MMO" Z.UI.ApplySkin()
+  assert(card.body:GetText():find("|cff" .. Z.UI.Hex("accent") .. "/lyorune", 1, true), "accent pas suivi : " .. card.body:GetText())
+  card.close:Run("OnClick")
+  Z.db.windowTheme = saved.windowTheme Z.UI.ApplySkin()
+
+  -- R1 : inscription coupée à la première ouverture, puis rallumée : construite sans attendre un /reload
+  local fresh = setmetatable({}, { __index = Z })
+  local f = assert(loadstring(RUNES_LUA, "@Runes.lua"))
+  f("Lyorune", fresh)
+  Z.db.showRunes = false
+  fresh:RefreshRunes(w)
+  assert(fresh:RuneStrip() == nil)
+  Z.db.showRunes = true
+  fresh:RefreshRunes()
+  local strip = fresh:RuneStrip()
+  assert(strip and strip:IsShown(), "inscription pas construite une fois rallumee")
+  strip:Hide()
+
+  -- R2 : fenêtre fermée la souris sur les runes : éclat du survol et infobulle partent avec elle
+  strip = Z:RuneStrip()
+  strip:Run("OnEnter")
+  assert(strip.lit)
+  local owned = GameTooltip.IsOwned
+  GameTooltip.IsOwned = function(_, owner) return owner == strip end
+  GameTooltip:Show()
+  strip:Run("OnHide")
+  GameTooltip.IsOwned = owned
+  assert(not strip.lit and strip.base[1]._color[4] == 0.5, "runes restees allumees")
+  assert(not GameTooltip:IsShown(), "infobulle restee ouverte")
+
+  w:Hide() w:Run("OnHide")
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:SetLanguage() Z.UI.ApplySkin() Z:Refresh()
 end)
 
 step("aucune variable globale imprevue", function()

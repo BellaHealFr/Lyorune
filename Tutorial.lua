@@ -6,15 +6,30 @@ local _, Z = ...
 local UI = Z.UI
 
 local card, highlight, current
-local lockBefore -- déplacement des cadres choisi par le joueur, rendu à la fin de l'étape « Placer les cadres »
+local fake     -- vrai quand la visite a ouvert elle-même le mode test : elle le ferme en partant (ouvert avant, il reste)
+local watching -- vrai une fois le crochet posé sur la fenêtre d'options (cadre lumineux caché avec elle)
 -- D'où la visite a été lancée : fenêtre d'options ouverte ou non, et son chapitre. La visite la ferme le temps des
 -- cases, puis rend la fenêtre telle qu'elle était, sur le même chapitre (retour d'essai de l'auteur).
 local back = {}
 local starting -- vrai pendant que la visite ferme la fenêtre d'options, juste avant sa première carte
 local GAP = 14 -- écart entre la carte et ce qu'elle présente (le cadre de runes déborde de 12 pixels)
 
--- Le bloc entier des cadres de soin : le groupe, ou chaque groupe de raid, avec son étiquette
+-- La première case montrée : une vraie, ou celle du faux groupe quand le mode test est ouvert (il cache les vraies)
+local function Cell()
+	if Z.previewActive then return Z:PreviewCells(1)[1] end
+	return Z.buttons[1]
+end
+
+-- Le bloc entier des cadres de soin : le groupe, ou chaque groupe de raid, avec son étiquette ; en mode test, les
+-- cases du faux groupe
 local function Block()
+	if Z.previewActive then
+		local list, size = {}, Z:PreviewSize()
+		for i, cell in ipairs(Z:PreviewCells(size)) do
+			if i <= size and cell:IsVisible() then list[#list + 1] = cell end
+		end
+		return list
+	end
 	local list = { Z.buttons[1] }
 	for _, h in ipairs(Z.headers) do
 		if h.def and h.def.pos == "pos" and h:IsVisible() then
@@ -30,6 +45,26 @@ local function OpenPage()
 	local window = Z:OptionsWindow()
 	for _, chapter in ipairs(window and window.chapters or {}) do
 		if chapter.page and chapter.page.scroll:IsShown() then return chapter.page.scroll end
+	end
+end
+
+-- Couleur d'un élément des cases en « |cff... » (soins en route, bouclier), lue dans le thème des cases en cours :
+-- elle change d'un thème à l'autre (bouclier doré en Héroïque, jaune en contraste élevé)
+local function Hex(color)
+	return ("%02x%02x%02x"):format(color[1] * 255 + 0.5, color[2] * 255 + 0.5, color[3] * 255 + 0.5)
+end
+
+-- Ouvre le faux groupe du mode test (wanted : nombre de joueurs) s'il n'est pas déjà ouvert, ou le ferme (nil) si
+-- c'est la visite qui l'a ouvert. Jamais en combat (le mode test y est refusé).
+local function FakeGroup(wanted)
+	if wanted then
+		if not Z.previewActive and not InCombatLockdown() then
+			Z:TogglePreview(wanted)
+			fake = true
+		end
+	elseif fake then
+		fake = nil
+		if Z.previewActive then Z:TogglePreview() end
 	end
 end
 
@@ -62,11 +97,23 @@ local steps = {
 	},
 	{
 		title = "Une case par joueur",
-		text = "La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé.\n\n"
-			.. "Le |cff73ff99vert clair|r au bout de la barre montre les soins déjà en route. "
-			.. "La |cff8cd9ffbande claire|r en bas est un bouclier.",
-		target = function() return Z.buttons[1] end,
+		-- Écrit d'après les réglages : couleurs du thème des cases, place du bouclier, éléments coupés
+		text = function()
+			local L, db, theme = Z.L, Z.db, Z:Theme()
+			local text = L["La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé."]
+			if db.showIncoming then
+				text = text .. "\n\n" .. L["La |cff%steinte claire|r au bout de la vie montre les soins déjà en route."]:format(Hex(theme.incoming))
+			end
+			if db.showAbsorb then
+				local shield = db.absorbStyle == "FOLLOW" and "La |cff%spart claire|r qui prolonge la vie est un bouclier."
+					or "La |cff%sbande claire|r en bas de la case est un bouclier."
+				text = text .. (db.showIncoming and " " or "\n\n") .. L[shield]:format(Hex(theme.absorb))
+			end
+			return text
+		end,
+		target = Cell,
 		around = Block,
+		cells = true,
 	},
 	{
 		title = "Soigner d'un clic",
@@ -74,8 +121,9 @@ local steps = {
 			return Z.L["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] .. "\n\n" .. ClickSummary()
 				.. "\n\n" .. Z.L["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."]
 		end,
-		target = function() return Z.buttons[1] end,
+		target = Cell,
 		around = Block,
+		cells = true,
 	},
 	{
 		title = "Ce que disent les couleurs",
@@ -87,8 +135,9 @@ local steps = {
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics.",
-		target = function() return Z.buttons[1] end,
+		target = Cell,
 		around = Block,
+		cells = true,
 	},
 	{
 		title = "Placer les cadres",
@@ -99,20 +148,23 @@ local steps = {
 			.. "Dans la partie Cadres affichés, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
 		target = function() return Z.header.handle end,
 		around = Block,
-		-- Les cadres sont libres le temps de l'étape, puis le choix du joueur revient (verrou compris)
+		-- Les cadres sont libres le temps de l'étape, puis le choix du joueur revient (verrou compris). L'ancien choix
+		-- est gardé dans la sauvegarde : un /reload ou une déconnexion pendant la carte le rend au chargement
+		-- (Core.lua). Un verrou choisi par le joueur pendant la carte (elle le lui conseille) n'est pas écrasé.
 		before = function()
-			lockBefore = Z.db.lockMode
 			if Z.db.lockMode ~= "FREE" then
+				Z.db.lockBeforeTutorial = Z.db.lockMode
 				Z.db.lockMode = "FREE"
 				Z:Refresh()
 			end
 		end,
 		after = function()
-			if lockBefore and lockBefore ~= Z.db.lockMode then
-				Z.db.lockMode = lockBefore
+			local before = Z.db.lockBeforeTutorial
+			Z.db.lockBeforeTutorial = nil
+			if before and Z.db.lockMode == "FREE" then
+				Z.db.lockMode = before
 				Z:Refresh()
 			end
-			lockBefore = nil
 		end,
 	},
 	{
@@ -120,9 +172,9 @@ local steps = {
 		text = "Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r, ou avec « 5 », « 10 », « 25 » ou « 40 » sous la case témoin des options. Glissez son bandeau pour le déplacer ; un second clic sur le même nombre, ou le bouton |cff33dd88Fermer|r au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat.",
-		target = function() return LyorunePreview end,
-		before = function() if not Z.previewActive then Z:TogglePreview(10) end end,
-		after = function() if Z.previewActive then Z:TogglePreview() end end,
+		target = Cell,
+		around = Block,
+		preview = 10, -- ouvert pour la carte s'il ne l'est pas, puis refermé ; ouvert par le joueur avant, il reste
 	},
 	-- La fenêtre d'options, zone par zone : chaque carte ouvre la fenêtre sur son chapitre (window) et encadre sa
 	-- zone ; la carte se pose à côté de la fenêtre entière, jamais sur la zone présentée
@@ -179,6 +231,18 @@ local function Accent(text)
 	end))
 end
 
+-- Le texte d'une carte, avec l'accent du thème de fenêtre
+local function Body(step)
+	return Accent(type(step.text) == "function" and step.text() or Z.L[step.text])
+end
+
+-- Faux groupe voulu par une carte : celui de la carte du mode test ; pour les cartes des cases, 5 joueurs quand
+-- aucune vraie case n'est visible (cadres cachés hors combat, ou seul sans son propre cadre)
+local function Wanted(step)
+	if step.preview then return step.preview end
+	if step.cells and (fake or not Z.previewActive and not (Z.buttons[1] and Z.buttons[1]:IsVisible())) then return 5 end
+end
+
 -- Étapes vues : runes allumées ; étape en cours : rune qui respire ; à venir : runes éteintes
 local function Progress(index)
 	local gold, dim = UI.gold, UI.line
@@ -196,9 +260,11 @@ end
 -- Fin de la visite (Terminer ou la croix) : la fenêtre d'options revient comme elle était, même chapitre, sans que
 -- la visite change le dernier chapitre utilisé
 local function Finish()
+	if not current then return end -- déjà finie (Échap, puis la croix dans le même instant)
 	local step = steps[current]
-	if step and step.after then step.after() end
+	if step.after then step.after() end
 	current = nil
+	FakeGroup(nil)
 	card:Hide()
 	highlight:Hide()
 	Z.db.tutorialDone = true
@@ -206,10 +272,13 @@ local function Finish()
 	if not window then return end
 	if back.touched then window.Select(back.chapter or 1, true) end -- chapitres ouverts par la visite
 	if back.open then
-		window:Show()
-	elseif step and step.window then
+		-- effacée par une fenêtre secondaire encore ouverte : elle revient à sa fermeture
+		if not UI.Away() then window:Show() end
+	elseif step.window then
 		window:Hide() -- fermée sur une carte de la fenêtre ; une fenêtre ouverte par le joueur reste ouverte
 	end
+	-- La fenêtre ne revient pas : la copie d'« Annuler mes changements », gardée pendant la visite, est lâchée
+	if not (window:IsShown() or UI.Away()) then Z:ForgetOptionsCopy() end
 end
 
 -- Bords d'un ou plusieurs cadres (gauche, droite, haut, bas), en points de l'écran, et le premier cadre mesuré ;
@@ -262,11 +331,20 @@ local function Show(index)
 	if previous and previous.after then previous.after() end
 	current = index
 	local step = steps[index]
+	FakeGroup(Wanted(step))
 	if step.before then step.before() end
 	-- Les cartes de la fenêtre d'options l'ouvrent sur leur chapitre ; les autres la ferment
 	if step.window then
 		back.touched = true
 		Z:ToggleOptions(step.window)
+		-- Fenêtre fermée par sa croix sur une de ses cartes : le cadre lumineux part avec elle
+		if not watching then
+			watching = true
+			Z:OptionsWindow():HookScript("OnHide", function()
+				local shown = steps[current]
+				if shown and shown.window then highlight:Hide() end
+			end)
+		end
 	elseif previous and previous.window then
 		Z:OptionsWindow():Hide()
 	end
@@ -274,7 +352,7 @@ local function Show(index)
 	local L = Z.L
 	local wasShown = card:IsShown()
 	card.title:SetText(L[step.title])
-	card.body:SetText(Accent(type(step.text) == "function" and step.text() or L[step.text]))
+	card.body:SetText(Body(step))
 	card.progress:SetText(index .. " / " .. #steps)
 	Progress(index)
 	card.back:SetShown(index > 1)
@@ -314,6 +392,16 @@ local function Build()
 	card = UI.Window("LyoruneTutorial", "", 400, 220)
 	card:SetFrameStrata("FULLSCREEN_DIALOG")
 	card.close:SetScript("OnClick", Finish)
+	-- Échap termine la visite comme la croix. Fini juste après : sur les cartes de la fenêtre, Échap ferme aussi la
+	-- fenêtre d'options, et la visite la rend une fois tout fermé.
+	tinsert(UISpecialFrames, "LyoruneTutorial")
+	card:HookScript("OnHide", function()
+		if current then
+			C_Timer.After(0, function()
+				if current and not card:IsShown() then Finish() end
+			end)
+		end
+	end)
 
 	card.slide = card:CreateAnimationGroup()
 	card.from = card.slide:CreateAnimation("Translation")
@@ -368,7 +456,13 @@ local function Build()
 	highlight.pulse = UI.Breathe(highlight, 0.3, 1.4)
 	highlight:Hide()
 	card.highlight = highlight
-	UI.OnSkin(function() if current then Progress(current) end end)
+	-- Thème de fenêtre changé pendant la visite : runes et mots à la couleur d'accent suivent tout de suite
+	UI.OnSkin(function()
+		if current then
+			Progress(current)
+			card.body:SetText(Body(steps[current]))
+		end
+	end)
 end
 
 -- Lancée des options (bouton de l'Accueil, ou /lyorune tuto fenêtre ouverte), la visite ferme la fenêtre le temps
@@ -380,7 +474,8 @@ function Z:StartTutorial(from)
 	if not card then Build() end
 	local window = Z:OptionsWindow()
 	if not current then -- relancée en cours de route : on garde d'où elle était partie
-		back = from or { open = window and window:IsShown(), chapter = Z:OptionChapter() }
+		-- effacée par une fenêtre secondaire (UI.Away), la fenêtre compte comme ouverte : elle revient à la fin
+		back = from or { open = window and (window:IsShown() or UI.Away()), chapter = Z:OptionChapter() }
 	end
 	if window and window:IsShown() then
 		starting = true

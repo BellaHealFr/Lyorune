@@ -388,10 +388,12 @@ Z.translations.enUS = {
 	["Lyorune affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
 			.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/lyorune tuto|r."] =
 		"Lyorune shows your group as cells and lets you heal with a single click.\n\nThis tour takes one minute. You can restart it with |cff33dd88/lyorune tuto|r.",
-	["La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé.\n\n"
-			.. "Le |cff73ff99vert clair|r au bout de la barre montre les soins déjà en route. "
-			.. "La |cff8cd9ffbande claire|r en bas est un bouclier."] =
-		"The coloured bar is the player's health: the shorter it is, the more hurt they are.\n\nThe |cff73ff99light green|r at the end of the bar shows heals already on their way. The |cff8cd9fflight strip|r at the bottom is a shield.",
+	["La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé."] =
+		"The coloured bar is the player's health: the shorter it is, the more hurt they are.",
+	["La |cff%steinte claire|r au bout de la vie montre les soins déjà en route."] =
+		"The |cff%slight tint|r at the end of the health shows heals already on their way.",
+	["La |cff%sbande claire|r en bas de la case est un bouclier."] = "The |cff%slight strip|r at the bottom of the cell is a shield.",
+	["La |cff%spart claire|r qui prolonge la vie est un bouclier."] = "The |cff%slight part|r extending the health is a shield.",
 	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"

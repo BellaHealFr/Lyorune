@@ -52,7 +52,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 
 - **Profil actif** : le profil en cours et comment il a été choisi, avec le bouton « Changer de profil » ;
 - **Vos réglages changés** : tous vos réglages qui ne sont plus comme à l'installation. Un clic sur un nom vous y emmène ; un clic sur sa rune d'or le rétablit ;
-- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
+- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus ; si vos cadres sont cachés (« En combat seulement », ou seul sans votre propre cadre), elle ouvre le faux groupe du mode test pour vous montrer les cases, puis le referme. Échap ou la croix arrêtent la visite à tout moment, et la fenêtre revient de la même façon. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
 
 Au bas du chapitre Fenêtre et aide, « Lire une case » rappelle ce que veulent dire les couleurs principales d'une case, et « Commandes » liste les commandes `/lyorune`.
 

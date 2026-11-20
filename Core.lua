@@ -308,6 +308,13 @@ local function Migrate(db)
 	end
 	-- 1.7.0 : la barre de mana passe à « Tous » par défaut, une seule fois, pour ceux qui gardaient l'ancien défaut
 	if db.lastVersion and Z.VersionNumber(db.lastVersion) < 10700 and db.manaBars == "HEALERS" then db.manaBars = "ALL" end
+	-- Visite guidée coupée sur la carte « Placer les cadres » (/reload, déconnexion) : le déplacement des cadres que
+	-- le joueur avait choisi revient, sauf s'il en a pris un autre pendant la carte (Tutorial.lua). Champ hors de
+	-- Z.defaults : jamais partagé, jamais copié dans un profil.
+	if db.lockBeforeTutorial then
+		if db.lockMode == "FREE" then db.lockMode = db.lockBeforeTutorial end
+		db.lockBeforeTutorial = nil
+	end
 end
 
 -- Position par personnage. Le premier personnage connecté après la 1.7.0 garde l'ancienne position commune.

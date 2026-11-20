@@ -2596,6 +2596,13 @@ function Z:OptionsOpenedCopy()
 	return opened
 end
 
+-- Une fenêtre qui a fermé les options en gardant la copie (la visite) ne les rend pas : la copie est lâchée, sinon
+-- « Annuler mes changements » reprendrait plus tard des changements faits hors de la fenêtre
+function Z:ForgetOptionsCopy()
+	opened = nil
+	UpdateFoot()
+end
+
 -- Hauteur de la fenêtre : jamais plus haute que l'écran moins 60 pixels, la page du chapitre défile
 function Z.OptionsHeight(screen)
 	screen = screen or 0

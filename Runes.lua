@@ -90,6 +90,8 @@ local function PlayAll(list, play)
 	end
 end
 
+-- Repos : aussi à la fermeture de la fenêtre, la souris encore sur les runes (le jeu peut ne pas envoyer OnLeave à un
+-- cadre caché) : l'éclat du survol et l'infobulle partent avec elle
 local function Quiet(self)
 	PlayAll(self.writes, false)
 	PlayAll(self.waves, false)
@@ -100,6 +102,11 @@ local function Quiet(self)
 		self.glows[i]:SetAlpha(0)
 		self.halos[i]:SetAlpha(0)
 	end
+	if self.lit then
+		self.lit = false
+		Paint()
+	end
+	if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
 end
 
 -- Joue les animations à l'ouverture de la fenêtre (ou seulement fixe les runes en animations réduites)
@@ -208,7 +215,7 @@ local function Build(window)
 			PlayAll(self.hovers, true)
 			-- La traduction apparaît une fois la vague passée
 			C_Timer.After(SPREAD + 0.15, function()
-				if self.lit and self:IsMouseOver() then Tooltip(self) end
+				if self.lit and self:IsVisible() and self:IsMouseOver() then Tooltip(self) end
 			end)
 		end
 	end)
@@ -224,8 +231,10 @@ local function Build(window)
 	Paint()
 end
 
--- Appelée à la création de la fenêtre d'options, puis à chaque changement de réglage
+-- Appelée à la création de la fenêtre d'options, puis à chaque changement de réglage (sans la fenêtre : on la prend
+-- ici, pour construire l'inscription rallumée après avoir été coupée à la première ouverture)
 function Z:RefreshRunes(window)
+	window = window or Z.OptionsWindow and Z:OptionsWindow()
 	if window and Z.db.showRunes and not strip then Build(window) end
 	-- Logo de l'en-tête et inscription suivent « Animations réduites » sans attendre la prochaine ouverture
 	local options = Z.OptionsWindow and Z:OptionsWindow()

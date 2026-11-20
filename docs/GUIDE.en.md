@@ -53,7 +53,7 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 
 - **Active profile**: the current profile and how it was chosen, with the "Change profile" button;
 - **Your changed settings**: all your settings that are no longer as installed. Click a name to go there; click its golden rune to reset it;
-- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them. The setup assistant also closes the window during its three questions and gives it back on the Home page.
+- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them; if your frames are hidden ("In combat only", or solo without your own frame), it opens the fake group of the test mode to show you the cells, then closes it. Escape or the close button stop the tour at any time, and the window comes back the same way. The setup assistant also closes the window during its three questions and gives it back on the Home page.
 
 At the bottom of the Window and help chapter, "Reading a cell" recalls what the main colours of a cell mean, and "Commands" lists the `/lyorune` commands.
 
