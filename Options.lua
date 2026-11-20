@@ -2244,6 +2244,12 @@ local function BuildSearch()
 		results:Hide()
 		edit:SetText("")
 		edit:ClearFocus()
+		if entry.Show then -- élément hors des chapitres (case témoin) : il se montre lui-même, la page ne change pas
+			window.found = entry
+			flash.count = (flash.count or 0) + 1
+			flash:Hide()
+			return entry.Show()
+		end
 		local page = Select(entry.chapter)
 		-- La ligne qui porte l'élément : lui-même, ou la ligne dessinée à part qui le contient
 		local holder = entry.widget
@@ -2286,7 +2292,8 @@ local function BuildSearch()
 						results.rows[count] = row
 					end
 					row.entry = entry
-					row.label:SetText(entry.label .. "  |cff" .. UI.Hex("dim") .. L[chapters[entry.chapter].name] .. "|r")
+					local where = entry.chapter and L[chapters[entry.chapter].name] or entry.where
+					row.label:SetText(entry.label .. "  |cff" .. UI.Hex("dim") .. where .. "|r")
 					row:Show()
 				end
 			end
@@ -2415,8 +2422,25 @@ local function BuildWitness()
 	col.testText:SetWidth(STAGE_W)
 	col.testText:SetJustifyH("LEFT")
 	col.testText:SetSpacing(2)
+	-- Trouvé par la recherche (retour d'essai 22) : les boutons clignotent ici, sur le chapitre ouvert. Ils ont quitté
+	-- Disposition pour cette colonne ; y mener le joueur ne lui montrait rien.
+	local glow = UI.Paint(UI.Tex(col, "BORDER"), "accent", 0.35) -- au-dessus du fond de la colonne, sous les boutons
+	glow:SetPoint("TOPLEFT", test.strip, "TOPLEFT", -4, 3)
+	glow:SetPoint("BOTTOMRIGHT", test.strip, "BOTTOMRIGHT", 4, -3)
+	glow:Hide()
+	col.glow = glow
+	local function Blink() -- trois éclats en 1,5 seconde ; un seul, fixe, avec « Réduire les mouvements »
+		glow.count = (glow.count or 0) + 1 -- deux recherches de suite : seule la dernière décide
+		local mine, steps = glow.count, Z.db.reduceMotion and 1 or 6
+		local function Step(n)
+			if glow.count ~= mine then return end
+			glow:SetShown(n < steps and n % 2 == 0)
+			if n < steps then C_Timer.After(steps == 1 and 1.5 or 0.25, function() Step(n + 1) end) end
+		end
+		Step(0)
+	end
 	searchIndex[#searchIndex + 1] = { text = Plain(L["Mode test"]), more = Plain(L[TEST_HINT]), widget = test,
-		label = L["Mode test"], chapter = ChapterIndex("Disposition") }
+		label = L["Mode test"], where = L["Case témoin"], Show = Blink }
 
 	col.Update = function()
 		local db = Z.db

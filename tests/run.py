@@ -3403,7 +3403,7 @@ step("refonte 1.26.0, lot 4b : case temoin, faux groupe, boutons du mode test", 
   local row = w.results.rows[1]
   assert(row and row:IsShown() and row.entry.widget == col.test, "recherche du mode test")
   row:Run("OnClick", "LeftButton")
-  assert(Z:OptionChapter() == "Disposition", "la recherche ouvre Disposition")
+  assert(Z:OptionChapter() == "Apparence", "la recherche change de chapitre (retour 22 : les boutons clignotent sur place)")
 
   -- Fenêtre fermée : rien n'est redessiné ; à la réouverture, la case témoin suit
   w:Hide() col:Hide()
@@ -4834,6 +4834,45 @@ step("refonte 1.26.0, lot 6c octies : retours 16, 18, 20 et 21 (visite et Mes ma
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c nonies a : retour 22 (recherche du mode test)", function()
+  local L, o = Z.L, Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion }
+  o:Hide() o:Run("OnHide")
+  Z:ToggleOptions("Mes soins")
+  local chapter = Z:OptionChapter()
+  local after, timers = C_Timer.After, {}
+  C_Timer.After = function(_, f) timers[#timers + 1] = f end
+  local function Find()
+    o.search:SetText("mode test") o.search:Run("OnTextChanged", true)
+    for _, row in ipairs(o.results.rows) do
+      if row:IsShown() and row.entry.label == L["Mode test"] then return row end
+    end
+  end
+  -- le résultat dit où sont les boutons, et les fait clignoter sans changer de chapitre
+  Z.db.reduceMotion = false
+  local row = Find()
+  assert(row and row.label:GetText():find(L["Case témoin"], 1, true), "22 : resultat sans « Case témoin »")
+  row:Run("OnClick", "LeftButton")
+  local glow = o.witness.glow
+  assert(Z:OptionChapter() == chapter, "22 : la recherche change de chapitre")
+  assert(glow:IsShown() and not o.flash:IsShown(), "22 : boutons du mode test pas montres")
+  local seen = { glow:IsShown() }
+  local i = 1
+  while timers[i] do timers[i]() seen[#seen + 1] = glow:IsShown() i = i + 1 end
+  assert(#seen == 7 and not glow:IsShown(), "22 : clignotement : " .. #seen)
+  assert(seen[2] == false and seen[3] == true, "22 : pas de clignotement")
+  -- Réduire les mouvements : un seul éclat fixe ; une seconde recherche reprend la main sur la première
+  Z.db.reduceMotion = true
+  timers = {}
+  Find():Run("OnClick", "LeftButton")
+  Find():Run("OnClick", "LeftButton")
+  assert(#timers == 2 and glow:IsShown(), "22 : eclat fixe : " .. #timers)
+  timers[1]() assert(glow:IsShown(), "22 : le premier delai eteint le second eclat")
+  timers[2]() assert(not glow:IsShown(), "22 : eclat jamais eteint")
+  C_Timer.After = after
+  for key, value in pairs(saved) do Z.db[key] = value end
 end)
 
 step("aucune variable globale imprevue", function()
