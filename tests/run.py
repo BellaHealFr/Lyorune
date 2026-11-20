@@ -1507,11 +1507,10 @@ step("etape 7 : clics et touches sur un seul ecran, nouveau sort sans clic", fun
   NOW = NOW + 1 add:Run("OnClick", "LeftButton") add:Run("OnKeyDown", "ESCAPE")
   assert(not add.capturing and add.label:GetText():find("Ajouter", 1, true))
   -- changer le declencheur d'une ligne
-  local list = page.add and Z:ClickCell("ctrl-shift-2") and select(2, Z:ClickCell("ctrl-shift-2")):GetParent()
-  assert(not Z:ClickCell("CTRL-SHIFT-Q", "key"), "liste sans defilement")
-  list:Run("OnMouseWheel", -100) -- la molette descend au bas de la liste
+  -- toutes les lignes sont visibles (la page du chapitre défile) : la liste s'allonge avec les raccourcis
   cell, row = Z:ClickCell("CTRL-SHIFT-Q", "key")
-  assert(row, "ligne de la touche")
+  assert(row and row:IsShown(), "ligne de la touche")
+  assert(page:GetHeight() >= #Z:Bindings() * 27, "liste trop courte : " .. page:GetHeight())
   NOW = NOW + 1 row.key:Run("OnClick", "LeftButton") row.key:Run("OnMouseDown", "Button7")
   assert(Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-BUTTON7" }) == "Rénovation" and not Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-Q" }))
   IsShiftKeyDown = shift CTRL = false
@@ -2967,8 +2966,7 @@ step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", funct
   local keys = Z:OptionKeys()
   for key, where in pairs(keys) do assert(#where == 1, "reglage en double : " .. key .. " (" .. table.concat(where, ", ") .. ")") end
   for key, chapter in pairs(inChapters) do assert(keys[key] and keys[key][1] == chapter, "reglage sans ligne : " .. key) end
-  local elsewhere = { tutorialDone = true, wizardDone = true, minimapAngle = true, macroAutoTarget = true, -- réglés ailleurs
-    manaAlert = true, regenAlert = true, resAlert = true, manaThreshold = true, regenThreshold = true } -- page Alertes
+  local elsewhere = { tutorialDone = true, wizardDone = true, minimapAngle = true, macroAutoTarget = true } -- réglés ailleurs
   for key, value in pairs(Z.defaults) do
     if (type(value) == "boolean" or type(value) == "number" or Z.choices[key]) and not elsewhere[key] then
       assert(keys[key], "reglage absent des options : " .. key)
@@ -3029,6 +3027,84 @@ step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", funct
 
   -- Fenêtre de 1080 x 708, jamais plus haute que l'écran moins 60 pixels
   assert(w:GetWidth() == 1080 and Z.OptionsHeight(1080) == 708 and Z.OptionsHeight(700) == 640 and Z.OptionsHeight(nil) == 708, "hauteur")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
+end)
+
+step("refonte 1.26.0, lot 3a : listes dans leurs chapitres, clics et alertes en une colonne", function()
+  local saved = { extraTracked = Z.db.extraTracked, manaText = Z.db.manaText }
+  Z.db.extraTracked = {}
+  Z.char.optionFolds = {}
+  Z:ToggleOptions("Accueil")
+  local w = Z:OptionsWindow()
+  -- Chaque liste dans son chapitre ; plus aucune page à deux colonnes pour les listes, les clics et les alertes
+  local where, boxes = { pinned = "Disposition", extraTracked = "Mes soins", ignoredNames = "Affaiblissements", importantNames = "Affaiblissements" }, {}
+  for _, chapter in ipairs(w.chapters) do
+    local page = w.Select(chapter.name)
+    for _, part in ipairs(page.parts) do
+      local widget = part.widget
+      if widget.chips then boxes[widget.key] = { box = widget, part = part, chapter = chapter.name } end
+      if chapter.name == "Clics" or chapter.name == "Alertes" or chapter.name == "Affaiblissements" then
+        assert(not widget.isBlock, "page a deux colonnes : " .. chapter.name)
+      end
+    end
+  end
+  for key, chapter in pairs(where) do assert(boxes[key] and boxes[key].chapter == chapter, "liste " .. key .. " hors de " .. chapter) end
+  assert(boxes.pinned.part.fold and not boxes.extraTracked.part.fold, "joueurs epingles dans les reglages fins")
+
+  -- Un nom tapé puis Entrée entre dans la liste, qui s'allonge avec la page ; un clic sur un nom le retire
+  local tracked = boxes.extraTracked.box
+  local page = w.Select("Mes soins")
+  local before, used = tracked:GetHeight(), page.used
+  for _, name in ipairs({ "Sort A", "Sort B", "Sort C", "Sort D" }) do
+    tracked.edit:SetText(name) tracked.edit:Run("OnEnterPressed")
+  end
+  assert(Z.db.extraTracked["Sort D"] and tracked.edit:GetText() == "", "ajout a la liste")
+  assert(tracked:GetHeight() > before and page.used > used, "la liste et la page s'allongent")
+  local found
+  for _, choice in ipairs(Z.CornerChoices("TOPLEFT")) do if choice[1] == "Sort C" then found = true end end
+  assert(found, "sort suivi absent du choix des coins")
+  assert(tracked.chips[1].name == "Sort A") tracked.chips[1]:Run("OnClick", "LeftButton")
+  assert(not Z.db.extraTracked["Sort A"] and not tracked.chips[4]:IsShown() and tracked:GetHeight() == before and page.used == used, "retrait d'un nom")
+
+  -- La recherche trouve une liste rangée dans les réglages fins : chapitre ouvert, réglages fins dépliés
+  w.search:SetText("joueurs épinglés") w.search:Run("OnTextChanged", true)
+  local hit
+  for _, row in ipairs(w.results.rows) do if row:IsShown() and row.entry.list == "pinned" then hit = row end end
+  assert(hit, "liste des joueurs epingles introuvable")
+  hit:Run("OnClick", "LeftButton")
+  assert(Z.char.optionChapter == "Disposition" and boxes.pinned.part.fold:IsOpen() and boxes.pinned.box:IsShown(), "recherche d'une liste")
+  boxes.pinned.part.fold:Run("OnClick")
+
+  -- Alertes et Clics : chaque réglage a sa ligne dans son chapitre ; le texte d'une annonce s'écrit dans la page
+  local keys = Z:OptionKeys()
+  for _, key in ipairs({ "alertChannel", "manaAlert", "manaThreshold", "regenAlert", "regenThreshold", "resAlert", "soundDispel", "soundMana" }) do
+    assert(keys[key] and keys[key][1] == "Alertes", "Alertes : " .. key)
+  end
+  for _, key in ipairs({ "castOnDown", "autoRes", "clicksPerSpec", "newSpellAlert", "clickConflictAlert", "externalClicks", "actionBarMacros" }) do
+    assert(keys[key] and keys[key][1] == "Clics", "Clics : " .. key)
+  end
+  page = w.Select("Alertes")
+  local text
+  for _, part in ipairs(page.parts) do if part.widget.test and not text then text = part.widget end end
+  assert(text and text.edit:GetText() == Z.db.manaText, "texte de l'annonce de mana")
+  text.edit:SetText("Mana basse {mana}") text.edit:Run("OnTextChanged", true)
+  assert(Z.db.manaText == "Mana basse {mana}", "texte de l'annonce enregistre")
+
+  -- Plus aucun texte des chapitres ne cite un ancien onglet (l'onglet de /macro est celui du jeu)
+  for _, chapter in ipairs(w.chapters) do
+    for _, section in ipairs(chapter.sections) do
+      for _, item in ipairs(section[2]) do
+        for _, value in pairs(item) do
+          if type(value) == "string" then
+            assert(not value:gsub("onglet de votre personnage", ""):find("onglet"), "ancien onglet cite : " .. value)
+          end
+        end
+      end
+    end
+  end
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()

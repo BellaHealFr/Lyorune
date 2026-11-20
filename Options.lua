@@ -29,7 +29,7 @@ local FINE = 14             -- retrait des réglages fins
 local COLUMN = 310          -- largeur d'une colonne des pages dessinées à part (Clics, Alertes, Profils...)
 local window, picker
 local chapters
-local searchIndex = {}      -- { text, more, chapter, widget, label, block } : nom, explications, chapitre, élément
+local searchIndex = {}      -- { text, more, chapter, widget, label, key } : nom, explications, chapitre, élément
 
 ----------------------------------------------------------------------------------------------------
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
@@ -46,11 +46,11 @@ local function Option(key)
 	end
 end
 
--- Un réglage retrouvable par la recherche. page : la page du chapitre, ou un bloc dessiné à part (page.isBlock) ;
+-- Un réglage retrouvable par la recherche. page : la page du chapitre, ou un bloc dessiné à part ;
 -- more : ses explications (phrase visible et infobulle), cherchées aussi.
 local function Register(page, label, widget, more)
 	local entry = { text = label:lower(), more = (more or ""):lower(), chapter = page.tabIndex, widget = widget,
-		label = label, block = page.isBlock and page or nil }
+		label = label }
 	searchIndex[#searchIndex + 1] = entry
 	return entry
 end
@@ -103,7 +103,9 @@ end
 --   { "button", "Libellé", fonction, "aide" } bouton
 --   { "buttons", { bouton, bouton... } }      boutons côte à côte (même description que « button »)
 --   { "note", "Texte", hauteur }              explication
---   { "custom", fonction }                    élément dessiné à part : fonction(page) renvoie le cadre
+--   { "custom", fonction }                    élément dessiné à part : fonction(page, largeur) renvoie le cadre ;
+--                                             son Update() le remet à jour à l'ouverture du chapitre, Fit(cadre, h)
+--                                             change sa hauteur et range de nouveau la page
 --   { "block", fonction, hauteur }            page dessinée à part en deux colonnes : fonction(bloc)
 -- Champs nommés, tous facultatifs :
 --   desc = "Phrase"     une phrase visible sous le nom, quand le nom ne suffit pas (l'aide reste en infobulle)
@@ -176,9 +178,9 @@ local function BuildItem(page, item, width)
 		widget:SetSize(width, item[3] or 30)
 		Note(widget, item[2], 0, 0, width)
 	elseif kind == "custom" then
-		widget = item[2](page)
+		widget = item[2](page, width)
 	elseif kind == "block" then
-		-- Page dessinée à part (Clics, Alertes, Profils...) : remise en une colonne avec les nouvelles briques au lot 3
+		-- Page dessinée à part (Profils, Aide) : remise en une colonne avec les nouvelles briques au lot 3b
 		widget = CreateFrame("Frame", nil, page)
 		widget:SetSize(2 * COLUMN + 32, item[3])
 		widget.tabIndex, widget.isBlock = page.tabIndex, true
@@ -209,22 +211,34 @@ local function PreviewButton(count)
 	return { "button", count .. " " .. L["joueurs"], function() Z:TogglePreview(count) end }
 end
 
--- Les valeurs affichées suivent un changement fait par un bouton : chaque ligne de la page ouverte se remet à
--- jour, les pages dessinées à part se remplissent de nouveau
-local function RefreshShownPages()
-	for _, chapter in ipairs(chapters or {}) do
-		local page = chapter.page
-		if page and page.scroll:IsShown() then
-			for _, part in ipairs(page.parts) do
-				local widget = part.widget
-				if widget.isBlock then
-					if widget:IsShown() then widget:Hide() widget:Show() end
-				elseif widget.Update then
-					widget:Update()
-				end
+-- Chaque ligne affichée d'une page se remet à jour ; les pages dessinées à part se remplissent de nouveau
+local function RefreshPage(page)
+	for _, part in ipairs(page.parts) do
+		local widget = part.widget
+		if widget:IsShown() then
+			if widget.isBlock then
+				widget:Hide()
+				widget:Show()
+			elseif widget.Update then
+				widget:Update()
 			end
 		end
 	end
+end
+
+-- Les valeurs affichées suivent un changement fait par un bouton (page ouverte seulement)
+local function RefreshShownPages()
+	for _, chapter in ipairs(chapters or {}) do
+		local page = chapter.page
+		if page and page.scroll:IsShown() then RefreshPage(page) end
+	end
+end
+
+-- Un élément dessiné à part change de hauteur (liste qui s'allonge) : la page se range de nouveau
+local function Fit(widget, height)
+	if math.abs((widget:GetHeight() or 0) - height) < 0.5 then return end
+	widget:SetHeight(height)
+	if widget.Relayout then widget.Relayout() end
 end
 
 -- Préréglage de transparence : opacité des cadres et opacité hors de portée
@@ -341,7 +355,7 @@ local function BuildThumb(parent, id, label, onClick)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
 		GameTooltip:SetText(L[label], UI.accent[1], UI.accent[2], UI.accent[3])
 		GameTooltip:AddLine(L["Cases de %d x %d, texte %d."]:format(shape.width, shape.height, shape.fontSize), 1, 1, 1)
-		GameTooltip:AddLine(L["Chaque valeur se retouche ensuite dans l'onglet Cadres."], 0.6, 0.64, 0.7, true)
+		GameTooltip:AddLine(L["Chaque valeur se retouche ensuite dans le chapitre Disposition."], 0.6, 0.64, 0.7, true)
 		GameTooltip:Show()
 	end)
 	thumb:SetScript("OnLeave", function(self)
@@ -400,8 +414,8 @@ end
 
 -- Choix d'un coin : « Aucun », puis mes sorts suivis (ceux de ma classe et ma liste), par ordre alphabétique.
 -- Le réglage est gardé par classe : un prêtre et un druide ont chacun leurs coins.
--- La liste est refaite à chaque affichage : un sort ajouté dans l'onglet Listes y entre aussitôt, et le sort du
--- coin reste affiché même s'il a quitté la liste (sinon « Aucun » s'afficherait alors que le coin est pris).
+-- La liste est refaite à chaque mise à jour : un sort ajouté à « Mes sorts à suivre » y entre aussitôt, et le sort
+-- du coin reste affiché même s'il a quitté la liste (sinon « Aucun » s'afficherait alors que le coin est pris).
 function Z.CornerChoices(point)
 	local names, seen = {}, {}
 	local function Add(name)
@@ -430,11 +444,13 @@ local function CornerPicker(point, label)
 				all[Z.class][point] = value ~= "" and value or nil
 				Z:Refresh()
 			end)
-		widget:SetScript("OnShow", function(self)
+		local show = widget.Update
+		widget.Update = function(self)
 			wipe(choices)
 			for _, choice in ipairs(Z.CornerChoices(point)) do choices[#choices + 1] = choice end
-			self:Update()
-		end)
+			show(self)
+		end
+		widget:SetScript("OnShow", widget.Update)
 		local color = Z.CORNER_COLORS[point]
 		widget.label:SetTextColor(color[1], color[2], color[3])
 		Register(page, L[label], widget)
@@ -443,90 +459,107 @@ local function CornerPicker(point, label)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Listes de sorts et de joueurs (chapitre Affaiblissements, en attendant leur place dans chaque chapitre)
+-- Listes de sorts et de joueurs : une ligne par liste, dans le chapitre qu'elle concerne. On tape un nom puis
+-- Entrée ; un clic sur un nom le retire. La ligne s'allonge avec la liste.
 ----------------------------------------------------------------------------------------------------
-local function ListEditor(page, x, title, hint, key, clean)
-	local width = 151
-	local head = Heading(page, title)
-	head:SetWidth(width)
-	head:SetPoint("TOPLEFT", x, 0)
-	Note(page, hint, x, -30, width)
-	local rows = {}
-	local function Fill()
-		local names = {}
-		for name in pairs(Z.db[key]) do names[#names + 1] = name end
-		table.sort(names)
-		for i, row in ipairs(rows) do
-			row.name = names[i]
-			row.label:SetText(names[i] or "")
-			row:SetShown(names[i] ~= nil)
-		end
-	end
-	local edit = UI.Edit(page, width, function(text)
-		if clean then text = clean(text) end
-		if text and text ~= "" then
-			Z.db[key][text] = true
-			Z:Refresh()
-		end
-	end)
-	edit:SetPoint("TOPLEFT", x, -84)
-	edit:HookScript("OnEnterPressed", function(self)
-		self:SetText("")
-		Fill()
-	end)
-	for i = 1, 11 do
-		local row = UI.Button(page, "", width, 22, function(self)
-			Z.db[key][self.name] = nil
-			Z:Refresh()
-			Fill()
+local CHIPS, CHIP_H = 3, 25 -- noms par rangée, hauteur d'une rangée
+
+local function ListBox(key, title, hint, clean, fields)
+	local item = { "custom", function(page, width)
+		local box = CreateFrame("Frame", nil, page)
+		box:SetSize(width, 60)
+		box.label = UI.Label(box, 12)
+		box.label:SetPoint("TOPLEFT", 0, -5)
+		box.label:SetText(L[title])
+		box.hint = UI.Label(box, 11, nil, "dim")
+		box.hint:SetPoint("TOPLEFT", 0, -28)
+		box.hint:SetWidth(width)
+		box.hint:SetJustifyH("LEFT")
+		box.hint:SetText(L[hint])
+		local edit = UI.Edit(box, 210, function(text)
+			if clean then text = clean(text) end
+			if text and text ~= "" then
+				Z.db[key][text] = true
+				Z:Refresh()
+			end
 		end)
-		row:SetPoint("TOPLEFT", x, -112 - (i - 1) * 25)
-		row.tip = L["Cliquez pour retirer de la liste."]
-		rows[i] = row
-	end
-	Register(page, L[title], edit)
-	return Fill, rows
+		edit:SetPoint("TOPRIGHT")
+		edit.placeholder = UI.Label(edit, 11, nil, "dim")
+		edit.placeholder:SetPoint("LEFT", 6, 0)
+		edit.placeholder:SetText(L["Nom exact, puis Entrée"])
+		edit:HookScript("OnTextChanged", function(self) self.placeholder:SetShown(self:GetText() == "") end)
+		edit:HookScript("OnEnterPressed", function(self)
+			self:SetText("")
+			RefreshShownPages() -- la liste, et les coins qui proposent les sorts suivis
+		end)
+		box.edit, box.key = edit, key
+		box.empty = UI.Label(box, 11, nil, "dim")
+		box.empty:SetText(L["Liste vide."])
+		box.chips = {}
+		local chipWidth = math.floor((width - 6 * (CHIPS - 1)) / CHIPS)
+		box.Update = function(self)
+			local names = {}
+			for name in pairs(Z.db[key]) do names[#names + 1] = name end
+			table.sort(names)
+			local top = 28 + math.ceil(self.hint:GetStringHeight()) + 8
+			for i, name in ipairs(names) do
+				local chip = self.chips[i]
+				if not chip then
+					chip = UI.Button(self, "", chipWidth, 22, function(button)
+						Z.db[key][button.name] = nil
+						Z:Refresh()
+						RefreshShownPages()
+					end)
+					chip.tip = L["Cliquez pour retirer de la liste."]
+					self.chips[i] = chip
+				end
+				chip:ClearAllPoints()
+				chip:SetPoint("TOPLEFT", ((i - 1) % CHIPS) * (chipWidth + 6), -top - math.floor((i - 1) / CHIPS) * CHIP_H)
+				chip.name = name
+				chip.label:SetText(name)
+				chip:Show()
+			end
+			for i = #names + 1, #self.chips do self.chips[i]:Hide() end
+			self.empty:ClearAllPoints()
+			self.empty:SetPoint("TOPLEFT", 4, -top - 4)
+			self.empty:SetShown(#names == 0)
+			Fit(self, top + math.max(1, math.ceil(#names / CHIPS)) * CHIP_H - 3)
+		end
+		box:SetScript("OnShow", box.Update)
+		box:Update()
+		Register(page, L[title], box, L[hint]).list = key
+		return box
+	end }
+	for field, value in pairs(fields or {}) do item[field] = value end -- fine, dep
+	return item
 end
 
-local function BuildLists(page)
-	local fillPinned, pinnedRows = ListEditor(page, 501, "Joueurs épinglés", "Montrés dans le cadre « Épinglés ». Tapez un nom puis Entrée.", "pinned", Z.CleanPinName)
-	local fills = {
-		ListEditor(page, 0, "Mes sorts à suivre", "Vos sorts affichés avec vos soins sur la durée. Nom exact puis Entrée.", "extraTracked"),
-		ListEditor(page, 167, "À ignorer", "Affaiblissements à ne jamais afficher.", "ignoredNames"),
-		ListEditor(page, 334, "À mettre en avant", "Affaiblissements en grand, avec contour et son (onglet Indicateurs).", "importantNames"),
-		fillPinned,
-	}
-	-- Épingler ma cible : sous la liste des joueurs épinglés
-	local pinTarget = UI.Button(page, L["Épingler ma cible"], 151, 22, function()
-		local name = Z.UnitPinName("target")
-		if name and Z.db.pinned[name] then return Z:Print(L["%s est déjà épinglé."]:format(name)) end
-		Z:Print(Z:TogglePin(name))
-		fillPinned()
-	end)
-	pinTarget:SetPoint("TOPLEFT", pinnedRows[#pinnedRows], "BOTTOMLEFT", 0, -8)
-	pinTarget.tip = L["Aussi : survolez une case et tapez /lyorune epingler (une macro sur une touche, par exemple)."]
-	local function FillAll() for _, fill in ipairs(fills) do fill() end end
-	page:SetScript("OnShow", FillAll)
-	FillAll()
+-- Épingler ma cible : sous la liste des joueurs épinglés
+local function PinTarget()
+	local name = Z.UnitPinName("target")
+	if name and Z.db.pinned[name] then return Z:Print(L["%s est déjà épinglé."]:format(name)) end
+	Z:Print(Z:TogglePin(name))
+	RefreshShownPages()
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Page des clics (chapitre Clics)
 ----------------------------------------------------------------------------------------------------
 local rows, barIcons = {}, {}
-local VISIBLE_ROWS = 13     -- lignes de raccourcis visibles ; la molette fait défiler les autres
-local scroll = 0
+local ROW_H = 27            -- hauteur d'une ligne de raccourci ; toutes sont visibles, la page défile
+local clickList, specLine, barBox -- lignes du chapitre Clics, créées à sa première ouverture
 
 local function SpellText(value)
 	return Z:ActionText(value)
 end
 
 local RefreshClicks -- définie plus bas
-local specLabel, specCopy, banner, listTop, more, empty
+local NewRow        -- une ligne de raccourci de plus (définie plus bas)
 
 function RefreshClicks()
-	-- Nouveau sort sans clic : le plus ancien en haut de la liste
-	if banner then
+	if clickList then
+		-- Nouveau sort sans clic : le plus ancien, sous le bouton « Ajouter »
+		local banner = clickList.banner
 		local spell = Z:NewSpells()[1]
 		banner.spell = spell
 		banner:SetShown(spell ~= nil)
@@ -534,58 +567,62 @@ function RefreshClicks()
 			banner.icon:SetTexture(spell.icon)
 			banner.text:SetText(L["Nouveau sort sans clic :"] .. " |cffffffff" .. spell.name .. "|r")
 		end
-		listTop:ClearAllPoints()
-		listTop:SetPoint("TOPLEFT", 0, spell and -104 or -74)
-	end
-	-- Une ligne par clic ou par touche
-	local bindings = Z:Bindings()
-	local conflicts = Z.db.clickConflictAlert and Z:GameClickConflicts() or {}
-	scroll = math.max(0, math.min(scroll, #bindings - VISIBLE_ROWS))
-	for i, row in ipairs(rows) do
-		local binding = bindings[i + scroll]
-		row.binding = binding
-		row:SetShown(binding ~= nil)
-		if binding then
-			-- en orange : le clic pour lancer du jeu prend aussi cette combinaison
-			local game = binding.kind == "click" and conflicts[binding.key]
-			row.key.label:SetText((game and "|cffff9933" or "") .. Z:TriggerLabel(binding))
-			row.key.tip = game and L["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."]:format(game)
-				or L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
-			row.spell.label:SetText(binding.value ~= "" and SpellText(binding.value) or "|cff555a63" .. L["Sort"] .. "|r")
-			for index, toggle in ipairs(row.trinkets) do
-				local slot = Z.TRINKET_SLOTS[index]
-				local on = Z.MaskHas(binding.trinkets, index)
-				toggle:SetShown(Z.TakesTrinket(binding.value))
-				toggle.icon:SetTexture(GetInventoryItemTexture and GetInventoryItemTexture("player", slot) or "Interface\\Icons\\INV_Misc_QuestionMark")
-				toggle.icon:SetDesaturated(not on)
-				toggle.icon:SetAlpha(on and 1 or 0.3)
-				toggle.label:SetText(on and "" or tostring(index))
+		local top = spell and 66 or 36
+		clickList.list:ClearAllPoints()
+		clickList.list:SetPoint("TOPLEFT", 0, -top)
+		-- Une ligne par clic ou par touche
+		local bindings = Z:Bindings()
+		local conflicts = Z.db.clickConflictAlert and Z:GameClickConflicts() or {}
+		for i = #rows + 1, #bindings do rows[i] = NewRow(i) end
+		for i, row in ipairs(rows) do
+			local binding = bindings[i]
+			row.binding = binding
+			row:SetShown(binding ~= nil)
+			if binding then
+				-- en orange : le clic pour lancer du jeu prend aussi cette combinaison
+				local game = binding.kind == "click" and conflicts[binding.key]
+				row.key.label:SetText((game and "|cffff9933" or "") .. Z:TriggerLabel(binding))
+				row.key.tip = game and L["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."]:format(game)
+					or L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
+				row.spell.label:SetText(binding.value ~= "" and SpellText(binding.value) or "|cff555a63" .. L["Sort"] .. "|r")
+				for index, toggle in ipairs(row.trinkets) do
+					local slot = Z.TRINKET_SLOTS[index]
+					local on = Z.MaskHas(binding.trinkets, index)
+					toggle:SetShown(Z.TakesTrinket(binding.value))
+					toggle.icon:SetTexture(GetInventoryItemTexture and GetInventoryItemTexture("player", slot) or "Interface\\Icons\\INV_Misc_QuestionMark")
+					toggle.icon:SetDesaturated(not on)
+					toggle.icon:SetAlpha(on and 1 or 0.3)
+					toggle.label:SetText(on and "" or tostring(index))
+				end
 			end
 		end
-	end
-	if more then
-		local hidden = math.max(0, #bindings - VISIBLE_ROWS - scroll)
-		more:SetText((scroll + hidden > 0) and L["Molette : %d autre(s) raccourci(s)"]:format(scroll + hidden) or "")
-		empty:SetShown(#bindings == 0)
+		clickList.empty:SetShown(#bindings == 0)
+		local height = math.max(1, #bindings) * ROW_H
+		clickList.list:SetHeight(height)
+		Fit(clickList, top + height)
 	end
 	-- Macros pour les barres de sorts : une icône par macro tenue à jour par Lyorune
-	local macros = Z.db.actionBarMacros and Z:BarMacros() or {}
-	for i, icon in ipairs(barIcons) do
-		local macro = macros[i]
-		icon.macro = macro
-		icon:SetShown(macro ~= nil)
-		if macro then icon.texture:SetTexture(macro.icon or "Interface\\Icons\\INV_Misc_QuestionMark") end
+	if barBox then
+		local macros = Z.db.actionBarMacros and Z:BarMacros() or {}
+		for i = #barIcons + 1, #macros do barIcons[i] = barBox:NewIcon(i) end
+		for i, icon in ipairs(barIcons) do
+			local macro = macros[i]
+			icon.macro = macro
+			icon:SetShown(macro ~= nil)
+			if macro then icon.texture:SetTexture(macro.icon or "Interface\\Icons\\INV_Misc_QuestionMark") end
+		end
+		Fit(barBox, #macros > 0 and math.ceil(#macros / barBox.perRow) * 32 - 4 or 1)
 	end
 	-- Spécialisation dont on voit les clics
-	if specLabel then
+	if specLine then
 		local perSpec = Z.db.clicksPerSpec
-		specLabel:SetText(perSpec and L["Clics de la spécialisation %d"]:format(Z:SpecGroup()) or L["Mêmes clics dans toutes les spécialisations"])
-		specCopy:SetShown(perSpec)
+		specLine.label:SetText(perSpec and L["Clics de la spécialisation %d"]:format(Z:SpecGroup()) or L["Mêmes clics dans toutes les spécialisations"])
+		specLine.copy:SetShown(perSpec)
 	end
 end
 -- Appelé aussi par ApplyClicks : la liste suit les changements faits ailleurs (macros, partage), si elle est visible
 Z.RefreshClicks = function()
-	if listTop and listTop:IsVisible() then RefreshClicks() end
+	if clickList and clickList:IsVisible() then RefreshClicks() end
 end
 
 -- Prend une macro de Lyorune « en main », pour la déposer dans une barre de sorts
@@ -600,12 +637,15 @@ local function PickupBarMacro(icon)
 	end
 end
 
-local function BuildBarIcons(page, x, y)
-	local size, perRow = 28, 9
-	for i = 1, perRow * 2 do
-		local icon = CreateFrame("Button", nil, page)
-		icon:SetSize(size, size)
-		icon:SetPoint("TOPLEFT", x + ((i - 1) % perRow) * (size + 4), y - math.floor((i - 1) / perRow) * (size + 4))
+-- Ligne des icônes de macros : une icône par macro de Lyorune, autant de rangées que nécessaire
+local function BarIcons(page, width)
+	barBox = CreateFrame("Frame", nil, page)
+	barBox:SetSize(width, 1)
+	barBox.perRow = math.max(1, math.floor((width + 4) / 32))
+	barBox.NewIcon = function(self, i)
+		local icon = CreateFrame("Button", nil, self)
+		icon:SetSize(28, 28)
+		icon:SetPoint("TOPLEFT", ((i - 1) % self.perRow) * 32, -math.floor((i - 1) / self.perRow) * 32)
 		icon.texture = icon:CreateTexture(nil, "ARTWORK")
 		icon.texture:SetAllPoints()
 		icon.texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
@@ -613,22 +653,23 @@ local function BuildBarIcons(page, x, y)
 		icon:RegisterForDrag("LeftButton")
 		icon:SetScript("OnClick", PickupBarMacro)
 		icon:SetScript("OnDragStart", PickupBarMacro)
-		icon:SetScript("OnEnter", function(self)
-			self.border:SetColor(UI.accent[1], UI.accent[2], UI.accent[3])
-			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetText(self.macro.name, UI.accent[1], UI.accent[2], UI.accent[3])
-			GameTooltip:AddLine(self.macro.body, 1, 1, 1)
+		icon:SetScript("OnEnter", function(button)
+			button.border:SetColor(UI.accent[1], UI.accent[2], UI.accent[3])
+			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+			GameTooltip:SetText(button.macro.name, UI.accent[1], UI.accent[2], UI.accent[3])
+			GameTooltip:AddLine(button.macro.body, 1, 1, 1)
 			GameTooltip:AddLine(L["Cliquez, puis déposez dans une barre de sorts."], 0.6, 0.6, 0.65)
 			GameTooltip:Show()
 		end)
-		icon:SetScript("OnLeave", function(self)
-			self.border:SetColor(0, 0, 0)
+		icon:SetScript("OnLeave", function(button)
+			button.border:SetColor(0, 0, 0)
 			GameTooltip:Hide()
 		end)
-		icon:Hide()
-		barIcons[i] = icon
+		return icon
 	end
-	return 2 * (size + 4)
+	barBox.Update = function() RefreshClicks() end
+	barBox:SetScript("OnShow", barBox.Update)
+	return barBox
 end
 
 -- Fenêtre de choix d'un sort : une icône par sort connu. onChoose(valeur) reçoit le choix.
@@ -825,24 +866,86 @@ local function Trigger(row)
 	return { kind = row.binding.kind, key = row.binding.key }
 end
 
-local function BuildClicks(page)
-	Note(page, "Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée.", 0, 0, COLUMN)
+-- Une ligne de raccourci : déclencheur, sort, bijoux, retirer
+function NewRow(i)
+	local width = clickList.width
+	local row = CreateFrame("Frame", nil, clickList.list)
+	row:SetSize(width, 24)
+	row:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_H)
+	row.key = UI.Button(row, "", 150, 24, function(self)
+		if self.capturing or GetTime() < (self.ignoreUntil or 0) or not row.binding then return end
+		local from = Trigger(row)
+		CaptureTrigger(self, function(to)
+			Z:MoveBinding(from, to)
+			RefreshClicks()
+		end)
+	end)
+	row.key:SetPoint("LEFT")
+	row.key.label:SetJustifyH("CENTER")
+	row.key.tip = L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
+	row.spell = UI.Button(row, "", width - 150 - 4 - 2 * 20 - 4 - 22, 24, function()
+		if not row.binding then return end
+		ChooseAction(Trigger(row), Z:TakeCursor()) -- un sort ou une macro tenu sous la souris est posé directement
+	end)
+	row.spell:SetPoint("LEFT", row.key, "RIGHT", 4, 0)
+	row.spell.label:SetJustifyH("CENTER")
+	Droppable(row.spell, function(value)
+		if row.binding then Z:SetBinding(Trigger(row), value) end
+	end)
+	row.clear = UI.Button(row, "x", 22, 24, function()
+		if not row.binding then return end
+		Z:SetBinding(Trigger(row), nil)
+		RefreshClicks()
+	end)
+	-- Bijou 1 (emplacement 13) et bijou 2 (emplacement 14), utilisés juste avant le sort
+	row.trinkets = {}
+	local anchor = row.spell
+	for index, slot in ipairs(Z.TRINKET_SLOTS) do
+		local toggle = UI.Button(row, "", 18, 24, function()
+			if row.binding then Z:ToggleTrinket(Trigger(row), index) RefreshClicks() end
+		end)
+		toggle:SetPoint("LEFT", anchor, "RIGHT", 2, 0)
+		toggle.label:SetJustifyH("CENTER")
+		toggle.icon = toggle:CreateTexture(nil, "ARTWORK")
+		toggle.icon:SetPoint("TOPLEFT", 1, -4)
+		toggle.icon:SetPoint("BOTTOMRIGHT", -1, 4)
+		toggle.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		toggle.tip = L["Bijou %d (emplacement %d) : utilisé juste avant le sort, sur un joueur vivant. Cliquez pour l'ajouter ou le retirer."]:format(index, slot)
+		row.trinkets[index] = toggle
+		anchor = toggle
+	end
+	row.clear:SetPoint("LEFT", anchor, "RIGHT", 4, 0)
+	row.clear.label:SetJustifyH("CENTER")
+	row.clear.tip = L["Retirer ce raccourci"]
+	return row
+end
 
-	-- Spécialisation dont on voit les clics, et copie depuis l'autre
-	local x = COLUMN + 32
-	specLabel = UI.Text(page, 11)
-	specLabel:SetPoint("TOPLEFT", x, 0)
-	UI.Paint(specLabel, "accent")
-	specCopy = UI.Button(page, L["Copier l'autre spécialisation"], 200, 18, function()
+-- Spécialisation dont on voit les clics, et copie depuis l'autre
+local function SpecLine(page, width)
+	specLine = CreateFrame("Frame", nil, page)
+	specLine:SetSize(width, 22)
+	specLine.label = UI.Label(specLine, 12, nil, "accent")
+	specLine.label:SetPoint("LEFT")
+	specLine.copy = UI.Button(specLine, L["Copier l'autre spécialisation"], 220, 22, function()
 		Z:CopyOtherSpec()
 		RefreshClicks()
 	end)
-	specCopy:SetPoint("TOPLEFT", x, -15)
-	specCopy.label:SetJustifyH("CENTER")
-	specCopy.tip = L["Remplace les clics et les touches de cette spécialisation par ceux de l'autre."]
+	specLine.copy:SetPoint("RIGHT")
+	specLine.copy.label:SetJustifyH("CENTER")
+	specLine.copy.tip = L["Remplace les clics et les touches de cette spécialisation par ceux de l'autre."]
+	specLine.Update = function() RefreshClicks() end
+	specLine:SetScript("OnShow", specLine.Update)
+	return specLine
+end
+
+-- Mes clics : « Ajouter », le nouveau sort sans clic, puis une ligne par raccourci
+local function ClickList(page, width)
+	clickList = CreateFrame("Frame", nil, page)
+	clickList:SetSize(width, 64)
+	clickList.width = width
 
 	-- Ajouter : on clique sur le bouton, puis on fait la combinaison voulue (clic, touche ou molette)
-	local add = UI.Button(page, "", COLUMN, 28, function(self)
+	local add = UI.Button(clickList, "", width, 28, function(self)
 		if self.capturing or GetTime() < (self.ignoreUntil or 0) then return end
 		local preset = self.preset
 		self.preset = nil
@@ -852,15 +955,15 @@ local function BuildClicks(page)
 	add.label:SetText(add.idle)
 	add.label:SetJustifyH("CENTER")
 	add.tip = L["Cliquez, puis faites la combinaison voulue sur ce bouton : un clic (avec Alt, Ctrl, Maj...), une touche du clavier, un bouton de souris supplémentaire ou la molette. Échap : annuler."]
-	add:SetPoint("TOPLEFT", 0, -40)
+	add:SetPoint("TOPLEFT")
 	Register(page, L["Ajouter un clic ou une touche"], add)
 	Register(page, L["Touches au survol"], add)
-	page.add = add
+	clickList.add = add
 
 	-- Nouveau sort appris, sans aucun raccourci (option « newSpellAlert »)
-	banner = CreateFrame("Frame", nil, page)
-	banner:SetSize(COLUMN, 26)
-	banner:SetPoint("TOPLEFT", 0, -74)
+	local banner = CreateFrame("Frame", nil, clickList)
+	banner:SetSize(width, 26)
+	banner:SetPoint("TOPLEFT", 0, -34)
 	banner.icon = banner:CreateTexture(nil, "ARTWORK")
 	banner.icon:SetSize(22, 22)
 	banner.icon:SetPoint("LEFT", 2, 0)
@@ -886,179 +989,70 @@ local function BuildClicks(page)
 	banner.assign.label:SetJustifyH("CENTER")
 	banner.assign.tip = L["Puis, sur le bouton « Ajouter », faites le clic ou la touche qui lancera ce sort."]
 	banner:Hide()
-	page.banner = banner
+	clickList.banner = banner
 
-	-- La liste : déclencheur, action, retirer. La molette fait défiler.
-	listTop = CreateFrame("Frame", nil, page)
-	listTop:SetSize(COLUMN, VISIBLE_ROWS * 27)
-	listTop:SetPoint("TOPLEFT", 0, -74)
-	listTop:EnableMouseWheel(true)
-	listTop:SetScript("OnMouseWheel", function(_, delta)
-		scroll = scroll - delta
-		RefreshClicks()
-	end)
-	for i = 1, VISIBLE_ROWS do
-		local row = CreateFrame("Frame", nil, listTop)
-		row:SetSize(COLUMN, 24)
-		row:SetPoint("TOPLEFT", 0, -(i - 1) * 27)
-		row.key = UI.Button(row, "", 124, 24, function(self)
-			if self.capturing or GetTime() < (self.ignoreUntil or 0) or not row.binding then return end
-			local from = Trigger(row)
-			CaptureTrigger(self, function(to)
-				Z:MoveBinding(from, to)
-				RefreshClicks()
-			end)
-		end)
-		row.key:SetPoint("LEFT")
-		row.key.label:SetJustifyH("CENTER")
-		row.key.tip = L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
-		row.spell = UI.Button(row, "", COLUMN - 124 - 4 - 2 * 20 - 4 - 22, 24, function()
-			if not row.binding then return end
-			ChooseAction(Trigger(row), Z:TakeCursor()) -- un sort ou une macro tenu sous la souris est posé directement
-		end)
-		row.spell:SetPoint("LEFT", row.key, "RIGHT", 4, 0)
-		row.spell.label:SetJustifyH("CENTER")
-		Droppable(row.spell, function(value)
-			if row.binding then Z:SetBinding(Trigger(row), value) end
-		end)
-		row.clear = UI.Button(row, "x", 22, 24, function()
-			if not row.binding then return end
-			Z:SetBinding(Trigger(row), nil)
-			RefreshClicks()
-		end)
-		-- Bijou 1 (emplacement 13) et bijou 2 (emplacement 14), utilisés juste avant le sort
-		row.trinkets = {}
-		local anchor = row.spell
-		for index, slot in ipairs(Z.TRINKET_SLOTS) do
-			local toggle = UI.Button(row, "", 18, 24, function()
-				if row.binding then Z:ToggleTrinket(Trigger(row), index) RefreshClicks() end
-			end)
-			toggle:SetPoint("LEFT", anchor, "RIGHT", 2, 0)
-			toggle.label:SetJustifyH("CENTER")
-			toggle.icon = toggle:CreateTexture(nil, "ARTWORK")
-			toggle.icon:SetPoint("TOPLEFT", 1, -4)
-			toggle.icon:SetPoint("BOTTOMRIGHT", -1, 4)
-			toggle.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-			toggle.tip = L["Bijou %d (emplacement %d) : utilisé juste avant le sort, sur un joueur vivant. Cliquez pour l'ajouter ou le retirer."]:format(index, slot)
-			row.trinkets[index] = toggle
-			anchor = toggle
-		end
-		row.clear:SetPoint("LEFT", anchor, "RIGHT", 4, 0)
-		row.clear.label:SetJustifyH("CENTER")
-		row.clear.tip = L["Retirer ce raccourci"]
-		rows[i] = row
-	end
-	empty = UI.Text(listTop, 11)
+	-- La liste : toutes les lignes, la page défile
+	clickList.list = CreateFrame("Frame", nil, clickList)
+	clickList.list:SetSize(width, ROW_H)
+	clickList.list:SetPoint("TOPLEFT", 0, -36)
+	local empty = UI.Label(clickList.list, 11, nil, "dim")
 	empty:SetPoint("TOPLEFT", 4, -6)
-	empty:SetWidth(COLUMN - 8)
+	empty:SetWidth(width - 8)
 	empty:SetJustifyH("LEFT")
-	UI.Paint(empty, "dim")
 	empty:SetText(L["Aucun raccourci pour l'instant : cliquez sur « Ajouter », puis faites un clic ou appuyez sur une touche."])
-	more = UI.Text(page, 11)
-	more:SetPoint("TOPLEFT", listTop, "BOTTOMLEFT", 0, -2)
-	UI.Paint(more, "dim")
-	local free = UI.Text(page, 11)
-	free:SetPoint("TOPLEFT", listTop, "BOTTOMLEFT", 0, -18)
-	free:SetWidth(COLUMN)
-	free:SetJustifyH("LEFT")
-	UI.Paint(free, "dim")
-	free:SetText(L["Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser."])
+	clickList.empty = empty
 
-	-- Spécialisations, macros et comportement, à droite
-	local perSpec = BuildItem(page, { "check", "clicksPerSpec", "Clics propres à chaque spécialisation",
-		"Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout." })
-	perSpec:SetPoint("TOPLEFT", x, -42)
-	local library = BuildItem(page, { "button", "Mes macros...", function() Z:OpenMacros() end,
-		"Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic." })
-	library:SetPoint("TOPLEFT", x, -72)
-	local options = {
-		{ "head", "Comportement" },
-		{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },
-		{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
-		{ "check", "newSpellAlert", "Signaler un nouveau sort sans clic", "Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de cet onglet avec le bouton « Attribuer »." },
-		{ "check", "clickConflictAlert", "Signaler un clic pris aussi par le jeu", "Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans cet onglet. Lyorune ne modifie jamais les raccourcis du jeu." },
-		{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés." },
-		{ "head", "Macros pour vos barres de sorts" },
-		{ "check", "actionBarMacros", "Créer une macro par sort de mes clics", "Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro." },
-		{ "note", "Cliquez sur une icône, puis déposez-la dans une barre de sorts. La macro vise le joueur sous la souris, sinon votre cible, sinon vous.", 44 },
-	}
-	local y = -104
-	for _, item in ipairs(options) do
-		local widget = BuildItem(page, item)
-		widget:SetPoint("TOPLEFT", x, y)
-		y = y - widget:GetHeight() - 7
-	end
-	y = y - BuildBarIcons(page, x, y) - 4
-	local remove = BuildItem(page, { "button", "Retirer les macros de Lyorune", function()
-		Z:RemoveBarMacros()
-		Z.db.actionBarMacros = false
-		page:Hide() page:Show() -- la case à cocher et les icônes suivent
-	end, "Supprime les macros « Lyo: » et décoche l'option. Vos autres macros ne sont pas touchées." })
-	remove:SetPoint("TOPLEFT", x, y)
-
-	page:SetScript("OnShow", function()
+	clickList.Update = function()
 		Z:CheckNewSpells()
 		RefreshClicks()
-	end)
+	end
+	clickList:SetScript("OnShow", clickList.Update)
 	RefreshClicks()
+	return clickList
 end
 
 ----------------------------------------------------------------------------------------------------
--- Page des annonces et des sons (chapitre Alertes)
+-- Annonces et sons (chapitre Alertes) : le texte d'une annonce et son essai, la règle de la mana
 ----------------------------------------------------------------------------------------------------
-local function BuildAlerts(page)
-	local edits = {}
-	local function Block(y, label, enableKey, textKey, thresholdKey, test)
-		local check = UI.Check(page, L[label], Option(enableKey))
-		check:SetPoint("TOPLEFT", 0, y)
-		Register(page, L[label], check)
-		if thresholdKey then
-			local limit = Z.limits[thresholdKey]
-			local stepper = UI.Stepper(page, L["Seuil (%)"], limit[1], limit[2], limit[3], Option(thresholdKey))
-			stepper:SetPoint("TOPLEFT", COLUMN + 32, y)
-		end
-		local edit = UI.Edit(page, 540)
-		edit:SetPoint("TOPLEFT", 0, y - 26)
+local function AlertText(textKey, test, dep)
+	return { "custom", function(page, width)
+		local line = CreateFrame("Frame", nil, page)
+		line:SetSize(width, 22)
+		local edit = UI.Edit(line, width - 90)
+		edit:SetPoint("LEFT")
 		edit:SetMaxLetters(120)
 		edit:HookScript("OnTextChanged", function(self, byUser)
 			if byUser and self:GetText():match("%S") then Z.db[textKey] = self:GetText() end
 		end)
-		edits[textKey] = edit
-		local button = UI.Button(page, L["Tester"], 80, 22, test)
-		button:SetPoint("LEFT", edit, "RIGHT", 10, 0)
+		local button = UI.Button(line, L["Tester"], 80, 22, test)
+		button:SetPoint("RIGHT")
 		button.label:SetJustifyH("CENTER")
+		line.edit, line.test = edit, button
+		line.Update = function()
+			if not edit.focused then edit:SetText(Z.db[textKey]) end
+		end
+		line:SetScript("OnShow", line.Update)
+		line:Update()
+		return line
+	end, dep = dep }
+end
+
+-- WoW Forever cache ma mana aux addons : le sort qui sert de règle (Alerts.lua)
+local function RulerNote(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 20)
+	box.text = UI.Label(box, 11, nil, "dim")
+	box.text:SetPoint("TOPLEFT")
+	box.text:SetWidth(width)
+	box.text:SetJustifyH("LEFT")
+	box.text:SetSpacing(3)
+	box.Update = function(self)
+		self.text:SetText(Z:ManaRulerText())
+		Fit(self, math.ceil(self.text:GetStringHeight()) + 2)
 	end
-
-	local head = Heading(page, "Annonces dans le chat")
-	head:SetPoint("TOPLEFT")
-	local channel = BuildItem(page, { "cycle", "alertChannel", "Canal des annonces" })
-	channel:SetPoint("TOPLEFT", 0, -32)
-
-	Block(-66, "Annoncer quand ma mana est faible", "manaAlert", "manaText", "manaThreshold",
-		function() Z:Announce(Z:ManaText(Z.db.manaThreshold), true) end)
-	Block(-128, "Annoncer quand ma mana est remontée", "regenAlert", "regenText", "regenThreshold",
-		function() Z:Announce(Z:RegenText(Z.db.regenThreshold), true) end)
-	Block(-190, "Annoncer quand je ressuscite un joueur", "resAlert", "resText", nil,
-		function() Z:Announce(Z:ResText(UnitName("player")), true) end)
-
-	Note(page, "Dans les textes, {mana} est remplacé par votre pourcentage de mana et {nom} par le joueur relevé. Les annonces ne partent qu'en groupe. Règle du jeu : hors instance, un addon ne peut pas écrire en /dire tout seul ; l'annonce part alors dans le canal du groupe ou du raid.", 0, -252)
-
-	local sounds = Heading(page, "Sons")
-	sounds:SetPoint("TOPLEFT", 0, -312)
-	local dispel = BuildItem(page, { "check", "soundDispel", "Son quand je peux dissiper un affaiblissement" })
-	dispel:SetPoint("TOPLEFT", 0, -344)
-	local mana = BuildItem(page, { "check", "soundMana", "Son quand ma mana est faible" })
-	mana:SetPoint("TOPLEFT", COLUMN + 32, -344)
-
-	-- WoW Forever cache ma mana aux addons : le sort qui sert de règle (Alerts.lua)
-	local rulerNote = Note(page, "", 0, -380)
-
-	local function Fill()
-		for key, edit in pairs(edits) do edit:SetText(Z.db[key]) end
-		rulerNote:SetText(Z:ManaRulerText())
-	end
-	page:SetScript("OnShow", Fill)
-	Fill()
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	return box
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1521,7 +1515,9 @@ local function Chapters()
 				{ "check", "showPets", "Cadre séparé pour les familiers", fine = true },
 				{ "check", "showTargetTarget", "Case de la cible de ma cible", "Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change.", fine = true },
 				{ "check", "showFocus", "Case de ma focalisation", fine = true },
-				{ "check", "showPinned", "Cadre des joueurs épinglés", "Un petit cadre « Épinglés » avec les joueurs de votre liste (onglet Listes), par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler.", desc = "Pour épingler : survolez une case et tapez /lyorune epingler.", fine = true },
+				{ "check", "showPinned", "Cadre des joueurs épinglés", "Un petit cadre « Épinglés » avec les joueurs de la liste ci-dessous, par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler.", desc = "Pour épingler : survolez une case et tapez /lyorune epingler.", fine = true },
+				ListBox("pinned", "Joueurs épinglés", "Montrés dans le cadre « Épinglés ». Tapez un nom puis Entrée.", Z.CleanPinName, { fine = true, dep = { "showPinned", true } }),
+				{ "button", "Épingler ma cible", PinTarget, "Aussi : survolez une case et tapez /lyorune epingler (une macro sur une touche, par exemple).", fine = true },
 			} },
 			{ "Mode test", {
 				{ "note", "Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer.", 22 },
@@ -1586,12 +1582,15 @@ local function Chapters()
 				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges.", fine = true, dep = { "showHots", true } },
 			} },
 			{ "Coins de la case", {
-				{ "note", "Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de l'onglet Listes.", 46 },
+				{ "note", "Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de « Mes sorts à suivre », plus bas.", 46 },
 				CornerPicker("TOPLEFT", "En haut à gauche"),
 				CornerPicker("TOPRIGHT", "En haut à droite"),
 				CornerPicker("BOTTOMLEFT", "En bas à gauche"),
 				CornerPicker("BOTTOMRIGHT", "En bas à droite"),
 				{ "note", "En combat, le jeu cache le nom des auras : Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.", 46, fine = true },
+			} },
+			{ "Sorts suivis", {
+				ListBox("extraTracked", "Mes sorts à suivre", "Vos sorts affichés avec vos soins sur la durée, et proposés pour les coins. Tous leurs rangs sont suivis."),
 			} },
 			{ "Temps de recharge global", {
 				{ "cycle", "castIndicator", "Recharge globale et incantation", nil, "Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat." },
@@ -1604,20 +1603,19 @@ local function Chapters()
 			{ "Icônes", {
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
 				{ "seg", "debuffMode", "Affaiblissements affichés", dep = { "showDebuffs", true } },
+				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher."),
 				{ "step", "debuffCount", "Nombre d'affaiblissements", fine = true, dep = { "showDebuffs", true } },
 			} },
 			{ "Importants", {
-				{ "check", "bossDebuffs", "Affaiblissement important en grand", "Ceux des boss, et ceux de votre liste (onglet Listes)." },
+				{ "check", "bossDebuffs", "Affaiblissement important en grand", "Ceux des boss, et ceux de votre liste « À mettre en avant », plus bas." },
 				{ "check", "importantGlow", "Contour lumineux si important", "La case s'entoure d'un contour doré qui pulse. Marche en combat pour les affaiblissements de boss : le jeu décide lui-même." },
+				ListBox("importantNames", "À mettre en avant", "Affaiblissements affichés en grand comme ceux des boss, avec contour lumineux et son."),
 				{ "check", "importantSound", "Son pour ceux de ma liste", "Un son d'alerte quand un affaiblissement de la liste « À mettre en avant » est posé. En combat, le jeu cache souvent le nom des affaiblissements de boss : le son ne peut alors pas partir.", fine = true },
 			} },
 			{ "Auras privées des boss", {
 				{ "check", "privateAuras", "Afficher les auras privées", "Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place choisie ici (deux au plus).", desc = "Le jeu les dessine lui-même sur la case." },
 				{ "step", "privateAuraSize", "Taille des auras privées", fine = true, dep = { "privateAuras", true } },
 				{ "cycle", "privateAuraPoint", "Place des auras privées", fine = true, dep = { "privateAuras", true } },
-			} },
-			{ "Listes", {
-				{ "block", BuildLists, 420 },
 			} },
 		} },
 		{ name = "Joueurs", rune = 18, intro = "Qui est qui dans le groupe, et ce qui leur manque.", sections = {
@@ -1642,10 +1640,50 @@ local function Chapters()
 			} },
 		} },
 		{ name = "Clics", rune = 1, intro = "Un clic sur une case, un sort lancé.", sections = {
-			{ nil, { { "block", BuildClicks, 520 } } },
+			{ "Mes clics", {
+				{ "note", "Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée.", 30 },
+				{ "custom", SpecLine },
+				{ "custom", ClickList },
+				{ "note", "Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser.", 30 },
+				{ "button", "Mes macros...", function() Z:OpenMacros() end, "Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic." },
+			} },
+			{ "Comportement", {
+				{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },
+				{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
+				{ "check", "clicksPerSpec", "Clics propres à chaque spécialisation", "Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout.", fine = true },
+				{ "check", "newSpellAlert", "Signaler un nouveau sort sans clic", "Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de ce chapitre avec le bouton « Attribuer ».", fine = true },
+				{ "check", "clickConflictAlert", "Signaler un clic pris aussi par le jeu", "Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans ce chapitre. Lyorune ne modifie jamais les raccourcis du jeu.", fine = true },
+				{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés.", fine = true },
+			} },
+			{ "Macros pour vos barres de sorts", {
+				{ "check", "actionBarMacros", "Créer une macro par sort de mes clics", "Lyorune crée et tient à jour de vraies macros du jeu (leur nom commence par « Lyo: »), rangées dans /macro, onglet de votre personnage. Il ne touche à aucune autre macro." },
+				{ "note", "Cliquez sur une icône, puis déposez-la dans une barre de sorts. La macro vise le joueur sous la souris, sinon votre cible, sinon vous.", 30, dep = { "actionBarMacros", true } },
+				{ "custom", BarIcons, dep = { "actionBarMacros", true } },
+				{ "button", "Retirer les macros de Lyorune", function()
+					Z:RemoveBarMacros()
+					Z.db.actionBarMacros = false
+					RefreshShownPages() -- l'interrupteur et les icônes suivent
+				end, "Supprime les macros « Lyo: » et décoche l'option. Vos autres macros ne sont pas touchées." },
+			} },
 		} },
 		{ name = "Alertes", rune = 4, intro = "Annonces dans le chat et sons.", sections = {
-			{ nil, { { "block", BuildAlerts, 420 } } },
+			{ "Annonces dans le chat", {
+				{ "cycle", "alertChannel", "Canal des annonces" },
+				{ "check", "manaAlert", "Annoncer quand ma mana est faible" },
+				{ "step", "manaThreshold", "Seuil de mana faible (%)", dep = { "manaAlert", true } },
+				AlertText("manaText", function() Z:Announce(Z:ManaText(Z.db.manaThreshold), true) end, { "manaAlert", true }),
+				{ "check", "regenAlert", "Annoncer quand ma mana est remontée" },
+				{ "step", "regenThreshold", "Seuil de mana remontée (%)", dep = { "regenAlert", true } },
+				AlertText("regenText", function() Z:Announce(Z:RegenText(Z.db.regenThreshold), true) end, { "regenAlert", true }),
+				{ "check", "resAlert", "Annoncer quand je ressuscite un joueur" },
+				AlertText("resText", function() Z:Announce(Z:ResText(UnitName("player")), true) end, { "resAlert", true }),
+				{ "note", "Dans les textes, {mana} est remplacé par votre pourcentage de mana et {nom} par le joueur relevé. Les annonces ne partent qu'en groupe. Règle du jeu : hors instance, un addon ne peut pas écrire en /dire tout seul ; l'annonce part alors dans le canal du groupe ou du raid.", 60 },
+			} },
+			{ "Sons", {
+				{ "check", "soundDispel", "Son quand je peux dissiper un affaiblissement" },
+				{ "check", "soundMana", "Son quand ma mana est faible" },
+				{ "custom", RulerNote },
+			} },
 		} },
 		{ name = "Profils et partage", rune = 20, old = { "Profils" }, intro = "Vos profils, le partage avec vos amis et la synchronisation.", sections = {
 			{ nil, { { "block", BuildProfiles, 540 } } },
@@ -1765,6 +1803,7 @@ local function BuildChapter(index)
 				local widget = BuildItem(content, item, item.fine and ROW - FINE or ROW)
 				local part = { widget = widget, item = item }
 				widget.part = part
+				widget.Relayout = function() Layout(page) end -- Fit : la ligne a changé de hauteur
 				if widget.isBlock then page.blocks[#page.blocks + 1] = widget end
 				if item.fine then fine[#fine + 1] = part else page.parts[#page.parts + 1] = part end
 			end)
@@ -1824,6 +1863,10 @@ local function Select(index, quiet)
 	end
 	page.scroll:Show()
 	for _, block in ipairs(page.blocks) do block:Show() end -- une page dessinée à part se remplit à l'affichage
+	for _, part in ipairs(page.parts) do -- chaque ligne suit les changements faits ailleurs (profil, partage, liste)
+		local widget = part.widget
+		if not widget.isBlock and widget.Update and widget:IsShown() then widget:Update() end
+	end
 	if changed and not quiet then Enter(page.scroll) end
 	if picker then picker:Hide() end
 	return page
@@ -1858,12 +1901,15 @@ local function BuildSearch()
 		edit:SetText("")
 		edit:ClearFocus()
 		local page = Select(entry.chapter)
-		local part = entry.widget.part or (entry.block and entry.block.part)
+		-- La ligne qui porte l'élément : lui-même, ou la ligne dessinée à part qui le contient
+		local holder = entry.widget
+		while holder and not holder.part do holder = holder:GetParent() end
+		local part = holder and holder.part
 		if part and part.fold and not part.fold:IsOpen() then part.fold:SetOpen(true) end -- la page se range de nouveau
 		if part and part.y then
-			local inside = 0 -- dans une page dessinée à part : la place du réglage dans le bloc
-			if entry.block then
-				local top, target = entry.block:GetTop(), entry.widget:GetTop()
+			local inside = 0 -- dans une ligne dessinée à part : la place de l'élément dans la ligne
+			if holder ~= entry.widget then
+				local top, target = holder:GetTop(), entry.widget:GetTop()
 				if top and target then inside = top - target end
 			end
 			page.scroll:ScrollTo(part.y + inside - 30)
