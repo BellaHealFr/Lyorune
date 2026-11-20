@@ -413,6 +413,7 @@ function Z.PrivateHolder(b)
 	return holder, size
 end
 Z.PRIVATE_SLOTS = PRIVATE_SLOTS
+Z.PRIVATE_OFFSETS = PRIVATE_OFFSETS -- pour borner leur décalage au bord de la case (Placement.lua)
 
 function Z.AnchorPrivateAuras(b)
 	if b.privateAnchors then

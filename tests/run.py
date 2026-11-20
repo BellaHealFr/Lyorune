@@ -1406,8 +1406,8 @@ step("etape 6 : echelle, editeur de placement", function()
   Z.SetOffset("name", 4, -3) Z:Refresh()
   local p = b.name._point
   assert(p[1] == "CENTER" and p[4] == 4 and p[5] == 0, "nom decale")
-  Z.SetOffset("marker", 0, 2) Z:Refresh()
-  assert(b.marker._point[5] == 1, "marqueur decale")
+  Z.SetOffset("marker", 0, -2) Z:Refresh() -- à cheval sur le haut de la case : il peut seulement descendre
+  assert(b.marker._point[5] == -3, "marqueur decale")
   AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 41, spellId = 139 } }
   Z.db.showHots, Z.db.hotStyle = true, "ICONS"
   Z.SetOffset("hots", 5, 0) Z:Refresh() FireEvent("UNIT_AURA", "player") RunUpdates()
@@ -1419,7 +1419,8 @@ step("etape 6 : echelle, editeur de placement", function()
   -- bornes, nettoyage, element inconnu refuse
   Z.SetOffset("name", 999, -999)
   local x, y = Z.Offset("name")
-  assert(x == 40 and y == -40, "decalage borne")
+  local _, right, bottom = Z.OffsetRange("name")
+  assert(x == right and y == bottom and x > 0 and x < 40 and y < 0 and y > -40, "decalage borne au bord de la case")
   Z.SetOffset("name", 0, 0)
   assert(Z.db.placement.TILE.name == nil, "place d'origine : entree effacee")
   Z.SetOffset("inconnu", 1, 1)
@@ -1449,7 +1450,7 @@ step("etape 6 : echelle, editeur de placement", function()
   w.stage:Run("OnMouseUp", "LeftButton")
   assert(not w.stage:GetScript("OnUpdate"), "aucune boucle apres le glissement")
   x, y = Z.Offset("marker")
-  assert(x == 3 and y == 0, "marqueur glisse : " .. x .. "," .. y)
+  assert(x == 3 and y == -4, "marqueur glisse : " .. x .. "," .. y)
   assert(b.marker._point[4] == 3, "les vraies cases suivent")
   CURSOR_X, CURSOR_Y = nil, nil
   w.resetAll:Run("OnClick")
@@ -4956,6 +4957,169 @@ step("refonte 1.26.0, lot 6c nonies a : retour 22 (recherche du mode test)", fun
   timers[2]() assert(not glow:IsShown(), "22 : eclat jamais eteint")
   C_Timer.After = after
   for key, value in pairs(saved) do Z.db[key] = value end
+end)
+
+step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case)", function()
+  local keys = { "shape", "width", "height", "corners", "manaBars", "hotStyle", "hotCount", "debuffCount",
+    "privateAuraPoint", "privateAuraSize", "fontSize", "autoShrink" }
+  local saved = { placement = CopyTable(Z.db.placement), corners = Z.db.cornerSpells[Z.class] }
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  local b = Z.buttons[1]
+  -- Place d'un élément recalculée à partir des ancres notées par le faux client, sans passer par Placement.lua.
+  -- Rectangle { gauche, droite, bas, haut }, (0, 0) en bas à gauche de la case.
+  local W, H
+  local function Spot(r, point)
+    local x = point:find("LEFT") and r[1] or point:find("RIGHT") and r[2] or (r[1] + r[2]) / 2
+    local y = point:find("BOTTOM") and r[3] or point:find("TOP") and r[4] or (r[3] + r[4]) / 2
+    return x, y
+  end
+  local Rect
+  local function Anchor(region, p)
+    local relative, relPoint, x, y
+    if type(p[2]) == "table" then
+      relative = p[2]
+      if type(p[3]) == "string" then relPoint, x, y = p[3], p[4], p[5] else relPoint, x, y = p[1], p[3], p[4] end
+    else
+      relative, relPoint, x, y = region._parent, p[1], p[2], p[3]
+    end
+    local px, py = Spot(Rect(relative), relPoint)
+    return px + (x or 0), py + (y or 0)
+  end
+  function Rect(region)
+    if region == b then return { 0, W, 0, H } end
+    if region._all then return Rect(region._all) end
+    local points = region._points
+    assert(points, "element sans ancre")
+    if points.TOPLEFT and points.BOTTOMRIGHT then
+      local left, top = Anchor(region, points.TOPLEFT)
+      local right, bottom = Anchor(region, points.BOTTOMRIGHT)
+      return { left, right, bottom, top }
+    end
+    local p = region._point
+    local x, y = Anchor(region, p)
+    local w, h = region._w, region._kind == "FontString" and region._size or region._h
+    local left = p[1]:find("LEFT") and x or p[1]:find("RIGHT") and x - w or x - w / 2
+    local bottom = p[1]:find("BOTTOM") and y or p[1]:find("TOP") and y - h or y - h / 2
+    return { left, left + w, bottom, bottom + h }
+  end
+  -- Les morceaux de chaque élément, posés comme sur les vraies cases
+  local function Parts(key)
+    if key == "hots" then
+      local row = {}
+      for i = 1, Z.db.hotCount do row[i] = Z.db.hotStyle == "BARS" and Z.HotBar(b, i) or Z.HotIcon(b, i) end
+      return row
+    elseif key == "debuffs" then
+      local row = {}
+      for i = 1, Z.db.debuffCount do row[i] = Z.DebuffIcon(b, i) end
+      return row
+    elseif key == "big" then return { Z.BigIcon(b) }
+    elseif key == "buff" then return { Z.BuffIcon(b) }
+    elseif key == "private" then return { (Z.PrivateHolder(b)) } end
+    return { b[key] }
+  end
+  local function Rects(power)
+    b.powerShown = power
+    Z.StyleButton(b)
+    W, H = Z.CellSize()
+    local all = {}
+    for _, element in ipairs(Z.placeElements) do
+      all[element[1]] = {}
+      for i, part in ipairs(Parts(element[1])) do all[element[1]][i] = Rect(part) end
+    end
+    return all
+  end
+  local function Push(x, y)
+    Z.db.placement = {}
+    for _, element in ipairs(Z.placeElements) do Z.SetOffset(element[1], x, y) end
+    Z:Refresh()
+  end
+  -- Chaque élément poussé au plus loin, dans les 8 directions : jamais plus loin que la case (ou que sa place
+  -- d'origine, quand il y dépasse déjà, comme le marqueur à cheval sur le haut)
+  local PUSHES = { { 40, 0 }, { -40, 0 }, { 0, 40 }, { 0, -40 }, { 40, 40 }, { -40, 40 }, { 40, -40 }, { -40, -40 } }
+  local checked, moved = 0, {}
+  local function Check(label)
+    for _, power in ipairs({ false, true }) do
+      Push(0, 0)
+      local home = Rects(power)
+      for _, push in ipairs(PUSHES) do
+        Push(push[1], push[2])
+        local now = Rects(power)
+        for key, parts in pairs(now) do
+          for i, r in ipairs(parts) do
+            local o = home[key][i]
+            local where = label .. ", " .. key .. " " .. i .. (power and ", mana" or "") .. ", pousse " .. push[1] .. "," .. push[2]
+            assert(r[1] >= math.min(0, o[1]) - 0.01 and r[2] <= math.max(W, o[2]) + 0.01
+              and r[3] >= math.min(0, o[3]) - 0.01 and r[4] <= math.max(H, o[4]) + 0.01,
+              "23 : hors de la case : " .. where .. string.format(" (%.1f %.1f %.1f %.1f dans %dx%d)", r[1], r[2], r[3], r[4], W, H))
+            if math.abs(r[1] - o[1]) >= 1 or math.abs(r[3] - o[3]) >= 1 then moved[key] = true end
+            checked = checked + 1
+          end
+        end
+      end
+    end
+  end
+  Z.db.manaBars, Z.db.autoShrink = "ALL", false
+  for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+    Z.db.shape = shape
+    local default = Z.shapes[shape]
+    local sizes = { { default.width, default.height }, { Z.limits.width[1], Z.limits.height[1] },
+      { Z.limits.width[2], Z.limits.height[2] }, { Z.limits.width[1], Z.limits.height[2] } }
+    for _, size in ipairs(sizes) do
+      Z.db.width, Z.db.height = size[1], size[2]
+      Z.db.corners, Z.db.hotStyle, Z.db.hotCount, Z.db.debuffCount = "SQUARE", "ICONS", 2, 2
+      Z.db.privateAuraPoint, Z.db.privateAuraSize, Z.db.fontSize = "CENTER", 20, default.fontSize
+      Z.db.cornerSpells[Z.class] = nil
+      Check(shape .. " " .. size[1] .. "x" .. size[2])
+      -- Autres réglages : angles arrondis, coins pris, barres fines, rangées longues, auras privées en haut
+      Z.db.corners, Z.db.hotStyle, Z.db.hotCount, Z.db.debuffCount = "ROUND", "BARS", 6, 5
+      Z.db.privateAuraPoint, Z.db.privateAuraSize, Z.db.fontSize = "TOP", 40, Z.limits.fontSize[2]
+      Z.db.cornerSpells[Z.class] = { TOPLEFT = "Rénovation", TOPRIGHT = "Rénovation", BOTTOMRIGHT = "Rénovation", BOTTOMLEFT = "Rénovation" }
+      Check(shape .. " " .. size[1] .. "x" .. size[2] .. " variante")
+    end
+  end
+  for _, element in ipairs(Z.placeElements) do assert(moved[element[1]], "23 : " .. element[1] .. " ne bouge plus du tout") end
+  assert(checked > 5000, "23 : trop peu de verifications : " .. checked)
+
+  -- Le nom rétrécit près du bord au lieu d'en sortir, et garde trois tailles de police de large
+  Z.db.shape, Z.db.width, Z.db.height, Z.db.fontSize = "TILE", 86, 42, 11
+  Z.db.corners, Z.db.hotStyle, Z.db.hotCount, Z.db.debuffCount = "SQUARE", "ICONS", 2, 2
+  Z.db.cornerSpells[Z.class] = nil
+  Push(0, 0)
+  Z.StyleButton(b)
+  assert(b.name._w == 78 and b.text._w == 78, "23 : largeur d'origine du nom : " .. tostring(b.name._w))
+  Z.db.placement = {} Z.SetOffset("name", -40, 0) Z:Refresh()
+  local x = Z.Offset("name")
+  assert(x < 0 and x > -40 and b.name._w < 78 and b.name._w >= 33, "23 : nom pousse a gauche : " .. x .. ", largeur " .. b.name._w)
+  -- Ancien décalage trop grand dans la sauvegarde : ramené au bord à la lecture, jamais réécrit
+  Z.db.placement = { TILE = { name = { -40, 0 } } } Z:Refresh()
+  assert(Z.Offset("name") == x and Z.db.placement.TILE.name[1] == -40, "23 : sauvegarde reecrite")
+  -- Le chef de groupe suit l'icône de rôle poussée au bord gauche : il est repoussé dans la case
+  Z.db.placement = { TILE = { role = { -40, 0 } } } Z:Refresh()
+  W, H = Z.CellSize()
+  local leader = Rect(b.leader)
+  assert(leader[1] >= 0, "23 : chef de groupe hors de la case : " .. leader[1])
+  -- Une autre forme (code de partage) : seulement les limites du réglage
+  Z.SetOffset("debuffs", -40, 12, "BAR")
+  assert(Z.db.placement.BAR.debuffs[1] == -40, "23 : autre forme bornee a la case choisie")
+
+  -- Éditeur : rangées entières, et « au bord » quand une flèche ne pousse plus
+  Z.db.placement = {} Z.db.hotCount = 4 Z:Refresh()
+  Z:OpenPlacement()
+  local w = Z:PlacementWindow()
+  for _, button in ipairs(w.list) do if button.key == "hots" then button:Run("OnClick") end end
+  local shown = 0
+  for _, icon in ipairs(w.cell.hots) do if icon:IsShown() then shown = shown + 1 end end
+  assert(shown == 4, "23 : editeur, rangee de soins : " .. shown)
+  for _ = 1, 30 do w.up:Run("OnClick") end
+  local _, top = Z.Offset("hots")
+  assert(top == select(4, Z.OffsetRange("hots")), "23 : fleche au dela du bord")
+  assert(w.coords:GetText() == Z.L["Au bord de la case : %d, %d"]:format(0, top), "23 : bord pas signale : " .. w.coords:GetText())
+  w:Hide() w:Run("OnHide")
+
+  Z.db.placement = saved.placement
+  Z.db.cornerSpells[Z.class] = saved.corners
+  for _, key in ipairs(keys) do Z.db[key] = saved[key] end
+  Z:Refresh()
 end)
 
 step("aucune variable globale imprevue", function()

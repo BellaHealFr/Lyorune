@@ -95,7 +95,15 @@ function Obj:GetValue() return self._value end
 function Obj:GetAlpha() return self._alpha or 1 end
 function Obj:SetStatusBarColor(r, g, b, a) self._barColor = { r, g, b, a } end
 function Obj:SetBackdrop(b) self._backdrop = b end
-function Obj:SetPoint(...) self._point = { ... } end
+function Obj:SetPoint(...)
+	self._point = { ... }
+	-- Toutes les ancres, pour les tests qui recalculent la place d'un élément (aucune géométrie ici)
+	self._points = self._points or {}
+	self._points[(...)] = { ... }
+	self._all = nil
+end
+function Obj:ClearAllPoints() self._points, self._all = nil, nil end
+function Obj:SetAllPoints(relative) self._points, self._all = nil, relative or self._parent end
 function Obj:Play() self._playing = true end
 function Obj:Stop() self._playing = false end
 function Obj:IsPlaying() return self._playing or false end
