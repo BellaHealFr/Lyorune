@@ -43,7 +43,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 
 - **Rune d'or** : elle s'allume à côté de chaque réglage qui n'a plus sa valeur d'installation. Survolez-la pour voir cette valeur, cliquez dessus pour la reprendre.
 - **« Rétablir cette page »** : au bas d'un chapitre où un réglage a changé. Deux clics, et chaque réglage du chapitre reprend sa valeur d'installation. Vos listes, vos textes d'annonce, vos clics et vos profils ne bougent pas.
-- **« Annuler mes changements »** : en bas à droite de la fenêtre, dès que vous avez changé quelque chose depuis son ouverture. Deux clics, et tout reprend la valeur qu'il avait quand vous avez ouvert la fenêtre : réglages, clics, listes (joueurs épinglés compris), textes d'annonce et placement des éléments. Vos profils enregistrés ne bougent pas. Ouvrir une autre fenêtre de Lyorune, lancer la visite ou l'assistant ne compte pas comme une fermeture ; fermer la fenêtre, si. En combat, vos clics reviennent dès la fin du combat.
+- **« Annuler mes changements »** : en bas à droite de la fenêtre, dès que vous avez changé quelque chose depuis son ouverture. Deux clics, et tout reprend la valeur qu'il avait quand vous avez ouvert la fenêtre : réglages, clics, listes (joueurs épinglés compris), macros de votre bibliothèque, textes d'annonce et placement des éléments. Vos profils enregistrés ne bougent pas. Ouvrir une autre fenêtre de Lyorune, lancer la visite ou l'assistant ne compte pas comme une fermeture ; fermer la fenêtre, si. En combat, vos clics reviennent dès la fin du combat.
 - **« Enregistrer mes réglages »** : en bas à gauche, sous les chapitres. Tapez un nom et appuyez sur Entrée (Échap annule) : vos réglages du moment deviennent un profil, que vous retrouverez dans Profils et partage (voir la partie 11).
 
 **Retrouver un réglage** : en haut à droite, tapez un mot dans « Rechercher un réglage... » (« mana », « tank », « thème »...). Lyorune cherche dans le nom des réglages, puis dans leurs explications. Majuscules et accents ne comptent pas : « echelle » trouve « Échelle générale ». Un clic sur un résultat ouvre le bon chapitre, déplie les réglages fins si besoin et fait clignoter le réglage.
@@ -178,12 +178,16 @@ Une macro trouvée sur Internet avec `[@mouseover]` marche telle quelle. Pour pl
 - un sort que votre spécialisation active ne connaît pas (c'est peut-être celui de l'autre) ;
 - une commande qui exécute du code (`/run`, `/script`).
 
-Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, et « Posée sur » les clics qui utilisent la macro.
+Les trois premiers constats sont écrits, le nombre des suivants est donné au bout du titre « Vérification ». Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, et « Posée sur » les clics qui utilisent la macro. Un texte trop long pour sa place se lit en entier en passant la souris dessus.
 
 **Poser la macro sur un clic :**
 
 - glissez-la de la liste sur le sort d'une ligne du chapitre **Sorts et raccourcis** ;
 - ou cliquez sur ce sort : vos macros sont listées sous vos sorts, à la ligne « Mes macros ».
+
+Sur un petit écran, la fenêtre d'options s'efface tant que la bibliothèque est ouverte : fermez la bibliothèque, les options reviennent, puis cliquez sur le sort d'une ligne.
+
+**Supprimer une macro** demande un second clic : la macro part avec tous ses clics et ses touches. Changé d'avis ? « Annuler mes changements », au bas de la fenêtre d'options, rend la macro et ses clics.
 
 Vos macros restent sur votre ordinateur : elles ne sont jamais envoyées ni reçues dans une configuration partagée, et « Tout réinitialiser » ne les efface pas. Quand un clic porte une macro, la résurrection automatique ne s'y ajoute pas : utilisez la case « Si le joueur est mort » de l'assistant.
 

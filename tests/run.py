@@ -3790,8 +3790,8 @@ step("refonte 1.26.0, lot 6c quater : annuler mes changements, enregistrer mes r
   Z:ToggleOptions("Disposition")
   local copy = Z:OptionsOpenedCopy()
   assert(copy and not w.undo:IsShown(), "Annuler montre sans changement")
-  assert(copy.profiles == nil and copy.macros == nil and copy.pinned and copy.language == nil and copy.clicks,
-    "copie : reglages prives exclus (sauf les epingles, constat O12), clics compris")
+  assert(copy.profiles == nil and copy.macros and copy.pinned and copy.language == nil and copy.clicks,
+    "copie : reglages prives exclus (sauf les epingles et les macros, constats O12 et M1), clics compris")
 
   -- Bande du bas : un bouton de chaque côté de l'inscription runique, sans la toucher, dans la bande (34 de haut),
   -- en retrait des cadres épais ; la fenêtre réduite d'un bloc garde ce rapport
@@ -4009,6 +4009,8 @@ step("refonte 1.26.0, lot 6c septies a : corrections de UI.lua (relecture)", fun
   Z:ToggleOptions()
   assert(not w:IsShown(), "deuxieme appel : options fermees")
   w:Run("OnHide")
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
@@ -4330,6 +4332,216 @@ step("refonte 1.26.0, lot 6c septies c : corrections de Tutorial.lua et Runes.lu
   w:Hide() w:Run("OnHide")
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:SetLanguage() Z.UI.ApplySkin() Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c septies d : corrections de Macros.lua (relecture)", function()
+  local UI, o, L = Z.UI, Z:OptionsWindow(), Z.L
+  local saved = { reduceMotion = Z.db.reduceMotion, windowTheme = Z.db.windowTheme, macroAutoTarget = Z.db.macroAutoTarget,
+    macros = CopyTable(Z.db.macros), clicks = CopyTable(Z.db.clicks), hoverKeys = CopyTable(Z.db.hoverKeys) }
+  local after, print = C_Timer.After, Z.Print
+  Z.db.reduceMotion = true Z:Refresh()
+  local b = Z.buttons[1]
+  local function Fresh() -- options fermées par le joueur puis rouvertes : nouvelle copie d'« Annuler »
+    o:Hide() o:Run("OnHide")
+    Z:ToggleOptions("Sorts et raccourcis")
+    assert(Z:OptionsOpenedCopy() and not o.undo:IsShown(), "copie prise a l'ouverture")
+  end
+  local function Undo()
+    o.undo.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+    o.undo:Run("OnClick", "LeftButton")
+  end
+  Z.db.macros[Z.class] = {}
+  Z:NewMacro("Bijou soin", "/use 13\n/cast Soins")
+  Z:SetClick("alt-5", "@macro:Bijou soin")
+
+  -- M1 : renommer puis « Annuler » : le clic et sa macro reviennent ensemble, la fenêtre reprend la macro
+  Fresh()
+  local w = Z:OpenMacros("Bijou soin")
+  w.name:SetText("Soin du bijou") w.name:Run("OnEnterPressed")
+  assert(Z:GetClicks()["alt-5"] == "@macro:Soin du bijou" and o.undo:IsShown(), "renommage")
+  Undo()
+  assert(Z:GetClicks()["alt-5"] == "@macro:Bijou soin" and Z:FindMacro("Bijou soin") and not Z:FindMacro("Soin du bijou"),
+    "M1 : macro pas revenue avec son clic")
+  assert(w.macro == Z:FindMacro("Bijou soin") and w.name:GetText() == "Bijou soin", "M1 : fenetre restee sur l'ancienne table")
+  assert(b:GetAttribute("alt-macrotext5") == "/use 13\n/cast [@mouseover] Soins", tostring(b:GetAttribute("alt-macrotext5")))
+  -- M2 : supprimer demande un second clic ; puis « Annuler » rend la macro et son clic
+  C_Timer.After = function() end
+  w.remove:Run("OnClick", "LeftButton")
+  assert(Z:FindMacro("Bijou soin") and w.remove.armed, "M2 : supprimee en un clic")
+  w.remove:Run("OnClick", "LeftButton")
+  assert(not Z:FindMacro("Bijou soin") and Z:GetClicks()["alt-5"] == nil, "M2 : second clic sans effet")
+  Undo()
+  assert(Z:FindMacro("Bijou soin") and Z:GetClicks()["alt-5"] == "@macro:Bijou soin" and b:GetAttribute("alt-macrotext5"),
+    "M1 : suppression pas annulee")
+  assert(w.macro == Z:FindMacro("Bijou soin"), "M1 : fenetre apres la suppression annulee")
+  -- M2 : armé sur une macro, puis une autre choisie : le second clic ne la supprime pas
+  Z:NewMacro("Autre", "/cast Soins")
+  w.remove:Run("OnClick", "LeftButton")
+  assert(w.remove.armed)
+  w.SaveCurrent() w.Select(Z:FindMacro("Autre"))
+  assert(not w.remove.armed and w.remove.label:GetText() == L["Supprimer"], "M2 : reste arme sur une autre macro")
+  C_Timer.After = after
+  -- M1 : le texte seul change : « Annuler » paraît et le rend
+  w.Select(Z:FindMacro("Bijou soin"))
+  Fresh()
+  w.edit:SetText("/cast Rénovation") w.save:Run("OnClick")
+  assert(o.undo:IsShown(), "M1 : texte change seul, Annuler absent")
+  Undo()
+  assert(Z:FindMacro("Bijou soin").body == "/use 13\n/cast Soins" and w.edit:GetText() == "/use 13\n/cast Soins", "M1 : texte")
+
+  -- M3 : chaque zone de la colonne de droite a sa hauteur et finit avant le haut de la suivante
+  local function Top(f) return f._point[#f._point] end
+  assert(w.problems:GetHeight() == 6 * 13 and w.preview:GetHeight() == 5 * 13 and w.uses:GetHeight() == 2 * 13
+    and w.help:GetHeight() == 2 * 13, "hauteurs des zones")
+  local box = w.scroll:GetParent()
+  local column = { { -72, box:GetHeight() }, { Top(w.help), w.help:GetHeight() }, { -230 }, { Top(w.problems), w.problems:GetHeight() },
+    { -330 }, { Top(w.preview), w.preview:GetHeight() }, { -417 }, { Top(w.uses), w.uses:GetHeight() }, { Top(w.auto), 24 },
+    { -(w:GetHeight() - 14 - 24) } }
+  for i = 1, #column - 1 do
+    local top, height = column[i][1], column[i][2] or 14
+    assert(top - height >= column[i + 1][1], "M3 : zone " .. i .. " sur la suivante")
+  end
+  -- six fautes et plus : trois montrées, le reste compté au bout du titre
+  w.edit:SetText("a\nb\nc\nd\ne\nf") w.edit:Run("OnTextChanged")
+  local _, breaks = w.problems:GetText():gsub("\n", "")
+  assert(breaks == 2 and w.others:GetText() == L["et %d autres"]:format(4), w.others:GetText())
+  w.edit:SetText("/cast Soins") w.edit:Run("OnTextChanged")
+  assert(w.others:GetText() == "", "compte reste")
+  -- aperçu coupé : texte entier dans l'infobulle
+  w.preview.IsTruncated = function() return true end
+  w.preview.hover:Run("OnEnter")
+  assert(GameTooltip:GetText() == w.preview:GetText(), "M3 : infobulle de l'apercu")
+  w.preview.hover:Run("OnLeave") w.preview.IsTruncated = nil
+  -- zone d'écriture qui défile et suit le curseur
+  local shift = 0
+  w.scroll.GetVerticalScroll = function() return shift end
+  w.scroll.SetVerticalScroll = function(_, v) shift = v end
+  w.edit:Run("OnCursorChanged", 0, -150, 2, 14)
+  assert(shift == 150 + 14 - w.scroll:GetHeight(), "curseur sous la zone : " .. shift)
+  w.edit:Run("OnCursorChanged", 0, -10, 2, 14)
+  assert(shift == 10, "curseur au-dessus : " .. shift)
+  w.scroll.GetVerticalScroll, w.scroll.SetVerticalScroll = nil, nil
+  w.edit:SetText(Z:FindMacro("Bijou soin").body) w.save:Run("OnClick")
+
+  -- M4 : écran de 1365, options effacées : la consigne ne demande pas de glisser sur une ligne invisible
+  local function Screen(width, height)
+    UIParent.GetWidth = function() return width end UIParent.GetHeight = function() return height end
+  end
+  w:Hide() w:Run("OnHide")
+  Screen(1365, 768)
+  o.GetLeft = function() return 142 end o.GetRight = function() return 1222 end o.GetTop = function() return 738 end
+  Z:ToggleOptions("Sorts et raccourcis")
+  Z:OpenMacros()
+  local away = L["Fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne, vos macros sont dans la liste."]
+  local drag = L["Glissez une macro sur une ligne du chapitre Sorts et raccourcis, ou cliquez sur le sort d'une ligne pour la choisir."]
+  assert(UI.Away() and w.hint:GetText() == away, "M4 : consigne du glisser, options effacees")
+  w:Hide() w:Run("OnHide")
+  assert(o:IsShown() and not UI.Away())
+  Screen(2560, 1440)
+  Z:OpenMacros()
+  assert(not UI.Away() and w.hint:GetText() == drag, "M4 : consigne du glisser, grand ecran")
+  Screen(1365, 768) FireEvent("UI_SCALE_CHANGED") -- l'écran change, fenêtre ouverte
+  assert(UI.Away() and w.hint:GetText() == away, "M4 : consigne apres le changement d'ecran")
+  w:Hide() w:Run("OnHide")
+  o.GetLeft, o.GetRight, o.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+
+  -- M5 : la macro ouverte a sa bordure, dans les 3 thèmes et après un changement de thème
+  Z:OpenMacros("Autre")
+  for _, theme in ipairs({ "CLASSIC", "MMO", "MODERN" }) do
+    Z.db.windowTheme = theme Z:Refresh()
+    for _, row in ipairs(w.rows) do
+      local chosen = row.macro ~= nil and row.macro == w.macro
+      assert(row.mark:IsShown() == chosen, "M5 : marque " .. theme .. " " .. tostring(row.macro and row.macro.name))
+      if chosen then assert(row.mark[1]._color[1] == UI.accent[1], "M5 : couleur " .. theme) end
+    end
+  end
+  -- M10 : gris et texte du thème
+  w.Refresh()
+  assert(w.uses:GetText():find(UI.Hex("dim"), 1, true) and not w.uses:GetText():find("8a8f99", 1, true), w.uses:GetText())
+  assert(w.preview._color[1] == UI.text[1] and w.uses._color[1] == UI.text[1], "M10 : texte en dur")
+
+  -- M6 : le champ du nom montre toujours le vrai nom
+  local m = w.macro
+  w.name:SetText("") w.name:Run("OnEnterPressed")
+  assert(w.name:GetText() == "Autre" and m.name == "Autre", "M6 : nom vide")
+  w.name:SetText(string.rep("é", 20)) w.name:Run("OnEnterPressed")
+  assert(#m.name <= 32 and w.name:GetText() == m.name, "M6 : nom coupe")
+  local printed
+  Z.Print = function(_, text) printed = text end
+  w.name:SetText("Bijou soin") w.SaveCurrent()
+  Z.Print = print
+  assert(printed == L["Une autre macro porte déjà ce nom."] and w.name:GetText() == m.name, "M6 : nom pris sans message")
+
+  -- M7 : Échap ferme seulement la fenêtre du dessus
+  local function Listed(name)
+    for _, n in ipairs(UISpecialFrames) do if n == name then return true end end
+  end
+  local wiz = Z:OpenMacroWizard()
+  assert(Listed("LyoruneMacroWizard") and not Listed("LyoruneMacros") and not Listed("LyoruneOptions"), "M7 : assistant")
+  wiz.spell:Run("OnClick", "LeftButton") -- choix d'un sort par-dessus l'assistant
+  assert(LyorunePicker:IsShown() and Listed("LyorunePicker") and not Listed("LyoruneMacroWizard"), "M7 : choix d'un sort")
+  LyorunePicker:Hide()
+  assert(Listed("LyoruneMacroWizard") and not Listed("LyoruneMacros"), "M7 : assistant rendu")
+  wiz:Hide()
+  assert(Listed("LyoruneMacros") and Listed("LyoruneOptions") and Listed("LyorunePicker"), "M7 : noms rendus")
+  -- M11 c : classe sans résurrection, la suite remonte d'une ligne
+  local res = Z.classRes[Z.class]
+  Z.classRes[Z.class] = nil
+  Z:OpenMacroWizard()
+  assert(wiz:GetHeight() == 336 and wiz.tail._point[3] == wiz.tailY + 24 and not wiz.res:IsShown(), "M11 c : trou")
+  wiz:Hide()
+  Z.classRes[Z.class] = res
+  Z:OpenMacroWizard()
+  assert(wiz:GetHeight() == 360 and wiz.tail._point[3] == wiz.tailY and wiz.res:IsShown())
+  wiz.opts.spell = nil wiz.Update()
+  assert(wiz.spell.label:GetText():find(UI.Hex("dim"), 1, true), "M10 : Choisir... en gris du theme")
+  wiz:Hide()
+
+  -- M8 : macro tenue au curseur, fenêtre fermée : rien n'est déposé
+  local dropped
+  Z:MacroDragStart(w.rows[1])
+  w:Hide() w:Run("OnHide")
+  MOUSE_FOCI = { { dropValue = function() dropped = true end } }
+  assert(not Z:MacroDragStop() and not dropped, "M8 : macro deposee apres la fermeture")
+  MOUSE_FOCI = false
+  -- M9 : la zone d'écriture rend le clavier à la fermeture
+  assert(w.edit:GetScript("OnHide") == w.edit.ClearFocus, "M9")
+
+  -- M11 a : l'aide suit la case
+  Z:OpenMacros()
+  Z.db.macroAutoTarget = false w.Refresh()
+  assert(w.help:GetText() == L["{cible} est le joueur de la case."], "M11 a")
+  Z.db.macroAutoTarget = true w.Refresh()
+  assert(w.help:GetText():find(L["Une commande sans cible vise la case"], 1, true), "M11 a : case cochee")
+  -- M11 b : plus de macros que de lignes, la molette est annoncée
+  for i = 1, 14 do Z:NewMacro("Macro " .. i, "/cast Soins") end
+  w.Refresh()
+  assert(w.more:IsShown() and w.more:GetText() == L["Molette : %d de plus"]:format(#Z:GetMacros() - 13), w.more:GetText())
+  -- M11 f : aucune macro, une phrase et aucune ligne
+  Z.db.macros[Z.class] = {}
+  w.macro = nil w.Refresh()
+  assert(w.empty:IsShown() and not w.more:IsShown(), "M11 f")
+  for _, row in ipairs(w.rows) do assert(not row:IsShown(), "M11 f : ligne vide montree") end
+  -- M11 d : icônes de l'import espacées de 3
+  MACROS[#MACROS + 1] = { name = "Deux", icon = 1, body = "/dance" }
+  local imp = Z:OpenMacroImport()
+  assert(imp.icons[2]._point[2] - imp.icons[1]._point[2] == 35, "M11 d")
+  imp:Hide()
+  table.remove(MACROS)
+  -- M11 e : options ouvertes, Mes macros n'est plus posée par Z:OpenMacros (UI.Appear le fait) ; fermées, au milieu
+  w:Hide() w:Run("OnHide")
+  w._point = nil
+  Z:OpenMacros()
+  assert(w._point == nil, "M11 e : place posee pour rien")
+  w:Hide() w:Run("OnHide")
+  o:Hide() o:Run("OnHide")
+  Z:OpenMacros()
+  assert(w._point[1] == "CENTER", "M11 e : options fermees")
+  w:Hide() w:Run("OnHide")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh() Z:ApplyClicks()
 end)
 
 step("aucune variable globale imprevue", function()

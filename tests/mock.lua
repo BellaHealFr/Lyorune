@@ -10,8 +10,13 @@ Obj.__index = function(t, k)
 	if type(k) == "string" and k:match("^%u") then return function() end end -- méthode inconnue : sans effet
 end
 
+-- Fenêtres posées sur une autre (UI.OnTop) : comme dans le jeu, les cacher lance OnHide, qui rend à
+-- UISpecialFrames les noms retirés (ailleurs, les tests lancent OnHide à la main)
+local HIDE_RUNS_ONHIDE = { LyorunePicker = true, LyoruneMacroImport = true, LyoruneMacroWizard = true }
+
 local function new(kind, name, parent)
-	local o = setmetatable({ _kind = kind, _name = name, _parent = parent, _scripts = {}, _attr = {}, _events = {}, _shown = true, _w = 100, _h = 20 }, Obj)
+	local o = setmetatable({ _kind = kind, _name = name, _parent = parent, _scripts = {}, _attr = {}, _events = {}, _shown = true, _w = 100, _h = 20,
+		_hideRuns = name and HIDE_RUNS_ONHIDE[name] }, Obj)
 	frames[#frames + 1] = o
 	if name then _G[name] = o end
 	return o
@@ -27,7 +32,11 @@ function Obj:Run(n, ...) if self._scripts[n] then return self._scripts[n](self, 
 function Obj:SetAttribute(k, v) self._attr[k] = v; self:Run("OnAttributeChanged", k, v) end
 function Obj:GetAttribute(k) return self._attr[k] end
 function Obj:Show() local was = self._shown; self._shown = true; if not was then self:Run("OnShow") end end
-function Obj:Hide() self._shown = false end
+function Obj:Hide()
+	local was = self._shown
+	self._shown = false
+	if was and self._hideRuns then self:Run("OnHide") end
+end
 function Obj:SetShown(s) if s then self:Show() else self:Hide() end end
 function Obj:IsShown() return self._shown end
 function Obj:IsVisible() return self._shown end

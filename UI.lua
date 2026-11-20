@@ -1648,6 +1648,37 @@ function UI.Away()
 	return next(away) ~= nil
 end
 
+-- Fenêtre posée sur une autre (choix d'un sort, import, assistant de macro). À Échap, le jeu ferme d'un coup
+-- toutes les fenêtres de UISpecialFrames : le temps qu'elle est ouverte, les autres fenêtres de Lyorune quittent
+-- cette liste, et y reviennent à sa fermeture. Échap ferme ainsi seulement celle du dessus. Seulement nos noms,
+-- aucune fonction du jeu touchée. Deux fenêtres l'une sur l'autre (assistant, puis choix d'un sort) : chacune
+-- rend ce qu'elle a retiré.
+local lifted = {} -- nom retiré -> nom de la fenêtre qui l'a retiré
+function UI.OnTop(w)
+	local name = w:GetName()
+	w:HookScript("OnShow", function()
+		if lifted[name] then -- retirée par la fenêtre du dessous : c'est elle, maintenant, le dessus
+			lifted[name] = nil
+			tinsert(UISpecialFrames, name)
+		end
+		for i = #UISpecialFrames, 1, -1 do
+			local other = UISpecialFrames[i]
+			if other ~= name and other:find("^Lyorune") and not lifted[other] then
+				table.remove(UISpecialFrames, i)
+				lifted[other] = name
+			end
+		end
+	end)
+	w:HookScript("OnHide", function()
+		for other, by in pairs(lifted) do
+			if by == name then
+				lifted[other] = nil
+				tinsert(UISpecialFrames, other)
+			end
+		end
+	end)
+end
+
 -- Montre une fenêtre, même pendant son fondu de fermeture (qui l'aurait cachée juste après)
 function UI.Reopen(w)
 	if w.outro and w.outro:IsPlaying() then w.outro:Stop() end
@@ -1691,7 +1722,10 @@ local function Refit()
 		if w:IsShown() then UI.Fit(w) end
 	end
 	for _, w in ipairs(windows) do
-		if w.beside and w:IsShown() then UI.PlaceBeside(w) end
+		if w.beside and w:IsShown() then
+			UI.PlaceBeside(w)
+			if w.Placed then w.Placed() end -- ce qui suit la place des options (consigne de Mes macros)
+		end
 	end
 end
 Z:On("UI_SCALE_CHANGED", Refit)

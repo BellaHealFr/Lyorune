@@ -44,7 +44,7 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 
 - **Golden rune**: it lights up next to every setting that no longer has its default value. Hover it to see that value, click it to go back to it.
 - **"Reset this page"**: at the bottom of a chapter where a setting has changed. Two clicks, and every setting of the chapter goes back to its default value. Your lists, announcement texts, clicks and profiles do not move.
-- **"Undo my changes"**: at the bottom right of the window, as soon as you have changed something since it was opened. Two clicks, and everything goes back to the value it had when you opened the window: settings, clicks, lists (pinned players included), announcement texts and element placement. Your saved profiles do not move. Opening another Lyorune window, starting the tour or the setup assistant does not count as closing it; closing the window does. In combat, your clicks come back as soon as combat ends.
+- **"Undo my changes"**: at the bottom right of the window, as soon as you have changed something since it was opened. Two clicks, and everything goes back to the value it had when you opened the window: settings, clicks, lists (pinned players included), the macros of your library, announcement texts and element placement. Your saved profiles do not move. Opening another Lyorune window, starting the tour or the setup assistant does not count as closing it; closing the window does. In combat, your clicks come back as soon as combat ends.
 - **"Save my settings"**: at the bottom left, under the chapters. Type a name and press Enter (Escape cancels): your current settings become a profile, which you will find in Profiles and sharing (see part 11).
 
 **Finding a setting**: at the top right, type a word in "Search a setting..." ("mana", "tank", "theme"...). Lyorune looks in the setting names, then in their explanations. Capitals and accents do not matter. Clicking a result opens the right chapter, unfolds the fine settings if needed and makes the setting flash.
@@ -179,12 +179,16 @@ A macro found on the Internet with `[@mouseover]` works as it is. To place the p
 - a spell your active specialization does not know (maybe it belongs to the other one);
 - a command that runs code (`/run`, `/script`).
 
-Just below, "Sent to the game" shows the exact text that goes out on the click, and "Used on" the clicks that use the macro.
+The first three findings are written out, the number of the others is given at the end of the "Check" title. Just below, "Sent to the game" shows the exact text that goes out on the click, and "Used on" the clicks that use the macro. A text too long for its place can be read in full by hovering it.
 
 **Putting the macro on a click:**
 
 - drag it from the list onto the spell of a line in the **Spells and bindings** chapter;
 - or click that spell: your macros are listed below your spells, in the "My macros" row.
+
+On a small screen, the options window fades out while the library is open: close the library, the options come back, then click the spell of a line.
+
+**Deleting a macro** asks for a second click: the macro goes away with all its clicks and keys. Changed your mind? "Undo my changes", at the bottom of the options window, gives back the macro and its clicks.
 
 Your macros stay on your computer: they are never sent or received in a shared configuration, and "Reset everything" does not erase them. When a click holds a macro, automatic resurrection is not added to it: use the "If the player is dead: resurrect them" box of the wizard.
 

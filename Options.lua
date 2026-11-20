@@ -722,6 +722,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 		picker = UI.Window("LyorunePicker", "", 372, 200)
 		picker:SetFrameStrata("FULLSCREEN_DIALOG")
 		tinsert(UISpecialFrames, "LyorunePicker")
+		UI.OnTop(picker) -- Échap ferme seulement cette fenêtre, pas les options ni Mes macros
 		picker.icons = {}
 		local function Choose(value)
 			picker.onChoose(value)
@@ -1154,6 +1155,12 @@ local function ArmedButton(parent, text, armed, width, onConfirm)
 		onConfirm()
 	end)
 	button.label:SetJustifyH("CENTER")
+	-- Désarme tout de suite (la chose visée a changé : une autre macro choisie)
+	function button.Disarm()
+		button.arming = (button.arming or 0) + 1
+		button.armed = false
+		button.label:SetText(L[text])
+	end
 	return button
 end
 Z.ArmedButton = ArmedButton
@@ -2466,9 +2473,10 @@ end
 --   « Annuler mes changements », montré seulement si un réglage a changé depuis l'ouverture de la fenêtre : en deux
 --   clics, tout reprend la valeur qu'il avait à l'ouverture (réglages, clics, listes, coins, placement). La copie
 --   est prise à l'ouverture et gardée tant que la fenêtre n'est pas vraiment fermée : une fenêtre secondaire qui
---   l'efface (UI.Away) ou la visite guidée ne la ferment pas. Mes profils, mes macros et les réglages propres à
---   l'ordinateur (Z.private) n'en font pas partie, sauf la liste des joueurs épinglés (une liste comme les autres,
---   gardée hors des profils partagés seulement). En combat, les clics reviennent à la fin du combat.
+--   l'efface (UI.Away) ou la visite guidée ne la ferment pas. Mes profils et les réglages propres à l'ordinateur
+--   (Z.private) n'en font pas partie, sauf la liste des joueurs épinglés (une liste comme les autres, gardée hors
+--   des profils partagés seulement) et mes macros (les clics qui les portent reviennent : leur macro aussi). En
+--   combat, les clics reviennent à la fin du combat.
 ----------------------------------------------------------------------------------------------------
 local opened -- les réglages copiés à l'ouverture de la fenêtre
 
@@ -2477,8 +2485,9 @@ local function Copy(value)
 end
 
 -- Réglages de Z.private repris quand même : « Joueurs épinglés » est une liste du chapitre Disposition, privée
--- seulement pour ne pas partir avec un profil partagé
-local UNDO_PRIVATE = { pinned = true }
+-- seulement pour ne pas partir avec un profil partagé ; la bibliothèque de macros suit les clics (une macro
+-- renommée ou supprimée puis « Annuler » : le clic revenu retrouve sa macro, sinon il ne ferait plus rien)
+local UNDO_PRIVATE = { pinned = true, macros = true }
 
 local function TakeCopy()
 	local copy = {}
@@ -2501,6 +2510,7 @@ end
 local function UndoChanges()
 	if not opened then return end
 	for key, value in pairs(opened) do Z.db[key] = Copy(value) end
+	if Z.MacrosUndone then Z.MacrosUndone() end -- Mes macros, si elle est ouverte, reprend sa macro
 	Z:Refresh()
 	Z:RefreshAlerts()
 	Z:ApplyClicks() -- en combat, attend la fin du combat (boutons protégés)
@@ -2574,7 +2584,7 @@ local function BuildFoot()
 	local undo = ArmedButton(window, "Annuler mes changements", "Cliquez encore pour confirmer", 214, UndoChanges)
 	undo:SetHeight(22)
 	undo:SetPoint("BOTTOMRIGHT", -16, 7)
-	undo.tip = L["Tout ce que vous avez changé depuis l'ouverture de cette fenêtre reprend sa valeur d'avant : réglages, clics et listes. Vos profils enregistrés ne changent pas."]
+	undo.tip = L["Tout ce que vous avez changé depuis l'ouverture de cette fenêtre reprend sa valeur d'avant : réglages, clics, listes et macros. Vos profils enregistrés ne changent pas."]
 	undo:Hide()
 	window.undo = undo
 

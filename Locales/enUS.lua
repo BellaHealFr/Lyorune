@@ -214,6 +214,10 @@ Z.translations.enUS = {
 	["Glissez une macro sur une ligne du chapitre Sorts et raccourcis, ou cliquez sur le sort d'une ligne pour la choisir."] = "Drag a macro onto a line of the Spells and bindings chapter, or click the spell of a line to pick it.",
 	["Nom"] = "Name", ["Enregistrer"] = "Save", ["Supprimer"] = "Delete",
 	["{cible} est le joueur de la case. Une commande sans cible vise la case."] = "{cible} is the player in the cell. A command without a target aims at the cell.",
+	["{cible} est le joueur de la case."] = "{cible} is the player in the cell.",
+	["Fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne, vos macros sont dans la liste."] =
+		"Close this window: the options come back, then click the spell of a line, your macros are in the list.",
+	["et %d autres"] = "and %d more", ["Molette : %d de plus"] = "Mouse wheel: %d more",
 	["Vérification"] = "Check", ["Envoyé au jeu"] = "Sent to the game", ["Posée sur"] = "Used on",
 	["Aucune faute trouvée."] = "No mistake found.",
 	["Aucune macro : cliquez sur Nouvelle."] = "No macro yet: click New.",
@@ -799,8 +803,8 @@ Z.translations.enUS = {
 	["Par exemple : Raid"] = "For example: Raid", ["Entrée : enregistrer. Échap : annuler."] = "Enter: save. Escape: cancel.",
 	["Tout s'enregistre déjà tout seul. Ce bouton garde en plus vos réglages du moment sous un nom, comme profil : vous y reviendrez par Profils et partage. Vos clics et vos listes restent les mêmes dans tous les profils."] =
 		"Everything is already saved by itself. This button also keeps your current settings under a name, as a profile: you can come back to it from Profiles and sharing. Your clicks and lists stay the same in every profile.",
-	["Tout ce que vous avez changé depuis l'ouverture de cette fenêtre reprend sa valeur d'avant : réglages, clics et listes. Vos profils enregistrés ne changent pas."] =
-		"Everything you changed since this window was opened goes back to its previous value: settings, clicks and lists. Your saved profiles do not change.",
+	["Tout ce que vous avez changé depuis l'ouverture de cette fenêtre reprend sa valeur d'avant : réglages, clics, listes et macros. Vos profils enregistrés ne changent pas."] =
+		"Everything you changed since this window was opened goes back to its previous value: settings, clicks, lists and macros. Your saved profiles do not change.",
 	["vos clics reviendront à la fin du combat."] = "your clicks will come back when combat ends.",
 
 	-- Fenêtre d'options à chapitres (1.26.0) : case témoin et mode test
