@@ -12,8 +12,7 @@ local size = 10
 
 local CLASSES = { "WARRIOR", "PRIEST", "DRUID", "MAGE", "PALADIN", "ROGUE", "SHAMAN", "HUNTER", "WARLOCK" }
 local HEALTH = { 100, 62, 100, 18, 85, 100, 0, 45, 100, 73 } -- vie des faux joueurs, en %
--- Ressource de chaque classe d'exemple, quand ce n'est pas la mana : numéro et nom du jeu (Enum.PowerType)
-local CLASS_POWER = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2, "FOCUS" } }
+local CLASS_POWER = Z.classPower -- ressource de chaque classe quand ce n'est pas la mana (Data.lua)
 local DISPEL_COLORS = { { 0.20, 0.60, 1.00 }, { 0.65, 0.20, 1.00 }, { 0.10, 0.85, 0.20 } }
 
 -- Remplit une fausse case avec un état d'exemple. sample : la case témoin des options, à mon nom, où chaque
@@ -70,8 +69,16 @@ local function Fill(cell, index, sample)
 	local leader = db.showLeader and ((sample or index == 1) and "LeaderIcon" or size > 5 and slot == 0 and "AssistantIcon")
 	if leader then cell.leader:SetTexture("Interface\\GroupFrame\\UI-Group-" .. leader) end
 	cell.leader:SetShown(leader and true or false)
-	-- Barre de ressource comme sur les vraies cases : mana, rage, énergie ou focalisation selon la classe
+	-- Barre de ressource comme sur les vraies cases : mana, rage, énergie ou focalisation selon la classe.
+	-- Le druide montre sa forme : ours (rage) quand il tank, félin (énergie) un druide sur deux en dégâts
 	local power = CLASS_POWER[class]
+	if class == "DRUID" and not sample then
+		if role == "TANK" then
+			power = CLASS_POWER.WARRIOR
+		elseif not role and index % 2 == 1 then
+			power = CLASS_POWER.ROGUE
+		end
+	end
 	cell.powerType, cell.powerToken = power and power[1] or 0, power and power[2] or "MANA"
 	local mana = db.manaBars == "ALL" or (db.manaBars == "HEALERS" and role == "HEALER" and not power)
 	if mana ~= cell.powerShown then

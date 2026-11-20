@@ -279,7 +279,7 @@ Z.translations.enUS = {
 	["Son quand ma mana est faible"] = "Sound when my mana is low",
 	["Votre mana est lisible : l'annonce part au seuil exact."] = "Your mana is readable: the announcement goes out at the exact threshold.",
 	["Aucun de vos sorts ne coûte près de ce seuil : essayez un autre seuil."] = "None of your spells costs close to this threshold: try another threshold.",
-	["Le jeu cache votre mana : l'annonce part quand vous n'avez plus assez de mana pour %s, soit vers %d %%. La mana remontée est estimée d'après la vitesse à laquelle vos sorts redeviennent utilisables."] = "The game hides your mana: the announcement goes out when you no longer have enough mana for %s, around %d%%. Mana back is estimated from how fast your spells become usable again.",
+	["Le jeu cache votre mana : l'annonce part quand vous n'avez plus assez de mana pour %s, soit vers %d %%. La mana remontée est estimée hors combat avec votre régénération, boisson comprise."] = "The game hides your mana: the announcement goes out when you no longer have enough mana for %s, around %d%%. Mana back is estimated out of combat from your regeneration, drinking included.",
 	["Dans les textes, {mana} est remplacé par votre pourcentage de mana et {nom} par le joueur relevé. Les annonces ne partent qu'en groupe. Règle du jeu : hors instance, un addon ne peut pas écrire en /dire tout seul ; l'annonce part alors dans le canal du groupe ou du raid."] = "In the texts, {mana} is replaced by your mana percentage and {nom} by the resurrected player. Announcements are only sent while grouped. Game rule: outside instances an addon cannot write in /say on its own; the announcement then goes to the party or raid channel.",
 
 	-- Profils

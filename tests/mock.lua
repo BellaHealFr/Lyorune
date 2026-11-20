@@ -211,6 +211,8 @@ function GetReadyCheckStatus() return "ready" end
 function UnitHasIncomingResurrection() return false end
 function UnitIsUnit() return false end
 function InCombatLockdown() return COMBAT end
+-- Régénération de mana par seconde (hors combat, puis pendant les 5 s après un sort)
+function GetPowerRegen() return 10, 0 end
 -- Macros du personnage : MACROS[1] porte le numéro 121 dans le jeu
 MACROS, PICKED = {}, false
 MAX_ACCOUNT_MACROS, MAX_CHARACTER_MACROS = 120, 18

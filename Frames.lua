@@ -280,9 +280,20 @@ local function UpdateRole(b)
 		b.role:Hide()
 	end
 
-	-- La ressource montrée par le jeu pour ce joueur ; réponse secrète ou inconnue : la mana, comme avant
+	-- La ressource montrée par le jeu pour ce joueur. Réponse secrète ou inconnue : celle déjà connue, sinon
+	-- celle de sa classe (Data.lua), sinon la mana. Relue à la sortie de combat.
 	local powerType, token = UnitPowerType(unit)
-	if issecret(powerType) or type(powerType) ~= "number" then powerType, token = MANA, "MANA" end
+	if issecret(powerType) or type(powerType) ~= "number" then
+		local _, class = UnitClass(unit)
+		local guess = Z.classPower[not issecret(class) and class or ""]
+		if b.powerType then
+			powerType, token = b.powerType, b.powerToken
+		elseif guess then
+			powerType, token = guess[1], guess[2]
+		else
+			powerType, token = MANA, "MANA"
+		end
+	end
 	if issecret(token) or type(token) ~= "string" then token = nil end
 	local hasMana = powerType == MANA
 	if powerType ~= b.powerType or token ~= b.powerToken then
@@ -1497,6 +1508,8 @@ function Z:CreateFrames()
 	-- Entrée et sortie de combat : les buffs manquants ne se lisent que hors combat
 	Z:On("PLAYER_REGEN_ENABLED", ForVisible(Z.QueueAuras))
 	Z:On("PLAYER_REGEN_DISABLED", ForVisible(Z.QueueAuras))
+	-- Sortie de combat : la ressource de chacun relue, si une forme a changé pendant une réponse secrète
+	Z:On("PLAYER_REGEN_ENABLED", ForVisible(UpdateRole))
 	-- Étiquettes : masquées pendant un combat si elles ne servaient qu'au déplacement, revenues ensuite ;
 	-- en mode « Alt, Ctrl ou Maj », elles apparaissent le temps de maintenir la touche
 	Z:On("PLAYER_REGEN_DISABLED", UpdateHandles)

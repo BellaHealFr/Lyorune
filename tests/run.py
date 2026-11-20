@@ -655,43 +655,52 @@ step("mana secrete : la regle a sorts annonce la mana faible", function()
   FireEvent("SPELLS_CHANGED") Z.db.manaThreshold = 20 MANA = 1000 FireEvent("UNIT_POWER_UPDATE", "player")
 end)
 
-step("mana secrete : mana remontee estimee par paliers", function()
-  local power, cost, usable, after, now0 = UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, C_Timer.After, NOW
+step("mana secrete : mana remontee estimee avec la regeneration (bug C8)", function()
+  local power, cost, usable, now0 = UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, NOW
   UnitPower = function() return MakeSecret(MANA) end
   local costs = { [139] = 50, [2061] = 190, [527] = 300, [17] = 450 } -- paliers 5, 19, 30 et 45 %
   C_Spell.GetSpellPowerCost = function(id) return costs[id] and { { type = 0, cost = costs[id] } } or {} end
   C_Spell.IsSpellUsable = function(id) local c = costs[id] or 0 return MANA >= c, MANA < c end
-  FireEvent("SPELLS_CHANGED") -- avant de garder les minuteurs : celui des nouveaux sorts doit partir
-  local timers = {} C_Timer.After = function(d, f) timers[#timers + 1] = { d = d, f = f } end
+  -- régénération lue hors combat (boisson comprise), secrète en combat
+  local RATE, regen = 20, GetPowerRegen
+  GetPowerRegen = function() if COMBAT then return MakeSecret(RATE) end return RATE, 0 end
+  FireEvent("SPELLS_CHANGED")
   Z.db.manaThreshold = 20 Z.db.regenThreshold = 90 Z.db.manaAlert = true Z.db.regenAlert = true Z.db.alertChannel = "SAY"
   Z:RefreshAlerts()
-  NOW = 2000 local n = #SENT
-  MANA = 600 FireEvent("UNIT_POWER_UPDATE", "player")
-  MANA = 150 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 1, "mana faible")
-  wipe(timers) -- la mesure de la remontee commence a l'alerte
-  NOW = 2010 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 19 % : un seul, pas encore de vitesse
-  assert(#timers == 0 and #SENT == n + 1, "minuteur sans vitesse connue")
-  NOW = 2020 MANA = 310 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 30 % : 11 de mana par seconde
-  assert(#timers == 1 and math.abs(timers[1].d - 600 / 11) < 0.01, "heure prevue : " .. tostring(timers[1] and timers[1].d))
-  NOW = 2025 MANA = 320 FireEvent("UNIT_POWER_UPDATE", "player") assert(#timers == 1, "pas de nouveau palier")
-  NOW = 2035 MANA = 460 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 45 % : calcul refait
-  assert(#timers == 2, "calcul refait au palier suivant")
-  MANA = 900 timers[1].f() assert(#SENT == n + 1, "ancien minuteur pas annule")
-  timers[2].f()
-  assert(#SENT == n + 2 and SENT[#SENT] == "SAY:Mana remontée (90 %), prêt à repartir !", tostring(SENT[#SENT]))
-  timers[2].f() assert(#SENT == n + 2, "annonce repetee")
-  -- mana depensee pendant la remontee : le minuteur ne dit rien
-  NOW = 2100 MANA = 150 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 3, "nouvelle mana faible")
-  NOW = 2110 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player")
-  NOW = 2120 MANA = 310 FireEvent("UNIT_POWER_UPDATE", "player")
-  MANA = 60 FireEvent("UNIT_POWER_UPDATE", "player")
-  timers[#timers].f() assert(#SENT == n + 3, "annonce apres une depense")
-  -- annonce de remontee decochee : aucun minuteur
-  Z.db.regenAlert = false Z:RefreshAlerts() local t = #timers
-  NOW = 2200 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player") MANA = 310 NOW = 2210 FireEvent("UNIT_POWER_UPDATE", "player")
-  assert(#timers == t, "minuteur alors que l'annonce est decochee")
+  local function At(t, mana) NOW = t MANA = mana FireEvent("UNIT_POWER_UPDATE", "player") end
+  local n = #SENT
+  At(2000, 600) At(2000, 150) assert(#SENT == n + 1, "mana faible")
+  -- je bois : 20 de mana par seconde depuis le plancher sûr (50, le sort le moins cher)
+  At(2010, 250) assert(#SENT == n + 1, "annonce trop tot (250)")
+  At(2030, 650) assert(#SENT == n + 1, "annonce trop tot (650)")
+  At(2040, 850) assert(#SENT == n + 1, "annonce trop tot (850)")
+  At(2045, 950)
+  assert(#SENT == n + 2 and SENT[#SENT] == "SAY:Mana remontée (95 %), prêt à repartir !", tostring(SENT[#SENT]))
+  At(2050, 1000) assert(#SENT == n + 2, "annonce repetee")
+  -- plafond : une régénération énorme ne passe pas le coût d'un sort qui manque de mana
+  At(2100, 150) assert(#SENT == n + 3, "nouvelle mana faible")
+  RATE = 1000
+  At(2101, 160) At(2110, 200) assert(#SENT == n + 3, "estimation au-dessus d'un sort qui manque de mana")
+  RATE = 20
+  -- un sort lancé pendant la remontée : retour au plancher, et 5 secondes sans régénération
+  At(2120, 460) -- estimation 450 au moins (plancher)
+  FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 2061)
+  At(2124, 270) At(2130, 340) -- plancher 190, 20/s seulement après les 5 s, puis plancher 300
+  At(2155, 800) assert(#SENT == n + 3, "annonce trop tot apres un sort (800 estimes)")
+  At(2165, 1000) assert(#SENT == n + 4, "mana remontee apres un sort")
+  -- en combat la régénération est secrète : rien n'est ajouté, aucune annonce trop tôt
+  At(2200, 150) assert(#SENT == n + 5, "mana faible avant le combat")
+  COMBAT = true
+  At(2210, 200) At(2400, 950) assert(#SENT == n + 5, "annonce en combat sans regeneration connue")
+  COMBAT = false
+  At(2410, 960) At(2450, 1000)
+  assert(#SENT == n + 6, "mana remontee apres le combat")
+  -- annonce de remontée décochée : rien
+  Z.db.regenAlert = false Z:RefreshAlerts()
+  At(2500, 150) At(2600, 1000) assert(#SENT == n + 7, "annonce alors qu'elle est decochee")
   Z.db.regenAlert = true Z:RefreshAlerts()
-  UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, C_Timer.After, NOW = power, cost, usable, after, now0
+  GetPowerRegen = regen
+  UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, NOW = power, cost, usable, now0
   FireEvent("SPELLS_CHANGED") MANA = 1000 FireEvent("UNIT_POWER_UPDATE", "player")
 end)
 
@@ -2785,7 +2794,19 @@ step("C7 : barre de ressource selon la classe (rage, energie, forme du druide), 
     FireEvent("UNIT_DISPLAYPOWER", "party2")
     SECRET = false
     assert(b.powerType == 0, "type secret mal lu")
+    -- réponse secrète sans ressource connue : celle de la classe (un guerrier garde sa rage, pas la mana)
+    local oldClass = UnitClass
+    UnitClass = function() return "Guerrier", "WARRIOR" end
+    b.powerType, b.powerToken = nil, nil
+    SECRET = true
+    FireEvent("UNIT_DISPLAYPOWER", "party2")
+    SECRET = false
+    UnitClass = oldClass
+    assert(b.powerType == 1 and b.power._barColor[3] == 0, "guerrier en mana quand la ressource est secrete")
+    -- sortie de combat : la ressource relue (le guerrier redevient ce que dit le jeu)
     POWER_TYPE, POWER_TOKEN = nil, nil
+    FireEvent("PLAYER_REGEN_ENABLED")
+    assert(b.powerType == 0, "ressource pas relue a la sortie de combat")
     -- mode test : le guerrier et le voleur d'exemple ont leur rage et leur énergie
     Z.db.manaBars = "ALL" Z:Refresh()
     Z:TogglePreview(10)
@@ -2793,6 +2814,14 @@ step("C7 : barre de ressource selon la classe (rage, energie, forme du druide), 
     assert(cells[1].powerType == 1 and cells[1].power._barColor[1] == 1 and cells[1].power._barColor[3] == 0, "guerrier d'exemple en mana")
     assert(cells[6].powerType == 3 and cells[6].power._barColor[3] == 0, "voleur d'exemple en mana")
     assert(cells[2].powerType == 0 and cells[2].power._barColor[3] == Z.manaColors.BLUE[3], "pretre d'exemple sans mana")
+    Z:TogglePreview()
+    -- druides d'exemple (cases 3, 12, 21, 30 du raid) : félin en dégâts, mana en soin, ours en tank, mana en dégâts
+    Z:TogglePreview(40)
+    cells = Z:PreviewCells(40)
+    assert(cells[3].powerType == 3, "druide felin d'exemple sans energie")
+    assert(cells[12].powerType == 0, "druide soigneur d'exemple sans mana")
+    assert(cells[21].powerType == 1 and cells[21].power._barColor[3] == 0, "druide tank d'exemple sans rage")
+    assert(cells[30].powerType == 0, "druide en forme humaine d'exemple sans mana")
     Z:TogglePreview()
   end)
   POWER_TYPE, POWER_TOKEN, SECRET = nil, nil, false
