@@ -1823,10 +1823,10 @@ local function Chapters()
 				{ "check", "showHealAbsorb", "Absorption de soins", "Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat.", desc = "Bande rouge sombre : la part qu'un affaiblissement mange avant vos soins.", fine = true },
 			} },
 			{ "Mana", {
-				{ "seg", "manaBars", "Barre de mana" },
+				{ "seg", "manaBars", "Barre de mana", nil, "Tous : chaque joueur avec sa ressource, à la couleur du jeu (mana, rage, énergie, focalisation...), qui suit la forme du druide. Soigneurs : leur mana seulement." },
 				{ "cycle", "lowManaHealers", "Mana basse des soigneurs", nil, "Une icône de boisson sur la case d'un soigneur dont la mana passe sous ce seuil. Le jeu la calcule lui-même : elle marche en combat, même quand la mana est cachée.", desc = "Une icône de boisson, même en combat." },
 				{ "step", "powerHeight", "Hauteur de la barre de mana", fine = true, dep = { "manaBars", "!OFF" } },
-				{ "cycle", "manaColor", "Couleur de la barre de mana", fine = true, dep = { "manaBars", "!OFF" } },
+				{ "cycle", "manaColor", "Couleur de la barre de mana", nil, "Seulement pour la mana : rage, énergie et les autres ressources gardent la couleur du jeu.", fine = true, dep = { "manaBars", "!OFF" } },
 				{ "check", "manaPercent", "Pourcentage de mana dans la barre", "Le % de mana écrit au milieu de la barre, lisible en combat. La barre passe alors à 8 pixels de haut au moins.", fine = true, dep = { "manaBars", "!OFF" } },
 			} },
 			{ "Portée", {
