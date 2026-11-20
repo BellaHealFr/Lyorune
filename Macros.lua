@@ -621,7 +621,7 @@ local function BuildWindow()
 		win.auto:Update()
 	end
 
-	win:SetScript("OnHide", function() win.SaveCurrent() end)
+	win:HookScript("OnHide", function() win.SaveCurrent() end) -- garde le retour des options (UI.Window)
 end
 
 -- Ouvre la bibliothèque, sur une macro (nom) ou sur la première

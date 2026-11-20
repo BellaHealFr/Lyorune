@@ -3692,6 +3692,91 @@ step("refonte 1.26.0, lot 6c bis b : visite qui rend la fenetre, explique les op
   Z:SetLanguage() Z:Refresh()
 end)
 
+step("refonte 1.26.0, lot 6c ter : fenetres a la mesure de l'ecran, jamais l'une sur l'autre", function()
+  local UI, w = Z.UI, Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion }
+  Z.db.reduceMotion = true -- fermetures sans fondu : la fenêtre se cache tout de suite
+  w:Hide()
+  -- Chaque fenêtre secondaire construite, puis fermée
+  Z:ShowBug() Z:ShowNews() Z:ShowLog() Z:ShowMeasure() Z:OpenMacros() Z:OpenPlacement()
+  OptionPart("copyButton").copyButton:Run("OnClick", "LeftButton")
+  local beside = { LyoruneBug, LyoruneNews, LyoruneLog, LyorunePerf, LyoruneMacros, LyorunePlacement, LyoruneProfileCopy }
+  for i, f in ipairs(beside) do
+    assert(f and f.beside, "fenetre a cote des options : " .. i)
+    f:Hide() f:Run("OnHide")
+  end
+
+  -- Quatre écrans (taille de UIParent) et un écran bas : chaque fenêtre tient, jamais sous 75 %
+  local function Screen(width, height)
+    UIParent.GetWidth = function() return width end UIParent.GetHeight = function() return height end
+  end
+  for _, screen in ipairs({ { 1024, 768 }, { 1365, 768 }, { 1920, 1080 }, { 2560, 1440 }, { 1365, 600 } }) do
+    Screen(screen[1], screen[2])
+    for _, f in ipairs(UI.Windows()) do
+      UI.Fit(f)
+      local s = f:GetScale()
+      assert(s >= 0.75 and s <= 1, "echelle " .. s)
+      assert(f:GetWidth() * s <= screen[1] - 40 and f:GetHeight() * s <= screen[2] - 60,
+        "plus grande que l'ecran " .. screen[1] .. " x " .. screen[2] .. " : " .. tostring(f:GetName()))
+    end
+  end
+  Screen(1024, 768) UI.Fit(w)
+  assert(math.abs(w:GetScale() - 984 / 1080) < 0.001 and w:GetHeight() == 708, "options reduites d'un bloc : " .. w:GetScale())
+  Screen(1365, 600) UI.Fit(w)
+  local step = math.floor((540 - 58 - 34 - 16) / 11)
+  assert(w:GetScale() == 1 and w:GetHeight() == 540 and w.chapters[1].button:GetHeight() == step - 2, "options moins hautes")
+  -- l'échelle de l'interface change, fenêtre ouverte : elle reprend sa taille
+  w:Show() Screen(1365, 768) FireEvent("UI_SCALE_CHANGED")
+  assert(w:GetHeight() == 708 and w.chapters[1].button:GetHeight() == 38, "taille reprise")
+  Screen(2560, 1440) FireEvent("DISPLAY_SIZE_CHANGED")
+  assert(w:GetScale() == 1 and w:GetHeight() == 708, "grand ecran")
+
+  -- Écran de 1365 : aucune fenêtre ne tient à côté, les options s'effacent puis reviennent sur le même chapitre
+  Screen(1365, 768)
+  w.GetLeft = function() return 142 end w.GetRight = function() return 1222 end w.GetTop = function() return 738 end
+  Z:ToggleOptions("Apparence")
+  for _, f in ipairs(beside) do
+    f:Show()
+    local p = f._point
+    assert(not w:IsShown(), "options sous " .. f:GetName())
+    assert(p[1] == "TOP" and p[2] == UIParent and p[4] == (142 + 1222) / 2 and p[5] == 738, "a la place des options : " .. f:GetName())
+    f:Hide() f:Run("OnHide")
+    assert(w:IsShown() and Z:OptionChapter() == "Apparence", "options revenues : " .. f:GetName())
+  end
+  -- deux fenêtres ouvertes : les options reviennent à la fermeture de la dernière
+  LyoruneBug:Show() LyoruneLog:Show()
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  assert(not w:IsShown(), "options revenues trop tot")
+  LyoruneLog:Hide() LyoruneLog:Run("OnHide")
+  assert(w:IsShown(), "options pas revenues")
+  -- options rouvertes par le joueur : la fenêtre qui les effaçait se ferme
+  LyoruneBug:Show()
+  Z:ToggleOptions("Apparence")
+  assert(w:IsShown() and not LyoruneBug:IsShown(), "deux fenetres l'une sur l'autre")
+
+  -- Écran de 1920, options au milieu : elles glissent pour faire la place, puis retournent à leur place
+  Screen(1920, 1080)
+  w.GetLeft = function() return 420 end w.GetRight = function() return 1500 end w.GetTop = function() return 900 end
+  LyoruneMacros:Show()
+  local p = w._point
+  assert(w:IsShown() and p[1] == "TOPLEFT" and p[2] == UIParent and p[4] == 106 and p[5] == 900, "options glissees")
+  p = LyoruneMacros._point
+  assert(p[1] == "TOPLEFT" and p[2] == w and p[3] == "TOPRIGHT", "macros a cote")
+  w.GetLeft = function() return 106 end w.GetRight = function() return 1186 end
+  LyoruneMacros:Hide() LyoruneMacros:Run("OnHide")
+  assert(w._point[1] == "CENTER", "options pas revenues a leur place")
+  -- place assez à droite : rien ne bouge
+  w.GetLeft = function() return 100 end w.GetRight = function() return 1180 end
+  w:SetPoint("CENTER") LyoruneMacros:Show()
+  assert(w._point[1] == "CENTER" and LyoruneMacros._point[2] == w, "options deplacees pour rien")
+  LyoruneMacros:Hide() LyoruneMacros:Run("OnHide")
+
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+  w:Hide()
+  for key, value in pairs(saved) do Z.db[key] = value end
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

@@ -259,7 +259,7 @@ Chapitre **Fenêtre et aide**, partie « Fenêtres de Lyorune » : elle habille 
 - **Effets magiques** (allumés par défaut) : une lumière de soin, or et vert, traverse l'en-tête ; un cercle de runes tourne lentement derrière le logo et s'illumine à l'ouverture ; de petites particules de lumière montent dans l'en-tête ; la rune du chapitre ouvert s'allume dans la barre latérale ; et à chaque réglage changé, un éclat de soin passe sur la case témoin, dont la vie remonte. Le cercle et les particules prennent la couleur du thème (givre en Moderne, or en Classique, braise en MMORPG). Rien de tout cela ne touche aux cases de soin.
 - **Animations réduites** : les fenêtres s'ouvrent en simple fondu, les runes et le logo restent immobiles, rien ne bouge en boucle, et les effets magiques sont coupés. Pratique si le mouvement vous gêne.
 
-Les fenêtres des macros, du rapport de bug, du journal et des nouveautés s'ouvrent à côté de la fenêtre d'options, sans la recouvrir.
+Les fenêtres des macros, du placement des éléments, du rapport de bug, du journal, des nouveautés et des performances s'ouvrent à côté de la fenêtre d'options, sans jamais la recouvrir. Si la place manque, la fenêtre d'options glisse sur le côté ; sur un petit écran, elle s'efface le temps que l'autre fenêtre est ouverte et revient ensuite, sur le même chapitre. Une fenêtre plus grande que votre écran est réduite pour tenir entière.
 
 ## 9. Choisir ce qui s'affiche
 

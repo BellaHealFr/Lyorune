@@ -260,7 +260,7 @@ Type `/lyorune test`, or click "5", "10", "25" or "40" under "Test mode", in the
 - **Magic effects** (on by default): a healing light, gold and green, sweeps across the header; a rune circle slowly turns behind the logo and lights up when the window opens; small motes of light rise in the header; the rune of the open chapter lights up in the sidebar; and each time you change a setting, a healing burst passes over the preview cell while its health rises. The circle and the motes take the theme colour (frost in Modern, gold in Classic, ember in MMORPG). None of this ever touches the healing cells.
 - **Reduced motion**: windows open with a simple fade, runes and logo stay still, nothing moves in a loop, and the magic effects are turned off. Handy if motion bothers you.
 
-The macros, bug report, error log and news windows open next to the options window instead of covering it.
+The macros, element placement, bug report, error log, news and performance windows open next to the options window and never cover it. When there is not enough room, the options window slides aside; on a small screen, it fades out while the other window is open and comes back afterwards, on the same chapter. A window bigger than your screen is scaled down to fit.
 
 ## 9. Choosing what is shown
 

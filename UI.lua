@@ -1522,33 +1522,120 @@ function UI.Decorate(w)
 	if w.ornate then w.ornate:SetShown(kit == "MMO") end
 end
 
--- Une fenêtre secondaire (macros, rapport de bug, journal, nouveautés) s'ouvre à côté de la fenêtre d'options
--- au lieu de la recouvrir : à droite s'il y a la place, sinon à gauche, sinon contre le bord le plus dégagé.
+-- Taille à la mesure de l'écran : une fenêtre plus grande que l'écran (moins une marge) est réduite d'un bloc,
+-- sans rien changer à sa disposition, jamais sous 75 % pour rester lisible (elle ne peut de toute façon pas
+-- sortir de l'écran). Une fenêtre qui a sa fonction Stretch (les options) garde sa largeur réduite et prend la
+-- hauteur qui reste, sa page défile. Refait à chaque ouverture et quand l'écran ou l'échelle de l'interface change.
+local MARGIN_X, MARGIN_Y, MIN_SCALE = 40, 60, 0.75
+function UI.FitScale(width, height, screenW, screenH)
+	if not (screenW and screenH and screenW > MARGIN_X and screenH > MARGIN_Y) then return 1 end
+	return math.max(MIN_SCALE, math.min(1, (screenW - MARGIN_X) / width, (screenH - MARGIN_Y) / height))
+end
+
+function UI.Fit(w)
+	if InCombatLockdown() and w:IsProtected() then return end -- un cadre qui porte des boutons sécurisés
+	local screenW, screenH = UIParent:GetWidth(), UIParent:GetHeight()
+	local scale = UI.FitScale(w:GetWidth(), w.Stretch and 1 or w:GetHeight(), screenW, screenH)
+	if w.Stretch then w.Stretch(screenH and screenH / scale) end
+	if math.abs(w:GetScale() - scale) > 0.001 then w:SetScale(scale) end
+end
+
+-- Bords d'une fenêtre (gauche, droite, haut) en points de l'écran, quelle que soit son échelle
+local function Edges(f)
+	local l, r, t = f:GetLeft(), f:GetRight(), f:GetTop()
+	if not (l and r and t) then return end
+	local k = f:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	return l * k, r * k, t * k
+end
+
+-- Une fenêtre secondaire (macros, placement, rapport de bug, journal, nouveautés, mesure, copie de profil) s'ouvre
+-- à côté de la fenêtre d'options, jamais par-dessus : à droite s'il y a la place, sinon à gauche ; sinon les
+-- options glissent pour lui faire la place si les deux tiennent dans l'écran ; sinon les options s'effacent
+-- (fondu) le temps qu'elle est ouverte et reviennent à sa fermeture, sur le même chapitre, au même défilement.
 local GAP = 8
+local away = {} -- fenêtres ouvertes pendant que les options sont effacées
+local slid      -- la fenêtre pour laquelle les options ont glissé, et où elles étaient
+
+-- Au milieu de la place des options effacées
+local function Center(w, l, r, t)
+	local k = w:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	w:SetPoint("TOP", UIParent, "BOTTOMLEFT", (l + r) / 2 / k, t / k)
+end
+
 function UI.PlaceBeside(w)
 	local main = UI.main
-	if not main or main == w or not main:IsShown() then return end
-	local left, right, screen = main:GetLeft(), main:GetRight(), UIParent:GetWidth()
-	if not left or not right or not screen then return end
-	local width = w:GetWidth()
+	if not main or main == w then return end
+	local left, right, top = Edges(main)
+	local screen = UIParent:GetWidth()
+	if not (left and screen) then return end
+	if next(away) then -- options déjà effacées par une autre fenêtre
+		away[w] = true
+		w:ClearAllPoints()
+		return Center(w, left, right, top)
+	end
+	if not main:IsShown() then return end
+	local width = w:GetWidth() * w:GetEffectiveScale() / UIParent:GetEffectiveScale()
 	w:ClearAllPoints()
 	if screen - right >= width + GAP then
 		w:SetPoint("TOPLEFT", main, "TOPRIGHT", GAP, 0)
 	elseif left >= width + GAP then
 		w:SetPoint("TOPRIGHT", main, "TOPLEFT", -GAP, 0)
-	elseif screen - right >= left then
-		w:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, main:GetTop() - UIParent:GetHeight())
+	elseif screen >= right - left + GAP + width then
+		local x, k = math.floor((screen - (right - left) - GAP - width) / 2), main:GetEffectiveScale() / UIParent:GetEffectiveScale()
+		slid = slid or { w = w, point = { main:GetPoint(1) } }
+		slid.w, slid.left = w, x
+		main:ClearAllPoints()
+		main:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / k, top / k)
+		w:SetPoint("TOPLEFT", main, "TOPRIGHT", GAP, 0)
 	else
-		w:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, main:GetTop() - UIParent:GetHeight())
+		away[w] = true
+		Center(w, left, right, top)
+		main:Close()
+	end
+end
+
+-- Fenêtre secondaire fermée : les options reviennent (effacées) ou retournent à leur place (glissées), sauf si le
+-- joueur les a déplacées entre-temps
+local function GiveBack(w)
+	local main = UI.main
+	if away[w] then
+		away[w] = nil
+		if not next(away) and main then main:Show() end
+	end
+	if slid and slid.w == w then
+		local left = Edges(main)
+		if left and math.abs(left - slid.left) < 1 and slid.point[1] then
+			main:ClearAllPoints()
+			main:SetPoint(unpack(slid.point))
+		end
+		slid = nil
 	end
 end
 
 -- Apparition : fondu et léger grossissement (0,25 s), ou simple fondu de 0,15 s en animations réduites
 function UI.Appear(w)
+	UI.Fit(w)
 	if w.beside then UI.PlaceBeside(w) end
+	if w == UI.main and next(away) then -- options rouvertes par le joueur : les fenêtres qui les effaçaient se ferment
+		local open = away
+		away = {}
+		for f in pairs(open) do f:Hide() end
+	end
 	w.outro:Stop()
 	if UI.Calm() then w.calm:Play() else w.intro:Play() end
 end
+
+-- Écran ou échelle de l'interface changés : chaque fenêtre ouverte reprend sa taille, puis sa place
+local function Refit()
+	for _, w in ipairs(windows) do
+		if w:IsShown() then UI.Fit(w) end
+	end
+	for _, w in ipairs(windows) do
+		if w.beside and w:IsShown() then UI.PlaceBeside(w) end
+	end
+end
+Z:On("UI_SCALE_CHANGED", Refit)
+Z:On("DISPLAY_SIZE_CHANGED", Refit)
 
 -- Fermeture par la croix : fondu de 0,15 s (Échap ferme sans attendre)
 local function WindowClose(self)
@@ -1602,6 +1689,7 @@ function UI.Window(name, title, width, height)
 	AlphaAnim(w.outro, 1, 0, 0.15)
 	w.outro:SetScript("OnFinished", function() w:Hide() end)
 	w:HookScript("OnShow", UI.Appear)
+	w:HookScript("OnHide", GiveBack)
 
 	windows[#windows + 1] = w
 	UI.Decorate(w)

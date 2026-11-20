@@ -2410,9 +2410,20 @@ function Z.OptionsHeight(screen)
 	return screen > 400 and math.min(HEIGHT, math.floor(screen - 60)) or HEIGHT
 end
 
+-- Hauteur de la fenêtre et pas des boutons de la barre latérale, refaits à chaque ouverture et quand l'écran
+-- change (UI.Fit) ; screen : hauteur de l'écran dans l'échelle de la fenêtre
+local function Stretch(screen)
+	local height = Z.OptionsHeight(screen)
+	window:SetHeight(height)
+	local step = math.min(40, math.floor((height - HEAD - FOOT - 16) / #chapters))
+	for i, chapter in ipairs(chapters) do
+		chapter.button:SetSize(SIDE - 20, step - 2)
+		chapter.button:SetPoint("TOPLEFT", 5, -8 - (i - 1) * step)
+	end
+end
+
 local function Build()
-	local height = Z.OptionsHeight(UIParent:GetHeight())
-	window = UI.Window("LyoruneOptions", "Lyorune  |cff8a8f99" .. Z.version .. "|r", WIDTH, height)
+	window = UI.Window("LyoruneOptions", "Lyorune  |cff8a8f99" .. Z.version .. "|r", WIDTH, HEIGHT)
 	tinsert(UISpecialFrames, "LyoruneOptions")
 	UI.main = window -- les fenêtres secondaires s'ouvrent à côté d'elle (UI.PlaceBeside)
 	chapters = Chapters()
@@ -2429,12 +2440,11 @@ local function Build()
 	side.line:SetPoint("TOPRIGHT")
 	side.line:SetPoint("BOTTOMRIGHT")
 	window.side = side
-	local step = math.min(40, math.floor((height - HEAD - FOOT - 16) / #chapters))
 	for i, chapter in ipairs(chapters) do
 		chapter.button = UI.SideButton(side, chapter.rune, L[chapter.name], function() Select(i) end)
-		chapter.button:SetSize(SIDE - 20, step - 2)
-		chapter.button:SetPoint("TOPLEFT", 5, -8 - (i - 1) * step)
 	end
+	window.Stretch = Stretch
+	UI.Fit(window)
 
 	-- Logo dans l'en-tête : il respire lentement (coupé par « Animations réduites »)
 	local logo = window:CreateTexture(nil, "ARTWORK")
