@@ -113,6 +113,7 @@ Z.defaults = {
 	clicks = {},               -- clics de souris par classe : clicks.PRIEST["shift-1"] = "Rénovation" (PRIEST2 : 2e spécialisation)
 	hoverKeys = {},            -- touches au survol par classe : hoverKeys.PRIEST[1] = { key = "F", spell = "Rénovation" }
 	clickTrinkets = {},        -- bijoux utilisés avant le sort : clickTrinkets.PRIEST["shift-1"] = 1, 2 ou 3 (voir Clicks.lua)
+	trinketButtons = false,    -- montrer les boutons « bijou avec le sort » sur chaque ligne de clic
 	clickConflictAlert = true, -- signaler un clic que le « clic pour lancer » du jeu prend aussi
 	clicksPerSpec = true,      -- des clics et des touches propres à chaque spécialisation (groupe de talents)
 	macros = {},               -- ma bibliothèque de macros, par classe : macros.PRIEST[1] = { name = "...", body = "..." }
@@ -202,7 +203,7 @@ Z.notInProfile = {
 	minimapButton = true, minimapAngle = true,
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
-	clickTrinkets = true, clickConflictAlert = true,
+	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,
@@ -318,6 +319,7 @@ local function LoadCharacter(db)
 		db[key] = nil
 		if type(char[key]) ~= "table" then char[key] = CopyTable(value) end
 	end
+	char.optionChapter = nil -- avant la 1.26.0 : dernier chapitre des options, plus sauvé (Accueil à chaque connexion)
 	Z.char = char
 end
 

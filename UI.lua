@@ -1390,7 +1390,10 @@ function UI.SideButton(parent, rune, name, onClick)
 		self.badge:SetShown(self.count > 0)
 		self.badge.text:SetText(self.count > 99 and "99+" or tostring(self.count))
 		self.badge:SetWidth(math.max(18, math.ceil(self.badge.text:GetStringWidth()) + 10))
-		self.tip = self.count > 0 and L["Réglages changés dans ce chapitre : %d"]:format(self.count) or nil
+		-- Ce sont les choix du joueur, pas des changements de Lyorune : le texte le dit (retour d'essai)
+		self.tip = self.count == 1 and L["1 réglage différent de l'installation, choisi par vous. Une rune d'or le marque dans le chapitre."]
+			or self.count > 1 and L["%d réglages différents de l'installation, choisis par vous. Une rune d'or les marque dans le chapitre."]:format(self.count)
+			or nil
 	end
 	-- Allume ou éteint la lumière de la rune (chapitre ouvert, effets magiques, bouton à l'écran)
 	b.Light = function(self)

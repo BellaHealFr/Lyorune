@@ -498,7 +498,7 @@ function Z:WarnClickConflicts()
 	end
 	if #list == 0 then return end
 	table.sort(list)
-	Z:Print(Z.L["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Clics, ligne en orange)."]:format(table.concat(list, ", ")))
+	Z:Print(Z.L["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Sorts et raccourcis, ligne en orange)."]:format(table.concat(list, ", ")))
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -623,12 +623,12 @@ function Z:SyncBarMacros()
 				created = created + 1
 			elseif not warnedFull then
 				warnedFull = true
-				Z:Print(Z.L["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Clics."])
+				Z:Print(Z.L["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Sorts et raccourcis."])
 			end
 		end
 	end
 	if created > 0 then
-		Z:Print(Z.L["%d macro(s) créée(s) pour vos barres de sorts : chapitre Clics des options, ou /macro, onglet de votre personnage."]:format(created))
+		Z:Print(Z.L["%d macro(s) créée(s) pour vos barres de sorts : chapitre Sorts et raccourcis des options, ou /macro, onglet de votre personnage."]:format(created))
 	end
 end
 
@@ -782,7 +782,7 @@ function Z:CheckNewSpells()
 		end
 	end
 	if #found > 0 and Z.db.newSpellAlert then
-		Z:Print(Z.L["nouveau sort sans clic : %s. Chapitre Clics des options, bouton « Attribuer »."]:format(table.concat(found, ", ")))
+		Z:Print(Z.L["nouveau sort sans clic : %s. Chapitre Sorts et raccourcis des options, bouton « Attribuer »."]:format(table.concat(found, ", ")))
 	end
 	if #found > 0 and Z.RefreshClicks then Z.RefreshClicks() end
 end

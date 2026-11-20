@@ -201,6 +201,7 @@ step("options : onze chapitres, recherche, libelles traduits", function()
   SlashCmdList.LYORUNE("")
   local w = Z:OptionsWindow()
   assert(w and w:IsShown() and #w.chapters == 11, "onze chapitres")
+  assert(Z:OptionChapter() == "Accueil", "premiere ouverture de la partie : l'Accueil")
   for i = 1, 11 do w.Select(i) end
   w.Select("Clics") w.Select("Inconnu")
   local labels = Z:OptionLabels()
@@ -1568,6 +1569,8 @@ step("etape 2 : reprise des anciens reglages", function()
   assert(LyoruneCharDB.pos[1] == "CENTER" and LyoruneCharDB.pos[2] == -320, "un personnage neuf part de la position par defaut")
   db.manaBars = "HEALERS" db.lastVersion = "1.7.0" FireEvent("ADDON_LOADED", "Lyorune")
   assert(db.manaBars == "HEALERS", "un choix fait apres la 1.7.0 est respecte")
+  LyoruneCharDB.optionChapter = "Clics" FireEvent("ADDON_LOADED", "Lyorune")
+  assert(LyoruneCharDB.optionChapter == nil, "dernier chapitre des options plus sauve (1.26.0)")
   LyoruneDB, LyoruneCharDB = savedDB, savedChar
   FireEvent("ADDON_LOADED", "Lyorune")
 end)
@@ -2918,12 +2921,14 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   -- Bouton de chapitre : clic, pastille du nombre de réglages changés
   local side = UI.SideButton(UIParent, 4, "Disposition", function(self) self.clicked = true end)
   assert(not side.badge:IsShown())
-  side:SetCount(3) assert(side.badge:IsShown() and side.badge.text:GetText() == "3" and side.tip:find("3"))
+  side:SetCount(3) assert(side.badge:IsShown() and side.badge.text:GetText() == "3" and side.tip:find("3 réglages", 1, true) and side.tip:find("choisis par vous", 1, true))
+  side:SetCount(1) assert(side.tip:find("1 réglage différent", 1, true), "pastille au singulier")
   side:SetCount(0) assert(not side.badge:IsShown() and not side.tip)
   side:Run("OnClick") assert(side.clicked)
 
   for _, key in ipairs({ "Réglages fins (%d)", "Masquer les réglages fins (%d)", "Activé", "Coupé", "Rétablir : %s",
-    "Rétablir comme à l'installation", "Réglages changés dans ce chapitre : %d", "Molette : changer la valeur. Clic : la saisir au clavier." }) do
+    "Rétablir comme à l'installation", "1 réglage différent de l'installation, choisi par vous. Une rune d'or le marque dans le chapitre.",
+    "%d réglages différents de l'installation, choisis par vous. Une rune d'or les marque dans le chapitre.", "Molette : changer la valeur. Clic : la saisir au clavier." }) do
     assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
   end
   for key, value in pairs(saved) do Z.db[key] = value end
@@ -2937,7 +2942,7 @@ step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", funct
   local chapters = w.chapters
   -- Onze chapitres dans la barre latérale, dans l'ordre de la maquette, textes traduits
   local names = { "Accueil", "Disposition", "Apparence", "Vie et portée", "Mes soins", "Affaiblissements", "Joueurs",
-    "Clics", "Alertes", "Profils et partage", "Fenêtre et aide" }
+    "Sorts et raccourcis", "Alertes", "Profils et partage", "Fenêtre et aide" }
   local missing, inChapters = {}, {}
   local function Need(text) if text and not Z.translations.enUS[text] then missing[#missing + 1] = text end end
   for i, chapter in ipairs(chapters) do
@@ -2975,11 +2980,13 @@ step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", funct
   for _, e in ipairs(Z.db.errors) do assert(not tostring(e.message):find("^option"), "erreur dans les options : " .. tostring(e.message)) end
 
   -- Anciens noms d'onglet acceptés (tutoriel, guides) ; un seul chapitre visible, un seul bouton allumé ; le
-  -- chapitre ouvert est retenu pour la prochaine ouverture
+  -- chapitre ouvert est retenu pendant la partie, pas sauvé
+  Z:ToggleOptions("Disposition") Z:ToggleOptions() Z:ToggleOptions()
+  assert(Z:OptionChapter() == "Disposition" and not Z.char.optionChapter, "la fenetre rouvre le dernier chapitre de la partie")
   for old, new in pairs({ Cadres = "Disposition", Indicateurs = "Vie et portée", Soins = "Mes soins", Listes = "Affaiblissements",
-    Profils = "Profils et partage", Aide = "Fenêtre et aide", Clics = "Clics", Inconnu = "Accueil" }) do
+    Profils = "Profils et partage", Aide = "Fenêtre et aide", Clics = "Sorts et raccourcis", Inconnu = "Accueil" }) do
     Z:ToggleOptions(old)
-    assert(Z.char.optionChapter == new, old .. " -> " .. tostring(Z.char.optionChapter))
+    assert(Z:OptionChapter() == new, old .. " -> " .. tostring(Z:OptionChapter()))
     local shown, lit = 0, 0
     for _, chapter in ipairs(chapters) do
       if chapter.page and chapter.page.scroll:IsShown() then shown = shown + 1 end
@@ -3018,12 +3025,12 @@ step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", funct
   local row = w.results.rows[1]
   assert(w.results:IsShown() and row:IsShown() and row.entry.label == "Icône qui s'efface à la fin", "recherche par l'explication")
   row:Run("OnClick", "LeftButton")
-  assert(Z.char.optionChapter == "Mes soins" and fold:IsOpen() and fade.widget:IsShown(), "le resultat deplie les reglages fins")
+  assert(Z:OptionChapter() == "Mes soins" and fold:IsOpen() and fade.widget:IsShown(), "le resultat deplie les reglages fins")
   assert(page.scroll.offset > 0 and w.found == row.entry and w.search:GetText() == "", "le resultat fait defiler la page")
   fold:Run("OnClick")
   w.search:SetText("ajouter un clic") w.search:Run("OnTextChanged", true)
   w.results.rows[1]:Run("OnClick", "LeftButton")
-  assert(Z.char.optionChapter == "Clics", "reglage d'une page dessinee a part")
+  assert(Z:OptionChapter() == "Sorts et raccourcis", "reglage d'une page dessinee a part")
 
   -- Fenêtre de 1080 x 708, jamais plus haute que l'écran moins 60 pixels
   assert(w:GetWidth() == 1080 and Z.OptionsHeight(1080) == 708 and Z.OptionsHeight(700) == 640 and Z.OptionsHeight(nil) == 708, "hauteur")
@@ -3046,7 +3053,7 @@ step("refonte 1.26.0, lot 3a : listes dans leurs chapitres, clics et alertes en 
     for _, part in ipairs(page.parts) do
       local widget = part.widget
       if widget.chips then boxes[widget.key] = { box = widget, part = part, chapter = chapter.name } end
-      if chapter.name == "Clics" or chapter.name == "Alertes" or chapter.name == "Affaiblissements" then
+      if chapter.name == "Sorts et raccourcis" or chapter.name == "Alertes" or chapter.name == "Affaiblissements" then
         assert(not widget.isBlock, "page a deux colonnes : " .. chapter.name)
       end
     end
@@ -3075,7 +3082,7 @@ step("refonte 1.26.0, lot 3a : listes dans leurs chapitres, clics et alertes en 
   for _, row in ipairs(w.results.rows) do if row:IsShown() and row.entry.list == "pinned" then hit = row end end
   assert(hit, "liste des joueurs epingles introuvable")
   hit:Run("OnClick", "LeftButton")
-  assert(Z.char.optionChapter == "Disposition" and boxes.pinned.part.fold:IsOpen() and boxes.pinned.box:IsShown(), "recherche d'une liste")
+  assert(Z:OptionChapter() == "Disposition" and boxes.pinned.part.fold:IsOpen() and boxes.pinned.box:IsShown(), "recherche d'une liste")
   boxes.pinned.part.fold:Run("OnClick")
 
   -- Alertes et Clics : chaque réglage a sa ligne dans son chapitre ; le texte d'une annonce s'écrit dans la page
@@ -3084,7 +3091,7 @@ step("refonte 1.26.0, lot 3a : listes dans leurs chapitres, clics et alertes en 
     assert(keys[key] and keys[key][1] == "Alertes", "Alertes : " .. key)
   end
   for _, key in ipairs({ "castOnDown", "autoRes", "clicksPerSpec", "newSpellAlert", "clickConflictAlert", "externalClicks", "actionBarMacros" }) do
-    assert(keys[key] and keys[key][1] == "Clics", "Clics : " .. key)
+    assert(keys[key] and keys[key][1] == "Sorts et raccourcis", "Sorts et raccourcis : " .. key)
   end
   page = w.Select("Alertes")
   local text
@@ -3150,7 +3157,7 @@ step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", functio
   end
   assert(home.profile and home.profile.name:GetText() == "Essai", "profil actif a l'Accueil")
   home.profile.go:Run("OnClick", "LeftButton")
-  assert(Z.char.optionChapter == "Profils et partage", "bouton vers les profils")
+  assert(Z:OptionChapter() == "Profils et partage", "bouton vers les profils")
 
   -- Réglages changés : un réglage changé a sa ligne ; un clic mène au réglage (réglages fins dépliés), la rune le rétablit
   Z.db.width, Z.db.showPets = Z.defaults.width, Z.defaults.showPets
@@ -3168,7 +3175,7 @@ step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", functio
   assert(row.value:GetText() == (Z.db.showPets and "Activé" or "Coupé"), "valeur du reglage : " .. tostring(row.value:GetText()))
   assert(Row("width").value:GetText() == tostring(Z.defaults.width + 4), "valeur d'un nombre")
   row:Run("OnClick", "LeftButton")
-  assert(Z.char.optionChapter == "Disposition" and w.found and w.found.key == "showPets", "clic : aller au reglage")
+  assert(Z:OptionChapter() == "Disposition" and w.found and w.found.key == "showPets", "clic : aller au reglage")
   local fold = w.found.widget.part.fold
   assert(fold and fold:IsOpen(), "reglage fin deplie")
   fold:Run("OnClick")
@@ -3186,7 +3193,7 @@ step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", functio
   w.search:SetText("donner ma config") w.search:Run("OnTextChanged", true)
   assert(w.results.rows[1]:IsShown() and w.results.rows[1].entry.label == "Donner ma configuration", "recherche d'un outil de partage")
   w.results.rows[1]:Run("OnClick", "LeftButton")
-  assert(Z.char.optionChapter == "Profils et partage", "recherche : chapitre des profils")
+  assert(Z:OptionChapter() == "Profils et partage", "recherche : chapitre des profils")
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
@@ -3243,6 +3250,13 @@ step("refonte 1.26.0, lot 4a : rune sur chaque ligne, pastilles, retablir une pa
   Z.db.manaBars = "HEALERS" w.Select("Vie et portée")
   assert(vie.powerHeight:GetAlpha() == 1, "dependance « tout sauf » : barre de mana montree")
   Z.db.manaBars = Z.defaults.manaBars
+  -- Contraste élevé : il remplace le thème et la texture, qui sont grisés (retour d'essai 10)
+  local style = w.Select("Apparence").content.settings
+  assert(style.theme:GetAlpha() == 1 and style.texture:GetAlpha() == 1 and style.theme.desc, "theme et texture reglables")
+  style.highContrast:Run("OnClick")
+  assert(Z.db.highContrast and style.theme:GetAlpha() < 1 and style.texture:GetAlpha() < 1, "contraste eleve : theme et texture grises")
+  style.highContrast:Run("OnClick")
+  assert(not Z.db.highContrast and style.theme:GetAlpha() == 1, "contraste coupe : theme regle de nouveau")
 
   -- « Rétablir cette page » : deux clics (le premier arme le bouton), et seulement ce chapitre
   Z.db.frameAlpha = Z.defaults.frameAlpha - 10
@@ -3265,6 +3279,30 @@ step("refonte 1.26.0, lot 4a : rune sur chaque ligne, pastilles, retablir une pa
   Z.db.frameAlpha = Z.defaults.frameAlpha
   Z:ToggleOptions()
   assert(look.changes == others - 1, "pastille revue a l'ouverture")
+
+  -- Boutons de bijou du chapitre Sorts et raccourcis : cachés sauf réglage fin allumé ou bijou déjà choisi
+  -- (retour d'essai 12), jamais un point d'interrogation
+  local savedClicks, savedTrinkets = Z.db.clicks[Z:ClickSet()], Z.db.clickTrinkets
+  Z.db.clicks[Z:ClickSet()] = { ["shift-1"] = "Soins rapides", ["ctrl-1"] = "Rénovation", ["2"] = "@menu" }
+  Z.db.clickTrinkets = {} Z.db.trinketButtons = false
+  local clickPage = w.Select("Sorts et raccourcis")
+  Z.RefreshClicks()
+  local _, plain = Z:ClickCell("ctrl-1")
+  local _, menu = Z:ClickCell("2")
+  assert(plain and not plain.trinkets[1]:IsShown() and not plain.trinkets[2]:IsShown(), "boutons de bijou caches a l'installation")
+  Z:ToggleTrinket({ kind = "click", key = "shift-1" }, 1) Z.RefreshClicks()
+  local _, worn = Z:ClickCell("shift-1")
+  assert(worn.trinkets[1]:IsShown() and worn.trinkets[2]:IsShown(), "une ligne qui a un bijou garde ses boutons")
+  assert(worn.trinkets[1].chosen:IsShown() and not worn.trinkets[2].chosen:IsShown(), "bordure d'or sur le bijou choisi")
+  assert(worn.trinkets[2].icon._tex == "Interface\\PaperDoll\\UI-PaperDoll-Slot-Trinket", "emplacement vide : icone du jeu")
+  assert(not plain.trinkets[1]:IsShown(), "les autres lignes restent sans bijou")
+  assert(clickPage.content.settings.trinketButtons, "reglage fin dans le chapitre")
+  clickPage.content.settings.trinketButtons:Run("OnClick")
+  assert(Z.db.trinketButtons and plain.trinkets[1]:IsShown() and not menu.trinkets[1]:IsShown(), "reglage fin : boutons sur chaque sort, pas sur le menu")
+  clickPage.content.settings.trinketButtons:Run("OnClick")
+  assert(not Z.db.trinketButtons and not plain.trinkets[1]:IsShown(), "reglage coupe : boutons caches")
+  Z.db.clicks[Z:ClickSet()], Z.db.clickTrinkets = savedClicks, savedTrinkets
+  Z:ApplyClicks()
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
@@ -3356,7 +3394,7 @@ step("refonte 1.26.0, lot 4b : case temoin, faux groupe, boutons du mode test", 
   local row = w.results.rows[1]
   assert(row and row:IsShown() and row.entry.widget == col.test, "recherche du mode test")
   row:Run("OnClick", "LeftButton")
-  assert(Z.char.optionChapter == "Disposition", "la recherche ouvre Disposition")
+  assert(Z:OptionChapter() == "Disposition", "la recherche ouvre Disposition")
 
   -- Fenêtre fermée : rien n'est redessiné ; à la réouverture, la case témoin suit
   w:Hide() col:Hide()
@@ -3489,10 +3527,10 @@ step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", fu
     "Fenêtre et aide", "Accueil", "case témoin", "rune d'or", "Réglages fins", "recherche" }) do
     assert(fr[7]:find(word, 1, true), "Regler Lyorune sans : " .. word)
   end
-  assert(fr[3]:find("Chapitre Clics", 1, true) and fr[4]:find("chapitre Mes soins", 1, true), "clics, coins")
+  assert(fr[3]:find("Bijoux avec les sorts", 1, true) and fr[4]:find("chapitre Mes soins", 1, true), "clics, coins")
   assert(fr[5]:find("partie Position", 1, true) and fr[5]:find("Cadres affichés", 1, true), "placer les cadres")
   assert(fr[6]:find("case témoin", 1, true) and fr[6]:find("second clic", 1, true), "boutons du mode test")
-  assert(fr[8]:find("chapitre Clics", 1, true), "derniere carte")
+  assert(fr[8]:find("chapitre Sorts et raccourcis", 1, true), "derniere carte")
 
   Z.db.language = "enUS" Z:SetLanguage()
   local en = Tour()
@@ -3504,15 +3542,15 @@ step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", fu
     "Window and help", "Home", "preview cell", "golden rune", "Fine settings" }) do
     assert(en[7]:find(word, 1, true), "Setting up Lyorune sans : " .. word)
   end
-  assert(en[6]:find("preview cell", 1, true) and en[8]:find("Clicks chapter", 1, true))
+  assert(en[6]:find("preview cell", 1, true) and en[8]:find("Spells and bindings chapter", 1, true))
 
   -- Messages du chat et textes hors options : chapitres, traduits, anciennes clés retirées
-  for _, key in ipairs({ "... et %d autre(s) : chapitre Clics.",
-    "nouveau sort sans clic : %s. Chapitre Clics des options, bouton « Attribuer ».",
-    "Glissez une macro sur une ligne du chapitre Clics, ou cliquez sur le sort d'une ligne pour la choisir.",
-    "plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Clics.",
-    "%d macro(s) créée(s) pour vos barres de sorts : chapitre Clics des options, ou /macro, onglet de votre personnage.",
-    "le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Clics, ligne en orange).",
+  for _, key in ipairs({ "... et %d autre(s) : chapitre Sorts et raccourcis.",
+    "nouveau sort sans clic : %s. Chapitre Sorts et raccourcis des options, bouton « Attribuer ».",
+    "Glissez une macro sur une ligne du chapitre Sorts et raccourcis, ou cliquez sur le sort d'une ligne pour la choisir.",
+    "plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Sorts et raccourcis.",
+    "%d macro(s) créée(s) pour vos barres de sorts : chapitre Sorts et raccourcis des options, ou /macro, onglet de votre personnage.",
+    "le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Sorts et raccourcis, ligne en orange).",
     "La synchronisation entre joueurs est coupée (chapitre Profils et partage).",
     "la synchronisation entre joueurs est coupée (chapitre Profils et partage).",
     "Mode performance : activé (chapitre Fenêtre et aide).",

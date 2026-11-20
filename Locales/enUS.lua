@@ -8,7 +8,7 @@ local _, Z = ...
 Z.translations.enUS = {
 	-- Onglets
 	["Cadres"] = "Frames", ["Apparence"] = "Look", ["Indicateurs"] = "Indicators", ["Listes"] = "Lists",
-	["Clics"] = "Clicks", ["Alertes"] = "Alerts", ["Profils"] = "Profiles", ["Aide"] = "Help",
+	["Clics"] = "Clicks", ["Sorts et raccourcis"] = "Spells and bindings", ["Alertes"] = "Alerts", ["Profils"] = "Profiles", ["Aide"] = "Help",
 	["Rechercher un réglage..."] = "Search a setting...",
 
 	-- Chapitres de la fenêtre d'options (1.26.0)
@@ -32,6 +32,7 @@ Z.translations.enUS = {
 	["Nom exact, puis Entrée"] = "Exact name, then Enter", ["Liste vide."] = "Empty list.",
 	["Pour épingler : survolez une case et tapez /lyorune epingler."] = "To pin: hover over a cell and type /lyorune epingler.",
 	["Fond noir, bordure blanche, texte plus gros."] = "Black background, white border, larger text.",
+	["Sans effet quand « Contraste élevé » est allumé : il le remplace."] = "No effect while High contrast is on: it replaces it.",
 	["La part de vie que les soins en cours vont rendre."] = "The health that heals being cast will restore.",
 	["Bande rouge sombre : la part qu'un affaiblissement mange avant vos soins."] = "Dark red band: the part a debuff eats before your heals count.",
 	["Une icône de boisson, même en combat."] = "A drink icon, even in combat.",
@@ -194,12 +195,12 @@ Z.translations.enUS = {
 	["Molette : %d autre(s) raccourci(s)"] = "Wheel: %d more shortcut(s)",
 	["Aucun raccourci pour l'instant : cliquez sur « Ajouter », puis faites un clic ou appuyez sur une touche."] = "No shortcut yet: click \"Add\", then click or press a key.",
 	["Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser."] = "Free left click: target. Free right click: player menu. Drag a spell from your spellbook onto a line to set it.",
-	["... et %d autre(s) : chapitre Clics."] = "... and %d more: Clicks chapter.",
+	["... et %d autre(s) : chapitre Sorts et raccourcis."] = "... and %d more: Spells and bindings chapter.",
 	["Nouveau sort sans clic :"] ="New spell without a click:", ["Attribuer"] = "Assign", ["Ne plus proposer ce sort."] = "Stop suggesting this spell.",
 	["Puis, sur le bouton « Ajouter », faites le clic ou la touche qui lancera ce sort."] = "Then, on the \"Add\" button, do the click or key that will cast this spell.",
 	["Signaler un nouveau sort sans clic"] = "Report a new spell without a click",
 	["Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de ce chapitre avec le bouton « Attribuer »."] = "When you learn a spell usable on an ally that has no click or key yet: a message, and the spell at the top of this chapter with the \"Assign\" button.",
-	["nouveau sort sans clic : %s. Chapitre Clics des options, bouton « Attribuer »."] = "new spell without a click: %s. Clicks chapter of the options, \"Assign\" button.",
+	["nouveau sort sans clic : %s. Chapitre Sorts et raccourcis des options, bouton « Attribuer »."] = "new spell without a click: %s. Spells and bindings chapter of the options, \"Assign\" button.",
 	["Clics propres à chaque spécialisation"] = "Separate clicks for each specialization",
 	["Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout."] = "Each talent group has its own clicks and keys; they switch by themselves with your talents. Unticked: the same everywhere.",
 	-- Mes macros
@@ -210,7 +211,7 @@ Z.translations.enUS = {
 	["Importer de /macro"] = "Import from /macro",
 	["Une macro écrite pour vous : cochez ce que vous voulez, Lyorune écrit le texte."] = "A macro written for you: tick what you want, Lyorune writes the text.",
 	["Copie une macro de la fenêtre /macro du jeu. Vous pouvez aussi la glisser depuis /macro sur cette liste."] = "Copies a macro from the game's /macro window. You can also drag it from /macro onto this list.",
-	["Glissez une macro sur une ligne du chapitre Clics, ou cliquez sur le sort d'une ligne pour la choisir."] = "Drag a macro onto a line of the Clicks chapter, or click the spell of a line to pick it.",
+	["Glissez une macro sur une ligne du chapitre Sorts et raccourcis, ou cliquez sur le sort d'une ligne pour la choisir."] = "Drag a macro onto a line of the Spells and bindings chapter, or click the spell of a line to pick it.",
 	["Nom"] = "Name", ["Enregistrer"] = "Save", ["Supprimer"] = "Delete",
 	["{cible} est le joueur de la case. Une commande sans cible vise la case."] = "{cible} is the player in the cell. A command without a target aims at the cell.",
 	["Vérification"] = "Check", ["Envoyé au jeu"] = "Sent to the game", ["Posée sur"] = "Used on",
@@ -249,12 +250,14 @@ Z.translations.enUS = {
 	["Cliquez, puis déposez dans une barre de sorts."] = "Click, then drop on an action bar.",
 	["impossible de modifier les macros en combat."] = "macros cannot be changed in combat.",
 	["cette macro n'existe pas encore : elle sera créée dans quelques secondes."] = "this macro does not exist yet: it will be created in a few seconds.",
-	["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Clics."] = "no room left for a character macro: delete one in /macro, or turn the option off in the Clicks chapter.",
-	["%d macro(s) créée(s) pour vos barres de sorts : chapitre Clics des options, ou /macro, onglet de votre personnage."] = "%d macro(s) created for your action bars: Clicks chapter of the options, or /macro, your character's tab.",
+	["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Sorts et raccourcis."] = "no room left for a character macro: delete one in /macro, or turn the option off in the Spells and bindings chapter.",
+	["%d macro(s) créée(s) pour vos barres de sorts : chapitre Sorts et raccourcis des options, ou /macro, onglet de votre personnage."] = "%d macro(s) created for your action bars: Spells and bindings chapter of the options, or /macro, your character's tab.",
 	["Lancer le sort dès l'appui (plus rapide)"] = "Cast on key press (faster)",
 	["Le même clic relève un joueur mort"] = "The same click resurrects a dead player",
 	["Si la cible est morte, votre sort de soin est remplacé par votre résurrection."] = "If the target is dead, your heal is replaced by your resurrection spell.",
 	["Laisser Clique ou le jeu gérer les clics"] = "Let Clique or the game handle clicks",
+	["Bijoux avec les sorts"] = "Trinkets with spells",
+	["Deux boutons au bout de chaque ligne : votre bijou du haut ou du bas, utilisé juste avant le sort, sur un joueur vivant. Une ligne qui a déjà un bijou garde ses boutons."] = "Two buttons at the end of each line: your top or bottom trinket, used right before the spell, on a living player. A line that already has a trinket keeps its buttons.",
 	["À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés."] = "Only tick this if you prefer Clique or the game's click-casting: Lyorune's clicks are then turned off.",
 
 	-- Alertes
@@ -412,22 +415,22 @@ Z.translations.enUS = {
 			.. "|cff33dd88Mes soins|r : soins sur la durée, coins, sorts suivis, recharge globale.\n"
 			.. "|cff33dd88Affaiblissements|r : dissipation, icônes, importants, auras privées.\n"
 			.. "|cff33dd88Joueurs|r : rôle, marqueur, menace, buffs manquants, infobulle.\n"
-			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, macros.\n"
+			.. "|cff33dd88Sorts et raccourcis|r : clics et touches sur une seule liste, macros.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils et partage|r : profils, partage, entre joueurs.\n"
 			.. "|cff33dd88Fenêtre et aide|r : thème des fenêtres, effets, langue, aide.\n\n"
 			.. "À droite, la |cff33dd88case témoin|r suit chaque réglage en direct. Une |cffffd140rune d'or|r marque un réglage changé : "
 			.. "un clic dessus le rétablit. « Réglages fins » déplie les réglages plus rares.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its switch.\n\n|cff33dd88Home|r: your changed settings, this tutorial, the setup assistant, the news.\n|cff33dd88Layout|r: size, sorting, position, shown frames (tanks, target, pinned).\n|cff33dd88Look|r: cell shape, theme, colours, text.\n|cff33dd88Health and range|r: incoming heals, shield, low health, mana, distant players.\n|cff33dd88My heals|r: heals over time, corners, tracked spells, global cooldown.\n|cff33dd88Debuffs|r: dispels, icons, important debuffs, private auras.\n|cff33dd88Players|r: role, marker, threat, missing buffs, tooltip.\n|cff33dd88Clicks|r: clicks and keys on a single list, macros.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles and sharing|r: profiles, sharing, between players.\n|cff33dd88Window and help|r: window theme, effects, language, help.\n\nOn the right, the |cff33dd88preview cell|r follows every setting live. A |cffffd140golden rune|r marks a changed setting: click it to reset it. \"Fine settings\" unfolds the less common settings.\n\nCannot find a setting? Type a word in the search box, top right.",
-	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Clics. "
+		"Everything is set here, and nothing is mandatory: every element has its switch.\n\n|cff33dd88Home|r: your changed settings, this tutorial, the setup assistant, the news.\n|cff33dd88Layout|r: size, sorting, position, shown frames (tanks, target, pinned).\n|cff33dd88Look|r: cell shape, theme, colours, text.\n|cff33dd88Health and range|r: incoming heals, shield, low health, mana, distant players.\n|cff33dd88My heals|r: heals over time, corners, tracked spells, global cooldown.\n|cff33dd88Debuffs|r: dispels, icons, important debuffs, private auras.\n|cff33dd88Players|r: role, marker, threat, missing buffs, tooltip.\n|cff33dd88Spells and bindings|r: clicks and keys on a single list, macros.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles and sharing|r: profiles, sharing, between players.\n|cff33dd88Window and help|r: window theme, effects, language, help.\n\nOn the right, the |cff33dd88preview cell|r follows every setting live. A |cffffd140golden rune|r marks a changed setting: click it to reset it. \"Fine settings\" unfolds the less common settings.\n\nCannot find a setting? Type a word in the search box, top right.",
+	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur."] =
-		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Clicks chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click).\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
+		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click).\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
 	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a cell to cast a spell on that player, without targeting them.",
-	["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Clics des options."] = "No spell is assigned yet: you will choose them in the Clicks chapter of the options.",
+	["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."] = "No spell is assigned yet: you will choose them in the Spells and bindings chapter of the options.",
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
 
 	-- Thèmes
@@ -708,8 +711,8 @@ Z.translations.enUS = {
 	["Signaler un clic pris aussi par le jeu"] = "Warn about a click the game also uses",
 	["Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans ce chapitre. Lyorune ne modifie jamais les raccourcis du jeu."] = "If the game's click casting uses the same combination as a Lyorune click: a message, and the line in orange in this chapter. Lyorune never changes the game's bindings.",
 	["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."] = "The game's click casting also casts %s with this combination, and may go before Lyorune. Change one of them: click here for another combination, or remove it in the game's click casting.",
-	["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Clics, ligne en orange)."] = "the game's click casting also uses: %s. It may go before Lyorune: change one of them (Clicks chapter, line in orange).",
-	["Chapitre Clics : les icônes de bijou d'une ligne utilisent votre bijou avec le sort."] = "Clicks chapter: the trinket icons on a line use your trinket along with the spell.",
+	["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Sorts et raccourcis, ligne en orange)."] = "the game's click casting also uses: %s. It may go before Lyorune: change one of them (Spells and bindings chapter, line in orange).",
+	["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."] = "A trinket with a spell? Spells and bindings chapter, fine settings: Trinkets with spells.",
 	["Bijou avec le sort : sur chaque ligne de l'onglet Clics, deux petites icônes utilisent votre bijou du haut ou du bas juste avant le sort, sur un joueur vivant (#42)."] = "Trinket with the spell: on each line of the Clicks tab, two small icons use your top or bottom trinket right before the spell, on a living player (#42).",
 	["Arrêter l'incantation : un clic ou une touche peut interrompre le sort en cours (#42)."] = "Stop casting: a click or a key can interrupt the spell being cast (#42).",
 	["Clic pris aussi par le jeu : si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune, un message le dit et la ligne passe en orange ; Lyorune ne touche jamais aux raccourcis du jeu (#42)."] = "Click the game also uses: if the game's click casting uses the same combination as a Lyorune click, a message says so and the line turns orange; Lyorune never touches the game's bindings (#42).",
@@ -770,7 +773,8 @@ Z.translations.enUS = {
 	["Réglages fins (%d)"] = "Fine settings (%d)", ["Masquer les réglages fins (%d)"] = "Hide fine settings (%d)",
 	["Activé"] = "On", ["Coupé"] = "Off",
 	["Rétablir : %s"] = "Reset: %s", ["Rétablir comme à l'installation"] = "Reset to default",
-	["Réglages changés dans ce chapitre : %d"] = "Changed settings in this chapter: %d",
+	["1 réglage différent de l'installation, choisi par vous. Une rune d'or le marque dans le chapitre."] = "1 setting different from the default, chosen by you. A golden rune marks it in the chapter.",
+	["%d réglages différents de l'installation, choisis par vous. Une rune d'or les marque dans le chapitre."] = "%d settings different from the default, chosen by you. A golden rune marks them in the chapter.",
 
 	-- Fenêtre d'options à chapitres (1.26.0) : Accueil, Profils et partage
 	["Profil actif"] = "Active profile", ["Changer de profil"] = "Change profile", ["Aucun profil"] = "No profile",

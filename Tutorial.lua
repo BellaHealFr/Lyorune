@@ -19,7 +19,7 @@ local function ClickSummary()
 		end
 	end
 	if #lines == 0 then
-		return Z.L["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Clics des options."]
+		return Z.L["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."]
 	end
 	return table.concat(lines, "\n")
 end
@@ -41,7 +41,7 @@ local steps = {
 		title = "Soigner d'un clic",
 		text = function()
 			return Z.L["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] .. "\n\n" .. ClickSummary()
-				.. "\n\n" .. Z.L["Chapitre Clics : les icônes de bijou d'une ligne utilisent votre bijou avec le sort."]
+				.. "\n\n" .. Z.L["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."]
 		end,
 		target = function() return Z.buttons[1] end,
 	},
@@ -100,7 +100,7 @@ local steps = {
 			.. "|cff33dd88Mes soins|r : soins sur la durée, coins, sorts suivis, recharge globale.\n"
 			.. "|cff33dd88Affaiblissements|r : dissipation, icônes, importants, auras privées.\n"
 			.. "|cff33dd88Joueurs|r : rôle, marqueur, menace, buffs manquants, infobulle.\n"
-			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, macros.\n"
+			.. "|cff33dd88Sorts et raccourcis|r : clics et touches sur une seule liste, macros.\n"
 			.. "|cff33dd88Alertes|r : annonces et sons.\n"
 			.. "|cff33dd88Profils et partage|r : profils, partage, entre joueurs.\n"
 			.. "|cff33dd88Fenêtre et aide|r : thème des fenêtres, effets, langue, aide.\n\n"
@@ -116,7 +116,7 @@ local steps = {
 	},
 	{
 		title = "C'est parti",
-		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Clics. "
+		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "

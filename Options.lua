@@ -8,7 +8,7 @@
 --   Mes soins           mes soins sur la durée, les coins de la case, la recharge globale
 --   Affaiblissements    dissipation, icônes, importants, auras privées, listes
 --   Joueurs             rôle, menace, buffs, survol
---   Clics               souris, touches au survol, macros
+--   Sorts et raccourcis souris, touches au survol, macros (ancien nom : Clics)
 --   Alertes             annonces dans le chat et sons
 --   Profils et partage  profils, partage, synchronisation
 --   Fenêtre et aide     cette fenêtre, la langue, l'aide
@@ -44,7 +44,7 @@ local function Option(key)
 		Z.db[key] = value
 		Z:Refresh()
 		Z:RefreshAlerts()
-		if CLICK_OPTIONS[key] then Z:ApplyClicks() end
+		if CLICK_OPTIONS[key] then Z:ApplyClicks() elseif Z.RefreshClicks then Z.RefreshClicks() end -- liste des clics à l'écran
 		if AfterChange then AfterChange() end
 		if witness then witness.Spark() end -- éclat de soin sur la case témoin (effets magiques)
 	end
@@ -549,17 +549,27 @@ local function PinTarget()
 end
 
 ----------------------------------------------------------------------------------------------------
--- Page des clics (chapitre Clics)
+-- Page des clics (chapitre Sorts et raccourcis)
 ----------------------------------------------------------------------------------------------------
 local rows, barIcons = {}, {}
 local ROW_H = 27            -- hauteur d'une ligne de raccourci ; toutes sont visibles, la page défile
-local clickList, specLine, barBox -- lignes du chapitre Clics, créées à sa première ouverture
+local clickList, specLine, barBox -- lignes du chapitre Sorts et raccourcis, créées à sa première ouverture
 
 local function SpellText(value)
 	return Z:ActionText(value)
 end
 
 local RefreshClicks -- définie plus bas
+
+-- Icône d'un bouton de bijou : le bijou porté quand il est choisi, sinon l'emplacement Bijou vide du jeu
+local TRINKET_SLOT_NAMES = { [13] = "Trinket0Slot", [14] = "Trinket1Slot" }
+local function TrinketIcon(slot, chosen)
+	local worn = chosen and GetInventoryItemTexture and GetInventoryItemTexture("player", slot)
+	if worn then return worn end
+	local empty
+	if GetInventorySlotInfo then empty = select(2, GetInventorySlotInfo(TRINKET_SLOT_NAMES[slot])) end
+	return empty or "Interface\\PaperDoll\\UI-PaperDoll-Slot-Trinket"
+end
 local NewRow        -- une ligne de raccourci de plus (définie plus bas)
 
 function RefreshClicks()
@@ -591,15 +601,16 @@ function RefreshClicks()
 				row.key.tip = game and L["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."]:format(game)
 					or L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
 				row.spell.label:SetText(binding.value ~= "" and SpellText(binding.value) or "|cff555a63" .. L["Sort"] .. "|r")
+				-- Bijoux : montrés si « Bijoux avec les sorts » est allumé, ou si la ligne a déjà un bijou
+				local trinkets = Z.TakesTrinket(binding.value) and (Z.db.trinketButtons or (binding.trinkets or 0) > 0)
 				for index, toggle in ipairs(row.trinkets) do
-					local slot = Z.TRINKET_SLOTS[index]
 					local on = Z.MaskHas(binding.trinkets, index)
-					toggle:SetShown(Z.TakesTrinket(binding.value))
-					toggle.icon:SetTexture(GetInventoryItemTexture and GetInventoryItemTexture("player", slot) or "Interface\\Icons\\INV_Misc_QuestionMark")
-					toggle.icon:SetDesaturated(not on)
-					toggle.icon:SetAlpha(on and 1 or 0.3)
-					toggle.label:SetText(on and "" or tostring(index))
+					toggle:SetShown(trinkets)
+					toggle.icon:SetTexture(TrinketIcon(Z.TRINKET_SLOTS[index], on))
+					toggle.icon:SetAlpha(on and 1 or 0.6)
+					toggle.chosen:SetShown(on)
 				end
+				row.spell:SetPoint("RIGHT", trinkets and row.trinkets[1] or row.clear, "LEFT", -4, 0)
 			end
 		end
 		clickList.empty:SetShown(#bindings == 0)
@@ -889,7 +900,7 @@ function NewRow(i)
 	row.key:SetPoint("LEFT")
 	row.key.label:SetJustifyH("CENTER")
 	row.key.tip = L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
-	row.spell = UI.Button(row, "", width - 150 - 4 - 2 * 20 - 4 - 22, 24, function()
+	row.spell = UI.Button(row, "", width - 150 - 4 - 4 - 22, 24, function() -- bord droit : RefreshClicks
 		if not row.binding then return end
 		ChooseAction(Trigger(row), Z:TakeCursor()) -- un sort ou une macro tenu sous la souris est posé directement
 	end)
@@ -903,24 +914,27 @@ function NewRow(i)
 		Z:SetBinding(Trigger(row), nil)
 		RefreshClicks()
 	end)
-	-- Bijou 1 (emplacement 13) et bijou 2 (emplacement 14), utilisés juste avant le sort
+	row.clear:SetPoint("RIGHT")
+	-- Bijou 1 (emplacement 13) et bijou 2 (emplacement 14), utilisés juste avant le sort : deux carrés à la hauteur
+	-- de la ligne, posés de droite à gauche devant « x » ; bordure d'or quand le bijou est choisi
 	row.trinkets = {}
-	local anchor = row.spell
-	for index, slot in ipairs(Z.TRINKET_SLOTS) do
-		local toggle = UI.Button(row, "", 18, 24, function()
+	local anchor = row.clear
+	for index = #Z.TRINKET_SLOTS, 1, -1 do
+		local slot = Z.TRINKET_SLOTS[index]
+		local toggle = UI.Button(row, "", 24, 24, function()
 			if row.binding then Z:ToggleTrinket(Trigger(row), index) RefreshClicks() end
 		end)
-		toggle:SetPoint("LEFT", anchor, "RIGHT", 2, 0)
-		toggle.label:SetJustifyH("CENTER")
+		toggle:SetPoint("RIGHT", anchor, "LEFT", index == #Z.TRINKET_SLOTS and -4 or -2, 0)
 		toggle.icon = toggle:CreateTexture(nil, "ARTWORK")
-		toggle.icon:SetPoint("TOPLEFT", 1, -4)
-		toggle.icon:SetPoint("BOTTOMRIGHT", -1, 4)
+		toggle.icon:SetPoint("TOPLEFT", 2, -2)
+		toggle.icon:SetPoint("BOTTOMRIGHT", -2, 2)
 		toggle.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		toggle.chosen = UI.Paint(UI.Border(toggle, 2), "gold")
+		toggle.chosen:Hide()
 		toggle.tip = L["Bijou %d (emplacement %d) : utilisé juste avant le sort, sur un joueur vivant. Cliquez pour l'ajouter ou le retirer."]:format(index, slot)
 		row.trinkets[index] = toggle
 		anchor = toggle
 	end
-	row.clear:SetPoint("LEFT", anchor, "RIGHT", 4, 0)
 	row.clear.label:SetJustifyH("CENTER")
 	row.clear.tip = L["Retirer ce raccourci"]
 	return row
@@ -1719,9 +1733,10 @@ local function Chapters()
 				{ "check", "groupPanel", "Fond et bordure par groupe", "Chaque groupe (ou chaque rôle) est posé sur un fond aux couleurs du thème.", fine = true },
 			} },
 			{ "Style", {
-				{ "cycle", "theme", "Thème", ThemeChoices() },
+				-- Le contraste élevé remplace le thème et la texture : grisés tant qu'il est allumé (retour d'essai)
+				{ "cycle", "theme", "Thème", ThemeChoices(), desc = "Sans effet quand « Contraste élevé » est allumé : il le remplace.", dep = { "highContrast", false } },
 				{ "check", "highContrast", "Contraste élevé", "Fond noir, bordure blanche, texte plus gros : pour une lecture facile. S'applique aussi aux fenêtres de Lyorune.", desc = "Fond noir, bordure blanche, texte plus gros." },
-				{ "cycle", "texture", "Texture des barres", TextureChoices(), fine = true },
+				{ "cycle", "texture", "Texture des barres", TextureChoices(), desc = "Sans effet quand « Contraste élevé » est allumé : il le remplace.", fine = true, dep = { "highContrast", false } },
 				{ "check", "smooth", "Barres animées", fine = true },
 			} },
 			{ "Couleurs et transparence", {
@@ -1827,7 +1842,7 @@ local function Chapters()
 				{ "check", "pingCells", "Signal du jeu sur une case", "Survolez une case et appuyez sur la touche de signal du jeu : le joueur est marqué pour tout le groupe, sans viser son personnage.", fine = true },
 			} },
 		} },
-		{ name = "Clics", rune = 1, intro = "Un clic sur une case, un sort lancé.", sections = {
+		{ name = "Sorts et raccourcis", rune = 1, old = { "Clics" }, intro = "Un clic sur une case, un sort lancé.", sections = {
 			{ "Mes clics", {
 				{ "note", "Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée.", 30 },
 				{ "custom", SpecLine },
@@ -1841,6 +1856,7 @@ local function Chapters()
 				{ "check", "clicksPerSpec", "Clics propres à chaque spécialisation", "Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout.", fine = true },
 				{ "check", "newSpellAlert", "Signaler un nouveau sort sans clic", "Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de ce chapitre avec le bouton « Attribuer ».", fine = true },
 				{ "check", "clickConflictAlert", "Signaler un clic pris aussi par le jeu", "Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans ce chapitre. Lyorune ne modifie jamais les raccourcis du jeu.", fine = true },
+				{ "check", "trinketButtons", "Bijoux avec les sorts", "Deux boutons au bout de chaque ligne : votre bijou du haut ou du bas, utilisé juste avant le sort, sur un joueur vivant. Une ligne qui a déjà un bijou garde ses boutons.", fine = true },
 				{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés.", fine = true },
 			} },
 			{ "Macros pour vos barres de sorts", {
@@ -2120,15 +2136,14 @@ local function Enter(scroll)
 end
 
 local current
--- Ouvre un chapitre, par son numéro ou son nom (Z:ToggleOptions("Clics")). Le chapitre ouvert est retenu pour
--- la prochaine ouverture de la fenêtre.
+-- Ouvre un chapitre, par son numéro ou son nom (Z:ToggleOptions("Clics")). La fenêtre rouvre le dernier chapitre
+-- pendant la partie ; il n'est pas sauvé : chaque connexion ou /reload ouvre l'Accueil (retour d'essai).
 local function Select(index, quiet)
 	if type(index) == "string" then index = ChapterIndex(index) or 1 end
 	if not chapters[index] then index = 1 end
 	local page = BuildChapter(index)
 	local changed = current ~= index
 	current = index
-	if Z.char then Z.char.optionChapter = chapters[index].name end
 	for i, chapter in ipairs(chapters) do
 		local other = chapter.page
 		if other and i ~= index then other.scroll:Hide() end
@@ -2446,7 +2461,12 @@ local function Build()
 	if Z.RefreshRunes then Z:RefreshRunes(window) end
 	window.Select, window.GoToSetting = Select, GoToSetting
 	window.chapters = chapters
-	Select(Z.char and Z.char.optionChapter or 1, true) -- le chapitre de la dernière fois
+	Select(1, true) -- l'Accueil à la première ouverture de la partie
+end
+
+-- Le chapitre ouvert (son nom), ou nil si la fenêtre n'a jamais été ouverte
+function Z:OptionChapter()
+	return current and chapters[current] and chapters[current].name
 end
 
 -- Z:ToggleOptions() ouvre ou ferme. Z:ToggleOptions("Clics") ouvre sur un chapitre (nom, ou ancien nom d'onglet).
@@ -2465,7 +2485,7 @@ function Z:BarIcons()
 	return barIcons
 end
 
--- La ligne d'un raccourci dans le chapitre Clics (bouton du sort, puis la ligne) ; kind : "click" ou "key"
+-- La ligne d'un raccourci dans le chapitre Sorts et raccourcis (bouton du sort, puis la ligne) ; kind : "click" ou "key"
 function Z:ClickCell(key, kind)
 	for _, row in ipairs(rows) do
 		if row.binding and row.binding.key == key and row.binding.kind == (kind or "click") then return row.spell, row end

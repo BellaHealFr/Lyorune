@@ -11,7 +11,7 @@ Au tout premier lancement, un **assistant** pose trois questions avant la visite
 
 Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte). La fenêtre a trois colonnes.
 
-**À gauche, la barre latérale** : onze chapitres, chacun avec sa rune. Un clic ouvre un chapitre ; la fenêtre rouvre celui de la dernière fois. Une petite pastille d'or donne le nombre de réglages que vous avez changés dans chaque chapitre.
+**À gauche, la barre latérale** : onze chapitres, chacun avec sa rune. Un clic ouvre un chapitre. À chaque connexion, la fenêtre s'ouvre sur l'Accueil ; pendant la partie, elle rouvre le dernier chapitre utilisé. Une petite pastille d'or compte, dans chaque chapitre, les réglages que vous avez choisis vous-même et qui diffèrent de l'installation : Lyorune ne change rien tout seul.
 
 | Chapitre | Ce que vous y réglez |
 |---|---|
@@ -22,7 +22,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 | Mes soins | Vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale |
 | Affaiblissements | Dissipation, icônes, affaiblissements importants, auras privées des boss |
 | Joueurs | Rôle, marqueur, chef, menace, buffs manquants, infobulle |
-| Clics | Vos clics, vos touches, vos macros |
+| Sorts et raccourcis | Vos sorts sur les clics et les touches, vos macros |
 | Alertes | Annonces dans le chat et sons |
 | Profils et partage | Profils, partage de configuration, échanges entre joueurs, remise à zéro |
 | Fenêtre et aide | Thème de cette fenêtre, effets, langue, aide, lecture d'une case, commandes |
@@ -96,7 +96,7 @@ Survolez une case hors combat : l'infobulle montre le joueur, puis la liste de v
 
 Cliquez sur une case : le sort part sur ce joueur, sans le cibler.
 
-Pour choisir vos sorts : `/lyorune`, chapitre **Clics**. Tous vos raccourcis sont sur une seule liste, un par ligne : à gauche le clic ou la touche, au milieu le sort, à droite « x » pour le retirer.
+Pour choisir vos sorts : `/lyorune`, chapitre **Sorts et raccourcis**. Tous vos raccourcis sont sur une seule liste, un par ligne : à gauche le clic ou la touche, au milieu le sort, à droite « x » pour le retirer.
 
 **Ajouter un raccourci :**
 
@@ -108,7 +108,7 @@ Il n'y a pas de limite : ajoutez autant de lignes que vous voulez. Toutes les li
 
 - **Changer le sort** : cliquez sur le sort de la ligne, ou glissez-y un sort de votre grimoire.
 - **Changer le raccourci** : cliquez sur le clic ou la touche de la ligne, puis faites la nouvelle combinaison. Si elle était déjà prise, les deux sorts sont échangés : rien n'est perdu.
-- **Utiliser un bijou avec le sort** : chaque ligne a deux petites icônes, vos bijoux du haut (1) et du bas (2). Cliquez sur l'une pour l'allumer : le bijou est utilisé juste avant le sort, seulement si le joueur est vivant. Cliquez de nouveau pour l'éteindre. Si le bijou n'est pas prêt, le sort part quand même.
+- **Utiliser un bijou avec le sort** : allumez d'abord « Bijoux avec les sorts » (réglages fins de Comportement). Chaque ligne a alors deux petits carrés au bout, vos bijoux du haut (1) et du bas (2) ; l'infobulle dit lequel. Cliquez sur l'un pour l'allumer (bordure d'or, icône de votre bijou) : le bijou est utilisé juste avant le sort, seulement si le joueur est vivant. Cliquez de nouveau pour l'éteindre. Si le bijou n'est pas prêt, le sort part quand même.
 - **Arrêter l'incantation** : dans la fenêtre de choix du sort, ce bouton fait d'un clic un « stop » qui interrompt le sort en cours (un long soin devenu inutile, par exemple).
 - Un clic gauche ou droit sans sort garde son rôle habituel : cibler le joueur, ouvrir son menu.
 
@@ -116,13 +116,13 @@ Les réglages du clic lui-même sont dans la partie **Comportement**, sous la li
 
 ### Un clic que le jeu prend aussi
 
-Le jeu a son propre « clic pour lancer » (dans le grimoire). S'il utilise la même combinaison qu'un clic de Lyorune, il peut passer avant. Lyorune vous le dit une fois dans la discussion, et la ligne apparaît en orange dans le chapitre **Clics** : changez la combinaison d'un côté ou de l'autre. Lyorune ne modifie jamais les raccourcis du jeu. Pour ne plus être prévenu, coupez « Signaler un clic pris aussi par le jeu » (réglages fins de Comportement).
+Le jeu a son propre « clic pour lancer » (dans le grimoire). S'il utilise la même combinaison qu'un clic de Lyorune, il peut passer avant. Lyorune vous le dit une fois dans la discussion, et la ligne apparaît en orange dans le chapitre **Sorts et raccourcis** : changez la combinaison d'un côté ou de l'autre. Lyorune ne modifie jamais les raccourcis du jeu. Pour ne plus être prévenu, coupez « Signaler un clic pris aussi par le jeu » (réglages fins de Comportement).
 
 Exemple pour un prêtre : clic gauche pour Soins rapides, clic droit pour Rénovation, Maj + clic droit pour le bouclier, clic milieu pour dissiper, Ctrl + Maj + clic gauche pour Prière de soins.
 
 ### Un nouveau sort sans clic
 
-Vous venez d'apprendre un sort utilisable sur un allié, et aucun de vos clics ni de vos touches ne le lance ? Lyorune vous le dit une fois dans la discussion, et le sort apparaît en haut du chapitre **Clics** :
+Vous venez d'apprendre un sort utilisable sur un allié, et aucun de vos clics ni de vos touches ne le lance ? Lyorune vous le dit une fois dans la discussion, et le sort apparaît en haut du chapitre **Sorts et raccourcis** :
 
 - « Attribuer » : faites ensuite sur le bouton « Ajouter » le clic ou la touche voulu, le sort y est posé directement ;
 - « x » : Lyorune ne vous le propose plus.
@@ -135,7 +135,7 @@ Vos clics sont enregistrés par classe : chaque personnage garde les siens.
 
 Votre personnage a deux spécialisations (deux groupes de talents) ? Chacune a ses propres clics et ses propres touches. Quand vous changez de talents, Lyorune passe tout seul aux bons clics, même pour une macro.
 
-- Juste au-dessus de la liste du chapitre **Clics**, Lyorune indique la spécialisation dont vous voyez les clics.
+- Juste au-dessus de la liste du chapitre **Sorts et raccourcis**, Lyorune indique la spécialisation dont vous voyez les clics.
 - La première fois, votre seconde spécialisation reprend les clics de la première. Changez ensuite ce que vous voulez.
 - « Copier l'autre spécialisation », sur la même ligne, reprend tous les clics et les touches de l'autre.
 - Vous voulez les mêmes clics partout ? Coupez « Clics propres à chaque spécialisation » (réglages fins de Comportement).
@@ -146,7 +146,7 @@ Une macro fait plusieurs choses d'un seul clic : activer un bijou puis soigner, 
 
 Lyorune garde vos macros dans une bibliothèque. Vous écrivez une macro une seule fois, puis vous la posez sur autant de clics et de touches que vous voulez, dans vos deux spécialisations. Si vous la modifiez, tous ses clics suivent. Elle ne prend aucune place dans la fenêtre `/macro` du jeu.
 
-**Ouvrir la bibliothèque** : chapitre **Clics**, bouton « Mes macros... » sous la liste (ou le même bouton dans la fenêtre de choix d'un sort).
+**Ouvrir la bibliothèque** : chapitre **Sorts et raccourcis**, bouton « Mes macros... » sous la liste (ou le même bouton dans la fenêtre de choix d'un sort).
 
 **Trois façons de créer une macro :**
 
@@ -180,7 +180,7 @@ Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, e
 
 **Poser la macro sur un clic :**
 
-- glissez-la de la liste sur le sort d'une ligne du chapitre **Clics** ;
+- glissez-la de la liste sur le sort d'une ligne du chapitre **Sorts et raccourcis** ;
 - ou cliquez sur ce sort : vos macros sont listées sous vos sorts, à la ligne « Mes macros ».
 
 Vos macros restent sur votre ordinateur : elles ne sont jamais envoyées ni reçues dans une configuration partagée, et « Tout réinitialiser » ne les efface pas. Quand un clic porte une macro, la résurrection automatique ne s'y ajoute pas : utilisez la case « Si le joueur est mort » de l'assistant.
@@ -191,14 +191,14 @@ Vous utilisiez déjà des macros avec une version précédente ? Elles sont rang
 
 Si vous le demandez, Lyorune crée une vraie macro du jeu pour chaque sort de vos clics. Rien n'est créé tant que le réglage n'est pas allumé.
 
-1. Chapitre **Clics**, partie « Macros pour vos barres de sorts » : allumez « Créer une macro par sort de mes clics ». Une icône par macro apparaît.
+1. Chapitre **Sorts et raccourcis**, partie « Macros pour vos barres de sorts » : allumez « Créer une macro par sort de mes clics ». Une icône par macro apparaît.
 2. Cliquez sur une icône, puis déposez-la dans une barre de sorts. Vous les retrouvez aussi dans `/macro`, onglet de votre personnage : leur nom commence par « Lyo: ».
 
 La macro soigne le joueur sous votre souris (une case ou un personnage), sinon votre cible, sinon vous. Elle se met à jour quand vous changez vos clics. Lyorune ne touche jamais à vos autres macros. Pour vous en passer, coupez « Créer une macro par sort de mes clics » ou cliquez sur « Retirer les macros de Lyorune ».
 
 ## 4. Touches au survol
 
-Vous préférez le clavier, ou votre souris a beaucoup de boutons ? Les touches se règlent sur la même liste que les clics, chapitre **Clics** :
+Vous préférez le clavier, ou votre souris a beaucoup de boutons ? Les touches se règlent sur la même liste que les clics, chapitre **Sorts et raccourcis** :
 
 1. Cliquez sur « + Ajouter un clic ou une touche ».
 2. Appuyez sur la touche voulue : une lettre, un chiffre, un bouton de souris à partir du 6e, la molette, avec ou sans Maj, Ctrl, Alt (et leurs combinaisons). Échap annule.
@@ -208,7 +208,7 @@ Passez ensuite la souris sur une case et appuyez sur la touche : le sort part su
 
 ## 5. Relever un joueur
 
-Avec « Le même clic relève un joueur mort » (chapitre Clics, partie Comportement, allumé par défaut), cliquez simplement sur un joueur mort avec votre clic de soin habituel : Lyorune lance votre résurrection à la place. Aucune touche supplémentaire.
+Avec « Le même clic relève un joueur mort » (chapitre Sorts et raccourcis, partie Comportement, allumé par défaut), cliquez simplement sur un joueur mort avec votre clic de soin habituel : Lyorune lance votre résurrection à la place. Aucune touche supplémentaire.
 
 ## 6. Placer et dimensionner les cadres
 
@@ -243,7 +243,7 @@ Chapitre **Apparence** :
 - **Angles des cases** : droits ou arrondis, quelle que soit la forme.
 - **Fond et bordure par groupe** (réglages fins) : chaque groupe est posé sur son propre fond, aux couleurs du thème.
 - **Thème** : Néon, Épuré, Verre, Classique ou Héroïque.
-- **Contraste élevé** : fond noir, bordure blanche, texte plus gros. Il vaut aussi pour les fenêtres de Lyorune.
+- **Contraste élevé** : fond noir, bordure blanche, texte plus gros. Il vaut aussi pour les fenêtres de Lyorune. Il remplace le thème et la texture des barres : ces deux lignes restent grisées tant qu'il est allumé.
 - **Couleurs de classe** : « Vives » (par défaut) pour des couleurs franches et lumineuses, ou « Naturelles » pour celles du jeu. Grisé si les barres ne sont pas aux couleurs de classe.
 - **Transparence** : « Opacité des cadres (%) » et « Opacité hors de portée (%) ». Dans les réglages fins, « Luminosité des barres (%) » et trois préréglages en un clic : « Discret », « Semi-transparent », « Bien visible ».
 - **Texte de vie** : vie manquante, pourcentage, ou rien ; avec la taille du texte.

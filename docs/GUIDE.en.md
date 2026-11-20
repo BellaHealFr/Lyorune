@@ -12,7 +12,7 @@ On the very first launch, a **setup assistant** asks three questions before the 
 
 Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The window has three columns.
 
-**On the left, the sidebar**: eleven chapters, each with its own rune. One click opens a chapter; the window reopens the one you used last. A small golden badge shows how many settings you changed in each chapter.
+**On the left, the sidebar**: eleven chapters, each with its own rune. One click opens a chapter. At each login, the window opens on Home; during the session, it reopens the chapter you used last. A small golden badge counts, in each chapter, the settings you chose yourself that differ from the default: Lyorune never changes anything by itself.
 
 | Chapter | What you set there |
 |---|---|
@@ -23,7 +23,7 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 | My heals | Your heals over time, the cell corners, your tracked spells, the global cooldown |
 | Debuffs | Dispelling, icons, important debuffs, boss private auras |
 | Players | Role, marker, leader, threat, missing buffs, tooltip |
-| Clicks | Your clicks, your keys, your macros |
+| Spells and bindings | Your spells on clicks and keys, your macros |
 | Alerts | Chat announcements and sounds |
 | Profiles and sharing | Profiles, sharing a configuration, exchanges between players, reset |
 | Window and help | This window's theme, effects, language, help, reading a cell, commands |
@@ -97,7 +97,7 @@ Hover a frame out of combat: the tooltip shows the player, then the list of your
 
 Click a frame: the spell is cast on that player, without targeting them.
 
-To choose your spells: `/lyorune`, **Clicks** chapter. All your shortcuts are on a single list, one per line: the click or key on the left, the spell in the middle, "x" on the right to remove it.
+To choose your spells: `/lyorune`, **Spells and bindings** chapter. All your shortcuts are on a single list, one per line: the click or key on the left, the spell in the middle, "x" on the right to remove it.
 
 **Adding a shortcut:**
 
@@ -109,7 +109,7 @@ There is no limit: add as many lines as you like. All lines stay visible; when t
 
 - **Changing the spell**: click the spell of the line, or drag a spell from your spellbook onto it.
 - **Changing the shortcut**: click the click or key of the line, then do the new combination. If it was already taken, the two spells are swapped: nothing is lost.
-- **Using a trinket with the spell**: each line has two small icons, your top (1) and bottom (2) trinkets. Click one to light it up: the trinket is used right before the spell, only if the player is alive. Click again to turn it off. If the trinket is not ready, the spell is still cast.
+- **Using a trinket with the spell**: first turn on "Trinkets with spells" (fine settings of Behaviour). Each line then has two small squares at its end, your top (1) and bottom (2) trinkets; the tooltip says which one. Click one to light it up (golden border, your trinket's icon): the trinket is used right before the spell, only if the player is alive. Click again to turn it off. If the trinket is not ready, the spell is still cast.
 - **Stop casting**: in the spell choice window, this button turns a click into a "stop" that interrupts the spell being cast (a long heal that is no longer needed, for example).
 - A left or right click without a spell keeps its usual role: target the player, open their menu.
 
@@ -117,13 +117,13 @@ The settings of the click itself are in the **Behaviour** part, below the list: 
 
 ### A click the game also uses
 
-The game has its own click casting (in the spellbook). If it uses the same combination as a Lyorune click, it may go first. Lyorune tells you once in the chat, and the line turns orange in the **Clicks** chapter: change the combination on one side or the other. Lyorune never changes the game's bindings. To stop being warned, turn off "Warn about a click the game also uses" (fine settings of Behaviour).
+The game has its own click casting (in the spellbook). If it uses the same combination as a Lyorune click, it may go first. Lyorune tells you once in the chat, and the line turns orange in the **Spells and bindings** chapter: change the combination on one side or the other. Lyorune never changes the game's bindings. To stop being warned, turn off "Warn about a click the game also uses" (fine settings of Behaviour).
 
 Example for a priest: left click for Flash Heal, right click for Renew, Shift + right click for the shield, middle click to dispel, Ctrl + Shift + left click for Prayer of Healing.
 
 ### A new spell without a click
 
-You just learned a spell usable on an ally, and none of your clicks or keys casts it? Lyorune tells you once in the chat, and the spell shows up at the top of the **Clicks** chapter:
+You just learned a spell usable on an ally, and none of your clicks or keys casts it? Lyorune tells you once in the chat, and the spell shows up at the top of the **Spells and bindings** chapter:
 
 - "Assign": then do, on the "Add" button, the click or key you want, and the spell is put on it straight away;
 - "x": Lyorune stops suggesting it.
@@ -136,7 +136,7 @@ Your clicks are saved per class: each character keeps its own.
 
 Your character has two specializations (two talent groups)? Each one has its own clicks and its own keys. When you switch talents, Lyorune moves to the right clicks by itself, macros included.
 
-- Just above the list of the **Clicks** chapter, Lyorune shows which specialization's clicks you are looking at.
+- Just above the list of the **Spells and bindings** chapter, Lyorune shows which specialization's clicks you are looking at.
 - The first time, your second specialization takes over the clicks of the first. Then change whatever you like.
 - "Copy the other specialization", on the same line, takes over all the clicks and keys of the other one.
 - Want the same clicks everywhere? Turn off "Separate clicks for each specialization" (fine settings of Behaviour).
@@ -147,7 +147,7 @@ A macro does several things in one click: use a trinket then heal, resurrect a d
 
 Lyorune keeps your macros in a library. You write a macro once, then put it on as many clicks and keys as you like, in both specializations. If you edit it, all its clicks follow. It takes no room in the game's `/macro` window.
 
-**Open the library**: **Clicks** chapter, "My macros..." button below the list (or the same button in the spell picker).
+**Open the library**: **Spells and bindings** chapter, "My macros..." button below the list (or the same button in the spell picker).
 
 **Three ways to create a macro:**
 
@@ -181,7 +181,7 @@ Just below, "Sent to the game" shows the exact text that goes out on the click, 
 
 **Putting the macro on a click:**
 
-- drag it from the list onto the spell of a line in the **Clicks** chapter;
+- drag it from the list onto the spell of a line in the **Spells and bindings** chapter;
 - or click that spell: your macros are listed below your spells, in the "My macros" row.
 
 Your macros stay on your computer: they are never sent or received in a shared configuration, and "Reset everything" does not erase them. When a click holds a macro, automatic resurrection is not added to it: use the "If the player is dead: resurrect them" box of the wizard.
@@ -192,14 +192,14 @@ Already used macros with a previous version? They are moved into the library by 
 
 If you ask for it, Lyorune creates a real game macro for each spell of your clicks. Nothing is created until the setting is turned on.
 
-1. **Clicks** chapter, "Macros for your action bars" part: turn on "Create one macro per spell of my clicks". One icon per macro appears.
+1. **Spells and bindings** chapter, "Macros for your action bars" part: turn on "Create one macro per spell of my clicks". One icon per macro appears.
 2. Click an icon, then drop it on an action bar. You also find them in `/macro`, in your character's tab: their name starts with "Lyo:".
 
 The macro heals the player under your mouse (a frame or a character), otherwise your target, otherwise yourself. It updates when you change your clicks. Lyorune never touches your other macros. To do without them, turn off "Create one macro per spell of my clicks" or click "Remove Lyorune's macros".
 
 ## 4. Hover keys
 
-Prefer the keyboard, or does your mouse have many buttons? Keys are set on the same list as clicks, **Clicks** chapter:
+Prefer the keyboard, or does your mouse have many buttons? Keys are set on the same list as clicks, **Spells and bindings** chapter:
 
 1. Click "+ Add a click or a key".
 2. Press the key you want: a letter, a number, a mouse button from the 6th on, the wheel, with or without Shift, Ctrl, Alt (and their combinations). Escape cancels.
@@ -209,7 +209,7 @@ Then hover a frame and press the key: the spell is cast on that player. The key 
 
 ## 5. Resurrecting a player
 
-With "The same click resurrects a dead player" (Clicks chapter, Behaviour part, on by default), simply click a dead player with your usual heal click: Lyorune casts your resurrection instead. No extra key.
+With "The same click resurrects a dead player" (Spells and bindings chapter, Behaviour part, on by default), simply click a dead player with your usual heal click: Lyorune casts your resurrection instead. No extra key.
 
 ## 6. Moving and sizing the frames
 
@@ -244,7 +244,7 @@ Type `/lyorune test`, or click "5", "10", "25" or "40" under "Test mode", in the
 - **Cell corners**: square or rounded, whatever the shape.
 - **Background and border per group** (fine settings): each group sits on its own background, in the theme's colours.
 - **Theme**: Neon, Clean, Glass, Classic or Heroic (flat and modern, lightly embossed, glassy, like the game's raid frames, or textured with a golden border).
-- **High contrast**: black background, white border, larger text. It also applies to Lyorune's windows.
+- **High contrast**: black background, white border, larger text. It also applies to Lyorune's windows. It replaces the theme and the bar texture: both lines stay greyed out while it is on.
 - **Class colours**: "Vivid" (default) for bold, bright colours, or "Natural" for the game's own. Greyed out when the bars do not use class colours.
 - **Transparency**: "Frame opacity (%)" and "Out-of-range opacity (%)". In the fine settings, "Bar brightness (%)" and three one-click presets: "Subtle", "Semi-transparent", "Clearly visible".
 - **Health text**: missing health, percentage, or nothing; with the text size.

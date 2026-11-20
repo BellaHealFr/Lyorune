@@ -477,7 +477,7 @@ local function OnEnter(b)
 		local TOOLTIP_LINES = 16 -- les raccourcis ne sont pas limités, mais l'infobulle reste courte
 		for i, line in ipairs(clicks) do
 			if i > TOOLTIP_LINES then
-				GameTooltip:AddLine(L["... et %d autre(s) : chapitre Clics."]:format(#clicks - TOOLTIP_LINES), 0.6, 0.6, 0.65)
+				GameTooltip:AddLine(L["... et %d autre(s) : chapitre Sorts et raccourcis."]:format(#clicks - TOOLTIP_LINES), 0.6, 0.6, 0.65)
 				break
 			end
 			GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1)

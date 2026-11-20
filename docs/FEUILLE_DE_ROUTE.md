@@ -224,7 +224,7 @@ Demande de l'auteur (20 novembre 2026) : une fenêtre d'options plus lisible et 
 avec un côté magique qui rappelle le soin. Le fonctionnement de l'addon ne change pas, ni aucun réglage : seule leur
 place change. La phrase en runes est gardée. Travail par lots, un lot par session, publié en une seule fois.
 - [ ] Barre latérale à 11 chapitres rangés par tâche (Accueil, Disposition, Apparence, Vie et portée, Mes soins,
-  Affaiblissements, Joueurs, Clics, Alertes, Profils et partage, Fenêtre et aide), une colonne qui défile
+  Affaiblissements, Joueurs, Sorts et raccourcis, Alertes, Profils et partage, Fenêtre et aide), une colonne qui défile
 - [ ] Réglages courants d'abord, « Réglages fins » repliables, réglages dépendants grisés, explication visible
   sous le nom quand il ne suffit pas
 - [ ] Case témoin qui suit chaque réglage en direct, avec le faux groupe et le mode test à côté
