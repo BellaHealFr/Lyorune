@@ -1272,8 +1272,9 @@ end
 -- Rune d'or à côté d'un réglage changé (valeur différente de Z.defaults). Infobulle « Rétablir : valeur »,
 -- clic : le réglage reprend sa valeur d'installation. Elle suit toute seule l'élément « widget » (case,
 -- interrupteur, nombre, choix) : sa mise à jour la montre ou la cache. Elle se pose à gauche de « anchor »
--- (la commande de la ligne, entre le nom et elle), ou à gauche de l'élément.
-function UI.ChangedRune(widget, key, get, set, anchor)
+-- (la commande de la ligne, entre le nom et elle), ou à gauche de l'élément. describe(valeur) donne la valeur en
+-- mots quand le réglage a sa propre liste de choix (Thème, Texture) : jamais un nom interne dans l'infobulle.
+function UI.ChangedRune(widget, key, get, set, anchor, describe)
 	local r = CreateFrame("Button", nil, widget)
 	r:SetSize(20, 20)
 	r:SetPoint("RIGHT", anchor or widget, "LEFT", -4, 0)
@@ -1284,7 +1285,9 @@ function UI.ChangedRune(widget, key, get, set, anchor)
 	r.key = key
 	r.Update = function(self) self:SetShown(not UI.Same(get(), Z.defaults[self.key])) end
 	r:SetScript("OnEnter", function(self)
-		local value = UI.Describe(self.key, Z.defaults[self.key])
+		local default = Z.defaults[self.key]
+		local value = describe and describe(default) or UI.Describe(self.key, default)
+		if value == "" then value = nil end
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
 		GameTooltip:SetText(value and L["Rétablir : %s"]:format(value) or L["Rétablir comme à l'installation"], 1, 1, 1, 1, true)
 		GameTooltip:Show()
@@ -1706,7 +1709,14 @@ end
 -- Apparition : fondu et léger grossissement (0,25 s), ou simple fondu de 0,15 s en animations réduites
 function UI.Appear(w)
 	UI.Fit(w)
-	if w.beside then UI.PlaceBeside(w) end
+	if w.beside then
+		UI.PlaceBeside(w)
+		-- Une seule fenêtre à côté des options : la nouvelle ferme l'ancienne, qui était à la même place
+		-- (après PlaceBeside, pour que les options effacées ou glissées restent comme la nouvelle les veut)
+		for _, other in ipairs(windows) do
+			if other ~= w and other.beside and other:IsShown() then other:Hide() end
+		end
+	end
 	if w == UI.main and next(away) then -- options rouvertes par le joueur : les fenêtres qui les effaçaient se ferment
 		local open = away
 		away = {}

@@ -152,6 +152,17 @@ local function TranslatedChoices(list)
 	return choices
 end
 
+-- Valeur d'un réglage en mots : le libellé du choix (liste propre au réglage, comme Thème et Texture, ou
+-- Z.choices), « Activé », « Coupé » ou le nombre. Sert à la liste de l'Accueil et à l'infobulle des runes d'or.
+local function ValueText(item, value)
+	if item[1] == "cycle" and item[4] then
+		for _, choice in ipairs(item[4]) do
+			if choice[1] == value then return L[choice[2]] end
+		end
+	end
+	return UI.Describe(item[2], value) or ""
+end
+
 local function Describe(widget, text, width)
 	local desc = UI.Label(widget, 11, nil, "dim")
 	desc:SetPoint("TOPLEFT", widget, "BOTTOMLEFT", 0, -1)
@@ -220,7 +231,8 @@ local function BuildItem(page, item, width)
 		-- Rune d'or entre le nom et la commande quand le réglage n'est plus celui de l'installation
 		if Z.defaults[item[2]] ~= nil then
 			local get, set = Option(item[2])
-			UI.ChangedRune(widget, item[2], get, set, widget.box or widget.strip or widget.minus or widget.button)
+			UI.ChangedRune(widget, item[2], get, set, widget.box or widget.strip or widget.minus or widget.button,
+				function(value) return ValueText(item, value) end)
 		end
 	end
 	if widget.SetWidth and kind ~= "button" then widget:SetWidth(width) end
@@ -1653,16 +1665,6 @@ local function ActiveProfile(page, width)
 	return box
 end
 
--- Valeur d'un réglage en mots : le libellé du choix, « Activé », « Coupé » ou le nombre
-local function ValueText(item, value)
-	if item[1] == "cycle" and item[4] then
-		for _, choice in ipairs(item[4]) do
-			if choice[1] == value then return L[choice[2]] end
-		end
-	end
-	return UI.Describe(item[2], value) or ""
-end
-
 -- Vos réglages changés : un clic sur le nom mène au réglage, un clic sur la rune d'or le rétablit
 local CHANGED_H = 24
 
@@ -1685,7 +1687,7 @@ local function ChangedRow(box, width)
 	row.tip = L["Aller au réglage"]
 	local function Get() return Z.db[row.key] end
 	local function Set(value) select(2, Option(row.key))(value) end
-	row.rune = UI.ChangedRune(row, row.key, Get, Set)
+	row.rune = UI.ChangedRune(row, row.key, Get, Set, nil, function(value) return ValueText(row.item, value) end)
 	row.Update = function() box:Update() end -- rétabli : la liste se range de nouveau
 	return row
 end
@@ -1705,7 +1707,7 @@ local function ChangedList(page, width)
 		for i, entry in ipairs(list) do
 			local row = self.rows[i] or ChangedRow(self, width)
 			self.rows[i] = row
-			row.key, row.chapter = entry.item[2], entry.chapter
+			row.key, row.chapter, row.item = entry.item[2], entry.chapter, entry.item
 			row:ClearAllPoints()
 			row:SetPoint("TOPLEFT", 24, -(i - 1) * CHANGED_H)
 			row.label:SetText(L[entry.item[3]])

@@ -827,7 +827,8 @@ step("journal d'erreurs, diagnostic, nouveautes", function()
   local text = Z:LogText()
   assert(text:find("Frames.lua:42", 1, true) and text:find("PRIEST") and text:find("70938") and text:find("x2", 1, true), text)
   SlashCmdList.LYORUNE("erreurs") SlashCmdList.LYORUNE("diag") SlashCmdList.LYORUNE("nouveautes")
-  assert(LyoruneLog:IsShown() and LyoruneNews:IsShown())
+  -- une seule fenêtre à côté des options : les nouveautés, ouvertes en dernier, ont fermé le journal (retour 15)
+  assert(LyoruneNews:IsShown() and not LyoruneLog:IsShown())
   local news = Z:NewsText()
   assert(news:find("Nouveau", 1, true) and news:find("Corrigé", 1, true) and news:find("n'est plus estompée", 1, true), "rubriques du journal")
   assert(Z.changes[1].version == Z.version, "Changes.lua n'est pas a jour : " .. Z.changes[1].version .. " / " .. Z.version)
@@ -4678,6 +4679,66 @@ step("refonte 1.26.0, lot 6c septies e : corrections de Placement, Bug, Changes,
   perf:Hide() perf:Run("OnHide")
 
   Z.db.errors = saved.errors
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, retours d'essai 14 et 15 : infobulle des runes, une fenetre a cote des options", function()
+  local UI, L, o = Z.UI, Z.L, Z:OptionsWindow()
+  local saved = { theme = Z.db.theme, texture = Z.db.texture, text = Z.db.text, reduceMotion = Z.db.reduceMotion }
+  Z.db.reduceMotion = true
+  -- 14 : la rune dit la valeur d'installation en mots, jamais un nom interne (« PURE », « THEME »)
+  Z.db.theme, Z.db.texture, Z.db.text = "HEROIC", "Raid", "PERCENT"
+  Z:Refresh()
+  o:Hide() o:Run("OnHide")
+  Z:ToggleOptions("Accueil")
+  Z:OptionLabels()
+  local seen = {}
+  local function Check(rune, key)
+    rune:Run("OnEnter")
+    local tip = GameTooltip:GetText()
+    assert(not tip:find(": %u[%u_]+$"), "14 : nom interne dans l'infobulle de " .. key .. " : " .. tip)
+    seen[key] = tip
+  end
+  for _, chapter in ipairs(o.chapters) do
+    local page = chapter.page
+    for key, widget in pairs(page and page.content.settings or {}) do
+      if widget.changed then
+        widget.changed:Update() -- page pas encore ouverte : la rune suit le réglage à l'ouverture
+        if widget.changed:IsShown() then Check(widget.changed, key) end
+      end
+    end
+    for _, part in ipairs(page and page.parts or {}) do
+      if part.widget.rows then
+        part.widget:Update()
+        for _, row in ipairs(part.widget.rows) do if row:IsShown() then Check(row.rune, "Accueil " .. row.key) end end
+      end
+    end
+  end
+  assert(seen["Accueil theme"] == L["Rétablir : %s"]:format(L["Épuré"]), tostring(seen["Accueil theme"]))
+  assert(seen["Accueil texture"] == L["Rétablir : %s"]:format(L["Celle du thème"]), tostring(seen["Accueil texture"]))
+  assert(seen.theme == seen["Accueil theme"], "14 : rune du chapitre Apparence : " .. tostring(seen.theme))
+
+  -- 15 : la nouvelle fenêtre ferme l'ancienne ; options effacées sur un petit écran, elles restent effacées
+  -- jusqu'à la fermeture de la dernière, puis reviennent
+  Z:ShowBug()
+  Z:ShowLog()
+  assert(LyoruneLog:IsShown() and not LyoruneBug:IsShown(), "15 : bug et journal l'un sur l'autre")
+  Z:ShowBug()
+  assert(LyoruneBug:IsShown() and not LyoruneLog:IsShown(), "15 : dans l'autre sens")
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  o.GetLeft = function() return 142 end o.GetRight = function() return 1222 end o.GetTop = function() return 738 end
+  Z:ShowBug()
+  assert(UI.Away() and not o:IsShown(), "options effacees")
+  Z:ShowLog()
+  LyoruneBug:Run("OnHide") -- le faux client ne lance pas OnHide tout seul
+  assert(not LyoruneBug:IsShown() and UI.Away() and not o:IsShown(), "15 : options revenues sous le journal")
+  LyoruneLog:Hide() LyoruneLog:Run("OnHide")
+  assert(not UI.Away() and o:IsShown(), "15 : options pas rendues")
+  o.GetLeft, o.GetRight, o.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
 end)
