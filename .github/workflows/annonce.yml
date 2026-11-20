@@ -1,0 +1,32 @@
+# Renvoie l'annonce Discord d'une version déjà publiée (annonce refusée ou oubliée), sans republier l'archive.
+# Lancée à la main : onglet Actions, « Annonce Discord », numéro de version (par exemple v1.26.0).
+name: Annonce Discord
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version déjà publiée, par exemple v1.26.0"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  annonce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Notes de la version
+        run: python outils/publier.py --notes "$VERSION"
+        env:
+          PYTHONIOENCODING: utf-8
+          VERSION: ${{ inputs.version }}
+      - name: Annonce sur Discord
+        run: python outils/annonce_discord.py "$VERSION"
+        env:
+          PYTHONIOENCODING: utf-8
+          VERSION: ${{ inputs.version }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}

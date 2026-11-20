@@ -9,13 +9,19 @@
 #
 #   python outils/annonce_discord.py v1.4.0 --essai
 #       affiche le message prêt à envoyer, sans rien envoyer
+#
+#   Annonce refusée ou oubliée : action « Annonce Discord » du dépôt (lancée à la main, avec le numéro de version),
+#   qui renvoie seulement l'annonce, sans republier l'archive.
 import io, json, os, re, sys, urllib.request
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 DEPOT = 'https://github.com/BellaHealFr/Lyorune'
 ROLE_ALERTES = '1572192211754422413'  # rôle « Alertes Lyorune » du serveur Discord
 COULEUR = 0x7C4DFF
-LIMITE = 4000  # un encadré Discord accepte 4096 caractères
+# Un encadré Discord accepte 4096 caractères, mais tous les encadrés d'un message ensemble 6000 au plus :
+# deux encadrés (français, anglais) de 2700, avec titres et liens, restent dessous (refus « 400 » à la 1.26.0)
+LIMITE = 2700
+TOTAL = 6000
 
 
 def notes_markdown(partie):
@@ -61,6 +67,8 @@ def message(version):
             'description': couper(notes_markdown(parties[1]), '[All changes](%s)' % page)
                            + '\n\n[Download](%s)' % page,
         })
+    if sum(len(e['title']) + len(e['description']) for e in encadres) > TOTAL:
+        sys.exit('Annonce Discord trop longue (%d caractères au plus pour tous les encadrés).' % TOTAL)
     return {
         'content': '<@&%s> Lyorune %s est disponible !' % (ROLE_ALERTES, numero),
         'embeds': encadres,
