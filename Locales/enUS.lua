@@ -379,8 +379,12 @@ Z.translations.enUS = {
 	["Ce que disent les couleurs"] = "What the colours say",
 	["Placer les cadres"] = "Placing the frames",
 	["Essayer sans groupe"] = "Trying without a group",
-	["Régler Lyorune"] = "Setting up Lyorune",
+	["La fenêtre d'options"] = "The options window",
+	["Une page par chapitre"] = "One page per chapter",
+	["La case témoin"] = "The preview cell",
+	["Recherche et Accueil"] = "Search and Home",
 	["C'est parti"] = "Off you go",
+	["La fenêtre d'options revient à la fin de la visite."] = "The options window comes back at the end of the tour.",
 	["Lyorune affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
 			.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/lyorune tuto|r."] =
 		"Lyorune shows your group as cells and lets you heal with a single click.\n\nThis tour takes one minute. You can restart it with |cff33dd88/lyorune tuto|r.",
@@ -407,22 +411,19 @@ Z.translations.enUS = {
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r, ou avec « 5 », « 10 », « 25 » ou « 40 » sous la case témoin des options. Glissez son bandeau pour le déplacer ; un second clic sur le même nombre, ou le bouton |cff33dd88Fermer|r au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat."] =
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r, or with \"5\", \"10\", \"25\" or \"40\" under the preview cell of the options. Drag its banner to move it; a second click on the same number, or the |cff33dd88Close|r button at the end of the banner, leaves it; it also closes by itself in combat.",
-	["Tout se règle ici, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
-			.. "|cff33dd88Accueil|r : vos réglages changés, ce tutoriel, l'assistant, les nouveautés.\n"
-			.. "|cff33dd88Disposition|r : taille, rangement, position, cadres affichés (tanks, cible, épinglés).\n"
-			.. "|cff33dd88Apparence|r : forme des cases, thème, couleurs, texte.\n"
-			.. "|cff33dd88Vie et portée|r : soins en route, bouclier, vie basse, mana, joueurs loin.\n"
-			.. "|cff33dd88Mes soins|r : soins sur la durée, coins, sorts suivis, recharge globale.\n"
-			.. "|cff33dd88Affaiblissements|r : dissipation, icônes, importants, auras privées.\n"
-			.. "|cff33dd88Joueurs|r : rôle, marqueur, menace, buffs manquants, infobulle.\n"
-			.. "|cff33dd88Sorts et raccourcis|r : clics et touches sur une seule liste, macros.\n"
-			.. "|cff33dd88Alertes|r : annonces et sons.\n"
-			.. "|cff33dd88Profils et partage|r : profils, partage, entre joueurs.\n"
-			.. "|cff33dd88Fenêtre et aide|r : thème des fenêtres, effets, langue, aide.\n\n"
-			.. "À droite, la |cff33dd88case témoin|r suit chaque réglage en direct. Une |cffffd140rune d'or|r marque un réglage changé : "
-			.. "un clic dessus le rétablit. « Réglages fins » déplie les réglages plus rares.\n\n"
-			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its switch.\n\n|cff33dd88Home|r: your changed settings, this tutorial, the setup assistant, the news.\n|cff33dd88Layout|r: size, sorting, position, shown frames (tanks, target, pinned).\n|cff33dd88Look|r: cell shape, theme, colours, text.\n|cff33dd88Health and range|r: incoming heals, shield, low health, mana, distant players.\n|cff33dd88My heals|r: heals over time, corners, tracked spells, global cooldown.\n|cff33dd88Debuffs|r: dispels, icons, important debuffs, private auras.\n|cff33dd88Players|r: role, marker, threat, missing buffs, tooltip.\n|cff33dd88Spells and bindings|r: clicks and keys on a single list, macros.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles and sharing|r: profiles, sharing, between players.\n|cff33dd88Window and help|r: window theme, effects, language, help.\n\nOn the right, the |cff33dd88preview cell|r follows every setting live. A |cffffd140golden rune|r marks a changed setting: click it to reset it. \"Fine settings\" unfolds the less common settings.\n\nCannot find a setting? Type a word in the search box, top right.",
+	["Tout se règle dans cette fenêtre, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
+			.. "À gauche, un |cff33dd88chapitre|r par sujet. Sa pastille d'or compte les réglages que vous y avez changés."] =
+		"Everything is set in this window, and nothing is mandatory: every element has its switch.\n\nOn the left, one |cff33dd88chapter|r per topic. Its golden badge counts the settings you changed there.",
+	["La page défile et se range par parties. « Réglages fins » déplie les réglages plus rares.\n\n"
+			.. "Une |cffffd140rune d'or|r marque un réglage changé : un clic dessus le rétablit. "
+			.. "« Rétablir cette page », tout en bas, remet le chapitre entier."] =
+		"The page scrolls and is sorted into parts. \"Fine settings\" unfolds the less common settings.\n\nA |cffffd140golden rune|r marks a changed setting: click it to reset it. \"Reset this page\", at the very bottom, resets the whole chapter.",
+	["La |cff33dd88case témoin|r suit chaque réglage en direct, avec un faux groupe dessous.\n\n"
+			.. "Les boutons « 5 », « 10 », « 25 » et « 40 » ouvrent le mode test."] =
+		"The |cff33dd88preview cell|r follows every setting live, with a fake group below it.\n\nThe \"5\", \"10\", \"25\" and \"40\" buttons open test mode.",
+	["Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
+			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel."] =
+		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"

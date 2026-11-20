@@ -7,6 +7,30 @@ local UI = Z.UI
 
 local card, highlight, current
 local lockBefore -- déplacement des cadres choisi par le joueur, rendu à la fin de l'étape « Placer les cadres »
+-- D'où la visite a été lancée : fenêtre d'options ouverte ou non, et son chapitre. La visite la ferme le temps des
+-- cases, puis rend la fenêtre telle qu'elle était, sur le même chapitre (retour d'essai de l'auteur).
+local back = {}
+local GAP = 14 -- écart entre la carte et ce qu'elle présente (le cadre de runes déborde de 12 pixels)
+
+-- Le bloc entier des cadres de soin : le groupe, ou chaque groupe de raid, avec son étiquette
+local function Block()
+	local list = { Z.buttons[1] }
+	for _, h in ipairs(Z.headers) do
+		if h.def and h.def.pos == "pos" and h:IsVisible() then
+			list[#list + 1] = h
+			if h.handle and h.handle:IsShown() then list[#list + 1] = h.handle end
+		end
+	end
+	return list
+end
+
+-- La page du chapitre ouvert dans la fenêtre d'options
+local function OpenPage()
+	local window = Z:OptionsWindow()
+	for _, chapter in ipairs(window and window.chapters or {}) do
+		if chapter.page and chapter.page.scroll:IsShown() then return chapter.page.scroll end
+	end
+end
 
 -- Résumé des clics du joueur, écrit à partir de ses vrais réglages
 local function ClickSummary()
@@ -27,8 +51,13 @@ end
 local steps = {
 	{
 		title = "Bienvenue dans Lyorune",
-		text = "Lyorune affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
-			.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/lyorune tuto|r.",
+		text = function()
+			local L = Z.L
+			local text = L["Lyorune affiche votre groupe sous forme de cases et vous laisse soigner d'un simple clic.\n\n"
+				.. "Cette visite dure une minute. Vous pourrez la relancer avec |cff33dd88/lyorune tuto|r."]
+			if back.open then text = text .. "\n\n" .. L["La fenêtre d'options revient à la fin de la visite."] end
+			return text
+		end,
 	},
 	{
 		title = "Une case par joueur",
@@ -36,6 +65,7 @@ local steps = {
 			.. "Le |cff73ff99vert clair|r au bout de la barre montre les soins déjà en route. "
 			.. "La |cff8cd9ffbande claire|r en bas est un bouclier.",
 		target = function() return Z.buttons[1] end,
+		around = Block,
 	},
 	{
 		title = "Soigner d'un clic",
@@ -44,6 +74,7 @@ local steps = {
 				.. "\n\n" .. Z.L["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."]
 		end,
 		target = function() return Z.buttons[1] end,
+		around = Block,
 	},
 	{
 		title = "Ce que disent les couleurs",
@@ -56,6 +87,7 @@ local steps = {
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics.",
 		target = function() return Z.buttons[1] end,
+		around = Block,
 	},
 	{
 		title = "Placer les cadres",
@@ -65,6 +97,7 @@ local steps = {
 			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
 			.. "Dans la partie Cadres affichés, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
 		target = function() return Z.header.handle end,
+		around = Block,
 		-- Les cadres sont libres le temps de l'étape, puis le choix du joueur revient (verrou compris)
 		before = function()
 			lockBefore = Z.db.lockMode
@@ -90,29 +123,36 @@ local steps = {
 		before = function() if not Z.previewActive then Z:TogglePreview(10) end end,
 		after = function() if Z.previewActive then Z:TogglePreview() end end,
 	},
+	-- La fenêtre d'options, zone par zone : chaque carte ouvre la fenêtre sur son chapitre (window) et encadre sa
+	-- zone ; la carte se pose à côté de la fenêtre entière, jamais sur la zone présentée
 	{
-		title = "Régler Lyorune",
-		text = "Tout se règle ici, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
-			.. "|cff33dd88Accueil|r : vos réglages changés, ce tutoriel, l'assistant, les nouveautés.\n"
-			.. "|cff33dd88Disposition|r : taille, rangement, position, cadres affichés (tanks, cible, épinglés).\n"
-			.. "|cff33dd88Apparence|r : forme des cases, thème, couleurs, texte.\n"
-			.. "|cff33dd88Vie et portée|r : soins en route, bouclier, vie basse, mana, joueurs loin.\n"
-			.. "|cff33dd88Mes soins|r : soins sur la durée, coins, sorts suivis, recharge globale.\n"
-			.. "|cff33dd88Affaiblissements|r : dissipation, icônes, importants, auras privées.\n"
-			.. "|cff33dd88Joueurs|r : rôle, marqueur, menace, buffs manquants, infobulle.\n"
-			.. "|cff33dd88Sorts et raccourcis|r : clics et touches sur une seule liste, macros.\n"
-			.. "|cff33dd88Alertes|r : annonces et sons.\n"
-			.. "|cff33dd88Profils et partage|r : profils, partage, entre joueurs.\n"
-			.. "|cff33dd88Fenêtre et aide|r : thème des fenêtres, effets, langue, aide.\n\n"
-			.. "À droite, la |cff33dd88case témoin|r suit chaque réglage en direct. Une |cffffd140rune d'or|r marque un réglage changé : "
-			.. "un clic dessus le rétablit. « Réglages fins » déplie les réglages plus rares.\n\n"
-			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite.",
-		target = function() return Z:OptionsWindow() end,
-		before = function() Z:ToggleOptions("Clics") end,
-		after = function()
-			local window = Z:OptionsWindow()
-			if window then window:Hide() end
-		end,
+		title = "La fenêtre d'options",
+		text = "Tout se règle dans cette fenêtre, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
+			.. "À gauche, un |cff33dd88chapitre|r par sujet. Sa pastille d'or compte les réglages que vous y avez changés.",
+		window = "Accueil",
+		target = function() return Z:OptionsWindow().side end,
+	},
+	{
+		title = "Une page par chapitre",
+		text = "La page défile et se range par parties. « Réglages fins » déplie les réglages plus rares.\n\n"
+			.. "Une |cffffd140rune d'or|r marque un réglage changé : un clic dessus le rétablit. "
+			.. "« Rétablir cette page », tout en bas, remet le chapitre entier.",
+		window = "Disposition",
+		target = OpenPage,
+	},
+	{
+		title = "La case témoin",
+		text = "La |cff33dd88case témoin|r suit chaque réglage en direct, avec un faux groupe dessous.\n\n"
+			.. "Les boutons « 5 », « 10 », « 25 » et « 40 » ouvrent le mode test.",
+		window = "Disposition",
+		target = function() return Z:OptionsWindow().witness end,
+	},
+	{
+		title = "Recherche et Accueil",
+		text = "Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
+			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel.",
+		window = "Accueil",
+		target = function() return Z:OptionsWindow().search end,
 	},
 	{
 		title = "C'est parti",
@@ -151,6 +191,8 @@ local function Progress(index)
 	end
 end
 
+-- Fin de la visite (Terminer ou la croix) : la fenêtre d'options revient comme elle était, même chapitre, sans que
+-- la visite change le dernier chapitre utilisé
 local function Finish()
 	local step = steps[current]
 	if step and step.after then step.after() end
@@ -158,6 +200,59 @@ local function Finish()
 	card:Hide()
 	highlight:Hide()
 	Z.db.tutorialDone = true
+	local window = Z:OptionsWindow()
+	if not window then return end
+	if back.touched then window.Select(back.chapter or 1, true) end -- chapitres ouverts par la visite
+	if back.open then
+		window:Show()
+	elseif step and step.window then
+		window:Hide() -- fermée sur une carte de la fenêtre ; une fenêtre ouverte par le joueur reste ouverte
+	end
+end
+
+-- Bords d'un ou plusieurs cadres (gauche, droite, haut, bas), en points de l'écran, et le premier cadre mesuré ;
+-- nil si le jeu ne connaît encore la place d'aucun
+local function Box(frames)
+	local base = UIParent:GetEffectiveScale()
+	local left, right, top, bottom, ref
+	for _, f in ipairs(frames) do
+		local l, r, t, b = f:GetLeft(), f:GetRight(), f:GetTop(), f:GetBottom()
+		if l and r and t and b then
+			local k = f:GetEffectiveScale() / base
+			left, right = math.min(left or l * k, l * k), math.max(right or r * k, r * k)
+			top, bottom = math.max(top or t * k, t * k), math.min(bottom or b * k, b * k)
+			ref = ref or { frame = f, left = l * k, bottom = b * k }
+		end
+	end
+	return left, right, top, bottom, ref
+end
+
+-- Pose la carte à côté du bloc (around) sans jamais le couvrir : du côté où il reste le plus de place (droite,
+-- gauche, dessous, dessus) ; elle suit le bloc s'il est déplacé. Si rien ne tient : contre le bord de l'écran le
+-- plus loin de ce qui est encadré.
+local function Place(target, around)
+	local l, r, t, b, ref = Box(around)
+	local width, height = UIParent:GetWidth(), UIParent:GetHeight()
+	if not (l and width and height) then return card:SetPoint("TOPLEFT", target, "TOPRIGHT", GAP, 0) end
+	local w, h = card:GetWidth(), card:GetHeight()
+	local best
+	for _, side in ipairs({
+		{ width - r - w, "TOPLEFT", r + GAP, t },
+		{ l - w, "TOPRIGHT", l - GAP, t },
+		{ b - h, "TOPLEFT", l, b - GAP },
+		{ height - t - h, "BOTTOMLEFT", l, t + GAP },
+	}) do
+		if side[1] >= GAP and (not best or side[1] > best[1]) then best = side end
+	end
+	if best then
+		return card:SetPoint(best[2], ref.frame, "BOTTOMLEFT", best[3] - ref.left, best[4] - ref.bottom)
+	end
+	local x = target:GetCenter()
+	if x and x * target:GetEffectiveScale() / UIParent:GetEffectiveScale() < width / 2 then
+		card:SetPoint("TOPRIGHT", UIParent, "BOTTOMRIGHT", 0, t)
+	else
+		card:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", 0, t)
+	end
 end
 
 local function Show(index)
@@ -166,6 +261,13 @@ local function Show(index)
 	current = index
 	local step = steps[index]
 	if step.before then step.before() end
+	-- Les cartes de la fenêtre d'options l'ouvrent sur leur chapitre ; les autres la ferment
+	if step.window then
+		back.touched = true
+		Z:ToggleOptions(step.window)
+	elseif previous and previous.window then
+		Z:OptionsWindow():Hide()
+	end
 
 	local L = Z.L
 	local wasShown = card:IsShown()
@@ -187,16 +289,9 @@ local function Show(index)
 		highlight:Show()
 		highlight.pulse:Stop()
 		if not UI.Calm() then highlight.pulse:Play() end
-		if target == UI.main then
-			-- La fenêtre d'options est large : carte à sa droite, sinon à sa gauche, sinon contre le bord le
-			-- plus dégagé (petit écran), comme les fenêtres secondaires
-			card:SetPoint("TOPLEFT", target, "TOPRIGHT", 14, 0)
-			UI.PlaceBeside(card)
-		elseif target:GetWidth() > 400 then
-			card:SetPoint("TOPLEFT", target, "TOPRIGHT", 14, 0)
-		else
-			card:SetPoint("TOPLEFT", target, "BOTTOMRIGHT", 14, -14)
-		end
+		-- À côté du bloc des cadres pour une case, de la fenêtre entière pour une zone des options
+		local around = step.around and step.around() or step.window and { Z:OptionsWindow() } or { target }
+		Place(target, around)
 	else
 		highlight:Hide()
 		card:SetPoint("CENTER", UIParent, "CENTER", 0, 120)
@@ -214,7 +309,7 @@ local function Show(index)
 end
 
 local function Build()
-	card = UI.Window("LyoruneTutorial", "", 380, 220)
+	card = UI.Window("LyoruneTutorial", "", 400, 220)
 	card:SetFrameStrata("FULLSCREEN_DIALOG")
 	card.close:SetScript("OnClick", Finish)
 
@@ -230,29 +325,30 @@ local function Build()
 
 	card.body = UI.Label(card, 12)
 	card.body:SetPoint("TOPLEFT", 16, -46)
-	card.body:SetWidth(348)
+	card.body:SetWidth(368)
 	card.body:SetJustifyH("LEFT")
 	card.body:SetSpacing(3)
 
-	-- Une rune par étape : allumée une fois vue, celle de l'étape en cours respire
+	-- Une rune par étape : allumée une fois vue, celle de l'étape en cours respire. Onze runes, le compte « 11 / 11 »
+	-- et les deux boutons de 88 tiennent sur la largeur de la carte.
 	card.runes = {}
 	for i = 1, #steps do
 		local rune = UI.Rune(card, "ARTWORK", PROGRESS[(i - 1) % #PROGRESS + 1], 11)
-		rune:SetPoint("BOTTOMLEFT", 16 + (i - 1) * 14, 22)
+		rune:SetPoint("BOTTOMLEFT", 16 + (i - 1) * 13, 22)
 		rune.breath = UI.Breathe(rune, 0.35, 1.6)
 		card.runes[i] = rune
 	end
 	card.progress = UI.Label(card, 11, nil, "dim")
 	card.progress:SetPoint("LEFT", card.runes[#steps], "RIGHT", 8, 0)
 
-	card.next = UI.Button(card, Z.L["Suivant"], 96, 26, function()
+	card.next = UI.Button(card, Z.L["Suivant"], 88, 26, function()
 		if current == #steps then Finish() else Show(current + 1) end
 	end)
 	card.next:SetPoint("BOTTOMRIGHT", -14, 14)
 	card.next.label:SetJustifyH("CENTER")
 	UI.Paint(card.next.bg, "accent", 1, 0.45)
 
-	card.back = UI.Button(card, Z.L["Précédent"], 96, 26, function() Show(current - 1) end)
+	card.back = UI.Button(card, Z.L["Précédent"], 88, 26, function() Show(current - 1) end)
 	card.back:SetPoint("RIGHT", card.next, "LEFT", -6, 0)
 	card.back.label:SetJustifyH("CENTER")
 
@@ -269,11 +365,19 @@ local function Build()
 	end
 	highlight.pulse = UI.Breathe(highlight, 0.3, 1.4)
 	highlight:Hide()
+	card.highlight = highlight
 	UI.OnSkin(function() if current then Progress(current) end end)
 end
 
+-- Lancée des options (bouton de l'Accueil, ou /lyorune tuto fenêtre ouverte), la visite ferme la fenêtre le temps
+-- des cases et la rend à la fin sur le même chapitre ; la première carte le dit.
 function Z:StartTutorial()
 	if not Z.header then return end
 	if not card then Build() end
+	local window = Z:OptionsWindow()
+	if not current then -- relancée en cours de route : on garde d'où elle était partie
+		back = { open = window and window:IsShown(), chapter = Z:OptionChapter() }
+	end
+	if window and window:IsShown() then window:Hide() end
 	Show(1)
 end

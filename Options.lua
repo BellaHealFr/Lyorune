@@ -1685,7 +1685,7 @@ local function Chapters()
 			} },
 			{ "Découvrir", {
 				{ "buttons", {
-					{ "button", "Lancer le tutoriel", function() window:Hide() Z:StartTutorial() end },
+					{ "button", "Lancer le tutoriel", function() Z:StartTutorial() end }, -- la fenêtre revient à la fin
 					{ "button", "Assistant de départ", function() window:Hide() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." },
 					{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
 				} },

@@ -565,7 +565,7 @@ step("tutoriel", function()
   Z.db.tutorialDone = false
   Z:StartTutorial()
   local card = LyoruneTutorial
-  for i = 1, 8 do card.next:Run("OnClick") end
+  for i = 1, #card.runes do card.next:Run("OnClick") end
   assert(Z.db.tutorialDone and not card:IsShown() and not Z.previewActive)
   Z:StartTutorial() card.next:Run("OnClick") card.back:Run("OnClick") card.close:Run("OnClick")
   -- lot 13 : l'etape « Placer les cadres » libere les cadres, puis rend le verrou du joueur
@@ -935,12 +935,13 @@ step("anglais : visite guidee, nouveautes, messages", function()
   Z.db.tutorialDone = false Z:StartTutorial()
   local card = LyoruneTutorial
   local titles = { "Welcome to Lyorune", "One cell per player", "Heal with one click", "What the colours say",
-    "Placing the frames", "Trying without a group", "Setting up Lyorune", "Off you go" }
-  for i = 1, 8 do
+    "Placing the frames", "Trying without a group", "The options window", "One page per chapter", "The preview cell",
+    "Search and Home", "Off you go" }
+  for i = 1, #titles do
     assert(card.title:GetText() == titles[i], "titre " .. i .. " : " .. card.title:GetText())
     local body = card.body:GetText()
     assert(i == 3 or not body:find("[\195][\160-\191]"), "etape " .. i .. " encore en francais : " .. body:sub(1, 60))
-    assert(card.next.label:GetText() == (i == 8 and "Finish" or "Next"), card.next.label:GetText())
+    assert(card.next.label:GetText() == (i == #titles and "Finish" or "Next"), card.next.label:GetText())
     card.next:Run("OnClick")
   end
   assert(Z.db.tutorialDone)
@@ -1292,7 +1293,7 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
   -- Tutoriel : une rune par étape, l'étape en cours respire, la carte glisse
   Z:StartTutorial()
   local card = LyoruneTutorial
-  assert(#card.runes == 8 and card.runes[1].breath:IsPlaying())
+  assert(#card.runes == 11 and card.runes[1].breath:IsPlaying())
   card.next:Run("OnClick")
   assert(card.slide:IsPlaying() and card.runes[2].breath:IsPlaying() and not card.runes[1].breath:IsPlaying())
   assert(card.runes[1]._color[1] == UI.gold[1], "etape vue eteinte")
@@ -3514,7 +3515,7 @@ step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", fu
     local bodies = {}
     Z:StartTutorial()
     local card = LyoruneTutorial
-    for i = 1, 8 do
+    for i = 1, #card.runes do
       bodies[i] = card.body:GetText()
       card.next:Run("OnClick")
     end
@@ -3523,14 +3524,16 @@ step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", fu
   end
   local fr = Tour()
   for i, body in ipairs(fr) do assert(not body:lower():find("onglet", 1, true), "etape " .. i .. " cite un onglet") end
-  for _, word in ipairs({ "Disposition", "Vie et portée", "Mes soins", "Affaiblissements", "Profils et partage",
-    "Fenêtre et aide", "Accueil", "case témoin", "rune d'or", "Réglages fins", "recherche" }) do
-    assert(fr[7]:find(word, 1, true), "Regler Lyorune sans : " .. word)
+  -- Lot 6c bis b : la fenêtre d'options en quatre cartes courtes (barre, page, case témoin, recherche)
+  local window = table.concat(fr, "|", 7, 10)
+  for _, word in ipairs({ "chapitre", "pastille", "Réglages fins", "rune d'or", "Rétablir cette page", "case témoin",
+    "mode test", "recherche", "Accueil" }) do
+    assert(window:find(word, 1, true), "cartes de la fenetre sans : " .. word)
   end
   assert(fr[3]:find("Bijoux avec les sorts", 1, true) and fr[4]:find("chapitre Mes soins", 1, true), "clics, coins")
   assert(fr[5]:find("partie Position", 1, true) and fr[5]:find("Cadres affichés", 1, true), "placer les cadres")
   assert(fr[6]:find("case témoin", 1, true) and fr[6]:find("second clic", 1, true), "boutons du mode test")
-  assert(fr[8]:find("chapitre Sorts et raccourcis", 1, true), "derniere carte")
+  assert(fr[11]:find("chapitre Sorts et raccourcis", 1, true), "derniere carte")
 
   Z.db.language = "enUS" Z:SetLanguage()
   local en = Tour()
@@ -3538,11 +3541,12 @@ step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", fu
     -- l'étape 3 montre les sorts du joueur, avec leur nom du jeu
     assert(not body:find("%f[%a]tab%f[%A]") and (i == 3 or not body:find("[\195][\160-\191]")), "etape " .. i .. " : " .. body:sub(1, 60))
   end
-  for _, word in ipairs({ "Layout", "Health and range", "My heals", "Debuffs", "Profiles and sharing",
-    "Window and help", "Home", "preview cell", "golden rune", "Fine settings" }) do
-    assert(en[7]:find(word, 1, true), "Setting up Lyorune sans : " .. word)
+  window = table.concat(en, "|", 7, 10)
+  for _, word in ipairs({ "chapter", "badge", "Fine settings", "golden rune", "Reset this page", "preview cell",
+    "test mode", "search", "Home" }) do
+    assert(window:find(word, 1, true), "options window cards without: " .. word)
   end
-  assert(en[6]:find("preview cell", 1, true) and en[8]:find("Spells and bindings chapter", 1, true))
+  assert(en[6]:find("preview cell", 1, true) and en[11]:find("Spells and bindings chapter", 1, true))
 
   -- Messages du chat et textes hors options : chapitres, traduits, anciennes clés retirées
   for _, key in ipairs({ "... et %d autre(s) : chapitre Sorts et raccourcis.",
@@ -3563,23 +3567,126 @@ step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", fu
   end
   assert(not Z.translations.enUS["... et %d autre(s) : onglet Clics."] and not Z.translations.enUS["Mode performance : activé (onglet Aide)."], "anciennes cles")
 
-  -- « Régler Lyorune » : la carte se pose à côté de la fenêtre d'options, jamais hors de l'écran
+  -- Cartes de la fenêtre : la carte se pose à côté de la fenêtre d'options, jamais hors de l'écran
   Z.db.language = saved.language Z:SetLanguage()
   w.GetLeft = function() return 300 end w.GetRight = function() return 1380 end w.GetTop = function() return 900 end
+  w.GetBottom = function() return 192 end
   UIParent.GetWidth = function() return 1920 end UIParent.GetHeight = function() return 1080 end
   Z:StartTutorial()
   local card = LyoruneTutorial
   for _ = 1, 6 do card.next:Run("OnClick") end
-  assert(card.title:GetText() == "Régler Lyorune" and UI.main == w, card.title:GetText())
+  assert(card.title:GetText() == "La fenêtre d'options" and UI.main == w, card.title:GetText())
   local p = card._point
-  assert(p[1] == "TOPLEFT" and p[2] == w and p[3] == "TOPRIGHT", "carte a droite des options")
+  assert(p[1] == "TOPLEFT" and p[2] == w and p[3] == "BOTTOMLEFT" and p[4] == 1380 + 14 - 300, "carte a droite des options")
   w.GetLeft = function() return 110 end w.GetRight = function() return 1190 end UIParent.GetWidth = function() return 1300 end
+  w.GetBottom = function() return 100 end
   card.back:Run("OnClick") card.next:Run("OnClick")
   p = card._point
   assert(p[2] == UIParent, "petit ecran : carte contre le bord, pas hors de l'ecran")
   card.close:Run("OnClick")
-  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  w.GetLeft, w.GetRight, w.GetTop, w.GetBottom, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil, nil
   assert(not w:IsShown(), "options restees ouvertes")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:SetLanguage() Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c bis b : visite qui rend la fenetre, explique les options, ne couvre pas les cases", function()
+  local w = Z:OptionsWindow()
+  local saved = { language = Z.db.language, lockMode = Z.db.lockMode, tutorialDone = Z.db.tutorialDone }
+  Z.db.language = "AUTO" Z:SetLanguage()
+  local card
+
+  -- Lancée des options (chapitre Apparence) : la fenêtre se ferme, la carte le dit, elle revient à la fin
+  Z:ToggleOptions("Apparence")
+  Z:StartTutorial()
+  card = LyoruneTutorial
+  local light = card.highlight
+  assert(not w:IsShown() and card.body:GetText():find("revient à la fin de la visite", 1, true), "premiere carte")
+  for _ = 1, 6 do card.next:Run("OnClick") end
+  -- Quatre cartes sur la fenêtre, chacune sur sa zone et son chapitre
+  local zones = {
+    { "La fenêtre d'options", "Accueil", function() return w.side end },
+    { "Une page par chapitre", "Disposition", function() return Z:OptionsTabs()[2].page.scroll end },
+    { "La case témoin", "Disposition", function() return w.witness end },
+    { "Recherche et Accueil", "Accueil", function() return w.search end },
+  }
+  for i, zone in ipairs(zones) do
+    assert(card.title:GetText() == zone[1] and w:IsShown() and Z:OptionChapter() == zone[2], "carte " .. i .. " : " .. card.title:GetText())
+    assert(light:IsShown() and light._point[2] == zone[3](), "zone encadree, carte " .. i)
+    card.next:Run("OnClick")
+  end
+  assert(card.title:GetText() == "C'est parti" and not w:IsShown(), "derniere carte : fenetre fermee")
+  card.next:Run("OnClick")
+  assert(not card:IsShown() and w:IsShown() and Z:OptionChapter() == "Apparence", "fenetre rendue sur son chapitre")
+
+  -- Lancée de l'Accueil, fermée par la croix : la fenêtre revient sur l'Accueil
+  Z:ToggleOptions("Accueil")
+  Z:StartTutorial() card.next:Run("OnClick") card.next:Run("OnClick")
+  card.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Accueil", "croix : fenetre rendue")
+
+  -- Lancée fenêtre fermée : rien ne s'ouvre à la fin, le dernier chapitre ne change pas (croix sur une carte de la fenêtre)
+  Z:ToggleOptions("Mes soins") w:Hide()
+  Z:StartTutorial()
+  assert(not card.body:GetText():find("revient", 1, true), "phrase de retour sans fenetre ouverte")
+  for _ = 1, 7 do card.next:Run("OnClick") end
+  assert(w:IsShown() and Z:OptionChapter() == "Disposition")
+  card.close:Run("OnClick")
+  assert(not w:IsShown() and Z:OptionChapter() == "Mes soins", "dernier chapitre change par la visite")
+  Z:StartTutorial()
+  for _ = 1, #card.runes do card.next:Run("OnClick") end
+  assert(not w:IsShown() and Z:OptionChapter() == "Mes soins")
+  -- Ouverte par le joueur pendant les cartes des cases : la fin de la visite la laisse ouverte
+  Z:StartTutorial() card.next:Run("OnClick")
+  Z:ToggleOptions()
+  card.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Mes soins", "fenetre du joueur fermee par la visite")
+  w:Hide()
+
+  -- Une case : la carte se pose à côté du bloc entier des cadres, du côté le plus dégagé, sans le couvrir
+  local frames, block = {}, {}
+  for _, h in ipairs(Z.headers) do
+    if h.def.pos == "pos" and h:IsVisible() then frames[#frames + 1] = h frames[#frames + 1] = h.handle block[#block + 1] = h end
+  end
+  assert(#block > 0, "aucun cadre visible")
+  local button = Z.buttons[1]
+  local function Set(f, l, r, t, b)
+    f.GetLeft = function() return l end f.GetRight = function() return r end
+    f.GetTop = function() return t end f.GetBottom = function() return b end
+  end
+  local function Blocks(l, r, t, b)
+    for _, h in ipairs(block) do Set(h, l, r, t, b) Set(h.handle, l, r, t + 14, t + 2) end
+  end
+  Set(button, 100, 190, 700, 670)
+  UIParent.GetWidth = function() return 1920 end UIParent.GetHeight = function() return 1080 end
+  Blocks(100, 300, 700, 500)
+  Z:StartTutorial() card.next:Run("OnClick")
+  assert(card.title:GetText() == "Une case par joueur" and light._point[2] == button)
+  local p = card._point
+  assert(p[1] == "TOPLEFT" and p[2] == button and p[3] == "BOTTOMLEFT" and 100 + p[4] == 300 + 14, "a droite du bloc")
+  -- Bloc sur toute la largeur : dessous (plus de place que dessus)
+  Blocks(0, 1900, 700, 500)
+  card.next:Run("OnClick") -- Soigner d'un clic
+  p = card._point
+  assert(p[1] == "TOPLEFT" and 670 + p[5] == 500 - 14, "sous le bloc : " .. tostring(p[5]))
+  -- Plus de place nulle part : contre le bord de l'écran le plus loin de la case
+  Blocks(0, 1900, 1000, 100)
+  card.next:Run("OnClick") -- Ce que disent les couleurs
+  p = card._point
+  assert(p[2] == UIParent and p[1] == "TOPRIGHT", "contre le bord")
+  -- Placer les cadres : l'étiquette est encadrée, la carte reste hors du bloc
+  Blocks(100, 300, 700, 500)
+  Z.header.handle.IsVisible = function() return true end -- le faux client ne montre pas l'étiquette
+  card.next:Run("OnClick")
+  Z.header.handle.IsVisible = nil
+  assert(card.title:GetText() == "Placer les cadres" and light._point[2] == Z.header.handle)
+  p = card._point
+  assert(p[1] == "TOPLEFT" and p[3] == "BOTTOMLEFT", "placer : a droite du bloc")
+  card.close:Run("OnClick")
+  for _, f in ipairs(frames) do f.GetLeft, f.GetRight, f.GetTop, f.GetBottom = nil, nil, nil, nil end
+  button.GetLeft, button.GetRight, button.GetTop, button.GetBottom = nil, nil, nil, nil
+  UIParent.GetWidth, UIParent.GetHeight = nil, nil
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:SetLanguage() Z:Refresh()
