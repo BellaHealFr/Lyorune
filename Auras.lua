@@ -227,6 +227,7 @@ local function GetCorner(b, point)
 	square:SetPoint(point, b.over, point, sign[1] * 2, sign[2] * 2)
 	return square
 end
+Z.CornerSquare = GetCorner -- aussi pour les fausses cases (mode test, case témoin)
 
 ----------------------------------------------------------------------------------------------------
 -- Place de chaque rangée d'icônes : celle d'origine, plus le décalage de l'éditeur de placement (Z.Offset).

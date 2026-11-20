@@ -69,7 +69,6 @@ Z.translations.enUS = {
 	["Cadre séparé pour les familiers"] = "Separate frame for pets",
 	["Expérimental. Pour les faire revenir, décochez puis tapez /reload."] = "Experimental. To bring them back, untick then type /reload.",
 	["Mode test"] = "Test mode", ["joueurs"] = "players", ["Joueur"] = "Player",
-	["Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer."] = "Shows a fake group to tune the look. Click again to close it.",
 	["Par groupe"] = "By group", ["Par rôle"] = "By role", ["Grille"] = "Grid",
 	["Ordre du groupe"] = "Group order", ["Par nom"] = "By name", ["Par classe, puis nom"] = "By class, then name",
 	["Ordre dans chaque bloc"] = "Order in each block", ["Chaque groupe garde sa place"] = "Each group keeps its place",
@@ -782,4 +781,14 @@ Z.translations.enUS = {
 	-- Fenêtre d'options à chapitres (1.26.0) : rétablir une page
 	["Rétablir cette page"] = "Reset this page",
 	["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne changent pas."] = "Every setting in this chapter goes back to its default value. Your lists, clicks and profiles do not change.",
+
+	-- Fenêtre d'options à chapitres (1.26.0) : case témoin et mode test
+	["Case témoin"] = "Preview cell", ["Elle suit chaque réglage, en direct."] = "It follows every setting, live.",
+	["cadre de couleur : affaiblissement à dissiper"] = "colored frame: debuff to dispel",
+	["bouclier à la suite de la vie"] = "shield after the health", ["bouclier en bande sous la vie"] = "shield as a strip under the health",
+	["coins : %s"] = "corners: %s", ["1 soin sur la durée"] = "1 heal over time", ["%d soins sur la durée"] = "%d heals over time",
+	["Case nue : tous les indicateurs sont coupés."] = "Bare cell: every indicator is turned off.",
+	["Pose un faux groupe à l'écran, à la vraie taille, pour régler l'apparence en vrai."] = "Puts a fake group on screen, at real size, to tune the look for real.",
+	["Faux groupe de %d joueurs."] = "Fake group of %d players.",
+	["Faux groupe de %d joueurs à l'écran. Recliquez pour le fermer."] = "Fake group of %d players on screen. Click again to close it.",
 }

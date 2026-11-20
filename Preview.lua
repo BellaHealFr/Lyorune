@@ -14,17 +14,18 @@ local CLASSES = { "WARRIOR", "PRIEST", "DRUID", "MAGE", "PALADIN", "ROGUE", "SHA
 local HEALTH = { 100, 62, 100, 18, 85, 100, 0, 45, 100, 73 } -- vie des faux joueurs, en %
 local DISPEL_COLORS = { { 0.20, 0.60, 1.00 }, { 0.65, 0.20, 1.00 }, { 0.10, 0.85, 0.20 } }
 
--- Remplit une fausse case avec un état d'exemple
-local function Fill(cell, index)
+-- Remplit une fausse case avec un état d'exemple. sample : la case témoin des options, à mon nom, où chaque
+-- indicateur allumé dans les options se voit. Renvoie le nombre de soins sur la durée montrés.
+local function Fill(cell, index, sample)
 	local db, L = Z.db, Z.L
-	local class = CLASSES[(index - 1) % #CLASSES + 1]
+	local class = (sample and Z.class) or CLASSES[(index - 1) % #CLASSES + 1]
 	local r, g, b = Z.ClassColor(class)
 	local health = HEALTH[(index - 1) % #HEALTH + 1]
 	local dead = health == 0
 
 	cell.hp:SetMinMaxValues(0, 100)
 	cell.hp:SetValue(health)
-	cell.name:SetText(L["Joueur"] .. " " .. index)
+	cell.name:SetText(sample and UnitName("player") or (L["Joueur"] .. " " .. index))
 	if dead then
 		cell.hp:SetStatusBarColor(0.25, 0.25, 0.28)
 		cell.name:SetTextColor(0.65, 0.65, 0.68)
@@ -53,7 +54,7 @@ local function Fill(cell, index)
 	cell.incoming:SetMinMaxValues(0, 100)
 	cell.incoming:SetValue((not dead and health < 90 and index % 2 == 0) and 15 or 0)
 	cell.absorb:SetMinMaxValues(0, 100)
-	cell.absorb:SetValue((not dead and index % 5 == 2) and 30 or 0)
+	cell.absorb:SetValue((not dead and (sample or index % 5 == 2)) and (sample and 18 or 30) or 0)
 	-- Absorption de soins : bornes données, sinon le jeu dessine la barre pleine et teinte toute la case en rouge
 	cell.healAbsorb:SetMinMaxValues(0, 100)
 	cell.healAbsorb:SetValue(0)
@@ -64,7 +65,7 @@ local function Fill(cell, index)
 	cell.role:SetShown(db.showRole and role ~= nil)
 	if role then cell.role:SetAtlas(role == "TANK" and "roleicon-tiny-tank" or "roleicon-tiny-healer") end
 	-- Chef de groupe sur la première case, un assistant par groupe de cinq en raid
-	local leader = db.showLeader and (index == 1 and "LeaderIcon" or size > 5 and slot == 0 and "AssistantIcon")
+	local leader = db.showLeader and ((sample or index == 1) and "LeaderIcon" or size > 5 and slot == 0 and "AssistantIcon")
 	if leader then cell.leader:SetTexture("Interface\\GroupFrame\\UI-Group-" .. leader) end
 	cell.leader:SetShown(leader and true or false)
 	local mana = db.manaBars == "ALL" or (db.manaBars == "HEALERS" and role == "HEALER")
@@ -80,13 +81,16 @@ local function Fill(cell, index)
 	cell.lowMana:SetShown((tonumber(db.lowManaHealers) or 0) > 0 and role == "HEALER" and index % 10 == 2 and not dead)
 	cell.overAbsorb:SetAlpha((index % 5 == 2 and health >= 75) and 1 or 0)
 
-	cell.threat:SetShown(db.showThreat and slot == 0 and not dead)
+	-- Marqueur de raid : seulement sur la case témoin (le faux groupe en serait couvert)
+	if sample and db.showMarker then SetRaidTargetIconTexture(cell.marker, 1) end
+	cell.marker:SetShown(sample and db.showMarker and true or false)
+	cell.threat:SetShown(db.showThreat and (sample or slot == 0) and not dead)
 	cell.low.fill:SetAlpha((db.lowHealth and not dead and health <= db.lowHealthAt) and 1 or 0)
-	cell.selected:SetAlpha(index == 2 and 1 or 0)
-	cell:SetAlpha(index % 10 == 9 and db.rangeAlpha / 100 or 1)
+	cell.selected:SetAlpha((index == 2 and not sample) and 1 or 0)
+	cell:SetAlpha((index % 10 == 9 and not sample) and db.rangeAlpha / 100 or 1)
 
 	-- Dissipation possible sur un joueur sur six
-	local dispel = db.showDispel and not dead and index % 6 == 3 and DISPEL_COLORS[math.floor(index / 6) % #DISPEL_COLORS + 1]
+	local dispel = db.showDispel and not dead and (sample or index % 6 == 3) and DISPEL_COLORS[math.floor(index / 6) % #DISPEL_COLORS + 1]
 	if dispel then
 		Z.ShowDispel(cell, true, dispel[1], dispel[2], dispel[3], 1)
 	else
@@ -95,10 +99,11 @@ local function Fill(cell, index)
 
 	-- Soins sur la durée d'exemple, avec les icônes de mes vrais sorts
 	Z.HideAuras(cell)
-	if db.showHots and not dead and index % 3 ~= 0 then
-		local shown = 0
+	local mine = not dead and (sample or index % 3 ~= 0) -- joueurs qui portent mes soins
+	local shown = 0
+	if db.showHots and mine then
 		for _, id in ipairs(Z.trackedSpells[Z.class] or { 139, 774 }) do
-			if shown == math.min(2, db.hotCount) then break end
+			if shown == math.min(sample and 3 or 2, db.hotCount) then break end
 			shown = shown + 1
 			if db.hotStyle == "BARS" then
 				local bar = Z.HotBar(cell, shown)
@@ -114,6 +119,16 @@ local function Fill(cell, index)
 			end
 		end
 	end
+	-- Coins : un carré par sort choisi, sur les mêmes joueurs (montrés même soins sur la durée coupés, comme en vrai)
+	if mine then
+		for point, name in pairs(Z.MyCorners()) do
+			if name ~= "" then
+				local square = Z.CornerSquare(cell, point)
+				square.cooldown:Clear()
+				square:Show()
+			end
+		end
+	end
 	if db.showDebuffs and (dispel or index % 7 == 5) and not dead then
 		local icon = Z.DebuffIcon(cell, 1)
 		icon.texture:SetTexture("Interface\\Icons\\Spell_Shadow_CurseOfTounges")
@@ -121,6 +136,24 @@ local function Fill(cell, index)
 		icon.count:SetText("")
 		icon:Show()
 	end
+	return shown
+end
+
+-- Une fausse case hors du mode test (case témoin des options) : même habillage, simple cadre, jamais de bouton
+-- protégé, aucune valeur lue sur un vrai joueur
+function Z.FakeCell(parent)
+	local cell = CreateFrame("Frame", nil, parent)
+	Z.BuildVisuals(cell)
+	return cell
+end
+
+-- Dessine une fausse case à la taille des vraies, avec l'état du faux joueur index. Renvoie sa largeur, sa hauteur
+-- et le nombre de soins sur la durée montrés.
+function Z.DrawFakeCell(cell, index, sample, width, height)
+	if not width then width, height = Z.CellSize() end
+	cell:SetSize(width, height)
+	Z.StyleButton(cell)
+	return width, height, Fill(cell, index, sample)
 end
 
 -- Ordre des faux joueurs, comme le jeu le ferait : trié dans chaque groupe de cinq, ou dans toute la grille.
@@ -171,9 +204,7 @@ local function Layout()
 			end
 			cell:ClearAllPoints()
 			cell:SetPoint("TOPLEFT", container, "TOPLEFT", x, y)
-			cell:SetSize(width, height)
-			Z.StyleButton(cell)
-			Fill(cell, order[place])
+			Z.DrawFakeCell(cell, order[place], false, width, height)
 		end
 	end
 	for group = 1, 8 do

@@ -3271,6 +3271,106 @@ step("refonte 1.26.0, lot 4a : rune sur chaque ligne, pastilles, retablir une pa
   w:Hide()
 end)
 
+step("refonte 1.26.0, lot 4b : case temoin, faux groupe, boutons du mode test", function()
+  local keys = { "showHots", "hotCount", "hotStyle", "showDispel", "showAbsorb", "absorbStyle", "color", "width", "height",
+    "frameAlpha", "showMarker" }
+  local saved = {}
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  local savedCorners = Z.db.cornerSpells[Z.class]
+  Z.db.cornerSpells[Z.class] = nil
+  Z.db.hotStyle = "ICONS"
+  Z:ToggleOptions("Apparence")
+  local w = Z:OptionsWindow()
+  local col = w.witness
+  assert(col and col:IsShown(), "colonne de la case temoin")
+  local cell = col.stage.cell
+
+  -- De simples cadres, comme les fausses cases du mode test : aucun bouton protégé
+  assert(cell:GetObjectType() == "Frame" and #col.group.slots == 5, "case temoin et faux groupe de cinq")
+  for _, slot in ipairs(col.group.slots) do assert(slot.cell:GetObjectType() == "Frame", "fausse case du groupe") end
+
+  -- Forme : la taille des vraies cases, agrandie pour tenir dans son fond (leçon C2 : chaque barre a ses bornes)
+  Z.db.width, Z.db.height = 150, 50 Z:Refresh()
+  local cw, ch = Z.CellSize()
+  assert(cell:GetWidth() == cw and cell:GetHeight() == ch, "la case temoin suit la taille")
+  assert(math.abs(cell:GetScale() - math.min(1.9, 226 / cw, 116 / ch)) < 0.001, "agrandie dans son fond")
+  for _, bar in ipairs({ cell.hp, cell.incoming, cell.absorb, cell.healAbsorb, cell.power }) do
+    assert(bar._min == 0 and bar._max == 100 and bar._value ~= nil, "barre sans bornes ou sans valeur")
+  end
+
+  -- Couleurs : couleur de la classe, ou couleur de la vie (62 %)
+  Z.db.color = "CLASS" Z:Refresh()
+  local r = Z.ClassColor(Z.class)
+  assert(math.abs(cell.hp._barColor[1] - r) < 0.001, "couleur de classe")
+  Z.db.color = "HEALTH" Z:Refresh()
+  assert(math.abs(cell.hp._barColor[1] - 0.38) < 0.001, "couleur selon la vie")
+
+  -- Soins sur la durée : jusqu'à trois, et la légende les compte
+  Z.db.showHots, Z.db.hotCount = true, 3 Z:Refresh()
+  assert(cell.hots[1] and cell.hots[1]:IsShown(), "soin sur la duree montre")
+  assert(col.legend:GetText():find("sur la durée", 1, true), "legende des soins : " .. col.legend:GetText())
+  Z.db.showHots = false Z:Refresh()
+  assert(not cell.hots[1]:IsShown() and not col.legend:GetText():find("sur la durée", 1, true), "soins coupes")
+
+  -- Coins : le carré du sort choisi, et son nom dans la légende
+  Z.db.cornerSpells[Z.class] = { TOPLEFT = "Récupération" } Z:Refresh()
+  assert(cell.corners and cell.corners.TOPLEFT:IsShown(), "coin montre sur la case temoin")
+  assert(col.legend:GetText():find("Récupération", 1, true), "coin dans la legende")
+  Z.db.cornerSpells[Z.class] = nil Z:Refresh()
+  assert(not cell.corners.TOPLEFT:IsShown(), "coin retire")
+
+  -- Dissipation, bouclier : allumés, ils se voient ; tout coupé, la case est nue
+  Z.db.showDispel, Z.db.showAbsorb, Z.db.absorbStyle = true, true, "FOLLOW" Z:Refresh()
+  assert(col.legend:GetText():find("dissiper", 1, true) and col.legend:GetText():find("à la suite", 1, true), "dissipation et bouclier")
+  assert(cell.absorb:IsShown() and cell.absorb._value > 0, "bouclier sur la case temoin")
+  Z.db.showDispel, Z.db.showAbsorb = false, false Z:Refresh()
+  assert(col.legend:GetText() == Z.L["Case nue : tous les indicateurs sont coupés."], "case nue : " .. col.legend:GetText())
+
+  -- Opacité des cadres : la case et le faux groupe, pas leur fond
+  Z.db.frameAlpha = 50 Z:Refresh()
+  assert(col.stage.holder:GetAlpha() == 0.5 and col.group.holder:GetAlpha() == 0.5 and col.stage:GetAlpha() == 1, "opacite")
+
+  -- Un réglage changé depuis sa ligne redessine la case témoin (Option, puis Z:Refresh)
+  local set = w.Select("Apparence").content.settings
+  set.color.segments[1]:Run("OnClick", "LeftButton")
+  local want = Z.db.color == "CLASS" and r or 0.38
+  assert(math.abs(cell.hp._barColor[1] - want) < 0.001, "la case temoin suit la ligne de reglage")
+
+  -- Boutons du mode test : un clic ouvre, un second clic sur le même nombre ferme
+  local tens = col.test.segments[2]
+  assert(tens.value == 10, "bouton 10")
+  tens:Run("OnClick", "LeftButton")
+  assert(Z.previewActive and Z:PreviewSize() == 10 and tens.selected, "mode test a 10")
+  assert(col.testText:GetText():find("10", 1, true), "phrase du mode test ouvert")
+  col.test.segments[4]:Run("OnClick", "LeftButton")
+  assert(Z.previewActive and Z:PreviewSize() == 40 and col.test.segments[4].selected and not tens.selected, "passage a 40")
+  col.test.segments[4]:Run("OnClick", "LeftButton")
+  assert(not Z.previewActive and not col.test.segments[4].selected, "second clic : mode test ferme")
+  assert(col.testText:GetText() == Z.L["Pose un faux groupe à l'écran, à la vraie taille, pour régler l'apparence en vrai."], "phrase du mode test ferme")
+
+  -- Les boutons ont quitté Disposition ; la recherche les trouve encore
+  for _, chapter in ipairs(Z:OptionsTabs()) do
+    for _, section in ipairs(chapter.sections) do assert(section[1] ~= "Mode test", "Mode test encore dans " .. chapter.name) end
+  end
+  w.search:SetText("mode test") w.search:Run("OnTextChanged", true)
+  local row = w.results.rows[1]
+  assert(row and row:IsShown() and row.entry.widget == col.test, "recherche du mode test")
+  row:Run("OnClick", "LeftButton")
+  assert(Z.char.optionChapter == "Disposition", "la recherche ouvre Disposition")
+
+  -- Fenêtre fermée : rien n'est redessiné ; à la réouverture, la case témoin suit
+  w:Hide() col:Hide()
+  Z.db.frameAlpha = 80 Z:Refresh()
+  assert(col.stage.holder:GetAlpha() == 0.5, "rien n'est redessine fenetre fermee")
+  col:Show()
+  assert(col.stage.holder:GetAlpha() == 0.8, "redessinee a l'ouverture")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z.db.cornerSpells[Z.class] = savedCorners
+  Z:Refresh()
+  w:Hide()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

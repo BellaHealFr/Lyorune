@@ -26,7 +26,8 @@ local HEAD = 58             -- en-tête : logo, titre, recherche
 local FOOT = 34             -- bas de la fenêtre : inscription runique
 local ROW = 520             -- largeur d'une ligne de réglage
 local FINE = 14             -- retrait des réglages fins
-local window, picker
+local WITNESS = 290         -- largeur de la colonne de la case témoin, à droite
+local window, picker, witness
 local chapters
 local searchIndex = {}      -- { text, more, chapter, widget, label, key } : nom, explications, chapitre, élément
 local AfterChange           -- après un changement : pastilles, réglages dépendants, « Rétablir cette page » (plus bas)
@@ -222,10 +223,6 @@ local function TextureChoices()
 	return list
 end
 
-local function PreviewButton(count)
-	return { "button", count .. " " .. L["joueurs"], function() Z:TogglePreview(count) end }
-end
-
 -- Chaque ligne affichée d'une page se remet à jour
 local function RefreshPage(page)
 	for _, part in ipairs(page.parts) do
@@ -416,9 +413,11 @@ function Z.ShapeThumb(parent, id, label, onClick)
 	return thumb
 end
 
--- Appelé après chaque changement d'option : les vignettes suivent le thème, les angles et les couleurs
+-- Appelé après chaque changement d'option (Z:Refresh) : les vignettes et la case témoin suivent le thème, les
+-- angles, les couleurs et chaque indicateur. Rien n'est redessiné fenêtre fermée.
 function Z:RefreshShapes()
 	if Z.shapePicker and Z.shapePicker:IsVisible() then Z.shapePicker:Update() end
+	if witness and witness:IsVisible() then Z:Try("case témoin", witness.Update) end
 end
 
 -- Choix d'un coin : « Aucun », puis mes sorts suivis (ceux de ma classe et ma liste), par ordre alphabétique.
@@ -1711,10 +1710,6 @@ local function Chapters()
 				ListBox("pinned", "Joueurs épinglés", "Montrés dans le cadre « Épinglés ». Tapez un nom puis Entrée.", Z.CleanPinName, { fine = true, dep = { "showPinned", true } }),
 				{ "button", "Épingler ma cible", PinTarget, "Aussi : survolez une case et tapez /lyorune epingler (une macro sur une touche, par exemple).", fine = true },
 			} },
-			{ "Mode test", {
-				{ "note", "Affiche un faux groupe pour régler l'apparence. Recliquez pour le fermer.", 22 },
-				{ "buttons", { PreviewButton(5), PreviewButton(10), PreviewButton(25), PreviewButton(40) } },
-			} },
 		} },
 		{ name = "Apparence", rune = 14, intro = "À quoi ressemblent les cases.", sections = {
 			{ "Forme des cases", {
@@ -2048,7 +2043,7 @@ local function BuildChapter(index)
 	if chapter.page then return chapter.page end
 	local scroll = UI.Scroll(window)
 	scroll:SetPoint("TOPLEFT", SIDE + 28, -HEAD - 10)
-	scroll:SetPoint("BOTTOMRIGHT", -18, FOOT)
+	scroll:SetPoint("BOTTOMRIGHT", -WITNESS - 8, FOOT) -- la case témoin occupe la droite
 	scroll:Hide()
 	local content = scroll.content
 	content.tabIndex = index
@@ -2219,6 +2214,154 @@ local function BuildSearch()
 	window.search, window.results, window.Go = edit, results, Go
 end
 
+----------------------------------------------------------------------------------------------------
+-- Case témoin, dans la colonne de droite : une fausse case agrandie qui suit chaque réglage, un faux groupe de
+-- cinq dessous, puis les boutons du mode test. Ce sont les fausses cases du mode test (Preview.lua) : de simples
+-- cadres, jamais de bouton protégé, aucune valeur lue sur un vrai joueur. Redessinée après chaque Z:Refresh()
+-- (Z:RefreshShapes), seulement quand la fenêtre est ouverte.
+----------------------------------------------------------------------------------------------------
+local STAGE_W, STAGE_H = 250, 140 -- fond de la case témoin
+local TEST_SIZES = { 5, 10, 25, 40 }
+local TEST_HINT = "Pose un faux groupe à l'écran, à la vraie taille, pour régler l'apparence en vrai."
+
+-- Ce que montre la case témoin, en une phrase
+local function WitnessLegend(hots)
+	local db, bits = Z.db, {}
+	if db.showDispel then bits[#bits + 1] = L["cadre de couleur : affaiblissement à dissiper"] end
+	if db.showAbsorb then
+		bits[#bits + 1] = L[db.absorbStyle == "FOLLOW" and "bouclier à la suite de la vie" or "bouclier en bande sous la vie"]
+	end
+	local names = {}
+	for _, point in ipairs(Z.CORNERS) do
+		local name = Z.MyCorners()[point]
+		if name and name ~= "" then names[#names + 1] = name end
+	end
+	if #names > 0 then bits[#bits + 1] = L["coins : %s"]:format(table.concat(names, ", ")) end
+	if hots == 1 then bits[#bits + 1] = L["1 soin sur la durée"] end
+	if hots > 1 then bits[#bits + 1] = L["%d soins sur la durée"]:format(hots) end
+	if #bits == 0 then return L["Case nue : tous les indicateurs sont coupés."] end
+	local text = table.concat(bits, ", ") -- chaque morceau commence par une lettre sans accent
+	return text:sub(1, 1):upper() .. text:sub(2) .. "."
+end
+
+local function BuildWitness()
+	local col = CreateFrame("Frame", nil, window)
+	col:SetPoint("TOPRIGHT", -10, -HEAD)
+	col:SetPoint("BOTTOMRIGHT", -10, FOOT)
+	col:SetWidth(WITNESS - 10)
+	col.bg = UI.Tex(col, "BACKGROUND", 0, 0, 0, 0.18)
+	col.bg:SetAllPoints()
+	col.line = UI.Paint(UI.Tex(col, "ARTWORK"), "line")
+	col.line:SetWidth(1)
+	col.line:SetPoint("TOPLEFT")
+	col.line:SetPoint("BOTTOMLEFT")
+	col.title = UI.Heading(col, 15)
+	col.title:SetPoint("TOPLEFT", 15, -12)
+	col.title:SetText(L["Case témoin"])
+	col.intro = UI.Label(col, 11, nil, "dim")
+	col.intro:SetPoint("TOPLEFT", 15, -32)
+	col.intro:SetText(L["Elle suit chaque réglage, en direct."])
+
+	-- La case, agrandie, sur un fond ; le porteur reçoit l'opacité des cadres
+	local stage = CreateFrame("Frame", nil, col)
+	stage:SetSize(STAGE_W, STAGE_H)
+	stage:SetPoint("TOPLEFT", 15, -52)
+	stage.bg = UI.Tex(stage, "BACKGROUND", 0, 0, 0, 0.35)
+	stage.bg:SetAllPoints()
+	stage.border = UI.Paint(UI.Border(stage, 1), "line")
+	stage.holder = CreateFrame("Frame", nil, stage)
+	stage.holder:SetAllPoints()
+	stage.cell = Z.FakeCell(stage.holder)
+	stage.cell:SetPoint("CENTER")
+	col.stage = stage
+	col.legend = UI.Label(col, 11, nil, "dim")
+	col.legend:SetPoint("TOPLEFT", stage, "BOTTOMLEFT", 0, -6)
+	col.legend:SetWidth(STAGE_W)
+	col.legend:SetJustifyH("LEFT")
+	col.legend:SetSpacing(2)
+
+	-- Faux groupe : cinq petites cases, trois puis deux
+	col.groupTitle = UI.Heading(col, 13)
+	col.groupTitle:SetPoint("TOPLEFT", stage, "BOTTOMLEFT", 0, -56) -- légende : jusqu'à trois lignes
+	col.groupTitle:SetText(L["Faux groupe"])
+	local group = CreateFrame("Frame", nil, col)
+	group:SetPoint("TOPLEFT", col.groupTitle, "BOTTOMLEFT", 0, -6)
+	group:SetSize(STAGE_W, 80)
+	group.bg = UI.Tex(group, "BACKGROUND", 0, 0, 0, 0.3)
+	group.bg:SetAllPoints()
+	group.border = UI.Paint(UI.Border(group, 1), "line")
+	group.holder = CreateFrame("Frame", nil, group)
+	group.holder:SetAllPoints()
+	group.slots = {}
+	for i = 1, 5 do
+		local slot = CreateFrame("Frame", nil, group.holder)
+		slot.cell = Z.FakeCell(slot)
+		slot.cell:SetPoint("CENTER")
+		group.slots[i] = slot
+	end
+	col.group = group
+
+	-- Mode test : le faux groupe posé à l'écran. Un clic ouvre, un second clic sur le même nombre ferme.
+	col.testTitle = UI.Heading(col, 13)
+	col.testTitle:SetPoint("TOPLEFT", group, "BOTTOMLEFT", 0, -14)
+	col.testTitle:SetText(L["Mode test"])
+	local choices = {}
+	for i, count in ipairs(TEST_SIZES) do choices[i] = { count, tostring(count) } end
+	local test = UI.Segmented(col, "", choices, function() return Z.previewActive and Z:PreviewSize() or nil end,
+		function(count) Z:TogglePreview(count) end)
+	test:SetWidth(STAGE_W)
+	test:SetPoint("TOPLEFT", col.testTitle, "BOTTOMLEFT", 0, -6)
+	local each = math.floor((STAGE_W - 2) / #TEST_SIZES) - 2
+	for i, b in ipairs(test.segments) do
+		b:SetWidth(each)
+		b:ClearAllPoints()
+		b:SetPoint("LEFT", test.strip, "LEFT", 2 + (i - 1) * (each + 2), 0)
+		b.tip = L["Faux groupe de %d joueurs."]:format(b.value)
+		b:SetScript("OnClick", function(self)
+			PlaySound(SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or 856)
+			Z:TogglePreview(self.value) -- même nombre : ferme le mode test
+			test:Update()
+		end)
+	end
+	test.strip:SetWidth(2 + #TEST_SIZES * (each + 2))
+	col.test = test
+	col.testText = UI.Label(col, 11, nil, "dim")
+	col.testText:SetPoint("TOPLEFT", test, "BOTTOMLEFT", 0, -6)
+	col.testText:SetWidth(STAGE_W)
+	col.testText:SetJustifyH("LEFT")
+	col.testText:SetSpacing(2)
+	searchIndex[#searchIndex + 1] = { text = L["Mode test"]:lower(), more = L[TEST_HINT]:lower(), widget = test,
+		label = L["Mode test"], chapter = ChapterIndex("Disposition") }
+
+	col.Update = function()
+		local db = Z.db
+		local width, height = Z.CellSize()
+		stage.cell:SetScale(math.min(1.9, (STAGE_W - 24) / width, (STAGE_H - 24) / height))
+		local _, _, hots = Z.DrawFakeCell(stage.cell, 2, true, width, height)
+		stage.holder:SetAlpha(db.frameAlpha / 100)
+		col.legend:SetText(WitnessLegend(hots))
+		local mini = math.min(1, 74 / width, 34 / height)
+		local w, h = width * mini, height * mini
+		for i, slot in ipairs(group.slots) do
+			local row, place = math.floor((i - 1) / 3), (i - 1) % 3
+			local inRow = row == 0 and 3 or 2
+			slot:SetSize(w, h)
+			slot:ClearAllPoints()
+			slot:SetPoint("TOPLEFT", (STAGE_W - inRow * w - (inRow - 1) * 3) / 2 + place * (w + 3), -8 - row * (h + 3))
+			slot.cell:SetScale(mini)
+			Z.DrawFakeCell(slot.cell, i, false, width, height)
+		end
+		group:SetHeight(16 + 2 * h + 3)
+		group.holder:SetAlpha(db.frameAlpha / 100)
+		test:Update()
+		col.testText:SetText(Z.previewActive and L["Faux groupe de %d joueurs à l'écran. Recliquez pour le fermer."]:format(Z:PreviewSize())
+			or L[TEST_HINT])
+	end
+	witness, window.witness = col, col
+	col:SetScript("OnShow", function() Z:Try("case témoin", col.Update) end)
+	col.Update()
+end
+
 -- Mène à un réglage par sa clé, dans son chapitre (liste des réglages changés de l'Accueil)
 local function GoToSetting(key, index)
 	BuildChapter(index)
@@ -2273,6 +2416,7 @@ local function Build()
 	window:HookScript("OnHide", function() window.breath:Stop() end)
 
 	BuildSearch()
+	BuildWitness()
 	window.magic = UI.HeaderMagic(window, logo, window.search)
 	if Z.RefreshRunes then Z:RefreshRunes(window) end
 	window.Select, window.GoToSetting = Select, GoToSetting
