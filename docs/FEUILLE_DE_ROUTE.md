@@ -243,10 +243,19 @@ une taille tirée de la seule hauteur de la case. Lu dans le code, à confirmer 
 recouvrent le rôle, le nom et la vie ; en Carré, une rangée de 4 soins (72 pixels) dépasse de la case (54 pixels).
 Décisions (carte blanche de l'auteur) : étape à part, après la 1.26.0 ; les auras privées gardent leur réglage de
 taille en pixels (un seul réglage), l'éditeur de placement les déplace seulement et renvoie à ce réglage.
-- [ ] Lot 1 : maquette des 4 formes avec la place et la taille des icônes, validée par l'auteur avant de coder
+- [x] Lot 1 : maquette des 4 formes avec la place et la taille des icônes (décidé avec carte blanche de l'auteur,
+  20 novembre 2026) : Tuile, icônes de 26 % de la hauteur, soins en haut à gauche jusqu'à l'icône de rôle,
+  affaiblissements en bas à droite jusqu'au buff manquant ; Carré, pareil à 19 %, la rangée trop longue passe à la
+  ligne (2 lignes au plus) ; Barre, soins et affaiblissements collés aux bords haut et bas de la barre de vie, côté
+  droit, à une taille qui laisse libre la ligne du texte ; Bandeau, les deux rangées en bloc au bout de la case, le
+  chiffre de vie rangé à leur gauche. Décalages des soins et affaiblissements (et du chiffre de vie en Bandeau)
+  remis à zéro une fois en Barre, Bandeau et Carré
 - [ ] Lot 2 : place et taille d'origine des icônes écrites pour chaque forme dans `Z.shapes` (une forme ajoutée =
-  une ligne) ; une rangée trop large rapetisse ses icônes pour tenir dans la case au lieu d'en déborder ; test des
-  4 formes avec 1 à 6 soins et 2 à 5 affaiblissements, grand raid compris
+  une ligne) ; une rangée trop large rapetisse ses icônes pour tenir dans la case au lieu d'en déborder (Carré :
+  passe d'abord à la ligne, `SetFlowLayoutMaximumLineSize`, repli « rapetisser » si le jeu refuse) ; place du
+  chiffre de vie en Bandeau d'après les nombres réglés ; remise à zéro unique des décalages ; mêmes règles dans
+  `Placement.lua` (bornes de l'éditeur) ; test des 4 formes avec 1 à 6 soins et 2 à 5 affaiblissements, grand
+  raid compris
 - [ ] Lot 3 : taille de l'élément choisi dans l'éditeur de placement (molette ou « - » et « + », de 50 à 200 %),
   gardée par forme avec son décalage dans `Z.db.placement`, bornes dans `Z.limits`, partage de profil
   (`Share.lua`) ; en combat, une taille changée attend la sortie du combat (conteneurs d'auras du jeu reconstruits
