@@ -768,4 +768,14 @@ Z.translations.enUS = {
 	["Activé"] = "On", ["Coupé"] = "Off",
 	["Rétablir : %s"] = "Reset: %s", ["Rétablir comme à l'installation"] = "Reset to default",
 	["Réglages changés dans ce chapitre : %d"] = "Changed settings in this chapter: %d",
+
+	-- Fenêtre d'options à chapitres (1.26.0) : Accueil, Profils et partage
+	["Profil actif"] = "Active profile", ["Changer de profil"] = "Change profile", ["Aucun profil"] = "No profile",
+	["Changé tout seul selon la taille du groupe et votre spécialisation."] = "Switched automatically by group size and your specialization.",
+	["Choisi à la main : il ne change que si vous en chargez un autre."] = "Chosen by hand: it only changes if you load another one.",
+	["Vos réglages du moment ne portent aucun nom."] = "Your current settings are not saved under any name.",
+	["Vos réglages changés"] = "Your changed settings", ["Aller au réglage"] = "Go to this setting",
+	["Un clic sur un nom mène au réglage ; un clic sur sa rune d'or le remet comme à l'installation."] = "Click a name to go to the setting; click its golden rune to reset it to default.",
+	["Aucun pour l'instant : Lyorune est réglé comme à l'installation. Changez un réglage dans un chapitre, il apparaîtra ici."] = "None yet: Lyorune is set up as installed. Change a setting in a chapter and it will show up here.",
+	["Nom du profil"] = "Profile name", ["Nom du joueur"] = "Player name",
 }

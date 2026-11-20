@@ -26,11 +26,11 @@ print('fichiers charges :', len(files))
 scenario = r'''
 local Z = NS
 local step = function(label, fn) local ok, err = pcall(fn) print((ok and "OK    " or "ERREUR ") .. label .. (ok and "" or (" : " .. tostring(err)))) if not ok then FAILED = true end end
--- Fenêtre d'options : le bloc dessiné à part qui porte ce champ (pages Clics, Profils...), tous les chapitres construits
-local function OptionBlock(field)
+-- Fenêtre d'options : la ligne dessinée à part qui porte ce champ (tableau des profils...), tous les chapitres construits
+local function OptionPart(field)
   Z:OptionLabels()
   for _, chapter in ipairs(Z:OptionsTabs()) do
-    for _, block in ipairs(chapter.page and chapter.page.blocks or {}) do if block[field] then return block end end
+    for _, part in ipairs(chapter.page and chapter.page.parts or {}) do if part.widget[field] then return part.widget end end
   end
 end
 -- Chaque page de chapitre est rangée : la hauteur de son contenu suit ce qu'elle montre, elle défile au-delà
@@ -1640,8 +1640,8 @@ step("etape 8 : profils automatiques, cible et focalisation", function()
   Z:ResetAll()
   assert(Z.db.profiles.Donjon and Z.db.activeProfile == "" and Z.db.autoProfile == false, "reinitialisation")
   -- chapitre Profils et partage : les cases du tableau font tourner les profils
-  Z:ToggleOptions()
-  local page = OptionBlock("profileCells")
+  Z:ToggleOptions("Profils et partage")
+  local page = OptionPart("profileCells")
   assert(page, "chapitre Profils et partage construit")
   do
     local cell = page.profileCells[1]
@@ -2426,13 +2426,13 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
   assert(Z.db.activeProfile == "Raid", "champ de bataille sans choix : taille du groupe")
   INSTANCE_TYPE = "none" FireEvent("PLAYER_ENTERING_WORLD")
   -- chapitre Profils et partage : 12 cases (6 situations, 2 specialisations), fenetre de copie
-  Z:ToggleOptions()
-  local page = OptionBlock("profileCells")
+  Z:ToggleOptions("Profils et partage")
+  local page = OptionPart("profileCells")
   assert(page and #page.profileCells == 12, "cases du tableau")
   local arena = page.profileCells[11]
   assert(arena.size == "ARENA" and arena.group == 1 and arena.label:GetText() == "Arene", "case arene")
   assert(page.profileCells[9].label:GetText() == "selon la taille", "champ de bataille sans choix")
-  page.copyButton:Run("OnClick", "LeftButton")
+  OptionPart("copyButton").copyButton:Run("OnClick", "LeftButton")
   local w = Z:ProfileCopyWindow()
   assert(w and w:IsShown(), "fenetre de copie")
   assert(w.from.label and w.parts.Apparence, "fenetre complete")
@@ -3105,6 +3105,88 @@ step("refonte 1.26.0, lot 3a : listes dans leurs chapitres, clics et alertes en 
       end
     end
   end
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
+end)
+
+step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", function()
+  local saved = { width = Z.db.width, showPets = Z.db.showPets, syncEnabled = Z.db.syncEnabled, profiles = Z.db.profiles,
+    activeProfile = Z.db.activeProfile }
+  Z.char.optionFolds = {}
+  Z:ToggleOptions("Accueil")
+  local w = Z:OptionsWindow()
+  -- Plus aucune page à deux colonnes : chaque ligne tient dans la colonne
+  for _, chapter in ipairs(w.chapters) do
+    local page = w.Select(chapter.name)
+    assert(page.blocks == nil, "page a deux colonnes : " .. chapter.name)
+    for _, part in ipairs(page.parts) do assert(part.widget:GetWidth() <= 520, "ligne trop large dans " .. chapter.name) end
+  end
+  local keys = Z:OptionKeys()
+  for _, key in ipairs({ "autoProfile", "syncEnabled", "resSync", "acceptConfigs", "versionNotice" }) do
+    assert(keys[key] and #keys[key] == 1 and keys[key][1] == "Profils et partage", "Profils et partage : " .. key)
+  end
+
+  -- Synchronisation coupée : les trois réglages qui en dépendent sont grisés
+  local page = w.Select("Profils et partage")
+  local sync = page.content.settings
+  Z.db.syncEnabled = true
+  sync.syncEnabled:Run("OnClick")
+  assert(not Z.db.syncEnabled and sync.resSync:GetAlpha() < 1 and sync.versionNotice:GetAlpha() < 1, "synchronisation coupee : reglages grises")
+  sync.syncEnabled:Run("OnClick")
+  assert(Z.db.syncEnabled and sync.resSync:GetAlpha() == 1, "synchronisation remise")
+
+  -- Un profil enregistré depuis la page devient le profil actif de l'Accueil ; son bouton mène aux profils
+  Z.db.profiles, Z.db.activeProfile = {}, ""
+  local box = OptionPart("copyButton")
+  box.edit:SetText("Essai") box.edit:Run("OnEnterPressed")
+  assert(Z.db.profiles.Essai and Z.db.activeProfile == "Essai", "profil enregistre depuis la page")
+  page = w.Select("Accueil")
+  local home = {}
+  for _, part in ipairs(page.parts) do
+    if part.widget.go then home.profile = part.widget end
+    if part.widget.rows then home.changed = part.widget end
+  end
+  assert(home.profile and home.profile.name:GetText() == "Essai", "profil actif a l'Accueil")
+  home.profile.go:Run("OnClick", "LeftButton")
+  assert(Z.char.optionChapter == "Profils et partage", "bouton vers les profils")
+
+  -- Réglages changés : un réglage changé a sa ligne ; un clic mène au réglage (réglages fins dépliés), la rune le rétablit
+  Z.db.width, Z.db.showPets = Z.defaults.width, Z.defaults.showPets
+  w.Select("Accueil")
+  local before = home.changed.count
+  assert(home.changed.empty:IsShown() == (before == 0), "liste vide annoncee")
+  Z.db.width, Z.db.showPets = Z.defaults.width + 4, not Z.defaults.showPets
+  w.Select("Accueil")
+  assert(home.changed.count == before + 2 and not home.changed.empty:IsShown(), "deux reglages changes")
+  local function Row(key)
+    for _, row in ipairs(home.changed.rows) do if row:IsShown() and row.key == key then return row end end
+  end
+  local row = Row("showPets")
+  assert(row and row.where:GetText() == "Disposition" and row.rune:IsShown(), "ligne du reglage change")
+  assert(row.value:GetText() == (Z.db.showPets and "Activé" or "Coupé"), "valeur du reglage : " .. tostring(row.value:GetText()))
+  assert(Row("width").value:GetText() == tostring(Z.defaults.width + 4), "valeur d'un nombre")
+  row:Run("OnClick", "LeftButton")
+  assert(Z.char.optionChapter == "Disposition" and w.found and w.found.key == "showPets", "clic : aller au reglage")
+  local fold = w.found.widget.part.fold
+  assert(fold and fold:IsOpen(), "reglage fin deplie")
+  fold:Run("OnClick")
+  w.Select("Accueil")
+  Row("showPets").rune:Run("OnClick")
+  assert(Z.db.showPets == Z.defaults.showPets and home.changed.count == before + 1 and not Row("showPets"), "la rune retablit le reglage")
+  Row("width").rune:Run("OnClick")
+  assert(Z.db.width == Z.defaults.width and home.changed.count == before, "la liste se vide")
+
+  -- Fenêtre et aide : légende et commandes en lignes, retrouvées par la recherche
+  page = w.Select("Fenêtre et aide")
+  local commands
+  for _, part in ipairs(page.parts) do if part.widget.list then commands = part.widget end end
+  assert(commands and commands.list:GetText():find("/lyorune diag", 1, true), "liste des commandes")
+  w.search:SetText("donner ma config") w.search:Run("OnTextChanged", true)
+  assert(w.results.rows[1]:IsShown() and w.results.rows[1].entry.label == "Donner ma configuration", "recherche d'un outil de partage")
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  assert(Z.char.optionChapter == "Profils et partage", "recherche : chapitre des profils")
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()

@@ -26,7 +26,6 @@ local HEAD = 58             -- en-tête : logo, titre, recherche
 local FOOT = 34             -- bas de la fenêtre : inscription runique
 local ROW = 520             -- largeur d'une ligne de réglage
 local FINE = 14             -- retrait des réglages fins
-local COLUMN = 310          -- largeur d'une colonne des pages dessinées à part (Clics, Alertes, Profils...)
 local window, picker
 local chapters
 local searchIndex = {}      -- { text, more, chapter, widget, label, key } : nom, explications, chapitre, élément
@@ -46,7 +45,7 @@ local function Option(key)
 	end
 end
 
--- Un réglage retrouvable par la recherche. page : la page du chapitre, ou un bloc dessiné à part ;
+-- Un réglage retrouvable par la recherche. page : la page du chapitre ;
 -- more : ses explications (phrase visible et infobulle), cherchées aussi.
 local function Register(page, label, widget, more)
 	local entry = { text = label:lower(), more = (more or ""):lower(), chapter = page.tabIndex, widget = widget,
@@ -57,7 +56,7 @@ end
 
 local function Heading(parent, text)
 	local f = CreateFrame("Frame", nil, parent)
-	f:SetSize(COLUMN, 24)
+	f:SetSize(ROW, 24)
 	local label = UI.Heading(f, 13)
 	label:SetPoint("BOTTOMLEFT", 0, 6)
 	label:SetText(L[text])
@@ -76,6 +75,15 @@ local function Note(parent, text, x, y, width)
 	UI.Paint(note, "dim")
 	note:SetText(L[text])
 	return note
+end
+
+-- Texte d'attente gris dans un champ de saisie vide
+local function Placeholder(edit, text)
+	edit.placeholder = UI.Label(edit, 11, nil, "dim")
+	edit.placeholder:SetPoint("LEFT", 6, 0)
+	edit.placeholder:SetText(L[text])
+	edit:HookScript("OnTextChanged", function(self) self.placeholder:SetShown(self:GetText() == "") end)
+	return edit.placeholder
 end
 
 local function Tip(widget, text)
@@ -106,12 +114,13 @@ end
 --   { "custom", fonction }                    élément dessiné à part : fonction(page, largeur) renvoie le cadre ;
 --                                             son Update() le remet à jour à l'ouverture du chapitre, Fit(cadre, h)
 --                                             change sa hauteur et range de nouveau la page
---   { "block", fonction, hauteur }            page dessinée à part en deux colonnes : fonction(bloc)
 -- Champs nommés, tous facultatifs :
 --   desc = "Phrase"     une phrase visible sous le nom, quand le nom ne suffit pas (l'aide reste en infobulle)
 --   fine = true         réglage fin : replié sous « Réglages fins (n) »
 --   dep = { cle, v }    réglage qui n'a d'effet que si le réglage cle vaut v ("!v" : tout sauf v)
 ----------------------------------------------------------------------------------------------------
+local SETTING_KINDS = { check = true, seg = true, step = true, cycle = true } -- lignes qui portent un réglage
+
 local function TranslatedChoices(list)
 	local choices = {}
 	for _, choice in ipairs(list) do choices[#choices + 1] = { choice[1], L[choice[2]] } end
@@ -138,7 +147,7 @@ end
 
 local function BuildItem(page, item, width)
 	local kind, widget = item[1], nil
-	width = width or COLUMN
+	width = width or ROW
 	local tip = item[(kind == "seg" or kind == "cycle") and 5 or 4]
 	local more = (item.desc and L[item.desc] or "") .. " " .. (type(tip) == "string" and L[tip] or "")
 	if kind == "head" then
@@ -179,13 +188,10 @@ local function BuildItem(page, item, width)
 		Note(widget, item[2], 0, 0, width)
 	elseif kind == "custom" then
 		widget = item[2](page, width)
-	elseif kind == "block" then
-		-- Page dessinée à part (Profils, Aide) : remise en une colonne avec les nouvelles briques au lot 3b
-		widget = CreateFrame("Frame", nil, page)
-		widget:SetSize(2 * COLUMN + 32, item[3])
-		widget.tabIndex, widget.isBlock = page.tabIndex, true
-		item[2](widget)
-		return widget
+	end
+	if SETTING_KINDS[kind] then -- un outil de la page peut retrouver un réglage (page.settings.syncEnabled)
+		page.settings = page.settings or {}
+		page.settings[item[2]] = widget
 	end
 	if widget.SetWidth and kind ~= "button" then widget:SetWidth(width) end
 	if item.desc then Describe(widget, item.desc, width) end
@@ -211,18 +217,11 @@ local function PreviewButton(count)
 	return { "button", count .. " " .. L["joueurs"], function() Z:TogglePreview(count) end }
 end
 
--- Chaque ligne affichée d'une page se remet à jour ; les pages dessinées à part se remplissent de nouveau
+-- Chaque ligne affichée d'une page se remet à jour
 local function RefreshPage(page)
 	for _, part in ipairs(page.parts) do
 		local widget = part.widget
-		if widget:IsShown() then
-			if widget.isBlock then
-				widget:Hide()
-				widget:Show()
-			elseif widget.Update then
-				widget:Update()
-			end
-		end
+		if widget.Update and widget:IsShown() then widget:Update() end
 	end
 end
 
@@ -367,7 +366,7 @@ end
 
 local function ShapePicker(page)
 	local picker = CreateFrame("Frame", nil, page)
-	picker:SetSize(COLUMN, 2 * THUMB_H + 6 + 30)
+	picker:SetSize(ROW, 2 * THUMB_H + 6 + 30)
 	for index, choice in ipairs(Z.choices.shape) do
 		local thumb = BuildThumb(picker, choice[1], choice[2])
 		thumb:SetPoint("TOPLEFT", ((index - 1) % 2) * (THUMB_W + 10), -math.floor((index - 1) / 2) * (THUMB_H + 6))
@@ -484,10 +483,7 @@ local function ListBox(key, title, hint, clean, fields)
 			end
 		end)
 		edit:SetPoint("TOPRIGHT")
-		edit.placeholder = UI.Label(edit, 11, nil, "dim")
-		edit.placeholder:SetPoint("LEFT", 6, 0)
-		edit.placeholder:SetText(L["Nom exact, puis Entrée"])
-		edit:HookScript("OnTextChanged", function(self) self.placeholder:SetShown(self:GetText() == "") end)
+		Placeholder(edit, "Nom exact, puis Entrée")
 		edit:HookScript("OnEnterPressed", function(self)
 			self:SetText("")
 			RefreshShownPages() -- la liste, et les coins qui proposent les sorts suivis
@@ -1056,8 +1052,45 @@ local function RulerNote(page, width)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Page des profils et du partage (chapitre Profils et partage)
+-- Chapitre Profils et partage : une ligne dessinée à part par outil, en une colonne. Chaque outil écrit sa
+-- réussite ou son échec juste dessous.
 ----------------------------------------------------------------------------------------------------
+local GOOD, BAD = "|cff33dd88", "|cffff5555"
+
+local function Say(label, ok, message)
+	label:SetText((ok and GOOD or BAD) .. message .. "|r")
+end
+
+-- Ligne de message sous un outil
+local function Result(box, y, width)
+	local result = UI.Label(box, 11)
+	result:SetPoint("TOPLEFT", 0, y)
+	result:SetWidth(width)
+	result:SetJustifyH("LEFT")
+	return result
+end
+
+-- Bouton à confirmer : un premier clic l'arme (texte rouge pendant 4 secondes), le second agit
+local function ArmedButton(parent, text, armed, width, onConfirm)
+	local button
+	button = UI.Button(parent, L[text], width, 24, function(self)
+		if not self.armed then
+			self.armed = true
+			self.label:SetText(BAD .. L[armed] .. "|r")
+			C_Timer.After(4, function()
+				button.armed = false
+				button.label:SetText(L[text])
+			end)
+			return
+		end
+		self.armed = false
+		self.label:SetText(L[text])
+		onConfirm()
+	end)
+	button.label:SetJustifyH("CENTER")
+	return button
+end
+
 -- Fenêtre « Copier une partie » (#44) : de quel profil, vers lequel, et quelles parties (un chapitre chacune)
 local copyWindow
 local function OpenCopyWindow(onDone)
@@ -1104,7 +1137,7 @@ local function OpenCopyWindow(onDone)
 	w.result = result
 	w.copy = UI.Button(w, L["Copier"], 288, 24, function()
 		local ok, message = Z:CopyProfileParts(from, to, parts)
-		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
+		Say(result, ok, message)
 		if ok and onDone then onDone() end
 	end)
 	w.copy:SetPoint("TOPLEFT", 16, -222)
@@ -1130,25 +1163,66 @@ function Z:ProfileCopyWindow()
 	return copyWindow
 end
 
-local function BuildProfiles(page)
-	local right = COLUMN + 32
-	local result
+-- Un profil chargé tout seul (Share.lua) : la page ouverte suit
+Z.RefreshProfiles = function() RefreshShownPages() end
 
-	-- Colonne de gauche, 1 : mes profils (#24)
-	local mine = Heading(page, "Mes profils")
-	mine:SetPoint("TOPLEFT")
-	Register(page, L["Mes profils"], mine)
-	Note(page, "Vos réglages d'apparence, enregistrés sous un nom. Clics, macros, listes et annonces n'en font pas partie : ils ne changent jamais avec le profil.", 0, -30, COLUMN)
+-- Mes profils (#24) : choisir, charger, supprimer, copier une partie, enregistrer sous un nom
+local function ProfileBox(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 136)
+	local choices, selected = { { false, L["(aucun)"] } }, false -- remplie par Update
+	local picker = UI.Cycle(box, L["Profil"], choices, function() return selected end, function(value) selected = value end)
+	picker:SetWidth(width)
+	picker:SetPoint("TOPLEFT")
+	local result = Result(box, -118, width)
 
-	local choices, selected = { { false, L["(aucun)"] } }, false -- remplie par Refresh
-	local picker = UI.Cycle(page, L["Profil"], choices, function() return selected end, function(value) selected = value end)
-	picker:SetWidth(COLUMN)
-	picker:SetPoint("TOPLEFT", 0, -66)
-	local status = Note(page, "", 0, -158, COLUMN)
-	local cells = {}
-	local function Refresh()
+	local load = UI.Button(box, L["Charger"], 120, 24, function()
+		if selected and Z:LoadProfile(selected) then
+			RefreshShownPages()
+			Say(result, true, L["Profil « %s » chargé."]:format(selected))
+		end
+	end)
+	load:SetPoint("TOPLEFT", 0, -32)
+	load.label:SetJustifyH("CENTER")
+	local delete = ArmedButton(box, "Supprimer", "Confirmer", 120, function()
+		if not selected then return end
+		Z:DeleteProfile(selected)
+		Say(result, true, L["Profil « %s » supprimé."]:format(selected))
+		selected = nil
+		RefreshShownPages()
+	end)
+	delete:SetPoint("TOPLEFT", 126, -32)
+	local copy = UI.Button(box, L["Copier..."], 160, 24, function() OpenCopyWindow(RefreshShownPages) end)
+	copy:SetPoint("TOPLEFT", 252, -32)
+	copy.label:SetJustifyH("CENTER")
+	copy.tip = L["Copier seulement une partie d'un profil vers un autre : un ou plusieurs chapitres, de Disposition à Joueurs."]
+	Register(page, L["Copier une partie d'un profil"], copy)
+	box.copyButton = copy
+
+	local name
+	local function Save()
+		local ok, message = Z:SaveProfile(name:GetText())
+		Say(result, ok, message)
+		if ok then
+			selected = Z.ProfileName(name:GetText())
+			name:SetText("")
+		end
+		RefreshShownPages()
+	end
+	name = UI.Edit(box, 246, Save)
+	name:SetPoint("TOPLEFT", 0, -64)
+	Placeholder(name, "Nom du profil")
+	box.edit = name
+	local save = UI.Button(box, L["Enregistrer sous"], 160, 22, Save)
+	save:SetPoint("LEFT", name, "RIGHT", 6, 0)
+	save.label:SetJustifyH("CENTER")
+	save.tip = L["Tapez un nom, puis Enregistrer sous : vos réglages d'apparence du moment deviennent ce profil (nouveau, ou remplacé)."]
+	Register(page, L["Enregistrer sous"], save)
+
+	local status = Note(box, "", 0, -96, width)
+	box.Update = function()
 		wipe(choices)
-		for _, name in ipairs(Z:ProfileNames()) do choices[#choices + 1] = { name, name } end
+		for _, n in ipairs(Z:ProfileNames()) do choices[#choices + 1] = { n, n } end
 		if #choices == 0 then choices[1] = { false, L["(aucun)"] } end
 		if not (selected and Z.db.profiles[selected]) then
 			selected = Z.db.profiles[Z.db.activeProfile] and Z.db.activeProfile or choices[1][1]
@@ -1156,90 +1230,38 @@ local function BuildProfiles(page)
 		picker:Update()
 		local active = Z.db.activeProfile ~= "" and Z.db.activeProfile or L["aucun"]
 		status:SetText(L["Profil en cours : %s"]:format("|cffffffff" .. active .. "|r"))
-		for _, cell in ipairs(cells) do cell:Update() end
 	end
-	Z.RefreshProfiles = Refresh
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Register(page, L["Mes profils"], box)
+	return box
+end
 
-	local load = UI.Button(page, L["Charger"], 100, 24, function()
-		if selected and Z:LoadProfile(selected) then
-			RefreshShownPages()
-			result:SetText("|cff33dd88" .. L["Profil « %s » chargé."]:format(selected) .. "|r")
-		end
-		Refresh()
-	end)
-	load:SetPoint("TOPLEFT", 0, -94)
-	load.label:SetJustifyH("CENTER")
-	local delete
-	delete = UI.Button(page, L["Supprimer"], 100, 24, function(self)
-		if not selected then return end
-		if not self.armed then -- un premier clic arme le bouton, le second confirme
-			self.armed = true
-			self.label:SetText("|cffff5555" .. L["Confirmer"] .. "|r")
-			C_Timer.After(4, function()
-				delete.armed = false
-				delete.label:SetText(L["Supprimer"])
-			end)
-			return
-		end
-		self.armed = false
-		self.label:SetText(L["Supprimer"])
-		Z:DeleteProfile(selected)
-		result:SetText("|cff33dd88" .. L["Profil « %s » supprimé."]:format(selected) .. "|r")
-		selected = nil
-		Refresh()
-	end)
-	delete:SetPoint("TOPLEFT", 106, -94)
-	delete.label:SetJustifyH("CENTER")
-	local copy = UI.Button(page, L["Copier..."], COLUMN - 212, 24, function() OpenCopyWindow(Refresh) end)
-	copy:SetPoint("TOPLEFT", 212, -94)
-	copy.label:SetJustifyH("CENTER")
-	copy.tip = L["Copier seulement une partie d'un profil vers un autre : un ou plusieurs chapitres, de Disposition à Joueurs."]
-	Register(page, L["Copier une partie d'un profil"], copy)
-	page.copyButton = copy
+-- Profils automatiques : une ligne par situation (taille du groupe, champ de bataille, arène), une colonne par
+-- spécialisation. Clic : profil suivant, clic droit : précédent.
+local SIZE_LABELS = { ["5"] = "Seul, 5", ["10"] = "10 joueurs", ["25"] = "25 joueurs", ["40"] = "40 joueurs", BG = "Champ de bataille", ARENA = "Arène" }
 
-	local name
-	local function Save()
-		local ok, message = Z:SaveProfile(name:GetText())
-		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
-		if ok then
-			selected = Z.ProfileName(name:GetText())
-			name:SetText("")
-		end
-		Refresh()
-	end
-	name = UI.Edit(page, COLUMN - 116, Save)
-	name:SetPoint("TOPLEFT", 0, -126)
-	local save = UI.Button(page, L["Enregistrer sous"], 110, 22, Save)
-	save:SetPoint("LEFT", name, "RIGHT", 6, 0)
-	save.label:SetJustifyH("CENTER")
-	save.tip = L["Tapez un nom, puis Enregistrer sous : vos réglages d'apparence du moment deviennent ce profil (nouveau, ou remplacé)."]
-	Register(page, L["Enregistrer sous"], save)
-
-	-- Colonne de gauche, 2 : profils automatiques, pour chaque taille de groupe et chaque spécialisation
-	local auto = Heading(page, "Profils automatiques")
-	auto:SetPoint("TOPLEFT", 0, -180)
-	Register(page, L["Profils automatiques"], auto)
-	local enable = BuildItem(page, { "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe, le champ de bataille ou l'arène, et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." })
-	enable:SetPoint("TOPLEFT", 0, -212)
-	-- Une ligne par situation (taille du groupe, champ de bataille, arène), une colonne par spécialisation
-	local LABEL_W = 110
-	local CELL_W = (COLUMN - LABEL_W - 4) / 2
-	local SIZE_LABELS = { ["5"] = "Seul, 5", ["10"] = "10 joueurs", ["25"] = "25 joueurs", ["40"] = "40 joueurs", BG = "Champ de bataille", ARENA = "Arène" }
+local function ProfileGrid(page, width)
+	local grid = CreateFrame("Frame", nil, page)
+	local LABEL_W = 150
+	local CELL_W = math.floor((width - LABEL_W - 6) / 2)
+	grid:SetSize(width, 18 + #Z.profileSizes * 24)
 	for group = 1, 2 do
-		local head = UI.Label(page, 11, nil, "accent")
-		head:SetPoint("TOPLEFT", LABEL_W + (group - 1) * (CELL_W + 4), -240)
+		local head = UI.Label(grid, 11, nil, "accent")
+		head:SetPoint("TOPLEFT", LABEL_W + (group - 1) * (CELL_W + 6), 0)
 		head:SetWidth(CELL_W)
 		head:SetJustifyH("CENTER")
 		head:SetText(L["Spé. %d"]:format(group))
 	end
 	local CLICK_HINT = "\n|cff8a8f99" .. L["Clic : profil suivant, clic droit : précédent."] .. "|r"
+	local cells = {}
 	for i, size in ipairs(Z.profileSizes) do
-		local y = -256 - (i - 1) * 24
-		local label = UI.Label(page, 11)
+		local y = -16 - (i - 1) * 24
+		local label = UI.Label(grid, 11)
 		label:SetPoint("TOPLEFT", 0, y - 5)
 		label:SetText(L[SIZE_LABELS[size]])
 		for group = 1, 2 do
-			local cell = UI.Button(page, "", CELL_W, 22, function(self, mouseButton)
+			local cell = UI.Button(grid, "", CELL_W, 22, function(self, mouseButton)
 				local rules = Z:ProfileRules(group)
 				local list = { false } -- false : aucun profil
 				for _, n in ipairs(Z:ProfileNames()) do list[#list + 1] = n end
@@ -1253,7 +1275,7 @@ local function BuildProfiles(page)
 				Z:CheckAutoProfile()
 			end)
 			cell:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-			cell:SetPoint("TOPLEFT", LABEL_W + (group - 1) * (CELL_W + 4), y)
+			cell:SetPoint("TOPLEFT", LABEL_W + (group - 1) * (CELL_W + 6), y)
 			cell.label:SetJustifyH("CENTER")
 			cell.Update = function(self)
 				local wanted = Z:ProfileRules(group)[size]
@@ -1274,78 +1296,96 @@ local function BuildProfiles(page)
 			cells[#cells + 1] = cell
 		end
 	end
-	page.profileCells = cells
+	grid.profileCells = cells
+	grid.Update = function()
+		for _, cell in ipairs(cells) do cell:Update() end
+	end
+	grid:SetScript("OnShow", grid.Update)
+	grid:Update()
+	Register(page, L["Profils automatiques"], grid)
+	return grid
+end
 
-	-- Colonne de gauche, 3 : points de départ
-	local presets = Heading(page, "Profils prêts à l'emploi")
-	presets:SetPoint("TOPLEFT", 0, -408)
-	Register(page, L["Profils prêts à l'emploi"], presets)
-	Note(page, "Taille et disposition seulement ; vos clics restent.", 0, -438, COLUMN)
+-- Profils prêts à l'emploi : trois boutons par rangée
+local function PresetButtons(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	local each = math.floor((width - 12) / 3)
+	box:SetSize(width, math.ceil(#Z.presets / 3) * 29 - 5)
 	for i, preset in ipairs(Z.presets) do
-		local button = UI.Button(page, L[preset[2]], 150, 24, function() Z:ApplyPreset(preset[1]) end)
-		button:SetPoint("TOPLEFT", ((i - 1) % 2) * 156, -462 - math.floor((i - 1) / 2) * 29)
+		local button = UI.Button(box, L[preset[2]], each, 24, function()
+			Z:ApplyPreset(preset[1])
+			RefreshShownPages()
+		end)
+		button:SetPoint("TOPLEFT", ((i - 1) % 3) * (each + 6), -math.floor((i - 1) / 3) * 29)
 		button.label:SetJustifyH("CENTER")
 	end
+	Register(page, L["Profils prêts à l'emploi"], box)
+	return box
+end
 
-	-- Colonne de droite, 2 et 3 : remise à zéro, entre joueurs
-	local clicksHead = Heading(page, "Remise à zéro")
-	clicksHead:SetPoint("TOPLEFT", right, -262)
-	local clicks = UI.Button(page, L["Reprendre les clics proposés pour ma classe"], COLUMN, 24, function()
-		Z:ResetClassClicks()
-		result:SetText("|cff33dd88" .. L["Clics de la classe rétablis."] .. "|r")
-	end)
-	clicks:SetPoint("TOPLEFT", right, -294)
-	clicks.label:SetJustifyH("CENTER")
-	local reset, undo
-	local HALF = (COLUMN - 6) / 2
-	reset = UI.Button(page, L["Tout réinitialiser"], HALF, 24, function(self)
-		if not self.armed then -- un premier clic arme le bouton, le second confirme
-			self.armed = true
-			self.label:SetText("|cffff5555" .. L["Cliquez encore pour confirmer"] .. "|r")
-			C_Timer.After(4, function()
-				reset.armed = false
-				reset.label:SetText(L["Tout réinitialiser"])
-			end)
-			return
-		end
-		Z:ResetAll()
-		Refresh()
-		result:SetText("|cff33dd88" .. L["Tous les réglages sont revenus à l'origine."] .. "|r")
-	end)
-	reset:SetPoint("TOPLEFT", right, -324)
-	reset.label:SetJustifyH("CENTER")
-	reset.tip = L["Remet tous les réglages d'origine. La position des cadres et vos profils enregistrés sont conservés."]
-	Register(page, L["Tout réinitialiser"], reset)
-	-- Sauvegarde avant import (#29) : grisé tant qu'aucun import n'a eu lieu
-	undo = UI.Button(page, L["Annuler l'import"], HALF, 24, function()
-		local ok, message = Z:UndoImport()
-		if ok then RefreshShownPages() end
-		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
-	end)
-	undo:SetPoint("LEFT", reset, "RIGHT", 6, 0)
-	undo.label:SetJustifyH("CENTER")
-	undo.tip = L["Remet la configuration d'avant le dernier import (code collé ou configuration reçue). Aussi : /lyorune annuler."]
-	Register(page, L["Annuler l'import"], undo)
-
-	-- Entre joueurs (#29) : un interrupteur général, et sous lui chaque fonction, grisée quand il est coupé
-	local sync = Heading(page, "Entre joueurs")
-	sync:SetPoint("TOPLEFT", right, -366)
-	local master = BuildItem(page, { "check", "syncEnabled", "Synchronisation entre joueurs", "Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu." })
-	master:SetPoint("TOPLEFT", right, -398)
-	local subs = {
-		BuildItem(page, { "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande." }),
-		BuildItem(page, { "check", "versionNotice", "Me prévenir si une version plus récente existe" }),
-		BuildItem(page, { "check", "resSync", "Montrer qui relève qui", "Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss, le jeu bloque ces messages." }),
-	}
-	for i, sub in ipairs(subs) do
-		sub:SetPoint("TOPLEFT", right + 16, -398 - i * 27)
-		sub:SetWidth(COLUMN - 16)
+-- Donner ma configuration : le code à copier, ou l'envoi direct à un joueur qui a Lyorune
+local function ExportBox(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 118)
+	Note(box, "Code à copier (Ctrl+C) et à envoyer : chuchotement, Discord...", 0, 0, width)
+	local export = UI.Edit(box, width)
+	export:SetPoint("TOPLEFT", 0, -20)
+	box.Update = function()
+		export:SetText(Z:Export())
+		export:SetCursorPosition(0)
 	end
-	-- Joueurs du groupe qui ont Lyorune : le nombre, et la liste au survol
+	export:HookScript("OnTextChanged", function(_, byUser)
+		if byUser then box:Update() end -- le code n'est pas modifiable à la main
+	end)
+	Note(box, "Ou envoi direct à un joueur qui a Lyorune (il devra accepter) :", 0, -52, width)
+	local target = UI.Edit(box, 246)
+	target:SetPoint("TOPLEFT", 0, -72)
+	Placeholder(target, "Nom du joueur")
+	local result = Result(box, -102, width)
+	local send = UI.Button(box, L["Envoyer"], 160, 22, function()
+		Say(result, Z:SendConfig(target:GetText()))
+	end)
+	send:SetPoint("LEFT", target, "RIGHT", 6, 0)
+	send.label:SetJustifyH("CENTER")
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Register(page, L["Donner ma configuration"], box)
+	return box
+end
+
+-- Recevoir une configuration : coller le code, puis Importer
+local function ImportBox(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 66)
+	Note(box, "Collez le code reçu (Ctrl+V), puis Importer. Votre position à l'écran est conservée.", 0, 0, width)
+	local result = Result(box, -50, width)
+	local import
+	local function DoImport()
+		local ok, message = Z:Import(import:GetText())
+		if ok then
+			import:SetText("")
+			RefreshShownPages() -- le code à donner, la synchronisation, « Annuler l'import »
+		end
+		Say(result, ok, message)
+	end
+	import = UI.Edit(box, width - 166, DoImport)
+	import:SetPoint("TOPLEFT", 0, -20)
+	local button = UI.Button(box, L["Importer"], 160, 22, DoImport)
+	button:SetPoint("LEFT", import, "RIGHT", 6, 0)
+	button.label:SetJustifyH("CENTER")
+	box.import = import
+	Register(page, L["Recevoir une configuration"], box)
+	return box
+end
+
+-- Entre joueurs (#29) : sous l'interrupteur général, chaque fonction est grisée quand il est coupé ; puis les
+-- joueurs du groupe qui ont Lyorune (le nombre, et la liste au survol)
+local SYNC_SUBS = { "resSync", "acceptConfigs", "versionNotice" }
+
+local function SyncWho(page, width)
 	local who = CreateFrame("Frame", nil, page)
-	who:SetSize(COLUMN, 16)
-	who:SetPoint("TOPLEFT", right, -510)
-	who.text = Note(who, "", 0, 0, COLUMN)
+	who:SetSize(width, 18)
+	who.text = Note(who, "", 0, -2, width)
 	who:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
 		GameTooltip:SetText(L["Avec Lyorune dans le groupe"], 1, 1, 1)
@@ -1353,136 +1393,269 @@ local function BuildProfiles(page)
 		GameTooltip:Show()
 	end)
 	who:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	local function UpdateSync()
+	who.Update = function()
 		local on = Z.db.syncEnabled
-		for _, sub in ipairs(subs) do
-			sub:SetAlpha(on and 1 or 0.4)
-			sub:EnableMouse(on)
+		for _, key in ipairs(SYNC_SUBS) do
+			local sub = page.settings and page.settings[key]
+			if sub then
+				sub:SetAlpha(on and 1 or 0.4)
+				sub:EnableMouse(on)
+			end
 		end
-		undo:SetAlpha(Z:CanUndoImport() and 1 or 0.4)
-		undo:EnableMouse(Z:CanUndoImport())
 		local count = on and IsInGroup() and #Z:SyncMembers() or 0
 		who.text:SetText(not on and L["Synchronisation coupée."] or count == 0 and L["Pas de groupe : personne avec qui se synchroniser."]
 			or (L["Avec Lyorune dans le groupe : %d (survolez)."]):format(count))
 	end
-	master:HookScript("OnClick", UpdateSync)
+	local master = page.settings and page.settings.syncEnabled
+	if master then master:HookScript("OnClick", who.Update) end
+	who:SetScript("OnShow", who.Update)
+	who:Update()
+	return who
+end
 
-	-- Colonne de droite : partage
-	local exportHead = Heading(page, "Donner ma configuration")
-	exportHead:SetPoint("TOPLEFT", right, 0)
-	Register(page, L["Donner ma configuration"], exportHead)
-	Note(page, "Code à copier (Ctrl+C) et à envoyer : chuchotement, Discord...", right, -30, COLUMN)
-	local export = UI.Edit(page, COLUMN)
-	export:SetPoint("TOPLEFT", right, -52)
-	local function FillExport()
-		export:SetText(Z:Export())
-		export:SetCursorPosition(0)
+-- Remise à zéro : clics de la classe, tous les réglages, ou l'annulation du dernier import (#29)
+local function ResetBox(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 76)
+	local result = Result(box, -60, width)
+	local HALF = 240
+	local clicks = UI.Button(box, L["Reprendre les clics proposés pour ma classe"], 2 * HALF + 6, 24, function()
+		Z:ResetClassClicks()
+		Say(result, true, L["Clics de la classe rétablis."])
+	end)
+	clicks:SetPoint("TOPLEFT")
+	clicks.label:SetJustifyH("CENTER")
+	Register(page, L["Reprendre les clics proposés pour ma classe"], clicks)
+	local reset = ArmedButton(box, "Tout réinitialiser", "Cliquez encore pour confirmer", HALF, function()
+		Z:ResetAll()
+		RefreshShownPages()
+		Say(result, true, L["Tous les réglages sont revenus à l'origine."])
+	end)
+	reset:SetPoint("TOPLEFT", 0, -30)
+	reset.tip = L["Remet tous les réglages d'origine. La position des cadres et vos profils enregistrés sont conservés."]
+	Register(page, L["Tout réinitialiser"], reset)
+	-- Sauvegarde avant import : grisé tant qu'aucun import n'a eu lieu
+	local undo = UI.Button(box, L["Annuler l'import"], HALF, 24, function()
+		local ok, message = Z:UndoImport()
+		if ok then RefreshShownPages() end
+		Say(result, ok, message)
+	end)
+	undo:SetPoint("LEFT", reset, "RIGHT", 6, 0)
+	undo.label:SetJustifyH("CENTER")
+	undo.tip = L["Remet la configuration d'avant le dernier import (code collé ou configuration reçue). Aussi : /lyorune annuler."]
+	Register(page, L["Annuler l'import"], undo)
+	box.undo = undo
+	box.Update = function()
+		undo:SetAlpha(Z:CanUndoImport() and 1 or 0.4)
+		undo:EnableMouse(Z:CanUndoImport())
 	end
-	export:HookScript("OnTextChanged", function(_, byUser)
-		if byUser then FillExport() end -- le code n'est pas modifiable à la main
-	end)
-
-	Note(page, "Ou envoi direct à un joueur qui a Lyorune (il devra accepter) :", right, -84, COLUMN)
-	local target = UI.Edit(page, COLUMN - 96)
-	target:SetPoint("TOPLEFT", right, -106)
-	local send = UI.Button(page, L["Envoyer"], 90, 22, function()
-		local ok, message = Z:SendConfig(target:GetText())
-		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
-	end)
-	send:SetPoint("LEFT", target, "RIGHT", 6, 0)
-	send.label:SetJustifyH("CENTER")
-
-	local importHead = Heading(page, "Recevoir une configuration")
-	importHead:SetPoint("TOPLEFT", right, -140)
-	Register(page, L["Recevoir une configuration"], importHead)
-	Note(page, "Collez le code reçu (Ctrl+V), puis Importer. Votre position à l'écran est conservée.", right, -170, COLUMN)
-	local import
-	local function DoImport()
-		local ok, message = Z:Import(import:GetText())
-		result:SetText((ok and "|cff33dd88" or "|cffff5555") .. message .. "|r")
-		if ok then
-			import:SetText("")
-			FillExport()
-			UpdateSync()
-		end
-	end
-	import = UI.Edit(page, COLUMN - 96, DoImport)
-	import:SetPoint("TOPLEFT", right, -202)
-	local button = UI.Button(page, L["Importer"], 90, 22, DoImport)
-	button:SetPoint("LEFT", import, "RIGHT", 6, 0)
-	button.label:SetJustifyH("CENTER")
-
-	result = Note(page, "", right, -234, COLUMN)
-	page:SetScript("OnShow", function()
-		FillExport()
-		Refresh()
-		UpdateSync()
-	end)
-	FillExport()
-	Refresh()
-	UpdateSync()
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	return box
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Lire une case et commandes (chapitre Fenêtre et aide)
 ----------------------------------------------------------------------------------------------------
-local function BuildHelp(page)
-	local legend = {
-		{ { 0.45, 1.00, 0.60 }, "Vert clair au bout de la barre : soins en route" },
-		{ { 0.55, 0.85, 1.00 }, "Bande claire en bas : bouclier d'absorption" },
-		{ { 0.25, 0.50, 1.00 }, "Barre bleue sous la vie : mana" },
-		{ { 1.00, 0.15, 0.15 }, "Bordure rouge : le joueur est attaqué" },
-		{ { 1.00, 1.00, 1.00 }, "Bordure blanche : votre cible" },
-		{ { 0.20, 0.60, 1.00 }, "Cadre bleu : magie que vous pouvez dissiper" },
-		{ { 0.65, 0.20, 1.00 }, "Cadre violet : malédiction" },
-		{ { 0.75, 0.50, 0.10 }, "Cadre brun : maladie" },
-		{ { 0.10, 0.85, 0.20 }, "Cadre vert : poison" },
-		{ { 0.35, 0.35, 0.38 }, "Case estompée : joueur hors de portée" },
-	}
-	local head = Heading(page, "Lire une case")
-	head:SetPoint("TOPLEFT")
-	for i, entry in ipairs(legend) do
-		local square = UI.Tex(page, "ARTWORK", entry[1][1], entry[1][2], entry[1][3])
+local LEGEND = {
+	{ { 0.45, 1.00, 0.60 }, "Vert clair au bout de la barre : soins en route" },
+	{ { 0.55, 0.85, 1.00 }, "Bande claire en bas : bouclier d'absorption" },
+	{ { 0.25, 0.50, 1.00 }, "Barre bleue sous la vie : mana" },
+	{ { 1.00, 0.15, 0.15 }, "Bordure rouge : le joueur est attaqué" },
+	{ { 1.00, 1.00, 1.00 }, "Bordure blanche : votre cible" },
+	{ { 0.20, 0.60, 1.00 }, "Cadre bleu : magie que vous pouvez dissiper" },
+	{ { 0.65, 0.20, 1.00 }, "Cadre violet : malédiction" },
+	{ { 0.75, 0.50, 0.10 }, "Cadre brun : maladie" },
+	{ { 0.10, 0.85, 0.20 }, "Cadre vert : poison" },
+	{ { 0.35, 0.35, 0.38 }, "Case estompée : joueur hors de portée" },
+}
+
+local function Legend(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, #LEGEND * 21)
+	for i, entry in ipairs(LEGEND) do
+		local square = UI.Tex(box, "ARTWORK", entry[1][1], entry[1][2], entry[1][3])
 		square:SetSize(12, 12)
-		square:SetPoint("TOPLEFT", 2, -12 - i * 21)
-		local text = UI.Text(page, 12)
+		square:SetPoint("TOPLEFT", 2, -4 - (i - 1) * 21)
+		local text = UI.Text(box, 12)
 		text:SetPoint("LEFT", square, "RIGHT", 10, 0)
 		text:SetText(L[entry[2]])
 	end
+	Register(page, L["Lire une case"], box)
+	return box
+end
 
-	local commands = Heading(page, "Commandes")
-	commands:SetPoint("TOPLEFT", 0, -256)
-	local list = UI.Label(page, 12)
-	list:SetPoint("TOPLEFT", commands, "BOTTOMLEFT", 0, -8)
+-- Les commandes prennent la couleur d'accent du thème de fenêtre
+local COMMANDS = {
+	{ "", "ouvrir cette fenêtre" }, { " test", "mode test (faux groupe)" }, { " tuto", "relancer le tutoriel" },
+	{ " assistant", "assistant de départ" }, { " verrou", "verrouiller ou libérer la position" },
+	{ " epingler", "épingler ou retirer le joueur survolé" }, { " porteur", "le joueur survolé reçoit mes buffs uniques" },
+	{ " groupe", "qui a Lyorune dans le groupe" }, { " annuler", "annuler le dernier import" },
+	{ " mesure", "mesurer les performances" }, { " bug", "signaler un bug" }, { " diag", "compatibilité avec le jeu" },
+}
+
+local function CommandList(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 20)
+	local list = UI.Label(box, 12)
+	list:SetPoint("TOPLEFT")
+	list:SetWidth(width)
 	list:SetJustifyH("LEFT")
 	list:SetSpacing(4)
-	local function Commands() -- les commandes prennent la couleur d'accent du thème de fenêtre
-		local c = "|cff" .. UI.Hex("accent")
-		list:SetText(c .. "/lyorune|r  " .. L["ouvrir cette fenêtre"] .. "\n" .. c .. "/lyorune test|r  " .. L["mode test (faux groupe)"]
-			.. "\n" .. c .. "/lyorune tuto|r  " .. L["relancer le tutoriel"] .. "\n" .. c .. "/lyorune assistant|r  " .. L["assistant de départ"] .. "\n" .. c .. "/lyorune verrou|r  " .. L["verrouiller ou libérer la position"]
-			.. "\n" .. c .. "/lyorune epingler|r  " .. L["épingler ou retirer le joueur survolé"]
-			.. "\n" .. c .. "/lyorune porteur|r  " .. L["le joueur survolé reçoit mes buffs uniques"]
-			.. "\n" .. c .. "/lyorune groupe|r  " .. L["qui a Lyorune dans le groupe"] .. "\n" .. c .. "/lyorune annuler|r  " .. L["annuler le dernier import"]
-			.. "\n" .. c .. "/lyorune mesure|r  " .. L["mesurer les performances"]
-			.. "\n" .. c .. "/lyorune bug|r  " .. L["signaler un bug"] .. "\n" .. c .. "/lyorune diag|r  " .. L["compatibilité avec le jeu"])
+	box.list = list
+	box.Update = function()
+		local c, lines = "|cff" .. UI.Hex("accent"), {}
+		for i, command in ipairs(COMMANDS) do lines[i] = c .. "/lyorune" .. command[1] .. "|r  " .. L[command[2]] end
+		list:SetText(table.concat(lines, "\n"))
+		Fit(box, math.ceil(list:GetStringHeight()) + 2)
 	end
-	Commands()
-	UI.OnSkin(Commands)
+	UI.OnSkin(box.Update)
+	box:Update()
+	Register(page, L["Commandes"], box)
+	return box
+end
+
+----------------------------------------------------------------------------------------------------
+-- Accueil : le profil en cours, les réglages changés, de quoi bien commencer
+----------------------------------------------------------------------------------------------------
+-- Chaque réglage décrit dans les chapitres : fonction(ligne, numéro du chapitre, chapitre)
+local function EachSetting(list, fn)
+	for i, chapter in ipairs(list) do
+		for _, section in ipairs(chapter.sections) do
+			for _, item in ipairs(section[2]) do
+				if SETTING_KINDS[item[1]] then fn(item, i, chapter) end
+			end
+		end
+	end
+end
+
+-- Profil actif : son nom, comment il a été choisi, et un bouton vers le chapitre Profils et partage
+local function ActiveProfile(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 44)
+	box.rune = UI.Paint(UI.Rune(box, "ARTWORK", 20, 30), "gold")
+	box.rune:SetPoint("LEFT", 2, 0)
+	box.name = UI.Label(box, 13)
+	box.name:SetPoint("TOPLEFT", 44, -4)
+	box.desc = UI.Label(box, 11, nil, "dim")
+	box.desc:SetPoint("TOPLEFT", 44, -24)
+	box.desc:SetWidth(width - 44 - 166)
+	box.desc:SetJustifyH("LEFT")
+	box.go = UI.Button(box, L["Changer de profil"], 160, 24, function() Z:ToggleOptions("Profils et partage") end)
+	box.go:SetPoint("RIGHT")
+	box.go.label:SetJustifyH("CENTER")
+	box.Update = function(self)
+		local active = Z.db.activeProfile
+		if active ~= "" and Z.db.profiles[active] then
+			self.name:SetText(active)
+			self.desc:SetText(L[Z.db.autoProfile and "Changé tout seul selon la taille du groupe et votre spécialisation."
+				or "Choisi à la main : il ne change que si vous en chargez un autre."])
+		else
+			self.name:SetText(L["Aucun profil"])
+			self.desc:SetText(L["Vos réglages du moment ne portent aucun nom."])
+		end
+	end
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Register(page, L["Profil actif"], box)
+	return box
+end
+
+-- Valeur d'un réglage en mots : le libellé du choix, « Activé », « Coupé » ou le nombre
+local function ValueText(item, value)
+	if item[1] == "cycle" and item[4] then
+		for _, choice in ipairs(item[4]) do
+			if choice[1] == value then return L[choice[2]] end
+		end
+	end
+	return UI.Describe(item[2], value) or ""
+end
+
+-- Vos réglages changés : un clic sur le nom mène au réglage, un clic sur la rune d'or le rétablit
+local CHANGED_H = 24
+
+local function ChangedRow(box, width)
+	local row = UI.Button(box, "", width - 24, 22, function(self) window.GoToSetting(self.key, self.chapter) end)
+	row.label:ClearAllPoints()
+	row.label:SetPoint("LEFT", 6, 0)
+	row.label:SetWidth(270)
+	row.label:SetJustifyH("LEFT")
+	row.value = UI.Label(row, 11, nil, "accent")
+	row.value:SetPoint("LEFT", 282, 0)
+	row.value:SetWidth(110)
+	row.value:SetJustifyH("LEFT")
+	row.value:SetWordWrap(false)
+	row.where = UI.Label(row, 11, nil, "dim")
+	row.where:SetPoint("RIGHT", -6, 0)
+	row.where:SetWidth(100)
+	row.where:SetJustifyH("RIGHT")
+	row.where:SetWordWrap(false)
+	row.tip = L["Aller au réglage"]
+	local function Get() return Z.db[row.key] end
+	local function Set(value) select(2, Option(row.key))(value) end
+	row.rune = UI.ChangedRune(row, row.key, Get, Set)
+	row.Update = function() box:Update() end -- rétabli : la liste se range de nouveau
+	return row
+end
+
+local function ChangedList(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 40)
+	box.empty = Note(box, "Aucun pour l'instant : Lyorune est réglé comme à l'installation. Changez un réglage dans un chapitre, il apparaîtra ici.", 0, -2, width)
+	box.rows = {}
+	box.Update = function(self)
+		local list = {}
+		EachSetting(chapters, function(item, index)
+			local key = item[2]
+			if Z.defaults[key] ~= nil and not UI.Same(Z.db[key], Z.defaults[key]) then
+				list[#list + 1] = { item = item, chapter = index }
+			end
+		end)
+		for i, entry in ipairs(list) do
+			local row = self.rows[i] or ChangedRow(self, width)
+			self.rows[i] = row
+			row.key, row.chapter = entry.item[2], entry.chapter
+			row:ClearAllPoints()
+			row:SetPoint("TOPLEFT", 24, -(i - 1) * CHANGED_H)
+			row.label:SetText(L[entry.item[3]])
+			row.value:SetText(ValueText(entry.item, Z.db[row.key]))
+			row.where:SetText(L[chapters[entry.chapter].name])
+			row.rune.key = row.key
+			row.rune:Update()
+			row:Show()
+		end
+		for i = #list + 1, #self.rows do self.rows[i]:Hide() end
+		self.empty:SetShown(#list == 0)
+		self.count = #list
+		Fit(self, #list == 0 and 40 or #list * CHANGED_H)
+	end
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Register(page, L["Vos réglages changés"], box)
+	return box
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Les chapitres : nom, rune de l'atlas (1 à 24, ordre de outils/runes.py), phrase sous le titre, anciens noms
 -- d'onglet encore acceptés (Z:ToggleOptions("Clics") du tutoriel), parties { titre, lignes }.
--- Les pages dessinées à part (Clics, Alertes, Profils, listes, légende) y sont posées telles quelles en attendant
--- d'être remises en une colonne.
+-- Tout est en une colonne ; les outils (listes, clics, profils, légende) sont des lignes « custom ».
 ----------------------------------------------------------------------------------------------------
 local function Chapters()
 	return {
 		{ name = "Accueil", rune = 19, intro = "Votre profil, vos réglages changés et de quoi bien commencer.", sections = {
+			{ "Profil actif", {
+				{ "custom", ActiveProfile },
+			} },
+			{ "Vos réglages changés", {
+				{ "note", "Un clic sur un nom mène au réglage ; un clic sur sa rune d'or le remet comme à l'installation.", 30 },
+				{ "custom", ChangedList },
+			} },
 			{ "Découvrir", {
-				{ "button", "Lancer le tutoriel", function() window:Hide() Z:StartTutorial() end },
-				{ "button", "Assistant de départ", function() window:Hide() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." },
-				{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
+				{ "buttons", {
+					{ "button", "Lancer le tutoriel", function() window:Hide() Z:StartTutorial() end },
+					{ "button", "Assistant de départ", function() window:Hide() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." },
+					{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
+				} },
 			} },
 		} },
 		{ name = "Disposition", rune = 5, old = { "Cadres" }, intro = "Où et comment les cases sont rangées à l'écran.", sections = {
@@ -1686,7 +1859,34 @@ local function Chapters()
 			} },
 		} },
 		{ name = "Profils et partage", rune = 20, old = { "Profils" }, intro = "Vos profils, le partage avec vos amis et la synchronisation.", sections = {
-			{ nil, { { "block", BuildProfiles, 540 } } },
+			{ "Mes profils", {
+				{ "note", "Vos réglages d'apparence, enregistrés sous un nom. Clics, macros, listes et annonces n'en font pas partie : ils ne changent jamais avec le profil.", 30 },
+				{ "custom", ProfileBox },
+			} },
+			{ "Profils automatiques", {
+				{ "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe, le champ de bataille ou l'arène, et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." },
+				{ "custom", ProfileGrid },
+			} },
+			{ "Profils prêts à l'emploi", {
+				{ "note", "Taille et disposition seulement ; vos clics restent.", 18 },
+				{ "custom", PresetButtons },
+			} },
+			{ "Donner ma configuration", {
+				{ "custom", ExportBox },
+			} },
+			{ "Recevoir une configuration", {
+				{ "custom", ImportBox },
+			} },
+			{ "Entre joueurs", {
+				{ "check", "syncEnabled", "Synchronisation entre joueurs", "Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu." },
+				{ "check", "resSync", "Montrer qui relève qui", "Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss, le jeu bloque ces messages.", dep = { "syncEnabled", true } },
+				{ "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande.", fine = true, dep = { "syncEnabled", true } },
+				{ "check", "versionNotice", "Me prévenir si une version plus récente existe", fine = true, dep = { "syncEnabled", true } },
+				{ "custom", SyncWho }, -- après les trois réglages qu'il grise
+			} },
+			{ "Remise à zéro", {
+				{ "custom", ResetBox },
+			} },
 		} },
 		{ name = "Fenêtre et aide", rune = 21, old = { "Aide" }, intro = "Cette fenêtre, la langue, et de l'aide si besoin.", sections = {
 			{ "Fenêtres de Lyorune", {
@@ -1707,7 +1907,12 @@ local function Chapters()
 				{ "check", "perfMode", "Mode performance", "Pour les grands raids ou un ordinateur modeste : portée vérifiée une fois par seconde au lieu de deux, icônes des soins et des affaiblissements regroupées (un dixième de seconde de retard au plus). Rien ne disparaît. Peut être gardé dans un profil de raid.", fine = true },
 				{ "button", "Mesurer les performances", function() Z:ShowMeasure() end, "Fait tourner Lyorune sur un faux groupe de 5, 25 et 40 joueurs, et compare sa mémoire et son temps aux autres addons de soin chargés. Hors combat. Aussi : /lyorune mesure.", fine = true },
 			} },
-			{ nil, { { "block", BuildHelp, 490 } } },
+			{ "Lire une case", {
+				{ "custom", Legend },
+			} },
+			{ "Commandes", {
+				{ "custom", CommandList },
+			} },
 		} },
 	}
 end
@@ -1718,14 +1923,7 @@ local settingChapter
 function Z.TabOfSetting(key)
 	if not settingChapter then
 		settingChapter = {}
-		for _, chapter in ipairs(Chapters()) do
-			for _, section in ipairs(chapter.sections) do
-				for _, item in ipairs(section[2]) do
-					local kind = item[1]
-					if kind == "check" or kind == "seg" or kind == "step" or kind == "cycle" then settingChapter[item[2]] = chapter.name end
-				end
-			end
-		end
+		EachSetting(Chapters(), function(item, _, chapter) settingChapter[item[2]] = chapter.name end)
 	end
 	return settingChapter[key]
 end
@@ -1777,7 +1975,7 @@ local function BuildChapter(index)
 	scroll:Hide()
 	local content = scroll.content
 	content.tabIndex = index
-	local page = { scroll = scroll, content = content, parts = {}, blocks = {}, top = -64 }
+	local page = { scroll = scroll, content = content, parts = {}, top = -64 }
 	chapter.page = page
 
 	-- En-tête : la rune du chapitre, son nom, une phrase
@@ -1793,7 +1991,6 @@ local function BuildChapter(index)
 	for s, section in ipairs(chapter.sections) do
 		if section[1] then
 			local head = Heading(content, section[1])
-			head:SetWidth(ROW)
 			page.parts[#page.parts + 1] = { widget = head, before = s > 1 and 14 or 0 }
 		end
 		local fine = {}
@@ -1804,7 +2001,6 @@ local function BuildChapter(index)
 				local part = { widget = widget, item = item }
 				widget.part = part
 				widget.Relayout = function() Layout(page) end -- Fit : la ligne a changé de hauteur
-				if widget.isBlock then page.blocks[#page.blocks + 1] = widget end
 				if item.fine then fine[#fine + 1] = part else page.parts[#page.parts + 1] = part end
 			end)
 		end
@@ -1855,18 +2051,11 @@ local function Select(index, quiet)
 	if Z.char then Z.char.optionChapter = chapters[index].name end
 	for i, chapter in ipairs(chapters) do
 		local other = chapter.page
-		if other and i ~= index then
-			for _, block in ipairs(other.blocks) do block:Hide() end
-			other.scroll:Hide()
-		end
+		if other and i ~= index then other.scroll:Hide() end
 		chapter.button:SetActive(i == index)
 	end
 	page.scroll:Show()
-	for _, block in ipairs(page.blocks) do block:Show() end -- une page dessinée à part se remplit à l'affichage
-	for _, part in ipairs(page.parts) do -- chaque ligne suit les changements faits ailleurs (profil, partage, liste)
-		local widget = part.widget
-		if not widget.isBlock and widget.Update and widget:IsShown() then widget:Update() end
-	end
+	RefreshPage(page) -- chaque ligne suit les changements faits ailleurs (profil, partage, liste)
 	if changed and not quiet then Enter(page.scroll) end
 	if picker then picker:Hide() end
 	return page
@@ -1890,10 +2079,7 @@ local function BuildSearch()
 
 	local edit = UI.Edit(window, 230)
 	edit:SetPoint("TOPRIGHT", -44, -13)
-	edit.placeholder = UI.Text(edit, 11)
-	edit.placeholder:SetPoint("LEFT", 6, 0)
-	UI.Paint(edit.placeholder, "dim")
-	edit.placeholder:SetText(L["Rechercher un réglage..."])
+	Placeholder(edit, "Rechercher un réglage...")
 	results:SetPoint("TOPRIGHT", edit, "BOTTOMRIGHT", 0, -2)
 
 	local function Go(entry)
@@ -1924,7 +2110,6 @@ local function BuildSearch()
 
 	edit:HookScript("OnTextChanged", function(self)
 		local text = self:GetText():lower():match("^%s*(.-)%s*$")
-		self.placeholder:SetShown(text == "")
 		if #text < 2 then return results:Hide() end
 		for i = 1, #chapters do BuildChapter(i) end -- la recherche couvre tous les chapitres
 		local count = 0
@@ -1950,7 +2135,15 @@ local function BuildSearch()
 		results:SetHeight(count * 24 + 8)
 		results:SetShown(count > 0)
 	end)
-	window.search, window.results = edit, results
+	window.search, window.results, window.Go = edit, results, Go
+end
+
+-- Mène à un réglage par sa clé, dans son chapitre (liste des réglages changés de l'Accueil)
+local function GoToSetting(key, index)
+	BuildChapter(index)
+	for _, entry in ipairs(searchIndex) do
+		if entry.key == key then return window.Go(entry) end
+	end
 end
 
 -- Hauteur de la fenêtre : jamais plus haute que l'écran moins 60 pixels, la page du chapitre défile
@@ -1998,7 +2191,7 @@ local function Build()
 	BuildSearch()
 	window.magic = UI.HeaderMagic(window, logo, window.search)
 	if Z.RefreshRunes then Z:RefreshRunes(window) end
-	window.Select = Select
+	window.Select, window.GoToSetting = Select, GoToSetting
 	window.chapters = chapters
 	Select(Z.char and Z.char.optionChapter or 1, true) -- le chapitre de la dernière fois
 end
