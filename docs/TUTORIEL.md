@@ -39,10 +39,12 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 - **Réglages fins (n)** : au bas de chaque partie, les réglages moins courants sont repliés. Un clic les déplie ; Lyorune retient ce que vous avez déplié.
 - **Réglage grisé** : il dépend d'un autre réglage qui est coupé (par exemple la hauteur de la barre de mana quand la barre de mana est coupée). Il reste réglable et compte dès que l'autre est rallumé.
 
-**Ce que vous avez changé** :
+**Ce que vous avez changé** : tout s'enregistre tout seul, dès que vous touchez un réglage. Pour revenir en arrière :
 
 - **Rune d'or** : elle s'allume à côté de chaque réglage qui n'a plus sa valeur d'installation. Survolez-la pour voir cette valeur, cliquez dessus pour la reprendre.
 - **« Rétablir cette page »** : au bas d'un chapitre où un réglage a changé. Deux clics, et chaque réglage du chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne bougent pas.
+- **« Annuler mes changements »** : en bas à droite de la fenêtre, dès que vous avez changé quelque chose depuis son ouverture. Deux clics, et tout reprend la valeur qu'il avait quand vous avez ouvert la fenêtre : réglages, clics, listes et placement des éléments. Vos profils enregistrés ne bougent pas. Ouvrir une autre fenêtre de Lyorune ou lancer la visite ne compte pas comme une fermeture ; fermer la fenêtre, si. En combat, vos clics reviennent dès la fin du combat.
+- **« Enregistrer mes réglages »** : en bas à gauche, sous les chapitres. Tapez un nom et appuyez sur Entrée (Échap annule) : vos réglages du moment deviennent un profil, que vous retrouverez dans Profils et partage (voir la partie 11).
 
 **Retrouver un réglage** : en haut à droite, tapez un mot dans « Rechercher un réglage... » (« mana », « tank », « thème »...). Lyorune cherche dans le nom des réglages, puis dans leurs explications. Un clic sur un résultat ouvre le bon chapitre, déplie les réglages fins si besoin et fait clignoter le réglage.
 

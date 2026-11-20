@@ -1594,6 +1594,11 @@ function UI.PlaceBeside(w)
 	end
 end
 
+-- Vrai quand les options sont effacées le temps d'une fenêtre secondaire : elles reviendront à sa fermeture
+function UI.Away()
+	return next(away) ~= nil
+end
+
 -- Fenêtre secondaire fermée : les options reviennent (effacées) ou retournent à leur place (glissées), sauf si le
 -- joueur les a déplacées entre-temps
 local function GiveBack(w)

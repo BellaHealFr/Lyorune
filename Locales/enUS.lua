@@ -411,13 +411,14 @@ Z.translations.enUS = {
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r, ou avec « 5 », « 10 », « 25 » ou « 40 » sous la case témoin des options. Glissez son bandeau pour le déplacer ; un second clic sur le même nombre, ou le bouton |cff33dd88Fermer|r au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat."] =
 		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r, or with \"5\", \"10\", \"25\" or \"40\" under the preview cell of the options. Drag its banner to move it; a second click on the same number, or the |cff33dd88Close|r button at the end of the banner, leaves it; it also closes by itself in combat.",
-	["Tout se règle dans cette fenêtre, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
-			.. "À gauche, un |cff33dd88chapitre|r par sujet. Sa pastille d'or compte les réglages que vous y avez changés."] =
-		"Everything is set in this window, and nothing is mandatory: every element has its switch.\n\nOn the left, one |cff33dd88chapter|r per topic. Its golden badge counts the settings you changed there.",
+	["Tout se règle ici et s'enregistre tout seul. Rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
+			.. "À gauche, un |cff33dd88chapitre|r par sujet ; sa pastille d'or compte vos réglages changés. "
+			.. "Dessous, « Enregistrer mes réglages » les garde sous un nom."] =
+		"Everything is set here and saved by itself. Nothing is mandatory: every element has its switch.\n\nOn the left, one |cff33dd88chapter|r per topic; its golden badge counts your changed settings. Below, \"Save my settings\" keeps them under a name.",
 	["La page défile et se range par parties. « Réglages fins » déplie les réglages plus rares.\n\n"
-			.. "Une |cffffd140rune d'or|r marque un réglage changé : un clic dessus le rétablit. "
-			.. "« Rétablir cette page », tout en bas, remet le chapitre entier."] =
-		"The page scrolls and is sorted into parts. \"Fine settings\" unfolds the less common settings.\n\nA |cffffd140golden rune|r marks a changed setting: click it to reset it. \"Reset this page\", at the very bottom, resets the whole chapter.",
+			.. "Pour revenir en arrière : la |cffffd140rune d'or|r d'un réglage changé, « Rétablir cette page » tout en bas, "
+			.. "ou « Annuler mes changements » au bas de la fenêtre."] =
+		"The page scrolls and is sorted into parts. \"Fine settings\" unfolds the less common settings.\n\nTo go back: the |cffffd140golden rune|r of a changed setting, \"Reset this page\" at the very bottom, or \"Undo my changes\" at the bottom of the window.",
 	["La |cff33dd88case témoin|r suit chaque réglage en direct, avec un faux groupe dessous.\n\n"
 			.. "Les boutons « 5 », « 10 », « 25 » et « 40 » ouvrent le mode test."] =
 		"The |cff33dd88preview cell|r follows every setting live, with a fake group below it.\n\nThe \"5\", \"10\", \"25\" and \"40\" buttons open test mode.",
@@ -790,6 +791,15 @@ Z.translations.enUS = {
 	-- Fenêtre d'options à chapitres (1.26.0) : rétablir une page
 	["Rétablir cette page"] = "Reset this page",
 	["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne changent pas."] = "Every setting in this chapter goes back to its default value. Your lists, clicks and profiles do not change.",
+
+	-- Fenêtre d'options à chapitres (1.26.0) : bas de la fenêtre, enregistrer et annuler
+	["Enregistrer mes réglages"] = "Save my settings", ["Annuler mes changements"] = "Undo my changes",
+	["Par exemple : Raid"] = "For example: Raid", ["Entrée : enregistrer. Échap : annuler."] = "Enter: save. Escape: cancel.",
+	["Tout s'enregistre déjà tout seul. Ce bouton garde en plus vos réglages du moment sous un nom, comme profil : vous y reviendrez par Profils et partage. Vos clics et vos listes restent les mêmes dans tous les profils."] =
+		"Everything is already saved by itself. This button also keeps your current settings under a name, as a profile: you can come back to it from Profiles and sharing. Your clicks and lists stay the same in every profile.",
+	["Tout ce que vous avez changé depuis l'ouverture de cette fenêtre reprend sa valeur d'avant : réglages, clics et listes. Vos profils enregistrés ne changent pas."] =
+		"Everything you changed since this window was opened goes back to its previous value: settings, clicks and lists. Your saved profiles do not change.",
+	["vos clics reviendront à la fin du combat."] = "your clicks will come back when combat ends.",
 
 	-- Fenêtre d'options à chapitres (1.26.0) : case témoin et mode test
 	["Case témoin"] = "Preview cell", ["Elle suit chaque réglage, en direct."] = "It follows every setting, live.",

@@ -40,10 +40,12 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 - **Fine settings (n)**: at the bottom of each part, the less common settings are folded away. One click unfolds them; Lyorune remembers what you unfolded.
 - **Greyed-out setting**: it depends on another setting that is off (for example the mana bar height while the mana bar is off). You can still change it, and it counts as soon as the other one is back on.
 
-**What you changed**:
+**What you changed**: everything is saved by itself, as soon as you touch a setting. To go back:
 
 - **Golden rune**: it lights up next to every setting that no longer has its default value. Hover it to see that value, click it to go back to it.
 - **"Reset this page"**: at the bottom of a chapter where a setting has changed. Two clicks, and every setting of the chapter goes back to its default value. Your lists, clicks and profiles do not move.
+- **"Undo my changes"**: at the bottom right of the window, as soon as you have changed something since it was opened. Two clicks, and everything goes back to the value it had when you opened the window: settings, clicks, lists and element placement. Your saved profiles do not move. Opening another Lyorune window or starting the tour does not count as closing it; closing the window does. In combat, your clicks come back as soon as combat ends.
+- **"Save my settings"**: at the bottom left, under the chapters. Type a name and press Enter (Escape cancels): your current settings become a profile, which you will find in Profiles and sharing (see part 11).
 
 **Finding a setting**: at the top right, type a word in "Search a setting..." ("mana", "tank", "theme"...). Lyorune looks in the setting names, then in their explanations. Clicking a result opens the right chapter, unfolds the fine settings if needed and makes the setting flash.
 

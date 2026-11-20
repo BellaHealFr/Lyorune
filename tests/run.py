@@ -3777,6 +3777,98 @@ step("refonte 1.26.0, lot 6c ter : fenetres a la mesure de l'ecran, jamais l'une
   for key, value in pairs(saved) do Z.db[key] = value end
 end)
 
+step("refonte 1.26.0, lot 6c quater : annuler mes changements, enregistrer mes reglages", function()
+  local w = Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion, activeProfile = Z.db.activeProfile, profiles = CopyTable(Z.db.profiles),
+    showRunes = Z.db.showRunes }
+  Z.db.reduceMotion = true Z.db.showRunes = true Z:Refresh()
+  -- Fermée par le joueur : la copie est lâchée ; rouverte : nouvelle copie, rien à annuler
+  w:Hide() w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == nil, "copie gardee fenetre fermee")
+  Z:ToggleOptions("Disposition")
+  local copy = Z:OptionsOpenedCopy()
+  assert(copy and not w.undo:IsShown(), "Annuler montre sans changement")
+  assert(copy.profiles == nil and copy.macros == nil and copy.pinned == nil and copy.language == nil and copy.clicks,
+    "copie : reglages prives exclus, clics compris")
+
+  -- Bande du bas : un bouton de chaque côté de l'inscription runique, sans la toucher, dans la bande (34 de haut),
+  -- en retrait des cadres épais ; la fenêtre réduite d'un bloc garde ce rapport
+  local strip, width = Z:RuneStrip(), w:GetWidth()
+  local s, u = w.save._point, w.undo._point
+  assert(s[1] == "BOTTOMLEFT" and u[1] == "BOTTOMRIGHT" and s[2] >= 14 and u[2] <= -14, "places des boutons")
+  assert(s[2] + w.save:GetWidth() + 20 <= (width - strip:GetWidth()) / 2, "Enregistrer touche l'inscription")
+  assert(width + u[2] - w.undo:GetWidth() - 20 >= (width + strip:GetWidth()) / 2, "Annuler touche l'inscription")
+  assert(s[3] >= 6 and s[3] + w.save:GetHeight() <= 34 and u[3] + w.undo:GetHeight() <= 34, "boutons hors de la bande")
+
+  -- Enregistrer mes réglages : la case de nom s'ouvre, Entrée enregistre le profil, aucun réglage n'a changé
+  w.save:Run("OnClick", "LeftButton")
+  local box = w.saveBox
+  assert(box:IsShown() and box.status:GetText():find("Échap", 1, true), "case de nom")
+  box.edit:SetText(string.rep("x", 30)) box.edit:Run("OnEnterPressed")
+  assert(box:IsShown() and box.status:GetText():find("24", 1, true), "nom trop long accepte")
+  box.edit:Run("OnEscapePressed")
+  assert(not box:IsShown(), "Echap ne ferme pas la case")
+  w.save:Run("OnClick", "LeftButton")
+  box.edit:SetText("Essai 6c") box.edit:Run("OnEnterPressed")
+  assert(Z.db.profiles["Essai 6c"] and Z.db.activeProfile == "Essai 6c" and not box:IsShown(), "profil pas enregistre")
+  assert(not w.undo:IsShown(), "Annuler montre apres un simple enregistrement")
+  w.save:Run("OnClick", "LeftButton")
+  assert(box.edit:GetText() == "Essai 6c", "profil en cours propose")
+  w.save:Run("OnClick", "LeftButton")
+  assert(not box:IsShown(), "second clic ne ferme pas la case")
+
+  -- Un réglage, un clic, une liste et le placement changés : Annuler paraît, puis tout revient
+  local before = { width = Z.db.width, click = Z:GetClicks()["alt-5"] }
+  Z.db.width = Z.db.width + 10 Z:Refresh()
+  assert(w.undo:IsShown(), "Annuler cache apres un reglage change")
+  Z:SetClick("alt-5", "Prière")
+  Z.db.ignoredNames["Essai 6c"] = true
+  Z.db.placement.TILE = Z.db.placement.TILE or {}
+  Z.db.placement.TILE.name = { 3, -2 }
+  Z:Refresh()
+  -- Effacée par une fenêtre secondaire (écran de 1365) : la copie est gardée, Annuler revient avec les options
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  w.GetLeft = function() return 142 end w.GetRight = function() return 1222 end w.GetTop = function() return 738 end
+  LyoruneBug:Show()
+  assert(not w:IsShown(), "options pas effacees") w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue sous une fenetre secondaire")
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  assert(w:IsShown() and w.undo:IsShown(), "Annuler perdu au retour des options")
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  Z.UI.Fit(w)
+  -- Visite lancée des options : la copie est gardée, la fenêtre revient avec Annuler
+  Z:StartTutorial()
+  assert(Z:TutorialRunning(), "visite pas en cours") w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue pendant la visite")
+  LyoruneTutorial.close:Run("OnClick")
+  assert(not Z:TutorialRunning() and w:IsShown() and w.undo:IsShown(), "Annuler perdu apres la visite")
+
+  -- En combat : tout revient, les clics à la fin du combat, et le joueur est prévenu
+  local printed, Print = nil, Z.Print
+  Z.Print = function(_, text) printed = text end
+  COMBAT = true
+  w.undo:Run("OnClick", "LeftButton")
+  assert(Z.db.width ~= before.width, "Annuler au premier clic")
+  w.undo.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+  w.undo:Run("OnClick", "LeftButton")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+  Z.Print = Print
+  assert(printed and printed:find("fin du combat", 1, true), "joueur pas prevenu en combat")
+  assert(Z.db.width == before.width and Z:GetClicks()["alt-5"] == before.click, "reglage ou clic pas revenu")
+  assert(not Z.db.ignoredNames["Essai 6c"] and not (Z.db.placement.TILE and Z.db.placement.TILE.name), "liste ou placement pas revenus")
+  assert(Z.db.activeProfile == copy.activeProfile and Z.db.profiles["Essai 6c"], "profil en cours pas revenu, ou profil enregistre perdu")
+  assert(not w.undo:IsShown(), "Annuler encore montre")
+  assert(Z:OptionsOpenedCopy() == copy, "copie lachee apres Annuler")
+
+  -- Fermée puis rouverte : nouvelle copie
+  w:Hide() w:Run("OnHide")
+  Z:ToggleOptions()
+  assert(Z:OptionsOpenedCopy() and Z:OptionsOpenedCopy() ~= copy, "copie pas reprise a l'ouverture")
+  w:Hide() w:Run("OnHide")
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

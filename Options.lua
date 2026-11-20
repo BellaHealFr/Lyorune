@@ -15,6 +15,8 @@
 -- Chaque chapitre est une page qui défile, décrite par une liste (Chapters) : ajouter un réglage = ajouter une
 -- ligne. Les réglages fins de chaque partie sont repliés sous « Réglages fins (n) ».
 -- La recherche (en haut à droite) retrouve un réglage par son nom ou son explication.
+-- Au bas de la fenêtre, de chaque côté de l'inscription runique : « Enregistrer mes réglages » et « Annuler mes
+-- changements » (retour à l'ouverture de la fenêtre).
 
 local _, Z = ...
 local UI = Z.UI
@@ -23,7 +25,7 @@ local L = Z.L
 local WIDTH, HEIGHT = 1080, 708
 local SIDE = 212            -- largeur de la barre latérale
 local HEAD = 58             -- en-tête : logo, titre, recherche
-local FOOT = 34             -- bas de la fenêtre : inscription runique
+local FOOT = 34             -- bas de la fenêtre : inscription runique, Enregistrer et Annuler
 local ROW = 520             -- largeur d'une ligne de réglage
 local FINE = 14             -- retrait des réglages fins
 local WITNESS = 290         -- largeur de la colonne de la case témoin, à droite
@@ -31,6 +33,7 @@ local window, picker, witness
 local chapters
 local searchIndex = {}      -- { text, more, chapter, widget, label, key } : nom, explications, chapitre, élément
 local AfterChange           -- après un changement : pastilles, réglages dépendants, « Rétablir cette page » (plus bas)
+local UpdateFoot            -- après un changement : « Annuler mes changements » paraît ou disparaît (plus bas)
 local DIMMED = 0.42         -- transparence d'un réglage sans effet (son réglage parent est coupé)
 
 ----------------------------------------------------------------------------------------------------
@@ -419,6 +422,7 @@ end
 function Z:RefreshShapes()
 	if Z.shapePicker and Z.shapePicker:IsVisible() then Z.shapePicker:Update() end
 	if witness and witness:IsVisible() then Z:Try("case témoin", witness.Update) end
+	if UpdateFoot then UpdateFoot() end -- changement fait ailleurs (placement, liste, profil automatique)
 end
 
 -- Choix d'un coin : « Aucun », puis mes sorts suivis (ceux de ma classe et ma liste), par ordre alphabétique.
@@ -636,10 +640,12 @@ function RefreshClicks()
 		specLine.label:SetText(perSpec and L["Clics de la spécialisation %d"]:format(Z:SpecGroup()) or L["Mêmes clics dans toutes les spécialisations"])
 		specLine.copy:SetShown(perSpec)
 	end
+	if UpdateFoot then UpdateFoot() end -- un clic changé, même en combat
 end
 -- Appelé aussi par ApplyClicks : la liste suit les changements faits ailleurs (macros, partage), si elle est visible
 Z.RefreshClicks = function()
 	if clickList and clickList:IsVisible() then RefreshClicks() end
+	if UpdateFoot then UpdateFoot() end
 end
 
 -- Prend une macro de Lyorune « en main », pour la déposer dans une barre de sorts
@@ -2056,6 +2062,7 @@ AfterChange = function()
 			if page.reset and page.reset:IsShown() ~= (chapter.changes > 0) then Layout(page) end
 		end
 	end
+	UpdateFoot()
 end
 
 -- Page d'un chapitre, construite à sa première ouverture
@@ -2404,6 +2411,148 @@ local function GoToSetting(key, index)
 	end
 end
 
+----------------------------------------------------------------------------------------------------
+-- Bas de la fenêtre, de chaque côté de l'inscription runique (retour d'essai de l'auteur) :
+--   « Enregistrer mes réglages », toujours là : une petite case de nom s'ouvre au-dessus du bouton ; Entrée garde
+--   les réglages du moment comme profil (Z:SaveProfile), Échap annule. On reste sur la page.
+--   « Annuler mes changements », montré seulement si un réglage a changé depuis l'ouverture de la fenêtre : en deux
+--   clics, tout reprend la valeur qu'il avait à l'ouverture (réglages, clics, listes, coins, placement). La copie
+--   est prise à l'ouverture et gardée tant que la fenêtre n'est pas vraiment fermée : une fenêtre secondaire qui
+--   l'efface (UI.Away) ou la visite guidée ne la ferment pas. Mes profils, mes macros et les réglages propres à
+--   l'ordinateur (Z.private) n'en font pas partie. En combat, les clics reviennent à la fin du combat.
+----------------------------------------------------------------------------------------------------
+local opened -- les réglages copiés à l'ouverture de la fenêtre
+
+local function Copy(value)
+	return type(value) == "table" and CopyTable(value) or value
+end
+
+local function TakeCopy()
+	local copy = {}
+	for key in pairs(Z.defaults) do
+		if not Z.private[key] then copy[key] = Copy(Z.db[key]) end
+	end
+	return copy
+end
+
+-- Deux valeurs égales, tables comprises (clé par clé)
+local function Same(a, b)
+	if type(a) ~= "table" or type(b) ~= "table" then return a == b end
+	for k, v in pairs(a) do
+		if not Same(v, b[k]) then return false end
+	end
+	for k in pairs(b) do
+		if a[k] == nil then return false end
+	end
+	return true
+end
+
+-- Un réglage a changé depuis l'ouverture. Le profil en cours seul ne compte pas : enregistrer un profil ne change
+-- aucun réglage (il revient quand même avec le reste, sinon le profil d'avant recevrait de mauvais réglages).
+local function ChangedSinceOpen()
+	if not opened then return false end
+	for key, value in pairs(opened) do
+		if key ~= "activeProfile" and not Same(value, Z.db[key]) then return true end
+	end
+	return false
+end
+
+local function UndoChanges()
+	if not opened then return end
+	for key, value in pairs(opened) do Z.db[key] = Copy(value) end
+	Z:Refresh()
+	Z:RefreshAlerts()
+	Z:ApplyClicks() -- en combat, attend la fin du combat (boutons protégés)
+	if Z.RefreshClicks then Z.RefreshClicks() end
+	RefreshShownPages()
+	if witness then witness.Spark() end
+	if InCombatLockdown() then Z:Print(L["vos clics reviendront à la fin du combat."]) end
+end
+
+UpdateFoot = function()
+	if window and window.undo then window.undo:SetShown(ChangedSinceOpen()) end
+end
+
+-- Case de nom au-dessus de « Enregistrer mes réglages »
+local function SaveBox(save)
+	local box = CreateFrame("Frame", nil, window)
+	box:SetSize(save:GetWidth(), 84) -- le message peut tenir sur deux lignes
+	box:SetPoint("BOTTOMLEFT", save, "TOPLEFT", 0, 6)
+	box:SetFrameLevel(window:GetFrameLevel() + 30) -- au-dessus de la barre latérale
+	box:EnableMouse(true)
+	box.bg = UI.Paint(UI.Tex(box, "BACKGROUND"), "bg", 0.98)
+	box.bg:SetAllPoints()
+	box.border = UI.Paint(UI.Border(box, 1), "line")
+	box.title = UI.Label(box, 11)
+	box.title:SetPoint("TOPLEFT", 8, -8)
+	box.title:SetText(L["Nom du profil"])
+	box.status = UI.Label(box, 10, nil, "dim")
+	box.status:SetPoint("TOPLEFT", 8, -56)
+	box.status:SetWidth(box:GetWidth() - 16)
+	box.status:SetJustifyH("LEFT")
+
+	local function Save(text)
+		local ok, message = Z:SaveProfile(text)
+		Say(box.status, ok, message)
+		if not ok then return box.edit:SetFocus() end
+		RefreshShownPages() -- Accueil (profil actif), Profils et partage
+		box.done = message
+		C_Timer.After(2.5, function()
+			if box.done == message then box:Hide() end
+		end)
+	end
+	box.edit = UI.Edit(box, box:GetWidth() - 16, Save)
+	box.edit:SetPoint("TOPLEFT", 8, -26)
+	Placeholder(box.edit, "Par exemple : Raid")
+	box.edit:SetScript("OnEscapePressed", function(self)
+		self:ClearFocus()
+		box:Hide()
+	end)
+	box:SetScript("OnShow", function()
+		box.done = nil
+		box.status:SetText(L["Entrée : enregistrer. Échap : annuler."])
+		local active = Z.db.activeProfile
+		box.edit:SetText(active ~= "" and Z.db.profiles[active] and active or "") -- le profil en cours, à remplacer
+		box.edit:SetFocus()
+	end)
+	box:Hide()
+	return box
+end
+
+local function BuildFoot()
+	-- À gauche, sous la barre latérale ; en retrait des cadres épais (Classique, MMORPG)
+	local save = UI.Button(window, L["Enregistrer mes réglages"], SIDE - 16, 22, function()
+		if window.saveBox:IsShown() then window.saveBox:Hide() else window.saveBox:Show() end
+	end)
+	save:SetPoint("BOTTOMLEFT", 16, 7)
+	save.label:SetJustifyH("CENTER")
+	save.tip = L["Tout s'enregistre déjà tout seul. Ce bouton garde en plus vos réglages du moment sous un nom, comme profil : vous y reviendrez par Profils et partage. Vos clics et vos listes restent les mêmes dans tous les profils."]
+	window.save, window.saveBox = save, SaveBox(save)
+
+	-- À droite, sous la case témoin : montré seulement si un réglage a changé depuis l'ouverture
+	local undo = ArmedButton(window, "Annuler mes changements", "Cliquez encore pour confirmer", 214, UndoChanges)
+	undo:SetHeight(22)
+	undo:SetPoint("BOTTOMRIGHT", -16, 7)
+	undo.tip = L["Tout ce que vous avez changé depuis l'ouverture de cette fenêtre reprend sa valeur d'avant : réglages, clics et listes. Vos profils enregistrés ne changent pas."]
+	undo:Hide()
+	window.undo = undo
+
+	window:HookScript("OnShow", function()
+		if not opened then opened = TakeCopy() end
+		UpdateFoot()
+	end)
+	-- Fermée par le joueur : la copie est lâchée. Effacée par une fenêtre secondaire ou par la visite : gardée.
+	window:HookScript("OnHide", function()
+		window.saveBox:Hide()
+		if not (UI.Away() or Z.TutorialRunning and Z:TutorialRunning()) then opened = nil end
+	end)
+end
+
+-- Pour les tests : la copie prise à l'ouverture de la fenêtre
+function Z:OptionsOpenedCopy()
+	return opened
+end
+
 -- Hauteur de la fenêtre : jamais plus haute que l'écran moins 60 pixels, la page du chapitre défile
 function Z.OptionsHeight(screen)
 	screen = screen or 0
@@ -2464,6 +2613,7 @@ local function Build()
 	window.foot:SetHeight(1)
 	window.foot:SetPoint("BOTTOMLEFT", 10, FOOT)
 	window.foot:SetPoint("BOTTOMRIGHT", -10, FOOT)
+	BuildFoot() -- Enregistrer mes réglages, Annuler mes changements
 
 	BuildSearch()
 	BuildWitness()

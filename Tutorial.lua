@@ -10,6 +10,7 @@ local lockBefore -- déplacement des cadres choisi par le joueur, rendu à la fi
 -- D'où la visite a été lancée : fenêtre d'options ouverte ou non, et son chapitre. La visite la ferme le temps des
 -- cases, puis rend la fenêtre telle qu'elle était, sur le même chapitre (retour d'essai de l'auteur).
 local back = {}
+local starting -- vrai pendant que la visite ferme la fenêtre d'options, juste avant sa première carte
 local GAP = 14 -- écart entre la carte et ce qu'elle présente (le cadre de runes déborde de 12 pixels)
 
 -- Le bloc entier des cadres de soin : le groupe, ou chaque groupe de raid, avec son étiquette
@@ -127,16 +128,17 @@ local steps = {
 	-- zone ; la carte se pose à côté de la fenêtre entière, jamais sur la zone présentée
 	{
 		title = "La fenêtre d'options",
-		text = "Tout se règle dans cette fenêtre, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
-			.. "À gauche, un |cff33dd88chapitre|r par sujet. Sa pastille d'or compte les réglages que vous y avez changés.",
+		text = "Tout se règle ici et s'enregistre tout seul. Rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
+			.. "À gauche, un |cff33dd88chapitre|r par sujet ; sa pastille d'or compte vos réglages changés. "
+			.. "Dessous, « Enregistrer mes réglages » les garde sous un nom.",
 		window = "Accueil",
 		target = function() return Z:OptionsWindow().side end,
 	},
 	{
 		title = "Une page par chapitre",
 		text = "La page défile et se range par parties. « Réglages fins » déplie les réglages plus rares.\n\n"
-			.. "Une |cffffd140rune d'or|r marque un réglage changé : un clic dessus le rétablit. "
-			.. "« Rétablir cette page », tout en bas, remet le chapitre entier.",
+			.. "Pour revenir en arrière : la |cffffd140rune d'or|r d'un réglage changé, « Rétablir cette page » tout en bas, "
+			.. "ou « Annuler mes changements » au bas de la fenêtre.",
 		window = "Disposition",
 		target = OpenPage,
 	},
@@ -378,6 +380,16 @@ function Z:StartTutorial()
 	if not current then -- relancée en cours de route : on garde d'où elle était partie
 		back = { open = window and window:IsShown(), chapter = Z:OptionChapter() }
 	end
-	if window and window:IsShown() then window:Hide() end
+	if window and window:IsShown() then
+		starting = true
+		window:Hide()
+		starting = nil
+	end
 	Show(1)
+end
+
+-- Vrai pendant la visite : la fenêtre d'options fermée par la visite n'est pas fermée par le joueur (elle garde
+-- de quoi « Annuler mes changements »)
+function Z:TutorialRunning()
+	return current ~= nil or starting == true
 end
