@@ -246,7 +246,7 @@ Type `/lyorune test`, or click "5", "10", "25" or "40" under "Test mode", in the
 - **Cell corners**: square or rounded, whatever the shape.
 - **Background and border per group** (fine settings): each group sits on its own background, in the theme's colours.
 - **Theme**: Neon, Clean, Glass, Classic or Heroic (flat and modern, lightly embossed, glassy, like the game's raid frames, or textured with a golden border).
-- **High contrast**: black background, white border, larger text. It also applies to Lyorune's windows. It replaces the theme and the bar texture: both lines stay greyed out while it is on.
+- **High contrast**: frames on a black background, white border, larger text. It also applies to Lyorune's windows, in very dark grey with light text (easier on the eyes than pure black and white). It replaces the theme and the bar texture: both lines stay greyed out while it is on.
 - **Class colours**: "Vivid" (default) for bold, bright colours, or "Natural" for the game's own. Greyed out when the bars do not use class colours.
 - **Transparency**: "Frame opacity (%)" and "Out-of-range opacity (%)". In the fine settings, "Bar brightness (%)" and three one-click presets: "Subtle", "Semi-transparent", "Clearly visible".
 - **Health text**: missing health, percentage, or nothing; with the text size.

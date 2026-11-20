@@ -86,7 +86,7 @@ Z.translations.enUS = {
 	-- Apparence
 	["Style"] = "Style", ["Thème"] = "Theme", ["Texture des barres"] = "Bar texture", ["Celle du thème"] = "Theme default",
 	["Contraste élevé"] = "High contrast",
-	["Fond noir, bordure blanche, texte plus gros : pour une lecture facile. S'applique aussi aux fenêtres de Lyorune."] = "Black background, white border, larger text: easier to read. Also applies to Lyorune's windows.",
+	["Cases sur fond noir, bordure blanche, texte plus gros : pour une lecture facile. Les fenêtres de Lyorune passent aussi en contraste élevé (gris très foncé, texte clair)."] = "Frames on a black background, white border, larger text: easier to read. Lyorune's windows also switch to high contrast (very dark grey, light text).",
 	["Fenêtres de Lyorune"] = "Lyorune windows", ["Thème des fenêtres"] = "Window theme",
 	["Moderne"] = "Modern", ["Classique"] = "Classic", ["MMORPG"] = "MMORPG",
 	["Options, visite guidée et petites fenêtres (pas les cases). Moderne : net, bleu givre et or. Classique : comme les fenêtres du jeu. MMORPG : pierre sombre, cadre doré et runes gravées."] = "Options, guided tour and small windows (not the cells). Modern: clean, frost blue and gold. Classic: like the game's own windows. MMORPG: dark stone, golden frame and carved runes.",

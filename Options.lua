@@ -1741,7 +1741,7 @@ local function Chapters()
 			{ "Style", {
 				-- Le contraste élevé remplace le thème et la texture : grisés tant qu'il est allumé (retour d'essai)
 				{ "cycle", "theme", "Thème", ThemeChoices(), desc = "Sans effet quand « Contraste élevé » est allumé : il le remplace.", dep = { "highContrast", false } },
-				{ "check", "highContrast", "Contraste élevé", "Fond noir, bordure blanche, texte plus gros : pour une lecture facile. S'applique aussi aux fenêtres de Lyorune.", desc = "Fond noir, bordure blanche, texte plus gros." },
+				{ "check", "highContrast", "Contraste élevé", "Cases sur fond noir, bordure blanche, texte plus gros : pour une lecture facile. Les fenêtres de Lyorune passent aussi en contraste élevé (gris très foncé, texte clair).", desc = "Fond noir, bordure blanche, texte plus gros." },
 				{ "cycle", "texture", "Texture des barres", TextureChoices(), desc = "Sans effet quand « Contraste élevé » est allumé : il le remplace.", fine = true, dep = { "highContrast", false } },
 				{ "check", "smooth", "Barres animées", fine = true },
 			} },
@@ -2276,7 +2276,7 @@ local function BuildWitness()
 	col:SetPoint("TOPRIGHT", -10, -HEAD)
 	col:SetPoint("BOTTOMRIGHT", -10, FOOT)
 	col:SetWidth(WITNESS - 10)
-	col.bg = UI.Tex(col, "BACKGROUND", 0, 0, 0, 0.18)
+	col.bg = UI.Paint(UI.Tex(col, "BACKGROUND"), "side", "sideAlpha")
 	col.bg:SetAllPoints()
 	col.line = UI.Paint(UI.Tex(col, "ARTWORK"), "line")
 	col.line:SetWidth(1)
@@ -2582,7 +2582,7 @@ local function Build()
 	side:SetPoint("TOPLEFT", 10, -HEAD)
 	side:SetPoint("BOTTOMLEFT", 10, FOOT)
 	side:SetWidth(SIDE - 10)
-	side.bg = UI.Tex(side, "BACKGROUND", 0, 0, 0, 0.18)
+	side.bg = UI.Paint(UI.Tex(side, "BACKGROUND"), "side", "sideAlpha") -- un ton à part de la page
 	side.bg:SetAllPoints()
 	side.line = UI.Paint(UI.Tex(side, "ARTWORK"), "line")
 	side.line:SetWidth(1)

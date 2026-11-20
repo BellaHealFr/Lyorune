@@ -245,7 +245,7 @@ Chapitre **Apparence** :
 - **Angles des cases** : droits ou arrondis, quelle que soit la forme.
 - **Fond et bordure par groupe** (réglages fins) : chaque groupe est posé sur son propre fond, aux couleurs du thème.
 - **Thème** : Néon, Épuré, Verre, Classique ou Héroïque.
-- **Contraste élevé** : fond noir, bordure blanche, texte plus gros. Il vaut aussi pour les fenêtres de Lyorune. Il remplace le thème et la texture des barres : ces deux lignes restent grisées tant qu'il est allumé.
+- **Contraste élevé** : cases sur fond noir, bordure blanche, texte plus gros. Il vaut aussi pour les fenêtres de Lyorune, en gris très foncé et texte clair (plus reposant pour les yeux que le noir et le blanc purs). Il remplace le thème et la texture des barres : ces deux lignes restent grisées tant qu'il est allumé.
 - **Couleurs de classe** : « Vives » (par défaut) pour des couleurs franches et lumineuses, ou « Naturelles » pour celles du jeu. Grisé si les barres ne sont pas aux couleurs de classe.
 - **Transparence** : « Opacité des cadres (%) » et « Opacité hors de portée (%) ». Dans les réglages fins, « Luminosité des barres (%) » et trois préréglages en un clic : « Discret », « Semi-transparent », « Bien visible ».
 - **Texte de vie** : vie manquante, pourcentage, ou rien ; avec la taille du texte.

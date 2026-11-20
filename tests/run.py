@@ -1221,7 +1221,7 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
   assert(#UI.Windows() == count, "fenetre en double")
   w:Hide() w:Show()
   Z.db.highContrast = true Z:Refresh()
-  assert(UI.bg[1] == 0 and UI.text[1] == 1 and w.bg:IsShown(), "contraste eleve")
+  assert(UI.bg[1] == UI.CONTRAST.bg[1] and UI.text[1] == UI.CONTRAST.text[1] and w.bg:IsShown(), "contraste eleve")
   Z.db.highContrast = false Z:Refresh()
   assert(UI.Hex("accent") == "73c7ff", UI.Hex("accent"))
 
@@ -3867,6 +3867,60 @@ step("refonte 1.26.0, lot 6c quater : annuler mes changements, enregistrer mes r
   w:Hide() w:Run("OnHide")
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c quinquies : fenetres en gris tres fonce, jamais en noir pur", function()
+  local UI = Z.UI
+  local function lum(c)
+    local function ch(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+    return 0.2126 * ch(c[1]) + 0.7152 * ch(c[2]) + 0.0722 * ch(c[3])
+  end
+  local function ratio(a, b) local x, y = lum(a), lum(b) if x < y then x, y = y, x end return (x + 0.05) / (y + 0.05) end
+  local function black(c) return c[1] == 0 and c[2] == 0 and c[3] == 0 end
+  local function white(c) return c[1] == 1 and c[2] == 1 and c[3] == 1 end
+  -- Chaque thème des fenêtres, puis le contraste élevé par-dessus chacun : aucun fond noir pur, aucun texte blanc
+  -- pur, trois tons distincts (page, colonnes de côté, boutons), texte 4,5:1 au moins (7:1 en contraste élevé)
+  -- partout où il se pose, sans être poussé au maximum
+  local looks = {}
+  for name, skin in pairs(UI.skins) do
+    looks[#looks + 1] = { name, skin, 4.5 }
+    local high = {}
+    for _, role in ipairs(UI.ROLES) do high[role] = UI.CONTRAST[role] or skin[role] end
+    looks[#looks + 1] = { name .. " contraste", high, 7 }
+  end
+  for _, look in ipairs(looks) do
+    local name, p, need = look[1], look[2], look[3]
+    for _, role in ipairs({ "bg", "side", "panel" }) do
+      assert(p[role] and not black(p[role]) and lum(p[role]) < 0.05, name .. " : fond " .. role .. " noir pur ou trop clair")
+    end
+    assert(lum(p.side) > lum(p.bg) and lum(p.panel) > lum(p.bg), name .. " : plans pas separes")
+    assert(not white(p.text) and not white(p.btext), name .. " : texte blanc pur")
+    for _, ground in ipairs({ "bg", "side", "panel" }) do
+      for _, role in ipairs({ "text", "dim", "accent" }) do
+        assert(ratio(p[role], p[ground]) >= need, name .. " : " .. role .. " sur " .. ground .. " peu lisible")
+      end
+      assert(ratio(p.text, p[ground]) <= 18, name .. " : contraste force au maximum")
+    end
+    assert(ratio(p.btext, p.panel) >= need, name .. " : texte des boutons peu lisible")
+  end
+  assert(UI.CONTRAST.bgAlpha == 1, "contraste eleve : fond opaque")
+
+  -- Colonnes de côté peintes au ton « side », thème et contraste élevé suivis en direct
+  Z:ToggleOptions("Apparence")
+  local w = Z:OptionsWindow()
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast }
+  for _, case in ipairs({ { "MODERN", false }, { "CLASSIC", false }, { "MMO", false }, { "MODERN", true }, { "MMO", true } }) do
+    Z.db.windowTheme, Z.db.highContrast = case[1], case[2] Z:Refresh()
+    local skin, look = UI.skins[case[1]], case[1] .. (case[2] and " contraste" or "")
+    local want = case[2] and UI.CONTRAST or skin
+    for _, f in ipairs({ w.side, w.witness }) do
+      assert(f.bg._color[1] == want.side[1] and f.bg._color[4] == want.sideAlpha, look .. " : colonne de cote")
+    end
+    assert(not black(w.bg._color) and not black(UI.bg) and not white(UI.text), look .. " : fenetre en noir et blanc purs")
+  end
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide() w:Run("OnHide")
 end)
 
 step("aucune variable globale imprevue", function()

@@ -17,12 +17,13 @@ UI.accent = {}  -- couleur d'accent (titres, valeurs, survol)
 UI.gold   = {}  -- second accent (runes, séparateurs)
 UI.bg     = {}  -- fond des fenêtres
 UI.panel  = {}  -- fond des boutons et des champs
+UI.side   = {}  -- fond des colonnes de côté (barre latérale, case témoin) : un ton à part de la page
 UI.line   = {}  -- traits et bordures discrètes
 UI.edge   = {}  -- cadre des fenêtres
 UI.text   = {}  -- texte
 UI.dim    = {}  -- texte secondaire
 UI.btext  = {}  -- texte des boutons
-UI.ROLES = { "accent", "gold", "bg", "panel", "line", "edge", "text", "dim", "btext" }
+UI.ROLES = { "accent", "gold", "bg", "side", "panel", "line", "edge", "text", "dim", "btext" }
 
 -- Couleur fixe des cadres de soin (étiquettes « Groupe N », infobulle des clics) : hors thème de fenêtre
 UI.frameAccent = { 0.20, 0.87, 0.53 }
@@ -67,31 +68,44 @@ end
 --   kit       : famille des éléments (MODERN plat et net, CLASSIC textures du jeu, MMO pierre et or)
 --   headFont  : police des titres de rubrique (la police décorative est réservée aux titres)
 --   L'en-tête des fenêtres (logo, nom, version) garde la même police et la même taille dans tous les thèmes.
+-- Lisibilité (guides d'accessibilité des jeux) : aucun fond noir pur, gris très foncé à la place, trois tons
+-- pour séparer les plans (page, colonnes de côté, boutons et champs), texte blanc cassé, contraste du texte
+-- 4,5:1 au moins (7:1 en contraste élevé) sans être poussé au maximum. Les cases de soin ne sont pas concernées.
+--   side, sideAlpha : fond des colonnes de côté, posé sur celui de la fenêtre (voile léger sur un cadre du jeu)
 UI.skins = {
-	MODERN = { -- net, sombre, bleu givre et or du logo ; angles arrondis, éléments plats
+	MODERN = { -- net, gris ardoise, bleu givre et or du logo ; angles arrondis, éléments plats
 		accent = { 0.45, 0.78, 1.00 }, gold = { 0.93, 0.75, 0.35 },
-		bg = { 0.05, 0.06, 0.08 }, panel = { 0.10, 0.11, 0.14 }, line = { 0.22, 0.25, 0.32 }, edge = { 0.26, 0.30, 0.38 },
-		text = { 0.92, 0.94, 0.97 }, dim = { 0.62, 0.66, 0.72 }, btext = { 0.92, 0.94, 0.97 },
-		bgAlpha = 0.92, kit = "MODERN", headFont = "STANDARD", headSize = 13,
+		bg = { 0.09, 0.10, 0.12 }, side = { 0.12, 0.13, 0.16 }, panel = { 0.17, 0.18, 0.22 },
+		line = { 0.26, 0.29, 0.36 }, edge = { 0.30, 0.34, 0.42 },
+		text = { 0.88, 0.90, 0.93 }, dim = { 0.66, 0.70, 0.76 }, btext = { 0.88, 0.90, 0.93 },
+		bgAlpha = 0.92, sideAlpha = 0.9, kit = "MODERN", headFont = "STANDARD", headSize = 13,
 		runeBase = { 0.62, 0.84, 1.00 }, runeGlow = { 0.80, 0.93, 1.00 },
 	},
 	CLASSIC = { -- les fenêtres du jeu : cadre de boîte de dialogue, boutons rouges, cases à cocher du jeu
 		accent = { 1.00, 0.82, 0.00 }, gold = { 1.00, 0.82, 0.00 },
-		bg = { 0.06, 0.06, 0.06 }, panel = { 0.14, 0.14, 0.14 }, line = { 0.34, 0.34, 0.34 }, edge = { 1, 1, 1 },
-		text = { 1.00, 1.00, 1.00 }, dim = { 0.70, 0.70, 0.70 }, btext = { 1.00, 0.82, 0.00 },
-		bgAlpha = 1, kit = "CLASSIC", headFont = "Fonts\\FRIZQT__.TTF", headSize = 13,
+		bg = { 0.10, 0.10, 0.10 }, side = { 0.16, 0.16, 0.16 }, panel = { 0.16, 0.16, 0.16 },
+		line = { 0.34, 0.34, 0.34 }, edge = { 1, 1, 1 },
+		text = { 0.95, 0.95, 0.95 }, dim = { 0.72, 0.72, 0.72 }, btext = { 1.00, 0.82, 0.00 },
+		bgAlpha = 1, sideAlpha = 0.4, kit = "CLASSIC", headFont = "Fonts\\FRIZQT__.TTF", headSize = 13,
 		runeBase = { 0.93, 0.75, 0.35 }, runeGlow = { 1.00, 0.90, 0.60 },
 	},
 	MMO = { -- grimoire runique : fond de pierre, bordure dorée, runes aux angles, plaques dorées, braise
 		accent = { 1.00, 0.78, 0.30 }, gold = { 1.00, 0.78, 0.30 },
-		bg = { 0.08, 0.07, 0.06 }, panel = { 0.16, 0.12, 0.08 }, line = { 0.55, 0.42, 0.20 }, edge = { 1, 1, 1 },
-		text = { 0.96, 0.92, 0.84 }, dim = { 0.74, 0.68, 0.58 }, btext = { 1.00, 0.88, 0.62 },
-		bgAlpha = 0.78, kit = "MMO", headFont = "Fonts\\MORPHEUS.TTF", headSize = 15,
+		bg = { 0.10, 0.085, 0.07 }, side = { 0.15, 0.12, 0.09 }, panel = { 0.18, 0.14, 0.10 },
+		line = { 0.55, 0.42, 0.20 }, edge = { 1, 1, 1 },
+		text = { 0.96, 0.92, 0.84 }, dim = { 0.76, 0.70, 0.60 }, btext = { 1.00, 0.88, 0.62 },
+		bgAlpha = 0.78, sideAlpha = 0.5, kit = "MMO", headFont = "Fonts\\MORPHEUS.TTF", headSize = 15,
 		runeBase = { 1.00, 0.78, 0.30 }, runeGlow = { 1.00, 0.50, 0.15 }, sparks = true,
 	},
 }
--- Contraste élevé : appliqué par-dessus le thème choisi (cadre plat, fond noir, bordure blanche)
-local CONTRAST = { bg = { 0, 0, 0 }, text = { 1, 1, 1 }, btext = { 1, 1, 1 }, dim = { 0.86, 0.86, 0.86 }, line = { 0.75, 0.75, 0.75 }, edge = { 1, 1, 1 }, bgAlpha = 1 }
+-- Contraste élevé : appliqué par-dessus le thème choisi (cadre plat, fond opaque gris très foncé, texte blanc
+-- cassé, bordure blanche). Le blanc pur sur noir pur « bave » à la lecture : ni l'un ni l'autre ici.
+local CONTRAST = {
+	bg = { 0.08, 0.08, 0.08 }, side = { 0.12, 0.12, 0.12 }, panel = { 0.18, 0.18, 0.18 },
+	text = { 0.93, 0.93, 0.93 }, btext = { 0.93, 0.93, 0.93 }, dim = { 0.82, 0.82, 0.82 },
+	line = { 0.75, 0.75, 0.75 }, edge = { 1, 1, 1 }, bgAlpha = 1, sideAlpha = 1,
+}
+UI.CONTRAST = CONTRAST -- pour les tests
 
 -- Textures du jeu lui-même (présentes sur Forever) pour les thèmes Classique et MMORPG
 local GAME = {
@@ -128,7 +142,7 @@ UI.skin = UI.skins.MODERN
 
 local function Paint(obj, role, alpha, factor)
 	local c, f = UI[role], factor or 1
-	if alpha == "bgAlpha" then alpha = UI.bgAlpha or UI.skin.bgAlpha end
+	if type(alpha) == "string" then alpha = UI[alpha] or UI.skin[alpha] end -- « bgAlpha », « sideAlpha »
 	local r, g, b, a = c[1] * f, c[2] * f, c[3] * f, alpha or 1
 	local kind = not obj.isBorder and obj:GetObjectType()
 	if obj.isBorder then
@@ -141,7 +155,7 @@ local function Paint(obj, role, alpha, factor)
 end
 
 -- Note un élément de fenêtre (texture, texte ou bordure) et lui donne la couleur d'un rôle.
--- alpha : nombre, ou nom d'un champ du thème (« bgAlpha ») ; factor : assombrit (0,45 = 45 %).
+-- alpha : nombre, ou nom d'un champ du thème (« bgAlpha », « sideAlpha ») ; factor : assombrit (0,45 = 45 %).
 function UI.Paint(obj, role, alpha, factor)
 	if not painted[obj] then paintOrder[#paintOrder + 1] = obj end
 	painted[obj] = { role, alpha, factor }
@@ -199,6 +213,7 @@ function UI.ApplySkin()
 		UI[role][1], UI[role][2], UI[role][3] = c[1], c[2], c[3]
 	end
 	UI.bgAlpha = db.highContrast and CONTRAST.bgAlpha or skin.bgAlpha
+	UI.sideAlpha = db.highContrast and CONTRAST.sideAlpha or skin.sideAlpha
 	-- Chaque élément est repeint à part : une erreur sur l'un (notée dans le journal) n'arrête pas les autres
 	local failed
 	for _, obj in ipairs(paintOrder) do
