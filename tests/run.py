@@ -2775,6 +2775,153 @@ step("securite : codes et messages abimes", function()
   Z.db.placement = {} Z:Refresh()
 end)
 
+step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
+  local UI = Z.UI
+  local saved = { showPets = Z.db.showPets, horizontal = Z.db.horizontal, width = Z.db.width }
+  local function Get(key) return function() return Z.db[key] end end
+  local function Set(key) return function(value) Z.db[key] = value end end
+  local function Choices(key) local t = {} for _, c in ipairs(Z.choices[key]) do t[#t + 1] = { c[1], Z.L[c[2]] } end return t end
+  local function Build()
+    local w = {}
+    w.switch = UI.Switch(UIParent, "Familiers", Get("showPets"), Set("showPets"))
+    w.seg = UI.Segmented(UIParent, "Sens", Choices("horizontal"), Get("horizontal"), Set("horizontal"))
+    w.side = UI.SideButton(UIParent, 4, "Disposition", function(self) self.clicked = true end)
+    w.fold = UI.Fold(UIParent, "essai", 3)
+    w.scroll = UI.Scroll(UIParent)
+    return w
+  end
+  -- Chaque brique, créée dans chaque thème et en contraste élevé, ou créée avant et repeinte au changement
+  local early = Build()
+  Z.db.showPets, Z.db.horizontal = false, false
+  for _, look in ipairs({ "MODERN", "CLASSIC", "MMO", "CONTRAST" }) do
+    Z.db.windowTheme, Z.db.highContrast = look == "CONTRAST" and "MODERN" or look, look == "CONTRAST"
+    Z:Refresh()
+    local kit = UI.Kit()
+    for _, w in ipairs({ early, Build() }) do
+      local sw = w.switch
+      sw:Update()
+      assert(sw.track:IsShown() == (kit == "MODERN") and sw.knob:IsShown() == (kit == "MODERN" or kit == "FLAT"), look .. " : rail de l'interrupteur")
+      assert(sw.box:IsShown() == (kit ~= "MODERN"), look .. " : case de l'interrupteur")
+      assert(sw.box._tex == (kit == "CLASSIC" and UI.GAME.checkBox or kit == "MMO" and UI.SKIN.MMO.box or UI.WHITE), look .. " : allure de l'interrupteur")
+      assert(sw.mark:IsShown() == ((kit == "CLASSIC" or kit == "MMO") and sw.on), look .. " : marque")
+      w.seg:Update()
+      for _, b in ipairs(w.seg.segments) do
+        local layers = b.layers or {}
+        assert(b.pill:IsShown() == (b.selected and kit == "MODERN"), look .. " : pastille du choix")
+        assert(b.bg:IsShown() == (b.selected and kit == "FLAT"), look .. " : fond du choix")
+        assert((layers.gameUp and layers.gameUp:IsShown() or false) == (b.selected and kit == "CLASSIC"), look .. " : bouton du jeu")
+        assert((layers.plate and layers.plate:IsShown() or false) == (b.selected and kit == "MMO"), look .. " : plaque doree")
+      end
+      assert(w.seg.strip.round:IsShown() == (kit == "MODERN"), look .. " : cadre des choix")
+      w.side:SetActive(true)
+      assert(w.side.border:IsShown() and w.side.round:IsShown() == (kit == "MODERN") and w.side.bg:IsShown() == (kit ~= "MODERN"), look .. " : chapitre ouvert")
+      local strong = (kit == "CLASSIC" or kit == "MMO") and UI.gold or UI.text
+      assert(w.side.label._color[1] == strong[1], look .. " : nom du chapitre ouvert")
+      w.side:SetActive(false)
+      assert(not w.side.border:IsShown() and w.side.label._color[1] == UI.dim[1], look .. " : chapitre ferme")
+      assert(w.side.label._font == (kit == "MMO" and UI.skins.MMO.headFont or STANDARD_TEXT_FONT), look .. " : police du chapitre")
+    end
+  end
+  Z.db.windowTheme, Z.db.highContrast = "MODERN", false Z:Refresh()
+
+  -- Interrupteur : écrit le réglage, la pastille glisse (sauf en animations réduites) et prend l'accent
+  local sw = UI.Switch(UIParent, "Familiers", Get("showPets"), Set("showPets"))
+  sw:Run("OnClick")
+  assert(Z.db.showPets == true and sw.on and sw.slide:IsPlaying(), "interrupteur")
+  assert(sw.knob._color[1] == UI.accent[1] and sw.confirm:IsPlaying(), "interrupteur allume")
+  Z.db.reduceMotion = true
+  sw:Run("OnClick")
+  assert(Z.db.showPets == false and not sw.slide:IsPlaying() and sw.knob._color[1] == UI.dim[1], "interrupteur en animations reduites")
+  Z.db.reduceMotion = false
+  -- Une case à cocher garde son allure d'avant
+  local check = UI.Check(UIParent, "essai", Get("showPets"), Set("showPets"))
+  assert(not check.track and check.box._w == 16, "case a cocher changee")
+
+  -- Choix côte à côte : écrit le réglage, un seul choix sélectionné
+  local seg = UI.Segmented(UIParent, "Sens", Choices("horizontal"), Get("horizontal"), Set("horizontal"))
+  assert(#seg.segments == 2 and seg.segments[1].selected and seg.segments[1].label:GetText() == "En colonnes")
+  seg.segments[2]:Run("OnClick")
+  assert(Z.db.horizontal == true and seg.segments[2].selected and not seg.segments[1].selected, "choix cote a cote")
+  assert(seg.segments[2].label._color[1] == UI.bg[1] and seg.segments[1].label._color[1] == UI.dim[1], "texte des choix")
+
+  -- Nombre : flèches, molette, saisie directe ramenée aux limites et au pas
+  local lo, hi, pas = unpack(Z.limits.width)
+  Z.db.width = 86
+  local st = UI.Stepper(UIParent, "Largeur", lo, hi, pas, Get("width"), Set("width"))
+  assert(st.value:GetText() == "86" and st.value:GetObjectType() == "EditBox")
+  st.value:Run("OnMouseWheel", 1) assert(Z.db.width == 86 + pas, "molette vers le haut")
+  st.value:Run("OnMouseWheel", -1) st.value:Run("OnMouseWheel", -1) assert(Z.db.width == 86 - pas, "molette vers le bas")
+  st.plus:Run("OnClick") assert(Z.db.width == 86, "fleche +")
+  st.value:SetText("97") st.value:Run("OnEnterPressed") assert(Z.db.width == 98, "saisie ramenee au pas : " .. Z.db.width)
+  st.value:SetText("9999") st.value:Run("OnEnterPressed") assert(Z.db.width == hi, "saisie au-dela du maximum")
+  st.value:SetText("abc") st.value:Run("OnEnterPressed") assert(Z.db.width == hi and st.value:GetText() == tostring(hi), "saisie illisible")
+  st.value:SetText("-5") st.value:Run("OnEnterPressed") assert(Z.db.width == lo, "saisie sous le minimum")
+  st.value:Run("OnMouseWheel", -1) assert(Z.db.width == lo, "molette sous le minimum")
+  assert(Z.L["Molette : changer la valeur. Clic : la saisir au clavier."] and st.value:GetScript("OnEnter"))
+
+  -- Rune des réglages changés : visible seulement si la valeur diffère de Z.defaults, clic = valeur d'installation
+  local rune = UI.ChangedRune(st, "width", Get("width"), Set("width"))
+  assert(rune:IsShown() and st.changed == rune, "rune d'un reglage change")
+  rune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : " .. Z.defaults.width, GameTooltip:GetText())
+  rune:Run("OnClick")
+  assert(Z.db.width == Z.defaults.width and not rune:IsShown() and st.value:GetText() == tostring(Z.defaults.width), "retablir")
+  st.plus:Run("OnClick") assert(rune:IsShown(), "la rune suit le nombre")
+  rune:Run("OnClick")
+  local swRune = UI.ChangedRune(sw, "showPets", Get("showPets"), Set("showPets"))
+  assert(not swRune:IsShown()) sw:Run("OnClick") assert(swRune:IsShown(), "la rune suit l'interrupteur")
+  swRune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : Coupé", GameTooltip:GetText())
+  swRune:Run("OnClick") assert(Z.db.showPets == Z.defaults.showPets and not sw.on, "interrupteur retabli")
+  local segRune = UI.ChangedRune(seg, "horizontal", Get("horizontal"), Set("horizontal"))
+  segRune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : En colonnes", GameTooltip:GetText())
+  segRune:Run("OnClick") assert(Z.db.horizontal == false and seg.segments[1].selected, "choix retabli")
+  assert(UI.Same({ 1, { a = 2 } }, { 1, { a = 2 } }) and not UI.Same({ 1 }, { 1, 2 }) and not UI.Same({}, false))
+
+  -- Réglages fins repliables : l'état est gardé pour le personnage
+  Z.char.optionFolds = nil
+  local opened
+  local fold = UI.Fold(UIParent, "essai", 3, function(open) opened = open end)
+  assert(not fold:IsOpen() and fold.label:GetText() == "Réglages fins (3)")
+  fold:Run("OnClick")
+  assert(fold:IsOpen() and opened == true and Z.char.optionFolds.essai and fold.label:GetText() == "Masquer les réglages fins (3)")
+  assert(UI.Fold(UIParent, "essai", 3):IsOpen() and not UI.Fold(UIParent, "autre", 2):IsOpen(), "etat des reglages fins oublie")
+  fold:Run("OnClick") assert(not fold:IsOpen() and opened == false and Z.char.optionFolds.essai == nil)
+
+  -- Page qui défile : molette, limites, barre cachée sans défilement, poignée à glisser, aucune boucle au repos
+  local scroll = UI.Scroll(UIParent)
+  scroll:SetSize(300, 200) scroll.bar:SetHeight(200)
+  scroll:Run("OnSizeChanged", 300, 200)
+  assert(scroll.content:GetWidth() == 300 - 14, "largeur du contenu")
+  scroll:SetContentHeight(600)
+  assert(scroll:Range() == 400 and scroll.bar:IsShown())
+  scroll:Run("OnMouseWheel", -1) assert(scroll.offset == 40, "molette")
+  scroll:Run("OnMouseWheel", 1) scroll:Run("OnMouseWheel", 1) assert(scroll.offset == 0, "au-dessus du haut")
+  scroll:ScrollTo(9999) assert(scroll.offset == 400, "au-dela du bas")
+  scroll:ScrollTo(0)
+  CURSOR_Y = 300 scroll.thumb:Run("OnMouseDown", "LeftButton")
+  assert(scroll.thumb:GetScript("OnUpdate"), "poignee tenue")
+  CURSOR_Y = 250 scroll.thumb:Run("OnUpdate", 0.01)
+  assert(scroll.offset > 100 and scroll.offset < 200, "poignee glissee : " .. scroll.offset)
+  scroll.thumb:Run("OnMouseUp", "LeftButton")
+  assert(not scroll.thumb:GetScript("OnUpdate") and not scroll:GetScript("OnUpdate"), "boucle restee active")
+  CURSOR_Y = nil
+  scroll:SetContentHeight(100) assert(scroll.offset == 0 and not scroll.bar:IsShown(), "page courte")
+  assert(scroll.thumb.tex._color[1] == UI.gold[1], "barre aux couleurs du theme")
+
+  -- Bouton de chapitre : clic, pastille du nombre de réglages changés
+  local side = UI.SideButton(UIParent, 4, "Disposition", function(self) self.clicked = true end)
+  assert(not side.badge:IsShown())
+  side:SetCount(3) assert(side.badge:IsShown() and side.badge.text:GetText() == "3" and side.tip:find("3"))
+  side:SetCount(0) assert(not side.badge:IsShown() and not side.tip)
+  side:Run("OnClick") assert(side.clicked)
+
+  for _, key in ipairs({ "Réglages fins (%d)", "Masquer les réglages fins (%d)", "Activé", "Coupé", "Rétablir : %s",
+    "Rétablir comme à l'installation", "Réglages changés dans ce chapitre : %d", "Molette : changer la valeur. Clic : la saisir au clavier." }) do
+    assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+  end
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

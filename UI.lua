@@ -5,6 +5,7 @@
 local _, Z = ...
 local UI = {}
 Z.UI = UI
+local L = Z.L
 
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 UI.WHITE = WHITE
@@ -103,6 +104,7 @@ local GAME = {
 	buttonHighlight = "Interface\\Buttons\\UI-Panel-Button-Highlight",
 	checkBox = "Interface\\Buttons\\UI-CheckBox-Up",
 	check = "Interface\\Buttons\\UI-CheckBox-Check",
+	arrow = "Interface\\ChatFrame\\ChatFrameExpandArrow", -- petite flèche vers la droite (sous-menus du jeu)
 }
 UI.GAME = GAME
 local BACKDROPS = {
@@ -128,9 +130,10 @@ local function Paint(obj, role, alpha, factor)
 	local c, f = UI[role], factor or 1
 	if alpha == "bgAlpha" then alpha = UI.bgAlpha or UI.skin.bgAlpha end
 	local r, g, b, a = c[1] * f, c[2] * f, c[3] * f, alpha or 1
+	local kind = not obj.isBorder and obj:GetObjectType()
 	if obj.isBorder then
 		obj:SetColor(r, g, b, a)
-	elseif obj:GetObjectType() == "FontString" then
+	elseif kind == "FontString" or kind == "EditBox" then
 		obj:SetTextColor(r, g, b, a)
 	else
 		obj:SetVertexColor(r, g, b, a)
@@ -707,6 +710,110 @@ function UI.styles.divider(f, kit)
 	f.right:SetShown(rune)
 end
 
+-- Interrupteur. Moderne : pastille qui glisse dans un rail arrondi. Contraste élevé : même chose, rail carré.
+-- Classique : case et coche du jeu. MMORPG : creux cerclé d'or et rune. Toujours à droite de son libellé.
+local SWITCH_W, SWITCH_H, KNOB = 34, 18, 12
+
+local function KnobX(on)
+	return on and (SWITCH_W - KNOB - 3) or 3
+end
+
+local function PlaceKnob(c)
+	c.knob:ClearAllPoints()
+	c.knob:SetPoint("LEFT", c.box, "LEFT", KnobX(c.on), 0)
+end
+
+-- Allure de l'interrupteur selon son état ; animate : la pastille glisse (0,15 s, jamais en animations réduites)
+local function SwitchLook(c, animate)
+	local on = c.on
+	if c.textured then
+		c.mark:SetShown(on)
+		return
+	end
+	c.mark:Hide()
+	UI.Paint(c.knob, on and "accent" or "dim")
+	UI.Paint(c.track, on and "accent" or "panel", on and 0.3 or 1)
+	UI.Paint(c.box, on and "accent" or "panel", on and 0.3 or 1)
+	UI.Paint(c.border, on and "accent" or "line")
+	c.slide:Stop()
+	if animate and not UI.Calm() then
+		local from = KnobX(not on)
+		c.knob:ClearAllPoints()
+		c.knob:SetPoint("LEFT", c.box, "LEFT", from, 0)
+		c.move:SetOffset(KnobX(on) - from, 0)
+		c.slide:Play() -- à la fin, la pastille est posée à sa place (PlaceKnob)
+	else
+		PlaceKnob(c)
+	end
+end
+UI.SwitchLook = SwitchLook
+
+function UI.styles.switch(c, kit)
+	c.textured = kit == "CLASSIC" or kit == "MMO"
+	if c.textured then
+		UI.styles.check(c, kit) -- la case du thème, puis replacée à droite
+		c.box:ClearAllPoints()
+		c.box:SetPoint("RIGHT", kit == "CLASSIC" and 3 or 1, 0)
+	else
+		c.box:SetTexture(WHITE)
+		c.box:SetTexCoord(0, 1, 0, 1)
+		c.box:SetSize(SWITCH_W, SWITCH_H)
+		c.box:ClearAllPoints()
+		c.box:SetPoint("RIGHT")
+		c.border:Show()
+		c.border:SetRounded(kit == "MODERN")
+	end
+	c.box:SetShown(kit ~= "MODERN") -- rail carré du contraste élevé, ou case des thèmes texturés
+	c.track:SetShown(kit == "MODERN")
+	c.knob:SetShown(not c.textured)
+	c.label:ClearAllPoints()
+	c.label:SetPoint("LEFT")
+	c.label:SetPoint("RIGHT", c.box, "LEFT", -10, 0)
+	c.label:SetJustifyH("LEFT")
+	SwitchLook(c)
+end
+
+-- Un choix d'une rangée de choix côte à côte. Choisi : pastille d'accent (Moderne), fond d'accent (contraste
+-- élevé), bouton du jeu (Classique) ou plaque dorée (MMORPG). Les autres restent transparents.
+function UI.styles.segment(b, kit)
+	UI.styles.button(b, kit)
+	local textured = b.restKey ~= nil
+	if not b.selected then
+		b.restKey = nil -- pas de plaque enfoncée au clic
+		ShowLayer(b, nil)
+	end
+	b.gameLook = b.selected and kit == "CLASSIC"
+	if b.gameLight then b.gameLight:SetShown(b.gameLook) end
+	b.bg:SetShown(b.selected and not textured and kit ~= "MODERN")
+	b.pill:SetShown(b.selected and kit == "MODERN")
+	b.border:Hide()
+	UI.Paint(b.label, b.selected and (textured and "btext" or "bg") or "dim")
+end
+
+-- Cadre de la rangée de choix : arrondi en Moderne, droit ailleurs
+function UI.styles.segmented(s, kit)
+	local rounded = kit == "MODERN"
+	s.strip.round:SetShown(rounded)
+	s.strip.bg:SetShown(not rounded)
+	s.strip.border:SetRounded(rounded)
+end
+
+-- Bouton de chapitre de la barre latérale. Ouvert : fond léger et bordure, nom en clair (doré en Classique et
+-- MMORPG), rune dorée. Fermé : nom et rune discrets. Police des titres en MMORPG.
+function UI.styles.side(b, kit)
+	local active, rounded = b.active, kit == "MODERN"
+	b.bg:SetShown(active and not rounded)
+	b.round:SetShown(active and rounded)
+	b.border:SetShown(active)
+	b.border:SetRounded(rounded)
+	UI.Paint(b.label, active and ((kit == "CLASSIC" or kit == "MMO") and "gold" or "text") or "dim")
+	UI.Paint(b.rune, active and "gold" or "dim", active and 1 or 0.7)
+	local mmo = kit == "MMO"
+	if b.label:SetFont(mmo and UI.skin.headFont or STANDARD_TEXT_FONT, mmo and 14 or 13, "") == false then
+		b.label:SetFont(STANDARD_TEXT_FONT, 13, "")
+	end
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Éléments des fenêtres
 ----------------------------------------------------------------------------------------------------
@@ -740,10 +847,16 @@ function UI.Button(parent, text, width, height, onClick)
 	return UI.Style(b, "button")
 end
 
--- Case à cocher : get() donne l'état, set(valeur) l'enregistre
-function UI.Check(parent, label, get, set)
+-- Après chaque mise à jour d'un réglage affiché : sa rune des réglages changés suit (UI.ChangedRune)
+local function Changed(widget)
+	if widget.changed then widget.changed:Update() end
+end
+
+-- Case à cocher ou interrupteur : même fonctionnement, seule l'allure change (style « check » ou « switch »).
+-- get() donne l'état, set(valeur) l'enregistre.
+local function Toggle(parent, label, get, set, kind)
 	local c = CreateFrame("Button", nil, parent)
-	c:SetSize(250, 20)
+	c:SetSize(250, kind == "switch" and 26 or 20)
 	c.box = UI.Paint(UI.Tex(c, "BACKGROUND"), "panel")
 	c.border = UI.Paint(UI.Border(c, 1), "line")
 	c.border:ClearAllPoints()
@@ -751,35 +864,92 @@ function UI.Check(parent, label, get, set)
 	c.mark = UI.Paint(UI.Tex(c, "ARTWORK"), "accent")
 	c.label = UI.Label(c, 12)
 	c.label:SetText(label)
-	c.Update = function(self) self.mark:SetShown(get() and true or false) end
+	if kind == "switch" then
+		c.track = UI.Paint(UI.RoundTex(c, "BACKGROUND"), "panel")
+		c.track:SetAllPoints(c.box)
+		c.knob = UI.Paint(UI.RoundTex(c, "ARTWORK"), "dim") -- 12 pixels aux coins de 6 : un rond
+		c.knob:SetSize(KNOB, KNOB)
+		c.slide = c.knob:CreateAnimationGroup()
+		c.move = c.slide:CreateAnimation("Translation")
+		c.move:SetDuration(0.15)
+		c.move:SetSmoothing("OUT")
+		c.slide:SetScript("OnFinished", function() PlaceKnob(c) end)
+	end
+	c.Update = function(self, animate)
+		self.on = get() and true or false
+		if kind == "switch" then SwitchLook(self, animate) else self.mark:SetShown(self.on) end
+		Changed(self)
+	end
 	c:SetScript("OnClick", function(self)
 		Click()
 		set(not get())
-		self:Update()
+		self:Update(true)
 		UI.Confirm(self)
 	end)
-	c:SetScript("OnShow", c.Update)
-	UI.Style(c, "check")
+	c:SetScript("OnShow", function(self) self:Update() end)
+	c.on = get() and true or false
+	UI.Style(c, kind)
 	c:Update()
 	return c
 end
 
--- Valeur numérique avec boutons - et +
+function UI.Check(parent, label, get, set)
+	return Toggle(parent, label, get, set, "check")
+end
+
+-- Interrupteur : un réglage qui s'allume ou s'éteint, libellé à gauche, interrupteur à droite
+function UI.Switch(parent, label, get, set)
+	return Toggle(parent, label, get, set, "switch")
+end
+
+-- Valeur numérique : boutons - et +, molette sur la valeur, ou saisie directe (clic sur la valeur, Entrée).
+-- Un nombre saisi est ramené entre les limites et sur le pas le plus proche.
 function UI.Stepper(parent, label, min, max, step, get, set)
 	local s = CreateFrame("Frame", nil, parent)
 	s:SetSize(250, 22)
 	s.label = UI.Label(s, 12)
 	s.label:SetPoint("LEFT")
 	s.label:SetText(label)
-	s.value = UI.Label(s, 12, nil, "accent")
-	s.value:SetPoint("RIGHT", -30, 0)
-	s.value:SetWidth(40)
-	s.Update = function(self) self.value:SetText(get()) end
-	local function change(delta)
-		set(math.max(min, math.min(max, get() + delta)))
+	local e = CreateFrame("EditBox", nil, s)
+	e:SetSize(40, 22)
+	e:SetPoint("RIGHT", -30, 0)
+	e:SetAutoFocus(false)
+	e:SetFont(UI.Font(), 12, "")
+	e:SetJustifyH("CENTER")
+	UI.Paint(e, "accent")
+	s.value = e
+	s.Update = function(self)
+		self.value:SetText(tostring(get()))
+		Changed(self)
+	end
+	local function apply(value)
+		value = math.max(min, math.min(max, value))
+		if value == get() then return s:Update() end
+		set(value)
 		s:Update()
 		UI.Confirm(s)
 	end
+	local function change(delta) apply(get() + delta) end
+	s.Snap = function(value)
+		return math.max(min, math.min(max, min + math.floor((value - min) / step + 0.5) * step))
+	end
+	e:EnableMouseWheel(true)
+	e:SetScript("OnMouseWheel", function(_, delta) change(delta > 0 and step or -step) end)
+	e:SetScript("OnEnterPressed", function(self)
+		local typed = tonumber((self:GetText():gsub(",", ".")))
+		self:ClearFocus()
+		if typed then apply(s.Snap(typed)) else s:Update() end
+	end)
+	e:SetScript("OnEscapePressed", function(self) self:ClearFocus() s:Update() end)
+	e:SetScript("OnHide", e.ClearFocus) -- fenêtre fermée : le clavier revient au jeu
+	e:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+	e:SetScript("OnEditFocusLost", function(self) self:HighlightText(0, 0) s:Update() end)
+	e:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(L["Molette : changer la valeur. Clic : la saisir au clavier."], 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	e:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	s.plus = UI.Button(s, "+", 22, 22, function() change(step) end)
 	s.plus:SetPoint("RIGHT")
 	s.plus.label:SetJustifyH("CENTER")
@@ -817,10 +987,307 @@ function UI.Cycle(parent, label, choices, get, set)
 	c.button:SetPoint("RIGHT")
 	c.button.label:SetJustifyH("CENTER")
 	UI.Paint(c.button.label, "accent")
-	c.Update = function(self) self.button.label:SetText(choices[index()][2]) end
+	c.Update = function(self)
+		self.button.label:SetText(choices[index()][2])
+		Changed(self)
+	end
 	c:SetScript("OnShow", c.Update)
 	c:Update()
 	return c
+end
+
+----------------------------------------------------------------------------------------------------
+-- Briques de la fenêtre d'options à chapitres (1.26.0) : choix côte à côte, réglages fins repliables, rune des
+-- réglages changés, page qui défile, bouton de chapitre. Toutes suivent le thème des fenêtres.
+----------------------------------------------------------------------------------------------------
+
+-- Choix côte à côte, pour 2 à 4 possibilités (au-delà, UI.Cycle). choices = { { valeur, "libellé" }, ... }
+function UI.Segmented(parent, label, choices, get, set)
+	local s = CreateFrame("Frame", nil, parent)
+	s:SetSize(250, 26)
+	s.label = UI.Label(s, 12)
+	s.label:SetPoint("LEFT")
+	s.label:SetJustifyH("LEFT")
+	s.label:SetText(label)
+	local strip = CreateFrame("Frame", nil, s)
+	strip:SetPoint("RIGHT")
+	strip.bg = UI.Paint(UI.Tex(strip, "BACKGROUND"), "panel")
+	strip.bg:SetAllPoints()
+	strip.round = UI.Paint(UI.RoundTex(strip, "BACKGROUND"), "panel")
+	strip.round:SetAllPoints()
+	strip.border = UI.Paint(UI.Border(strip, 1), "line")
+	s.strip = strip
+	s.segments = {}
+	local x = 2
+	for i, choice in ipairs(choices) do
+		local b = UI.Button(strip, choice[2], 10, 22, function()
+			if get() == choice[1] then return end
+			set(choice[1])
+			s:Update()
+			UI.Confirm(s)
+		end)
+		b.value = choice[1]
+		b.label:SetJustifyH("CENTER")
+		UI.Paint(b.bg, "accent", 0.85) -- fond du choix sélectionné (contraste élevé)
+		b.pill = UI.Paint(UI.RoundTex(b, "BACKGROUND"), "accent", 0.85) -- le même, arrondi (Moderne)
+		b.pill:SetAllPoints()
+		local width = math.max(48, math.ceil(b.label:GetStringWidth()) + 20)
+		b:SetWidth(width)
+		b:SetPoint("LEFT", strip, "LEFT", x, 0)
+		x = x + width + 2
+		s.segments[i] = b
+	end
+	strip:SetSize(x, 26)
+	s.label:SetPoint("RIGHT", strip, "LEFT", -10, 0)
+	s.Update = function(self)
+		local current, kit = get(), UI.Kit()
+		for _, b in ipairs(self.segments) do
+			b.selected = b.value == current
+			UI.styles.segment(b, kit)
+		end
+		Changed(self)
+	end
+	for _, b in ipairs(s.segments) do UI.Style(b, "segment") end
+	s:SetScript("OnShow", s.Update)
+	UI.Style(s, "segmented")
+	s:Update()
+	return s
+end
+
+-- Réglages fins repliables : « Réglages fins (n) ». L'état de chaque partie (id) est gardé d'une ouverture à
+-- l'autre, pour chaque personnage. onToggle(ouvert) range la page.
+local foldMemory = {} -- avant le chargement des réglages (et pour les tests)
+local function Folds()
+	if not Z.char then return foldMemory end
+	Z.char.optionFolds = Z.char.optionFolds or {}
+	return Z.char.optionFolds
+end
+
+function UI.Fold(parent, id, count, onToggle)
+	local f = CreateFrame("Button", nil, parent)
+	f:SetSize(250, 26)
+	f.arrow = UI.Paint(f:CreateTexture(nil, "ARTWORK"), "dim")
+	f.arrow:SetTexture(GAME.arrow)
+	f.arrow:SetSize(12, 12)
+	f.arrow:SetPoint("LEFT", 2, 0)
+	f.label = UI.Label(f, 12, nil, "dim")
+	f.label:SetPoint("LEFT", f.arrow, "RIGHT", 6, 0)
+	f.id, f.count = id, count
+	f.IsOpen = function(self) return Folds()[self.id] and true or false end
+	f.Update = function(self)
+		local open = self:IsOpen()
+		self.arrow:SetRotation(open and -math.pi / 2 or 0) -- vers le bas quand c'est ouvert
+		self.label:SetText(L[open and "Masquer les réglages fins (%d)" or "Réglages fins (%d)"]:format(self.count))
+	end
+	f.SetOpen = function(self, open)
+		Folds()[self.id] = open and true or nil
+		self:Update()
+		if onToggle then onToggle(open and true or false) end
+	end
+	f:SetScript("OnClick", function(self)
+		Click()
+		self:SetOpen(not self:IsOpen())
+	end)
+	f:SetScript("OnEnter", function(self) UI.Paint(self.label, "accent") UI.Paint(self.arrow, "accent") end)
+	f:SetScript("OnLeave", function(self) UI.Paint(self.label, "dim") UI.Paint(self.arrow, "dim") end)
+	f:Update()
+	return f
+end
+
+-- Deux valeurs de réglage égales ? Les tables (positions, listes) sont comparées champ par champ.
+function UI.Same(a, b)
+	if type(a) ~= "table" or type(b) ~= "table" then return a == b end
+	for k, v in pairs(a) do
+		if not UI.Same(v, b[k]) then return false end
+	end
+	for k in pairs(b) do
+		if a[k] == nil then return false end
+	end
+	return true
+end
+
+-- Valeur d'un réglage en mots, pour l'infobulle de la rune : libellé du choix, « Activé », « Coupé » ou nombre
+function UI.Describe(key, value)
+	for _, choice in ipairs(Z.choices[key] or {}) do
+		if choice[1] == value then return L[choice[2]] end
+	end
+	if type(value) == "boolean" then return L[value and "Activé" or "Coupé"] end
+	if type(value) == "number" or type(value) == "string" then return tostring(value) end
+end
+
+-- Rune d'or à côté d'un réglage changé (valeur différente de Z.defaults). Infobulle « Rétablir : valeur »,
+-- clic : le réglage reprend sa valeur d'installation. Elle suit toute seule l'élément « widget » (case,
+-- interrupteur, nombre, choix) : sa mise à jour la montre ou la cache.
+function UI.ChangedRune(widget, key, get, set)
+	local r = CreateFrame("Button", nil, widget)
+	r:SetSize(20, 20)
+	r:SetPoint("RIGHT", widget, "LEFT", -4, 0)
+	r.halo = UI.Paint(UI.CutRune(r:CreateTexture(nil, "BACKGROUND"), 22, 20, UI.HALOS), "gold", 0.5)
+	r.halo:SetPoint("CENTER")
+	r.rune = UI.Paint(UI.Rune(r, "ARTWORK", 22, 14), "gold")
+	r.rune:SetPoint("CENTER")
+	r.key = key
+	r.Update = function(self) self:SetShown(not UI.Same(get(), Z.defaults[self.key])) end
+	r:SetScript("OnEnter", function(self)
+		local value = UI.Describe(self.key, Z.defaults[self.key])
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(value and L["Rétablir : %s"]:format(value) or L["Rétablir comme à l'installation"], 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	r:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	r:SetScript("OnClick", function(self)
+		Click()
+		GameTooltip:Hide()
+		local value = Z.defaults[self.key]
+		set(type(value) == "table" and CopyTable(value) or value)
+		if widget.Update then widget:Update() end
+		self:Update()
+	end)
+	widget.changed = r
+	r:Update()
+	return r
+end
+
+-- Page qui défile : cadre de défilement du jeu, molette, barre fine aux couleurs du thème (poignée à glisser).
+-- Le contenu se pose dans scroll.content ; sa hauteur est donnée par scroll:SetContentHeight(h).
+-- Aucune boucle : la barre est recalculée au défilement et au changement de taille, la poignée suit la souris
+-- seulement pendant qu'on la tient.
+local WHEEL, BAR = 40, 8
+
+local function ScrollBar(s)
+	local view, range = s:GetHeight() or 0, s:Range()
+	s.bar:SetShown(range > 0)
+	if range <= 0 then return end
+	local track = s.bar:GetHeight() or view
+	local size = math.max(24, track * view / (view + range))
+	s.thumb:SetHeight(size)
+	s.thumb:ClearAllPoints()
+	s.thumb:SetPoint("TOP", s.bar, "TOP", 0, -(track - size) * s.offset / range)
+end
+
+local function ScrollRange(s)
+	return math.max(0, (s.content:GetHeight() or 0) - (s:GetHeight() or 0))
+end
+
+local function ScrollTo(s, y)
+	s.offset = math.max(0, math.min(y, s:Range()))
+	s:SetVerticalScroll(s.offset)
+	ScrollBar(s)
+end
+
+-- Fait défiler jusqu'à un élément de la page (recherche) : il arrive en haut, avec un peu de marge
+local function ScrollToWidget(s, widget)
+	local top, target = s.content:GetTop(), widget:GetTop()
+	if top and target then s:ScrollTo(top - target - 20) end
+end
+
+local function ThumbDrag(thumb)
+	local s = thumb.scroll
+	local _, y = GetCursorPosition()
+	local moved = (thumb.startY - y) / (thumb:GetEffectiveScale() or 1)
+	local room = (s.bar:GetHeight() or 0) - (thumb:GetHeight() or 0)
+	if room > 0 then s:ScrollTo(thumb.startOffset + moved * s:Range() / room) end
+end
+
+function UI.Scroll(parent)
+	local s = CreateFrame("ScrollFrame", nil, parent)
+	s.offset = 0
+	s.content = CreateFrame("Frame", nil, s)
+	s.content:SetSize(1, 1)
+	s:SetScrollChild(s.content)
+	s.Range, s.ScrollTo, s.ScrollToWidget = ScrollRange, ScrollTo, ScrollToWidget
+	s.SetContentHeight = function(self, height)
+		self.content:SetHeight(math.max(1, height))
+		self:ScrollTo(self.offset) -- reste dans les limites si la page a raccourci
+	end
+	s:EnableMouseWheel(true)
+	s:SetScript("OnMouseWheel", function(self, delta) self:ScrollTo(self.offset - delta * WHEEL) end)
+	s:SetScript("OnSizeChanged", function(self, width)
+		self.content:SetWidth(math.max(1, (width or self:GetWidth() or 0) - BAR - 6))
+		self:ScrollTo(self.offset)
+	end)
+	s.bar = CreateFrame("Frame", nil, s)
+	s.bar:SetWidth(BAR)
+	s.bar:SetPoint("TOPRIGHT")
+	s.bar:SetPoint("BOTTOMRIGHT")
+	s.track = UI.Paint(UI.Tex(s.bar, "BACKGROUND"), "line", 0.25)
+	s.track:SetAllPoints()
+	local thumb = CreateFrame("Button", nil, s.bar)
+	thumb:SetWidth(BAR)
+	thumb.scroll = s
+	thumb.tex = UI.Paint(UI.Tex(thumb, "ARTWORK"), "gold", 0.45)
+	thumb.tex:SetAllPoints()
+	thumb:SetScript("OnEnter", function(self) UI.Paint(self.tex, "gold", 0.8) end)
+	thumb:SetScript("OnLeave", function(self) if not self.dragging then UI.Paint(self.tex, "gold", 0.45) end end)
+	thumb:SetScript("OnMouseDown", function(self)
+		local _, y = GetCursorPosition()
+		self.startY, self.startOffset, self.dragging = y, s.offset, true
+		self:SetScript("OnUpdate", ThumbDrag)
+	end)
+	thumb:SetScript("OnMouseUp", function(self)
+		self.dragging = nil
+		self:SetScript("OnUpdate", nil)
+		if not self:IsMouseOver() then UI.Paint(self.tex, "gold", 0.45) end
+	end)
+	thumb:SetScript("OnHide", function(self) self.dragging = nil self:SetScript("OnUpdate", nil) end)
+	s.thumb = thumb
+	ScrollBar(s)
+	return s
+end
+
+-- Bouton de chapitre de la barre latérale : rune, nom, pastille du nombre de réglages changés.
+-- b:SetActive(vrai) pour le chapitre ouvert, b:SetCount(n) pour la pastille (cachée à zéro).
+function UI.SideButton(parent, rune, name, onClick)
+	local b = CreateFrame("Button", nil, parent)
+	b:SetSize(192, 38)
+	b.bg = UI.Paint(UI.Tex(b, "BACKGROUND"), "accent", 0.08)
+	b.bg:SetAllPoints()
+	b.round = UI.Paint(UI.RoundTex(b, "BACKGROUND"), "accent", 0.08)
+	b.round:SetAllPoints()
+	b.border = UI.Paint(UI.Border(b, 1), "line")
+	b.light = b:CreateTexture(nil, "HIGHLIGHT") -- reflet discret au survol
+	b.light:SetTexture(WHITE)
+	b.light:SetVertexColor(1, 1, 1, 0.04)
+	b.light:SetAllPoints()
+	b.rune = UI.Rune(b, "ARTWORK", rune, 16)
+	b.rune:SetPoint("LEFT", 12, 0)
+	b.label = UI.Label(b, 13, nil, "dim")
+	b.label:SetPoint("LEFT", b.rune, "RIGHT", 10, 0)
+	b.label:SetPoint("RIGHT", -34, 0)
+	b.label:SetJustifyH("LEFT")
+	b.label:SetWordWrap(false)
+	b.label:SetText(name)
+	b.badge = CreateFrame("Frame", nil, b)
+	b.badge:SetSize(18, 18)
+	b.badge:SetPoint("RIGHT", -8, 0)
+	b.badge.bg = UI.Paint(UI.RoundTex(b.badge, "ARTWORK"), "gold")
+	b.badge.bg:SetAllPoints()
+	b.badge.text = UI.Label(b.badge, 11, nil, "bg")
+	b.badge.text:SetPoint("CENTER")
+	b.SetActive = function(self, active)
+		self.active = active and true or false
+		UI.styles.side(self, UI.Kit())
+	end
+	b.SetCount = function(self, count)
+		self.count = count or 0
+		self.badge:SetShown(self.count > 0)
+		self.badge.text:SetText(self.count > 99 and "99+" or tostring(self.count))
+		self.badge:SetWidth(math.max(18, math.ceil(self.badge.text:GetStringWidth()) + 10))
+		self.tip = self.count > 0 and L["Réglages changés dans ce chapitre : %d"]:format(self.count) or nil
+	end
+	b:SetScript("OnClick", function(self, button)
+		Click()
+		if onClick then onClick(self, button) end
+	end)
+	b:SetScript("OnEnter", function(self)
+		if not self.tip then return end
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	b:SetCount(0)
+	return UI.Style(b, "side")
 end
 
 -- Champ de saisie. onEnter(texte) est appelé à la touche Entrée.

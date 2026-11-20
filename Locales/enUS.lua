@@ -731,4 +731,11 @@ Z.translations.enUS = {
 	["Mode test : couleurs de classe teintées de rouge."] = "Test mode: class colors tinted red.",
 	["Mode test : un bouton Fermer au bout du bandeau, plus besoin de commande."] = "Test mode: a Close button at the end of the banner, no command needed.",
 	["Mode test : le bandeau se déplace à la souris et emmène les vrais cadres avec lui (sauf si les cadres sont verrouillés)."] = "Test mode: drag the banner with the mouse to move the real frames along with it (unless the frames are locked).",
+
+	-- Fenêtre d'options à chapitres (1.26.0) : briques d'interface
+	["Molette : changer la valeur. Clic : la saisir au clavier."] = "Mouse wheel: change the value. Click: type it in.",
+	["Réglages fins (%d)"] = "Fine settings (%d)", ["Masquer les réglages fins (%d)"] = "Hide fine settings (%d)",
+	["Activé"] = "On", ["Coupé"] = "Off",
+	["Rétablir : %s"] = "Reset: %s", ["Rétablir comme à l'installation"] = "Reset to default",
+	["Réglages changés dans ce chapitre : %d"] = "Changed settings in this chapter: %d",
 }
