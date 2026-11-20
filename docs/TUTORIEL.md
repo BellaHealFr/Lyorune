@@ -35,7 +35,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 
 - **Interrupteur** : un clic l'allume ou le coupe (dans le thème Classique, il a l'allure d'une case à cocher du jeu).
 - **Choix côte à côte** : cliquez sur celui que vous voulez. Une liste de choix plus longue passe au suivant à chaque clic (clic droit : au précédent).
-- **Nombre** : boutons « - » et « + », molette sur la valeur, ou cliquez sur la valeur, tapez le nombre et appuyez sur Entrée.
+- **Nombre** : boutons « - » et « + », ou cliquez sur la valeur : tapez le nombre et appuyez sur Entrée, ou ajustez-le à la molette. Maj + molette change la valeur sans clic ; sinon la molette fait défiler la page, sans changer un réglage au passage.
 - **Réglages fins (n)** : au bas de chaque partie, les réglages moins courants sont repliés. Un clic les déplie ; Lyorune retient ce que vous avez déplié.
 - **Réglage grisé** : il dépend d'un autre réglage qui est coupé (par exemple la hauteur de la barre de mana quand la barre de mana est coupée). Il reste réglable et compte dès que l'autre est rallumé.
 

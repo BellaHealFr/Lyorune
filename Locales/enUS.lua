@@ -771,7 +771,7 @@ Z.translations.enUS = {
 	["Mode test : le bandeau se déplace à la souris et emmène les vrais cadres avec lui (sauf si les cadres sont verrouillés)."] = "Test mode: drag the banner with the mouse to move the real frames along with it (unless the frames are locked).",
 
 	-- Fenêtre d'options à chapitres (1.26.0) : briques d'interface
-	["Molette : changer la valeur. Clic : la saisir au clavier."] = "Mouse wheel: change the value. Click: type it in.",
+	["Clic : saisir la valeur au clavier, ou l'ajuster à la molette. Maj + molette : la changer sans clic."] = "Click: type the value in, or adjust it with the mouse wheel. Shift + wheel: change it without clicking.",
 	["Réglages fins (%d)"] = "Fine settings (%d)", ["Masquer les réglages fins (%d)"] = "Hide fine settings (%d)",
 	["Activé"] = "On", ["Coupé"] = "Off",
 	["Rétablir : %s"] = "Reset: %s", ["Rétablir comme à l'installation"] = "Reset to default",

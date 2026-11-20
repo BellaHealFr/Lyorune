@@ -2632,11 +2632,14 @@ end
 -- Z:ToggleOptions() ouvre ou ferme. Z:ToggleOptions("Clics") ouvre sur un chapitre (nom, ou ancien nom d'onglet).
 function Z:ToggleOptions(chapter)
 	if not window then Build() end
+	-- pendant le fondu de fermeture, la fenêtre est encore montrée : l'ouvrir arrête le fondu
 	if chapter then
 		Select(chapter)
-		window:Show()
+		UI.Reopen(window)
+	elseif window:IsShown() and not window.outro:IsPlaying() then
+		window:Hide()
 	else
-		window:SetShown(not window:IsShown())
+		UI.Reopen(window)
 	end
 end
 

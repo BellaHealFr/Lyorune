@@ -37,22 +37,27 @@ local builtinTextures = {
 	{ "Raid", "Interface\\RaidFrame\\Raid-Bar-Hp-Fill" },
 }
 
+-- Chaque nom une seule fois : LibSharedMedia a aussi sa « Blizzard », un doublon bloquerait le tour des choix
 function UI.TextureList()
-	local list = {}
-	for _, entry in ipairs(builtinTextures) do list[#list + 1] = entry[1] end
+	local list, seen = {}, {}
+	local function add(name)
+		if not seen[name] then seen[name] = true list[#list + 1] = name end
+	end
+	for _, entry in ipairs(builtinTextures) do add(entry[1]) end
 	if LSM then
-		for _, name in ipairs(LSM:List("statusbar")) do list[#list + 1] = name end
+		for _, name in ipairs(LSM:List("statusbar")) do add(name) end
 	end
 	return list
 end
 
+-- Texture inconnue (addon désinstallé) : celle du thème, comme l'affiche la ligne « Texture des barres »
 function UI.BarTexture()
 	local wanted = Z.db.texture
 	if wanted == "THEME" then return Z:Theme().texture end
 	for _, entry in ipairs(builtinTextures) do
 		if entry[1] == wanted then return entry[2] end
 	end
-	return (LSM and LSM:Fetch("statusbar", wanted, true)) or WHITE
+	return (LSM and LSM:Fetch("statusbar", wanted, true)) or Z:Theme().texture
 end
 
 function UI.Font()
@@ -397,19 +402,21 @@ function UI.Breathe(region, low, period)
 	return group
 end
 
--- Petite rune qui s'allume à côté d'un réglage qu'on vient de changer (0,4 s), puis s'éteint
+-- Petite rune qui s'allume à côté d'un réglage qu'on vient de changer (0,4 s), puis s'éteint.
+-- Cachée par Hide, jamais par l'opacité : un changement de thème la repeint à l'opacité 1 (règle C1).
 function UI.Confirm(widget)
 	if not widget.confirm then
 		local rune = UI.Paint(UI.Rune(widget, "OVERLAY", 20, 10), "gold")
 		rune:SetPoint("RIGHT", widget, "LEFT", -5, 0)
-		rune:SetAlpha(0)
+		rune:Hide()
+		widget.confirmRune = rune
 		widget.confirm = rune:CreateAnimationGroup()
 		AlphaAnim(widget.confirm, 0, 1, 0.1, "OUT", 1)
 		AlphaAnim(widget.confirm, 1, 0, 0.3, "IN_OUT", 2)
-		widget.confirm:SetToFinalAlpha(true) -- la rune finit éteinte, quoi qu'il arrive
-		widget.confirm:SetScript("OnFinished", function() rune:SetAlpha(0) end)
+		widget.confirm:SetScript("OnFinished", function() rune:Hide() end)
 	end
 	widget.confirm:Stop()
+	widget.confirmRune:Show()
 	widget.confirm:Play()
 	UI.SoothingSpark(widget)
 end
@@ -477,7 +484,9 @@ function UI.SoothingSpark(widget)
 	widget.sparkRise:Play()
 end
 
--- Particule de l'en-tête : apparaît, monte de 22 pixels en s'effaçant, puis attend son tour
+-- Particule de l'en-tête : attend, apparaît, monte de 22 pixels en s'effaçant, puis attend son tour.
+-- Les attentes sont des animations éteintes (opacité 0 à 0), jamais des délais : pendant un délai, la particule
+-- garderait l'opacité 1 de sa couleur (règle C1) et resterait allumée, immobile.
 local function Mote(field, x, delay, rest)
 	local mote = field:CreateTexture(nil, "ARTWORK")
 	mote:SetTexture(UI.MAGIC_SPARK)
@@ -487,14 +496,19 @@ local function Mote(field, x, delay, rest)
 	mote:SetAlpha(0)
 	local group = mote:CreateAnimationGroup()
 	group:SetLooping("REPEAT")
-	AlphaAnim(group, 0, 0.8, 0.8, "OUT", 1, delay)
-	AlphaAnim(group, 0.8, 0, 2.2, "IN", 2):SetEndDelay(rest)
-	for order, rise in ipairs({ { 6, 0.8, delay }, { 16, 2.2 } }) do
+	local first = 1
+	if delay > 0 then
+		AlphaAnim(group, 0, 0, delay, "NONE", 1)
+		first = 2
+	end
+	AlphaAnim(group, 0, 0.8, 0.8, "OUT", first)
+	AlphaAnim(group, 0.8, 0, 2.2, "IN", first + 1)
+	AlphaAnim(group, 0, 0, rest, "NONE", first + 2)
+	for i, rise in ipairs({ { 6, 0.8 }, { 16, 2.2 } }) do
 		local up = group:CreateAnimation("Translation")
 		up:SetOffset(0, rise[1])
 		up:SetDuration(rise[2])
-		if rise[3] then up:SetStartDelay(rise[3]) end
-		up:SetOrder(order)
+		up:SetOrder(first + i - 1)
 	end
 	return mote, group
 end
@@ -1024,7 +1038,22 @@ function UI.Switch(parent, label, get, set)
 	return Toggle(parent, label, get, set, "switch")
 end
 
+-- Molette passée à la page qui défile autour de « frame » (s'il y en a une)
+local function PassWheel(frame, delta)
+	local p = frame:GetParent()
+	while p do
+		if p.offset and p.ScrollTo then -- une page de UI.Scroll
+			local wheel = p:GetScript("OnMouseWheel")
+			if wheel then wheel(p, delta) end
+			return
+		end
+		p = p:GetParent()
+	end
+end
+
 -- Valeur numérique : boutons - et +, molette sur la valeur, ou saisie directe (clic sur la valeur, Entrée).
+-- La molette change le nombre seulement quand sa valeur est active (après un clic dessus) ou avec Maj : sinon elle
+-- fait défiler la page, sans changer un réglage au passage.
 -- Un nombre saisi est ramené entre les limites et sur le pas le plus proche.
 function UI.Stepper(parent, label, min, max, step, get, set)
 	local s = CreateFrame("Frame", nil, parent)
@@ -1056,7 +1085,10 @@ function UI.Stepper(parent, label, min, max, step, get, set)
 		return math.max(min, math.min(max, min + math.floor((value - min) / step + 0.5) * step))
 	end
 	e:EnableMouseWheel(true)
-	e:SetScript("OnMouseWheel", function(_, delta) change(delta > 0 and step or -step) end)
+	e:SetScript("OnMouseWheel", function(self, delta)
+		if self:HasFocus() or IsShiftKeyDown() then return change(delta > 0 and step or -step) end
+		PassWheel(self, delta)
+	end)
 	e:SetScript("OnEnterPressed", function(self)
 		local typed = tonumber((self:GetText():gsub(",", ".")))
 		self:ClearFocus()
@@ -1068,7 +1100,7 @@ function UI.Stepper(parent, label, min, max, step, get, set)
 	e:SetScript("OnEditFocusLost", function(self) self:HighlightText(0, 0) s:Update() end)
 	e:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		GameTooltip:SetText(L["Molette : changer la valeur. Clic : la saisir au clavier."], 1, 1, 1, 1, true)
+		GameTooltip:SetText(L["Clic : saisir la valeur au clavier, ou l'ajuster à la molette. Maj + molette : la changer sans clic."], 1, 1, 1, 1, true)
 		GameTooltip:Show()
 	end)
 	e:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1445,10 +1477,12 @@ function UI.Edit(parent, width, onEnter)
 	e:SetAutoFocus(false)
 	e:SetFont(UI.Font(), 12, "")
 	e:SetTextInsets(6, 6, 0, 0)
+	UI.Paint(e, "text") -- sans couleur, le jeu écrit en blanc pur
 	e.bg = UI.Paint(UI.Tex(e, "BACKGROUND"), "panel")
 	e.bg:SetAllPoints()
 	e.border = UI.Paint(UI.Border(e, 1), "line")
 	e:SetScript("OnEscapePressed", e.ClearFocus)
+	e:SetScript("OnHide", e.ClearFocus) -- fenêtre fermée : le clavier revient au jeu
 	-- Champ actif : bordure d'accent, montrée aussi par-dessus les champs creusés des thèmes texturés
 	e:SetScript("OnEditFocusGained", function(self)
 		self.focused = true
@@ -1614,13 +1648,19 @@ function UI.Away()
 	return next(away) ~= nil
 end
 
+-- Montre une fenêtre, même pendant son fondu de fermeture (qui l'aurait cachée juste après)
+function UI.Reopen(w)
+	if w.outro and w.outro:IsPlaying() then w.outro:Stop() end
+	w:Show()
+end
+
 -- Fenêtre secondaire fermée : les options reviennent (effacées) ou retournent à leur place (glissées), sauf si le
 -- joueur les a déplacées entre-temps
 local function GiveBack(w)
 	local main = UI.main
 	if away[w] then
 		away[w] = nil
-		if not next(away) and main then main:Show() end
+		if not next(away) and main then UI.Reopen(main) end
 	end
 	if slid and slid.w == w then
 		local left = Edges(main)

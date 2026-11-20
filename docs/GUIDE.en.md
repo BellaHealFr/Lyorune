@@ -36,7 +36,7 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 
 - **Switch**: one click turns it on or off (in the Classic theme, it looks like one of the game's checkboxes).
 - **Side by side choices**: click the one you want. A longer list of choices moves to the next one on each click (right-click: the previous one).
-- **Number**: "-" and "+" buttons, mouse wheel over the value, or click the value, type the number and press Enter.
+- **Number**: "-" and "+" buttons, or click the value: type the number and press Enter, or adjust it with the mouse wheel. Shift + wheel changes the value without clicking; otherwise the wheel scrolls the page, without changing a setting on the way.
 - **Fine settings (n)**: at the bottom of each part, the less common settings are folded away. One click unfolds them; Lyorune remembers what you unfolded.
 - **Greyed-out setting**: it depends on another setting that is off (for example the mana bar height while the mana bar is off). You can still change it, and it counts as soon as the other one is back on.
 

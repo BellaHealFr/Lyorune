@@ -2861,6 +2861,7 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   Z.db.width = 86
   local st = UI.Stepper(UIParent, "Largeur", lo, hi, pas, Get("width"), Set("width"))
   assert(st.value:GetText() == "86" and st.value:GetObjectType() == "EditBox")
+  st.value.HasFocus = function() return true end -- valeur active (clic dessus) : la molette la change
   st.value:Run("OnMouseWheel", 1) assert(Z.db.width == 86 + pas, "molette vers le haut")
   st.value:Run("OnMouseWheel", -1) st.value:Run("OnMouseWheel", -1) assert(Z.db.width == 86 - pas, "molette vers le bas")
   st.plus:Run("OnClick") assert(Z.db.width == 86, "fleche +")
@@ -2869,7 +2870,7 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   st.value:SetText("abc") st.value:Run("OnEnterPressed") assert(Z.db.width == hi and st.value:GetText() == tostring(hi), "saisie illisible")
   st.value:SetText("-5") st.value:Run("OnEnterPressed") assert(Z.db.width == lo, "saisie sous le minimum")
   st.value:Run("OnMouseWheel", -1) assert(Z.db.width == lo, "molette sous le minimum")
-  assert(Z.L["Molette : changer la valeur. Clic : la saisir au clavier."] and st.value:GetScript("OnEnter"))
+  assert(Z.L["Clic : saisir la valeur au clavier, ou l'ajuster à la molette. Maj + molette : la changer sans clic."] and st.value:GetScript("OnEnter"))
 
   -- Rune des réglages changés : visible seulement si la valeur diffère de Z.defaults, clic = valeur d'installation
   local rune = UI.ChangedRune(st, "width", Get("width"), Set("width"))
@@ -2929,7 +2930,7 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
 
   for _, key in ipairs({ "Réglages fins (%d)", "Masquer les réglages fins (%d)", "Activé", "Coupé", "Rétablir : %s",
     "Rétablir comme à l'installation", "1 réglage différent de l'installation, choisi par vous. Une rune d'or le marque dans le chapitre.",
-    "%d réglages différents de l'installation, choisis par vous. Une rune d'or les marque dans le chapitre.", "Molette : changer la valeur. Clic : la saisir au clavier." }) do
+    "%d réglages différents de l'installation, choisis par vous. Une rune d'or les marque dans le chapitre.", "Clic : saisir la valeur au clavier, ou l'ajuster à la molette. Maj + molette : la changer sans clic." }) do
     assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
   end
   for key, value in pairs(saved) do Z.db[key] = value end
@@ -3921,6 +3922,95 @@ step("refonte 1.26.0, lot 6c quinquies : fenetres en gris tres fonce, jamais en 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
   w:Hide() w:Run("OnHide")
+end)
+
+step("refonte 1.26.0, lot 6c septies a : corrections de UI.lua (relecture)", function()
+  local UI, mt = Z.UI, getmetatable(UIParent)
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast, texture = Z.db.texture,
+    width = Z.db.width, reduceMotion = Z.db.reduceMotion }
+
+  -- U1 : la rune de confirmation éteinte reste éteinte après un changement de thème (cachée, pas mise à 0)
+  local widget = CreateFrame("Frame", nil, UIParent)
+  UI.Confirm(widget)
+  local rune = widget.confirmRune
+  assert(rune:IsShown() and widget.confirm:IsPlaying(), "rune allumee au changement")
+  widget.confirm:Run("OnFinished")
+  assert(not rune:IsShown(), "rune eteinte a la fin")
+  Z.db.windowTheme = "CLASSIC" Z:Refresh()
+  Z.db.highContrast = not Z.db.highContrast Z:Refresh()
+  assert(not rune:IsShown(), "rune rallumee par le changement de theme")
+  UI.Confirm(widget) assert(rune:IsShown(), "rune rallumee au clic suivant")
+
+  -- U2 : LibSharedMedia a aussi sa « Blizzard » : un seul exemplaire, le tour des choix passe par toutes
+  local list = mt.List
+  mt.List = function() return { "Blizzard", "Lisse", "Raid", "Brillante" } end
+  local names, seen = UI.TextureList(), {}
+  for _, name in ipairs(names) do assert(not seen[name], "texture en double : " .. name) seen[name] = true end
+  assert(#names == 5 and seen.Lisse and seen.Brillante, "textures de LibSharedMedia : " .. #names)
+  local choices = { { "THEME", "Celle du thème" } }
+  for _, name in ipairs(names) do choices[#choices + 1] = { name, name } end
+  Z.db.texture = "THEME"
+  local cycle = UI.Cycle(UIParent, "Texture", choices, function() return Z.db.texture end, function(v) Z.db.texture = v end)
+  local reached = {}
+  for _ = 1, #choices do cycle.button:Run("OnClick", "LeftButton") reached[Z.db.texture] = true end
+  for _, choice in ipairs(choices) do assert(reached[choice[1]], "texture jamais atteinte : " .. choice[1]) end
+  mt.List = list
+
+  -- U5 : texture inconnue (addon désinstallé) : celle du thème, comme l'affiche la ligne
+  local fetch = mt.Fetch
+  mt.Fetch = function() return nil end
+  Z.db.texture = "Absente"
+  assert(UI.BarTexture() == Z:Theme().texture, "texture inconnue : pas celle du theme")
+  mt.Fetch = fetch
+
+  -- U6 et B3 a : un champ rend le clavier quand il est caché et écrit dans la couleur du texte de la palette
+  local edit = UI.Edit(UIParent, 120)
+  assert(edit:GetScript("OnHide"), "champ cache sans rendre le clavier")
+  local c = edit._color
+  assert(c and c[1] == UI.text[1] and c[2] == UI.text[2] and c[3] == UI.text[3], "champ en blanc pur")
+  Z.db.windowTheme = "MMO" Z:Refresh()
+  assert(edit._color[1] == UI.text[1], "champ pas repeint au changement de theme")
+
+  -- U7 : la molette fait défiler la page ; elle change le nombre seulement sur une valeur active ou avec Maj
+  local scroll = UI.Scroll(UIParent)
+  scroll:SetHeight(200) scroll:SetContentHeight(1000)
+  local lo, hi, pas = unpack(Z.limits.width)
+  Z.db.width = 86
+  local st = UI.Stepper(scroll.content, "Largeur", lo, hi, pas, function() return Z.db.width end, function(v) Z.db.width = v end)
+  st.value:Run("OnMouseWheel", -1)
+  assert(Z.db.width == 86 and scroll.offset == 40, "molette sur un nombre au passage : " .. Z.db.width .. ", " .. scroll.offset)
+  local shift = IsShiftKeyDown
+  IsShiftKeyDown = function() return true end
+  st.value:Run("OnMouseWheel", 1)
+  IsShiftKeyDown = shift
+  assert(Z.db.width == 86 + pas and scroll.offset == 40, "Maj + molette")
+  st.value.HasFocus = function() return true end
+  st.value:Run("OnMouseWheel", -1)
+  assert(Z.db.width == 86 and scroll.offset == 40, "molette sur la valeur active")
+
+  -- U4 : options effacées en fondu puis rendues pendant ce fondu : elles restent ouvertes
+  Z.db.reduceMotion = false
+  local w = Z:OptionsWindow()
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  w.GetLeft = function() return 142 end w.GetRight = function() return 1222 end w.GetTop = function() return 738 end
+  Z:ToggleOptions("Apparence")
+  LyoruneBug:Show()
+  assert(w.outro:IsPlaying(), "options pas effacees en fondu")
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  assert(w:IsShown() and not w.outro:IsPlaying(), "fondu pas arrete : les options se cacheraient")
+  -- croix puis réouverture pendant le fondu : la fenêtre reste ; un second appel la ferme
+  w:Close()
+  assert(w.outro:IsPlaying(), "fondu de la croix")
+  Z:ToggleOptions()
+  assert(w:IsShown() and not w.outro:IsPlaying(), "options rouvertes pendant le fondu")
+  w:Close() Z:ToggleOptions("Accueil")
+  assert(w:IsShown() and not w.outro:IsPlaying(), "chapitre ouvert pendant le fondu")
+  Z:ToggleOptions()
+  assert(not w:IsShown(), "deuxieme appel : options fermees")
+  w:Run("OnHide")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
 end)
 
 step("aucune variable globale imprevue", function()
