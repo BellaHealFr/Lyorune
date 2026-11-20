@@ -67,7 +67,12 @@ end
 -- Le faux groupe : les cases suivent mon propre personnage, pour que le jeu réponde avec de vraies valeurs
 local function Bench(cells, count)
 	local updates = Z.cellUpdates
-	for i = 1, count do cells[i].unit = "player" end
+	for i = 1, count do
+		-- Habillées aux réglages du moment : sans le mode test ouvert avant, une fausse case n'a pas encore la
+		-- taille de ses icônes (erreur au premier buff manquant)
+		Z.StyleButton(cells[i])
+		cells[i].unit = "player"
+	end
 	local cost = {
 		full = Time(function(b) updates.all(b) Z.UpdateAurasNow(b) end, cells, count),
 		health = Time(updates.health, cells, count),
