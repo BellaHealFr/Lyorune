@@ -472,6 +472,9 @@ end
 function Z:StartTutorial(from)
 	if not Z.header then return end
 	if not card then Build() end
+	-- Mes macros, Placement, Signaler un bug... ouverts : fermés d'abord (les options effacées reviennent), sinon
+	-- une carte de la fenêtre, posée à côté des options, tomberait sur l'une d'elles
+	UI.CloseBeside()
 	local window = Z:OptionsWindow()
 	if not current then -- relancée en cours de route : on garde d'où elle était partie
 		-- effacée par une fenêtre secondaire (UI.Away), la fenêtre compte comme ouverte : elle revient à la fin
@@ -483,6 +486,17 @@ function Z:StartTutorial(from)
 		starting = nil
 	end
 	Show(1)
+end
+
+-- Une fenêtre à côté des options s'ouvre pendant la visite (UI.Appear) : la visite s'arrête. Sur une carte de la
+-- fenêtre, le joueur se sert des options : elles restent ouvertes, sur la page où il est allé.
+function Z:StopTutorial()
+	if not current then return end
+	if steps[current].window then
+		back.open = true
+		back.touched = nil
+	end
+	Finish()
 end
 
 -- Vrai pendant la visite : la fenêtre d'options fermée par la visite n'est pas fermée par le joueur (elle garde

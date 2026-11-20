@@ -236,6 +236,9 @@ Z.translations.enUS = {
 	["Ligne %d : condition « %s » inconnue (faute de frappe ?)."] = "Line %d: unknown condition \"%s\" (typo?).",
 	["Ligne %d : touche « %s » inconnue (shift, ctrl ou alt)."] = "Line %d: unknown key \"%s\" (shift, ctrl or alt).",
 	["Ligne %d : « %s » n'est pas connu dans votre spécialisation active."] = "Line %d: \"%s\" is not known in your active specialization.",
+	["Ligne %d : « %s » s'écrit « %s » dans votre grimoire."] = "Line %d: \"%s\" is spelled \"%s\" in your spellbook.",
+	["Corriger l'écriture"] = "Fix spelling", ["Enregistrée"] = "Saved",
+	["Écrit chaque sort signalé comme dans votre grimoire, accents compris."] = "Writes each flagged spell exactly as in your spellbook, accents included.",
 	["Ligne %d : une commande commence par une barre oblique, par exemple /cast."] = "Line %d: a command starts with a slash, for example /cast.",
 	["Aucune commande : une macro commence par une barre oblique, par exemple /cast."] = "No command: a macro starts with a slash, for example /cast.",
 	-- Assistant

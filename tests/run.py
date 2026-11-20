@@ -4743,6 +4743,97 @@ step("refonte 1.26.0, retours d'essai 14 et 15 : infobulle des runes, une fenetr
   Z:Refresh()
 end)
 
+step("refonte 1.26.0, lot 6c octies : retours 16, 18, 20 et 21 (visite et Mes macros)", function()
+  local UI, L, o = Z.UI, Z.L, Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion }
+  Z.db.reduceMotion = true
+  local function Highest(f, best)
+    best = math.max(best, f:GetFrameLevel())
+    for _, child in ipairs({ f:GetChildren() }) do best = Highest(child, best) end
+    return best
+  end
+
+  -- 21 : l'import posé sur Mes macros passe au-dessus de tous les enfants de Mes macros, même haut placés
+  local win = Z:OpenMacros()
+  local deep = CreateFrame("Frame", nil, win.scroll)
+  deep:SetFrameLevel(win:GetFrameLevel() + 40)
+  local importer = Z:OpenMacroImport()
+  assert(importer:GetFrameLevel() > Highest(win, 0), "21 : import sous un enfant de Mes macros")
+  assert(importer.close:GetFrameLevel() > Highest(win, 0), "21 : croix de l'import sous Mes macros")
+  local level = importer:GetFrameLevel()
+  Z:OpenMacroImport() -- rappelée ouverte : elle reste au-dessus, sans monter pour rien
+  assert(importer:GetFrameLevel() == level, "21 : niveau qui monte a chaque appel")
+  importer:Hide()
+  -- de même l'assistant de macro (capture de l'auteur), et le choix d'un sort ouvert depuis l'assistant ; fond opaque
+  local wizard = Z:OpenMacroWizard()
+  assert(wizard:GetFrameLevel() > Highest(win, 0), "21 : assistant sous Mes macros")
+  assert(wizard.bg._color[4] == 1 and wizard.shade._color[4] == 1, "21 : fond de l'assistant transparent")
+  wizard.spell:Run("OnClick")
+  assert(LyorunePicker:IsShown() and LyorunePicker:GetFrameLevel() > Highest(wizard, 0), "21 : choix d'un sort sous l'assistant")
+  LyorunePicker:Hide()
+  wizard:Hide()
+
+  -- 18 : un sort écrit avec d'autres accents que le grimoire est signalé, avec sa bonne écriture et un clic
+  local problems = Z:CheckMacro("/cast [@cible] renovation")
+  assert(problems.fixes and problems.fixes[1][2] == "Rénovation", "18 : pas de correction proposee")
+  assert(problems[1][2] == L["Ligne %d : « %s » s'écrit « %s » dans votre grimoire."]:format(1, "renovation", "Rénovation"), problems[1][2])
+  assert(Z:FixMacroSpelling("/cast [@cible,help] renovation; renovationx") == "/cast [@cible,help] Rénovation; renovationx",
+    "18 : correction hors du mot entier")
+  assert(not Z:CheckMacro("/cast Tempete").fixes, "18 : correction inventee")
+  local macro = Z:NewMacro("Accents", "/cast [@cible] renovation")
+  win.Select(macro)
+  assert(win.fix:IsShown(), "18 : bouton Corriger absent")
+  win.fix:Run("OnClick")
+  assert(macro.body == "/cast [@cible] Rénovation" and win.edit:GetText() == macro.body, "18 : macro pas corrigee : " .. macro.body)
+  assert(not win.fix:IsShown(), "18 : bouton Corriger reste")
+
+  -- 20 : « Enregistrer » dit deux secondes que c'est fait, puis reprend son nom ; une autre macro le remet
+  local after, later = C_Timer.After
+  C_Timer.After = function(_, f) later = f end
+  win.save:Run("OnClick")
+  assert(win.save.label:GetText() == L["Enregistrée"], "20 : aucun signe")
+  later()
+  assert(win.save.label:GetText() == L["Enregistrer"], "20 : nom pas rendu")
+  win.save:Run("OnClick")
+  win.Select(Z:GetMacros()[1])
+  assert(win.save.label:GetText() == L["Enregistrer"], "20 : « Enregistrée » garde pour une autre macro")
+  later()
+  C_Timer.After = after
+  Z:RemoveMacro(macro)
+  win.Select(Z:GetMacros()[1])
+
+  -- 16 : la visite ferme d'abord les fenêtres posées à côté des options
+  o:Hide() o:Run("OnHide")
+  Z:ToggleOptions("Accueil")
+  Z:OpenMacros()
+  assert(win:IsShown(), "Mes macros ouverte")
+  Z:StartTutorial()
+  assert(not win:IsShown(), "16 : Mes macros reste ouverte sous la visite")
+  local card = LyoruneTutorial
+  while Z:TutorialRunning() and not o:IsShown() do card.next:Run("OnClick") end
+  local chapter = Z:OptionChapter()
+  -- une fenêtre à côté des options ouverte sur une carte de la fenêtre : la visite s'arrête, les options restent
+  Z:OpenMacros()
+  assert(not Z:TutorialRunning() and not card:IsShown() and not card.highlight:IsShown(), "16 : visite pas arretee")
+  assert(o:IsShown() and win:IsShown() and Z:OptionChapter() == chapter, "16 : options pas gardees")
+  win:Hide() win:Run("OnHide")
+  -- petit écran : Mes macros efface les options, la visite s'arrête aussi ; les options reviennent à la fermeture
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  o.GetLeft = function() return 142 end o.GetRight = function() return 1222 end o.GetTop = function() return 738 end
+  Z:StartTutorial()
+  while Z:TutorialRunning() and not o:IsShown() do card.next:Run("OnClick") end
+  Z:OpenMacros()
+  assert(not Z:TutorialRunning() and not card:IsShown(), "16 : visite pas arretee (petit ecran)")
+  assert(UI.Away() and not o:IsShown(), "16 : options pas effacees")
+  win:Hide() win:Run("OnHide")
+  assert(not UI.Away() and o:IsShown(), "16 : options pas rendues")
+  o.GetLeft, o.GetRight, o.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

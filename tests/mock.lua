@@ -16,7 +16,7 @@ local HIDE_RUNS_ONHIDE = { LyorunePicker = true, LyoruneMacroImport = true, Lyor
 
 local function new(kind, name, parent)
 	local o = setmetatable({ _kind = kind, _name = name, _parent = parent, _scripts = {}, _attr = {}, _events = {}, _shown = true, _w = 100, _h = 20,
-		_hideRuns = name and HIDE_RUNS_ONHIDE[name] }, Obj)
+		_hideRuns = name and HIDE_RUNS_ONHIDE[name], _level = parent and (parent._level or 1) + 1 or 1 }, Obj)
 	frames[#frames + 1] = o
 	if name then _G[name] = o end
 	return o
@@ -58,7 +58,14 @@ function Obj:GetWidth() return self._w end
 function Obj:GetHeight() return self._h end
 function Obj:GetStringHeight() return 60 end
 function Obj:GetStringWidth() return 120 end
-function Obj:GetFrameLevel() return 1 end
+-- Niveaux comme dans le jeu : un enfant naît un cran au-dessus de son parent et le suit quand il change
+function Obj:GetFrameLevel() return self._level or 1 end
+function Obj:SetFrameLevel(level)
+	local delta = level - (self._level or 1)
+	self._level = level
+	for _, child in ipairs(self._children or {}) do child:SetFrameLevel((child._level or 1) + delta) end
+end
+function Obj:GetChildren() return unpack(self._children or {}) end
 function Obj:GetName() return self._name end
 function Obj:GetParent() return self._parent end
 function Obj:SetText(t) self._text = t end
@@ -113,7 +120,14 @@ function Obj:SetScale(s) self._scale = s end
 function Obj:GetScale() return self._scale or 1 end
 function GetCursorPosition() return CURSOR_X or 500, CURSOR_Y or 300 end
 GameTooltip = new("GameTooltip", "GameTooltip")
-function CreateFrame(kind, name, parent) return new(kind, name, parent) end
+function CreateFrame(kind, name, parent)
+	local o = new(kind, name, parent)
+	if parent and parent ~= UIParent then -- UIParent : trop d'enfants pour les compter, et personne ne les lit
+		parent._children = parent._children or {}
+		parent._children[#parent._children + 1] = o
+	end
+	return o
+end
 function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a, GetRGB = function() return r, g, b end, GetRGBA = function() return r, g, b, a end } end
 function CopyTable(t) local c = {} for k, v in pairs(t) do c[k] = type(v) == "table" and CopyTable(v) or v end return c end
 PixelUtil = {

@@ -53,7 +53,7 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 
 - **Active profile**: the current profile and how it was chosen, with the "Change profile" button;
 - **Your changed settings**: all your settings that are no longer as installed. Click a name to go there; click its golden rune to reset it;
-- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them; if your frames are hidden ("In combat only", or solo without your own frame), it opens the fake group of the test mode to show you the cells, then closes it. Escape or the close button stop the tour at any time, and the window comes back the same way. The setup assistant also closes the window during its three questions and gives it back on the Home page.
+- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them; if your frames are hidden ("In combat only", or solo without your own frame), it opens the fake group of the test mode to show you the cells, then closes it. Escape or the close button stop the tour at any time, and the window comes back the same way. A window open next to the options (My macros, Placement, Report a bug...) is closed when the tour starts; opening one during the tour stops it, and the options stay on the page you are on. The setup assistant also closes the window during its three questions and gives it back on the Home page.
 
 At the bottom of the Window and help chapter, "Reading a cell" recalls what the main colours of a cell mean, and "Commands" lists the `/lyorune` commands.
 
@@ -177,9 +177,14 @@ A macro found on the Internet with `[@mouseover]` works as it is. To place the p
 - a typo in a condition (`[mod:shfit]`, `[ded]`);
 - a forgotten bracket, a line that is too long;
 - a spell your active specialization does not know (maybe it belongs to the other one);
+- a spell written with other accents than in your spellbook: the game sometimes spells a name without its accent, and the macro then casts nothing. Lyorune gives the right spelling, and "Fix spelling", next to the "Check" title, puts it in the macro;
 - a command that runs code (`/run`, `/script`).
 
 The first three findings are written out, the number of the others is given at the end of the "Check" title. Just below, "Sent to the game" shows the exact text that goes out on the click, and "Used on" the clicks that use the macro. A text too long for its place can be read in full by hovering it.
+
+The macro saves itself when you pick another macro or close the window. "Save" does it at once and says "Saved" on the button for two seconds.
+
+The assistant, the import and the spell picker always open on top of My macros, whole.
 
 **Putting the macro on a click:**
 

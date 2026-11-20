@@ -847,7 +847,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 	picker:ClearAllPoints()
 	picker:SetPoint("CENTER", (spellsOnly or not window) and UIParent or window, "CENTER")
 	picker:Show()
-	picker:Raise()
+	UI.Lift(picker) -- déjà ouverte : repasse au-dessus
 	return picker
 end
 Z.OpenPicker = OpenPicker

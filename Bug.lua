@@ -53,6 +53,8 @@ local function ReplaceWord(text, word, by)
 	return table.concat(parts)
 end
 
+Z.ReplaceWord = ReplaceWord -- aussi pour corriger l'écriture d'un sort dans une macro (Macros.lua)
+
 function Z:Anonymize(text)
 	local names, realms = {}, {}
 	local function add(list, value)

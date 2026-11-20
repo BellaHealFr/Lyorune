@@ -1657,9 +1657,33 @@ end
 -- aucune fonction du jeu touchée. Deux fenêtres l'une sur l'autre (assistant, puis choix d'un sort) : chacune
 -- rend ce qu'elle a retiré.
 local lifted = {} -- nom retiré -> nom de la fenêtre qui l'a retiré
+
+-- Niveau le plus haut d'un cadre et de tous ses enfants
+local function Highest(frame, best)
+	best = math.max(best, frame:GetFrameLevel() or 0)
+	for _, child in ipairs({ frame:GetChildren() }) do best = Highest(child, best) end
+	return best
+end
+
+-- Fenêtre posée sur une autre : au-dessus de toutes les fenêtres de Lyorune ouvertes, enfants compris. Raise seul
+-- la laissait sous les enfants de la fenêtre du dessous (zones de Mes macros lisibles par-dessus l'import, croix
+-- qui ne prenait plus le clic). Le jeu borne les niveaux vers 10 000 : la place de ses propres enfants reste.
+local LEVEL_CAP = 9000
+function UI.Lift(w)
+	local top = 0
+	for _, other in ipairs(windows) do
+		if other ~= w and other:IsShown() then top = Highest(other, top) end
+	end
+	w:SetFrameLevel(math.min(math.max(top + 1, w:GetFrameLevel() or 0), LEVEL_CAP))
+end
+
 function UI.OnTop(w)
 	local name = w:GetName()
+	-- Fond opaque dans tous les thèmes : rien de la fenêtre du dessous ne se lit au travers
+	UI.Paint(w.bg, "bg", 1)
+	UI.Paint(w.shade, "bg", 1)
 	w:HookScript("OnShow", function()
+		UI.Lift(w)
 		if lifted[name] then -- retirée par la fenêtre du dessous : c'est elle, maintenant, le dessus
 			lifted[name] = nil
 			tinsert(UISpecialFrames, name)
@@ -1716,6 +1740,12 @@ function UI.Appear(w)
 		for _, other in ipairs(windows) do
 			if other ~= w and other.beside and other:IsShown() then other:Hide() end
 		end
+		-- Visite en cours : sa carte, posée à côté des options, tomberait sur cette fenêtre. Elle s'arrête, et la
+		-- fenêtre se pose à côté des options qu'elle a pu rendre.
+		if Z.TutorialRunning and Z:TutorialRunning() then
+			Z:StopTutorial()
+			UI.PlaceBeside(w)
+		end
 	end
 	if w == UI.main and next(away) then -- options rouvertes par le joueur : les fenêtres qui les effaçaient se ferment
 		local open = away
@@ -1724,6 +1754,14 @@ function UI.Appear(w)
 	end
 	w.outro:Stop()
 	if UI.Calm() then w.calm:Play() else w.intro:Play() end
+end
+
+-- Ferme d'un coup les fenêtres posées à côté des options (la visite qui commence) ; les options effacées
+-- reviennent
+function UI.CloseBeside()
+	for _, w in ipairs(windows) do
+		if w.beside and w:IsShown() then w:Hide() end
+	end
 end
 
 -- Écran ou échelle de l'interface changés : chaque fenêtre ouverte reprend sa taille, puis sa place

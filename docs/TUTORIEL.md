@@ -52,7 +52,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 
 - **Profil actif** : le profil en cours et comment il a été choisi, avec le bouton « Changer de profil » ;
 - **Vos réglages changés** : tous vos réglages qui ne sont plus comme à l'installation. Un clic sur un nom vous y emmène ; un clic sur sa rune d'or le rétablit ;
-- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus ; si vos cadres sont cachés (« En combat seulement », ou seul sans votre propre cadre), elle ouvre le faux groupe du mode test pour vous montrer les cases, puis le referme. Échap ou la croix arrêtent la visite à tout moment, et la fenêtre revient de la même façon. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
+- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus ; si vos cadres sont cachés (« En combat seulement », ou seul sans votre propre cadre), elle ouvre le faux groupe du mode test pour vous montrer les cases, puis le referme. Échap ou la croix arrêtent la visite à tout moment, et la fenêtre revient de la même façon. Une fenêtre ouverte à côté des options (Mes macros, Placement, Signaler un bug...) est fermée au départ de la visite ; en ouvrir une pendant la visite l'arrête, et les options restent sur la page où vous êtes. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
 
 Au bas du chapitre Fenêtre et aide, « Lire une case » rappelle ce que veulent dire les couleurs principales d'une case, et « Commandes » liste les commandes `/lyorune`.
 
@@ -176,9 +176,14 @@ Une macro trouvée sur Internet avec `[@mouseover]` marche telle quelle. Pour pl
 - une faute dans une condition (`[mod:shfit]`, `[ded]`) ;
 - un crochet oublié, une ligne trop longue ;
 - un sort que votre spécialisation active ne connaît pas (c'est peut-être celui de l'autre) ;
+- un sort écrit avec d'autres accents que dans votre grimoire : le jeu écrit parfois un nom sans accent (« Epines ») et `/cast Épines` ne lance alors rien. Lyorune donne la bonne écriture, et « Corriger l'écriture », à côté du titre « Vérification », la reprend dans la macro ;
 - une commande qui exécute du code (`/run`, `/script`).
 
 Les trois premiers constats sont écrits, le nombre des suivants est donné au bout du titre « Vérification ». Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, et « Posée sur » les clics qui utilisent la macro. Un texte trop long pour sa place se lit en entier en passant la souris dessus.
+
+La macro s'enregistre toute seule quand vous changez de macro ou fermez la fenêtre. « Enregistrer » le fait tout de suite et l'écrit deux secondes sur le bouton : « Enregistrée ».
+
+L'assistant, l'import et le choix d'un sort s'ouvrent toujours par-dessus Mes macros, entiers.
 
 **Poser la macro sur un clic :**
 

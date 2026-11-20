@@ -192,6 +192,31 @@ local function KnowsName(name)
 	return not ok or info ~= nil
 end
 
+-- Nom du grimoire (spécialisation active) qui ne diffère de name que par les accents ou les majuscules : le client
+-- écrit parfois un sort sans accent (« Epines »), et /cast Épines ne lance alors rien
+local function GrimoireSpelling(name)
+	local plain = Z.SearchText and Z.SearchText(name)
+	if not plain then return end
+	local found
+	pcall(function()
+		local bank = Enum.SpellBookSpellBank.Player
+		for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+			local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
+			for slot = info.itemIndexOffset + 1, info.itemIndexOffset + info.numSpellBookItems do
+				local item = C_SpellBook.GetSpellBookItemInfo(slot, bank)
+				local id = item and item.itemType == Enum.SpellBookItemType.Spell and not item.isPassive
+					and not item.isOffSpec and item.spellID
+				local spell = id and C_Spell.GetSpellName(id)
+				if spell and spell ~= name and Z.SearchText(spell) == plain then
+					found = spell
+					return
+				end
+			end
+		end
+	end)
+	return found
+end
+
 local function Split(text)
 	local lines = {}
 	for line in (text .. "\n"):gmatch("([^\n]*)\n") do lines[#lines + 1] = line end
@@ -251,7 +276,14 @@ function Z:CheckMacro(body)
 					for spell in clause:gmatch("[^,]+") do
 						spell = spell:match("^%s*!?(.-)%s*$"):gsub("%(.-%)$", "")
 						if spell ~= "" and not tonumber(spell) and not KnowsName(spell) then
-							add("warn", "Ligne %d : « %s » n'est pas connu dans votre spécialisation active.", n, spell)
+							local right = GrimoireSpelling(spell)
+							if right then -- même nom, autres accents : corrigé par « Corriger l'écriture »
+								add("warn", "Ligne %d : « %s » s'écrit « %s » dans votre grimoire.", n, spell, right)
+								problems.fixes = problems.fixes or {}
+								problems.fixes[#problems.fixes + 1] = { spell, right }
+							else
+								add("warn", "Ligne %d : « %s » n'est pas connu dans votre spécialisation active.", n, spell)
+							end
 						end
 					end
 				end
@@ -262,6 +294,12 @@ function Z:CheckMacro(body)
 	end
 	if commands == 0 then add("err", "Aucune commande : une macro commence par une barre oblique, par exemple /cast.") end
 	return problems
+end
+
+-- Macro où chaque nom de sort mal écrit (accents, majuscules) prend l'écriture du grimoire, comme mot entier
+function Z:FixMacroSpelling(body)
+	for _, fix in ipairs(Z:CheckMacro(body).fixes or {}) do body = Z.ReplaceWord(body, fix[1], fix[2]) end
+	return body
 end
 
 -- Icône : celle du premier sort ou objet de la macro
@@ -604,6 +642,17 @@ local function BuildWindow()
 	win.others:SetPoint("TOPRIGHT", win, "TOPLEFT", x + width, -230)
 	UI.Paint(win.others, "dim")
 	win.problems = Zone(win, x, -246, width, 6)
+	-- Un sort écrit avec d'autres accents que dans le grimoire : un clic le corrige
+	win.fix = UI.Button(win, L["Corriger l'écriture"], 150, 18, function()
+		edit:SetText(Z:FixMacroSpelling(edit:GetText()))
+		win.Live()
+		win.SaveCurrent()
+		win.Refresh()
+	end)
+	win.fix:SetPoint("TOPLEFT", x + 96, -227)
+	win.fix.label:SetJustifyH("CENTER")
+	win.fix.tip = L["Écrit chaque sort signalé comme dans votre grimoire, accents compris."]
+	win.fix:Hide()
 	Field(win, "Envoyé au jeu", x, -330)
 	win.preview = Zone(win, x, -346, width, 5)
 	UI.Paint(win.preview, "text")
@@ -630,7 +679,9 @@ local function BuildWindow()
 		local resolved = Z:ResolveMacro(body)
 		win.count:SetText(#resolved .. " / " .. Z.MACRO_MAX)
 		local lines = {}
-		for _, problem in ipairs(Z:CheckMacro(body)) do
+		local problems = Z:CheckMacro(body)
+		win.fix:SetShown(problems.fixes ~= nil)
+		for _, problem in ipairs(problems) do
 			lines[#lines + 1] = (problem[1] == "err" and "|cffff6060" or "|cffffd060") .. problem[2] .. "|r"
 		end
 		win.problems:SetText(#lines > 0 and table.concat(lines, "\n", 1, math.min(#lines, SHOWN)) or "|cff33dd88" .. L["Aucune faute trouvée."] .. "|r")
@@ -654,9 +705,17 @@ local function BuildWindow()
 		end
 	end
 
-	local save = UI.Button(win, L["Enregistrer"], 120, 24, function()
+	-- La macro s'enregistre aussi toute seule à la fermeture ; le bouton dit deux secondes que c'est fait
+	local save
+	save = UI.Button(win, L["Enregistrer"], 120, 24, function()
 		win.SaveCurrent()
 		win.Refresh()
+		local token = {}
+		save.token = token
+		save.label:SetText(L["Enregistrée"])
+		C_Timer.After(2, function()
+			if save.token == token then save.label:SetText(L["Enregistrer"]) end
+		end)
 	end)
 	save:SetPoint("BOTTOMLEFT", x, 14)
 	save.label:SetJustifyH("CENTER")
@@ -677,6 +736,8 @@ local function BuildWindow()
 		win.macro = macro
 		win.position = macro and select(2, Z:FindMacro(macro.name)) or nil
 		win.remove.Disarm() -- armé pour une autre macro : le second clic ne la supprime pas
+		win.save.token = nil -- « Enregistrée » était dit pour l'autre macro
+		win.save.label:SetText(L["Enregistrer"])
 		win.name:SetText(macro and macro.name or "")
 		edit:SetText(macro and macro.body or "")
 		win.scroll:SetVerticalScroll(0)
@@ -810,7 +871,7 @@ function Z:OpenMacroImport()
 	importer:ClearAllPoints()
 	importer:SetPoint("CENTER", win or UIParent, "CENTER")
 	importer:Show()
-	importer:Raise()
+	UI.Lift(importer) -- déjà ouverte : repasse au-dessus
 	return importer
 end
 
@@ -902,7 +963,7 @@ function Z:OpenMacroWizard()
 	wizard:ClearAllPoints()
 	wizard:SetPoint("CENTER", win or UIParent, "CENTER")
 	wizard:Show()
-	wizard:Raise()
+	UI.Lift(wizard) -- déjà ouvert : repasse au-dessus
 	return wizard
 end
 
