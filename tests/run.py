@@ -5311,5 +5311,12 @@ for f in files:
     for n, ligne in enumerate(sans_commentaires(read(os.path.join(addon, f))).split('\n'), 1):
         if re.search(r'UI\.Window\(\s*"[^"]*"\s*,\s*"(?!"|Lyorune")', ligne): # sauf titre vide ou nom de l'addon
             revue.append('titre de fenetre sans traduction dans %s, ligne %d' % (f, n))
+# 1.26.0 : mot d'ouverture de la page de publication (docs/annonces), français et anglais ensemble, sans tiret long
+annonces = os.path.join(addon, 'docs', 'annonces')
+for f in (sorted(os.listdir(annonces)) if os.path.isdir(annonces) else []):
+    if not f.endswith('.en.md') and not os.path.exists(os.path.join(annonces, f[:-3] + '.en.md')):
+        revue.append('annonce %s sans version anglaise' % f)
+    if re.search('[‒-―]', read(os.path.join(annonces, f))):
+        revue.append('tiret long dans docs/annonces/%s' % f)
 print(('  OK    revue : fonctions, champs et reglages coherents') if not revue else ('  ERREUR revue : ' + ', '.join(revue)))
 sys.exit(1 if rt.eval('FAILED') or found or revue else 0)

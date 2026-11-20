@@ -6,6 +6,43 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.26.0] - 2026-11-20
+
+### Added
+
+- New options window, fully redesigned and modernised: eleven chapters sorted by task in a sidebar (Home, Layout, Look, Health and range, My heals, Debuffs, Players, Spells and bindings, Alerts, Profiles and sharing, Window and help), a scrolling page split into parts, and the less common settings folded under Fine settings to keep the essentials in sight.
+- Preview cell on the right of the window: an enlarged fake cell shows every setting live, without closing the window, with a fake group of five below it and the test mode buttons (5, 10, 25, 40).
+- Golden rune next to every setting you have changed: hovering it tells the default value in words, a click goes back to it. In the sidebar, a badge counts your own choices in each chapter.
+- Reset this page at the bottom of each chapter, in two clicks: only the open page goes back to the default values, your lists, clicks and profiles stay as they are.
+- At the bottom of the window, Undo my changes puts everything back as it was when the window was opened, in two clicks: settings, clicks, lists, announcement texts, pinned players and macros (a renamed or deleted macro gets its click back). Save my settings keeps them under a profile name.
+- Home page: your active profile, the list of your changed settings, the tutorial, the starting assistant and what's new. The window opens on Home at each login, then on the last chapter used.
+- Magic effects in the window: a gold and green healing light crosses the header, a runic circle shines behind the logo, the rune of the open chapter lights up and the preview cell glows at every changed setting. Never on your real healing frames; Reduced motion turns them off.
+- Your Lyorune macros go on your action bars: drag a macro from My macros onto a game bar, out of combat. Lyorune makes a Lyo:Name copy in /macro (your character's tab) that heals the player under your mouse, otherwise your target; it follows every change of text or name and goes away with the macro. The Create one macro per spell of my clicks option aims the same way.
+
+### Improved
+
+- Search in setting names and in their explanations, with or without accents; clicking a result opens the right chapter and makes the setting flash. Searching for Test mode makes the test mode buttons under the preview cell flash, without changing chapter.
+- Easier controls: switches, side by side choices, numbers set with the keyboard or the mouse wheel (after clicking the value, or with Shift); the wheel scrolls the page without changing a setting on the way. A setting is greyed out while the one it depends on is off, and can still be changed.
+- Windows easier on the eyes: very dark grey instead of black, off-white text, sidebar in its own shade; High contrast stays very readable without pure black or white, and greys out Theme and Bar texture, which it replaces (your healing frames do not change).
+- Windows adapt to your screen: a window that is too big is scaled down to fit, only one window opens next to the options at a time and never covers them (the options slide aside, or fade out and come back on the same chapter, at the same place on the page).
+- The clicks chapter is now called Spells and bindings; all its lines are visible, and its trinket buttons are easier to read (the game's slot icon, then a golden border and your trinket's icon) and only show when Trinkets with spells is on.
+- Player guide and guided tour rewritten for the new window, in French and English: four short cards present it area by area. The cards sit next to your frames, never on top of them; started from the options, the tour gives the window back on Home; Escape stops it like the close button; hidden frames are replaced by the test mode's fake group during its cards; opening another window stops it cleanly.
+- My macros, safer and easier to read: the open macro is marked in every theme, the writing area scrolls, each area keeps its place (full text in the tooltip), Save shows Saved, and the wizard, the import and the spell picker open whole on top; Escape only closes the window on top.
+- My macros: a spell written with other accents than in your spellbook is flagged with its right spelling, and Fix spelling puts it in.
+- Actions that cannot be undone now ask for a second click: deleting a macro, Reset all in the placement, Clear the log, Take the clicks suggested for my class.
+- The test mode's fake cells show the chosen corners; the performance measure has MB and KB in English and texts that no longer overlap.
+
+### Fixed
+
+- Blue mana bar under a warrior, a rogue, a hunter or a druid in bear or cat form: every player now shows their own resource in the game's colours (rage, energy, focus), the bar changes with the druid's form and is read again after combat; the colour you choose applies to mana. Test mode and preview cell included.
+- Mana recovered announcement when the game hides your mana: with a low threshold, it came late or never. Lyorune now estimates your mana with the regeneration the game gives out of combat, drinking included, and announces as soon as the estimate reaches your threshold, never too early.
+- Macros longer than 255 characters were accepted although the game does not run them: the limit is now 255, a counter shows it, a macro that is too long is flagged in red, and trinkets are no longer added to a click that would go over.
+- Element placement: an element pushed far (name, health, icons, markers) could leave the cell, on screen as in the sample. Each offset now stops at the edge, according to the shape and size of your cells: At the edge of the cell shows, the name and health text shrink near the edge, the leader crown stays in the cell, and an offset brought back to the edge finds its place again if you make the cells bigger.
+- /lyorune mesure: Lua error (iconSize) and no measure when the test mode had not been opened yet in the session.
+- Guided tour: the frame lock chosen before the tour could be lost after a /reload; the shield and incoming heals colours named by the tour are now those of your theme.
+- Bug report: a short player name damaged the report text (it is now only replaced as a whole word), and calling the window again erased your answers. Error log: title translated into English. Runic inscription turned off then on again: it comes back without /reload.
+- Bar texture: the click stopped on a duplicate texture when other textures were installed, it now goes through all of them. My macros: a refused name (empty, too long or already taken) stayed in the field.
+
 ## [1.25.1] - 2026-11-20
 
 ### Improved
@@ -476,6 +513,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.26.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.1...v1.26.0
 [1.25.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.23.13...v1.24.0

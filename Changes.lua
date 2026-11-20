@@ -8,6 +8,41 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.26.0", date = "2026-11-20",
+		added = {
+			"Nouvelle fenêtre d'options, entièrement repensée et modernisée : onze chapitres rangés par tâche dans une barre latérale (Accueil, Disposition, Apparence, Vie et portée, Mes soins, Affaiblissements, Joueurs, Sorts et raccourcis, Alertes, Profils et partage, Fenêtre et aide), une page qui défile et se range par parties, et les réglages plus rares pliés sous « Réglages fins » pour garder l'essentiel sous les yeux.",
+			"Case témoin à droite de la fenêtre : une fausse case agrandie montre chaque réglage en direct, sans fermer la fenêtre, avec un faux groupe de cinq dessous et les boutons du mode test (5, 10, 25, 40).",
+			"Rune d'or à côté de chaque réglage que vous avez changé : son survol dit en mots la valeur d'installation, un clic la reprend. Dans la barre latérale, une pastille compte vos propres choix dans chaque chapitre.",
+			"« Rétablir cette page » au bas de chaque chapitre, en deux clics : seule la page ouverte revient aux valeurs d'installation, vos listes, vos clics et vos profils restent tels quels.",
+			"Au bas de la fenêtre, « Annuler mes changements » remet tout comme à l'ouverture de la fenêtre, en deux clics : réglages, clics, listes, textes d'annonce, joueurs épinglés et macros (une macro renommée ou supprimée retrouve son clic). « Enregistrer mes réglages » les garde sous un nom de profil.",
+			"Accueil : votre profil actif, la liste de vos réglages changés, le tutoriel, l'assistant de départ et les nouveautés. La fenêtre s'ouvre sur l'Accueil à chaque connexion, puis sur le dernier chapitre utilisé.",
+			"Effets magiques dans la fenêtre : une lumière de soin or et vert traverse l'en-tête, un cercle runique brille derrière le logo, la rune du chapitre ouvert s'allume et la case témoin s'illumine à chaque réglage changé. Jamais sur vos vraies cases de soin ; « Animations réduites » les coupe.",
+			"Vos macros de Lyorune vont dans vos barres de sorts : glissez une macro de « Mes macros » sur une barre du jeu, hors combat. Lyorune en crée une copie « Lyo:Nom » dans /macro (onglet de votre personnage) qui soigne le joueur survolé, sinon votre cible ; elle suit chaque changement de texte ou de nom et part avec la macro. L'option « Créer une macro par sort de mes clics » vise de la même façon.",
+		},
+		improved = {
+			"Recherche dans les noms des réglages et dans leurs explications, avec ou sans accents (« echelle » trouve « Échelle ») ; un clic sur un résultat ouvre le bon chapitre et fait clignoter le réglage. « Mode test » fait clignoter les boutons du mode test sous la case témoin, sans changer de chapitre.",
+			"Réglages plus simples à manier : interrupteurs, choix côte à côte, nombres réglables au clavier ou à la molette (après un clic sur la valeur, ou avec Maj) ; la molette fait défiler la page sans changer un réglage au passage. Un réglage est grisé quand celui dont il dépend est coupé, et reste réglable.",
+			"Fenêtres plus reposantes pour les yeux : gris très foncé au lieu du noir, texte blanc cassé, barre latérale d'un ton à part ; le contraste élevé reste très lisible sans noir ni blanc purs, et grise Thème et Texture des barres qu'il remplace (vos cases de soin ne changent pas).",
+			"Les fenêtres s'adaptent à votre écran : une fenêtre trop grande est réduite pour tenir entière, une seule fenêtre s'ouvre à la fois à côté des options et ne les recouvre jamais (les options glissent sur le côté, ou s'effacent puis reviennent sur le même chapitre, au même endroit de la page).",
+			"Le chapitre des clics s'appelle « Sorts et raccourcis » ; toutes ses lignes sont visibles, et ses boutons de bijou sont plus lisibles (icône d'emplacement du jeu, puis bordure d'or et icône de votre bijou) et n'apparaissent que si « Bijoux avec les sorts » est allumé.",
+			"Guide du joueur et visite guidée refaits pour la nouvelle fenêtre, en français et en anglais : quatre cartes courtes la présentent zone par zone. Les cartes se posent à côté de vos cadres, jamais dessus ; lancée des options, la visite vous rend la fenêtre sur l'Accueil ; Échap l'arrête comme la croix ; vos cadres cachés sont remplacés le temps des cartes par le faux groupe du mode test ; ouvrir une autre fenêtre l'arrête proprement.",
+			"Mes macros plus sûre et plus lisible : la macro ouverte est marquée dans chaque thème, la zone d'écriture défile, chaque zone garde sa place (texte entier en infobulle), « Enregistrer » affiche « Enregistrée », et l'assistant, l'import et le choix d'un sort s'ouvrent entiers par-dessus ; Échap ne ferme que la fenêtre du dessus.",
+			"Mes macros : un sort écrit avec d'autres accents que dans votre grimoire est signalé avec sa bonne écriture, et « Corriger l'écriture » la reprend.",
+			"Gestes sans retour à confirmer d'un second clic : supprimer une macro, « Tout remettre » du placement, « Vider le journal », « Reprendre les clics proposés pour ma classe ».",
+			"Les fausses cases du mode test montrent les coins choisis ; mesure des performances avec les nombres à virgule en français et des textes qui ne se chevauchent plus.",
+		},
+		fixed = {
+			"Barre de mana bleue sous un guerrier, un voleur, un chasseur ou un druide en ours ou en félin : chaque joueur montre maintenant sa propre ressource aux couleurs du jeu (rage, énergie, focalisation), la barre change avec la forme du druide et elle est relue à la sortie du combat ; la teinte que vous choisissez s'applique à la mana. Mode test et case témoin compris.",
+			"Annonce de mana remontée quand le jeu cache votre mana : avec un seuil bas, elle tardait ou ne partait jamais. Lyorune estime maintenant votre mana avec la régénération que le jeu donne hors combat, boisson comprise, et annonce dès que l'estimation atteint votre seuil, jamais trop tôt.",
+			"Macros de plus de 255 caractères acceptées alors que le jeu ne les lance pas : la limite est maintenant de 255, un compteur l'affiche, une macro trop longue est signalée en rouge, et les bijoux ne sont plus ajoutés à un clic qui dépasserait.",
+			"Placement des éléments : un élément poussé loin (nom, vie, icônes, marqueurs) pouvait sortir de la case, à l'écran comme dans l'exemple. Chaque décalage s'arrête maintenant au bord, selon la forme et la taille de vos cases : « Au bord de la case » s'affiche, le nom et le texte de vie rétrécissent près du bord, la couronne du chef reste dans la case, et un décalage ramené au bord retrouve sa place si vous agrandissez les cases.",
+			"« /lyorune mesure » : erreur Lua (« iconSize ») et aucune mesure quand le mode test n'avait pas encore été ouvert dans la partie.",
+			"Visite guidée : le verrou des cadres choisi avant la visite pouvait être perdu après un /reload ; les couleurs du bouclier et des soins en route citées par la visite sont maintenant celles de votre thème.",
+			"Rapport de bug : un nom de joueur court abîmait le texte du rapport (il n'est plus remplacé que comme mot entier), et rappeler la fenêtre effaçait vos réponses. Journal des erreurs : titre traduit en anglais. Inscription runique coupée puis rallumée : elle reparaît sans /reload.",
+			"Texture des barres : le clic s'arrêtait sur une texture en double quand d'autres textures étaient installées, il les parcourt maintenant toutes. Mes macros : un nom refusé (vide, trop long ou déjà pris) restait affiché dans le champ.",
+		},
+	},
+	{
 		version = "1.25.1", date = "2026-11-20",
 		added = {
 		},

@@ -16,6 +16,7 @@
 #
 #   python outils/publier.py --notes 1.4.0
 #       écrit RELEASE.md : les notes de cette seule version, pour la page de publication GitHub
+#       (précédées du mot d'ouverture docs/annonces/1.4.0.md et docs/annonces/1.4.0.en.md s'ils existent)
 #
 # Numérotation (versions sémantiques) : MAJEUR.MINEUR.CORRECTIF
 #   CORRECTIF (1.3.0 -> 1.3.1) : uniquement des corrections
@@ -153,16 +154,24 @@ def write_changelog(english=None):
     write('CHANGELOG.md' if english is None else 'CHANGELOG.en.md', '\n'.join(out + links) + '\n')
 
 
+def annonce(version, langue=''):
+    """Mot d'ouverture facultatif de la page de publication : docs/annonces/X.Y.Z.md (et X.Y.Z.en.md en anglais)."""
+    name = os.path.join('docs', 'annonces', version + langue + '.md')
+    if not os.path.exists(os.path.join(ROOT, name)):
+        return []
+    return [read(name).strip(), '']
+
+
 def write_release_notes(version):
     for entry_version, date, notes in changes():
         if entry_version == version.lstrip('v'):
-            lines = ['# Lyorune %s' % entry_version, ''] + section(notes)
+            lines = ['# Lyorune %s' % entry_version, ''] + annonce(entry_version) + section(notes)
             lines += ["**Installation** : téléchargez l'archive `.zip` ci-dessous et décompressez-la dans `World of Warcraft\\_forever_\\Interface\\AddOns\\`.",
                       '', 'Un bug ? [Comment le signaler](%s/blob/main/docs/SIGNALER_UN_BUG.md)' % DEPOT,
                       '', 'Journal complet : [CHANGELOG.md](%s/blob/main/CHANGELOG.md)' % DEPOT, '']
             english = traductions()
             if all(note in english for key, _, _ in RUBRIQUES for note in notes[key]):
-                lines += ['---', '', '# Lyorune %s (English)' % entry_version, ''] + section(notes, english)
+                lines += ['---', '', '# Lyorune %s (English)' % entry_version, ''] + annonce(entry_version, '.en') + section(notes, english)
                 lines += ['**Installation**: download the `.zip` archive below and unzip it into `World of Warcraft\\_forever_\\Interface\\AddOns\\`.',
                           '', 'A bug? [How to report it](%s/blob/main/docs/SIGNALER_UN_BUG.md#reporting-a-bug-english)' % DEPOT,
                           '', 'Full changelog: [CHANGELOG.en.md](%s/blob/main/CHANGELOG.en.md)' % DEPOT, '']
