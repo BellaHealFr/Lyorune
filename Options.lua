@@ -46,6 +46,7 @@ local function Option(key)
 		Z:RefreshAlerts()
 		if CLICK_OPTIONS[key] then Z:ApplyClicks() end
 		if AfterChange then AfterChange() end
+		if witness then witness.Spark() end -- éclat de soin sur la case témoin (effets magiques)
 	end
 end
 
@@ -1905,7 +1906,7 @@ local function Chapters()
 		{ name = "Fenêtre et aide", rune = 21, old = { "Aide" }, intro = "Cette fenêtre, la langue, et de l'aide si besoin.", sections = {
 			{ "Fenêtres de Lyorune", {
 				{ "seg", "windowTheme", "Thème des fenêtres", nil, "Options, visite guidée et petites fenêtres (pas les cases). Moderne : net, bleu givre et or. Classique : comme les fenêtres du jeu. MMORPG : pierre sombre, cadre doré et runes gravées.", desc = "Options, visite guidée et petites fenêtres (pas les cases)." },
-				{ "check", "magicEffects", "Effets magiques", "Cercle runique qui tourne derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change. Couleur du thème, jamais sur les cases de soin. Coupés par « Animations réduites ».", desc = "Lumière dans l'en-tête, cercle runique, étincelle quand un réglage change." },
+				{ "check", "magicEffects", "Effets magiques", "Lumière de soin, or et vert, qui traverse l'en-tête, cercle runique derrière le logo, particules de lumière, rune du chapitre ouvert qui s'allume, éclat sur la case témoin quand un réglage change. Jamais sur vos vraies cases de soin. Coupés par « Animations réduites ».", desc = "Lumière dans l'en-tête, cercle runique, étincelle quand un réglage change." },
 				{ "check", "reduceMotion", "Animations réduites", "Seulement des fondus courts : runes fixes, logo immobile, rien ne bouge en boucle. La lueur au survol reste." },
 				{ "check", "showRunes", "Inscription runique au bas de cette fenêtre", "Passez la souris sur les runes pour lire leur traduction." },
 				{ "check", "minimapButton", "Bouton sur la mini-carte", "Clic gauche : options. Clic droit : mode test. Faites-le glisser pour le déplacer.", fine = true },
@@ -2023,12 +2024,16 @@ local function ResetLine(chapter, page)
 end
 
 -- Après chaque changement : la pastille de chaque chapitre, le grisage des réglages dépendants des pages déjà
--- construites, et « Rétablir cette page » qui paraît ou disparaît (la page se range alors de nouveau)
+-- construites, « Rétablir cette page » qui paraît ou disparaît (la page se range alors de nouveau), et la lumière
+-- de la rune du chapitre ouvert (effets magiques allumés ou coupés)
 AfterChange = function()
 	if not chapters then return end
 	for _, chapter in ipairs(chapters) do
 		chapter.changes = ChapterChanges(chapter)
-		if chapter.button then chapter.button:SetCount(chapter.changes) end
+		if chapter.button then
+			chapter.button:SetCount(chapter.changes)
+			chapter.button:Light()
+		end
 		local page = chapter.page
 		if page then
 			ApplyDeps(page)
@@ -2273,6 +2278,7 @@ local function BuildWitness()
 	stage.holder:SetAllPoints()
 	stage.cell = Z.FakeCell(stage.holder)
 	stage.cell:SetPoint("CENTER")
+	stage.burst = UI.HealBurst(stage) -- éclat de soin quand un réglage change
 	col.stage = stage
 	col.legend = UI.Label(col, 11, nil, "dim")
 	col.legend:SetPoint("TOPLEFT", stage, "BOTTOMLEFT", 0, -6)
@@ -2357,6 +2363,19 @@ local function BuildWitness()
 		col.testText:SetText(Z.previewActive and L["Faux groupe de %d joueurs à l'écran. Recliquez pour le fermer."]:format(Z:PreviewSize())
 			or L[TEST_HINT])
 	end
+	-- Après un réglage changé (effets magiques, au plus 3 éclairs par seconde) : éclat de soin sur la case, et sa
+	-- vie qui remonte quand les barres sont animées (c'est le jeu qui anime la barre)
+	local SMOOTH = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.ExponentialEaseOut
+	col.Spark = function()
+		if not UI.Magic() or not col:IsVisible() or not UI.Flash() then return end
+		stage.burst.Play()
+		local hp = stage.cell.hp
+		local health = hp:GetValue() -- valeur d'exemple de la fausse case, jamais celle d'un vrai joueur
+		if Z.db.smooth and SMOOTH and health and health > 14 then
+			hp:SetValue(health - 14)
+			hp:SetValue(health, SMOOTH)
+		end
+	end
 	witness, window.witness = col, col
 	col:SetScript("OnShow", function() Z:Try("case témoin", col.Update) end)
 	col.Update()
@@ -2414,6 +2433,12 @@ local function Build()
 		AfterChange() -- réglages changés pendant que la fenêtre était fermée (commande, assistant, profil)
 	end)
 	window:HookScript("OnHide", function() window.breath:Stop() end)
+
+	-- Bas de la fenêtre : un trait sur toute la largeur, puis l'inscription runique au milieu (Runes.lua)
+	window.foot = UI.Paint(UI.Tex(window, "ARTWORK"), "line")
+	window.foot:SetHeight(1)
+	window.foot:SetPoint("BOTTOMLEFT", 10, FOOT)
+	window.foot:SetPoint("BOTTOMRIGHT", -10, FOOT)
 
 	BuildSearch()
 	BuildWitness()

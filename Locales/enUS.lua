@@ -92,7 +92,7 @@ Z.translations.enUS = {
 	["Animations réduites"] = "Reduced motion",
 	["Seulement des fondus courts : runes fixes, logo immobile, rien ne bouge en boucle. La lueur au survol reste."] = "Short fades only: still runes, still logo, nothing moves in a loop. The hover glow stays.",
 	["Effets magiques"] = "Magic effects",
-	["Cercle runique qui tourne derrière le logo, particules de lumière dans l'en-tête, étincelle quand un réglage change. Couleur du thème, jamais sur les cases de soin. Coupés par « Animations réduites »."] = "Rune circle turning behind the logo, motes of light in the header, a spark when a setting changes. Theme colour, never on the healing cells. Turned off by \"Reduced motion\".",
+	["Lumière de soin, or et vert, qui traverse l'en-tête, cercle runique derrière le logo, particules de lumière, rune du chapitre ouvert qui s'allume, éclat sur la case témoin quand un réglage change. Jamais sur vos vraies cases de soin. Coupés par « Animations réduites »."] = "A gold and green healing light crossing the header, a rune circle behind the logo, motes of light, the open chapter's rune lighting up, a glow on the preview cell when a setting changes. Never on your real healing cells. Turned off by \"Reduced motion\".",
 	["Barres animées"] = "Animated bars", ["Texte"] = "Text", ["Texte de vie"] = "Health text", ["Taille du texte"] = "Text size",
 	["Couleurs et transparence"] = "Colours and transparency", ["Couleur des barres"] = "Bar colour",
 	["Luminosité des barres (%)"] = "Bar brightness (%)", ["Opacité des cadres (%)"] = "Frame opacity (%)",

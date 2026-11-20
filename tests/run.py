@@ -3371,6 +3371,100 @@ step("refonte 1.26.0, lot 4b : case temoin, faux groupe, boutons du mode test", 
   w:Hide()
 end)
 
+step("refonte 1.26.0, lot 5 : lumiere de soin, rune du chapitre, eclat de la case temoin", function()
+  local UI = Z.UI
+  local saved = { magicEffects = Z.db.magicEffects, reduceMotion = Z.db.reduceMotion, smooth = Z.db.smooth,
+    windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast, showRunes = Z.db.showRunes, color = Z.db.color }
+  Z.db.magicEffects, Z.db.reduceMotion, Z.db.smooth, Z.db.showRunes = true, false, true, true
+  Z:ToggleOptions("Apparence")
+  local w = Z:OptionsWindow()
+  w:Show() w:Run("OnShow")
+  local m, col = w.magic, w.witness
+  local function Open(name) for _, c in ipairs(w.chapters) do if c.name == name then return c end end end
+
+  -- Lumière de soin dans l'en-tête : un faisceau or et vert qui traverse le trait, de bout en bout
+  assert(m.track:IsShown() and m.sweep:IsPlaying(), "faisceau de l'en-tete")
+  assert(#m.beam.pieces == 3 and m.beam.pieces[1]._tex == "Interface\\Buttons\\WHITE8X8", "trois degrades")
+  assert(UI.HEAL_GOLD[1] > UI.HEAL_GOLD[3] and UI.HEAL_GREEN[2] > UI.HEAL_GREEN[1], "or et vert")
+  assert(m.beam.haze._color[1] == UI.HEAL_GOLD[1], "halo du faisceau dore")
+
+  -- Trois thèmes et contraste élevé : la lumière reste or et vert, le trait est celui de la fenêtre en Classique
+  -- et MMORPG (liseré doré), le sien en Moderne et en contraste élevé
+  for _, case in ipairs({ { "MODERN", false, true }, { "CLASSIC", false, false }, { "MMO", false, false }, { "MMO", true, true } }) do
+    Z.db.windowTheme, Z.db.highContrast = case[1], case[2] Z:Refresh()
+    assert(m.rail:IsShown() == case[3], "trait sous l'en-tete : " .. case[1] .. (case[2] and " contraste" or ""))
+    assert(m.track:IsShown() and m.sweep:IsPlaying(), "faisceau : " .. case[1])
+    assert(m.beam.haze._color[1] == UI.HEAL_GOLD[1], "lumiere de soin independante du theme")
+    assert(Open("Apparence").button.halo._color[2] == UI.HEAL_GOLD[2], "rune : lumiere de soin")
+  end
+  Z.db.windowTheme, Z.db.highContrast = "MODERN", false Z:Refresh()
+
+  -- Rune du chapitre ouvert : sa lumière s'allume et respire ; les autres restent éteintes
+  local open, other = Open("Apparence").button, Open("Disposition").button
+  assert(open.active and open.halo:IsShown() and open.pulse:IsPlaying(), "rune du chapitre ouvert allumee")
+  assert(not other.halo:IsShown() and not other.pulse:IsPlaying(), "rune d'un autre chapitre eteinte")
+  w.Select("Disposition")
+  assert(other.halo:IsShown() and other.pulse:IsPlaying() and not open.halo:IsShown() and not open.pulse:IsPlaying(),
+    "la lumiere suit le chapitre ouvert")
+  w.Select("Apparence")
+
+  -- Éclat de la case témoin à chaque réglage changé, et la vie qui remonte (barres animées)
+  NOW = NOW + 5
+  local set = w.Select("Apparence").content.settings
+  local function Change() -- l'autre couleur des barres : un vrai changement de réglage, depuis sa ligne
+    for _, b in ipairs(set.color.segments) do
+      if b.value ~= Z.db.color then return b:Run("OnClick", "LeftButton") end
+    end
+  end
+  Change()
+  local burst, hp = col.stage.burst, col.stage.cell.hp
+  assert(burst.groups[1]:IsPlaying() and burst.groups[2]:IsPlaying(), "eclat de soin sur la case temoin")
+  assert(burst.glows[1]._color[1] == UI.HEAL_GOLD[1] and burst.glows[2]._color[2] == UI.HEAL_GREEN[2], "eclat or et vert")
+  assert(hp._value == 62 and hp._smoothing == Enum.StatusBarInterpolation.ExponentialEaseOut, "la vie remonte")
+  for _, group in ipairs(burst.groups) do group:Stop() end
+  -- Barres non animées : l'éclat, mais la vie ne bouge pas
+  NOW = NOW + 5
+  Z.db.smooth = false
+  Change()
+  assert(burst.groups[1]:IsPlaying() and hp._smoothing == nil, "vie fixe sans barres animees")
+  for _, group in ipairs(burst.groups) do group:Stop() end
+  Z.db.smooth = true
+
+  -- « Effets magiques » coupé ou « Animations réduites » : plus rien ne bouge ni ne brille (les fondus courts
+  -- des pages restent) ; le trait et l'inscription restent
+  for _, setting in ipairs({ "magicEffects", "reduceMotion" }) do
+    NOW = NOW + 5
+    Z.db[setting] = setting == "reduceMotion"
+    Change()
+    assert(not UI.Magic(), setting)
+    assert(not m.track:IsShown() and not m.sweep:IsPlaying(), setting .. " : faisceau")
+    assert(not open.halo:IsShown() and not open.pulse:IsPlaying(), setting .. " : rune du chapitre")
+    assert(not burst.groups[1]:IsPlaying() and hp._smoothing == nil, setting .. " : eclat de la case temoin")
+    assert(m.rail:IsShown() and w.foot:IsShown(), setting .. " : traits")
+    Z.db.magicEffects, Z.db.reduceMotion = true, false
+    Change()
+    assert(m.sweep:IsPlaying() and open.halo:IsShown() and open.pulse:IsPlaying(), setting .. " : effets revenus")
+    for _, group in ipairs(burst.groups) do group:Stop() end -- en jeu, l'éclat s'éteint seul après 0,9 s
+  end
+
+  -- Fenêtre fermée : tout s'arrête ; aucun éclat sur une case témoin cachée
+  w:Hide() w:Run("OnHide") open:Run("OnHide") col:Hide()
+  assert(not m.sweep:IsPlaying() and not open.pulse:IsPlaying(), "effets arretes a la fermeture")
+  NOW = NOW + 5
+  col.Spark()
+  assert(not burst.groups[1]:IsPlaying(), "eclat sur une case temoin cachee")
+  col:Show()
+
+  -- Phrase en runes : au bas de la fenêtre, au milieu de la bande sous le trait
+  local strip = Z:RuneStrip()
+  local p = strip._point
+  assert(strip:GetParent() == w and p[1] == "BOTTOM" and p[3] < 34, "inscription au bas de la fenetre")
+  assert(w.foot._point[1] == "BOTTOMRIGHT" and w.foot._point[3] == 34, "trait du bas")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

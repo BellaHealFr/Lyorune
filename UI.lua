@@ -408,6 +408,12 @@ UI.MAGIC_CIRCLE = MEDIA .. "MagieCercle"
 UI.MAGIC_SPARK = MEDIA .. "MagieEtincelle"
 local FLASHES = 3 -- au plus 3 éclairs par seconde, toutes fenêtres confondues
 local flashes = {}
+local HEADER = 44 -- hauteur de l'en-tête des fenêtres (titre, recherche, fermeture), identique dans tous les thèmes
+-- Lumière de soin, or et vert (choix de l'auteur), la même dans tous les thèmes : faisceau de l'en-tête, rune du
+-- chapitre ouvert, éclat de la case témoin
+UI.HEAL_GOLD = { 0.96, 0.82, 0.48 }
+UI.HEAL_GREEN = { 0.50, 0.89, 0.63 }
+local BEAM = 300 -- longueur du faisceau de l'en-tête
 
 function UI.Magic()
 	return Z.db and Z.db.magicEffects and not Z.db.reduceMotion and true or false
@@ -478,8 +484,34 @@ local function Mote(field, x, delay, rest)
 	return mote, group
 end
 
+-- Faisceau de la lumière de soin : un halo doux, puis le trait en trois dégradés (rien, or, vert, rien)
+local function Beam(parent)
+	local beam = CreateFrame("Frame", nil, parent)
+	beam:SetSize(BEAM, 14)
+	beam.haze = beam:CreateTexture(nil, "BACKGROUND")
+	beam.haze:SetTexture(UI.MAGIC_SPARK)
+	beam.haze:SetBlendMode("ADD")
+	beam.haze:SetAllPoints()
+	beam.haze:SetVertexColor(UI.HEAL_GOLD[1], UI.HEAL_GOLD[2], UI.HEAL_GOLD[3], 0.35)
+	local gold, green, third = UI.HEAL_GOLD, UI.HEAL_GREEN, BEAM / 3
+	beam.pieces = {}
+	for i, ends in ipairs({ { false, gold }, { gold, green }, { green, false } }) do
+		local from, to = ends[1] or ends[2], ends[2] or ends[1]
+		local t = beam:CreateTexture(nil, "ARTWORK")
+		t:SetTexture(WHITE)
+		t:SetBlendMode("ADD")
+		t:SetSize(third, 2)
+		t:SetPoint("LEFT", (i - 1) * third, 0)
+		t:SetGradient("HORIZONTAL", CreateColor(from[1], from[2], from[3], ends[1] and 1 or 0),
+			CreateColor(to[1], to[2], to[3], ends[2] and 1 or 0))
+		beam.pieces[i] = t
+	end
+	return beam
+end
+
 -- Effets de l'en-tête d'une fenêtre : cercle runique derrière « logo », particules entre le titre et « right »
--- (le champ de recherche). La zone des particules coupe tout ce qui en sort : rien ne passe derrière le texte.
+-- (le champ de recherche), lumière de soin qui parcourt le trait sous l'en-tête. La zone des particules et celle du
+-- faisceau coupent tout ce qui en sort : rien ne passe derrière le texte.
 function UI.HeaderMagic(w, logo, right)
 	local m = { motes = {}, rises = {} }
 	m.circle = w:CreateTexture(nil, "BORDER")
@@ -506,6 +538,31 @@ function UI.HeaderMagic(w, logo, right)
 		m.motes[i], m.rises[i] = Mote(m.field, spot[1], spot[2], spot[3])
 	end
 
+	-- Trait sous l'en-tête : celui de la fenêtre en Classique et MMORPG (liseré doré), le sien ailleurs
+	m.rail = UI.Paint(UI.Tex(w, "ARTWORK"), "line")
+	m.rail:SetHeight(1)
+	m.rail:SetPoint("TOPLEFT", 22, -HEADER)
+	m.rail:SetPoint("TOPRIGHT", -22, -HEADER)
+	-- Lumière de soin : le faisceau traverse le trait de gauche à droite (7 s), puis se repose (3 s)
+	m.track = CreateFrame("Frame", nil, w)
+	m.track:SetPoint("TOPLEFT", 22, -HEADER + 7)
+	m.track:SetPoint("TOPRIGHT", -22, -HEADER + 7)
+	m.track:SetHeight(14)
+	m.track:SetClipsChildren(true)
+	m.beam = Beam(m.track)
+	m.beam:SetPoint("LEFT", m.track, "LEFT", -BEAM, 0)
+	m.sweep = m.beam:CreateAnimationGroup()
+	m.sweep:SetLooping("REPEAT")
+	m.pass = m.sweep:CreateAnimation("Translation")
+	m.pass:SetDuration(7)
+	m.pass:SetSmoothing("IN_OUT")
+	m.pass:SetEndDelay(3)
+
+	function m.Rail()
+		local kit = UI.Kit()
+		m.rail:SetShown(kit ~= "CLASSIC" and kit ~= "MMO")
+	end
+
 	function m.Paint()
 		MagicColor(m.circle, m.circle:GetAlpha())
 		for _, mote in ipairs(m.motes) do MagicColor(mote) end
@@ -514,6 +571,7 @@ function UI.HeaderMagic(w, logo, right)
 	function m.Stop()
 		m.spin:Stop()
 		m.burst:Stop()
+		m.sweep:Stop()
 		for _, group in ipairs(m.rises) do group:Stop() end
 	end
 
@@ -522,8 +580,13 @@ function UI.HeaderMagic(w, logo, right)
 		local on = UI.Magic()
 		m.circle:SetShown(on)
 		m.field:SetShown(on)
+		m.track:SetShown(on)
 		if not on or not w:IsShown() then return m.Stop() end
 		m.Paint()
+		if not m.sweep:IsPlaying() then
+			m.pass:SetOffset(w:GetWidth() - 44 + BEAM, 0) -- de tout à gauche du trait à tout à droite
+			m.sweep:Play()
+		end
 		if opening and UI.Flash() then
 			m.burst:Stop()
 			m.burst:Play()
@@ -539,8 +602,51 @@ function UI.HeaderMagic(w, logo, right)
 	w:HookScript("OnShow", function() m.Update(true) end)
 	w:HookScript("OnHide", m.Stop)
 	UI.OnSkin(m.Paint)
+	UI.OnSkin(m.Rail)
+	m.Rail()
 	m.Update()
 	return m
+end
+
+-- Éclat de soin au centre de « parent » (case témoin) : une lueur or et vert qui grandit et s'efface en 0,9 s.
+-- Posé au-dessus des cadres de « parent ». burst.Play() le relance.
+function UI.HealBurst(parent)
+	local burst = CreateFrame("Frame", nil, parent)
+	burst:SetAllPoints()
+	burst:SetFrameLevel(parent:GetFrameLevel() + 30) -- au-dessus de la case et de ses icônes
+	burst.glows, burst.groups = {}, {}
+	for i, spec in ipairs({ { 64, UI.HEAL_GOLD, 0.55 }, { 34, UI.HEAL_GREEN, 0.9 } }) do
+		local glow = burst:CreateTexture(nil, "OVERLAY")
+		glow:SetTexture(UI.MAGIC_SPARK)
+		glow:SetBlendMode("ADD")
+		glow:SetSize(spec[1], spec[1])
+		glow:SetPoint("CENTER")
+		glow:SetVertexColor(spec[2][1], spec[2][2], spec[2][3])
+		glow:SetAlpha(0)
+		local group = glow:CreateAnimationGroup()
+		AlphaAnim(group, 0, spec[3], 0.22, "OUT", 1)
+		AlphaAnim(group, spec[3], 0, 0.68, "IN", 2)
+		for order, size in ipairs({ { 0.4, 1, 0.22 }, { 1, 1.6, 0.68 } }) do
+			local grow = group:CreateAnimation("Scale")
+			if grow.SetScaleFrom then
+				grow:SetScaleFrom(size[1], size[1])
+				grow:SetScaleTo(size[2], size[2])
+			end
+			grow:SetDuration(size[3])
+			grow:SetSmoothing("OUT")
+			grow:SetOrder(order)
+		end
+		group:SetToFinalAlpha(true)
+		group:SetScript("OnFinished", function() glow:SetAlpha(0) end)
+		burst.glows[i], burst.groups[i] = glow, group
+	end
+	function burst.Play()
+		for _, group in ipairs(burst.groups) do
+			group:Stop()
+			group:Play()
+		end
+	end
+	return burst
 end
 
 -- Bordure qui s'allume en douceur au survol d'un bouton (créée au premier survol seulement).
@@ -812,6 +918,7 @@ function UI.styles.side(b, kit)
 	if b.label:SetFont(mmo and UI.skin.headFont or STANDARD_TEXT_FONT, mmo and 14 or 13, "") == false then
 		b.label:SetFont(STANDARD_TEXT_FONT, 13, "")
 	end
+	if b.Light then b:Light() end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1252,6 +1359,15 @@ function UI.SideButton(parent, rune, name, onClick)
 	b.light:SetAllPoints()
 	b.rune = UI.Rune(b, "ARTWORK", rune, 16)
 	b.rune:SetPoint("LEFT", 12, 0)
+	-- Chapitre ouvert (effets magiques) : la lumière de soin s'allume derrière sa rune et respire (3 s)
+	b.halo = UI.CutRune(b:CreateTexture(nil, "ARTWORK", nil, -1), rune, 34, UI.HALOS)
+	b.halo:SetPoint("CENTER", b.rune)
+	b.halo:SetBlendMode("ADD")
+	b.halo:SetVertexColor(UI.HEAL_GOLD[1], UI.HEAL_GOLD[2], UI.HEAL_GOLD[3])
+	b.halo:Hide()
+	b.pulse = b.halo:CreateAnimationGroup()
+	b.pulse:SetLooping("BOUNCE")
+	AlphaAnim(b.pulse, 0.35, 0.9, 1.5, "IN_OUT")
 	b.label = UI.Label(b, 13, nil, "dim")
 	b.label:SetPoint("LEFT", b.rune, "RIGHT", 10, 0)
 	b.label:SetPoint("RIGHT", -34, 0)
@@ -1276,6 +1392,19 @@ function UI.SideButton(parent, rune, name, onClick)
 		self.badge:SetWidth(math.max(18, math.ceil(self.badge.text:GetStringWidth()) + 10))
 		self.tip = self.count > 0 and L["Réglages changés dans ce chapitre : %d"]:format(self.count) or nil
 	end
+	-- Allume ou éteint la lumière de la rune (chapitre ouvert, effets magiques, bouton à l'écran)
+	b.Light = function(self)
+		local on = self.active and UI.Magic() and self:IsVisible() and true or false
+		self.halo:SetShown(on)
+		if not on then
+			self.pulse:Stop()
+		elseif not self.pulse:IsPlaying() then
+			self.halo:SetAlpha(0.35)
+			self.pulse:Play()
+		end
+	end
+	b:HookScript("OnShow", b.Light)
+	b:HookScript("OnHide", function(self) self.pulse:Stop() end)
 	b:SetScript("OnClick", function(self, button)
 		Click()
 		if onClick then onClick(self, button) end
@@ -1345,8 +1474,6 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Fenêtres
 ----------------------------------------------------------------------------------------------------
-local HEADER = 44 -- hauteur de l'en-tête (titre, recherche, fermeture), identique dans tous les thèmes
-
 -- Habille une fenêtre selon le thème. Moderne : fond uni aux angles arrondis, bordure fine, liseré givre.
 -- Classique : cadre et fond de boîte de dialogue du jeu. MMORPG : fond de pierre assombri derrière le texte,
 -- bordure dorée du jeu, une rune gravée dans chaque angle. Les calques sont construits une fois.

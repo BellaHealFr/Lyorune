@@ -133,7 +133,7 @@ local function Build(window)
 
 	strip = CreateFrame("Frame", nil, window)
 	strip:SetSize(x, SIZE + 4)
-	strip:SetPoint("BOTTOM", 0, 9)
+	strip:SetPoint("BOTTOM", 0, 9) -- au milieu de la bande du bas de la fenêtre d'options, sous son trait
 	strip:EnableMouse(true)
 	strip.base, strip.glows, strip.halos, strip.sparks = {}, {}, {}, {}
 	strip.writes, strip.waves, strip.hovers = {}, {}, {}
