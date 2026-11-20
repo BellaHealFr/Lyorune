@@ -1908,7 +1908,7 @@ local function Chapters()
 				{ "custom", SpecLine },
 				{ "custom", ClickList },
 				{ "note", "Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser.", 30 },
-				{ "button", "Mes macros...", function() Z:OpenMacros() end, "Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic." },
+				{ "button", "Mes macros...", function() Z:OpenMacros() end, "Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic ou dans une barre de sorts." },
 			} },
 			{ "Comportement", {
 				{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },

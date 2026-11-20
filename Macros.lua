@@ -4,7 +4,8 @@
 -- RANGEMENT. Les macros sont rangées par classe, communes à toutes les spécialisations :
 --   Z.db.macros.PRIEST = { { name = "Bijou et soin", body = "/use 13\n/cast Soins rapides" }, ... }
 --   Un clic ou une touche qui en utilise une porte la valeur « @macro:Nom ». Modifier la macro change
---   tous ses clics, dans chaque spécialisation. Rien n'est écrit dans la fenêtre /macro du jeu.
+--   tous ses clics, dans chaque spécialisation. Rien n'est écrit dans la fenêtre /macro du jeu, sauf une copie
+--   « Lyo:Nom » quand le joueur glisse la macro vers une barre de sorts (voir Clicks.lua, Z:PickupGameCopy).
 -- VISER LA CASE. Le joueur de la case s'écrit {cible} ou @cible. Avec l'option « macroAutoTarget »
 --   (cochée d'origine), une commande sans cible (/cast Récupération) vise la case toute seule, et
 --   [@mouseover] marche tel quel : sur une case, le joueur survolé est celui de la case.
@@ -17,7 +18,9 @@ local UI = Z.UI
 local L = Z.L
 
 Z.MACRO_LINE = 255   -- longueur d'une ligne de commande acceptée par le jeu
-Z.MACRO_MAX = 1023   -- longueur totale d'une macro (à confirmer en jeu sur Forever)
+Z.MACRO_MAX = 255    -- longueur totale d'une macro : depuis le patch 11.0.2, le texte d'un bouton sécurisé
+                     -- (« macrotext ») ne dépasse pas 255 caractères, comme une macro de /macro
+local EDIT_MAX = 1023 -- la zone d'écriture garde le texte d'une ancienne macro plus longue (signalée en rouge)
 Z.MACRO_NAME = 32    -- longueur d'un nom de macro, en octets
 local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 
@@ -92,6 +95,7 @@ function Z:RenameMacro(macro, newName)
 	local other = Z:FindMacro(newName)
 	if other and other ~= macro then return false, L["Une autre macro porte déjà ce nom."] end
 	ReplaceValue("@macro:" .. macro.name, "@macro:" .. newName)
+	Z:MoveGameCopy(macro.name, newName) -- sa copie de /macro suit (Clicks.lua)
 	macro.name = newName
 	Z:ApplyClicks()
 	return true
@@ -232,7 +236,11 @@ function Z:CheckMacro(body)
 		return problems
 	end
 	local resolved = Z:ResolveMacro(body)
-	if #resolved > Z.MACRO_MAX then add("err", "Trop longue : %d caractères, %d au plus.", #resolved, Z.MACRO_MAX) end
+	if #resolved > Z.MACRO_MAX then
+		add("err", "Trop longue : %d caractères, %d au plus.", #resolved, Z.MACRO_MAX)
+	elseif #Z:BarText(body) > Z.MACRO_MAX then -- la copie pour une barre ajoute la cible : elle peut dépasser
+		add("warn", "Trop longue pour une barre de sorts du jeu : %d caractères, %d au plus. Elle reste bonne pour vos clics.", #Z:BarText(body), Z.MACRO_MAX)
+	end
 	local real, commands = Split(resolved), 0
 	for n, line in ipairs(Split(body)) do
 		if real[n] and #real[n] > Z.MACRO_LINE then
@@ -322,6 +330,85 @@ function Z:MacroIcon(body)
 end
 
 ----------------------------------------------------------------------------------------------------
+-- Copie pour une barre de sorts du jeu : là, il n'y a pas de case. Chaque groupe qui vise le joueur survolé est
+-- suivi du même groupe sans lui, qui vise la cible (sinon vous, selon le réglage du jeu « lancer sur soi »).
+--   « [@mouseover,harm] Châtiment »  -> « [@mouseover,harm][harm] Châtiment »
+--   « [@mouseover] Soins rapides »   -> « [@mouseover,help][] Soins rapides » (un soin ne vise pas un ennemi)
+--   « [@mouseover] 13 » (/use)       -> « [@mouseover,exists][] 13 »
+----------------------------------------------------------------------------------------------------
+local function Hovered(item)
+	item = item:lower()
+	return item == "@mouseover" or item:match("^target%s*=%s*mouseover$") ~= nil
+end
+
+-- Le sort d'une clause aide-t-il un allié ? (sans réponse du jeu : non, la clause vise alors tout joueur survolé)
+local function Helpful(clause)
+	local name = clause:gsub("%b[]", ""):gsub("reset=%S+", ""):match("^%s*!?([^,]+)")
+	name = name and name:match("^(.-)%s*$")
+	if not (name and name ~= "" and not tonumber(name) and C_Spell and C_Spell.IsSpellHelpful) then return false end
+	local ok, helpful = pcall(C_Spell.IsSpellHelpful, name)
+	return ok and helpful == true
+end
+
+local function BarClause(clause, cast)
+	local lead, rest = clause:match("^(%s*)(.*)$")
+	local out, pending, seen = "", {}, {}
+	local alone = cast and Helpful(rest) and "help" or "exists"
+	local function Add(group)
+		if not seen[group] then
+			seen[group] = true
+			out = out .. group
+		end
+	end
+	local function Flush()
+		for _, group in ipairs(pending) do Add(group) end
+		pending = {}
+	end
+	while true do
+		local group, after = rest:match("^(%b[])%s*(.*)$")
+		if not group then break end
+		local items, others, hovered = {}, {}, false
+		for item in group:sub(2, -2):gmatch("[^,]+") do
+			item = item:match("^%s*(.-)%s*$")
+			if item ~= "" then
+				items[#items + 1] = item
+				if Hovered(item) then hovered = true else others[#others + 1] = item end
+			end
+		end
+		if hovered then
+			if #others == 0 then items[#items + 1] = alone end
+			Add("[" .. table.concat(items, ",") .. "]")
+			pending[#pending + 1] = "[" .. table.concat(others, ",") .. "]"
+		else
+			Flush()
+			Add(group)
+		end
+		rest = after
+	end
+	Flush()
+	if out == "" then return clause end
+	return lead .. out .. (rest ~= "" and " " .. rest or "")
+end
+
+function Z:BarText(body)
+	local lines = {}
+	for line in (Z:ResolveMacro(body) .. "\n"):gmatch("([^\n]*)\n") do
+		local slash, command, rest = line:match("^(%s*/)(%S+)(.*)$")
+		local lower = command and command:lower()
+		if lower and AIMED[lower] and not UNIT_COMMANDS[lower] then
+			local clauses = {}
+			for clause in (rest .. ";"):gmatch("([^;]*);") do clauses[#clauses + 1] = BarClause(clause, CASTS[lower]) end
+			line = slash .. command .. table.concat(clauses, ";")
+		end
+		lines[#lines + 1] = line
+	end
+	local text = table.concat(lines, "\n")
+	-- l'icône « ? » de la copie montre alors le sort en cours et son infobulle, si la place le permet
+	if not text:find("^%s*#show") and #text + 13 <= Z.MACRO_MAX then text = "#showtooltip\n" .. text end
+	return text
+end
+
+----------------------------------------------------------------------------------------------------
 -- Assistant : une macro écrite à partir de cases à cocher
 --   opts = { spell = "Soins rapides", stop = true, trinket1 = true, trinket2 = false, res = true, harm = "Châtiment" }
 ----------------------------------------------------------------------------------------------------
@@ -349,6 +436,8 @@ end
 function Z:ImportGameMacro(index)
 	local name, _, body = GetMacroInfo(index)
 	if not name or not body then return nil end
+	local mine = Z:CopyOwner(name) -- la copie « Lyo: » d'une macro de la bibliothèque : c'est elle
+	if mine then return mine end
 	local same = Z:FindMacro(name)
 	if same and same.body == body then return same end
 	return Z:NewMacro(name, body)
@@ -431,8 +520,15 @@ local function StopDrag()
 	end
 end
 
+-- Hors combat, la macro part en main comme une macro de /macro (sa copie « Lyo: », créée ou mise à jour) : elle se
+-- dépose dans une barre de sorts du jeu, ou sur une ligne de Lyorune qui la reconnaît (Z:CopyOwner). Sinon, ou
+-- quand la copie est refusée (combat, trop longue, plus de place), seules les lignes de Lyorune la prennent.
 local function StartDrag(row)
 	if not row.macro then return end
+	if win then win.SaveCurrent() end -- la copie part avec le texte en cours d'écriture
+	local held, why = Z:PickupGameCopy(row.macro)
+	if held then return end
+	if why then Z:Print(why) end
 	if not dragIcon then
 		dragIcon = CreateFrame("Frame", nil, UIParent)
 		dragIcon:SetSize(30, 30)
@@ -495,8 +591,8 @@ end
 -- Ce que dit la consigne sous la liste : glisser une macro sur une ligne des options, sauf quand les options
 -- sont effacées le temps de cette fenêtre (écran trop étroit pour les deux) : aucune ligne où la glisser
 local function HintText()
-	return UI.Away() and L["Fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne, vos macros sont dans la liste."]
-		or L["Glissez une macro sur une ligne du chapitre Sorts et raccourcis, ou cliquez sur le sort d'une ligne pour la choisir."]
+	return UI.Away() and L["Glissez une macro dans une barre de sorts du jeu. Pour un clic, fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne."]
+		or L["Glissez une macro sur une ligne du chapitre Sorts et raccourcis ou dans une barre de sorts du jeu, ou cliquez sur le sort d'une ligne."]
 end
 
 local function BuildWindow()
@@ -608,7 +704,7 @@ local function BuildWindow()
 	edit:SetAutoFocus(false)
 	edit:SetFont(UI.Font(), 12, "")
 	UI.Paint(edit, "text") -- sans couleur, le jeu écrit en blanc pur
-	edit:SetMaxLetters(Z.MACRO_MAX)
+	edit:SetMaxLetters(EDIT_MAX)
 	edit:SetWidth(width - 12)
 	edit:SetHeight(120 - 12)
 	scroll:SetScrollChild(edit)
@@ -761,6 +857,8 @@ local function BuildWindow()
 		win.more:SetShown(#macros > ROWS)
 		win.more:SetText(L["Molette : %d de plus"]:format(math.max(0, #macros - ROWS)))
 		local uses = win.macro and Z:MacroUses(win.macro) or {}
+		local copy = Z:GameCopy(win.macro)
+		if copy then uses[#uses + 1] = L["copie dans /macro : %s"]:format(copy) end
 		win.uses:SetText(#uses > 0 and table.concat(uses, ", ") or Dim(L["aucun clic ni touche, dans cette spécialisation"]))
 		win.save:SetShown(win.macro ~= nil)
 		win.remove:SetShown(win.macro ~= nil)

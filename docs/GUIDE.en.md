@@ -147,7 +147,7 @@ Your character has two specializations (two talent groups)? Each one has its own
 
 A macro does several things in one click: use a trinket then heal, resurrect a dead player or heal a living one, attack an enemy or heal an ally...
 
-Lyorune keeps your macros in a library. You write a macro once, then put it on as many clicks and keys as you like, in both specializations. If you edit it, all its clicks follow. It takes no room in the game's `/macro` window.
+Lyorune keeps your macros in a library. You write a macro once, then put it on as many clicks and keys as you like, in both specializations. If you edit it, all its clicks follow. It takes no room in the game's `/macro` window, unless you drag it onto an action bar (see below).
 
 **Open the library**: **Spells and bindings** chapter, "My macros..." button below the list (or the same button in the spell picker).
 
@@ -175,12 +175,13 @@ A macro found on the Internet with `[@mouseover]` works as it is. To place the p
 **Checked while you type.** Below the macro, Lyorune points out:
 
 - a typo in a condition (`[mod:shfit]`, `[ded]`);
-- a forgotten bracket, a line that is too long;
+- a forgotten bracket, a macro that is too long: the game accepts 255 characters at most, target included (the counter below the macro counts them);
+- a macro that fits on a click but not on a game action bar, where the target takes a little more room (in yellow: it still works on your clicks);
 - a spell your active specialization does not know (maybe it belongs to the other one);
 - a spell written with other accents than in your spellbook: the game sometimes spells a name without its accent, and the macro then casts nothing. Lyorune gives the right spelling, and "Fix spelling", next to the "Check" title, puts it in the macro;
 - a command that runs code (`/run`, `/script`).
 
-The first three findings are written out, the number of the others is given at the end of the "Check" title. Just below, "Sent to the game" shows the exact text that goes out on the click, and "Used on" the clicks that use the macro. A text too long for its place can be read in full by hovering it.
+The first three findings are written out, the number of the others is given at the end of the "Check" title. Just below, "Sent to the game" shows the exact text that goes out on the click, and "Used on" the clicks that use the macro, then its copy in `/macro` if you dragged it onto a bar. A text too long for its place can be read in full by hovering it.
 
 The macro saves itself when you pick another macro or close the window. "Save" does it at once and says "Saved" on the button for two seconds.
 
@@ -192,6 +193,10 @@ The assistant, the import and the spell picker always open on top of My macros, 
 - or click that spell: your macros are listed below your spells, in the "My macros" row.
 
 On a small screen, the options window fades out while the library is open: close the library, the options come back, then click the spell of a line.
+
+**Putting the macro on a game action bar:** out of combat, drag it from the list onto an action bar. Lyorune makes it a real game macro, stored in `/macro`, in your character's tab, named "Lyo:" followed by its own name. On a bar there is no frame: the macro aims at the player under your mouse (a frame or a character), otherwise your target, otherwise yourself if the game casts on you when nothing is targeted. So it works when you click the bar as well as with a key.
+
+The copy follows the macro: when you change its text or its name, it changes too (at the end of combat if you are fighting), and it goes away when you delete the macro. Only the macros you drag take room in `/macro`; when there is none left, Lyorune says so. A macro too long for a bar is refused with the reason, and still works on your clicks. If you remove the copy yourself in `/macro`, Lyorune does not create it again. It never touches your other macros.
 
 **Deleting a macro** asks for a second click: the macro goes away with all its clicks and keys. Changed your mind? "Undo my changes", at the bottom of the options window, gives back the macro and its clicks.
 
@@ -206,7 +211,7 @@ If you ask for it, Lyorune creates a real game macro for each spell of your clic
 1. **Spells and bindings** chapter, "Macros for your action bars" part: turn on "Create one macro per spell of my clicks". One icon per macro appears.
 2. Click an icon, then drop it on an action bar. You also find them in `/macro`, in your character's tab: their name starts with "Lyo:".
 
-The macro heals the player under your mouse (a frame or a character), otherwise your target, otherwise yourself. It updates when you change your clicks. Lyorune never touches your other macros. To do without them, turn off "Create one macro per spell of my clicks" or click "Remove Lyorune's macros".
+The macro heals the player under your mouse (a frame or a character), otherwise your target, otherwise yourself, even when the click holds a macro of your library. It updates when you change your clicks. Lyorune never touches your other macros. To do without them, turn off "Create one macro per spell of my clicks" or click "Remove Lyorune's macros": the macros you dragged from My macros stay on your bars.
 
 ## 4. Hover keys
 

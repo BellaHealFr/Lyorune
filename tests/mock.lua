@@ -235,7 +235,7 @@ function CreateMacro(name, icon, body, perCharacter)
 end
 function EditMacro(index, name, icon, body) local m = MACROS[index - 120] m.name, m.body = name, body end
 function DeleteMacro(index) assert(not COMBAT) table.remove(MACROS, index - 120) end
-function PickupMacro(index) PICKED = MACROS[index - 120].name end
+function PickupMacro(index) PICKED = MACROS[index - 120].name CURSOR_INFO = { "macro", index } end
 -- Règles de visibilité : le faux client les réévalue à chaque changement de combat (voir FireEvent dans run.py)
 STATE_DRIVERS = {}
 -- Règle « [cond,cond] action; [cond] action; action » : conditions combat et group:raid

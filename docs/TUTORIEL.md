@@ -146,7 +146,7 @@ Votre personnage a deux spécialisations (deux groupes de talents) ? Chacune a s
 
 Une macro fait plusieurs choses d'un seul clic : activer un bijou puis soigner, relever un mort ou soigner un vivant, attaquer un ennemi ou soigner un allié...
 
-Lyorune garde vos macros dans une bibliothèque. Vous écrivez une macro une seule fois, puis vous la posez sur autant de clics et de touches que vous voulez, dans vos deux spécialisations. Si vous la modifiez, tous ses clics suivent. Elle ne prend aucune place dans la fenêtre `/macro` du jeu.
+Lyorune garde vos macros dans une bibliothèque. Vous écrivez une macro une seule fois, puis vous la posez sur autant de clics et de touches que vous voulez, dans vos deux spécialisations. Si vous la modifiez, tous ses clics suivent. Elle ne prend aucune place dans la fenêtre `/macro` du jeu, sauf si vous la glissez dans une barre de sorts (voir plus bas).
 
 **Ouvrir la bibliothèque** : chapitre **Sorts et raccourcis**, bouton « Mes macros... » sous la liste (ou le même bouton dans la fenêtre de choix d'un sort).
 
@@ -174,12 +174,13 @@ Une macro trouvée sur Internet avec `[@mouseover]` marche telle quelle. Pour pl
 **La vérification, pendant que vous écrivez.** Sous la macro, Lyorune signale :
 
 - une faute dans une condition (`[mod:shfit]`, `[ded]`) ;
-- un crochet oublié, une ligne trop longue ;
+- un crochet oublié, une macro trop longue : le jeu n'accepte pas plus de 255 caractères, cible comprise (le compteur sous la macro les compte) ;
+- une macro qui tient sur un clic mais pas dans une barre de sorts du jeu, où la cible prend un peu plus de place (en jaune : elle reste bonne pour vos clics) ;
 - un sort que votre spécialisation active ne connaît pas (c'est peut-être celui de l'autre) ;
 - un sort écrit avec d'autres accents que dans votre grimoire : le jeu écrit parfois un nom sans accent (« Epines ») et `/cast Épines` ne lance alors rien. Lyorune donne la bonne écriture, et « Corriger l'écriture », à côté du titre « Vérification », la reprend dans la macro ;
 - une commande qui exécute du code (`/run`, `/script`).
 
-Les trois premiers constats sont écrits, le nombre des suivants est donné au bout du titre « Vérification ». Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, et « Posée sur » les clics qui utilisent la macro. Un texte trop long pour sa place se lit en entier en passant la souris dessus.
+Les trois premiers constats sont écrits, le nombre des suivants est donné au bout du titre « Vérification ». Juste dessous, « Envoyé au jeu » montre le texte exact qui partira au clic, et « Posée sur » les clics qui utilisent la macro, puis sa copie dans `/macro` si vous l'avez glissée dans une barre. Un texte trop long pour sa place se lit en entier en passant la souris dessus.
 
 La macro s'enregistre toute seule quand vous changez de macro ou fermez la fenêtre. « Enregistrer » le fait tout de suite et l'écrit deux secondes sur le bouton : « Enregistrée ».
 
@@ -191,6 +192,10 @@ L'assistant, l'import et le choix d'un sort s'ouvrent toujours par-dessus Mes ma
 - ou cliquez sur ce sort : vos macros sont listées sous vos sorts, à la ligne « Mes macros ».
 
 Sur un petit écran, la fenêtre d'options s'efface tant que la bibliothèque est ouverte : fermez la bibliothèque, les options reviennent, puis cliquez sur le sort d'une ligne.
+
+**Poser la macro dans une barre de sorts du jeu :** hors combat, glissez-la de la liste dans une barre de sorts. Lyorune en fait une vraie macro du jeu, rangée dans `/macro`, onglet de votre personnage, sous le nom « Lyo: » suivi du sien. Dans une barre, il n'y a pas de case : la macro vise le joueur sous votre souris (une case ou un personnage), sinon votre cible, sinon vous si le jeu lance les sorts sur vous quand rien n'est ciblé. Elle marche donc au clic sur la barre comme avec un raccourci.
+
+La copie suit la macro : quand vous changez son texte ou son nom, elle change aussi (à la fin du combat si vous êtes en combat), et elle part quand vous supprimez la macro. Seules les macros que vous glissez prennent une place dans `/macro` ; s'il n'en reste plus, Lyorune le dit. Une macro trop longue pour une barre est refusée avec la raison, et reste bonne pour vos clics. Si vous retirez la copie vous-même dans `/macro`, Lyorune ne la recrée pas. Il ne touche jamais à vos autres macros.
 
 **Supprimer une macro** demande un second clic : la macro part avec tous ses clics et ses touches. Changé d'avis ? « Annuler mes changements », au bas de la fenêtre d'options, rend la macro et ses clics.
 
@@ -205,7 +210,7 @@ Si vous le demandez, Lyorune crée une vraie macro du jeu pour chaque sort de vo
 1. Chapitre **Sorts et raccourcis**, partie « Macros pour vos barres de sorts » : allumez « Créer une macro par sort de mes clics ». Une icône par macro apparaît.
 2. Cliquez sur une icône, puis déposez-la dans une barre de sorts. Vous les retrouvez aussi dans `/macro`, onglet de votre personnage : leur nom commence par « Lyo: ».
 
-La macro soigne le joueur sous votre souris (une case ou un personnage), sinon votre cible, sinon vous. Elle se met à jour quand vous changez vos clics. Lyorune ne touche jamais à vos autres macros. Pour vous en passer, coupez « Créer une macro par sort de mes clics » ou cliquez sur « Retirer les macros de Lyorune ».
+La macro soigne le joueur sous votre souris (une case ou un personnage), sinon votre cible, sinon vous, même quand le clic porte une macro de votre bibliothèque. Elle se met à jour quand vous changez vos clics. Lyorune ne touche jamais à vos autres macros. Pour vous en passer, coupez « Créer une macro par sort de mes clics » ou cliquez sur « Retirer les macros de Lyorune » : les macros que vous avez glissées depuis Mes macros restent dans vos barres.
 
 ## 4. Touches au survol
 

@@ -333,9 +333,9 @@ step("macros pour les barres de sorts", function()
   Z:ApplyClicks() assert(#MACROS == count, "macros creees en double")
   -- une macro du joueur posee sur un clic donne aussi une macro de barre, au nom du clic
   Z:SetClick("shift-4", "/use 13\n/cast [{cible}] Soins rapides")
-  assert(find("Lyo:shift-4") == "/use 13\n/cast [@mouseover] Soins rapides")
+  assert(find("Lyo:shift-4") == "#showtooltip\n/use 13\n/cast [@mouseover,help][] Soins rapides", tostring(find("Lyo:shift-4")))
   Z:SetClick("shift-4", "/use 14\n/cast [{cible}] Soins rapides")
-  assert(find("Lyo:shift-4") == "/use 14\n/cast [@mouseover] Soins rapides", "macro non mise a jour")
+  assert(find("Lyo:shift-4") == "#showtooltip\n/use 14\n/cast [@mouseover,help][] Soins rapides", "macro non mise a jour")
   Z:SetClick("shift-4", nil)
   assert(not find("Lyo:shift-4") and find("Ma macro") == "/dance", "retrait d'un clic")
   -- en combat : rien n'est cree, tout est rattrape a la fin
@@ -404,10 +404,20 @@ step("macros : fenetre, glisser-deposer, reprise des anciennes", function()
   local cell = Z:ClickCell("ctrl-4")
   local row
   for _, r in ipairs(w.rows) do if r.macro and r.macro.name == "Soin du bijou" then row = r end end
+  -- 6c nonies c : hors combat, la macro part en main comme une macro de /macro (sa copie), qu'une ligne reconnaît
+  Z:MacroDragStart(row)
+  assert(PICKED == "Lyo:Soin du bijo" and CURSOR_INFO and CURSOR_INFO[1] == "macro", "copie en main : " .. tostring(PICKED))
+  assert(not Z:MacroDragStop(), "copie en main : rien a deposer soi-meme")
+  cell:Run("OnReceiveDrag")
+  assert(Z:GetClicks()["ctrl-4"] == "@macro:Soin du bijou" and not Z:FindMacro("Lyo:Soin du bijo"), "copie reconnue : " .. tostring(Z:GetClicks()["ctrl-4"]))
+  -- en combat : pas de copie, la macro se pose encore sur une ligne de Lyorune
+  Z:SetClick("ctrl-4", "Soins")
+  COMBAT = true
   MOUSE_FOCI = { cell.label }
   Z:MacroDragStart(row)
   assert(Z:MacroDragStop(), "rien sous la souris")
   MOUSE_FOCI = false
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
   assert(Z:GetClicks()["ctrl-4"] == "@macro:Soin du bijou")
   assert(cell.label:GetText():find("Soin du bijou", 1, true), cell.label:GetText())
   -- glisser un sort du grimoire, puis une macro de /macro, sur une case
@@ -3643,7 +3653,7 @@ step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", fu
   -- Messages du chat et textes hors options : chapitres, traduits, anciennes clés retirées
   for _, key in ipairs({ "... et %d autre(s) : chapitre Sorts et raccourcis.",
     "nouveau sort sans clic : %s. Chapitre Sorts et raccourcis des options, bouton « Attribuer ».",
-    "Glissez une macro sur une ligne du chapitre Sorts et raccourcis, ou cliquez sur le sort d'une ligne pour la choisir.",
+    "Glissez une macro sur une ligne du chapitre Sorts et raccourcis ou dans une barre de sorts du jeu, ou cliquez sur le sort d'une ligne.",
     "plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Sorts et raccourcis.",
     "%d macro(s) créée(s) pour vos barres de sorts : chapitre Sorts et raccourcis des options, ou /macro, onglet de votre personnage.",
     "le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Sorts et raccourcis, ligne en orange).",
@@ -4522,8 +4532,8 @@ step("refonte 1.26.0, lot 6c septies d : corrections de Macros.lua (relecture)",
   o.GetLeft = function() return 142 end o.GetRight = function() return 1222 end o.GetTop = function() return 738 end
   Z:ToggleOptions("Sorts et raccourcis")
   Z:OpenMacros()
-  local away = L["Fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne, vos macros sont dans la liste."]
-  local drag = L["Glissez une macro sur une ligne du chapitre Sorts et raccourcis, ou cliquez sur le sort d'une ligne pour la choisir."]
+  local away = L["Glissez une macro dans une barre de sorts du jeu. Pour un clic, fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne."]
+  local drag = L["Glissez une macro sur une ligne du chapitre Sorts et raccourcis ou dans une barre de sorts du jeu, ou cliquez sur le sort d'une ligne."]
   assert(UI.Away() and w.hint:GetText() == away, "M4 : consigne du glisser, options effacees")
   w:Hide() w:Run("OnHide")
   assert(o:IsShown() and not UI.Away())
@@ -5120,6 +5130,112 @@ step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case
   Z.db.cornerSpells[Z.class] = saved.corners
   for _, key in ipairs(keys) do Z.db[key] = saved[key] end
   Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c nonies c : retour 19 (macros de Mes macros dans les barres du jeu)", function()
+  local L = Z.L
+  local function find(name) local i = GetMacroIndexByName(name) return i > 0 and GetMacroBody(i) or nil end
+  local function printed(text) for i = #PRINTED, 1, -1 do if PRINTED[i]:find(text, 1, true) then return true end end end
+  -- le jeu limite une macro (et le texte d'un bouton) à 255 caractères depuis le patch 11.0.2
+  assert(Z.MACRO_MAX == 255, "limite des macros")
+  local long = "/cast " .. string.rep("a", 260)
+  assert(Z:CheckMacro(long)[1][1] == "err", "macro de plus de 255 caracteres acceptee")
+  -- texte pour une barre : le joueur survolé, sinon la cible
+  local cases = {
+    { "/cast [@cible] Soins rapides", "#showtooltip\n/cast [@mouseover,help][] Soins rapides" },
+    { "/cast [@cible,harm,nodead] Châtiment; [@cible] Soins", "#showtooltip\n/cast [@mouseover,harm,nodead][harm,nodead] Châtiment; [@mouseover,help][] Soins" },
+    { "/cast [@mouseover,help][@player] Soins", "#showtooltip\n/cast [@mouseover,help][help][@player] Soins" },
+    { "#showtooltip Soins\n/cast [@player] Soins", "#showtooltip Soins\n/cast [@player] Soins" },
+    { "/use 13\n/focus [@mouseover]", "#showtooltip\n/use 13\n/focus [@mouseover]" },
+    { "/use [@cible] 13", "#showtooltip\n/use [@mouseover,exists][] 13" },
+  }
+  for _, case in ipairs(cases) do
+    assert(Z:BarText(case[1]) == case[2], "texte de barre : " .. Z:BarText(case[1]))
+  end
+  -- une macro qui tient sur un clic mais pas dans une barre : signalée en jaune
+  local near = "/cast [@cible] " .. string.rep("b", 232)
+  local warned
+  for _, problem in ipairs(Z:CheckMacro(near)) do
+    assert(problem[1] ~= "err", "erreur sur une macro de 251 caracteres : " .. problem[2])
+    if problem[2]:find("barre de sorts", 1, true) then warned = problem[1] end
+  end
+  assert(#Z:ResolveMacro(near) <= 255 and #Z:BarText(near) > 255 and warned == "warn", "avertissement de la barre")
+
+  local before = #MACROS
+  local m = Z:NewMacro("Prière vite", "/cast [@cible] Prière")
+  -- glisser : copie « Lyo: » créée, mise en main, montrée dans la fenêtre
+  local ok = Z:PickupGameCopy(m)
+  assert(ok and PICKED == "Lyo:Prière vite" and find("Lyo:Prière vite") == "#showtooltip\n/cast [@mouseover,help][] Prière", tostring(find("Lyo:Prière vite")))
+  assert(#MACROS == before + 1 and Z:GameCopy(m) == "Lyo:Prière vite")
+  ClearCursor()
+  local w = Z:OpenMacros("Prière vite")
+  assert(w.uses:GetText():find(L["copie dans /macro : %s"]:format("Lyo:Prière vite"), 1, true), w.uses:GetText())
+  assert(w.hint:GetText():find("barre de sorts", 1, true), "consigne sans la barre")
+  -- glissée une seconde fois : la même copie, pas une nouvelle
+  assert(Z:PickupGameCopy(m) and #MACROS == before + 1, "copie en double")
+  ClearCursor()
+  -- le texte change : la copie suit
+  m.body = "/cast [@cible] Soins rapides" Z:ApplyClicks()
+  assert(find("Lyo:Prière vite") == "#showtooltip\n/cast [@mouseover,help][] Soins rapides", "copie pas mise a jour")
+  -- en combat : rien n'est touché, tout est rattrapé à la fin
+  COMBAT = true
+  local held, why = Z:PickupGameCopy(m)
+  assert(not held and why == L["impossible de modifier les macros en combat."], "copie en combat")
+  m.body = "/cast [@cible] Rénovation" Z:ApplyClicks()
+  assert(find("Lyo:Prière vite"):find("Soins rapides", 1, true), "copie modifiee en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(find("Lyo:Prière vite"):find("Rénovation", 1, true), "copie pas rattrapee apres le combat")
+  -- renommée : la copie suit, au même emplacement de /macro (EditMacro, pas une nouvelle)
+  assert(Z:RenameMacro(m, "Prière"))
+  assert(Z:GameCopy(m) == "Lyo:Prière" and not find("Lyo:Prière vite") and #MACROS == before + 1, "renommage de la copie")
+  -- la copie déposée sur une ligne de Lyorune ou sur la liste redevient la macro, sans doublon
+  assert(Z:ImportGameMacro(GetMacroIndexByName("Lyo:Prière")) == m and not Z:FindMacro("Lyo:Prière"), "copie importee en double")
+  -- « Retirer les macros de Lyorune » (option des clics) laisse les copies glissées
+  Z.db.actionBarMacros = true Z:ApplyClicks()
+  Z.db.actionBarMacros = false Z:RemoveBarMacros()
+  assert(find("Lyo:Prière"), "copie retiree avec l'option des clics")
+  -- deux macros au début de nom pareil : deux copies distinctes de 16 octets au plus
+  local a, b = Z:NewMacro("Soins rapides A", "/cast Soins"), Z:NewMacro("Soins rapides B", "/cast Soins")
+  assert(Z:PickupGameCopy(a) and Z:PickupGameCopy(b))
+  assert(Z:GameCopy(a) ~= Z:GameCopy(b) and #Z:GameCopy(a) <= 16 and #Z:GameCopy(b) <= 16, Z:GameCopy(a) .. " / " .. Z:GameCopy(b))
+  ClearCursor()
+  -- trop longue pour une barre : refusée avec sa raison, elle se pose encore sur nos lignes
+  local big = Z:NewMacro("Longue", near)
+  held, why = Z:PickupGameCopy(big)
+  assert(not held and why and why:find("Longue", 1, true) and not Z:GameCopy(big), "copie trop longue")
+  -- plus de place dans l'onglet du personnage : refus clair
+  local saved = #MACROS
+  for i = #MACROS + 1, MAX_CHARACTER_MACROS do MACROS[i] = { name = "Perso " .. i, icon = 1, body = "/dance" } end
+  local c = Z:NewMacro("Pleine", "/cast Soins")
+  held, why = Z:PickupGameCopy(c)
+  assert(not held and why == L["plus de place pour une macro de personnage : supprimez-en une dans /macro."], "places pleines")
+  for i = #MACROS, saved + 1, -1 do MACROS[i] = nil end
+  -- supprimée de Mes macros : sa copie part ; retirée à la main de /macro : jamais recréée
+  Z:RemoveMacro(a)
+  assert(not find(Z.char.barCopies["Soins rapides A"] or "Lyo:Soins rapide") and Z.char.barCopies["Soins rapides A"] == nil, "copie restee apres la suppression")
+  local copyB = Z:GameCopy(b)
+  table.remove(MACROS, GetMacroIndexByName(copyB) - 120)
+  Z:ApplyClicks()
+  assert(not find(copyB) and Z.char.barCopies["Soins rapides B"] == nil, "copie retiree a la main recreee")
+  -- une macro du joueur n'est jamais touchée
+  MACROS[#MACROS + 1] = { name = "Lyo:Perso", icon = 1, body = "/dance" }
+  Z:RemoveMacro(m)
+  assert(not find("Lyo:Prière"), "copie restee")
+  assert(not Z:GameCopy(m), "copie de la macro supprimee")
+  assert(MACROS[#MACROS].body == "/dance", "macro du joueur touchee")
+  table.remove(MACROS)
+  -- clic avec bijou : 255 caractères au plus, une longue macro part sans la ligne du bijou
+  local button, trigger = Z.buttons[1], { kind = "click", key = "shift-3" }
+  Z:SetClick("shift-3", "@macro:Longue")
+  if not Z:HasTrinket(trigger, 1) then Z:ToggleTrinket(trigger, 1) end
+  local sent = button:GetAttribute("shift-macrotext3")
+  assert(sent == Z:ResolveMacro(near) and #sent <= 255, "bijou en trop : " .. #tostring(sent))
+  Z:SetClick("shift-3", "@macro:Pleine")
+  assert(button:GetAttribute("shift-macrotext3"):find("^/use %[@mouseover,nodead%] 13"), "bijou perdu sur une macro courte")
+  Z:ToggleTrinket(trigger, 1) Z:SetClick("shift-3", nil)
+  for _, x in ipairs({ b, big, c }) do Z:RemoveMacro(x) end
+  assert(#MACROS == before, "macros restantes : " .. #MACROS)
+  w:Hide()
 end)
 
 step("aucune variable globale imprevue", function()

@@ -49,7 +49,7 @@ Si tout est bon, l'étape se ferme sans nouvelle version. Sinon, les corrections
 - [x] Clics et touches propres à chaque spécialisation, copie d'une spécialisation à l'autre (#21)
 
 À vérifier en jeu : glisser d'une macro de la liste vers une case, changement de talents, longueur maximale d'une
-macro sur une case (1023 caractères retenus).
+macro sur une case (1023 caractères retenus ; 255 depuis la 1.26.0, limite du jeu depuis son patch 11.0.2).
 
 ## Étape 2 : bases de l'interface (1.7.0)
 - [x] Le cadre de dissipation ne cache plus le nom ni la vie (#4)
