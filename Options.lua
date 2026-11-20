@@ -29,6 +29,8 @@ local FINE = 14             -- retrait des réglages fins
 local window, picker
 local chapters
 local searchIndex = {}      -- { text, more, chapter, widget, label, key } : nom, explications, chapitre, élément
+local AfterChange           -- après un changement : pastilles, réglages dépendants, « Rétablir cette page » (plus bas)
+local DIMMED = 0.42         -- transparence d'un réglage sans effet (son réglage parent est coupé)
 
 ----------------------------------------------------------------------------------------------------
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
@@ -42,6 +44,7 @@ local function Option(key)
 		Z:Refresh()
 		Z:RefreshAlerts()
 		if CLICK_OPTIONS[key] then Z:ApplyClicks() end
+		if AfterChange then AfterChange() end
 	end
 end
 
@@ -117,7 +120,8 @@ end
 -- Champs nommés, tous facultatifs :
 --   desc = "Phrase"     une phrase visible sous le nom, quand le nom ne suffit pas (l'aide reste en infobulle)
 --   fine = true         réglage fin : replié sous « Réglages fins (n) »
---   dep = { cle, v }    réglage qui n'a d'effet que si le réglage cle vaut v ("!v" : tout sauf v)
+--   dep = { cle, v }    réglage qui n'a d'effet que si le réglage cle vaut v ("!v" : tout sauf v) : grisé sinon
+-- Chaque ligne de réglage reçoit sa rune d'or (réglage changé) entre son nom et sa commande.
 ----------------------------------------------------------------------------------------------------
 local SETTING_KINDS = { check = true, seg = true, step = true, cycle = true } -- lignes qui portent un réglage
 
@@ -192,6 +196,11 @@ local function BuildItem(page, item, width)
 	if SETTING_KINDS[kind] then -- un outil de la page peut retrouver un réglage (page.settings.syncEnabled)
 		page.settings = page.settings or {}
 		page.settings[item[2]] = widget
+		-- Rune d'or entre le nom et la commande quand le réglage n'est plus celui de l'installation
+		if Z.defaults[item[2]] ~= nil then
+			local get, set = Option(item[2])
+			UI.ChangedRune(widget, item[2], get, set, widget.box or widget.strip or widget.minus or widget.button)
+		end
 	end
 	if widget.SetWidth and kind ~= "button" then widget:SetWidth(width) end
 	if item.desc then Describe(widget, item.desc, width) end
@@ -231,6 +240,7 @@ local function RefreshShownPages()
 		local page = chapter.page
 		if page and page.scroll:IsShown() then RefreshPage(page) end
 	end
+	if AfterChange then AfterChange() end -- profil chargé, configuration reçue : pastilles et grisage suivent
 end
 
 -- Un élément dessiné à part change de hauteur (liste qui s'allonge) : la page se range de nouveau
@@ -1378,10 +1388,8 @@ local function ImportBox(page, width)
 	return box
 end
 
--- Entre joueurs (#29) : sous l'interrupteur général, chaque fonction est grisée quand il est coupé ; puis les
--- joueurs du groupe qui ont Lyorune (le nombre, et la liste au survol)
-local SYNC_SUBS = { "resSync", "acceptConfigs", "versionNotice" }
-
+-- Entre joueurs (#29) : les joueurs du groupe qui ont Lyorune (le nombre, et la liste au survol). Les réglages
+-- placés sous l'interrupteur général sont grisés quand il est coupé, comme tout réglage dépendant (dep).
 local function SyncWho(page, width)
 	local who = CreateFrame("Frame", nil, page)
 	who:SetSize(width, 18)
@@ -1395,13 +1403,6 @@ local function SyncWho(page, width)
 	who:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	who.Update = function()
 		local on = Z.db.syncEnabled
-		for _, key in ipairs(SYNC_SUBS) do
-			local sub = page.settings and page.settings[key]
-			if sub then
-				sub:SetAlpha(on and 1 or 0.4)
-				sub:EnableMouse(on)
-			end
-		end
 		local count = on and IsInGroup() and #Z:SyncMembers() or 0
 		who.text:SetText(not on and L["Synchronisation coupée."] or count == 0 and L["Pas de groupe : personne avec qui se synchroniser."]
 			or (L["Avec Lyorune dans le groupe : %d (survolez)."]):format(count))
@@ -1529,6 +1530,25 @@ local function EachSetting(list, fn)
 	end
 end
 
+-- Un réglage n'est plus celui de l'installation (rune d'or, pastille, liste de l'Accueil)
+local function IsChanged(key)
+	return Z.defaults[key] ~= nil and not UI.Same(Z.db[key], Z.defaults[key])
+end
+
+-- Un réglage dépendant a-t-il un effet ? dep = { cle, v } : le réglage cle vaut v ("!v" : tout sauf v)
+local function DepOk(dep)
+	local want, have = dep[2], Z.db[dep[1]]
+	if type(want) == "string" and want:sub(1, 1) == "!" then return have ~= want:sub(2) end
+	return have == want
+end
+
+-- Nombre de réglages changés d'un chapitre (pastille de la barre latérale)
+local function ChapterChanges(chapter)
+	local count = 0
+	EachSetting({ chapter }, function(item) if IsChanged(item[2]) then count = count + 1 end end)
+	return count
+end
+
 -- Profil actif : son nom, comment il a été choisi, et un bouton vers le chapitre Profils et partage
 local function ActiveProfile(page, width)
 	local box = CreateFrame("Frame", nil, page)
@@ -1606,8 +1626,7 @@ local function ChangedList(page, width)
 	box.Update = function(self)
 		local list = {}
 		EachSetting(chapters, function(item, index)
-			local key = item[2]
-			if Z.defaults[key] ~= nil and not UI.Same(Z.db[key], Z.defaults[key]) then
+			if IsChanged(item[2]) then
 				list[#list + 1] = { item = item, chapter = index }
 			end
 		end)
@@ -1947,11 +1966,12 @@ local function PartHeight(part)
 	return widget:GetHeight() + (widget.desc and widget.desc:GetStringHeight() + 3 or 0)
 end
 
--- Range la page de haut en bas ; les réglages fins d'une partie repliée sont cachés
+-- Range la page de haut en bas ; les réglages fins d'une partie repliée sont cachés, comme une ligne dont la
+-- condition (part.when) n'est pas remplie
 local function Layout(page)
 	local y = page.top
 	for _, part in ipairs(page.parts) do
-		local shown = not part.fold or part.fold:IsOpen()
+		local shown = (not part.fold or part.fold:IsOpen()) and (not part.when or part.when())
 		part.widget:SetShown(shown)
 		if shown then
 			y = y - (part.before or 0)
@@ -1963,6 +1983,63 @@ local function Layout(page)
 	end
 	page.used = -y -- hauteur occupée (contrôlée par les tests)
 	page.scroll:SetContentHeight(-y + 12)
+end
+
+-- Réglages dépendants : grisés quand leur réglage parent les rend sans effet. Ils restent réglables (on peut
+-- préparer une valeur avant d'allumer le réglage parent).
+local function ApplyDeps(page)
+	for _, part in ipairs(page.parts) do
+		local dep = part.item and part.item.dep
+		if dep then
+			part.dimmed = not DepOk(dep)
+			part.widget:SetAlpha(part.dimmed and DIMMED or 1)
+		end
+	end
+end
+
+-- « Rétablir cette page » : chaque réglage du chapitre reprend sa valeur d'installation. Les listes, les clics,
+-- les coins et les profils ne sont pas touchés. Un seul rafraîchissement des cadres, à la fin.
+local function ResetChapter(chapter)
+	local clicks
+	EachSetting({ chapter }, function(item)
+		local key = item[2]
+		if IsChanged(key) then
+			local value = Z.defaults[key]
+			Z.db[key] = type(value) == "table" and CopyTable(value) or value
+			if CLICK_OPTIONS[key] then clicks = true end
+		end
+	end)
+	Z:Refresh()
+	Z:RefreshAlerts()
+	if clicks then Z:ApplyClicks() end
+	if chapter.page then RefreshPage(chapter.page) end
+	AfterChange()
+end
+
+-- Bas de page : « Rétablir cette page », à droite, montré seulement si le chapitre a un réglage changé
+local function ResetLine(chapter, page)
+	local line = CreateFrame("Frame", nil, page.content)
+	line:SetSize(ROW, 24)
+	line.button = ArmedButton(line, "Rétablir cette page", "Cliquez encore pour confirmer", 240, function() ResetChapter(chapter) end)
+	line.button:SetPoint("RIGHT")
+	line.button.tip = L["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne changent pas."]
+	page.parts[#page.parts + 1] = { widget = line, before = 14, when = function() return (chapter.changes or 0) > 0 end }
+	page.reset = line
+end
+
+-- Après chaque changement : la pastille de chaque chapitre, le grisage des réglages dépendants des pages déjà
+-- construites, et « Rétablir cette page » qui paraît ou disparaît (la page se range alors de nouveau)
+AfterChange = function()
+	if not chapters then return end
+	for _, chapter in ipairs(chapters) do
+		chapter.changes = ChapterChanges(chapter)
+		if chapter.button then chapter.button:SetCount(chapter.changes) end
+		local page = chapter.page
+		if page then
+			ApplyDeps(page)
+			if page.reset and page.reset:IsShown() ~= (chapter.changes > 0) then Layout(page) end
+		end
+	end
 end
 
 -- Page d'un chapitre, construite à sa première ouverture
@@ -2014,6 +2091,9 @@ local function BuildChapter(index)
 			end
 		end
 	end
+	if content.settings then ResetLine(chapter, page) end -- chapitre qui porte des réglages
+	chapter.changes = ChapterChanges(chapter)
+	ApplyDeps(page)
 	Layout(page)
 	return page
 end
@@ -2056,6 +2136,7 @@ local function Select(index, quiet)
 	end
 	page.scroll:Show()
 	RefreshPage(page) -- chaque ligne suit les changements faits ailleurs (profil, partage, liste)
+	AfterChange()
 	if changed and not quiet then Enter(page.scroll) end
 	if picker then picker:Hide() end
 	return page
@@ -2185,7 +2266,10 @@ local function Build()
 	logo:SetPoint("TOPLEFT", 16, -11)
 	window.title:SetPoint("TOPLEFT", 48, -16)
 	window.logo, window.breath = logo, UI.Breathe(logo, 0.85, 12) -- souffle doux et lent : 12 s par respiration
-	window:HookScript("OnShow", function() if not UI.Calm() then window.breath:Play() end end)
+	window:HookScript("OnShow", function()
+		if not UI.Calm() then window.breath:Play() end
+		AfterChange() -- réglages changés pendant que la fenêtre était fermée (commande, assistant, profil)
+	end)
 	window:HookScript("OnHide", function() window.breath:Stop() end)
 
 	BuildSearch()

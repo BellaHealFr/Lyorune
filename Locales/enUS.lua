@@ -778,4 +778,8 @@ Z.translations.enUS = {
 	["Un clic sur un nom mène au réglage ; un clic sur sa rune d'or le remet comme à l'installation."] = "Click a name to go to the setting; click its golden rune to reset it to default.",
 	["Aucun pour l'instant : Lyorune est réglé comme à l'installation. Changez un réglage dans un chapitre, il apparaîtra ici."] = "None yet: Lyorune is set up as installed. Change a setting in a chapter and it will show up here.",
 	["Nom du profil"] = "Profile name", ["Nom du joueur"] = "Player name",
+
+	-- Fenêtre d'options à chapitres (1.26.0) : rétablir une page
+	["Rétablir cette page"] = "Reset this page",
+	["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne changent pas."] = "Every setting in this chapter goes back to its default value. Your lists, clicks and profiles do not change.",
 }

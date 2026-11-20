@@ -3193,6 +3193,84 @@ step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", functio
   w:Hide()
 end)
 
+step("refonte 1.26.0, lot 4a : rune sur chaque ligne, pastilles, retablir une page, reglages dependants", function()
+  local keys = { "showHots", "hotCount", "hotStyle", "frameAlpha", "manaBars", "powerHeight", "syncEnabled" }
+  local saved = {}
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  for _, key in ipairs(keys) do Z.db[key] = Z.defaults[key] end
+  Z.char.optionFolds = {}
+  Z:ToggleOptions("Mes soins")
+  local w = Z:OptionsWindow()
+  local chapters = Z:OptionsTabs()
+  local function Chapter(name) for _, c in ipairs(chapters) do if c.name == name then return c end end end
+
+  -- Chaque ligne de réglage porte sa rune d'or, cachée tant que le réglage est celui de l'installation (une ligne
+  -- repliée se met à jour en s'affichant : on regarde les lignes affichées, chapitre ouvert)
+  Z:OptionLabels()
+  for _, chapter in ipairs(chapters) do
+    w.Select(chapter.name)
+    for key, widget in pairs(chapter.page.content.settings or {}) do
+      if Z.defaults[key] ~= nil then
+        assert(widget.changed, "rune absente : " .. key)
+        assert(not widget:IsShown() or widget.changed:IsShown() == not Z.UI.Same(Z.db[key], Z.defaults[key]), "rune mal montree : " .. key)
+      end
+    end
+  end
+  assert(Chapter("Accueil").page.reset == nil, "pas de Retablir cette page a l'Accueil")
+
+  -- Un réglage changé depuis sa ligne : rune montrée, pastille du chapitre, « Rétablir cette page » paraît
+  local soins, look = Chapter("Mes soins"), Chapter("Apparence")
+  local page = w.Select("Mes soins")
+  local set = page.content.settings
+  local count = soins.button.count
+  assert(not page.reset:IsShown() == (count == 0), "Retablir cette page suit les reglages changes")
+  set.hotCount.plus:Run("OnClick", "LeftButton")
+  assert(Z.db.hotCount == Z.defaults.hotCount + 1 and set.hotCount.changed:IsShown(), "rune d'un nombre change")
+  assert(soins.button.count == count + 1 and soins.button.badge:IsShown(), "pastille du chapitre")
+  assert(page.reset:IsShown() and page.used > 64, "Retablir cette page montre")
+
+  -- Réglages dépendants : grisés quand le réglage parent est coupé, toujours réglables
+  set.showHots:Run("OnClick")
+  assert(not Z.db.showHots and set.hotCount:GetAlpha() < 1 and set.hotStyle:GetAlpha() < 1, "dependants grises")
+  assert(soins.button.count == count + 2, "pastille : deux reglages")
+  set.hotCount.minus:Run("OnClick", "LeftButton")
+  assert(Z.db.hotCount == Z.defaults.hotCount and not set.hotCount.changed:IsShown(), "un reglage grise reste reglable")
+  set.showHots.changed:Run("OnClick")
+  assert(Z.db.showHots and set.hotCount:GetAlpha() == 1 and soins.button.count == count, "la rune retablit et le grisage suit")
+  local vie = w.Select("Vie et portée").content.settings
+  Z.db.manaBars = "OFF" w.Select("Vie et portée")
+  assert(vie.powerHeight:GetAlpha() < 1, "dependance « tout sauf » : barre de mana coupee")
+  Z.db.manaBars = "HEALERS" w.Select("Vie et portée")
+  assert(vie.powerHeight:GetAlpha() == 1, "dependance « tout sauf » : barre de mana montree")
+  Z.db.manaBars = Z.defaults.manaBars
+
+  -- « Rétablir cette page » : deux clics (le premier arme le bouton), et seulement ce chapitre
+  Z.db.frameAlpha = Z.defaults.frameAlpha - 10
+  page = w.Select("Mes soins")
+  set.showHots:Run("OnClick")
+  set.hotCount.plus:Run("OnClick", "LeftButton")
+  local others = look.changes
+  assert(others >= 1 and soins.changes >= 2, "reglages changes dans deux chapitres")
+  page.reset.button:Run("OnClick", "LeftButton")
+  assert(not Z.db.showHots, "premier clic : rien n'est retabli")
+  page.reset.button.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+  page.reset.button:Run("OnClick", "LeftButton")
+  assert(Z.db.showHots == Z.defaults.showHots and Z.db.hotCount == Z.defaults.hotCount, "page retablie")
+  assert(soins.changes == 0 and soins.button.count == 0 and not soins.button.badge:IsShown(), "pastille a zero")
+  assert(not page.reset:IsShown() and not set.hotCount.changed:IsShown() and set.hotCount:GetAlpha() == 1, "page rangee apres retablissement")
+  assert(Z.db.frameAlpha == Z.defaults.frameAlpha - 10 and look.changes == others, "les autres chapitres ne bougent pas")
+
+  -- Changement fait fenêtre fermée (commande, profil) : la pastille suit à la réouverture
+  w:Hide()
+  Z.db.frameAlpha = Z.defaults.frameAlpha
+  Z:ToggleOptions()
+  assert(look.changes == others - 1, "pastille revue a l'ouverture")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

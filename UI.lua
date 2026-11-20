@@ -1117,11 +1117,12 @@ end
 
 -- Rune d'or à côté d'un réglage changé (valeur différente de Z.defaults). Infobulle « Rétablir : valeur »,
 -- clic : le réglage reprend sa valeur d'installation. Elle suit toute seule l'élément « widget » (case,
--- interrupteur, nombre, choix) : sa mise à jour la montre ou la cache.
-function UI.ChangedRune(widget, key, get, set)
+-- interrupteur, nombre, choix) : sa mise à jour la montre ou la cache. Elle se pose à gauche de « anchor »
+-- (la commande de la ligne, entre le nom et elle), ou à gauche de l'élément.
+function UI.ChangedRune(widget, key, get, set, anchor)
 	local r = CreateFrame("Button", nil, widget)
 	r:SetSize(20, 20)
-	r:SetPoint("RIGHT", widget, "LEFT", -4, 0)
+	r:SetPoint("RIGHT", anchor or widget, "LEFT", -4, 0)
 	r.halo = UI.Paint(UI.CutRune(r:CreateTexture(nil, "BACKGROUND"), 22, 20, UI.HALOS), "gold", 0.5)
 	r.halo:SetPoint("CENTER")
 	r.rune = UI.Paint(UI.Rune(r, "ARTWORK", 22, 14), "gold")
