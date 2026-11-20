@@ -1443,6 +1443,9 @@ step("etape 6 : echelle, editeur de placement", function()
   assert(b.marker._point[4] == 3, "les vraies cases suivent")
   CURSOR_X, CURSOR_Y = nil, nil
   w.resetAll:Run("OnClick")
+  assert(Z.db.placement.TILE ~= nil, "tout remettre en un seul clic")
+  w.resetAll.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+  w.resetAll:Run("OnClick")
   assert(Z.db.placement.TILE == nil, "tout remettre")
   w:Hide()
   -- options : trouvables par la recherche
@@ -4544,6 +4547,141 @@ step("refonte 1.26.0, lot 6c septies d : corrections de Macros.lua (relecture)",
   Z:Refresh() Z:ApplyClicks()
 end)
 
+step("refonte 1.26.0, lot 6c septies e : corrections de Placement, Bug, Changes, Log et Perf (relecture)", function()
+  local UI, L = Z.UI, Z.L
+  local painted = UI.Painted()
+  local saved = { reduceMotion = Z.db.reduceMotion, errors = Z.db.errors, perfMode = Z.db.perfMode,
+    placement = CopyTable(Z.db.placement) }
+  local after = C_Timer.After
+  Z.db.reduceMotion = true Z:Refresh()
+
+  -- P1 : la plus petite et la plus grande case, poussées de 40 de chaque côté, restent dans la scène
+  Z:OpenPlacement()
+  local w = Z:PlacementWindow()
+  local stage, limit = w.stage, Z.limits.placement
+  local room = math.max(-limit[1], limit[2])
+  for _, size in ipairs({ { Z.limits.width[1], Z.limits.height[1] }, { Z.limits.width[2], Z.limits.height[2] } }) do
+    local scale = w.StageScale(size[1], size[2])
+    assert(scale >= 1 and scale <= 3, "P1 : echelle " .. scale)
+    assert(scale * (size[1] / 2 + room) <= stage:GetWidth() / 2 and scale * (size[2] / 2 + room) <= stage:GetHeight() / 2,
+      "P1 : case " .. size[1] .. "x" .. size[2] .. " poussee hors de la scene")
+  end
+  -- P3 : une seule mise en place à l'ouverture
+  w:Hide() w:Run("OnHide")
+  local draws, set = 0, w.coords.SetText
+  w.coords.SetText = function(self, text) draws = draws + 1 return set(self, text) end
+  Z:OpenPlacement()
+  assert(draws == 1, "P3 : dessinee " .. draws .. " fois")
+  w.coords.SetText = nil
+  -- B2 : rappelée, elle reste ouverte
+  Z:OpenPlacement()
+  assert(w:IsShown(), "B2 : placement ferme au second appel")
+  -- P2 : armé puis fenêtre fermée : désarmé
+  C_Timer.After = function() end
+  w.resetAll:Run("OnClick")
+  assert(w.resetAll.armed and w.resetAll.label:GetText():find(L["Confirmer"], 1, true), "P2 : pas arme")
+  w:Hide() w:Run("OnHide")
+  assert(not w.resetAll.armed and w.resetAll.label:GetText() == L["Tout remettre"], "P2 : reste arme a la fermeture")
+  C_Timer.After = after
+
+  -- B1 : un nom remplacé seulement comme mot entier, nom accentué compris
+  local name, exists = UnitName, UnitExists
+  UnitName = function(u) if u == "player" then return "Lyo" elseif u == "party1" then return "Élyne" end end
+  UnitExists = function(u) return u == "player" or u == "party1" end
+  local text = Z:Anonymize("[Lyorune 1.25.1] Interface/AddOns/Lyorune/Frames.lua:12 Lyo soigne Élyne, pas Élynea ni xÉlyne. (Lyo)")
+  UnitName, UnitExists = name, exists
+  assert(text == "[Lyorune 1.25.1] Interface/AddOns/Lyorune/Frames.lua:12 (joueur) soigne (joueur), pas Élynea ni xÉlyne. ((joueur))",
+    "B1 : " .. text)
+  assert(Z:Anonymize("Mon Royaume, MonRoyaume, MonRoyaumes") == "(royaume), (royaume), MonRoyaumes", "B1 : royaume")
+
+  -- B2 : « Signaler un bug » rappelé garde les réponses ; fermé puis rouvert, il repart à vide
+  Z:ShowBug()
+  local bug = LyoruneBug
+  bug.answers[1]:SetText("en raid")
+  Z:ShowBug()
+  assert(bug:IsShown() and bug.answers[1]:GetText() == "en raid", "B2 : reponse effacee")
+  bug:Hide() bug:Run("OnHide")
+  Z:ShowBug()
+  assert(bug.answers[1]:GetText() == "", "B2 : nouvelle ouverture")
+  -- B3 : zones à copier et phrase dans les couleurs du thème
+  assert(painted[bug.report][1] == "text" and painted[bug.hint][1] == "accent", "B3 : rapport")
+  bug:Hide() bug:Run("OnHide")
+
+  -- L1 : chaque titre de fenêtre a sa traduction
+  local english = {}
+  for key, value in pairs(Z.translations.enUS) do english[key], english[value] = true, true end
+  Z:ShowLog()
+  for _, f in ipairs(UI.Windows()) do -- la fenêtre d'options porte le nom de l'addon et sa version
+    assert(f == UI.main or english[f.title:GetText()], "L1 : titre sans traduction : " .. f.title:GetText())
+  end
+  -- L2 : la phrase s'arrête au bord droit, sur deux lignes au plus
+  local log = LyoruneLog
+  local p = log.hint._point
+  assert(p[1] == "RIGHT" and p[2] == log and p[3] == "BOTTOMRIGHT" and p[4] < 0 and p[5] == 26, "L2 : phrase sans bord droit")
+  -- B3 et L4 : texte du thème, lu depuis le haut à chaque nouveau texte
+  assert(painted[log.edit][1] == "text" and painted[log.hint][1] == "dim", "B3 : journal")
+  local scrolled
+  log.scroll.SetVerticalScroll = function(_, v) scrolled = v end
+  Z.db.errors = { { message = "essai", count = 1, kind = "Erreur Lua", first = "12:00", last = "12:00" } }
+  Z:ShowLog()
+  assert(log:IsShown() and scrolled == 0, "L4 : journal rappele")
+  -- L3 : vider demande un second clic
+  scrolled = nil
+  C_Timer.After = function() end
+  log.clear:Run("OnClick")
+  assert(#Z.db.errors == 1 and log.clear.armed, "L3 : journal vide en un clic")
+  log.clear:Run("OnClick")
+  assert(#Z.db.errors == 0 and scrolled == 0, "L3 : second clic")
+  log.clear:Run("OnClick")
+  log:Hide() log:Run("OnHide")
+  assert(not log.clear.armed, "L3 : reste arme a la fermeture")
+  C_Timer.After = after
+  log.scroll.SetVerticalScroll = nil
+
+  -- N1 : date dans le gris du thème, texte peint ; rappelée, lue depuis le haut
+  Z:ShowNews()
+  local news = LyoruneNews
+  local newsText = news.text:GetText()
+  assert(newsText:find("|cff" .. UI.Hex("dim"), 1, true) and not newsText:find("8a8f99", 1, true), "N1 : date en dur")
+  assert(painted[news.text][1] == "text", "N1 : texte")
+  scrolled = nil
+  news.scroll.SetVerticalScroll = function(_, v) scrolled = v end
+  Z:ShowNews()
+  assert(news:IsShown() and scrolled == 0, "L4 : nouveautes")
+  news.scroll.SetVerticalScroll = nil
+  news:Hide() news:Run("OnHide")
+
+  -- F3 a : virgule en français, point en anglais
+  assert(Z.Decimal(0.25, 2) == "0,25" and Z.Decimal(1536 / 1024, 1) == "1,5" and Z.Decimal(12, 0) == "12", "F3 a")
+  Z.db.language = "enUS" Z:SetLanguage()
+  assert(Z.Decimal(0.25, 2) == "0.25" and L["%s Mo"]:format("1.5") == "1.5 MB", "F3 a : anglais")
+  Z.db.language = "AUTO" Z:SetLanguage()
+  -- F1, F2 : la phrase du mode sous la note, à gauche du bouton ; gris du thème, vert et or dans le texte
+  Z.db.perfMode = true
+  local printed, print = nil, Z.Print
+  Z.Print = function(_, msg) printed = msg end
+  Z:ShowMeasure()
+  Z.Print = print
+  local perf = LyorunePerf
+  assert(perf:GetHeight() == 450, "F1 : hauteur")
+  local m = perf.mode._point
+  assert(m[2] == perf.profiler and m[3] == "BOTTOMLEFT" and m[5] == -8, "F1 : phrase du mode posee par le bas")
+  assert(16 + perf.mode:GetWidth() < perf:GetWidth() - 16 - 150, "F1 : phrase sous le bouton")
+  assert(painted[perf.profiler][1] == "dim" and painted[perf.mode][1] == "dim", "F2 : gris en dur")
+  assert(perf.mode:GetText():find("^|cff73ff8c"), "F2 : vert dans le texte")
+  assert(not perf.groups[1][2]:GetText():find("%d%.%d") and perf.groups[1][2]:GetText():find("%d,%d"), "F3 a : " .. perf.groups[1][2]:GetText())
+  assert(printed and not printed:find("%d%.%d") and printed:find(" ms par seconde", 1, true), "F3 a : chat " .. tostring(printed))
+  Z.Print = function() end
+  Z:ShowMeasure()
+  Z.Print = print
+  assert(perf:IsShown(), "B2 : mesure rappelee")
+  perf:Hide() perf:Run("OnHide")
+
+  Z.db.errors = saved.errors
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,
@@ -4612,5 +4750,10 @@ for f in files:
     for n, ligne in enumerate(sans_commentaires(read(os.path.join(addon, f))).split('\n'), 1):
         if re.search(r'(?<!\\)(?:\\\\)*\\[^\\nrt"\'0-9abfv|x\[\]]', ligne):
             revue.append('barre inverse seule dans %s, ligne %d' % (f, n))
+# Lot 6c septies e (constat L1) : UI.Window ne traduit pas son titre, il lui arrive déjà traduit (L[...])
+for f in files:
+    for n, ligne in enumerate(sans_commentaires(read(os.path.join(addon, f))).split('\n'), 1):
+        if re.search(r'UI\.Window\(\s*"[^"]*"\s*,\s*"(?!"|Lyorune")', ligne): # sauf titre vide ou nom de l'addon
+            revue.append('titre de fenetre sans traduction dans %s, ligne %d' % (f, n))
 print(('  OK    revue : fonctions, champs et reglages coherents') if not revue else ('  ERREUR revue : ' + ', '.join(revue)))
 sys.exit(1 if rt.eval('FAILED') or found or revue else 0)

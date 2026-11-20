@@ -237,7 +237,7 @@ local window
 function Z:ShowLog()
 	local UI = Z.UI
 	if not window then
-		window = UI.Window("LyoruneLog", "Journal d'erreurs", 660, 440)
+		window = UI.Window("LyoruneLog", Z.L["Journal d'erreurs"], 660, 440)
 		window.beside = true -- à côté des options, jamais dessous ni par-dessus
 		window:SetFrameStrata("FULLSCREEN_DIALOG")
 		tinsert(UISpecialFrames, "LyoruneLog")
@@ -258,11 +258,18 @@ function Z:ShowLog()
 		edit:SetMultiLine(true)
 		edit:SetAutoFocus(false)
 		edit:SetFont(UI.Font(), 11, "")
+		UI.Paint(edit, "text") -- sans couleur, le jeu écrit en blanc pur
 		edit:SetWidth(620)
 		edit:SetTextInsets(6, 6, 6, 6)
 		edit:SetScript("OnEscapePressed", edit.ClearFocus)
 		scroll:SetScrollChild(edit)
-		window.edit = edit
+		window.edit, window.scroll = edit, scroll
+
+		-- Nouveau texte : lu depuis le haut (le texte raccourci ne laisse pas une zone vide à l'écran)
+		function window.Fill()
+			edit:SetText(Z:LogText())
+			scroll:SetVerticalScroll(0)
+		end
 
 		local select = UI.Button(window, Z.L["Tout sélectionner"], 140, 24, function()
 			edit:SetFocus()
@@ -270,17 +277,25 @@ function Z:ShowLog()
 		end)
 		select:SetPoint("BOTTOMLEFT", 14, 14)
 		select.label:SetJustifyH("CENTER")
-		local clear = UI.Button(window, Z.L["Vider le journal"], 130, 24, function()
+		-- Toutes les erreurs gardées d'un coup, sans retour possible : un second clic confirme (Options.lua)
+		local clear = Z.ArmedButton(window, "Vider le journal", "Confirmer", 130, function()
 			Z:ClearLog()
-			edit:SetText(Z:LogText())
+			window.Fill()
 		end)
 		clear:SetPoint("LEFT", select, "RIGHT", 6, 0)
-		clear.label:SetJustifyH("CENTER")
-		local hint = UI.Text(window, 11)
+		window:HookScript("OnHide", clear.Disarm)
+		window.clear = clear
+		-- Accrochée aussi au bord droit : sur deux lignes plutôt que hors de la fenêtre
+		local hint = UI.Label(window, 11, nil, "dim")
 		hint:SetPoint("LEFT", clear, "RIGHT", 12, 0)
-		UI.Paint(hint, "dim")
+		hint:SetPoint("RIGHT", window, "BOTTOMRIGHT", -14, 26) -- même hauteur que le milieu du bouton
+		hint:SetJustifyH("LEFT")
+		hint:SetMaxLines(2)
 		hint:SetText(Z.L["Ctrl+C pour copier, puis collez le texte à la personne qui vous aide."])
+		window.hint = hint
 	end
-	window.edit:SetText(Z:LogText())
-	window:Show()
+	-- Rappelée alors qu'elle est ouverte : elle relit le journal et passe devant
+	window.Fill()
+	UI.Reopen(window)
+	window:Raise()
 end

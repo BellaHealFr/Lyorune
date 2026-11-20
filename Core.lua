@@ -235,6 +235,13 @@ function Z:SetLanguage()
 	local wanted = Z.db.language
 	if wanted == "AUTO" then wanted = (GetLocale() == "frFR") and "frFR" or "enUS" end
 	activeTranslation = Z.translations[wanted] or {}
+	Z.decimalPoint = Z.translations[wanted] ~= nil -- textes traduits (anglais) : 0.25 ; en français : 0,25
+end
+
+-- Nombre à virgule écrit pour le joueur : « 0,25 » en français, « 0.25 » en anglais
+function Z.Decimal(value, digits)
+	local text = ("%." .. (digits or 0) .. "f"):format(value)
+	return Z.decimalPoint and text or (text:gsub("%.", ","))
 end
 
 function Z:Print(msg)

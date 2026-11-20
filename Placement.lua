@@ -138,13 +138,21 @@ local function ShapeName(id)
 	return id
 end
 
+-- Agrandissement de la case d'exemple : la case et le décalage le plus grand de chaque côté tiennent dans la
+-- scène (un élément poussé au bout reste visible), jamais plus de 3 fois, jamais sous la taille réelle
+local function StageScale(width, height)
+	local limit = Z.limits.placement
+	local room = 2 * math.max(-limit[1], limit[2])
+	return math.max(1, math.min(3, (STAGE_W - 24) / (width + room), (STAGE_H - 24) / (height + room)))
+end
+
 -- Dessine la case d'exemple avec TOUS les éléments, même ceux coupés dans les options : on peut les placer
 -- d'avance. Les vraies cases, le mode test et cette case passent par les mêmes fonctions de placement.
 local function Draw()
 	local db = Z.db
 	local width, height = Z.CellSize()
 	cell:SetSize(width, height)
-	cell:SetScale(math.max(1, math.min(3, (STAGE_W - 24) / width, (STAGE_H - 24) / height)))
+	cell:SetScale(StageScale(width, height))
 	cell.powerShown = db.manaBars ~= "OFF"
 	cell.power:SetShown(cell.powerShown)
 	Z.StyleButton(cell)
@@ -298,6 +306,7 @@ local function BuildWindow()
 	stage = CreateFrame("Frame", nil, win)
 	stage:SetSize(STAGE_W, STAGE_H)
 	stage:SetPoint("TOPLEFT", 214, -48)
+	stage:SetClipsChildren(true) -- en filet : rien ne déborde de la scène, ni sur la liste ni hors de la fenêtre
 	stage.bg = UI.Paint(UI.Tex(stage, "BACKGROUND"), "panel")
 	stage.bg:SetAllPoints()
 	stage.border = UI.Paint(UI.Border(stage, 1), "line")
@@ -336,12 +345,14 @@ local function BuildWindow()
 	end)
 	win.reset:SetPoint("TOPLEFT", win.left, "BOTTOMLEFT", 0, -8)
 	win.reset.label:SetJustifyH("CENTER")
-	win.resetAll = UI.Button(win, L["Tout remettre"], 172, 22, function()
+	-- Les 12 éléments d'un coup : un second clic confirme (Options.lua)
+	win.resetAll = Z.ArmedButton(win, "Tout remettre", "Confirmer", 172, function()
 		Z.ResetPlacement()
 		Changed()
 	end)
+	win.resetAll:SetHeight(22)
 	win.resetAll:SetPoint("LEFT", win.reset, "RIGHT", 8, 0)
-	win.resetAll.label:SetJustifyH("CENTER")
+	win:HookScript("OnHide", win.resetAll.Disarm)
 	win.resetAll.tip = L["Tous les éléments de cette forme de case reviennent à leur place d'origine."]
 
 	local note = UI.Label(win, 11, nil, "dim")
@@ -352,13 +363,14 @@ local function BuildWindow()
 	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."])
 
 	win:HookScript("OnShow", Draw)
+	win.StageScale = StageScale -- pour les tests
 end
 
+-- Rappelée alors qu'elle est ouverte, la fenêtre passe devant sans se fermer (OnShow la dessine)
 function Z:OpenPlacement()
 	if not win then BuildWindow() end
-	if win:IsShown() then return win:Close() end
-	win:Show()
-	Draw()
+	UI.Reopen(win)
+	win:Raise()
 end
 
 -- Appelé après chaque changement d'option : la case d'exemple suit la forme, le thème et les tailles
