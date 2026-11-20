@@ -55,7 +55,8 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 | <img src="docs/images/runes/a.png" alt="" width="40"> | **Announcements** | Low mana, mana restored, resurrection, with your own wording. On WoW Forever, where mana is hidden from addons, the low mana and mana restored announcements still go out on their own (threshold estimated from your spell costs, recovery measured while you drink). |
 | <img src="docs/images/runes/p.png" alt="" width="40"> | **Profiles and sharing** | One profile per group size, battleground, arena and specialization, applied automatically; copy just one part of a profile to another. Send your configuration to a friend, with a code or directly in game. |
 | <img src="docs/images/runes/b.png" alt="" width="40"> | **Always at hand** | A button on the edge of the minimap opens the options or the test mode. You can move it, or remove it with a checkbox. |
-| <img src="docs/images/runes/n.png" alt="" width="40"> | **Nothing is mandatory** | Every element has its checkbox, and a search box finds any setting. |
+| <img src="docs/images/runes/f.png" alt="" width="40"> | **Easy to set up** | An options window in eleven chapters, with a preview cell that shows every setting live while you change it. A golden rune marks what you changed (one click resets it), the less common settings stay folded away, and a search finds any setting, even in the explanations. A gold and green healing light brings it to life, and a checkbox turns it off. |
+| <img src="docs/images/runes/n.png" alt="" width="40"> | **Nothing is mandatory** | Every element has its checkbox: keep only what you use. |
 
 Lyorune never changes the game's frames or other addons' frames: it runs alongside ElvUI, Clique and your other interface addons.
 
@@ -73,7 +74,7 @@ It is the inscription carved on Frostmourne's dais, the one Muradin reads to Art
 
 **How to read them:** each rune stands for one letter of the sentence. They are the runes of the Elder Futhark, a very real alphabet used almost two thousand years ago. The sounds "th" and "ng" are written with a single rune.
 
-In game, hover the runes: they light up and their translation appears. If they distract you, a checkbox removes them (Help tab).
+In game, hover the runes: they light up and their translation appears. If they distract you, a checkbox removes them (Window and help chapter).
 
 ## Installation
 

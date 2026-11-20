@@ -48,7 +48,8 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 | <img src="docs/images/runes/a.png" alt="" width="40"> | **Annonces** | Mana faible, mana remontée, résurrection, avec vos propres textes. Sur WoW Forever, où la mana est cachée aux addons, les annonces de mana faible et de mana remontée partent quand même toutes seules (seuil approché par le coût de vos sorts, remontée mesurée pendant que vous buvez). |
 | <img src="docs/images/runes/p.png" alt="" width="40"> | **Profils et partage** | Un profil par taille de groupe, champ de bataille, arène et spécialisation, appliqué tout seul ; copie d'une seule partie d'un profil à un autre. Envoyez votre configuration à un ami, par un code ou directement en jeu. |
 | <img src="docs/images/runes/b.png" alt="" width="40"> | **Toujours sous la main** | Un bouton au bord de la mini-carte ouvre les options ou le mode test. Il se déplace, et se retire d'une case à cocher. |
-| <img src="docs/images/runes/n.png" alt="" width="40"> | **Rien n'est obligatoire** | Chaque élément a sa case à cocher, et une recherche retrouve n'importe quel réglage. |
+| <img src="docs/images/runes/f.png" alt="" width="40"> | **Facile à régler** | Une fenêtre d'options en onze chapitres, avec une case témoin qui montre chaque réglage en direct pendant que vous le changez. Une rune d'or marque ce que vous avez modifié (un clic le rétablit), les réglages rares restent pliés, et une recherche retrouve n'importe quel réglage, jusque dans les explications. Une lumière de soin or et vert l'éclaire, et s'éteint d'une case à cocher. |
+| <img src="docs/images/runes/n.png" alt="" width="40"> | **Rien n'est obligatoire** | Chaque élément a sa case à cocher : vous gardez seulement ce qui vous sert. |
 
 Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à côté d'ElvUI, de Clique ou de vos autres addons d'interface.
 
@@ -68,7 +69,7 @@ C'est l'inscription gravée sur le socle de Deuillegivre, celle que Muradin déc
 
 **Comment les lire :** chaque rune vaut une lettre de la phrase anglaise. Ce sont les runes de l'ancien futhark, un alphabet bien réel, utilisé il y a près de deux mille ans. Les sons « th » et « ng » s'écrivent d'une seule rune.
 
-En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (onglet Aide).
+En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (chapitre Fenêtre et aide).
 
 ## Installation
 

@@ -15,6 +15,7 @@ Main features:
 - Five themes, high contrast, sorting by group or role, separate tank and pet frames, pinned players.
 - Profiles per group size, battleground, arena and specialization, applied automatically; partial copy; sharing by code or in game.
 - Test mode with a fake group of 5 to 40 players; built-in one-minute tutorial.
+- Options window in eleven chapters: a preview cell shows every setting live, a golden rune marks changed settings (one click resets them), and a search finds any setting.
 
 Keywords: World of Warcraft, World of Warcraft: Forever, WoW Forever, WoW addon, Blizzard, MMORPG, healing frames, raid frames, party frames, click casting, healer addon, dungeon, raid, PvP, battleground, arena, alternative to VuhDo, HealBot, Grid and Cell.
 
