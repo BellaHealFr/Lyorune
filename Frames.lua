@@ -69,7 +69,8 @@ function Z.CellSize()
 	return math.floor(db.width * factor + 0.5), math.floor(db.height * factor + 0.5)
 end
 
--- Taille des icônes de la case (rôle, marqueur, auras...) : 30 % de sa hauteur, 10 pixels au moins
+-- Taille des icônes de la case (rôle, marqueur, grande icône...) : 30 % de sa hauteur, 10 pixels au moins.
+-- Les rangées de mes soins et des affaiblissements ont leur propre taille, selon la forme (Z.AuraRows).
 function Z.IconSize()
 	local _, height = Z.CellSize()
 	return math.max(10, math.floor(height * 0.30 + 0.5))
@@ -559,7 +560,7 @@ local function PlaceTexts(b, icon)
 		Place(b.role, "role", "LEFT", b.hp, "LEFT", 3, 0)
 		Place(b.name, "name", "LEFT", b.hp, "LEFT", icon + 3, 0)
 		b.name:SetJustifyH("LEFT")
-		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", -4, 0)
+		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", b.rows.textX, 0) -- en Bandeau, à gauche du bloc d'icônes
 		b.text:SetJustifyH("RIGHT")
 		Place(b.leader, "leader", "CENTER", b.role, "TOPRIGHT", 0, 0) -- petit badge sur l'icône de rôle
 	else
@@ -640,6 +641,7 @@ local function Style(b)
 
 	local icon = Z.IconSize()
 	b.iconSize = icon
+	b.rows = Z.AuraRows() -- rangées de mes soins et des affaiblissements, à la mesure de la forme (Themes.lua)
 	PlaceTexts(b, icon)
 	b.role:SetSize(icon - 2, icon - 2)
 	local badge = Z:Shape().inline and math.max(8, math.floor(icon * 0.7)) or icon - 2

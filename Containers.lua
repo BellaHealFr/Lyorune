@@ -4,9 +4,9 @@
 -- conteneurs : Lyorune leur dit quoi montrer (filtres, numéros de sorts) et où, le jeu y dessine les auras,
 -- leur durée et la couleur de dissipation. Rien n'est lu, rien ne tourne en boucle.
 -- Quatre conteneurs par case :
---   hots    : mes soins sur la durée en icônes (en haut à gauche)
+--   hots    : mes soins sur la durée en icônes (place et taille selon la forme, Z.AuraRows dans Themes.lua)
 --   bars    : les mêmes en barres fines (style « Barres »)
---   debuffs : affaiblissements (en bas à droite), celui que je peux dissiper en premier
+--   debuffs : affaiblissements (selon la forme aussi), celui que je peux dissiper en premier
 --   slots   : places fixes : un carré par coin, la bordure de dissipation, la grande icône et son contour
 -- Si le jeu n'a pas ces conteneurs, Auras.lua garde l'ancien affichage (lecture des auras).
 
@@ -19,6 +19,14 @@ local SPACING = 2
 function Z.HasAuraBoxes()
 	return AuraContainerSortMethod ~= nil and AnchorUtil ~= nil and AnchorUtil.FlowDirection ~= nil
 		and Enum.CustomAuraButtonDispelTypeTextureStyle ~= nil
+end
+
+-- Une rangée peut-elle passer à la ligne (Carré) ? Le jeu le fait avec SetFlowLayoutMaximumLineSize, en pixels.
+-- Sans elle, la rangée rapetisse pour tenir sur une ligne (Z.AuraRows). L'ancien affichage pose chaque icône
+-- lui-même : il passe toujours à la ligne. Z.boxWrap est lu sur un premier conteneur (Probe, plus bas).
+function Z.CanWrapAuras()
+	if not Z.HasAuraBoxes() then return true end
+	return Z.boxWrap ~= false
 end
 
 -- Appel protégé d'une méthode du jeu : une erreur est notée une fois au journal, jamais avalée sans trace
@@ -282,15 +290,19 @@ local function Plan(b)
 	local db = Z.db
 	local hots, corners, ignored, important = Wanted()
 	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place de la grande
-	-- icône, taille des coins, largeur des barres, réglages des icônes. Un changement reconstruit les conteneurs.
+	-- icône, taille des coins, largeur des barres, taille et coin de départ des rangées (Z.AuraRows), réglages des
+	-- icônes. Un changement reconstruit les conteneurs.
+	local rows = b.rows or Z.AuraRows()
 	local bigX, bigY = Z.Offset("big")
 	local look = table.concat({ bigX, bigY, Z.CornerSize(b), math.floor(Z.CellSize() * 0.45),
+		rows.hots.size, rows.hots.point, rows.debuffs.size, rows.debuffs.point,
 		tostring(db.hotSwipe), tostring(db.hotCountdown), tostring(db.hotFade), tostring(db.hotCharges),
 		tostring(db.bossDebuffs), tostring(db.importantGlow) }, ",")
-	local plan = { size = b.iconSize or 12, look = look, groups = {}, slots = {} }
+	local plan = { look = look, groups = {}, slots = {} }
 	local function Group(box, key, filter, candidates, max, index, template, dress)
+		local size = rows[box] and rows[box].size or 12 -- barres fines : leur taille est donnée à part (Build)
 		table.insert(plan.groups, { box = box, key = key, filter = filter, candidates = candidates, max = max,
-			index = index, template = template, dress = dress })
+			index = index, template = template, dress = dress, size = size })
 	end
 	local function Slot(key, filter, candidates, template, dress)
 		table.insert(plan.slots, { key = key, filter = filter, candidates = candidates, template = template, dress = dress })
@@ -337,7 +349,7 @@ local function Sorted(set)
 end
 
 local function Signature(plan)
-	local parts = { plan.size, plan.look }
+	local parts = { plan.look }
 	for _, list in ipairs({ plan.groups, plan.slots }) do
 		for _, entry in ipairs(list) do
 			local candidates = {}
@@ -376,24 +388,32 @@ local function Flow(box, point, horizontal, vertical, axis)
 	Call(box, "SetFlowLayoutGrowthDirection", horizontal, vertical)
 end
 
+-- Une rangée de Z.AuraRows : coin de départ, sens, et longueur d'une ligne (au-delà, le jeu passe à la ligne).
+-- La longueur compte l'écart après la dernière icône : juste assez pour row.perLine icônes, que le jeu compte
+-- cet écart ou non.
+local function PlaceRow(b, box, row, dx, dy)
+	local DIR = AnchorUtil.FlowDirection
+	Call(box, "ClearAllPoints")
+	Call(box, "SetPoint", row.point, row.relative == "HP" and b.hp or b.over, row.point, row.x + dx, row.y + dy)
+	Call(box, "SetSize", row.perLine * (row.size + SPACING), row.height)
+	Flow(box, row.point, row.dirX < 0 and DIR.Left or DIR.Right, row.dirY < 0 and DIR.Down or DIR.Up)
+	if Z.boxWrap then Call(box, "SetFlowLayoutMaximumLineSize", row.perLine * (row.size + SPACING)) end
+end
+
 -- Places des conteneurs dans la case (les conteneurs ne sont pas protégés : refait librement)
 local function Place(b)
 	local db = Z.db
-	local boxes, size = b.boxes, b.iconSize or 12
+	local boxes, rows = b.boxes, b.rows or Z.AuraRows()
 
 	local dx, dy = Z.Offset("hots")
-	Call(boxes.hots, "ClearAllPoints")
-	Call(boxes.hots, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 2 + Z.CornerShift(b, "TOPLEFT") + dx, -2 + dy)
-	Call(boxes.hots, "SetSize", db.hotCount * (size + SPACING), size)
+	PlaceRow(b, boxes.hots, rows.hots, dx, dy)
 
 	Call(boxes.bars, "ClearAllPoints")
 	Call(boxes.bars, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy - 3)
 	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), db.hotCount * 4)
 
 	dx, dy = Z.Offset("debuffs")
-	Call(boxes.debuffs, "ClearAllPoints")
-	Call(boxes.debuffs, "SetPoint", "BOTTOMRIGHT", b.over, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT") + dx, 2 + dy)
-	Call(boxes.debuffs, "SetSize", db.debuffCount * (size + SPACING), size)
+	PlaceRow(b, boxes.debuffs, rows.debuffs, dx, dy)
 
 	Call(boxes.slots, "SetAllPoints", b.over)
 
@@ -448,11 +468,9 @@ local function Build(b, plan)
 	boxes.slots = NewBox(b, 4) -- au-dessus des icônes, sous les auras privées
 	if not (boxes.hots and boxes.bars and boxes.debuffs and boxes.slots) then error("création refusée") end
 
-	-- 1. ancrer
+	-- 1. ancrer (les rangées de soins et d'affaiblissements prennent leur sens dans Place)
 	local DIR = AnchorUtil.FlowDirection
-	Flow(boxes.hots, "TOPLEFT", DIR.Right, DIR.Down)
 	Flow(boxes.bars, "TOPLEFT", DIR.Right, DIR.Down, AnchorUtil.FlowLayoutAxis.Vertical)
-	Flow(boxes.debuffs, "BOTTOMRIGHT", DIR.Left, DIR.Up)
 	Place(b)
 
 	-- 2. le joueur suivi, avant les groupes
@@ -462,11 +480,10 @@ local function Build(b, plan)
 	end
 
 	-- 3. groupes et places fixes, filtres donnés à la création
-	local size = plan.size
 	for _, entry in ipairs(plan.groups) do
 		local list, made, dress = {}, 0, Dresser(b, entry)
 		b.boxButtons[entry.key] = list
-		local width, height = size, size
+		local width, height = entry.size, entry.size
 		if entry.template == "LyoruneAuraBar" then width, height = math.floor(Z.CellSize() * 0.45), 3 end
 		local box = boxes[entry.box]
 		local ok, err = pcall(box.AddAuraGroup, box, entry.key, entry.filter, {
@@ -508,9 +525,21 @@ end
 ----------------------------------------------------------------------------------------------------
 local waiting = {} -- cases à construire à la fin du combat
 
+-- Un premier conteneur, hors combat, dit si le jeu sait passer à la ligne (Z.CanWrapAuras). Sans réponse, la
+-- taille des rangées compte sur le passage à la ligne : la case est refaite dès que la réponse change la taille.
+local function Probe(b)
+	if Z.boxWrap ~= nil or InCombatLockdown() then return end
+	local ok, box = pcall(CreateFrame, "AuraContainer", nil, b.over, "LyoruneAuraBox")
+	if not ok or not box then return end
+	Z.boxWrap = type(box.SetFlowLayoutMaximumLineSize) == "function"
+	Call(box, "Hide")
+	b.rows = Z.AuraRows()
+end
+
 -- Construit ou reconstruit les conteneurs si le plan a changé ; en combat, attend la fin du combat
 local function Rebuild(b)
 	if b.boxesFailed or not Z.HasAuraBoxes() or not b.unit or not b.over then return end
+	Probe(b)
 	local plan = Plan(b)
 	local signature = Signature(plan)
 	if b.boxes and b.boxesSig == signature then return end

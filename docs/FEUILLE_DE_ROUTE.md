@@ -250,12 +250,16 @@ taille en pixels (un seul réglage), l'éditeur de placement les déplace seulem
   droit, à une taille qui laisse libre la ligne du texte ; Bandeau, les deux rangées en bloc au bout de la case, le
   chiffre de vie rangé à leur gauche. Décalages des soins et affaiblissements (et du chiffre de vie en Bandeau)
   remis à zéro une fois en Barre, Bandeau et Carré
-- [ ] Lot 2 : place et taille d'origine des icônes écrites pour chaque forme dans `Z.shapes` (une forme ajoutée =
+- [x] Lot 2 : place et taille d'origine des icônes écrites pour chaque forme dans `Z.shapes` (une forme ajoutée =
   une ligne) ; une rangée trop large rapetisse ses icônes pour tenir dans la case au lieu d'en déborder (Carré :
   passe d'abord à la ligne, `SetFlowLayoutMaximumLineSize`, repli « rapetisser » si le jeu refuse) ; place du
   chiffre de vie en Bandeau d'après les nombres réglés ; remise à zéro unique des décalages ; mêmes règles dans
   `Placement.lua` (bornes de l'éditeur) ; test des 4 formes avec 1 à 6 soins et 2 à 5 affaiblissements, grand
-  raid compris
+  raid compris. Fait le 21 novembre 2026 : un seul calcul, `Z.AuraRows` (Themes.lua), lu par Auras.lua,
+  Containers.lua, Frames.lua et Placement.lua ; passage à la ligne du jeu détecté sur un premier conteneur
+  (`Z.boxWrap`) ; remise à zéro à la première connexion en 1.27.0 (`Migrate`, Core.lua). Limite admise : en raid
+  de 40, la Barre (21 pixels) garde des icônes de 5 pixels qui mordent d'un pixel sur la ligne du texte, restée
+  devant elles
 - [ ] Lot 3 : taille de l'élément choisi dans l'éditeur de placement (molette ou « - » et « + », de 50 à 200 %),
   gardée par forme avec son décalage dans `Z.db.placement`, bornes dans `Z.limits`, partage de profil
   (`Share.lua`) ; en combat, une taille changée attend la sortie du combat (conteneurs d'auras du jeu reconstruits

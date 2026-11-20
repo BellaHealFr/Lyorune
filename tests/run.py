@@ -2553,7 +2553,8 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
       assert(self.unit, "groupe ajoute avant SetUnit")
       assert(not self.enabled, "groupe ajoute apres SetEnabled")
       assert(options.templateNames[1]:match("^LyoruneAura%u") and options.maxFrameCount >= 1 and options.layout.elementWidth)
-      self.groups[key] = { filter = filter, candidates = options.candidateFilters or {}, max = options.maxFrameCount }
+      self.groups[key] = { filter = filter, candidates = options.candidateFilters or {}, max = options.maxFrameCount,
+        size = options.layout.elementWidth }
       options.initializeFrame(oldCreate("Button", nil, self)) -- le jeu habille un bouton
     end
     function f:AddAuraSlot(key, filter, options)
@@ -2569,6 +2570,9 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     end
     function f:SetUnit(unit) self.unit = unit end
     function f:UpdateAllAuras() self.updates = self.updates + 1 end
+    -- passage a la ligne et sens des rangees (1.27.0)
+    function f:SetFlowLayoutMaximumLineSize(size) self.maxLine = size end
+    function f:SetFlowLayoutAnchorPoint(point) self.flowPoint = point end
     return f
   end
   AuraContainerSortMethod = { Default = 0 } AuraContainerSortDirection = { Normal = 0 }
@@ -2580,7 +2584,9 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
   local oldGet = C_UnitAuras.GetUnitAuras
   C_UnitAuras.GetUnitAuras = function(unit, filter, ...) read[filter] = true return oldGet(unit, filter, ...) end
   local made = {}
+  Z.boxWrap = nil
   local function finish()
+    Z.boxWrap = nil
     CreateFrame, C_Secrets, PlaySound, C_UnitAuras.GetUnitAuras = oldCreate, oldSecrets, oldPlay, oldGet
     AuraContainerSortMethod, AuraContainerSortDirection, AnchorUtil = nil, nil, nil
     Enum.CustomAuraButtonDispelTypeTextureStyle = nil
@@ -2672,6 +2678,26 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     assert(b.boxes.debuffs.groups.dispellable.max == 1 and b.boxes.debuffs.groups.others.max == 3, "nombre d'affaiblissements")
     Z.db.hotCount, Z.db.debuffCount = 4, 2 Z:Refresh()
     assert(b.boxes.debuffs.groups.others.max == 1, "nombre d'affaiblissements non remis")
+    -- 1.27.0 (etape 21) : icones a la mesure de la forme, passees au jeu ; Carre : le jeu passe a la ligne
+    assert(Z.boxWrap == true, "passage a la ligne du jeu non detecte")
+    local form = {}
+    for _, key in ipairs({ "shape", "width", "height", "fontSize", "powerHeight" }) do form[key] = Z.db[key] end
+    Z:ApplyShape("SQUARE")
+    local rows = Z.AuraRows()
+    assert(rows.hots.lines == 2 and b.boxes.hots.maxLine == rows.hots.perLine * (rows.hots.size + 2),
+      "Carre : rangee de soins sur deux lignes : " .. tostring(b.boxes.hots.maxLine))
+    assert(b.boxes.hots.groups.hots.size == rows.hots.size and b.boxes.debuffs.groups.dispellable.size == rows.debuffs.size
+      and b.boxes.debuffs.groups.others.size == rows.debuffs.size, "taille des icones donnee au jeu")
+    kept = b.boxes.hots
+    Z:ApplyShape("BAR")
+    assert(b.boxes.hots ~= kept, "forme changee sans reconstruction (taille des icones)")
+    assert(b.boxes.hots.flowPoint == "TOPRIGHT" and b.boxes.hots._point[1] == "TOPRIGHT" and b.boxes.hots._point[2] == b.hp,
+      "Barre : soins colles au haut de la barre de vie, a droite")
+    assert(b.boxes.debuffs.flowPoint == "BOTTOMRIGHT" and b.boxes.debuffs._point[2] == b.hp, "Barre : affaiblissements")
+    assert(b.boxes.hots.groups.hots.size == Z.AuraRows().hots.size, "Barre : taille des soins")
+    for key, value in pairs(form) do Z.db[key] = value end
+    Z:Refresh()
+    assert(b.boxes.hots.flowPoint == "TOPLEFT" and b.boxes.hots._point[2] == b.over, "Tuile : soins en haut a gauche de la case")
     -- le nom et la vie restent lisibles : au-dessus des conteneurs, sous les auras privees
     local level = b.top:GetFrameLevel()
     for _, box in pairs(b.boxes) do assert(box:GetFrameLevel() < level, "conteneur au-dessus du nom") end
@@ -5236,6 +5262,179 @@ step("refonte 1.26.0, lot 6c nonies c : retour 19 (macros de Mes macros dans les
   for _, x in ipairs({ b, big, c }) do Z:RemoveMacro(x) end
   assert(#MACROS == before, "macros restantes : " .. #MACROS)
   w:Hide()
+end)
+
+step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre, Bandeau), raid de 40", function()
+  local keys = { "shape", "width", "height", "corners", "manaBars", "hotStyle", "hotCount", "debuffCount", "fontSize",
+    "powerHeight", "autoShrink", "showHots", "showDebuffs", "debuffMode" }
+  local saved = { placement = CopyTable(Z.db.placement), corners = Z.db.cornerSpells[Z.class], members = MEMBERS }
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  local b = Z.buttons[1]
+  Z.db.placement = {} Z.db.cornerSpells[Z.class] = nil
+  Z.db.corners, Z.db.hotStyle, Z.db.manaBars, Z.db.autoShrink = "SQUARE", "ICONS", "ALL", true
+  Z.db.showHots, Z.db.showDebuffs, Z.db.debuffMode = true, true, "ALL"
+  -- Rectangles { gauche, droite, bas, haut } des icônes d'une rangée, (0, 0) en bas à gauche de la case
+  local function Icons(row, n, W, H, hp)
+    local frame = row.relative == "HP" and hp or { 0, W, 0, H }
+    local ax = row.point:find("LEFT") and frame[1] or frame[2]
+    local ay = row.point:find("TOP") and frame[4] or frame[3]
+    local list = {}
+    for i = 1, n do
+      local column, line = (i - 1) % row.perLine, math.floor((i - 1) / row.perLine)
+      local x = ax + row.x + row.dirX * column * (row.size + 2)
+      local y = ay + row.y + row.dirY * line * (row.size + 2)
+      local left = row.dirX > 0 and x or x - row.size
+      local bottom = row.dirY > 0 and y or y - row.size
+      list[i] = { left, left + row.size, bottom, bottom + row.size }
+    end
+    return list
+  end
+  local function Overlap(a, c)
+    return math.min(a[2], c[2]) - math.max(a[1], c[1]) > 0.01 and math.min(a[4], c[4]) - math.max(a[3], c[3]) > 0.01
+  end
+  local checked = 0
+  for _, members in ipairs({ 5, 40 }) do
+    MEMBERS = members
+    for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+      Z:ApplyShape(shape)
+      local rules = Z.shapes[shape].auras
+      for hots = 1, 6 do
+        for debuffs = 2, 5 do
+          Z.db.hotCount, Z.db.debuffCount = hots, debuffs
+          Z.ForgetPlacementRanges()
+          b.powerShown = true
+          Z.StyleButton(b)
+          local W, H = Z.CellSize()
+          local where = shape .. ", " .. hots .. " soins, " .. debuffs .. " affaiblissements, groupe de " .. members
+          local rows = Z.AuraRows()
+          local inset = Z.UI.Inset(Z:Theme().borderSize, false)
+          local hp = { inset, W - inset, inset + Z.PowerHeight() + 1, H - inset }
+          local icon = Z.IconSize()
+          local h, d = Icons(rows.hots, hots, W, H, hp), Icons(rows.debuffs, debuffs, W, H, hp)
+          assert(rows.hots.lines <= 2 and rows.debuffs.lines <= 2, "plus de deux lignes : " .. where)
+          assert(rows.hots.size <= math.floor(H * rules.size + 0.5) and rows.hots.size >= 5, "taille des soins : " .. where)
+          for _, list in ipairs({ h, d }) do
+            for _, r in ipairs(list) do
+              assert(r[1] >= 0 and r[2] <= W and r[3] >= 0 and r[4] <= H,
+                "icone hors de la case : " .. where .. string.format(" (%d %d %d %d dans %dx%d)", r[1], r[2], r[3], r[4], W, H))
+              checked = checked + 1
+            end
+          end
+          for _, r in ipairs(h) do
+            for _, o in ipairs(d) do assert(not Overlap(r, o), "soins sur les affaiblissements : " .. where) end
+          end
+          if not rules.inline then
+            -- Tuile et Carré : les soins s'arrêtent avant l'icône de rôle, les affaiblissements avant le buff manquant
+            local role = { W - 2 - (icon - 2), W - 2, H - 2 - (icon - 2), H - 2 }
+            local buff = { 2, 2 + icon, 2, 2 + icon }
+            for _, r in ipairs(h) do assert(not Overlap(r, role), "soins sous l'icone de role : " .. where) end
+            for _, r in ipairs(d) do assert(not Overlap(r, buff), "affaiblissements sous le buff manquant : " .. where) end
+          else
+            local lineW = math.floor(W * rules.hotLine)
+            assert(rows.hots.width <= lineW or rows.hots.size == 5, "rangee trop large : " .. where)
+            if rules.inline == "EDGES" then
+              -- Barre : la ligne du texte, au milieu de la barre de vie, reste libre (sauf icônes déjà à leur plus
+              -- petite taille, 5 pixels, dans une case de raid de 40 très basse : le texte reste devant elles)
+              local middle, cap = (hp[3] + hp[4]) / 2, math.ceil(Z.db.fontSize * 0.72)
+              for _, r in ipairs(h) do assert(rows.hots.size == 5 or r[3] >= middle + cap / 2 - 0.51, "soins sur la ligne du texte : " .. where) end
+              for _, r in ipairs(d) do assert(rows.debuffs.size == 5 or r[4] <= middle - cap / 2 + 0.51, "affaiblissements sur le texte : " .. where) end
+            else
+              -- Bandeau : le chiffre de vie se range à gauche du bloc, le nom s'arrête avant lui
+              local textRight = hp[2] + rows.textX
+              for _, list in ipairs({ h, d }) do
+                for _, r in ipairs(list) do assert(textRight <= r[1] - 4, "chiffre de vie sur le bloc : " .. where) end
+              end
+              assert(b.text._point[1] == "RIGHT" and b.text._point[2] == b.hp and b.text._point[4] == rows.textX, "chiffre de vie pas pose : " .. where)
+              assert(inset + icon + 3 + rows.nameW <= textRight - rows.textW, "nom sur le chiffre de vie : " .. where)
+            end
+          end
+          -- Les icônes posées sur la case sont celles calculées (ancien affichage, mode test, éditeur)
+          for i = 1, hots do
+            local p = Z.HotIcon(b, i)._point
+            assert(p[1] == rows.hots.point and p[2] == (rows.hots.relative == "HP" and b.hp or b.over) and Z.HotIcon(b, i)._w == rows.hots.size,
+              "soin " .. i .. " mal pose : " .. where)
+          end
+          local last = Z.DebuffIcon(b, debuffs)._point
+          local column, line = (debuffs - 1) % rows.debuffs.perLine, math.floor((debuffs - 1) / rows.debuffs.perLine)
+          assert(last[4] == rows.debuffs.x + rows.debuffs.dirX * column * (rows.debuffs.size + 2)
+            and last[5] == rows.debuffs.y + rows.debuffs.dirY * line * (rows.debuffs.size + 2), "dernier affaiblissement : " .. where)
+          -- Les bornes de l'éditeur décrivent la même rangée
+          local left, right = Z.OffsetRange("hots")
+          assert(left <= 0 and right >= 0, "editeur : rangee de soins hors de ses bornes : " .. where)
+        end
+      end
+    end
+  end
+  assert(checked == 1344, "nombre de verifications : " .. checked)
+  MEMBERS = 5
+
+  -- Tailles décidées sur la maquette (taille d'origine des formes, barre de mana)
+  local function At(shape, hots, debuffs)
+    Z:ApplyShape(shape) Z.db.hotCount, Z.db.debuffCount = hots, debuffs
+    return Z.AuraRows()
+  end
+  local r = At("TILE", 4, 2)
+  assert(r.hots.size == 11 and r.hots.lines == 1 and r.hots.point == "TOPLEFT" and r.debuffs.point == "BOTTOMRIGHT", "Tuile : 11 pixels")
+  r = At("SQUARE", 4, 2)
+  assert(r.hots.size == 10 and r.hots.perLine == 3 and r.hots.lines == 2, "Carre : 10 pixels, deux lignes")
+  r = At("SQUARE", 2, 5)
+  assert(r.debuffs.lines == 2 and r.debuffs.size < 10, "Carre : 5 affaiblissements, deux lignes et plus petits")
+  r = At("BAR", 4, 2)
+  assert(r.hots.size == 8 and r.hots.point == "TOPRIGHT" and r.hots.relative == "HP" and r.textX == -4, "Barre : 8 pixels")
+  r = At("BANNER", 4, 2)
+  assert(r.hots.size == 9 and r.debuffs.size == 9 and r.textX < -4, "Bandeau : 9 pixels, chiffre de vie a gauche")
+  -- Bandeau : seules les rangées montrées comptent pour le bloc
+  local blockX = r.textX
+  Z.db.showHots = false
+  assert(At("BANNER", 4, 2).textX > blockX, "Bandeau : soins coupes, le chiffre de vie se rapproche du bord")
+  Z.db.showHots, Z.db.showDebuffs = false, false
+  assert(At("BANNER", 4, 2).textX == -4, "Bandeau : rien a montrer, chiffre de vie au bout")
+  Z.db.showHots, Z.db.showDebuffs = true, true
+  -- Une rangée trop longue rapetisse au lieu de sortir de la case
+  r = At("TILE", 6, 2)
+  assert(r.hots.lines == 1 and r.hots.size < 11, "Tuile : 6 soins rapetisses")
+  -- Le jeu ne sait pas passer à la ligne : le Carré rapetisse sur une ligne
+  AuraContainerSortMethod = { Default = 0 }
+  AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 } }
+  Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
+  Z.boxWrap = false
+  local ok, err = pcall(function()
+    local small = At("SQUARE", 4, 2)
+    assert(small.hots.lines == 1 and small.hots.size < 10, "Carre sans passage a la ligne : " .. small.hots.lines .. " lignes")
+    Z.boxWrap = true
+    assert(At("SQUARE", 4, 2).hots.lines == 2, "Carre : passage a la ligne du jeu")
+  end)
+  AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle, Z.boxWrap = nil, nil, nil, nil
+  assert(ok, err)
+  -- Une forme ajoutée sans « auras » prend les règles de la Tuile
+  Z.shapes.TEST = { width = 80, height = 40, fontSize = 10, powerHeight = 3 }
+  Z.db.shape = "TEST"
+  ok, err = pcall(Z.AuraRows)
+  Z.shapes.TEST = nil
+  assert(ok and err.hots.point == "TOPLEFT", "forme sans regles d'icones : " .. tostring(err))
+
+  -- Remise à zéro unique des décalages des icônes (et du chiffre de vie en Bandeau), à l'arrivée de la 1.27.0
+  local savedDB, savedChar, version = LyoruneDB, LyoruneCharDB, Z.version
+  local db = { lastVersion = "1.26.0", placement = { BAR = { hots = { 3, 1 }, name = { 2, 0 } },
+    BANNER = { text = { 4, 0 }, debuffs = { 1, 1 } }, TILE = { hots = { 5, 5 } }, SQUARE = { debuffs = { 1, 1 } } } }
+  LyoruneDB = db
+  Z.version = "1.26.0" FireEvent("ADDON_LOADED", "Lyorune")
+  assert(db.placement.BAR.hots, "remise a zero avant la 1.27.0")
+  Z.version = "1.27.0" FireEvent("ADDON_LOADED", "Lyorune")
+  assert(db.placement.BAR.hots == nil and db.placement.BAR.name[1] == 2, "Barre : decalages des icones remis a zero, nom garde")
+  assert(db.placement.BANNER == nil and db.placement.SQUARE == nil, "Bandeau et Carre remis a zero")
+  assert(db.placement.TILE.hots[1] == 5, "Tuile : place d'origine inchangee, decalage garde")
+  db.lastVersion = "1.27.0" db.placement.BAR.hots = { 3, 1 } FireEvent("ADDON_LOADED", "Lyorune")
+  assert(db.placement.BAR.hots[1] == 3, "remise a zero refaite")
+  Z.version = version
+  LyoruneDB, LyoruneCharDB = savedDB, savedChar
+  FireEvent("ADDON_LOADED", "Lyorune")
+
+  Z.db.placement = saved.placement
+  Z.db.cornerSpells[Z.class] = saved.corners
+  MEMBERS = saved.members
+  for _, key in ipairs(keys) do Z.db[key] = saved[key] end
+  Z:Refresh()
 end)
 
 step("aucune variable globale imprevue", function()

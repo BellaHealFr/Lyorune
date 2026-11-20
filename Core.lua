@@ -322,6 +322,20 @@ local function Migrate(db)
 		if db.lockMode == "FREE" then db.lockMode = db.lockBeforeTutorial end
 		db.lockBeforeTutorial = nil
 	end
+	-- 1.27.0 : les icônes ont une nouvelle place en Barre, Carré et Bandeau (Z.shapes, Themes.lua). Un ancien
+	-- décalage les pousserait au mauvais endroit : il repart de zéro, une seule fois, pour ces trois formes
+	-- (à la première connexion avec la 1.27.0 ou plus récente).
+	if db.lastVersion and Z.VersionNumber(db.lastVersion) < 12700 and Z.VersionNumber(Z.version) >= 12700
+		and type(db.placement) == "table" then
+		local reset = { BAR = { "hots", "debuffs" }, SQUARE = { "hots", "debuffs" }, BANNER = { "hots", "debuffs", "text" } }
+		for shape, keys in pairs(reset) do
+			local saved = db.placement[shape]
+			if type(saved) == "table" then
+				for _, key in ipairs(keys) do saved[key] = nil end
+				if not next(saved) then db.placement[shape] = nil end
+			end
+		end
+	end
 end
 
 -- Position par personnage. Le premier personnage connecté après la 1.7.0 garde l'ancienne position commune.

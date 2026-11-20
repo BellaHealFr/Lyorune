@@ -233,9 +233,25 @@ Z.CornerSquare = GetCorner -- aussi pour les fausses cases (mode test, case tém
 -- Place de chaque rangée d'icônes : celle d'origine, plus le décalage de l'éditeur de placement (Z.Offset).
 -- Les vraies cases, le mode test et la case d'exemple de l'éditeur passent tous par ici.
 ----------------------------------------------------------------------------------------------------
+-- Icône numéro « index » d'une rangée de Z.AuraRows (Themes.lua) : elle passe à la ligne après row.perLine icônes
+local function RowIcon(b, list, index, row, dx, dy)
+	local icon = list[index]
+	if not icon then
+		icon = NewIcon(b)
+		list[index] = icon
+	end
+	local size = row.size
+	local column, line = (index - 1) % row.perLine, math.floor((index - 1) / row.perLine)
+	icon:SetSize(size, size)
+	icon:ClearAllPoints()
+	icon:SetPoint(row.point, row.relative == "HP" and b.hp or b.over, row.point,
+		row.x + dx + row.dirX * column * (size + 2), row.y + dy + row.dirY * line * (size + 2))
+	return icon
+end
+
 function Z.HotIcon(b, index)
 	local dx, dy = Z.Offset("hots")
-	return GetIcon(b, b.hots, index, "TOPLEFT", 2 + Z.CornerShift(b, "TOPLEFT") + dx, -2 + dy, 1)
+	return RowIcon(b, b.hots, index, (b.rows or Z.AuraRows()).hots, dx, dy)
 end
 
 function Z.HotBar(b, index)
@@ -245,7 +261,7 @@ end
 
 function Z.DebuffIcon(b, index)
 	local dx, dy = Z.Offset("debuffs")
-	return GetIcon(b, b.debuffs, index, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT") + dx, 2 + dy, -1)
+	return RowIcon(b, b.debuffs, index, (b.rows or Z.AuraRows()).debuffs, dx, dy)
 end
 
 function Z.BigIcon(b)

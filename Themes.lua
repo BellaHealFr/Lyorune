@@ -69,16 +69,127 @@ end
 -- Formes des cases. Choisir une forme règle la taille, le texte et la barre de mana d'un coup ; chaque valeur se
 -- retouche ensuite dans les options. « inline » : nom à gauche et vie à droite, sur une seule ligne.
 -- Les noms et les choix sont dans Z.choices.shape (Core.lua) ; pour en ajouter une, ajoutez les deux.
+-- « auras » : place et taille d'origine des rangées de mes soins sur la durée et des affaiblissements
+--   size        : taille des icônes, en part de la hauteur de la case
+--   hots, debuffs : coin de départ de chaque rangée
+--   hotLine, debuffLine : largeur permise à la rangée : "ROLE" jusqu'à l'icône de rôle, "BUFF" jusqu'au buff
+--                 manquant, un nombre : part de la largeur de la case. Trop longue, la rangée rapetisse.
+--   wrap        : la rangée trop longue passe d'abord à la ligne (2 lignes au plus)
+--   inline      : "EDGES" rangées collées aux bords haut et bas de la barre de vie, à une taille qui laisse libre
+--                 la ligne du texte ; "BLOCK" les deux rangées l'une sur l'autre au bout de la case, le chiffre
+--                 de vie rangé à leur gauche. Ces deux rangées partent d'un coin de droite.
 Z.shapes = {
-	BAR    = { width = 124, height = 30, fontSize = 11, powerHeight = 3, inline = true },
-	TILE   = { width = 86,  height = 42, fontSize = 11, powerHeight = 4 },
-	SQUARE = { width = 54,  height = 54, fontSize = 10, powerHeight = 4 },
-	BANNER = { width = 170, height = 24, fontSize = 10, powerHeight = 2, inline = true },
+	BAR    = { width = 124, height = 30, fontSize = 11, powerHeight = 3, inline = true,
+		auras = { size = 0.34, hots = "TOPRIGHT", debuffs = "BOTTOMRIGHT", hotLine = 0.5, debuffLine = 0.5, inline = "EDGES" } },
+	TILE   = { width = 86,  height = 42, fontSize = 11, powerHeight = 4,
+		auras = { size = 0.26, hots = "TOPLEFT", debuffs = "BOTTOMRIGHT", hotLine = "ROLE", debuffLine = "BUFF" } },
+	SQUARE = { width = 54,  height = 54, fontSize = 10, powerHeight = 4,
+		auras = { size = 0.19, hots = "TOPLEFT", debuffs = "BOTTOMRIGHT", hotLine = "ROLE", debuffLine = "BUFF", wrap = true } },
+	BANNER = { width = 170, height = 24, fontSize = 10, powerHeight = 2, inline = true,
+		auras = { size = 0.38, hots = "TOPRIGHT", debuffs = "BOTTOMRIGHT", hotLine = 0.3, debuffLine = 0.3, inline = "BLOCK" } },
 }
 Z.shapeKeys = { "width", "height", "fontSize", "powerHeight" } -- les réglages qu'une forme décide
 
 function Z:Shape()
 	return Z.shapes[Z.db.shape] or Z.shapes.TILE
+end
+
+----------------------------------------------------------------------------------------------------
+-- Rangées d'icônes de la forme choisie, à la taille de la case : un seul calcul, lu par les vraies cases
+-- (Auras.lua, Containers.lua), le mode test, la case témoin et les bornes de l'éditeur (Placement.lua).
+----------------------------------------------------------------------------------------------------
+local GAP, MIN_ICON = 2, 5 -- écart entre deux icônes, icône la plus petite
+local SIGN = { TOPLEFT = { 1, -1 }, TOPRIGHT = { -1, -1 }, BOTTOMLEFT = { 1, 1 }, BOTTOMRIGHT = { -1, 1 } }
+
+-- Une rangée de n icônes de taille « size », qui doit tenir dans « line » pixels de large : elle passe à la
+-- ligne si elle peut (2 lignes au plus), sinon elle rapetisse. Rend la taille, les icônes par ligne, les lignes.
+local function Fit(n, size, line, maxH, canWrap)
+	size = math.max(MIN_ICON, math.min(size, maxH))
+	local perLine = math.max(1, math.floor((line + GAP) / (size + GAP)))
+	if n <= perLine then return size, n, 1 end
+	if canWrap and math.ceil(n / perLine) <= 2 then return size, perLine, 2 end
+	local each = math.ceil(n / (canWrap and 2 or 1))
+	local small = math.max(MIN_ICON, math.floor((line + GAP) / each - GAP))
+	return math.min(size, small), each, math.ceil(n / each)
+end
+
+-- Rend { hots = rangée, debuffs = rangée, textX, textW, nameW }. Une rangée : point d'accroche, cadre ("CELL" la
+-- case, "HP" la barre de vie), décalage x et y, taille des icônes, icônes par ligne, lignes, sens (dirX, dirY),
+-- largeur et hauteur. textX, textW, nameW : place du chiffre de vie et largeurs du nom et du chiffre (Barre, Bandeau).
+function Z.AuraRows()
+	local db, theme = Z.db, Z:Theme()
+	local shape = Z:Shape()
+	local rules = shape.auras or Z.shapes.TILE.auras
+	local W, H = Z.CellSize()
+	local inset = Z.UI.Inset(theme.borderSize, db.corners == "ROUND")
+	local icon = Z.IconSize()
+	local sizes = { iconSize = icon }
+	local function Shift(point) return Z.CornerShift(sizes, point) end
+	local font = db.fontSize + (theme.fontBonus or 0)
+	local want = math.max(MIN_ICON, math.floor(H * rules.size + 0.5))
+	local inline = rules.inline
+	local canWrap = rules.wrap and not inline and Z.CanWrapAuras()
+
+	-- Ce qui borne une rangée : l'icône de rôle (en haut à droite, ou à gauche sur une ligne) et le buff manquant
+	local role = shape.inline and { inset + 3, inset + 1 + icon }
+		or { W - 2 - Shift("TOPRIGHT") - (icon - 2), W - 2 - Shift("TOPRIGHT") }
+	local buff = { 2 + Shift("BOTTOMLEFT"), 2 + Shift("BOTTOMLEFT") + icon }
+	local function Start(point)
+		return point:find("LEFT") and 2 + Shift(point) or W - 2 - Shift(point)
+	end
+	local function Line(spec, point)
+		if type(spec) == "number" then return math.floor(W * spec) end
+		local obstacle = spec == "ROLE" and role or buff
+		if point:find("LEFT") then return obstacle[1] - GAP - Start(point) end
+		return Start(point) - obstacle[2] - GAP
+	end
+
+	local size, maxH = want, math.floor((H - 4) / (canWrap and 2 or 1)) - (canWrap and 1 or 0)
+	if inline then
+		-- La barre de vie la plus basse : celle d'une case avec sa barre de mana
+		local hpH = H - 2 * inset - (db.manaBars ~= "OFF" and Z.PowerHeight() + 1 or 0)
+		local room = inline == "EDGES" and math.floor((hpH - math.ceil(font * 0.72)) / 2) or math.floor((hpH - 1) / 2)
+		size = math.max(MIN_ICON, math.min(want, room))
+		maxH = size
+	end
+	local rows = {}
+	local function Row(key, point, spec, n)
+		local s, perLine, lines = Fit(n, size, Line(spec, point), maxH, canWrap)
+		local sign = SIGN[point]
+		local x, y = sign[1] * (2 + Shift(point)), sign[2] * 2
+		if inline then x, y = sign[1] * (2 + Shift(point) - inset), 0 end -- au bord de la barre de vie
+		rows[key] = { point = point, relative = inline and "HP" or "CELL", x = x, y = y, size = s,
+			perLine = perLine, lines = lines, dirX = sign[1], dirY = sign[2],
+			width = perLine * (s + GAP) - GAP, height = lines * (s + GAP) - GAP }
+	end
+	Row("hots", rules.hots, rules.hotLine, db.hotCount)
+	Row("debuffs", rules.debuffs, rules.debuffLine, db.debuffCount)
+
+	-- Nom et chiffre de vie sur une ligne (Barre, Bandeau) : places d'origine, sauf en bloc (ci-dessous)
+	rows.textX, rows.textW, rows.nameW = -4, W - 2 * inset - 8, math.max(20, W - icon - 46)
+	if inline == "BLOCK" then
+		-- Le bloc fait la largeur de la plus longue rangée réglée (et montrée) ; le chiffre de vie se range à sa
+		-- gauche, le nom s'arrête avant lui
+		local shown = {
+			hots = (db.showHots and db.hotStyle ~= "BARS") and db.hotCount or 0,
+			debuffs = db.showDebuffs and (db.debuffMode == "ALL" and db.debuffCount or 1) or 0,
+		}
+		local left
+		for key, n in pairs(shown) do
+			local row = rows[key]
+			if n > 0 then
+				local edge = Start(row.point) - (math.min(n, row.perLine) * (row.size + GAP) - GAP)
+				left = math.min(left or edge, edge)
+			end
+		end
+		if left then
+			local textRight = math.max(inset + 1, left - 4)
+			rows.textW = math.max(1, math.min(math.ceil(font * 3.2), textRight - inset))
+			rows.textX = textRight - (W - inset)
+			rows.nameW = math.max(20, textRight - rows.textW - 2 - (inset + icon + 3))
+		end
+	end
+	return rows
 end
 
 -- Choisit une forme. L'état d'avant est gardé : « Revenir » le rétablit (Z:UndoShape).

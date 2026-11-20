@@ -53,8 +53,8 @@ end
 -- sont protégées, et la largeur d'un nom change d'un joueur à l'autre). Un élément déjà en partie dehors à sa
 -- place d'origine (le marqueur de raid, à cheval sur le haut) ne va pas plus loin de ce côté.
 -- Le nom et le texte de vie rétrécissent près du bord au lieu d'en sortir (un nom long finit par « ... »).
--- Les places d'origine ci-dessous sont celles posées par PlaceTexts (Frames.lua), Auras.lua et Containers.lua :
--- elles changent ensemble. La sauvegarde n'est jamais réécrite : un ancien décalage trop grand est ramené au bord
+-- Les places d'origine ci-dessous sont celles posées par PlaceTexts (Frames.lua), Auras.lua et Containers.lua ;
+-- les rangées d'icônes et le chiffre de vie en Bandeau viennent tous de Z.AuraRows (Themes.lua). Elles changent ensemble. La sauvegarde n'est jamais réécrite : un ancien décalage trop grand est ramené au bord
 -- à la lecture, et retrouve sa valeur si la case grandit.
 ----------------------------------------------------------------------------------------------------
 local ICON_GAP = 2 -- écart entre deux icônes d'une rangée (Auras.lua, Containers.lua)
@@ -88,6 +88,7 @@ local function Origins(power, roleRect)
 	local font = db.fontSize + (theme.fontBonus or 0)
 	local hp = { inset, W - inset, inset + (power and Z.PowerHeight() + 1 or 0), H - inset }
 	local cell = { 0, W, 0, H }
+	local rows = Z.AuraRows() -- rangées d'icônes et textes sur une ligne, selon la forme (Themes.lua)
 	local o = {}
 	local function Put(key, point, rect, relative, x, y, w, h, text)
 		local ax, ay = Spot(rect, relative, x, y)
@@ -96,8 +97,8 @@ local function Origins(power, roleRect)
 
 	if Z:Shape().inline then
 		Put("role", "LEFT", hp, "LEFT", 3, 0, icon - 2, icon - 2)
-		Put("name", "LEFT", hp, "LEFT", icon + 3, 0, math.max(20, W - icon - 46), font + 2, true)
-		Put("text", "RIGHT", hp, "RIGHT", -4, 0, W - 2 * inset - 8, font + 1, true)
+		Put("name", "LEFT", hp, "LEFT", icon + 3, 0, rows.nameW, font + 2, true)
+		Put("text", "RIGHT", hp, "RIGHT", rows.textX, 0, rows.textW, font + 1, true)
 		local badge = math.max(8, math.floor(icon * 0.7))
 		if roleRect then Put("leader", "CENTER", roleRect, "TOPRIGHT", 0, 0, badge, badge) end
 	else
@@ -110,14 +111,16 @@ local function Origins(power, roleRect)
 	Put("center", "CENTER", cell, "CENTER", 0, 0, icon + 8, icon + 8)
 	Put("lowMana", "BOTTOMLEFT", hp, "BOTTOMLEFT", 2, 2, icon - 1, icon - 1)
 
-	-- Rangées : toutes les icônes réglées (la rangée la plus longue que la case montrera)
-	local function Row(count) return count * (icon + ICON_GAP) - ICON_GAP end
+	-- Rangées : toutes les icônes réglées (la rangée la plus longue que la case montrera), sur une ou deux lignes
+	local function Row(key, row)
+		Put(key, row.point, row.relative == "HP" and hp or cell, row.point, row.x, row.y, row.width, row.height)
+	end
 	if db.hotStyle == "BARS" then
 		Put("hots", "TOPLEFT", cell, "TOPLEFT", 3 + Shift("TOPLEFT"), -3, math.floor(W * 0.45), db.hotCount * 4)
 	else
-		Put("hots", "TOPLEFT", cell, "TOPLEFT", 2 + Shift("TOPLEFT"), -2, Row(db.hotCount), icon)
+		Row("hots", rows.hots)
 	end
-	Put("debuffs", "BOTTOMRIGHT", cell, "BOTTOMRIGHT", -2 - Shift("BOTTOMRIGHT"), 2, Row(db.debuffCount), icon)
+	Row("debuffs", rows.debuffs)
 	local big = math.floor(icon * 1.6 + 0.5)
 	Put("big", "LEFT", cell, "LEFT", 3, 0, big, big)
 	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, icon, icon)
