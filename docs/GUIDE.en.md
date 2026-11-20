@@ -43,17 +43,17 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 **What you changed**: everything is saved by itself, as soon as you touch a setting. To go back:
 
 - **Golden rune**: it lights up next to every setting that no longer has its default value. Hover it to see that value, click it to go back to it.
-- **"Reset this page"**: at the bottom of a chapter where a setting has changed. Two clicks, and every setting of the chapter goes back to its default value. Your lists, clicks and profiles do not move.
-- **"Undo my changes"**: at the bottom right of the window, as soon as you have changed something since it was opened. Two clicks, and everything goes back to the value it had when you opened the window: settings, clicks, lists and element placement. Your saved profiles do not move. Opening another Lyorune window or starting the tour does not count as closing it; closing the window does. In combat, your clicks come back as soon as combat ends.
+- **"Reset this page"**: at the bottom of a chapter where a setting has changed. Two clicks, and every setting of the chapter goes back to its default value. Your lists, announcement texts, clicks and profiles do not move.
+- **"Undo my changes"**: at the bottom right of the window, as soon as you have changed something since it was opened. Two clicks, and everything goes back to the value it had when you opened the window: settings, clicks, lists (pinned players included), announcement texts and element placement. Your saved profiles do not move. Opening another Lyorune window, starting the tour or the setup assistant does not count as closing it; closing the window does. In combat, your clicks come back as soon as combat ends.
 - **"Save my settings"**: at the bottom left, under the chapters. Type a name and press Enter (Escape cancels): your current settings become a profile, which you will find in Profiles and sharing (see part 11).
 
-**Finding a setting**: at the top right, type a word in "Search a setting..." ("mana", "tank", "theme"...). Lyorune looks in the setting names, then in their explanations. Clicking a result opens the right chapter, unfolds the fine settings if needed and makes the setting flash.
+**Finding a setting**: at the top right, type a word in "Search a setting..." ("mana", "tank", "theme"...). Lyorune looks in the setting names, then in their explanations. Capitals and accents do not matter. Clicking a result opens the right chapter, unfolds the fine settings if needed and makes the setting flash.
 
 **The Home page** shows:
 
 - **Active profile**: the current profile and how it was chosen, with the "Change profile" button;
 - **Your changed settings**: all your settings that are no longer as installed. Click a name to go there; click its golden rune to reset it;
-- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them.
+- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them. The setup assistant also closes the window during its three questions and gives it back on the Home page.
 
 At the bottom of the Window and help chapter, "Reading a cell" recalls what the main colours of a cell mean, and "Commands" lists the `/lyorune` commands.
 
@@ -326,6 +326,7 @@ Good to know: outside dungeons and raids, the game does not let an addon write i
 - **Direct sending**: type the name of a player who has Lyorune. They receive a request and choose whether to accept. A request only comes from a member of your group, your guild or your friends list, at most once a minute. The window shows the sender's name and realm, and the "Import" button only becomes active after two seconds.
 - **Reset**, at the bottom of the chapter:
   - **Undo import**: you don't like a pasted code or a received configuration? This button (or `/lyorune undo`) restores your settings from before the last import: look, clicks, keys and lists. Lyorune keeps this backup even after a /reload, until the next import.
+  - **Restore the suggested clicks for my class**: two clicks, and the clicks and keys of your specialization become the ones suggested for your class again. Changed your mind? "Undo my changes" gives them back.
   - **Reset everything**: two clicks to go back to the default settings. Your saved profiles and the frames' position are kept. For a single chapter, use "Reset this page" at the bottom of that chapter instead.
 
 ## 12. Between players who have Lyorune

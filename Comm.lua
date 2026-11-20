@@ -317,6 +317,7 @@ local function OnVersion(version, sender)
 		local key = Key(sender)
 		local known = members[key]
 		members[key] = { name = Full(sender), version = version } -- seulement des membres du groupe : 40 au plus
+		if not known and Z.RefreshSyncWho then Z.RefreshSyncWho() end -- « Entre joueurs », si la page est ouverte
 		if not known and GetTime() - lastReply >= REPLY_DELAY then
 			lastReply = GetTime()
 			SendGroup("V:" .. Z.version)

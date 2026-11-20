@@ -373,12 +373,14 @@ end
 
 -- Lancée des options (bouton de l'Accueil, ou /lyorune tuto fenêtre ouverte), la visite ferme la fenêtre le temps
 -- des cases et la rend à la fin sur le même chapitre ; la première carte le dit.
-function Z:StartTutorial()
+-- from : où rendre la fenêtre, donné par l'assistant lancé des options ({ open = true, chapter = "Accueil" }),
+-- qui l'a déjà fermée.
+function Z:StartTutorial(from)
 	if not Z.header then return end
 	if not card then Build() end
 	local window = Z:OptionsWindow()
 	if not current then -- relancée en cours de route : on garde d'où elle était partie
-		back = { open = window and window:IsShown(), chapter = Z:OptionChapter() }
+		back = from or { open = window and window:IsShown(), chapter = Z:OptionChapter() }
 	end
 	if window and window:IsShown() then
 		starting = true

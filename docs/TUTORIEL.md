@@ -42,17 +42,17 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 **Ce que vous avez changé** : tout s'enregistre tout seul, dès que vous touchez un réglage. Pour revenir en arrière :
 
 - **Rune d'or** : elle s'allume à côté de chaque réglage qui n'a plus sa valeur d'installation. Survolez-la pour voir cette valeur, cliquez dessus pour la reprendre.
-- **« Rétablir cette page »** : au bas d'un chapitre où un réglage a changé. Deux clics, et chaque réglage du chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne bougent pas.
-- **« Annuler mes changements »** : en bas à droite de la fenêtre, dès que vous avez changé quelque chose depuis son ouverture. Deux clics, et tout reprend la valeur qu'il avait quand vous avez ouvert la fenêtre : réglages, clics, listes et placement des éléments. Vos profils enregistrés ne bougent pas. Ouvrir une autre fenêtre de Lyorune ou lancer la visite ne compte pas comme une fermeture ; fermer la fenêtre, si. En combat, vos clics reviennent dès la fin du combat.
+- **« Rétablir cette page »** : au bas d'un chapitre où un réglage a changé. Deux clics, et chaque réglage du chapitre reprend sa valeur d'installation. Vos listes, vos textes d'annonce, vos clics et vos profils ne bougent pas.
+- **« Annuler mes changements »** : en bas à droite de la fenêtre, dès que vous avez changé quelque chose depuis son ouverture. Deux clics, et tout reprend la valeur qu'il avait quand vous avez ouvert la fenêtre : réglages, clics, listes (joueurs épinglés compris), textes d'annonce et placement des éléments. Vos profils enregistrés ne bougent pas. Ouvrir une autre fenêtre de Lyorune, lancer la visite ou l'assistant ne compte pas comme une fermeture ; fermer la fenêtre, si. En combat, vos clics reviennent dès la fin du combat.
 - **« Enregistrer mes réglages »** : en bas à gauche, sous les chapitres. Tapez un nom et appuyez sur Entrée (Échap annule) : vos réglages du moment deviennent un profil, que vous retrouverez dans Profils et partage (voir la partie 11).
 
-**Retrouver un réglage** : en haut à droite, tapez un mot dans « Rechercher un réglage... » (« mana », « tank », « thème »...). Lyorune cherche dans le nom des réglages, puis dans leurs explications. Un clic sur un résultat ouvre le bon chapitre, déplie les réglages fins si besoin et fait clignoter le réglage.
+**Retrouver un réglage** : en haut à droite, tapez un mot dans « Rechercher un réglage... » (« mana », « tank », « thème »...). Lyorune cherche dans le nom des réglages, puis dans leurs explications. Majuscules et accents ne comptent pas : « echelle » trouve « Échelle générale ». Un clic sur un résultat ouvre le bon chapitre, déplie les réglages fins si besoin et fait clignoter le réglage.
 
 **L'Accueil** montre :
 
 - **Profil actif** : le profil en cours et comment il a été choisi, avec le bouton « Changer de profil » ;
 - **Vos réglages changés** : tous vos réglages qui ne sont plus comme à l'installation. Un clic sur un nom vous y emmène ; un clic sur sa rune d'or le rétablit ;
-- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus.
+- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
 
 Au bas du chapitre Fenêtre et aide, « Lire une case » rappelle ce que veulent dire les couleurs principales d'une case, et « Commandes » liste les commandes `/lyorune`.
 
@@ -327,6 +327,7 @@ Chapitre **Profils et partage** (le profil actif se voit aussi sur l'Accueil, av
 - **Envoi direct** : tapez le nom d'un joueur qui a Lyorune. Il reçoit une demande et choisit d'accepter ou non. Une demande n'arrive que d'un membre de votre groupe, de votre guilde ou de votre liste d'amis, une fois par minute au plus. La fenêtre affiche le nom et le royaume de l'expéditeur, et le bouton « Importer » ne s'active qu'au bout de deux secondes.
 - **Remise à zéro**, en bas du chapitre :
   - **Annuler l'import** : un code collé ou une configuration reçue ne vous plaît pas ? Ce bouton (ou `/lyorune annuler`) remet vos réglages d'avant le dernier import : apparence, clics, touches et listes. Lyorune garde cette sauvegarde même après un /reload, jusqu'au prochain import.
+  - **Reprendre les clics proposés pour ma classe** : deux clics, et les clics et touches de votre spécialisation redeviennent ceux proposés pour votre classe. Changé d'avis ? « Annuler mes changements » vous les rend.
   - **Tout réinitialiser** : deux clics pour revenir aux réglages d'origine. Vos profils enregistrés et la position des cadres sont gardés. Pour un seul chapitre, utilisez plutôt « Rétablir cette page » au bas de ce chapitre.
 
 ## 12. Entre joueurs qui ont Lyorune

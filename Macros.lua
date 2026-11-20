@@ -715,7 +715,7 @@ function Z:OpenMacroWizard()
 			Z.OpenPicker(L["Sort lancé sur le joueur"], function(value)
 				if value and value:sub(1, 1) ~= "@" then opts.spell = value end
 				wizard.Update()
-			end, opts.spell, true)
+			end, true)
 		end)
 		wizard.spell:SetPoint("TOPLEFT", 186, y + 4)
 		wizard.spell.label:SetJustifyH("CENTER")

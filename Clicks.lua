@@ -633,15 +633,20 @@ function Z:SyncBarMacros()
 end
 
 -- Bouton « Retirer les macros de Lyorune » : ne retire que les macros « Lyo: »
+-- Renvoie vrai si les macros sont retirées (refusé en combat : l'option reste cochée)
 function Z:RemoveBarMacros()
-	if InCombatLockdown() then return Z:Print(Z.L["impossible de modifier les macros en combat."]) end
-	if not GetNumMacros then return end
+	if InCombatLockdown() then
+		Z:Print(Z.L["impossible de modifier les macros en combat."])
+		return false
+	end
+	if not GetNumMacros then return true end -- aucune macro à retirer
 	AdoptOldMacros(Z:BarMacros())
 	local owned = Owned()
 	EachOwnMacro(function(index, name)
 		DeleteMacro(index)
 		owned[name] = nil
 	end)
+	return true
 end
 
 -- Appelé à la connexion : la première synchronisation attend que le jeu ait chargé les macros

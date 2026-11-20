@@ -9,6 +9,8 @@ local UI = Z.UI
 local WIDTH = 360
 local window, page, answers
 local before -- forme et tailles d'avant l'assistant : « Passer » les rétablit
+local fromOptions -- lancé fenêtre d'options ouverte : elle est fermée le temps des questions, puis rendue
+local running     -- vrai pendant l'assistant (la fenêtre d'options fermée par lui garde « Annuler mes changements »)
 local pages = {}
 
 -- Ce que chaque réponse change. Un soigneur garde les réglages d'origine, pensés pour lui.
@@ -118,12 +120,24 @@ local function RestoreShape()
 	if changed then Z:Refresh() end
 end
 
+-- Fin (Terminer, Passer ou la croix). Lancé des options, la fenêtre revient sur l'Accueil : tout de suite, ou à
+-- la fin de la visite si elle suit (premier lancement).
 local function Finish(apply)
 	if apply then Z:ApplyWizard(answers.role, answers.size) else RestoreShape() end
 	if Z.previewActive then Z:TogglePreview() end
 	Z.db.wizardDone = true
 	window:Hide()
-	if not Z.db.tutorialDone then C_Timer.After(0.5, function() Z:StartTutorial() end) end
+	local giveBack = fromOptions and { open = true, chapter = "Accueil" } or nil
+	fromOptions = nil
+	if not Z.db.tutorialDone then
+		C_Timer.After(0.5, function()
+			running = false
+			Z:StartTutorial(giveBack)
+		end)
+		return
+	end
+	running = false
+	if giveBack then Z:ToggleOptions(giveBack.chapter) end
 end
 
 local function Show(index)
@@ -189,6 +203,10 @@ end
 function Z:StartWizard()
 	if not Z.header then return end
 	if not window then Build() end
+	local options = Z:OptionsWindow()
+	if not running then fromOptions = options and options:IsShown() or false end -- relancé : on garde d'où
+	running = true
+	if options and options:IsShown() then options:Hide() end -- « Annuler mes changements » garde sa copie
 	answers = { role = GuessRole(), size = "SMALL", shape = Z.db.shape }
 	before = { values = { shape = Z.db.shape }, undo = Z.shapeUndo }
 	for _, key in ipairs(Z.shapeKeys) do before.values[key] = Z.db[key] end
@@ -198,4 +216,10 @@ end
 
 function Z:WizardWindow()
 	return window
+end
+
+-- Vrai pendant l'assistant, jusqu'au début de la visite qui le suit : la fenêtre d'options fermée par lui n'est
+-- pas fermée par le joueur (elle garde de quoi « Annuler mes changements »)
+function Z:WizardRunning()
+	return running == true
 end

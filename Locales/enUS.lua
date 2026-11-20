@@ -790,7 +790,7 @@ Z.translations.enUS = {
 
 	-- Fenêtre d'options à chapitres (1.26.0) : rétablir une page
 	["Rétablir cette page"] = "Reset this page",
-	["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne changent pas."] = "Every setting in this chapter goes back to its default value. Your lists, clicks and profiles do not change.",
+	["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos textes d'annonce, vos clics et vos profils ne changent pas."] = "Every setting in this chapter goes back to its default value. Your lists, announcement texts, clicks and profiles do not change.",
 
 	-- Fenêtre d'options à chapitres (1.26.0) : bas de la fenêtre, enregistrer et annuler
 	["Enregistrer mes réglages"] = "Save my settings", ["Annuler mes changements"] = "Undo my changes",

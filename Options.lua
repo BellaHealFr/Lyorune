@@ -53,10 +53,26 @@ local function Option(key)
 	end
 end
 
+-- Texte de la recherche : minuscules, accents retirés. Lua ne change que les lettres sans accent : sans cela,
+-- « échelle » ne trouve pas « Échelle », et un mot tapé sans accent (« reglage ») ne trouve rien.
+-- Le texte tapé et l'index passent tous deux par ici.
+local PLAIN = {}
+for to, from in pairs({ a = "àâäáãÀÂÄÁÃ", e = "éèêëÉÈÊË", i = "îïíìÎÏÍÌ", o = "ôöóòõÔÖÓÒÕ", u = "ùûüúÙÛÜÚ",
+	c = "çÇ", n = "ñÑ", y = "ÿŸ", oe = "œŒ", ae = "æÆ" }) do
+	for letter in from:gmatch("[\192-\255][\128-\191]*") do PLAIN[letter] = to end
+end
+
+-- Les accents d'abord : selon la langue du système, lower() peut changer les octets d'une lettre accentuée
+local function Plain(text)
+	local plain = (text or ""):gsub("[\192-\255][\128-\191]*", PLAIN)
+	return plain:lower()
+end
+Z.SearchText = Plain
+
 -- Un réglage retrouvable par la recherche. page : la page du chapitre ;
 -- more : ses explications (phrase visible et infobulle), cherchées aussi.
 local function Register(page, label, widget, more)
-	local entry = { text = label:lower(), more = (more or ""):lower(), chapter = page.tabIndex, widget = widget,
+	local entry = { text = Plain(label), more = Plain(more), chapter = page.tabIndex, widget = widget,
 		label = label }
 	searchIndex[#searchIndex + 1] = entry
 	return entry
@@ -456,16 +472,20 @@ local function CornerPicker(point, label)
 				all[Z.class] = all[Z.class] or {}
 				all[Z.class][point] = value ~= "" and value or nil
 				Z:Refresh()
+				if witness then witness.Spark() end -- éclat sur la case témoin, comme pour les autres réglages
 			end)
 		local show = widget.Update
+		local color = Z.CORNER_COLORS[point]
 		widget.Update = function(self)
 			wipe(choices)
 			for _, choice in ipairs(Z.CornerChoices(point)) do choices[#choices + 1] = choice end
 			show(self)
+			-- le nom est peint en couleur de texte (UI.Label) : chaque changement de thème le repeint, la couleur
+			-- du coin est donc remise ici (appelé aussi au changement de thème, Recolor)
+			self.label:SetTextColor(color[1], color[2], color[3])
 		end
 		widget:SetScript("OnShow", widget.Update)
-		local color = Z.CORNER_COLORS[point]
-		widget.label:SetTextColor(color[1], color[2], color[3])
+		widget:Update()
 		Register(page, L[label], widget)
 		return widget
 	end }
@@ -585,7 +605,7 @@ function RefreshClicks()
 		banner:SetShown(spell ~= nil)
 		if spell then
 			banner.icon:SetTexture(spell.icon)
-			banner.text:SetText(L["Nouveau sort sans clic :"] .. " |cffffffff" .. spell.name .. "|r")
+			banner.text:SetText(L["Nouveau sort sans clic :"] .. " |cff" .. UI.Hex("text") .. spell.name .. "|r")
 		end
 		local top = spell and 66 or 36
 		clickList.list:ClearAllPoints()
@@ -604,7 +624,7 @@ function RefreshClicks()
 				row.key.label:SetText((game and "|cffff9933" or "") .. Z:TriggerLabel(binding))
 				row.key.tip = game and L["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."]:format(game)
 					or L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
-				row.spell.label:SetText(binding.value ~= "" and SpellText(binding.value) or "|cff555a63" .. L["Sort"] .. "|r")
+				row.spell.label:SetText(binding.value ~= "" and SpellText(binding.value) or "|cff" .. UI.Hex("dim") .. L["Sort"] .. "|r")
 				-- Bijoux : montrés si « Bijoux avec les sorts » est allumé, ou si la ligne a déjà un bijou
 				local trinkets = Z.TakesTrinket(binding.value) and (Z.db.trinketButtons or (binding.trinkets or 0) > 0)
 				for index, toggle in ipairs(row.trinkets) do
@@ -697,7 +717,7 @@ end
 
 -- Fenêtre de choix d'un sort : une icône par sort connu. onChoose(valeur) reçoit le choix.
 -- spellsOnly : seulement les sorts (pour l'assistant de macro), sans « Cibler », « Menu » ni macros.
-local function OpenPicker(title, onChoose, current, spellsOnly)
+local function OpenPicker(title, onChoose, spellsOnly)
 	if not picker then
 		picker = UI.Window("LyorunePicker", "", 372, 200)
 		picker:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -740,7 +760,6 @@ local function OpenPicker(title, onChoose, current, spellsOnly)
 	end
 
 	picker.onChoose = onChoose
-	picker.current = current
 	picker.title:SetText(title)
 	picker.edit:SetText("")
 	picker.actions:SetShown(not spellsOnly)
@@ -778,7 +797,7 @@ local function OpenPicker(title, onChoose, current, spellsOnly)
 			picker.icons[index] = icon
 		end
 		icon:ClearAllPoints()
-		icon:SetPoint("TOPLEFT", 14 + ((slot - 1) % perRow) * (size + 2.5), top - math.floor((slot - 1) / perRow) * (size + 3))
+		icon:SetPoint("TOPLEFT", 14 + ((slot - 1) % perRow) * (size + 3), top - math.floor((slot - 1) / perRow) * (size + 3))
 		icon:Show()
 		return icon
 	end
@@ -855,6 +874,15 @@ local function CaptureTrigger(button, onTrigger)
 	local function Upper()
 		return (IsAltKeyDown() and "ALT-" or "") .. (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "")
 	end
+	-- Bouton caché pendant l'attente (autre chapitre, croix, options effacées) : l'attente est annulée et le
+	-- clavier rendu, sinon la première touche tapée au retour deviendrait le raccourci
+	button.cancelCapture = function() Finish(nil) end
+	if not button.captureHooked then
+		button.captureHooked = true
+		button:HookScript("OnHide", function(self)
+			if self.capturing then self.cancelCapture() end
+		end)
+	end
 	button.capturing = true
 	button.label:SetText("|cff" .. UI.Hex("accent") .. L["Cliquez ici ou appuyez sur une touche..."] .. "|r")
 	button:EnableKeyboard(true)
@@ -882,7 +910,7 @@ local function ChooseAction(trigger, value)
 		Z:SetBinding(trigger, value)
 		return RefreshClicks()
 	end
-	OpenPicker(Z:TriggerLabel(trigger), function(chosen) Z:SetBinding(trigger, chosen) end, Z:GetBinding(trigger))
+	OpenPicker(Z:TriggerLabel(trigger), function(chosen) Z:SetBinding(trigger, chosen) end)
 end
 
 local function Trigger(row)
@@ -1048,7 +1076,10 @@ local function AlertText(textKey, test, dep)
 		edit:SetPoint("LEFT")
 		edit:SetMaxLetters(120)
 		edit:HookScript("OnTextChanged", function(self, byUser)
-			if byUser and self:GetText():match("%S") then Z.db[textKey] = self:GetText() end
+			if byUser and self:GetText():match("%S") then
+				Z.db[textKey] = self:GetText()
+				UpdateFoot() -- « Annuler mes changements » paraît (texte à part, hors de Option)
+			end
 		end)
 		local button = UI.Button(line, L["Tester"], 80, 22, test)
 		button:SetPoint("RIGHT")
@@ -1100,14 +1131,19 @@ local function Result(box, y, width)
 	return result
 end
 
--- Bouton à confirmer : un premier clic l'arme (texte rouge pendant 4 secondes), le second agit
+-- Bouton à confirmer : un premier clic l'arme (texte rouge pendant 4 secondes), le second agit.
+-- Chaque armement a son numéro : un délai ne désarme que le sien (armé, confirmé puis réarmé avant la fin des
+-- 4 secondes, le bouton reste armé ses 4 secondes). Donné aussi aux autres fenêtres (Z.ArmedButton).
 local function ArmedButton(parent, text, armed, width, onConfirm)
 	local button
 	button = UI.Button(parent, L[text], width, 24, function(self)
+		self.arming = (self.arming or 0) + 1
 		if not self.armed then
 			self.armed = true
 			self.label:SetText(BAD .. L[armed] .. "|r")
+			local mine = self.arming
 			C_Timer.After(4, function()
+				if button.arming ~= mine then return end -- confirmé ou réarmé depuis
 				button.armed = false
 				button.label:SetText(L[text])
 			end)
@@ -1120,6 +1156,7 @@ local function ArmedButton(parent, text, armed, width, onConfirm)
 	button.label:SetJustifyH("CENTER")
 	return button
 end
+Z.ArmedButton = ArmedButton
 
 -- Fenêtre « Copier une partie » (#44) : de quel profil, vers lequel, et quelles parties (un chapitre chacune)
 local copyWindow
@@ -1259,7 +1296,7 @@ local function ProfileBox(page, width)
 		end
 		picker:Update()
 		local active = Z.db.activeProfile ~= "" and Z.db.activeProfile or L["aucun"]
-		status:SetText(L["Profil en cours : %s"]:format("|cffffffff" .. active .. "|r"))
+		status:SetText(L["Profil en cours : %s"]:format("|cff" .. UI.Hex("text") .. active .. "|r"))
 	end
 	box:SetScript("OnShow", box.Update)
 	box:Update()
@@ -1283,7 +1320,7 @@ local function ProfileGrid(page, width)
 		head:SetJustifyH("CENTER")
 		head:SetText(L["Spé. %d"]:format(group))
 	end
-	local CLICK_HINT = "\n|cff8a8f99" .. L["Clic : profil suivant, clic droit : précédent."] .. "|r"
+	local CLICK_HINT = L["Clic : profil suivant, clic droit : précédent."]
 	local cells = {}
 	for i, size in ipairs(Z.profileSizes) do
 		local y = -16 - (i - 1) * 24
@@ -1303,6 +1340,7 @@ local function ProfileGrid(page, width)
 				self:Update()
 				UI.Confirm(self)
 				Z:CheckAutoProfile()
+				UpdateFoot() -- « Annuler mes changements » paraît, même si aucun profil ne change tout de suite
 			end)
 			cell:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 			cell:SetPoint("TOPLEFT", LABEL_W + (group - 1) * (CELL_W + 6), y)
@@ -1320,7 +1358,7 @@ local function ProfileGrid(page, width)
 				else
 					self.tip = L["Aucun profil : les réglages du moment restent."]
 				end
-				self.tip = self.tip .. CLICK_HINT
+				self.tip = self.tip .. "\n|cff" .. UI.Hex("dim") .. CLICK_HINT .. "|r" -- suit le thème
 			end
 			cell.size, cell.group = size, group
 			cells[#cells + 1] = cell
@@ -1430,6 +1468,10 @@ local function SyncWho(page, width)
 	local master = page.settings and page.settings.syncEnabled
 	if master then master:HookScript("OnClick", who.Update) end
 	who:SetScript("OnShow", who.Update)
+	-- Le groupe change, ou un joueur annonce sa version (Comm.lua), page ouverte : le nombre suit.
+	-- Rien n'est fait quand la ligne n'est pas à l'écran.
+	Z.RefreshSyncWho = function() if who:IsVisible() then who:Update() end end
+	Z:On("GROUP_ROSTER_UPDATE", Z.RefreshSyncWho)
 	who:Update()
 	return who
 end
@@ -1440,12 +1482,15 @@ local function ResetBox(page, width)
 	box:SetSize(width, 76)
 	local result = Result(box, -60, width)
 	local HALF = 240
-	local clicks = UI.Button(box, L["Reprendre les clics proposés pour ma classe"], 2 * HALF + 6, 24, function()
-		Z:ResetClassClicks()
-		Say(result, true, L["Clics de la classe rétablis."])
-	end)
+	-- Remplace tous les clics de la spécialisation : à confirmer, et « Annuler mes changements » paraît
+	local clicks = ArmedButton(box, "Reprendre les clics proposés pour ma classe", "Cliquez encore pour confirmer", 2 * HALF + 6,
+		function()
+			Z:ResetClassClicks()
+			RefreshShownPages()
+			Say(result, true, L["Clics de la classe rétablis."])
+		end)
 	clicks:SetPoint("TOPLEFT")
-	clicks.label:SetJustifyH("CENTER")
+	box.classClicks = clicks
 	Register(page, L["Reprendre les clics proposés pour ma classe"], clicks)
 	local reset = ArmedButton(box, "Tout réinitialiser", "Cliquez encore pour confirmer", HALF, function()
 		Z:ResetAll()
@@ -1622,7 +1667,7 @@ local function ChangedRow(box, width)
 	row.label:SetJustifyH("LEFT")
 	row.value = UI.Label(row, 11, nil, "accent")
 	row.value:SetPoint("LEFT", 282, 0)
-	row.value:SetWidth(110)
+	row.value:SetWidth(104) -- s'arrête à 386 : le nom du chapitre commence à 390 (ligne de 496)
 	row.value:SetJustifyH("LEFT")
 	row.value:SetWordWrap(false)
 	row.where = UI.Label(row, 11, nil, "dim")
@@ -1692,7 +1737,7 @@ local function Chapters()
 			{ "Découvrir", {
 				{ "buttons", {
 					{ "button", "Lancer le tutoriel", function() Z:StartTutorial() end }, -- la fenêtre revient à la fin
-					{ "button", "Assistant de départ", function() window:Hide() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." },
+					{ "button", "Assistant de départ", function() Z:StartWizard() end, "Trois questions (rôle, taille de groupe, forme des cases) pour régler Lyorune d'un coup." }, -- la fenêtre revient sur l'Accueil à la fin
 					{ "button", "Nouveautés de Lyorune", function() Z:ShowNews() end },
 				} },
 			} },
@@ -1870,7 +1915,7 @@ local function Chapters()
 				{ "note", "Cliquez sur une icône, puis déposez-la dans une barre de sorts. La macro vise le joueur sous la souris, sinon votre cible, sinon vous.", 30, dep = { "actionBarMacros", true } },
 				{ "custom", BarIcons, dep = { "actionBarMacros", true } },
 				{ "button", "Retirer les macros de Lyorune", function()
-					Z:RemoveBarMacros()
+					if not Z:RemoveBarMacros() then return end -- en combat : refusé, l'option reste cochée
 					Z.db.actionBarMacros = false
 					RefreshShownPages() -- l'interrupteur et les icônes suivent
 				end, "Supprime les macros « Lyo: » et décoche l'option. Vos autres macros ne sont pas touchées." },
@@ -2040,7 +2085,7 @@ local function ResetLine(chapter, page)
 	line:SetSize(ROW, 24)
 	line.button = ArmedButton(line, "Rétablir cette page", "Cliquez encore pour confirmer", 240, function() ResetChapter(chapter) end)
 	line.button:SetPoint("RIGHT")
-	line.button.tip = L["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos clics et vos profils ne changent pas."]
+	line.button.tip = L["Chaque réglage de ce chapitre reprend sa valeur d'installation. Vos listes, vos textes d'annonce, vos clics et vos profils ne changent pas."]
 	page.parts[#page.parts + 1] = { widget = line, before = 14, when = function() return (chapter.changes or 0) > 0 end }
 	page.reset = line
 end
@@ -2179,6 +2224,7 @@ local function BuildSearch()
 
 	local flash = UI.Paint(UI.Tex(window, "OVERLAY"), "accent", 0.35)
 	flash:Hide()
+	window.flash = flash
 
 	local edit = UI.Edit(window, 230)
 	edit:SetPoint("TOPRIGHT", -44, -13)
@@ -2208,11 +2254,13 @@ local function BuildSearch()
 		flash:SetPoint("TOPLEFT", entry.widget, "TOPLEFT", -4, 3)
 		flash:SetPoint("BOTTOMRIGHT", entry.widget, "BOTTOMRIGHT", 4, -3)
 		flash:Show()
-		C_Timer.After(1.5, function() flash:Hide() end)
+		flash.count = (flash.count or 0) + 1 -- deux recherches de suite : seul le dernier délai éteint
+		local mine = flash.count
+		C_Timer.After(1.5, function() if flash.count == mine then flash:Hide() end end)
 	end
 
 	edit:HookScript("OnTextChanged", function(self)
-		local text = self:GetText():lower():match("^%s*(.-)%s*$")
+		local text = Plain(self:GetText()):match("^%s*(.-)%s*$")
 		if #text < 2 then return results:Hide() end
 		for i = 1, #chapters do BuildChapter(i) end -- la recherche couvre tous les chapitres
 		local count = 0
@@ -2229,7 +2277,7 @@ local function BuildSearch()
 						results.rows[count] = row
 					end
 					row.entry = entry
-					row.label:SetText(entry.label .. "  |cff8a8f99" .. L[chapters[entry.chapter].name] .. "|r")
+					row.label:SetText(entry.label .. "  |cff" .. UI.Hex("dim") .. L[chapters[entry.chapter].name] .. "|r")
 					row:Show()
 				end
 			end
@@ -2358,7 +2406,7 @@ local function BuildWitness()
 	col.testText:SetWidth(STAGE_W)
 	col.testText:SetJustifyH("LEFT")
 	col.testText:SetSpacing(2)
-	searchIndex[#searchIndex + 1] = { text = L["Mode test"]:lower(), more = L[TEST_HINT]:lower(), widget = test,
+	searchIndex[#searchIndex + 1] = { text = Plain(L["Mode test"]), more = Plain(L[TEST_HINT]), widget = test,
 		label = L["Mode test"], chapter = ChapterIndex("Disposition") }
 
 	col.Update = function()
@@ -2419,7 +2467,8 @@ end
 --   clics, tout reprend la valeur qu'il avait à l'ouverture (réglages, clics, listes, coins, placement). La copie
 --   est prise à l'ouverture et gardée tant que la fenêtre n'est pas vraiment fermée : une fenêtre secondaire qui
 --   l'efface (UI.Away) ou la visite guidée ne la ferment pas. Mes profils, mes macros et les réglages propres à
---   l'ordinateur (Z.private) n'en font pas partie. En combat, les clics reviennent à la fin du combat.
+--   l'ordinateur (Z.private) n'en font pas partie, sauf la liste des joueurs épinglés (une liste comme les autres,
+--   gardée hors des profils partagés seulement). En combat, les clics reviennent à la fin du combat.
 ----------------------------------------------------------------------------------------------------
 local opened -- les réglages copiés à l'ouverture de la fenêtre
 
@@ -2427,24 +2476,16 @@ local function Copy(value)
 	return type(value) == "table" and CopyTable(value) or value
 end
 
+-- Réglages de Z.private repris quand même : « Joueurs épinglés » est une liste du chapitre Disposition, privée
+-- seulement pour ne pas partir avec un profil partagé
+local UNDO_PRIVATE = { pinned = true }
+
 local function TakeCopy()
 	local copy = {}
 	for key in pairs(Z.defaults) do
-		if not Z.private[key] then copy[key] = Copy(Z.db[key]) end
+		if not Z.private[key] or UNDO_PRIVATE[key] then copy[key] = Copy(Z.db[key]) end
 	end
 	return copy
-end
-
--- Deux valeurs égales, tables comprises (clé par clé)
-local function Same(a, b)
-	if type(a) ~= "table" or type(b) ~= "table" then return a == b end
-	for k, v in pairs(a) do
-		if not Same(v, b[k]) then return false end
-	end
-	for k in pairs(b) do
-		if a[k] == nil then return false end
-	end
-	return true
 end
 
 -- Un réglage a changé depuis l'ouverture. Le profil en cours seul ne compte pas : enregistrer un profil ne change
@@ -2452,7 +2493,7 @@ end
 local function ChangedSinceOpen()
 	if not opened then return false end
 	for key, value in pairs(opened) do
-		if key ~= "activeProfile" and not Same(value, Z.db[key]) then return true end
+		if key ~= "activeProfile" and not UI.Same(value, Z.db[key]) then return true end
 	end
 	return false
 end
@@ -2544,7 +2585,9 @@ local function BuildFoot()
 	-- Fermée par le joueur : la copie est lâchée. Effacée par une fenêtre secondaire ou par la visite : gardée.
 	window:HookScript("OnHide", function()
 		window.saveBox:Hide()
-		if not (UI.Away() or Z.TutorialRunning and Z:TutorialRunning()) then opened = nil end
+		if not (UI.Away() or Z.TutorialRunning and Z:TutorialRunning() or Z.WizardRunning and Z:WizardRunning()) then
+			opened = nil
+		end
 	end)
 end
 
@@ -2572,10 +2615,18 @@ local function Stretch(screen)
 end
 
 local function Build()
-	window = UI.Window("LyoruneOptions", "Lyorune  |cff8a8f99" .. Z.version .. "|r", WIDTH, HEIGHT)
+	window = UI.Window("LyoruneOptions", "Lyorune", WIDTH, HEIGHT)
 	tinsert(UISpecialFrames, "LyoruneOptions")
 	UI.main = window -- les fenêtres secondaires s'ouvrent à côté d'elle (UI.PlaceBeside)
 	chapters = Chapters()
+	-- Changement de thème : le numéro de version du titre et les couleurs écrites dans un texte (« |cff... ») ou
+	-- données à la main (noms des coins) suivent, sur les pages affichées
+	local function Recolor()
+		window.title:SetText("Lyorune  |cff" .. UI.Hex("dim") .. Z.version .. "|r")
+		if window:IsShown() then RefreshShownPages() end
+	end
+	Recolor()
+	UI.OnSkin(Recolor)
 
 	-- Barre latérale : un bouton par chapitre (rune, nom, pastille des réglages changés)
 	local side = CreateFrame("Frame", nil, window)

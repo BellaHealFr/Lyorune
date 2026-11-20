@@ -3789,8 +3789,8 @@ step("refonte 1.26.0, lot 6c quater : annuler mes changements, enregistrer mes r
   Z:ToggleOptions("Disposition")
   local copy = Z:OptionsOpenedCopy()
   assert(copy and not w.undo:IsShown(), "Annuler montre sans changement")
-  assert(copy.profiles == nil and copy.macros == nil and copy.pinned == nil and copy.language == nil and copy.clicks,
-    "copie : reglages prives exclus, clics compris")
+  assert(copy.profiles == nil and copy.macros == nil and copy.pinned and copy.language == nil and copy.clicks,
+    "copie : reglages prives exclus (sauf les epingles, constat O12), clics compris")
 
   -- Bande du bas : un bouton de chaque côté de l'inscription runique, sans la toucher, dans la bande (34 de haut),
   -- en retrait des cadres épais ; la fenêtre réduite d'un bloc garde ce rapport
@@ -4011,6 +4011,187 @@ step("refonte 1.26.0, lot 6c septies a : corrections de UI.lua (relecture)", fun
 
   for key, value in pairs(saved) do Z.db[key] = value end
   Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c septies b : corrections d'Options.lua (relecture)", function()
+  local UI, w = Z.UI, Z:OptionsWindow()
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast, reduceMotion = Z.db.reduceMotion,
+    manaText = Z.db.manaText, tutorialDone = Z.db.tutorialDone, wizardDone = Z.db.wizardDone,
+    actionBarMacros = Z.db.actionBarMacros, syncEnabled = Z.db.syncEnabled, width = Z.db.width,
+    clicks = CopyTable(Z.db.clicks), hoverKeys = CopyTable(Z.db.hoverKeys), pinned = CopyTable(Z.db.pinned),
+    autoProfiles = CopyTable(Z.db.autoProfiles or {}), cornerSpells = CopyTable(Z.db.cornerSpells) }
+  Z.db.reduceMotion = true Z:Refresh()
+  local function Fresh(chapter) -- fenêtre fermée par le joueur puis rouverte : nouvelle copie d'« Annuler »
+    w:Hide() w:Run("OnHide")
+    Z:ToggleOptions(chapter)
+    assert(Z:OptionsOpenedCopy() and not w.undo:IsShown(), "copie prise a l'ouverture : " .. chapter)
+  end
+  local function Find(page, test)
+    for _, part in ipairs(page.parts) do if test(part.widget) then return part.widget end end
+  end
+  local function Undo()
+    w.undo.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+    w.undo:Run("OnClick", "LeftButton")
+  end
+
+  -- O8 : la recherche ne tient compte ni des majuscules ni des accents
+  Fresh("Accueil")
+  for _, typed in ipairs({ "échelle", "ECHELLE", "echelle", "ÉCHELLE" }) do
+    w.search:SetText(typed) w.search:Run("OnTextChanged", true)
+    local row = w.results.rows[1]
+    assert(row and row:IsShown() and row.entry.label:find("chelle g", 1, true), "recherche : " .. typed)
+  end
+  w.search:SetText("a ignorer") w.search:Run("OnTextChanged", true)
+  local hit
+  for _, row in ipairs(w.results.rows) do if row:IsShown() and row.entry.label == "À ignorer" then hit = true end end
+  assert(hit, "« a ignorer » ne trouve pas À ignorer")
+  assert(Z.SearchText("Œuvre À Ça") == "oeuvre a ca", Z.SearchText("Œuvre À Ça"))
+  -- O14 : le nom du chapitre d'un résultat suit le thème
+  assert(w.results.rows[1].label:GetText():find(UI.Hex("dim"), 1, true), "chapitre du resultat en gris ecrit en dur")
+  -- O15 a : deux recherches de suite, le premier délai n'éteint pas le second clignotement
+  local after, timers = C_Timer.After, {}
+  C_Timer.After = function(_, f) timers[#timers + 1] = f end
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  w.search:SetText("echelle") w.search:Run("OnTextChanged", true)
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  assert(#timers == 2 and w.flash:IsShown(), "clignotement : " .. #timers)
+  timers[1]() assert(w.flash:IsShown(), "le premier delai eteint le second clignotement")
+  timers[2]() assert(not w.flash:IsShown(), "clignotement jamais eteint")
+
+  -- O4 : bouton à confirmer armé, confirmé puis réarmé : le premier délai ne le désarme pas
+  timers = {}
+  local done = 0
+  local armed = Z.ArmedButton(UIParent, "Supprimer", "Cliquez encore pour confirmer", 120, function() done = done + 1 end)
+  armed:Run("OnClick", "LeftButton") armed:Run("OnClick", "LeftButton")
+  assert(done == 1 and not armed.armed, "second clic")
+  armed:Run("OnClick", "LeftButton")
+  timers[1]() assert(armed.armed, "desarme par le delai d'avant")
+  timers[2]() assert(not armed.armed, "jamais desarme")
+  C_Timer.After = after
+
+  -- O1 : attente d'un raccourci puis bouton caché : l'attente est annulée, le clavier rendu
+  local page = w.Select("Sorts et raccourcis")
+  local list = Find(page, function(x) return x.add and x.banner end)
+  local add = list.add
+  NOW = NOW + 1 add:Run("OnClick", "LeftButton")
+  assert(add.capturing and add:GetScript("OnKeyDown"), "attente lancee")
+  add:Hide() add:Run("OnHide") add:Show()
+  assert(not add.capturing and not add:GetScript("OnKeyDown") and add.label:GetText() == add.idle, "attente gardee page cachee")
+
+  -- O2 et O6 : la couleur d'un coin revient après un changement de thème ; un coin choisi allume l'éclat
+  page = w.Select("Mes soins")
+  local corner = Find(page, function(x) return x.label and x.button and x.label:GetText() == "En haut à gauche" end)
+  local color = Z.CORNER_COLORS.TOPLEFT
+  Z.db.windowTheme = Z.db.windowTheme == "CLASSIC" and "MODERN" or "CLASSIC" Z:Refresh()
+  assert(corner.label._color[1] == color[1] and corner.label._color[3] == color[3], "couleur du coin perdue")
+  -- O14 : le numéro de version du titre suit le thème
+  assert(w.title:GetText():find(UI.Hex("dim") .. Z.version, 1, true), "titre en gris ecrit en dur")
+  Z.db.highContrast = not Z.db.highContrast Z:Refresh()
+  assert(corner.label._color[1] == color[1], "couleur du coin perdue au contraste eleve")
+  assert(w.title:GetText():find(UI.Hex("dim") .. Z.version, 1, true), "titre pas repeint")
+  local spark, sparks = w.witness.Spark, 0
+  w.witness.Spark = function() sparks = sparks + 1 end
+  corner.button:Run("OnClick", "LeftButton")
+  w.witness.Spark = spark
+  assert(sparks == 1, "coin choisi sans eclat")
+
+  -- O3 : un texte d'annonce changé seul fait paraître « Annuler mes changements »
+  Fresh("Alertes")
+  page = w.Select("Alertes")
+  local text = Find(page, function(x) return x.test and x.edit end)
+  text.edit:SetText("Mana basse O3") text.edit:Run("OnTextChanged", true)
+  assert(w.undo:IsShown(), "Annuler absent apres un texte d'annonce")
+  Undo()
+  assert(Z.db.manaText == saved.manaText, "texte d'annonce pas revenu")
+  -- ... et un profil automatique aussi
+  Fresh("Profils et partage")
+  local grid = OptionPart("profileCells")
+  Z.db.profiles["Essai O3"] = Z.db.profiles["Essai O3"] or {}
+  grid.profileCells[1]:Run("OnClick", "LeftButton")
+  assert(w.undo:IsShown(), "Annuler absent apres un profil automatique")
+  Undo()
+  Z.db.profiles["Essai O3"] = nil
+
+  -- O10 : les clics de la classe se reprennent en deux clics, et « Annuler mes changements » les rend
+  Z:SetClick("alt-5", "Prière")
+  Fresh("Profils et partage")
+  local reset = OptionPart("classClicks").classClicks
+  reset:Run("OnClick", "LeftButton")
+  assert(Z:GetClicks()["alt-5"] == "Prière" and not w.undo:IsShown(), "clics remplaces au premier clic")
+  reset.armed = true reset:Run("OnClick", "LeftButton")
+  assert(Z:GetClicks()["alt-5"] ~= "Prière" and w.undo:IsShown(), "clics pas remplaces, ou Annuler absent")
+  Undo()
+  assert(Z:GetClicks()["alt-5"] == "Prière", "clics pas rendus")
+
+  -- O12 : un joueur épinglé depuis l'ouverture est retiré par « Annuler mes changements »
+  Fresh("Disposition")
+  Z:TogglePin("Essai-O12")
+  assert(Z.db.pinned["Essai-O12"] and w.undo:IsShown(), "Annuler absent apres un epingle")
+  Undo()
+  assert(not Z.db.pinned["Essai-O12"], "epingle pas retire")
+
+  -- O13 : « Retirer les macros de Lyorune » en combat : refusé, l'option reste cochée
+  page = w.Select("Sorts et raccourcis")
+  local remove = Find(page, function(x) return x.label and x.label:GetText() == "Retirer les macros de Lyorune" end)
+  Z.db.actionBarMacros = true
+  local Print = Z.Print
+  Z.Print = function() end
+  COMBAT = true remove:Run("OnClick", "LeftButton") COMBAT = false
+  Z.Print = Print
+  assert(Z.db.actionBarMacros == true, "option decochee alors que les macros restent")
+  remove:Run("OnClick", "LeftButton")
+  assert(Z.db.actionBarMacros == false, "option pas decochee hors combat")
+
+  -- O15 b : sur la liste des réglages changés, la valeur s'arrête avant le nom du chapitre
+  Z.db.width = Z.db.width + 10 Z:Refresh()
+  page = w.Select("Accueil")
+  local changed = Find(page, function(x) return x.rows and x.rows[1] and x.rows[1].where end)
+  local row = changed.rows[1]
+  assert(282 + row.value:GetWidth() < row:GetWidth() - 6 - row.where:GetWidth(), "valeur sur le nom du chapitre")
+  Z.db.width = saved.width Z:Refresh()
+
+  -- O15 c : « Entre joueurs » suit le groupe page ouverte
+  page = w.Select("Profils et partage")
+  Z.db.syncEnabled = true
+  local who = Find(page, function(x) return x.text and x.Update and x:GetScript("OnEnter") and not x.list end)
+  assert(who, "ligne Entre joueurs")
+  local inGroup, members = IsInGroup, Z.SyncMembers
+  IsInGroup = function() return true end
+  Z.SyncMembers = function() return { { name = "Un", version = "1" }, { name = "Deux", version = "1" } } end
+  FireEvent("GROUP_ROSTER_UPDATE")
+  assert(who.text:GetText():find("2", 1, true), "nombre pas revu : " .. who.text:GetText())
+  IsInGroup, Z.SyncMembers = inGroup, members
+  FireEvent("GROUP_ROSTER_UPDATE")
+
+  -- O9 : l'assistant lancé des options garde la copie d'« Annuler » et rend la fenêtre sur l'Accueil
+  Z.db.tutorialDone = true
+  Fresh("Accueil")
+  local copy = Z:OptionsOpenedCopy()
+  page = w.Select("Accueil")
+  local discover = Find(page, function(x) return x.buttons and x.buttons[2] and x.buttons[2].label:GetText() == "Assistant de départ" end)
+  discover.buttons[2]:Run("OnClick", "LeftButton")
+  assert(not w:IsShown() and Z:WizardRunning(), "options pas fermees par l'assistant") w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue pendant l'assistant")
+  LyoruneWizard.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Accueil" and not Z:WizardRunning(), "fenetre pas rendue sur l'Accueil")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue apres l'assistant")
+  -- premier lancement : la visite suit et c'est elle qui rend la fenêtre
+  Z.db.tutorialDone = false
+  discover.buttons[2]:Run("OnClick", "LeftButton") w:Run("OnHide")
+  LyoruneWizard.close:Run("OnClick")
+  assert(Z:TutorialRunning() and not w:IsShown(), "visite pas lancee apres l'assistant")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue entre l'assistant et la visite")
+  LyoruneTutorial.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Accueil", "fenetre pas rendue apres la visite")
+  -- lancé fenêtre fermée (/lyorune assistant) : la fenêtre reste fermée
+  Z.db.tutorialDone = true
+  w:Hide() w:Run("OnHide")
+  Z:StartWizard() LyoruneWizard.close:Run("OnClick")
+  assert(not w:IsShown(), "options ouvertes par un assistant lance fenetre fermee")
+
+  w:Hide() w:Run("OnHide")
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh() Z:ApplyClicks()
 end)
 
 step("aucune variable globale imprevue", function()
