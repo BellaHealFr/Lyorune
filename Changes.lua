@@ -598,7 +598,7 @@ function Z:NewsText()
 	local L = Z.L
 	local lines = {}
 	for _, entry in ipairs(Z.changes) do
-		lines[#lines + 1] = "|cff" .. Z.UI.Hex("accent") .. "Lyorune " .. entry.version .. "|r  |cff8a8f99" .. entry.date .. "|r"
+		lines[#lines + 1] = "|cff" .. Z.UI.Hex("accent") .. "Lyorune " .. entry.version .. "|r  |cff" .. Z.UI.Hex("dim") .. entry.date .. "|r"
 		for _, section in ipairs(Z.changeSections) do
 			local notes = entry[section[1]]
 			if notes and #notes > 0 then
@@ -629,14 +629,17 @@ function Z:ShowNews()
 		local content = CreateFrame("Frame", nil, scroll)
 		content:SetSize(520, 10)
 		scroll:SetScrollChild(content)
-		window.text = UI.Text(content, 12)
+		window.text = UI.Label(content, 12)
 		window.text:SetPoint("TOPLEFT")
 		window.text:SetWidth(520)
 		window.text:SetJustifyH("LEFT")
 		window.text:SetSpacing(4)
-		window.content = content
+		window.content, window.scroll = content, scroll
 	end
+	-- Relu à chaque appel (couleurs du thème en cours), depuis le haut ; ouverte, elle passe devant
 	window.text:SetText(Z:NewsText())
 	window.content:SetHeight(window.text:GetStringHeight() + 10)
-	window:Show()
+	window.scroll:SetVerticalScroll(0)
+	UI.Reopen(window)
+	window:Raise()
 end

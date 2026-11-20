@@ -38,7 +38,7 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 
 | | | |
 |:-:|---|---|
-| <img src="docs/images/runes/s.png" alt="" width="40"> | **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. Un bijou peut partir avec le sort, un autre clic arrête l'incantation, et Lyorune vous prévient si le « clic pour lancer » du jeu prend la même combinaison. La touche de signal du jeu sur une case marque le joueur pour tout le groupe. |
+| <img src="docs/images/runes/s.png" alt="" width="40"> | **Soigner d'un clic** | Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur. Plus besoin de cibler. Un bijou peut partir avec le sort, un autre clic arrête l'incantation, et Lyorune vous prévient si le « clic pour lancer » du jeu prend la même combinaison. La touche de signal du jeu sur une case marque le joueur pour tout le groupe. Vos macros s'écrivent une fois dans Mes macros, puis se posent sur un clic ou se glissent dans une barre de sorts du jeu. |
 | <img src="docs/images/runes/t.png" alt="" width="40"> | **Touches au survol** | Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée. |
 | <img src="docs/images/runes/u.png" alt="" width="40"> | **Tout voir d'un coup d'œil** | Vie, soins en route, boucliers (en bande ou à la suite de la vie), absorption de soins, mana, mana basse des autres soigneurs, soins sur la durée et affaiblissements (dessinés par le jeu : visibles en plein combat, tous les rangs de vos sorts), auras privées des boss, invocation, vie basse, menace, portée en trois paliers, chef de groupe, temps de recharge global et incantation (barre ou anneau au curseur). Hors combat, un panneau lance vos buffs manquants, Bouclier de terre du tank compris. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dissiper sans chercher** | La case se colore quand vous pouvez retirer une magie, une malédiction, une maladie ou un poison. |
@@ -48,7 +48,8 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 | <img src="docs/images/runes/a.png" alt="" width="40"> | **Annonces** | Mana faible, mana remontée, résurrection, avec vos propres textes. Sur WoW Forever, où la mana est cachée aux addons, les annonces de mana faible et de mana remontée partent quand même toutes seules (seuil approché par le coût de vos sorts, remontée mesurée pendant que vous buvez). |
 | <img src="docs/images/runes/p.png" alt="" width="40"> | **Profils et partage** | Un profil par taille de groupe, champ de bataille, arène et spécialisation, appliqué tout seul ; copie d'une seule partie d'un profil à un autre. Envoyez votre configuration à un ami, par un code ou directement en jeu. |
 | <img src="docs/images/runes/b.png" alt="" width="40"> | **Toujours sous la main** | Un bouton au bord de la mini-carte ouvre les options ou le mode test. Il se déplace, et se retire d'une case à cocher. |
-| <img src="docs/images/runes/n.png" alt="" width="40"> | **Rien n'est obligatoire** | Chaque élément a sa case à cocher, et une recherche retrouve n'importe quel réglage. |
+| <img src="docs/images/runes/f.png" alt="" width="40"> | **Facile à régler** | Une fenêtre d'options en onze chapitres, avec une case témoin qui montre chaque réglage en direct pendant que vous le changez. Une rune d'or marque ce que vous avez modifié (un clic le rétablit), les réglages rares restent pliés, et une recherche retrouve n'importe quel réglage, jusque dans les explications. Une lumière de soin or et vert l'éclaire, et s'éteint d'une case à cocher. |
+| <img src="docs/images/runes/n.png" alt="" width="40"> | **Rien n'est obligatoire** | Chaque élément a sa case à cocher : vous gardez seulement ce qui vous sert. |
 
 Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à côté d'ElvUI, de Clique ou de vos autres addons d'interface.
 
@@ -68,7 +69,7 @@ C'est l'inscription gravée sur le socle de Deuillegivre, celle que Muradin déc
 
 **Comment les lire :** chaque rune vaut une lettre de la phrase anglaise. Ce sont les runes de l'ancien futhark, un alphabet bien réel, utilisé il y a près de deux mille ans. Les sons « th » et « ng » s'écrivent d'une seule rune.
 
-En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (onglet Aide).
+En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (chapitre Fenêtre et aide).
 
 ## Installation
 

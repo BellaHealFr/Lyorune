@@ -4,7 +4,8 @@
 -- RANGEMENT. Les macros sont rangées par classe, communes à toutes les spécialisations :
 --   Z.db.macros.PRIEST = { { name = "Bijou et soin", body = "/use 13\n/cast Soins rapides" }, ... }
 --   Un clic ou une touche qui en utilise une porte la valeur « @macro:Nom ». Modifier la macro change
---   tous ses clics, dans chaque spécialisation. Rien n'est écrit dans la fenêtre /macro du jeu.
+--   tous ses clics, dans chaque spécialisation. Rien n'est écrit dans la fenêtre /macro du jeu, sauf une copie
+--   « Lyo:Nom » quand le joueur glisse la macro vers une barre de sorts (voir Clicks.lua, Z:PickupGameCopy).
 -- VISER LA CASE. Le joueur de la case s'écrit {cible} ou @cible. Avec l'option « macroAutoTarget »
 --   (cochée d'origine), une commande sans cible (/cast Récupération) vise la case toute seule, et
 --   [@mouseover] marche tel quel : sur une case, le joueur survolé est celui de la case.
@@ -17,7 +18,9 @@ local UI = Z.UI
 local L = Z.L
 
 Z.MACRO_LINE = 255   -- longueur d'une ligne de commande acceptée par le jeu
-Z.MACRO_MAX = 1023   -- longueur totale d'une macro (à confirmer en jeu sur Forever)
+Z.MACRO_MAX = 255    -- longueur totale d'une macro : depuis le patch 11.0.2, le texte d'un bouton sécurisé
+                     -- (« macrotext ») ne dépasse pas 255 caractères, comme une macro de /macro
+local EDIT_MAX = 1023 -- la zone d'écriture garde le texte d'une ancienne macro plus longue (signalée en rouge)
 Z.MACRO_NAME = 32    -- longueur d'un nom de macro, en octets
 local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 
@@ -92,6 +95,7 @@ function Z:RenameMacro(macro, newName)
 	local other = Z:FindMacro(newName)
 	if other and other ~= macro then return false, L["Une autre macro porte déjà ce nom."] end
 	ReplaceValue("@macro:" .. macro.name, "@macro:" .. newName)
+	Z:MoveGameCopy(macro.name, newName) -- sa copie de /macro suit (Clicks.lua)
 	macro.name = newName
 	Z:ApplyClicks()
 	return true
@@ -192,6 +196,31 @@ local function KnowsName(name)
 	return not ok or info ~= nil
 end
 
+-- Nom du grimoire (spécialisation active) qui ne diffère de name que par les accents ou les majuscules : le client
+-- écrit parfois un sort sans accent (« Epines »), et /cast Épines ne lance alors rien
+local function GrimoireSpelling(name)
+	local plain = Z.SearchText and Z.SearchText(name)
+	if not plain then return end
+	local found
+	pcall(function()
+		local bank = Enum.SpellBookSpellBank.Player
+		for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+			local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
+			for slot = info.itemIndexOffset + 1, info.itemIndexOffset + info.numSpellBookItems do
+				local item = C_SpellBook.GetSpellBookItemInfo(slot, bank)
+				local id = item and item.itemType == Enum.SpellBookItemType.Spell and not item.isPassive
+					and not item.isOffSpec and item.spellID
+				local spell = id and C_Spell.GetSpellName(id)
+				if spell and spell ~= name and Z.SearchText(spell) == plain then
+					found = spell
+					return
+				end
+			end
+		end
+	end)
+	return found
+end
+
 local function Split(text)
 	local lines = {}
 	for line in (text .. "\n"):gmatch("([^\n]*)\n") do lines[#lines + 1] = line end
@@ -207,7 +236,11 @@ function Z:CheckMacro(body)
 		return problems
 	end
 	local resolved = Z:ResolveMacro(body)
-	if #resolved > Z.MACRO_MAX then add("err", "Trop longue : %d caractères, %d au plus.", #resolved, Z.MACRO_MAX) end
+	if #resolved > Z.MACRO_MAX then
+		add("err", "Trop longue : %d caractères, %d au plus.", #resolved, Z.MACRO_MAX)
+	elseif #Z:BarText(body) > Z.MACRO_MAX then -- la copie pour une barre ajoute la cible : elle peut dépasser
+		add("warn", "Trop longue pour une barre de sorts du jeu : %d caractères, %d au plus. Elle reste bonne pour vos clics.", #Z:BarText(body), Z.MACRO_MAX)
+	end
 	local real, commands = Split(resolved), 0
 	for n, line in ipairs(Split(body)) do
 		if real[n] and #real[n] > Z.MACRO_LINE then
@@ -251,7 +284,14 @@ function Z:CheckMacro(body)
 					for spell in clause:gmatch("[^,]+") do
 						spell = spell:match("^%s*!?(.-)%s*$"):gsub("%(.-%)$", "")
 						if spell ~= "" and not tonumber(spell) and not KnowsName(spell) then
-							add("warn", "Ligne %d : « %s » n'est pas connu dans votre spécialisation active.", n, spell)
+							local right = GrimoireSpelling(spell)
+							if right then -- même nom, autres accents : corrigé par « Corriger l'écriture »
+								add("warn", "Ligne %d : « %s » s'écrit « %s » dans votre grimoire.", n, spell, right)
+								problems.fixes = problems.fixes or {}
+								problems.fixes[#problems.fixes + 1] = { spell, right }
+							else
+								add("warn", "Ligne %d : « %s » n'est pas connu dans votre spécialisation active.", n, spell)
+							end
 						end
 					end
 				end
@@ -262,6 +302,12 @@ function Z:CheckMacro(body)
 	end
 	if commands == 0 then add("err", "Aucune commande : une macro commence par une barre oblique, par exemple /cast.") end
 	return problems
+end
+
+-- Macro où chaque nom de sort mal écrit (accents, majuscules) prend l'écriture du grimoire, comme mot entier
+function Z:FixMacroSpelling(body)
+	for _, fix in ipairs(Z:CheckMacro(body).fixes or {}) do body = Z.ReplaceWord(body, fix[1], fix[2]) end
+	return body
 end
 
 -- Icône : celle du premier sort ou objet de la macro
@@ -281,6 +327,85 @@ function Z:MacroIcon(body)
 		end
 	end
 	return QUESTION
+end
+
+----------------------------------------------------------------------------------------------------
+-- Copie pour une barre de sorts du jeu : là, il n'y a pas de case. Chaque groupe qui vise le joueur survolé est
+-- suivi du même groupe sans lui, qui vise la cible (sinon vous, selon le réglage du jeu « lancer sur soi »).
+--   « [@mouseover,harm] Châtiment »  -> « [@mouseover,harm][harm] Châtiment »
+--   « [@mouseover] Soins rapides »   -> « [@mouseover,help][] Soins rapides » (un soin ne vise pas un ennemi)
+--   « [@mouseover] 13 » (/use)       -> « [@mouseover,exists][] 13 »
+----------------------------------------------------------------------------------------------------
+local function Hovered(item)
+	item = item:lower()
+	return item == "@mouseover" or item:match("^target%s*=%s*mouseover$") ~= nil
+end
+
+-- Le sort d'une clause aide-t-il un allié ? (sans réponse du jeu : non, la clause vise alors tout joueur survolé)
+local function Helpful(clause)
+	local name = clause:gsub("%b[]", ""):gsub("reset=%S+", ""):match("^%s*!?([^,]+)")
+	name = name and name:match("^(.-)%s*$")
+	if not (name and name ~= "" and not tonumber(name) and C_Spell and C_Spell.IsSpellHelpful) then return false end
+	local ok, helpful = pcall(C_Spell.IsSpellHelpful, name)
+	return ok and helpful == true
+end
+
+local function BarClause(clause, cast)
+	local lead, rest = clause:match("^(%s*)(.*)$")
+	local out, pending, seen = "", {}, {}
+	local alone = cast and Helpful(rest) and "help" or "exists"
+	local function Add(group)
+		if not seen[group] then
+			seen[group] = true
+			out = out .. group
+		end
+	end
+	local function Flush()
+		for _, group in ipairs(pending) do Add(group) end
+		pending = {}
+	end
+	while true do
+		local group, after = rest:match("^(%b[])%s*(.*)$")
+		if not group then break end
+		local items, others, hovered = {}, {}, false
+		for item in group:sub(2, -2):gmatch("[^,]+") do
+			item = item:match("^%s*(.-)%s*$")
+			if item ~= "" then
+				items[#items + 1] = item
+				if Hovered(item) then hovered = true else others[#others + 1] = item end
+			end
+		end
+		if hovered then
+			if #others == 0 then items[#items + 1] = alone end
+			Add("[" .. table.concat(items, ",") .. "]")
+			pending[#pending + 1] = "[" .. table.concat(others, ",") .. "]"
+		else
+			Flush()
+			Add(group)
+		end
+		rest = after
+	end
+	Flush()
+	if out == "" then return clause end
+	return lead .. out .. (rest ~= "" and " " .. rest or "")
+end
+
+function Z:BarText(body)
+	local lines = {}
+	for line in (Z:ResolveMacro(body) .. "\n"):gmatch("([^\n]*)\n") do
+		local slash, command, rest = line:match("^(%s*/)(%S+)(.*)$")
+		local lower = command and command:lower()
+		if lower and AIMED[lower] and not UNIT_COMMANDS[lower] then
+			local clauses = {}
+			for clause in (rest .. ";"):gmatch("([^;]*);") do clauses[#clauses + 1] = BarClause(clause, CASTS[lower]) end
+			line = slash .. command .. table.concat(clauses, ";")
+		end
+		lines[#lines + 1] = line
+	end
+	local text = table.concat(lines, "\n")
+	-- l'icône « ? » de la copie montre alors le sort en cours et son infobulle, si la place le permet
+	if not text:find("^%s*#show") and #text + 13 <= Z.MACRO_MAX then text = "#showtooltip\n" .. text end
+	return text
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -311,6 +436,8 @@ end
 function Z:ImportGameMacro(index)
 	local name, _, body = GetMacroInfo(index)
 	if not name or not body then return nil end
+	local mine = Z:CopyOwner(name) -- la copie « Lyo: » d'une macro de la bibliothèque : c'est elle
+	if mine then return mine end
 	local same = Z:FindMacro(name)
 	if same and same.body == body then return same end
 	return Z:NewMacro(name, body)
@@ -365,10 +492,13 @@ end
 -- Fenêtre « Mes macros »
 ----------------------------------------------------------------------------------------------------
 local win, wizard, importer, dragIcon
-local ROWS = 14
+local ROWS = 13
+local LINE = 13 -- hauteur d'une ligne de texte de 11 avec l'interligne de 2
 
 local function Refresh() if win and win:IsShown() then win.Refresh() end end
+-- Les clics suivent, et « Annuler mes changements » paraît (Z.RefreshClicks prévient le bas des options)
 local function ClicksChanged() if Z.RefreshClicks then Z.RefreshClicks() end end
+local function Dim(text) return "|cff" .. UI.Hex("dim") .. text .. "|r" end
 
 -- Glisser une macro de la liste sur une case de l'onglet Clics (ou une touche au survol)
 local function StopDrag()
@@ -390,8 +520,15 @@ local function StopDrag()
 	end
 end
 
+-- Hors combat, la macro part en main comme une macro de /macro (sa copie « Lyo: », créée ou mise à jour) : elle se
+-- dépose dans une barre de sorts du jeu, ou sur une ligne de Lyorune qui la reconnaît (Z:CopyOwner). Sinon, ou
+-- quand la copie est refusée (combat, trop longue, plus de place), seules les lignes de Lyorune la prennent.
 local function StartDrag(row)
 	if not row.macro then return end
+	if win then win.SaveCurrent() end -- la copie part avec le texte en cours d'écriture
+	local held, why = Z:PickupGameCopy(row.macro)
+	if held then return end
+	if why then Z:Print(why) end
 	if not dragIcon then
 		dragIcon = CreateFrame("Frame", nil, UIParent)
 		dragIcon:SetSize(30, 30)
@@ -429,8 +566,37 @@ local function Block(parent, x, y, width, size)
 	return text
 end
 
+-- Zone de texte de hauteur fixe (« lines » lignes) : le texte en trop est coupé par le jeu et se lit en entier
+-- dans l'infobulle. Jamais de texte qui passe sur la zone suivante.
+local function Zone(parent, x, y, width, lines)
+	local text = Block(parent, x, y, width)
+	text:SetHeight(lines * LINE)
+	text:SetMaxLines(lines)
+	text.lines = lines
+	local hover = CreateFrame("Frame", nil, parent)
+	hover:SetAllPoints(text)
+	hover:EnableMouse(true)
+	hover:SetScript("OnEnter", function(self)
+		local full = text:GetText() or ""
+		if not (text:IsTruncated() or select(2, full:gsub("\n", "")) >= lines) then return end
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(full, UI.text[1], UI.text[2], UI.text[3], 1, true)
+		GameTooltip:Show()
+	end)
+	hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	text.hover = hover
+	return text
+end
+
+-- Ce que dit la consigne sous la liste : glisser une macro sur une ligne des options, sauf quand les options
+-- sont effacées le temps de cette fenêtre (écran trop étroit pour les deux) : aucune ligne où la glisser
+local function HintText()
+	return UI.Away() and L["Glissez une macro dans une barre de sorts du jeu. Pour un clic, fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne."]
+		or L["Glissez une macro sur une ligne du chapitre Sorts et raccourcis ou dans une barre de sorts du jeu, ou cliquez sur le sort d'une ligne."]
+end
+
 local function BuildWindow()
-	win = UI.Window("LyoruneMacros", L["Mes macros"], 620, 500)
+	win = UI.Window("LyoruneMacros", L["Mes macros"], 620, 530)
 	win:SetFrameStrata("FULLSCREEN_DIALOG")
 	win.beside = true -- à côté des options, sans les recouvrir
 	tinsert(UISpecialFrames, "LyoruneMacros")
@@ -485,87 +651,147 @@ local function BuildWindow()
 		row.label:ClearAllPoints()
 		row.label:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
 		row.label:SetPoint("RIGHT", -4, 0)
+		-- Macro ouverte : bordure d'or à part (le fond d'un bouton est caché en Classique et MMORPG, et repeint à
+		-- chaque changement de thème)
+		row.mark = UI.Paint(UI.Border(row, 1), "accent")
+		row.mark:Hide()
 		row:RegisterForDrag("LeftButton")
 		row:SetScript("OnDragStart", StartDrag)
 		row:SetScript("OnDragStop", StopDrag)
 		row:SetScript("OnReceiveDrag", ReceiveGameMacro)
 		win.rows[i] = row
 	end
-	local hint = Block(win, 14, -98 - ROWS * 24 - 6, 186)
-	UI.Paint(hint, "dim")
-	hint:SetText(L["Glissez une macro sur une ligne de l'onglet Clics, ou cliquez sur le sort d'une ligne pour la choisir."])
+	-- Aucune macro : une phrase sous les boutons, pas un bouton qui ne fait rien
+	win.empty = Block(win, 14, -98, 186)
+	UI.Paint(win.empty, "dim")
+	win.empty:SetText(L["Aucune macro : cliquez sur Nouvelle."])
+	-- Plus de macros que de lignes : la molette fait défiler la liste
+	win.more = Block(win, 14, -98 - ROWS * 24 - 4, 186)
+	UI.Paint(win.more, "dim")
+	win.hint = Block(win, 14, -98 - ROWS * 24 - 22, 186)
+	win.hint:SetMaxLines(5)
+	UI.Paint(win.hint, "dim")
+	win.hint:SetText(HintText())
 
-	-- Colonne de droite : la macro choisie
+	-- Colonne de droite : la macro choisie. Chaque zone a sa hauteur, posée sous la précédente.
 	local x, width = 216, 390
 	Field(win, "Nom", x, -46)
 	win.name = UI.Edit(win, width - 50, function(text)
 		if not win.macro then return end
 		local ok, why = Z:RenameMacro(win.macro, text)
 		if not ok then Z:Print(why) end
+		win.name:SetText(win.macro.name) -- nom vide, coupé ou refusé : le champ montre le vrai nom
 		win.Refresh()
 		ClicksChanged()
 	end)
 	win.name:SetPoint("TOPLEFT", x + 50, -42)
 
+	-- Zone où l'on écrit : elle défile, le curseur reste visible
 	local box = CreateFrame("Frame", nil, win)
 	box:SetPoint("TOPLEFT", x, -72)
-	box:SetSize(width, 140)
+	box:SetSize(width, 120)
 	box.bg = UI.Paint(UI.Tex(box, "BACKGROUND"), "panel")
 	box.bg:SetAllPoints()
 	box.border = UI.Border(box, 1)
 	UI.Paint(box.border, "line")
 	UI.Field(box, box.bg, box.border) -- zone de texte habillée selon le thème
-	local edit = CreateFrame("EditBox", nil, box)
+	local scroll = CreateFrame("ScrollFrame", nil, box)
+	scroll:SetPoint("TOPLEFT", 6, -6)
+	scroll:SetPoint("BOTTOMRIGHT", -6, 6)
+	scroll:SetSize(width - 12, 120 - 12)
+	local edit = CreateFrame("EditBox", nil, scroll)
 	edit:SetMultiLine(true)
 	edit:SetAutoFocus(false)
 	edit:SetFont(UI.Font(), 12, "")
-	edit:SetMaxLetters(Z.MACRO_MAX)
-	edit:SetPoint("TOPLEFT", 6, -6)
+	UI.Paint(edit, "text") -- sans couleur, le jeu écrit en blanc pur
+	edit:SetMaxLetters(EDIT_MAX)
 	edit:SetWidth(width - 12)
+	edit:SetHeight(120 - 12)
+	scroll:SetScrollChild(edit)
 	edit:SetScript("OnEscapePressed", edit.ClearFocus)
+	edit:SetScript("OnHide", edit.ClearFocus) -- fenêtre fermée pendant la frappe : le clavier revient au jeu
+	edit:SetScript("OnCursorChanged", function(_, _, y, _, h)
+		local top, view = scroll:GetVerticalScroll() or 0, scroll:GetHeight() or 0
+		y = -(y or 0)
+		if y < top then
+			scroll:SetVerticalScroll(y)
+		elseif y + (h or 0) > top + view then
+			scroll:SetVerticalScroll(y + (h or 0) - view)
+		end
+	end)
+	scroll:EnableMouseWheel(true)
+	scroll:SetScript("OnMouseWheel", function(self, delta)
+		local range = self:GetVerticalScrollRange() or 0
+		self:SetVerticalScroll(math.max(0, math.min(range, (self:GetVerticalScroll() or 0) - delta * 2 * LINE)))
+	end)
 	box:EnableMouse(true)
 	box:SetScript("OnMouseDown", function() edit:SetFocus() end)
-	win.edit = edit
+	win.edit, win.scroll = edit, scroll
 	win.count = UI.Text(win, 11)
 	win.count:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -4)
 	UI.Paint(win.count, "dim")
-	local help = Block(win, x, -218, width - 70)
-	UI.Paint(help, "dim")
-	help:SetText(L["{cible} est le joueur de la case. Une commande sans cible vise la case."])
+	win.help = Zone(win, x, -198, width - 70, 2)
+	UI.Paint(win.help, "dim")
 
-	Field(win, "Vérification", x, -244)
-	win.problems = Block(win, x, -260, width)
-	Field(win, "Envoyé au jeu", x, -318)
-	win.preview = Block(win, x, -334, width)
-	win.preview:SetTextColor(0.8, 0.82, 0.86)
-	Field(win, "Posée sur", x, -392)
-	win.uses = Block(win, x, -408, width)
-	win.uses:SetTextColor(0.8, 0.82, 0.86)
+	Field(win, "Vérification", x, -230)
+	win.others = UI.Text(win, 11) -- « et 3 autres » : au bout du titre, hors de la zone
+	win.others:SetPoint("TOPRIGHT", win, "TOPLEFT", x + width, -230)
+	UI.Paint(win.others, "dim")
+	win.problems = Zone(win, x, -246, width, 6)
+	-- Un sort écrit avec d'autres accents que dans le grimoire : un clic le corrige
+	win.fix = UI.Button(win, L["Corriger l'écriture"], 150, 18, function()
+		edit:SetText(Z:FixMacroSpelling(edit:GetText()))
+		win.Live()
+		win.SaveCurrent()
+		win.Refresh()
+	end)
+	win.fix:SetPoint("TOPLEFT", x + 96, -227)
+	win.fix.label:SetJustifyH("CENTER")
+	win.fix.tip = L["Écrit chaque sort signalé comme dans votre grimoire, accents compris."]
+	win.fix:Hide()
+	Field(win, "Envoyé au jeu", x, -330)
+	win.preview = Zone(win, x, -346, width, 5)
+	UI.Paint(win.preview, "text")
+	Field(win, "Posée sur", x, -417)
+	win.uses = Zone(win, x, -433, width, 2)
+	UI.Paint(win.uses, "text")
 
 	win.auto = UI.Check(win, L["Une commande sans cible vise la case"],
 		function() return Z.db.macroAutoTarget end,
-		function(value) Z.db.macroAutoTarget = value Z:ApplyClicks() win.Live() end)
-	win.auto:SetPoint("TOPLEFT", x, -434)
+		function(value) Z.db.macroAutoTarget = value Z:ApplyClicks() win.Live() win.Help() end)
+	win.auto:SetPoint("TOPLEFT", x, -463)
 	win.auto.tip = L["Décochez pour que vos macros partent exactement comme écrites, comme dans la fenêtre /macro."]
 
-	-- Mise à jour en direct pendant la frappe : longueur, fautes, texte réellement envoyé
+	-- L'aide suit la case : décochée, une commande sans cible ne vise plus la case
+	function win.Help()
+		win.help:SetText(Z.db.macroAutoTarget and L["{cible} est le joueur de la case. Une commande sans cible vise la case."]
+			or L["{cible} est le joueur de la case."])
+	end
+
+	-- Mise à jour en direct pendant la frappe : longueur, fautes (3 au plus, puis « et N autres »), texte envoyé
+	local SHOWN = 3
 	function win.Live()
 		local body = edit:GetText()
 		local resolved = Z:ResolveMacro(body)
 		win.count:SetText(#resolved .. " / " .. Z.MACRO_MAX)
 		local lines = {}
-		for _, problem in ipairs(Z:CheckMacro(body)) do
+		local problems = Z:CheckMacro(body)
+		win.fix:SetShown(problems.fixes ~= nil)
+		for _, problem in ipairs(problems) do
 			lines[#lines + 1] = (problem[1] == "err" and "|cffff6060" or "|cffffd060") .. problem[2] .. "|r"
 		end
-		win.problems:SetText(#lines > 0 and table.concat(lines, "\n", 1, math.min(#lines, 4)) or "|cff33dd88" .. L["Aucune faute trouvée."] .. "|r")
+		win.problems:SetText(#lines > 0 and table.concat(lines, "\n", 1, math.min(#lines, SHOWN)) or "|cff33dd88" .. L["Aucune faute trouvée."] .. "|r")
+		win.others:SetText(#lines > SHOWN and L["et %d autres"]:format(#lines - SHOWN) or "")
 		win.preview:SetText(resolved)
 	end
 	edit:SetScript("OnTextChanged", function() win.Live() end)
 
 	function win.SaveCurrent()
 		if not win.macro then return end
-		if win.name:GetText() ~= win.macro.name and not Z:RenameMacro(win.macro, win.name:GetText()) then
-			win.name:SetText(win.macro.name) -- nom déjà pris : on garde l'ancien
+		if win.name:GetText() ~= win.macro.name then
+			local ok, why = Z:RenameMacro(win.macro, win.name:GetText())
+			if not ok then Z:Print(why) end -- nom déjà pris : on garde l'ancien, et on le dit
+			win.name:SetText(win.macro.name)
 		end
 		local body = edit:GetText()
 		if body ~= win.macro.body then
@@ -575,14 +801,23 @@ local function BuildWindow()
 		end
 	end
 
-	local save = UI.Button(win, L["Enregistrer"], 120, 24, function()
+	-- La macro s'enregistre aussi toute seule à la fermeture ; le bouton dit deux secondes que c'est fait
+	local save
+	save = UI.Button(win, L["Enregistrer"], 120, 24, function()
 		win.SaveCurrent()
 		win.Refresh()
+		local token = {}
+		save.token = token
+		save.label:SetText(L["Enregistrée"])
+		C_Timer.After(2, function()
+			if save.token == token then save.label:SetText(L["Enregistrer"]) end
+		end)
 	end)
 	save:SetPoint("BOTTOMLEFT", x, 14)
 	save.label:SetJustifyH("CENTER")
 	win.save = save
-	local remove = UI.Button(win, L["Supprimer"], 100, 24, function()
+	-- Supprimer vide aussi tous les clics et touches de la macro : à confirmer d'un second clic
+	local remove = Z.ArmedButton(win, "Supprimer", "Cliquez encore pour confirmer", 200, function()
 		if not win.macro then return end
 		Z:RemoveMacro(win.macro)
 		win.macro = nil
@@ -590,16 +825,21 @@ local function BuildWindow()
 		ClicksChanged()
 	end)
 	remove:SetPoint("LEFT", save, "RIGHT", 6, 0)
-	remove.label:SetJustifyH("CENTER")
 	remove.tip = L["Supprime la macro et vide les clics qui l'utilisaient."]
 	win.remove = remove
 
 	function win.Select(macro)
 		win.macro = macro
+		win.position = macro and select(2, Z:FindMacro(macro.name)) or nil
+		win.remove.Disarm() -- armé pour une autre macro : le second clic ne la supprime pas
+		win.save.token = nil -- « Enregistrée » était dit pour l'autre macro
+		win.save.label:SetText(L["Enregistrer"])
 		win.name:SetText(macro and macro.name or "")
 		edit:SetText(macro and macro.body or "")
+		win.scroll:SetVerticalScroll(0)
 		win.Live()
 		win.Refresh()
+		ClicksChanged() -- macro créée, importée ou supprimée : « Annuler mes changements » paraît
 	end
 
 	function win.Refresh()
@@ -608,38 +848,71 @@ local function BuildWindow()
 		for i, row in ipairs(win.rows) do
 			local macro = macros[i + win.offset]
 			row.macro = macro
-			row:SetShown(macro ~= nil or i == 1)
+			row:SetShown(macro ~= nil)
 			row.icon:SetTexture(macro and Z:MacroIcon(macro.body) or nil)
-			row.label:SetText(macro and macro.name or "|cff8a8f99" .. L["Aucune macro : cliquez sur Nouvelle."] .. "|r")
-			row.bg:SetVertexColor(unpack(macro and macro == win.macro and UI.line or UI.panel))
+			row.label:SetText(macro and macro.name or "")
+			row.mark:SetShown(macro ~= nil and macro == win.macro)
 		end
+		win.empty:SetShown(#macros == 0)
+		win.more:SetShown(#macros > ROWS)
+		win.more:SetText(L["Molette : %d de plus"]:format(math.max(0, #macros - ROWS)))
 		local uses = win.macro and Z:MacroUses(win.macro) or {}
-		win.uses:SetText(#uses > 0 and table.concat(uses, ", ") or "|cff8a8f99" .. L["aucun clic ni touche, dans cette spécialisation"] .. "|r")
+		local copy = Z:GameCopy(win.macro)
+		if copy then uses[#uses + 1] = L["copie dans /macro : %s"]:format(copy) end
+		win.uses:SetText(#uses > 0 and table.concat(uses, ", ") or Dim(L["aucun clic ni touche, dans cette spécialisation"]))
 		win.save:SetShown(win.macro ~= nil)
 		win.remove:SetShown(win.macro ~= nil)
 		win.name:SetShown(win.macro ~= nil)
 		win.auto:Update()
+		win.Help()
+		win.Placed()
 	end
 
-	win:SetScript("OnHide", function() win.SaveCurrent() end)
+	-- Consigne refaite à l'ouverture, quand l'écran change (UI.lua, Refit) et à chaque rafraîchissement
+	function win.Placed()
+		win.hint:SetText(HintText())
+	end
+	win:HookScript("OnShow", win.Placed) -- après UI.Appear, qui a placé la fenêtre (et effacé les options ou non)
+
+	win:HookScript("OnHide", function() -- garde le retour des options (UI.Window)
+		win.SaveCurrent()
+		-- Une macro tenue au curseur quand la fenêtre se ferme : l'icône part, rien n'est déposé
+		if dragIcon then
+			dragIcon:Hide()
+			dragIcon:SetScript("OnUpdate", nil)
+		end
+	end)
+	-- Changement de thème : les gris écrits dans un texte suivent
+	UI.OnSkin(function()
+		if win:IsShown() then win.Refresh() end
+		if wizard and wizard:IsShown() then wizard.Update() end
+	end)
 end
 
 -- Ouvre la bibliothèque, sur une macro (nom) ou sur la première
 function Z:OpenMacros(name)
 	if not win then BuildWindow() end
 	local options = Z.OptionsWindow and Z:OptionsWindow()
-	if not win:IsShown() then
+	if not win:IsShown() and not (options and options:IsShown()) then
 		win:ClearAllPoints()
-		if options and options:IsShown() then
-			win:SetPoint("TOPLEFT", options, "TOPRIGHT", 8, 0)
-		else
-			win:SetPoint("CENTER")
-		end
+		win:SetPoint("CENTER") -- options fermées : au milieu ; ouvertes, UI.Appear la pose à côté
 	end
 	win:Show()
 	win.SaveCurrent()
 	win.Select(name and Z:FindMacro(name) or win.macro or Z:GetMacros()[1])
 	return win
+end
+
+-- « Annuler mes changements » a remis la bibliothèque d'avant (Options.lua) : la macro ouverte est une ancienne
+-- table, plus rien ne doit y être écrit. La fenêtre ouverte reprend la macro à la même place de la liste.
+function Z.MacrosUndone()
+	if not win then return end
+	local position = win.position
+	win.macro = nil
+	if win:IsShown() then
+		local macros = Z:GetMacros()
+		win.Select(position and macros[position] or macros[1])
+	end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -650,6 +923,7 @@ function Z:OpenMacroImport()
 		importer = UI.Window("LyoruneMacroImport", L["Importer de /macro"], 372, 120)
 		importer:SetFrameStrata("FULLSCREEN_DIALOG")
 		tinsert(UISpecialFrames, "LyoruneMacroImport")
+		UI.OnTop(importer) -- Échap ferme seulement cette fenêtre, pas Mes macros ni les options
 		importer.note = Block(importer, 14, -42, 344)
 		UI.Paint(importer.note, "dim")
 		importer.icons = {}
@@ -685,7 +959,7 @@ function Z:OpenMacroImport()
 		icon.game = game
 		icon.texture:SetTexture(game.icon or QUESTION)
 		icon:ClearAllPoints()
-		icon:SetPoint("TOPLEFT", 14 + ((i - 1) % perRow) * (size + 2.5), -76 - math.floor((i - 1) / perRow) * (size + 3))
+		icon:SetPoint("TOPLEFT", 14 + ((i - 1) % perRow) * (size + 3), -76 - math.floor((i - 1) / perRow) * (size + 3))
 		icon:Show()
 	end
 	for i = #macros + 1, #importer.icons do importer.icons[i]:Hide() end
@@ -695,18 +969,21 @@ function Z:OpenMacroImport()
 	importer:ClearAllPoints()
 	importer:SetPoint("CENTER", win or UIParent, "CENTER")
 	importer:Show()
-	importer:Raise()
+	UI.Lift(importer) -- déjà ouverte : repasse au-dessus
 	return importer
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Assistant
 ----------------------------------------------------------------------------------------------------
+local WIZARD_H = 360
+
 function Z:OpenMacroWizard()
 	if not wizard then
-		wizard = UI.Window("LyoruneMacroWizard", L["Assistant de macro"], 400, 360)
+		wizard = UI.Window("LyoruneMacroWizard", L["Assistant de macro"], 400, WIZARD_H)
 		wizard:SetFrameStrata("FULLSCREEN_DIALOG")
 		tinsert(UISpecialFrames, "LyoruneMacroWizard")
+		UI.OnTop(wizard) -- Échap ferme seulement l'assistant, pas Mes macros ni les options
 		local opts = { stop = false, trinket1 = false, trinket2 = false, res = true }
 		wizard.opts = opts
 		local y = -46
@@ -715,7 +992,7 @@ function Z:OpenMacroWizard()
 			Z.OpenPicker(L["Sort lancé sur le joueur"], function(value)
 				if value and value:sub(1, 1) ~= "@" then opts.spell = value end
 				wizard.Update()
-			end, opts.spell, true)
+			end, true)
 		end)
 		wizard.spell:SetPoint("TOPLEFT", 186, y + 4)
 		wizard.spell.label:SetJustifyH("CENTER")
@@ -734,21 +1011,30 @@ function Z:OpenMacroWizard()
 		Option("trinket1", "Utiliser mon bijou du haut")
 		Option("trinket2", "Utiliser mon bijou du bas")
 		wizard.res = Option("res", "Si le joueur est mort : le relever")
-		y = y - 4
-		Field(wizard, "Si c'est un ennemi, lancer (facultatif)", 14, y)
+		-- La suite est posée sous un repère qui remonte d'une ligne quand la classe n'a pas de résurrection
+		wizard.tailY = y - 4
+		wizard.tail = CreateFrame("Frame", nil, wizard)
+		wizard.tail:SetSize(1, 1)
+		wizard.tail:SetPoint("TOPLEFT", 0, wizard.tailY)
+		local harmLabel = Field(wizard, "Si c'est un ennemi, lancer (facultatif)", 14, 0)
+		harmLabel:ClearAllPoints()
+		harmLabel:SetPoint("TOPLEFT", wizard.tail, "TOPLEFT", 14, 0)
 		wizard.harm = UI.Edit(wizard, 170, function(text)
 			opts.harm = text
 			wizard.Update()
 		end)
-		wizard.harm:SetPoint("TOPLEFT", 216, y + 4)
+		wizard.harm:SetPoint("TOPLEFT", wizard.tail, "TOPLEFT", 216, 4)
 		wizard.harm:SetScript("OnTextChanged", function(self)
 			opts.harm = self:GetText()
 			wizard.Update()
 		end)
-		y = y - 32
-		Field(wizard, "Votre macro", 14, y)
-		wizard.preview = Block(wizard, 14, y - 16, 372)
-		wizard.preview:SetTextColor(0.8, 0.82, 0.86)
+		local previewLabel = Field(wizard, "Votre macro", 14, 0)
+		previewLabel:ClearAllPoints()
+		previewLabel:SetPoint("TOPLEFT", wizard.tail, "TOPLEFT", 14, -32)
+		wizard.preview = Zone(wizard, 14, 0, 372, 6)
+		wizard.preview:ClearAllPoints()
+		wizard.preview:SetPoint("TOPLEFT", wizard.tail, "TOPLEFT", 14, -48)
+		UI.Paint(wizard.preview, "text")
 		local create = UI.Button(wizard, L["Créer la macro"], 150, 24, function()
 			local body = Z:MacroFromWizard(opts)
 			if body == "" then return end
@@ -760,18 +1046,22 @@ function Z:OpenMacroWizard()
 		create.label:SetJustifyH("CENTER")
 		wizard.create = create
 		function wizard.Update()
-			wizard.spell.label:SetText(opts.spell or "|cff8a8f99" .. L["Choisir..."] .. "|r")
+			wizard.spell.label:SetText(opts.spell or Dim(L["Choisir..."]))
 			wizard.preview:SetText(Z:MacroFromWizard(opts))
 		end
 	end
 	local known = Z:KnownSpells()[1]
 	wizard.opts.spell = wizard.opts.spell or (known and known.name)
-	wizard.res:SetShown(Z.classRes[Z.class] ~= nil)
+	-- Classe sans résurrection : la case est cachée et la suite remonte, la fenêtre raccourcit d'autant
+	local res = Z.classRes[Z.class] ~= nil
+	wizard.res:SetShown(res)
+	wizard.tail:SetPoint("TOPLEFT", 0, wizard.tailY + (res and 0 or 24))
+	wizard:SetHeight(WIZARD_H - (res and 0 or 24))
 	wizard.Update()
 	wizard:ClearAllPoints()
 	wizard:SetPoint("CENTER", win or UIParent, "CENTER")
 	wizard:Show()
-	wizard:Raise()
+	UI.Lift(wizard) -- déjà ouvert : repasse au-dessus
 	return wizard
 end
 

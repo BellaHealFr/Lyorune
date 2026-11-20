@@ -10,8 +10,13 @@ Obj.__index = function(t, k)
 	if type(k) == "string" and k:match("^%u") then return function() end end -- méthode inconnue : sans effet
 end
 
+-- Fenêtres posées sur une autre (UI.OnTop) : comme dans le jeu, les cacher lance OnHide, qui rend à
+-- UISpecialFrames les noms retirés (ailleurs, les tests lancent OnHide à la main)
+local HIDE_RUNS_ONHIDE = { LyorunePicker = true, LyoruneMacroImport = true, LyoruneMacroWizard = true }
+
 local function new(kind, name, parent)
-	local o = setmetatable({ _kind = kind, _name = name, _parent = parent, _scripts = {}, _attr = {}, _events = {}, _shown = true, _w = 100, _h = 20 }, Obj)
+	local o = setmetatable({ _kind = kind, _name = name, _parent = parent, _scripts = {}, _attr = {}, _events = {}, _shown = true, _w = 100, _h = 20,
+		_hideRuns = name and HIDE_RUNS_ONHIDE[name], _level = parent and (parent._level or 1) + 1 or 1 }, Obj)
 	frames[#frames + 1] = o
 	if name then _G[name] = o end
 	return o
@@ -27,7 +32,11 @@ function Obj:Run(n, ...) if self._scripts[n] then return self._scripts[n](self, 
 function Obj:SetAttribute(k, v) self._attr[k] = v; self:Run("OnAttributeChanged", k, v) end
 function Obj:GetAttribute(k) return self._attr[k] end
 function Obj:Show() local was = self._shown; self._shown = true; if not was then self:Run("OnShow") end end
-function Obj:Hide() self._shown = false end
+function Obj:Hide()
+	local was = self._shown
+	self._shown = false
+	if was and self._hideRuns then self:Run("OnHide") end
+end
 function Obj:SetShown(s) if s then self:Show() else self:Hide() end end
 function Obj:IsShown() return self._shown end
 function Obj:IsVisible() return self._shown end
@@ -49,7 +58,14 @@ function Obj:GetWidth() return self._w end
 function Obj:GetHeight() return self._h end
 function Obj:GetStringHeight() return 60 end
 function Obj:GetStringWidth() return 120 end
-function Obj:GetFrameLevel() return 1 end
+-- Niveaux comme dans le jeu : un enfant naît un cran au-dessus de son parent et le suit quand il change
+function Obj:GetFrameLevel() return self._level or 1 end
+function Obj:SetFrameLevel(level)
+	local delta = level - (self._level or 1)
+	self._level = level
+	for _, child in ipairs(self._children or {}) do child:SetFrameLevel((child._level or 1) + delta) end
+end
+function Obj:GetChildren() return unpack(self._children or {}) end
 function Obj:GetName() return self._name end
 function Obj:GetParent() return self._parent end
 function Obj:SetText(t) self._text = t end
@@ -74,11 +90,20 @@ function Obj:SetFont(file, size) self._font, self._size = file, size return true
 function Obj:SetTexture(t) self._tex = t end
 function Obj:SetAlpha(a) self._alpha = a end
 function Obj:SetMinMaxValues(lo, hi) self._min, self._max = lo, hi end
-function Obj:SetValue(v) self._value = v end
+function Obj:SetValue(v, smoothing) self._value, self._smoothing = v, smoothing end
+function Obj:GetValue() return self._value end
 function Obj:GetAlpha() return self._alpha or 1 end
 function Obj:SetStatusBarColor(r, g, b, a) self._barColor = { r, g, b, a } end
 function Obj:SetBackdrop(b) self._backdrop = b end
-function Obj:SetPoint(...) self._point = { ... } end
+function Obj:SetPoint(...)
+	self._point = { ... }
+	-- Toutes les ancres, pour les tests qui recalculent la place d'un élément (aucune géométrie ici)
+	self._points = self._points or {}
+	self._points[(...)] = { ... }
+	self._all = nil
+end
+function Obj:ClearAllPoints() self._points, self._all = nil, nil end
+function Obj:SetAllPoints(relative) self._points, self._all = nil, relative or self._parent end
 function Obj:Play() self._playing = true end
 function Obj:Stop() self._playing = false end
 function Obj:IsPlaying() return self._playing or false end
@@ -103,7 +128,14 @@ function Obj:SetScale(s) self._scale = s end
 function Obj:GetScale() return self._scale or 1 end
 function GetCursorPosition() return CURSOR_X or 500, CURSOR_Y or 300 end
 GameTooltip = new("GameTooltip", "GameTooltip")
-function CreateFrame(kind, name, parent) return new(kind, name, parent) end
+function CreateFrame(kind, name, parent)
+	local o = new(kind, name, parent)
+	if parent and parent ~= UIParent then -- UIParent : trop d'enfants pour les compter, et personne ne les lit
+		parent._children = parent._children or {}
+		parent._children[#parent._children + 1] = o
+	end
+	return o
+end
 function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a, GetRGB = function() return r, g, b end, GetRGBA = function() return r, g, b, a end } end
 function CopyTable(t) local c = {} for k, v in pairs(t) do c[k] = type(v) == "table" and CopyTable(v) or v end return c end
 PixelUtil = {
@@ -187,6 +219,8 @@ function GetReadyCheckStatus() return "ready" end
 function UnitHasIncomingResurrection() return false end
 function UnitIsUnit() return false end
 function InCombatLockdown() return COMBAT end
+-- Régénération de mana par seconde (hors combat, puis pendant les 5 s après un sort)
+function GetPowerRegen() return 10, 0 end
 -- Macros du personnage : MACROS[1] porte le numéro 121 dans le jeu
 MACROS, PICKED = {}, false
 MAX_ACCOUNT_MACROS, MAX_CHARACTER_MACROS = 120, 18
@@ -201,7 +235,7 @@ function CreateMacro(name, icon, body, perCharacter)
 end
 function EditMacro(index, name, icon, body) local m = MACROS[index - 120] m.name, m.body = name, body end
 function DeleteMacro(index) assert(not COMBAT) table.remove(MACROS, index - 120) end
-function PickupMacro(index) PICKED = MACROS[index - 120].name end
+function PickupMacro(index) PICKED = MACROS[index - 120].name CURSOR_INFO = { "macro", index } end
 -- Règles de visibilité : le faux client les réévalue à chaque changement de combat (voir FireEvent dans run.py)
 STATE_DRIVERS = {}
 -- Règle « [cond,cond] action; [cond] action; action » : conditions combat et group:raid

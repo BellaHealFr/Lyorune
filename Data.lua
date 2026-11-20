@@ -11,6 +11,7 @@
 --   4. Z.resSpells et Z.classRes : son sort de résurrection, s'il en a un
 --   5. Z.raidBuffs.MACLASSE : ses buffs de groupe, s'il en a
 --   6. Z.uniqueBuffs.MACLASSE : ses buffs à poser sur une seule personne (le tank), s'il en a
+--   7. Z.classPower.MACLASSE : sa ressource si ce n'est pas la mana (rage, énergie...)
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -101,6 +102,10 @@ Z.classRes = {
 	PRIEST = { 2006 }, PALADIN = { 7328 }, SHAMAN = { 2008 },
 	DRUID = { 1237950, combat = 20484 },
 }
+
+-- Ressource de la classe quand ce n'est pas la mana : numéro et nom du jeu (Enum.PowerType). Sert au mode test,
+-- et sur les vraies cases quand le jeu garde la ressource secrète et qu'aucune n'est encore connue.
+Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2, "FOCUS" } }
 
 -- Buffs de groupe à surveiller hors combat. Chaque ligne : la version simple puis la version de groupe.
 Z.raidBuffs = {

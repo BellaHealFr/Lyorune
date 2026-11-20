@@ -3,7 +3,7 @@
 --   1. Mana faible     : ma mana passe sous un seuil.            Texte : {mana} = mon pourcentage de mana
 --   2. Mana remontée   : après une alerte, ma mana est revenue.  Texte : {mana}
 --   3. Résurrection    : je commence à relever un joueur.        Texte : {nom} = le joueur relevé
---   4. Quand le jeu cache ma mana (WoW Forever) : la règle à sorts (mana faible) et les paliers (mana remontée).
+--   4. Quand le jeu cache ma mana (WoW Forever) : la règle à sorts (mana faible) et l'estimation (mana remontée).
 -- Chaque annonce a sa case à cocher et son texte. Elles ne partent qu'en groupe.
 --
 -- Limite imposée par le jeu : hors instance, un addon n'a pas le droit d'écrire en /dire tout seul.
@@ -16,9 +16,10 @@ local MANA = 0        -- type de ressource « mana »
 local MIN_DELAY = 30  -- secondes minimum entre deux annonces de mana faible
 
 local low = false     -- vrai entre « mana faible » et « mana remontée »
-local waitRegen = false -- mana cachée : vrai entre « mana faible » et « mana remontée » (estimée par paliers)
+local waitRegen = false -- mana cachée : vrai entre « mana faible » et « mana remontée » (estimée)
 local lastLow, lastRes = -MIN_DELAY, -10
-local marks, lastFloor, plan = {}, math.huge, 0 -- paliers de mana cachée (voir « Mana remontée » plus bas)
+local estimate, estimateAt, lastRate -- mana cachée : mana estimée, heure de la mesure, régénération lue
+local castUntil = 0 -- mana cachée : fin des 5 secondes sans régénération après un sort qui coûte de la mana
 
 -- Remplace {mana}, {nom}... dans un texte
 local function Fill(text, token, value)
@@ -49,7 +50,7 @@ end
 -- Ma mana vient de passer sous le seuil : son et annonce (une annonce toutes les 30 s au plus)
 local function WarnLow(percent)
 	low, waitRegen = true, true
-	marks, lastFloor, plan = {}, math.huge, plan + 1 -- la remontée se mesure à partir de maintenant
+	estimate, lastRate = nil, nil -- la remontée se mesure à partir de maintenant, depuis le plancher sûr
 	if Z.db.soundMana then PlaySound(8959, "Master") end
 	if Z.db.manaAlert and GetTime() - lastLow >= MIN_DELAY then
 		lastLow = GetTime()
@@ -126,57 +127,85 @@ function Z:ManaRulerText()
 	local name = C_Spell.GetSpellName(id) or "?"
 	local rank = C_Spell.GetSpellSubtext and C_Spell.GetSpellSubtext(id)
 	if rank and not issecret(rank) and rank ~= "" then name = name .. " (" .. rank .. ")" end
-	return L["Le jeu cache votre mana : l'annonce part quand vous n'avez plus assez de mana pour %s, soit vers %d %%. La mana remontée est estimée d'après la vitesse à laquelle vos sorts redeviennent utilisables."]:format(name, percent)
+	return L["Le jeu cache votre mana : l'annonce part quand vous n'avez plus assez de mana pour %s, soit vers %d %%. La mana remontée est estimée hors combat avec votre régénération, boisson comprise."]:format(name, percent)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Mana remontée quand le jeu cache ma mana : les paliers
+-- Mana remontée quand le jeu cache ma mana : l'estimation
 ----------------------------------------------------------------------------------------------------
--- Aucun sort ne coûte 90 % de ma mana : la règle à sorts ne peut pas dire « remontée ». Mais pendant que
--- je bois, mes sorts redeviennent utilisables l'un après l'autre, du moins cher au plus cher. Chaque fois,
--- je sais que ma mana vient d'atteindre le coût de ce sort, et à quelle heure. Deux paliers donnent la
--- vitesse de remontée (boisson comprise), donc l'heure à laquelle j'atteindrai le seuil : un seul minuteur
--- part, refait à chaque nouveau palier, annulé si je dépense de la mana. Aucune boucle.
+-- Aucun sort ne coûte 90 % de ma mana : la règle à sorts ne peut pas dire « remontée » seule. Mais elle
+-- encadre ma mana : au moins le coût du sort le plus cher que je peux lancer (plancher), moins que le coût
+-- du premier qui en manque (plafond). Hors combat, le jeu dit en clair ma régénération par seconde, boisson
+-- comprise (GetPowerRegen). À chaque changement de mana signalé par le jeu, Lyorune ajoute cette
+-- régénération multipliée par le temps écoulé, puis garde l'estimation entre le plancher et le plafond.
+-- En combat la régénération est secrète : rien n'est ajouté. Un sort qui coûte de la mana ramène
+-- l'estimation au plancher, et les 5 secondes qui suivent ne comptent pas. L'annonce ne part donc jamais
+-- trop tôt. Aucune boucle, aucun minuteur.
 
--- Palier sûr : le coût du sort le plus cher que je peux lancer. Ma mana est au moins à ce niveau.
-local function ManaFloor()
+-- Plancher et plafond sûrs de ma mana d'après mes sorts
+local function ManaBounds(max)
 	if not manaSpells then ReadManaSpells() end
-	local floor = 0
+	local floor, ceiling = 0, max
 	for _, spell in ipairs(manaSpells) do -- du moins cher au plus cher : on s'arrête au premier qui manque
 		local enough = ManaFor(spell.id)
-		if enough == false then break end
+		if enough == false then
+			ceiling = spell.cost
+			break
+		end
 		if enough then floor = spell.cost end
 	end
-	return floor
+	return floor, math.max(ceiling, floor)
+end
+
+-- Ma régénération de mana par seconde : lisible hors combat seulement (rien en combat, ou réponse secrète)
+local function RegenRate()
+	if InCombatLockdown() then return nil end
+	local kind = UnitPowerType("player")
+	local ok, rate = false, nil
+	if (issecret(kind) or kind == MANA) and GetPowerRegen then
+		ok, rate = pcall(GetPowerRegen)
+	elseif GetPowerRegenForPowerType then -- druide en forme d'ours ou de félin : la mana à part
+		ok, rate = pcall(GetPowerRegenForPowerType, MANA)
+	end
+	if not ok or issecret(rate) or type(rate) ~= "number" or rate < 0 then return nil end
+	return rate
 end
 
 local function AnnounceRegen(percent)
-	waitRegen, marks, plan = false, {}, plan + 1
+	waitRegen, estimate, lastRate = false, nil, nil
 	if Z.db.regenAlert then Z:Announce(Z:RegenText(percent)) end
 end
 
 local function FollowRegen(max, regenAt)
-	local floor = ManaFloor()
-	if floor < lastFloor then marks, plan = {}, plan + 1 end -- je dépense : on repart de zéro
-	local crossed = floor > lastFloor
-	lastFloor = floor
-	if not crossed then return end
-	marks[#marks + 1] = { mana = floor, at = GetTime() }
-	if #marks > 4 then table.remove(marks, 1) end -- les derniers paliers : la vitesse de la boisson
-	local target = max * regenAt / 100
-	if floor >= target then return AnnounceRegen(math.floor(floor / max * 100 + 0.5)) end
-	local first, last = marks[1], marks[#marks]
-	if #marks < 2 or last.at <= first.at then return end
-	local speed = (last.mana - first.mana) / (last.at - first.at) -- mana par seconde
-	plan = plan + 1
-	local mine = plan
-	C_Timer.After((target - last.mana) / speed, function()
-		Z:Try("annonce de mana", function()
-			if mine ~= plan or not waitRegen then return end -- un palier plus récent a refait le calcul
-			if ManaFloor() < last.mana then return end -- mana dépensée entre-temps
-			AnnounceRegen(regenAt)
-		end)
-	end)
+	local now = GetTime()
+	local floor, ceiling = ManaBounds(max)
+	local rate = RegenRate()
+	if estimate and rate and lastRate then
+		-- la plus petite des deux mesures : une boisson qui commence ou finit n'avance jamais l'annonce
+		local from = math.max(estimateAt, castUntil)
+		if now > from then estimate = estimate + math.min(rate, lastRate) * (now - from) end
+	end
+	estimate = math.min(math.max(estimate or floor, floor), ceiling)
+	estimateAt, lastRate = now, rate
+	if estimate >= max * regenAt / 100 then
+		AnnounceRegen(math.min(100, math.floor(estimate / max * 100 + 0.5)))
+	end
+end
+
+-- Un sort qui coûte de la mana pendant la remontée : retour au plancher sûr, sans régénération pendant 5 s
+local function NoteCast(spellID)
+	if not waitRegen then return end
+	if not issecret(spellID) and spellID then
+		local ok, costs = pcall(C_Spell.GetSpellPowerCost, spellID)
+		if ok and type(costs) == "table" and not issecret(costs) then
+			local paid = false
+			for _, c in ipairs(costs) do
+				if issecret(c.type) or issecret(c.cost) or (c.type == MANA and (c.cost or 0) > 0) then paid = true end
+			end
+			if not paid then return end -- baguette, objet... : ma mana n'a pas bougé
+		end
+	end
+	estimate, castUntil = nil, GetTime() + 5
 end
 
 local function CheckMana()
@@ -187,7 +216,7 @@ local function CheckMana()
 	local mana, max = UnitPower("player", MANA), UnitPowerMax("player", MANA)
 	local regenAt = math.max(db.regenThreshold, db.manaThreshold + 10)
 	if issecret(mana) or issecret(max) then
-		-- mana cachée : la règle à sorts pour « mana faible », les paliers pour « mana remontée »
+		-- mana cachée : la règle à sorts pour « mana faible », l'estimation pour « mana remontée »
 		local isLow, percent = Z:ManaByRuler()
 		if isLow and not low then WarnLow(percent) elseif isLow == false then low = false end
 		if waitRegen and db.regenAlert and not issecret(max) and max and max > 0 then FollowRegen(max, regenAt) end
@@ -235,6 +264,9 @@ watcher:SetScript("OnEvent", function(_, event, ...)
 	if event == "UNIT_SPELLCAST_SENT" then
 		local _, target, _, spellID = ...
 		Z:Try("annonce de résurrection", CheckRes, target, spellID)
+	elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+		local _, _, spellID = ...
+		Z:Try("annonce de mana", NoteCast, spellID)
 	elseif event == "UI_ERROR_MESSAGE" then
 		Z:Try("annonce de mana", CheckOutOfMana, ...)
 	elseif event == "SPELLS_CHANGED" then
@@ -252,6 +284,9 @@ function Z:RefreshAlerts()
 	end
 	if Z.db.manaAlert or Z.db.soundMana or Z.db.regenAlert then -- règle à sorts et paliers : grimoire relu
 		watcher:RegisterEvent("SPELLS_CHANGED")
+	end
+	if Z.db.regenAlert then -- mana cachée : un sort lancé pendant la remontée
+		watcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 	end
 	if Z.db.manaAlert or Z.db.soundMana then -- sort refusé faute de mana
 		watcher:RegisterEvent("UI_ERROR_MESSAGE")

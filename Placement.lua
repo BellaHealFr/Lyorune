@@ -38,8 +38,8 @@ local function Limit(value)
 	return math.max(limit[1], math.min(limit[2], value))
 end
 
--- Décalage d'un élément pour la forme choisie, en pixels de la case (0, 0 : place d'origine)
-function Z.Offset(key)
+-- Décalage enregistré, tel quel (seulement borné par Z.limits.placement)
+local function Saved(key)
 	local db = Z.db
 	local shape = db and type(db.placement) == "table" and db.placement[db.shape]
 	local at = type(shape) == "table" and shape[key]
@@ -47,20 +47,202 @@ function Z.Offset(key)
 	return Limit(at[1]), Limit(at[2])
 end
 
--- Enregistre un décalage. (0, 0) efface l'entrée : le réglage reste léger.
+----------------------------------------------------------------------------------------------------
+-- Jamais hors de la case : chaque décalage est borné par la place qui reste entre l'élément, à sa place
+-- d'origine, et le bord de la case. Calcul fait à partir des tailles, sans mesure à l'écran (les vraies cases
+-- sont protégées, et la largeur d'un nom change d'un joueur à l'autre). Un élément déjà en partie dehors à sa
+-- place d'origine (le marqueur de raid, à cheval sur le haut) ne va pas plus loin de ce côté.
+-- Le nom et le texte de vie rétrécissent près du bord au lieu d'en sortir (un nom long finit par « ... »).
+-- Les places d'origine ci-dessous sont celles posées par PlaceTexts (Frames.lua), Auras.lua et Containers.lua :
+-- elles changent ensemble. La sauvegarde n'est jamais réécrite : un ancien décalage trop grand est ramené au bord
+-- à la lecture, et retrouve sa valeur si la case grandit.
+----------------------------------------------------------------------------------------------------
+local ICON_GAP = 2 -- écart entre deux icônes d'une rangée (Auras.lua, Containers.lua)
+local TEXT_MIN = 3 -- largeur la plus petite d'un texte poussé au bord, en tailles de police
+
+-- Rectangle { gauche, droite, bas, haut } d'un élément de taille w × h dont le point « point » est en (x, y).
+-- Coordonnées de la case : (0, 0) en bas à gauche.
+local function Box(point, x, y, w, h)
+	local left = point:find("LEFT") and x or point:find("RIGHT") and x - w or x - w / 2
+	local bottom = point:find("BOTTOM") and y or point:find("TOP") and y - h or y - h / 2
+	return { left, left + w, bottom, bottom + h }
+end
+
+-- Position d'un point d'un rectangle
+local function Spot(rect, point, x, y)
+	local px = point:find("LEFT") and rect[1] or point:find("RIGHT") and rect[2] or (rect[1] + rect[2]) / 2
+	local py = point:find("BOTTOM") and rect[3] or point:find("TOP") and rect[4] or (rect[3] + rect[4]) / 2
+	return px + (x or 0), py + (y or 0)
+end
+
+-- Place d'origine de chaque élément, avec ou sans barre de mana sous la barre de vie. roleRect : rectangle de
+-- l'icône de rôle, où s'accroche le chef de groupe (absent : pas de chef de groupe). Chaque entrée :
+-- { point, x, y, largeur, hauteur }, plus « text » pour un texte qui peut rétrécir.
+local function Origins(power, roleRect)
+	local db, theme = Z.db, Z:Theme()
+	local W, H = Z.CellSize()
+	local inset = UI.Inset(theme.borderSize, db.corners == "ROUND")
+	local icon = Z.IconSize()
+	local sizes = { iconSize = icon }
+	local function Shift(point) return Z.CornerShift(sizes, point) end
+	local font = db.fontSize + (theme.fontBonus or 0)
+	local hp = { inset, W - inset, inset + (power and Z.PowerHeight() + 1 or 0), H - inset }
+	local cell = { 0, W, 0, H }
+	local o = {}
+	local function Put(key, point, rect, relative, x, y, w, h, text)
+		local ax, ay = Spot(rect, relative, x, y)
+		o[key] = { point, ax, ay, w, h, text = text }
+	end
+
+	if Z:Shape().inline then
+		Put("role", "LEFT", hp, "LEFT", 3, 0, icon - 2, icon - 2)
+		Put("name", "LEFT", hp, "LEFT", icon + 3, 0, math.max(20, W - icon - 46), font + 2, true)
+		Put("text", "RIGHT", hp, "RIGHT", -4, 0, W - 2 * inset - 8, font + 1, true)
+		local badge = math.max(8, math.floor(icon * 0.7))
+		if roleRect then Put("leader", "CENTER", roleRect, "TOPRIGHT", 0, 0, badge, badge) end
+	else
+		Put("role", "TOPRIGHT", cell, "TOPRIGHT", -2 - Shift("TOPRIGHT"), -2, icon - 2, icon - 2)
+		Put("name", "CENTER", hp, "CENTER", 0, 3, W - 8, font + 2, true)
+		Put("text", "BOTTOM", hp, "BOTTOM", 0, 4, W - 8, font + 1, true)
+		if roleRect then Put("leader", "TOPRIGHT", roleRect, "TOPLEFT", -1, 0, icon - 2, icon - 2) end
+	end
+	Put("marker", "CENTER", cell, "TOP", 0, -1, icon, icon)
+	Put("center", "CENTER", cell, "CENTER", 0, 0, icon + 8, icon + 8)
+	Put("lowMana", "BOTTOMLEFT", hp, "BOTTOMLEFT", 2, 2, icon - 1, icon - 1)
+
+	-- Rangées : toutes les icônes réglées (la rangée la plus longue que la case montrera)
+	local function Row(count) return count * (icon + ICON_GAP) - ICON_GAP end
+	if db.hotStyle == "BARS" then
+		Put("hots", "TOPLEFT", cell, "TOPLEFT", 3 + Shift("TOPLEFT"), -3, math.floor(W * 0.45), db.hotCount * 4)
+	else
+		Put("hots", "TOPLEFT", cell, "TOPLEFT", 2 + Shift("TOPLEFT"), -2, Row(db.hotCount), icon)
+	end
+	Put("debuffs", "BOTTOMRIGHT", cell, "BOTTOMRIGHT", -2 - Shift("BOTTOMRIGHT"), 2, Row(db.debuffCount), icon)
+	local big = math.floor(icon * 1.6 + 0.5)
+	Put("big", "LEFT", cell, "LEFT", 3, 0, big, big)
+	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, icon, icon)
+	local size, point = db.privateAuraSize, db.privateAuraPoint
+	local spot = Z.PRIVATE_OFFSETS[point] or Z.PRIVATE_OFFSETS.CENTER
+	if not Z.PRIVATE_OFFSETS[point] then point = "CENTER" end
+	Put("private", point, cell, point, spot[1], spot[2], Z.PRIVATE_SLOTS * (size + ICON_GAP) - ICON_GAP, size)
+	return o
+end
+
+-- Bornes { gauche, droite, bas, haut } du décalage d'un élément : jusqu'au bord de la case, sans dépasser
+-- Z.limits.placement. Un texte peut s'approcher du bord tant qu'il garde TEXT_MIN tailles de police de large.
+-- home : la place d'origine quand elle diffère de spec (le chef de groupe, quand l'icône de rôle a bougé) ; la
+-- zone permise est la case, agrandie de la place d'origine si l'élément y dépasse déjà. Le décalage peut alors
+-- devoir être positif pour rentrer dans la case (chef de groupe poussé dehors par l'icône de rôle).
+local function Range(spec, W, H, home)
+	local point, x, y, w, h = spec[1], spec[2], spec[3], spec[4], spec[5]
+	local rect = Box(point, x, y, w, h)
+	local origin = home and Box(home[1], home[2], home[3], home[4], home[5]) or rect
+	local lowX, highX = math.min(0, origin[1]) - rect[1], math.max(W, origin[2]) - rect[2]
+	local lowY, highY = math.min(0, origin[3]) - rect[3], math.max(H, origin[4]) - rect[4]
+	if spec.text then
+		local least = math.min(w, TEXT_MIN * (h - 2))
+		if point:find("LEFT") then
+			highX = math.max(0, W - x - least)
+		elseif point:find("RIGHT") then
+			lowX = math.min(0, least - x)
+		else
+			lowX, highX = math.min(0, least / 2 - x), math.max(0, W - x - least / 2)
+		end
+	end
+	-- Dans les limites du réglage, et jamais à l'envers
+	local limit = Z.limits.placement
+	local function Within(low, high)
+		low = math.max(limit[1], math.min(limit[2], math.ceil(low)))
+		return low, math.max(low, math.min(limit[2], math.floor(high)))
+	end
+	lowX, highX = Within(lowX, highX)
+	lowY, highY = Within(lowY, highY)
+	return { lowX, highX, lowY, highY }
+end
+
+-- Garde la partie commune de deux bornes (jamais à l'envers : la borne basse l'emporte)
+local function Common(a, b)
+	if not a then return b end
+	local low, lowY = math.max(a[1], b[1]), math.max(a[3], b[3])
+	return { low, math.max(low, math.min(a[2], b[2])), lowY, math.max(lowY, math.min(a[4], b[4])) }
+end
+
+local function Clamp(range, x, y)
+	return math.max(range[1], math.min(range[2], x)), math.max(range[3], math.min(range[4], y))
+end
+
+-- Bornes de tous les éléments, gardées jusqu'au prochain changement (Z:Refresh, placement, taille des cases)
+local cache
+local function Ranges()
+	local db = Z.db
+	local W, H = Z.CellSize()
+	if cache and cache.db == db and cache.shape == db.shape and cache.W == W and cache.H == H then return cache end
+	-- Une case a sa barre de mana ou non selon le joueur : les bornes valent pour les deux
+	local powers = db.manaBars ~= "OFF" and { false, true } or { false }
+	local ranges, specs = {}, nil
+	for _, power in ipairs(powers) do
+		specs = Origins(power)
+		for key, spec in pairs(specs) do ranges[key] = Common(ranges[key], Range(spec, W, H)) end
+	end
+	-- Le chef de groupe s'accroche à l'icône de rôle, là où son propre décalage l'a posée
+	local roleX, roleY = Clamp(ranges.role, Saved("role"))
+	for _, power in ipairs(powers) do
+		local role = Origins(power).role
+		local home = Box(role[1], role[2], role[3], role[4], role[5])
+		local moved = Box(role[1], role[2] + roleX, role[3] + roleY, role[4], role[5])
+		ranges.leader = Common(ranges.leader, Range(Origins(power, moved).leader, W, H, Origins(power, home).leader))
+	end
+	cache = { db = db, shape = db.shape, W = W, H = H, ranges = ranges, specs = specs }
+	return cache
+end
+
+-- À appeler quand un réglage change (Z:Refresh le fait)
+function Z.ForgetPlacementRanges()
+	cache = nil
+end
+
+-- Bornes du décalage d'un élément : gauche, droite, bas, haut (pour l'éditeur et les tests)
+function Z.OffsetRange(key)
+	local range = Ranges().ranges[key]
+	if not range then return 0, 0, 0, 0 end
+	return range[1], range[2], range[3], range[4]
+end
+
+-- Décalage d'un élément pour la forme choisie, en pixels de la case (0, 0 : place d'origine), ramené dans la case
+function Z.Offset(key)
+	local range = KNOWN[key] and Ranges().ranges[key]
+	if not range then return 0, 0 end
+	return Clamp(range, Saved(key))
+end
+
+-- Largeur du nom ou du texte de vie, décalage compris : il rétrécit près du bord au lieu d'en sortir
+function Z.TextWidth(key)
+	local all = Ranges()
+	local spec = all.specs[key]
+	local point, x, w = spec[1], spec[2] + Z.Offset(key), spec[4]
+	if point:find("LEFT") then return math.min(w, all.W - x) end
+	if point:find("RIGHT") then return math.min(w, x) end
+	return math.min(w, 2 * x, 2 * (all.W - x))
+end
+
+-- Enregistre un décalage. (0, 0) efface l'entrée : le réglage reste léger. Pour la forme choisie, le décalage
+-- s'arrête au bord de la case ; pour une autre forme (code de partage), seulement aux limites du réglage.
 function Z.SetOffset(key, x, y, shape)
 	if not KNOWN[key] then return end
 	local all = Z.db.placement
 	shape = shape or Z.db.shape
 	x, y = Limit(x), Limit(y)
+	if shape == Z.db.shape then x, y = Clamp(Ranges().ranges[key], x, y) end
 	all[shape] = all[shape] or {}
 	all[shape][key] = (x ~= 0 or y ~= 0) and { x, y } or nil
 	if not next(all[shape]) then all[shape] = nil end
+	cache = nil
 end
 
 -- Tous les éléments de la forme choisie reviennent à leur place d'origine
 function Z.ResetPlacement()
 	Z.db.placement[Z.db.shape] = nil
+	cache = nil
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -89,13 +271,18 @@ local function SampleIcon(icon, texture)
 	icon:Show()
 end
 
--- Les morceaux qui forment un élément sur la case d'exemple
+-- Les morceaux qui forment un élément sur la case d'exemple (les rangées entières, comme réglées)
+local function Row(list, count)
+	local row = {}
+	for index = 1, count do row[index] = list[index] end
+	return row
+end
+
 local function Regions(key)
 	if key == "hots" then
-		local list = Z.db.hotStyle == "BARS" and cell.hotBars or cell.hots
-		return { list[1], list[2] }
+		return Row(Z.db.hotStyle == "BARS" and cell.hotBars or cell.hots, Z.db.hotCount)
 	elseif key == "debuffs" then
-		return { cell.debuffs[1], cell.debuffs[2] }
+		return Row(cell.debuffs, Z.db.debuffCount)
 	elseif key == "big" then
 		return { cell.bigIcon }
 	elseif key == "buff" then
@@ -138,13 +325,21 @@ local function ShapeName(id)
 	return id
 end
 
+-- Agrandissement de la case d'exemple : la case et le décalage le plus grand de chaque côté tiennent dans la
+-- scène (un élément poussé au bout reste visible), jamais plus de 3 fois, jamais sous la taille réelle
+local function StageScale(width, height)
+	local limit = Z.limits.placement
+	local room = 2 * math.max(-limit[1], limit[2])
+	return math.max(1, math.min(3, (STAGE_W - 24) / (width + room), (STAGE_H - 24) / (height + room)))
+end
+
 -- Dessine la case d'exemple avec TOUS les éléments, même ceux coupés dans les options : on peut les placer
 -- d'avance. Les vraies cases, le mode test et cette case passent par les mêmes fonctions de placement.
 local function Draw()
 	local db = Z.db
 	local width, height = Z.CellSize()
 	cell:SetSize(width, height)
-	cell:SetScale(math.max(1, math.min(3, (STAGE_W - 24) / width, (STAGE_H - 24) / height)))
+	cell:SetScale(StageScale(width, height))
 	cell.powerShown = db.manaBars ~= "OFF"
 	cell.power:SetShown(cell.powerShown)
 	Z.StyleButton(cell)
@@ -169,17 +364,23 @@ local function Draw()
 	cell.lowMana:SetAlpha(1)
 	cell.lowMana:Show()
 
+	-- Rangées entières, avec le nombre d'icônes réglé : c'est la rangée la plus longue qui reste dans la case
 	local spells = Z.trackedSpells[Z.class] or { 139, 774 }
-	for index = 1, 2 do
+	for _, list in ipairs({ cell.hots, cell.hotBars, cell.debuffs }) do
+		for _, region in ipairs(list) do region:Hide() end
+	end
+	for index = 1, db.hotCount do
 		if db.hotStyle == "BARS" then
 			local bar = Z.HotBar(cell, index)
 			bar:SetMinMaxValues(0, 1)
-			bar:SetValue(index == 1 and 0.8 or 0.4)
+			bar:SetValue(1 - (index - 1) * 0.2)
 			bar:Show()
 		else
-			SampleIcon(Z.HotIcon(cell, index), C_Spell.GetSpellTexture(spells[index] or spells[1]))
+			SampleIcon(Z.HotIcon(cell, index), C_Spell.GetSpellTexture(spells[(index - 1) % #spells + 1]))
 		end
-		SampleIcon(Z.DebuffIcon(cell, index), SAMPLE_ICONS.debuffs[index])
+	end
+	for index = 1, db.debuffCount do
+		SampleIcon(Z.DebuffIcon(cell, index), SAMPLE_ICONS.debuffs[(index - 1) % #SAMPLE_ICONS.debuffs + 1])
 	end
 	SampleIcon(Z.BigIcon(cell), SAMPLE_ICONS.big)
 	local buff = Z.BuffIcon(cell)
@@ -217,12 +418,14 @@ local function Select(key)
 	Draw()
 end
 
--- Pousse l'élément choisi d'un pixel (Maj : 5 pixels)
+-- Pousse l'élément choisi d'un pixel (Maj : 5 pixels). Au bord de la case, il s'arrête et le dit.
 local function Nudge(dx, dy)
 	local step = IsShiftKeyDown() and 5 or 1
 	local x, y = Z.Offset(selected)
 	Z.SetOffset(selected, x + dx * step, y + dy * step)
 	Changed()
+	local newX, newY = Z.Offset(selected)
+	if newX == x and newY == y then win.coords:SetText(L["Au bord de la case : %d, %d"]:format(x, y)) end
 end
 
 -- L'élément sous la souris ; s'ils se recouvrent, le plus petit (une icône posée sur le nom)
@@ -298,6 +501,7 @@ local function BuildWindow()
 	stage = CreateFrame("Frame", nil, win)
 	stage:SetSize(STAGE_W, STAGE_H)
 	stage:SetPoint("TOPLEFT", 214, -48)
+	stage:SetClipsChildren(true) -- en filet : rien ne déborde de la scène, ni sur la liste ni hors de la fenêtre
 	stage.bg = UI.Paint(UI.Tex(stage, "BACKGROUND"), "panel")
 	stage.bg:SetAllPoints()
 	stage.border = UI.Paint(UI.Border(stage, 1), "line")
@@ -336,12 +540,14 @@ local function BuildWindow()
 	end)
 	win.reset:SetPoint("TOPLEFT", win.left, "BOTTOMLEFT", 0, -8)
 	win.reset.label:SetJustifyH("CENTER")
-	win.resetAll = UI.Button(win, L["Tout remettre"], 172, 22, function()
+	-- Les 12 éléments d'un coup : un second clic confirme (Options.lua)
+	win.resetAll = Z.ArmedButton(win, "Tout remettre", "Confirmer", 172, function()
 		Z.ResetPlacement()
 		Changed()
 	end)
+	win.resetAll:SetHeight(22)
 	win.resetAll:SetPoint("LEFT", win.reset, "RIGHT", 8, 0)
-	win.resetAll.label:SetJustifyH("CENTER")
+	win:HookScript("OnHide", win.resetAll.Disarm)
 	win.resetAll.tip = L["Tous les éléments de cette forme de case reviennent à leur place d'origine."]
 
 	local note = UI.Label(win, 11, nil, "dim")
@@ -349,16 +555,17 @@ local function BuildWindow()
 	note:SetPoint("RIGHT", -16, 0)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)
-	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."])
+	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). Il s'arrête au bord de la case. Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."])
 
 	win:HookScript("OnShow", Draw)
+	win.StageScale = StageScale -- pour les tests
 end
 
+-- Rappelée alors qu'elle est ouverte, la fenêtre passe devant sans se fermer (OnShow la dessine)
 function Z:OpenPlacement()
 	if not win then BuildWindow() end
-	if win:IsShown() then return win:Close() end
-	win:Show()
-	Draw()
+	UI.Reopen(win)
+	win:Raise()
 end
 
 -- Appelé après chaque changement d'option : la case d'exemple suit la forme, le thème et les tailles

@@ -45,7 +45,7 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 
 | | | |
 |:-:|---|---|
-| <img src="docs/images/runes/s.png" alt="" width="40"> | **Heal with one click** | Every mouse button, alone or with Shift, Ctrl, Alt, casts the spell of your choice on a player's frame. No targeting needed. A trinket can go with the spell, another click stops casting, and Lyorune warns you if the game's click casting uses the same combination. The game's ping key on a frame marks the player for the whole group. |
+| <img src="docs/images/runes/s.png" alt="" width="40"> | **Heal with one click** | Every mouse button, alone or with Shift, Ctrl, Alt, casts the spell of your choice on a player's frame. No targeting needed. A trinket can go with the spell, another click stops casting, and Lyorune warns you if the game's click casting uses the same combination. The game's ping key on a frame marks the player for the whole group. Your macros are written once in My macros, then go on a click or are dragged onto a game action bar. |
 | <img src="docs/images/runes/t.png" alt="" width="40"> | **Hover keys** | A keyboard key, an extra mouse button or the wheel casts a spell on the hovered frame. |
 | <img src="docs/images/runes/u.png" alt="" width="40"> | **Everything at a glance** | Health, incoming heals, shields (as a band or after the health), heal absorbs, mana, other healers' low mana, heals over time and debuffs (drawn by the game: visible in the middle of combat, every rank of your spells), boss private auras, summons, low health, threat, range in three levels, group leader, global cooldown and casting (bar or ring at the cursor). Out of combat, a panel casts your missing buffs, the tank's Earth Shield included. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dispel without searching** | The frame lights up when you can remove a magic effect, a curse, a disease or a poison. |
@@ -55,7 +55,8 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 | <img src="docs/images/runes/a.png" alt="" width="40"> | **Announcements** | Low mana, mana restored, resurrection, with your own wording. On WoW Forever, where mana is hidden from addons, the low mana and mana restored announcements still go out on their own (threshold estimated from your spell costs, recovery measured while you drink). |
 | <img src="docs/images/runes/p.png" alt="" width="40"> | **Profiles and sharing** | One profile per group size, battleground, arena and specialization, applied automatically; copy just one part of a profile to another. Send your configuration to a friend, with a code or directly in game. |
 | <img src="docs/images/runes/b.png" alt="" width="40"> | **Always at hand** | A button on the edge of the minimap opens the options or the test mode. You can move it, or remove it with a checkbox. |
-| <img src="docs/images/runes/n.png" alt="" width="40"> | **Nothing is mandatory** | Every element has its checkbox, and a search box finds any setting. |
+| <img src="docs/images/runes/f.png" alt="" width="40"> | **Easy to set up** | An options window in eleven chapters, with a preview cell that shows every setting live while you change it. A golden rune marks what you changed (one click resets it), the less common settings stay folded away, and a search finds any setting, even in the explanations. A gold and green healing light brings it to life, and a checkbox turns it off. |
+| <img src="docs/images/runes/n.png" alt="" width="40"> | **Nothing is mandatory** | Every element has its checkbox: keep only what you use. |
 
 Lyorune never changes the game's frames or other addons' frames: it runs alongside ElvUI, Clique and your other interface addons.
 
@@ -73,7 +74,7 @@ It is the inscription carved on Frostmourne's dais, the one Muradin reads to Art
 
 **How to read them:** each rune stands for one letter of the sentence. They are the runes of the Elder Futhark, a very real alphabet used almost two thousand years ago. The sounds "th" and "ng" are written with a single rune.
 
-In game, hover the runes: they light up and their translation appears. If they distract you, a checkbox removes them (Help tab).
+In game, hover the runes: they light up and their translation appears. If they distract you, a checkbox removes them (Window and help chapter).
 
 ## Installation
 

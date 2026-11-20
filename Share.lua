@@ -279,13 +279,13 @@ end
 -- pour chaque spécialisation. La seconde spécialisation reprend le choix de la première quand rien n'est choisi
 -- pour elle ; en champ de bataille ou en arène sans choix, la règle de la taille du groupe s'applique. Le changement
 -- se fait sans /reload, à la fin du combat si besoin.
--- Copie d'une partie (#44) : les réglages d'un onglet (Cadres, Apparence, Indicateurs, Soins) d'un profil vers un
--- autre. La partie d'un réglage est l'onglet où il se règle (Z.TabOfSetting, Options.lua) : un nouveau réglage
--- suit tout seul son onglet.
+-- Copie d'une partie (#44) : les réglages d'un chapitre des options (Disposition, Apparence, Vie et portée, Mes
+-- soins, Affaiblissements, Joueurs) d'un profil vers un autre. La partie d'un réglage est le chapitre où il se règle
+-- (Z.TabOfSetting, Options.lua) : un nouveau réglage suit tout seul son chapitre.
 ----------------------------------------------------------------------------------------------------
 local MAX_PROFILES, MAX_NAME = 20, 24
 Z.profileSizes = { "5", "10", "25", "40", "BG", "ARENA" }
-Z.profileParts = { "Cadres", "Apparence", "Indicateurs", "Soins" }
+Z.profileParts = { "Disposition", "Apparence", "Vie et portée", "Mes soins", "Affaiblissements", "Joueurs" }
 
 local function InProfile(key)
 	return Z.defaults[key] ~= nil and not Z.notInProfile[key]
@@ -364,16 +364,16 @@ function Z:LoadProfile(name)
 	return true
 end
 
--- Partie d'un réglage du profil : l'onglet où il se règle. Ce qui n'est sur aucun de ces onglets (forme, bouton
--- « Placer les éléments », mode performance de l'onglet Aide) est rangé ici.
-local OTHER_PART = { shape = "Apparence", placement = "Cadres", cornerSpells = "Soins", perfMode = "Cadres" }
+-- Partie d'un réglage du profil : le chapitre où il se règle. Ce qui n'est dans aucun de ces chapitres (forme,
+-- bouton « Placer les éléments », mode performance du chapitre Fenêtre et aide) est rangé ici.
+local OTHER_PART = { shape = "Apparence", placement = "Disposition", cornerSpells = "Mes soins", perfMode = "Disposition" }
 
 function Z.ProfilePart(key)
 	if not InProfile(key) then return nil end
 	return OTHER_PART[key] or (Z.TabOfSetting and Z.TabOfSetting(key)) or "Apparence"
 end
 
--- Copie les parties choisies (parts.Cadres = true...) du profil « from » vers le profil « to ». Le profil en cours
+-- Copie les parties choisies (parts.Disposition = true...) du profil « from » vers le profil « to ». Le profil en cours
 -- est lu et changé en direct. Renvoie true et le message, ou false et la raison.
 function Z:CopyProfileParts(from, to, parts)
 	local L = Z.L

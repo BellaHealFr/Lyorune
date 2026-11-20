@@ -30,7 +30,30 @@ end
 
 -- Le rapport finit sur GitHub, en public : le nom de mon personnage, de mon royaume et des membres de mon groupe
 -- y sont remplacés par « (joueur) » et « (royaume) », même s'ils apparaissent dans un message d'erreur ou une réponse.
-local function Escape(text) return (text:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0")) end
+-- Un octet de mot : lettre, chiffre, ou morceau d'une lettre accentuée (octet de 128 et plus)
+local function WordByte(text, at)
+	local byte = text:byte(at)
+	return byte ~= nil and (byte >= 128 or text:sub(at, at):match("%w") ~= nil)
+end
+
+-- Remplace « word » seulement comme mot entier : un personnage « Lyo » ne touche ni « Lyorune » ni un chemin
+local function ReplaceWord(text, word, by)
+	local parts, from = {}, 1
+	while true do
+		local first, last = text:find(word, from, true)
+		if not first then break end
+		if not WordByte(text, first - 1) and not WordByte(text, last + 1) then
+			parts[#parts + 1] = text:sub(from, first - 1) .. by
+		else
+			parts[#parts + 1] = text:sub(from, last)
+		end
+		from = last + 1
+	end
+	parts[#parts + 1] = text:sub(from)
+	return table.concat(parts)
+end
+
+Z.ReplaceWord = ReplaceWord -- aussi pour corriger l'écriture d'un sort dans une macro (Macros.lua)
 
 function Z:Anonymize(text)
 	local names, realms = {}, {}
@@ -52,8 +75,8 @@ function Z:Anonymize(text)
 	-- les plus longs d'abord : « Jainara » avant « Jaina »
 	table.sort(names, function(a, b) return #a > #b end)
 	table.sort(realms, function(a, b) return #a > #b end)
-	for _, realm in ipairs(realms) do text = text:gsub(Escape(realm), "(royaume)") end
-	for _, name in ipairs(names) do text = text:gsub(Escape(name), "(joueur)") end
+	for _, realm in ipairs(realms) do text = ReplaceWord(text, realm, "(royaume)") end
+	for _, name in ipairs(names) do text = ReplaceWord(text, name, "(joueur)") end
 	return text
 end
 
@@ -102,7 +125,7 @@ function Z:ShowBug()
 		window.Update = Update
 
 		for i, question in ipairs(QUESTIONS) do
-			local label = UI.Text(window, 12)
+			local label = UI.Label(window, 12)
 			label:SetPoint("TOPLEFT", 16, -46 - (i - 1) * 50)
 			label:SetText(L[question])
 			local edit = UI.Edit(window, 568)
@@ -132,6 +155,7 @@ function Z:ShowBug()
 		report:SetMultiLine(true)
 		report:SetAutoFocus(false)
 		report:SetFont(UI.Font(), 11, "")
+		UI.Paint(report, "text") -- sans couleur, le jeu écrit en blanc pur
 		report:SetWidth(560)
 		report:SetTextInsets(6, 6, 6, 6)
 		report:SetScript("OnEscapePressed", report.ClearFocus)
@@ -145,13 +169,12 @@ function Z:ShowBug()
 		select:SetPoint("BOTTOMLEFT", 16, 78)
 		select.label:SetJustifyH("CENTER")
 
-		window.hint = UI.Text(window, 11)
+		window.hint = UI.Label(window, 11, nil, "accent")
 		window.hint:SetPoint("LEFT", select, "RIGHT", 12, 0)
 		window.hint:SetWidth(400)
 		window.hint:SetJustifyH("LEFT")
-		window.hint:SetTextColor(1, 0.82, 0.3)
 
-		local where = UI.Text(window, 12)
+		local where = UI.Label(window, 12)
 		where:SetPoint("BOTTOMLEFT", 16, 50)
 		where:SetText(L["Collez votre rapport ici :"])
 		local link = UI.Edit(window, 568)
@@ -159,11 +182,15 @@ function Z:ShowBug()
 		link:SetText(Z:ReportURL())
 		link:HookScript("OnTextChanged", function(self, byUser) if byUser then self:SetText(Z:ReportURL()) end end)
 	end
-	for _, edit in ipairs(window.answers) do edit:SetText("") end
+	-- Nouvelle ouverture : réponses vides. Rappelée alors qu'elle est ouverte : elle passe devant, réponses gardées.
+	if not window:IsShown() then
+		for _, edit in ipairs(window.answers) do edit:SetText("") end
+	end
 	local hasError = (Z.firstError or (Z.db.errors or {})[1]) ~= nil
 	window.hint:SetText(hasError and "" or L["Aucune erreur technique enregistrée : pensez à joindre une capture d'écran du défaut."])
 	window.Update()
-	window:Show()
+	UI.Reopen(window)
+	window:Raise()
 end
 
 ----------------------------------------------------------------------------------------------------

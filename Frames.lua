@@ -69,6 +69,12 @@ function Z.CellSize()
 	return math.floor(db.width * factor + 0.5), math.floor(db.height * factor + 0.5)
 end
 
+-- Taille des icônes de la case (rôle, marqueur, auras...) : 30 % de sa hauteur, 10 pixels au moins
+function Z.IconSize()
+	local _, height = Z.CellSize()
+	return math.max(10, math.floor(height * 0.30 + 0.5))
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Mises à jour d'une case. « b » est la case, b.unit son joueur ("raid7", "party2", "player"...)
 ----------------------------------------------------------------------------------------------------
@@ -280,9 +286,20 @@ local function UpdateRole(b)
 		b.role:Hide()
 	end
 
-	-- La ressource montrée par le jeu pour ce joueur ; réponse secrète ou inconnue : la mana, comme avant
+	-- La ressource montrée par le jeu pour ce joueur. Réponse secrète ou inconnue : celle déjà connue, sinon
+	-- celle de sa classe (Data.lua), sinon la mana. Relue à la sortie de combat.
 	local powerType, token = UnitPowerType(unit)
-	if issecret(powerType) or type(powerType) ~= "number" then powerType, token = MANA, "MANA" end
+	if issecret(powerType) or type(powerType) ~= "number" then
+		local _, class = UnitClass(unit)
+		local guess = Z.classPower[not issecret(class) and class or ""]
+		if b.powerType then
+			powerType, token = b.powerType, b.powerToken
+		elseif guess then
+			powerType, token = guess[1], guess[2]
+		else
+			powerType, token = MANA, "MANA"
+		end
+	end
 	if issecret(token) or type(token) ~= "string" then token = nil end
 	local hasMana = powerType == MANA
 	if powerType ~= b.powerType or token ~= b.powerToken then
@@ -499,7 +516,7 @@ local function OnEnter(b)
 		local TOOLTIP_LINES = 16 -- les raccourcis ne sont pas limités, mais l'infobulle reste courte
 		for i, line in ipairs(clicks) do
 			if i > TOOLTIP_LINES then
-				GameTooltip:AddLine(L["... et %d autre(s) : onglet Clics."]:format(#clicks - TOOLTIP_LINES), 0.6, 0.6, 0.65)
+				GameTooltip:AddLine(L["... et %d autre(s) : chapitre Sorts et raccourcis."]:format(#clicks - TOOLTIP_LINES), 0.6, 0.6, 0.65)
 				break
 			end
 			GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1)
@@ -534,24 +551,28 @@ local function Place(region, key, point, relative, relativePoint, x, y)
 end
 
 -- Nom, vie et rôle selon la forme : au centre (Tuile, Carré) ou sur une ligne (Barre, Bandeau).
--- Le marqueur et l'icône centrale suivent aussi l'éditeur de placement.
-local function PlaceTexts(b, width, icon)
+-- Le marqueur et l'icône centrale suivent aussi l'éditeur de placement. Ces places d'origine sont aussi
+-- décrites dans Placement.lua (Origins), qui borne les décalages au bord de la case : à changer ensemble.
+-- Largeur du nom et du texte de vie : Z.TextWidth, qui les fait rétrécir quand ils sont poussés vers un bord.
+local function PlaceTexts(b, icon)
 	if Z:Shape().inline then
 		Place(b.role, "role", "LEFT", b.hp, "LEFT", 3, 0)
 		Place(b.name, "name", "LEFT", b.hp, "LEFT", icon + 3, 0)
 		b.name:SetJustifyH("LEFT")
-		b.name:SetWidth(math.max(20, width - icon - 46))
 		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", -4, 0)
+		b.text:SetJustifyH("RIGHT")
 		Place(b.leader, "leader", "CENTER", b.role, "TOPRIGHT", 0, 0) -- petit badge sur l'icône de rôle
 	else
 		Place(b.role, "role", "TOPRIGHT", b, "TOPRIGHT", -2 - Z.CornerShift(b, "TOPRIGHT"), -2)
 		-- Accrochés à la barre de vie : ils remontent avec elle quand la barre de mana s'affiche
 		Place(b.name, "name", "CENTER", b.hp, "CENTER", 0, 3)
 		b.name:SetJustifyH("CENTER")
-		b.name:SetWidth(width - 8)
 		Place(b.text, "text", "BOTTOM", b.hp, "BOTTOM", 0, 4)
+		b.text:SetJustifyH("CENTER")
 		Place(b.leader, "leader", "TOPRIGHT", b.role, "TOPLEFT", -1, 0) -- à gauche de l'icône de rôle
 	end
+	b.name:SetWidth(Z.TextWidth("name"))
+	b.text:SetWidth(Z.TextWidth("text"))
 	Place(b.marker, "marker", "CENTER", b.over, "TOP", 0, -1)
 	Place(b.center, "center", "CENTER", b.over, "CENTER", 0, 0)
 	Place(b.lowMana, "lowMana", "BOTTOMLEFT", b.hp, "BOTTOMLEFT", 2, 2)
@@ -617,9 +638,9 @@ local function Style(b)
 	b.name:SetFont(theme.font, size, theme.flags)
 	b.text:SetFont(theme.font, size - 1, theme.flags)
 
-	local icon = math.max(10, math.floor(height * 0.30 + 0.5))
+	local icon = Z.IconSize()
 	b.iconSize = icon
-	PlaceTexts(b, width, icon)
+	PlaceTexts(b, icon)
 	b.role:SetSize(icon - 2, icon - 2)
 	local badge = Z:Shape().inline and math.max(8, math.floor(icon * 0.7)) or icon - 2
 	b.leader:SetSize(badge, badge)
@@ -740,6 +761,7 @@ function Z.BuildVisuals(b)
 
 	b.text = UI.Text(top, 10)
 	b.text:SetPoint("BOTTOM", hp, "BOTTOM", 0, 4)
+	b.text:SetWordWrap(false)
 
 	b.role = top:CreateTexture(nil, "ARTWORK")
 	b.role:SetPoint("TOPRIGHT", -2, -2)
@@ -1404,6 +1426,7 @@ end
 function Z:Refresh()
 	-- Thème des fenêtres en premier : il ne dépend pas des cases, une erreur plus bas ne doit pas l'empêcher
 	if Z.UI.SkinChanged() then Z:Try("thème des fenêtres", Z.UI.ApplySkin) end
+	Z.ForgetPlacementRanges() -- bornes du placement : la taille, la forme ou le thème ont pu changer
 	smoothing = db.smooth and SMOOTH or nil
 	rangeAlpha = db.rangeAlpha / 100
 	BuildCurves()
@@ -1497,6 +1520,8 @@ function Z:CreateFrames()
 	-- Entrée et sortie de combat : les buffs manquants ne se lisent que hors combat
 	Z:On("PLAYER_REGEN_ENABLED", ForVisible(Z.QueueAuras))
 	Z:On("PLAYER_REGEN_DISABLED", ForVisible(Z.QueueAuras))
+	-- Sortie de combat : la ressource de chacun relue, si une forme a changé pendant une réponse secrète
+	Z:On("PLAYER_REGEN_ENABLED", ForVisible(UpdateRole))
 	-- Étiquettes : masquées pendant un combat si elles ne servaient qu'au déplacement, revenues ensuite ;
 	-- en mode « Alt, Ctrl ou Maj », elles apparaissent le temps de maintenir la touche
 	Z:On("PLAYER_REGEN_DISABLED", UpdateHandles)

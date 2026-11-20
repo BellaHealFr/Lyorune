@@ -356,12 +356,16 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix, trinkets)
 	elseif Z.MacroRef(value) then -- une macro de ma bibliothèque, sans la résurrection automatique
 		local macro = Z:FindMacro(Z.MacroRef(value))
 		if macro and macro.body:find("%S") then
+			local text = Z:ResolveMacro(macro.body)
+			if #(use .. text) > Z.MACRO_MAX then use = "" end -- 255 caractères au plus : sans les bijoux, elle part
 			attributes[prefix .. "type" .. suffix] = "macro"
-			attributes[prefix .. "macrotext" .. suffix] = use .. Z:ResolveMacro(macro.body)
+			attributes[prefix .. "macrotext" .. suffix] = use .. text
 		end
 	elseif Z.IsMacro(value) then -- macro écrite sur le clic (avant la 1.6.0, rangée ensuite dans la bibliothèque)
+		local text = Z:ResolveMacro(value)
+		if #(use .. text) > Z.MACRO_MAX then use = "" end
 		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = use .. Z:ResolveMacro(value)
+		attributes[prefix .. "macrotext" .. suffix] = use .. text
 	elseif resPrefix or use ~= "" then
 		attributes[prefix .. "type" .. suffix] = "macro"
 		attributes[prefix .. "macrotext" .. suffix] = use .. "/cast " .. (resPrefix or "") .. "[@mouseover] " .. value
@@ -498,7 +502,7 @@ function Z:WarnClickConflicts()
 	end
 	if #list == 0 then return end
 	table.sort(list)
-	Z:Print(Z.L["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (onglet Clics, ligne en orange)."]:format(table.concat(list, ", ")))
+	Z:Print(Z.L["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Sorts et raccourcis, ligne en orange)."]:format(table.concat(list, ", ")))
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -507,6 +511,11 @@ end
 -- barre. Elle vise le joueur sous la souris (une case ou un personnage), sinon la cible, sinon moi.
 -- Lyorune ne crée, ne modifie et ne retire que SES macros : leur nom commence par « Lyo: », et Lyorune les a
 -- notées à leur création (LyoruneCharDB.barMacros). Une macro du joueur nommée « Lyo:... » n'est jamais touchée.
+-- COPIES DE MES MACROS. Glisser une macro de Mes macros la copie aussi (« Lyo:Nom ») et la met en main, pour une
+-- barre de sorts : sans l'option, et seulement celles que le joueur a glissées (LyoruneCharDB.barCopies, nom de la
+-- macro de la bibliothèque -> nom de sa copie). La copie suit le texte et le nom, et part avec la macro.
+-- Le jeu limite une macro à 255 caractères et interdit à une macro d'en lancer une autre (/click) depuis le patch
+-- 11.0.2 : la copie porte donc tout le texte, jamais un relais vers nos boutons.
 ----------------------------------------------------------------------------------------------------
 local MACRO_PREFIX = "Lyo:"
 local MACRO_ICON = "INV_MISC_QUESTIONMARK" -- avec cette icône, le jeu affiche celle du sort de la macro
@@ -518,12 +527,20 @@ local function MacroName(label)
 	return Z.CutText(MACRO_PREFIX .. label, 16)
 end
 
+-- Copies glissées depuis Mes macros, pour ce personnage : nom de la macro -> nom de sa copie dans /macro
+local function Copies()
+	local char = Z.char or {}
+	char.barCopies = char.barCopies or {}
+	return char.barCopies
+end
+
+-- Le texte d'une macro posée dans une barre vise le joueur survolé, sinon la cible (Z:BarText)
 local function BarBody(value)
-	if Z.IsMacro(value) then return Z:ResolveMacro(value) end
+	if Z.IsMacro(value) then return Z:BarText(value) end
 	local ref = Z.MacroRef(value)
 	if ref then
 		local macro = Z:FindMacro(ref)
-		return macro and Z:ResolveMacro(macro.body) or ""
+		return macro and Z:BarText(macro.body) or ""
 	end
 	local state, fallback = "nodead", "[@player] "
 	for _, id in pairs(Z.classRes[Z.class] or {}) do
@@ -539,12 +556,12 @@ function Z:BarMacros()
 		local ref = Z.MacroRef(value)
 		if type(value) ~= "string" or value == "" or (value:sub(1, 1) == "@" and not ref) then return end
 		local macro = Z.IsMacro(value)
-		local name = MacroName(ref or (macro and label) or value)
+		local name = ref and Copies()[ref] or MacroName(ref or (macro and label) or value) -- copie déjà glissée : la même
 		local body = BarBody(value)
 		if seen[name] or body == "" or #body > 255 then return end
 		seen[name] = true
 		local plain = not (macro or ref)
-		list[#list + 1] = { name = name, body = body, spell = plain and value or nil,
+		list[#list + 1] = { name = name, body = body, spell = plain and value or nil, ref = ref,
 			icon = plain and C_Spell.GetSpellTexture(value) or Z:MacroIcon(body) }
 	end
 	local clicks, keys = Z:GetClicks(), {}
@@ -592,56 +609,171 @@ local function EachOwnMacro(fn)
 	end
 end
 
+-- Les copies de Mes macros rejoignent la liste voulue (renommées si la macro l'a été) ; une copie dont la macro
+-- a disparu, ou que le joueur a retirée de /macro, est oubliée
+local function AddCopies(wanted, names)
+	local copies, owned = Copies(), Owned()
+	for lib, name in pairs(copies) do
+		local macro = Z:FindMacro(lib)
+		if not macro or not owned[name] then
+			copies[lib] = nil
+		else
+			local body = Z:BarText(macro.body)
+			if #body > Z.MACRO_MAX or not macro.body:find("%S") then body = nil end -- trop longue : copie gardée telle quelle
+			local better = MacroName(lib)
+			-- (pas quand l'option la tient aussi pour un clic : elle garde le nom qu'elle connaît)
+			if better ~= name and not names[name] and not names[better] and GetMacroIndexByName(better) == 0 then
+				local index = GetMacroIndexByName(name)
+				EditMacro(index, better, nil, body or GetMacroBody(index))
+				owned[name], owned[better], copies[lib], name = nil, true, better, better
+			end
+			if not names[name] then
+				names[name] = true
+				wanted[#wanted + 1] = { name = name, body = body, copy = true }
+			end
+		end
+	end
+end
+
+-- Nom libre pour une nouvelle copie : « Lyo:Nom », sinon « Lyo:No 2 », « Lyo:No 3 »...
+local function FreeCopyName(lib)
+	local taken = {}
+	for _, name in pairs(Copies()) do taken[name] = true end
+	for _, macro in ipairs(Z.db.actionBarMacros and Z:BarMacros() or {}) do
+		if macro.ref ~= lib then taken[macro.name] = true end
+	end
+	local name = MacroName(lib)
+	if not taken[name] and GetMacroIndexByName(name) == 0 then return name end
+	for i = 2, 99 do
+		name = Z.CutText(MACRO_PREFIX .. lib, 16 - #tostring(i) - 1) .. " " .. i
+		if not taken[name] and GetMacroIndexByName(name) == 0 then return name end
+	end
+end
+
 function Z:SyncBarMacros()
-	if not macrosReady or not Z.db.actionBarMacros or not (CreateMacro and GetNumMacros) then return end
+	if not macrosReady or not (CreateMacro and GetNumMacros) then return end
+	if not Z.db.actionBarMacros and not next(Copies()) then return end
 	if InCombatLockdown() then -- le jeu interdit de créer une macro en combat
 		Z:Safe("macros", function() Z:SyncBarMacros() end)
 		return
 	end
-	local wanted, names, created = Z:BarMacros(), {}, 0
-	AdoptOldMacros(wanted)
+	local wanted, names, created = Z.db.actionBarMacros and Z:BarMacros() or {}, {}, 0
+	if Z.db.actionBarMacros then AdoptOldMacros(wanted) end
 	local owned = Owned()
+	for name in pairs(owned) do -- supprimée à la main dans /macro : plus à moi
+		if GetMacroIndexByName(name) == 0 then owned[name] = nil end
+	end
 	for _, macro in ipairs(wanted) do names[macro.name] = true end
+	AddCopies(wanted, names)
 	EachOwnMacro(function(index, name)
-		if not names[name] then -- sort retiré de mes clics
+		if not names[name] then -- sort retiré de mes clics, macro supprimée de Mes macros
 			DeleteMacro(index)
 			owned[name] = nil
 		end
 	end)
-	for name in pairs(owned) do -- supprimée à la main dans /macro : plus à moi
-		if GetMacroIndexByName(name) == 0 then owned[name] = nil end
-	end
 	for _, macro in ipairs(wanted) do
 		local index = GetMacroIndexByName(macro.name)
 		if index and index > 0 then
 			-- une macro du joueur porte déjà ce nom : on la laisse telle quelle
-			if owned[macro.name] and GetMacroBody(index) ~= macro.body then EditMacro(index, macro.name, nil, macro.body) end
-		else
+			if macro.body and owned[macro.name] and GetMacroBody(index) ~= macro.body then EditMacro(index, macro.name, nil, macro.body) end
+		elseif not macro.copy then -- une copie n'est créée qu'au glisser (Z:PickupGameCopy)
 			local _, used = GetNumMacros()
 			if used < (MAX_CHARACTER_MACROS or 30) and pcall(CreateMacro, macro.name, MACRO_ICON, macro.body, true) then
 				owned[macro.name] = true
 				created = created + 1
 			elseif not warnedFull then
 				warnedFull = true
-				Z:Print(Z.L["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou décochez l'option dans l'onglet Clics."])
+				Z:Print(Z.L["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Sorts et raccourcis."])
 			end
 		end
 	end
 	if created > 0 then
-		Z:Print(Z.L["%d macro(s) créée(s) pour vos barres de sorts : onglet Clics des options, ou /macro, onglet de votre personnage."]:format(created))
+		Z:Print(Z.L["%d macro(s) créée(s) pour vos barres de sorts : chapitre Sorts et raccourcis des options, ou /macro, onglet de votre personnage."]:format(created))
 	end
 end
 
 -- Bouton « Retirer les macros de Lyorune » : ne retire que les macros « Lyo: »
+-- Renvoie vrai si les macros sont retirées (refusé en combat : l'option reste cochée)
 function Z:RemoveBarMacros()
-	if InCombatLockdown() then return Z:Print(Z.L["impossible de modifier les macros en combat."]) end
-	if not GetNumMacros then return end
+	if InCombatLockdown() then
+		Z:Print(Z.L["impossible de modifier les macros en combat."])
+		return false
+	end
+	if not GetNumMacros then return true end -- aucune macro à retirer
 	AdoptOldMacros(Z:BarMacros())
-	local owned = Owned()
+	local owned, kept = Owned(), {}
+	for _, name in pairs(Copies()) do kept[name] = true end -- les copies glissées depuis Mes macros restent
 	EachOwnMacro(function(index, name)
+		if kept[name] then return end
 		DeleteMacro(index)
 		owned[name] = nil
 	end)
+	return true
+end
+
+-- Glisser une macro de Mes macros : sa copie « Lyo: » est créée ou mise à jour, puis mise en main, à déposer dans
+-- une barre de sorts. Renvoie true, ou false et la raison à dire au joueur (rien quand le jeu n'a pas ces fonctions).
+function Z:PickupGameCopy(macro)
+	if not (macro and CreateMacro and PickupMacro and GetNumMacros) then return false end
+	local L = Z.L
+	if InCombatLockdown() then return false, L["impossible de modifier les macros en combat."] end
+	if not macrosReady then return false, L["les macros du jeu ne sont pas encore chargées : réessayez dans quelques secondes."] end
+	if not macro.body:find("%S") then return false end
+	local body = Z:BarText(macro.body)
+	if #body > Z.MACRO_MAX then
+		return false, L["« %s » est trop longue pour une barre de sorts du jeu : %d caractères, %d au plus."]:format(macro.name, #body, Z.MACRO_MAX)
+	end
+	local copies, owned = Copies(), Owned()
+	local name = copies[macro.name]
+	local index = name and owned[name] and GetMacroIndexByName(name) or 0
+	if index == 0 then
+		-- déjà créée pour un clic de cette macro par l'option « Créer une macro par sort de mes clics » : c'est la même
+		name = nil
+		for _, made in ipairs(Z.db.actionBarMacros and Z:BarMacros() or {}) do
+			if made.ref == macro.name and owned[made.name] and GetMacroIndexByName(made.name) > 0 then name = made.name end
+		end
+		if not name then
+			name = FreeCopyName(macro.name)
+			local _, used = GetNumMacros()
+			if not name or used >= (MAX_CHARACTER_MACROS or 30) then
+				return false, L["plus de place pour une macro de personnage : supprimez-en une dans /macro."]
+			end
+			local ok = pcall(CreateMacro, name, MACRO_ICON, body, true)
+			if not ok or GetMacroIndexByName(name) == 0 then return false end
+			owned[name] = true
+		end
+		copies[macro.name] = name
+		index = GetMacroIndexByName(name)
+	end
+	if GetMacroBody(index) ~= body then
+		EditMacro(index, name, nil, body)
+		index = GetMacroIndexByName(name)
+	end
+	PickupMacro(index)
+	return true
+end
+
+-- Nom de la copie de cette macro dans /macro, si elle existe
+function Z:GameCopy(macro)
+	local name = macro and Copies()[macro.name]
+	return name and Owned()[name] and GetMacroIndexByName and GetMacroIndexByName(name) > 0 and name or nil
+end
+
+-- La macro de la bibliothèque dont « name » est la copie (glissée, ou créée par l'option pour un clic)
+function Z:CopyOwner(name)
+	if not (name and Owned()[name]) then return nil end
+	for lib, copy in pairs(Copies()) do
+		if copy == name then return Z:FindMacro(lib) end
+	end
+	for _, macro in ipairs(Z.db.actionBarMacros and Z:BarMacros() or {}) do
+		if macro.name == name and macro.ref then return Z:FindMacro(macro.ref) end
+	end
+end
+
+-- Macro renommée dans Mes macros : sa copie la suit (nom de la copie changé à la prochaine synchronisation)
+function Z:MoveGameCopy(old, new)
+	local copies = Copies()
+	if copies[old] then copies[new], copies[old] = copies[old], nil end
 end
 
 -- Appelé à la connexion : la première synchronisation attend que le jeu ait chargé les macros
@@ -782,7 +914,7 @@ function Z:CheckNewSpells()
 		end
 	end
 	if #found > 0 and Z.db.newSpellAlert then
-		Z:Print(Z.L["nouveau sort sans clic : %s. Onglet Clics des options, bouton « Attribuer »."]:format(table.concat(found, ", ")))
+		Z:Print(Z.L["nouveau sort sans clic : %s. Chapitre Sorts et raccourcis des options, bouton « Attribuer »."]:format(table.concat(found, ", ")))
 	end
 	if #found > 0 and Z.RefreshClicks then Z.RefreshClicks() end
 end

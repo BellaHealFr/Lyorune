@@ -5,6 +5,7 @@
 local _, Z = ...
 local UI = {}
 Z.UI = UI
+local L = Z.L
 
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 UI.WHITE = WHITE
@@ -16,12 +17,13 @@ UI.accent = {}  -- couleur d'accent (titres, valeurs, survol)
 UI.gold   = {}  -- second accent (runes, séparateurs)
 UI.bg     = {}  -- fond des fenêtres
 UI.panel  = {}  -- fond des boutons et des champs
+UI.side   = {}  -- fond des colonnes de côté (barre latérale, case témoin) : un ton à part de la page
 UI.line   = {}  -- traits et bordures discrètes
 UI.edge   = {}  -- cadre des fenêtres
 UI.text   = {}  -- texte
 UI.dim    = {}  -- texte secondaire
 UI.btext  = {}  -- texte des boutons
-UI.ROLES = { "accent", "gold", "bg", "panel", "line", "edge", "text", "dim", "btext" }
+UI.ROLES = { "accent", "gold", "bg", "side", "panel", "line", "edge", "text", "dim", "btext" }
 
 -- Couleur fixe des cadres de soin (étiquettes « Groupe N », infobulle des clics) : hors thème de fenêtre
 UI.frameAccent = { 0.20, 0.87, 0.53 }
@@ -35,22 +37,27 @@ local builtinTextures = {
 	{ "Raid", "Interface\\RaidFrame\\Raid-Bar-Hp-Fill" },
 }
 
+-- Chaque nom une seule fois : LibSharedMedia a aussi sa « Blizzard », un doublon bloquerait le tour des choix
 function UI.TextureList()
-	local list = {}
-	for _, entry in ipairs(builtinTextures) do list[#list + 1] = entry[1] end
+	local list, seen = {}, {}
+	local function add(name)
+		if not seen[name] then seen[name] = true list[#list + 1] = name end
+	end
+	for _, entry in ipairs(builtinTextures) do add(entry[1]) end
 	if LSM then
-		for _, name in ipairs(LSM:List("statusbar")) do list[#list + 1] = name end
+		for _, name in ipairs(LSM:List("statusbar")) do add(name) end
 	end
 	return list
 end
 
+-- Texture inconnue (addon désinstallé) : celle du thème, comme l'affiche la ligne « Texture des barres »
 function UI.BarTexture()
 	local wanted = Z.db.texture
 	if wanted == "THEME" then return Z:Theme().texture end
 	for _, entry in ipairs(builtinTextures) do
 		if entry[1] == wanted then return entry[2] end
 	end
-	return (LSM and LSM:Fetch("statusbar", wanted, true)) or WHITE
+	return (LSM and LSM:Fetch("statusbar", wanted, true)) or Z:Theme().texture
 end
 
 function UI.Font()
@@ -66,31 +73,44 @@ end
 --   kit       : famille des éléments (MODERN plat et net, CLASSIC textures du jeu, MMO pierre et or)
 --   headFont  : police des titres de rubrique (la police décorative est réservée aux titres)
 --   L'en-tête des fenêtres (logo, nom, version) garde la même police et la même taille dans tous les thèmes.
+-- Lisibilité (guides d'accessibilité des jeux) : aucun fond noir pur, gris très foncé à la place, trois tons
+-- pour séparer les plans (page, colonnes de côté, boutons et champs), texte blanc cassé, contraste du texte
+-- 4,5:1 au moins (7:1 en contraste élevé) sans être poussé au maximum. Les cases de soin ne sont pas concernées.
+--   side, sideAlpha : fond des colonnes de côté, posé sur celui de la fenêtre (voile léger sur un cadre du jeu)
 UI.skins = {
-	MODERN = { -- net, sombre, bleu givre et or du logo ; angles arrondis, éléments plats
+	MODERN = { -- net, gris ardoise, bleu givre et or du logo ; angles arrondis, éléments plats
 		accent = { 0.45, 0.78, 1.00 }, gold = { 0.93, 0.75, 0.35 },
-		bg = { 0.05, 0.06, 0.08 }, panel = { 0.10, 0.11, 0.14 }, line = { 0.22, 0.25, 0.32 }, edge = { 0.26, 0.30, 0.38 },
-		text = { 0.92, 0.94, 0.97 }, dim = { 0.62, 0.66, 0.72 }, btext = { 0.92, 0.94, 0.97 },
-		bgAlpha = 0.92, kit = "MODERN", headFont = "STANDARD", headSize = 13,
+		bg = { 0.09, 0.10, 0.12 }, side = { 0.12, 0.13, 0.16 }, panel = { 0.17, 0.18, 0.22 },
+		line = { 0.26, 0.29, 0.36 }, edge = { 0.30, 0.34, 0.42 },
+		text = { 0.88, 0.90, 0.93 }, dim = { 0.66, 0.70, 0.76 }, btext = { 0.88, 0.90, 0.93 },
+		bgAlpha = 0.92, sideAlpha = 0.9, kit = "MODERN", headFont = "STANDARD", headSize = 13,
 		runeBase = { 0.62, 0.84, 1.00 }, runeGlow = { 0.80, 0.93, 1.00 },
 	},
 	CLASSIC = { -- les fenêtres du jeu : cadre de boîte de dialogue, boutons rouges, cases à cocher du jeu
 		accent = { 1.00, 0.82, 0.00 }, gold = { 1.00, 0.82, 0.00 },
-		bg = { 0.06, 0.06, 0.06 }, panel = { 0.14, 0.14, 0.14 }, line = { 0.34, 0.34, 0.34 }, edge = { 1, 1, 1 },
-		text = { 1.00, 1.00, 1.00 }, dim = { 0.70, 0.70, 0.70 }, btext = { 1.00, 0.82, 0.00 },
-		bgAlpha = 1, kit = "CLASSIC", headFont = "Fonts\\FRIZQT__.TTF", headSize = 13,
+		bg = { 0.10, 0.10, 0.10 }, side = { 0.16, 0.16, 0.16 }, panel = { 0.16, 0.16, 0.16 },
+		line = { 0.34, 0.34, 0.34 }, edge = { 1, 1, 1 },
+		text = { 0.95, 0.95, 0.95 }, dim = { 0.72, 0.72, 0.72 }, btext = { 1.00, 0.82, 0.00 },
+		bgAlpha = 1, sideAlpha = 0.4, kit = "CLASSIC", headFont = "Fonts\\FRIZQT__.TTF", headSize = 13,
 		runeBase = { 0.93, 0.75, 0.35 }, runeGlow = { 1.00, 0.90, 0.60 },
 	},
 	MMO = { -- grimoire runique : fond de pierre, bordure dorée, runes aux angles, plaques dorées, braise
 		accent = { 1.00, 0.78, 0.30 }, gold = { 1.00, 0.78, 0.30 },
-		bg = { 0.08, 0.07, 0.06 }, panel = { 0.16, 0.12, 0.08 }, line = { 0.55, 0.42, 0.20 }, edge = { 1, 1, 1 },
-		text = { 0.96, 0.92, 0.84 }, dim = { 0.74, 0.68, 0.58 }, btext = { 1.00, 0.88, 0.62 },
-		bgAlpha = 0.78, kit = "MMO", headFont = "Fonts\\MORPHEUS.TTF", headSize = 15,
+		bg = { 0.10, 0.085, 0.07 }, side = { 0.15, 0.12, 0.09 }, panel = { 0.18, 0.14, 0.10 },
+		line = { 0.55, 0.42, 0.20 }, edge = { 1, 1, 1 },
+		text = { 0.96, 0.92, 0.84 }, dim = { 0.76, 0.70, 0.60 }, btext = { 1.00, 0.88, 0.62 },
+		bgAlpha = 0.78, sideAlpha = 0.5, kit = "MMO", headFont = "Fonts\\MORPHEUS.TTF", headSize = 15,
 		runeBase = { 1.00, 0.78, 0.30 }, runeGlow = { 1.00, 0.50, 0.15 }, sparks = true,
 	},
 }
--- Contraste élevé : appliqué par-dessus le thème choisi (cadre plat, fond noir, bordure blanche)
-local CONTRAST = { bg = { 0, 0, 0 }, text = { 1, 1, 1 }, btext = { 1, 1, 1 }, dim = { 0.86, 0.86, 0.86 }, line = { 0.75, 0.75, 0.75 }, edge = { 1, 1, 1 }, bgAlpha = 1 }
+-- Contraste élevé : appliqué par-dessus le thème choisi (cadre plat, fond opaque gris très foncé, texte blanc
+-- cassé, bordure blanche). Le blanc pur sur noir pur « bave » à la lecture : ni l'un ni l'autre ici.
+local CONTRAST = {
+	bg = { 0.08, 0.08, 0.08 }, side = { 0.12, 0.12, 0.12 }, panel = { 0.18, 0.18, 0.18 },
+	text = { 0.93, 0.93, 0.93 }, btext = { 0.93, 0.93, 0.93 }, dim = { 0.82, 0.82, 0.82 },
+	line = { 0.75, 0.75, 0.75 }, edge = { 1, 1, 1 }, bgAlpha = 1, sideAlpha = 1,
+}
+UI.CONTRAST = CONTRAST -- pour les tests
 
 -- Textures du jeu lui-même (présentes sur Forever) pour les thèmes Classique et MMORPG
 local GAME = {
@@ -103,6 +123,7 @@ local GAME = {
 	buttonHighlight = "Interface\\Buttons\\UI-Panel-Button-Highlight",
 	checkBox = "Interface\\Buttons\\UI-CheckBox-Up",
 	check = "Interface\\Buttons\\UI-CheckBox-Check",
+	arrow = "Interface\\ChatFrame\\ChatFrameExpandArrow", -- petite flèche vers la droite (sous-menus du jeu)
 }
 UI.GAME = GAME
 local BACKDROPS = {
@@ -126,11 +147,12 @@ UI.skin = UI.skins.MODERN
 
 local function Paint(obj, role, alpha, factor)
 	local c, f = UI[role], factor or 1
-	if alpha == "bgAlpha" then alpha = UI.bgAlpha or UI.skin.bgAlpha end
+	if type(alpha) == "string" then alpha = UI[alpha] or UI.skin[alpha] end -- « bgAlpha », « sideAlpha »
 	local r, g, b, a = c[1] * f, c[2] * f, c[3] * f, alpha or 1
+	local kind = not obj.isBorder and obj:GetObjectType()
 	if obj.isBorder then
 		obj:SetColor(r, g, b, a)
-	elseif obj:GetObjectType() == "FontString" then
+	elseif kind == "FontString" or kind == "EditBox" then
 		obj:SetTextColor(r, g, b, a)
 	else
 		obj:SetVertexColor(r, g, b, a)
@@ -138,7 +160,7 @@ local function Paint(obj, role, alpha, factor)
 end
 
 -- Note un élément de fenêtre (texture, texte ou bordure) et lui donne la couleur d'un rôle.
--- alpha : nombre, ou nom d'un champ du thème (« bgAlpha ») ; factor : assombrit (0,45 = 45 %).
+-- alpha : nombre, ou nom d'un champ du thème (« bgAlpha », « sideAlpha ») ; factor : assombrit (0,45 = 45 %).
 function UI.Paint(obj, role, alpha, factor)
 	if not painted[obj] then paintOrder[#paintOrder + 1] = obj end
 	painted[obj] = { role, alpha, factor }
@@ -196,6 +218,7 @@ function UI.ApplySkin()
 		UI[role][1], UI[role][2], UI[role][3] = c[1], c[2], c[3]
 	end
 	UI.bgAlpha = db.highContrast and CONTRAST.bgAlpha or skin.bgAlpha
+	UI.sideAlpha = db.highContrast and CONTRAST.sideAlpha or skin.sideAlpha
 	-- Chaque élément est repeint à part : une erreur sur l'un (notée dans le journal) n'arrête pas les autres
 	local failed
 	for _, obj in ipairs(paintOrder) do
@@ -379,19 +402,21 @@ function UI.Breathe(region, low, period)
 	return group
 end
 
--- Petite rune qui s'allume à côté d'un réglage qu'on vient de changer (0,4 s), puis s'éteint
+-- Petite rune qui s'allume à côté d'un réglage qu'on vient de changer (0,4 s), puis s'éteint.
+-- Cachée par Hide, jamais par l'opacité : un changement de thème la repeint à l'opacité 1 (règle C1).
 function UI.Confirm(widget)
 	if not widget.confirm then
 		local rune = UI.Paint(UI.Rune(widget, "OVERLAY", 20, 10), "gold")
 		rune:SetPoint("RIGHT", widget, "LEFT", -5, 0)
-		rune:SetAlpha(0)
+		rune:Hide()
+		widget.confirmRune = rune
 		widget.confirm = rune:CreateAnimationGroup()
 		AlphaAnim(widget.confirm, 0, 1, 0.1, "OUT", 1)
 		AlphaAnim(widget.confirm, 1, 0, 0.3, "IN_OUT", 2)
-		widget.confirm:SetToFinalAlpha(true) -- la rune finit éteinte, quoi qu'il arrive
-		widget.confirm:SetScript("OnFinished", function() rune:SetAlpha(0) end)
+		widget.confirm:SetScript("OnFinished", function() rune:Hide() end)
 	end
 	widget.confirm:Stop()
+	widget.confirmRune:Show()
 	widget.confirm:Play()
 	UI.SoothingSpark(widget)
 end
@@ -405,6 +430,12 @@ UI.MAGIC_CIRCLE = MEDIA .. "MagieCercle"
 UI.MAGIC_SPARK = MEDIA .. "MagieEtincelle"
 local FLASHES = 3 -- au plus 3 éclairs par seconde, toutes fenêtres confondues
 local flashes = {}
+local HEADER = 44 -- hauteur de l'en-tête des fenêtres (titre, recherche, fermeture), identique dans tous les thèmes
+-- Lumière de soin, or et vert (choix de l'auteur), la même dans tous les thèmes : faisceau de l'en-tête, rune du
+-- chapitre ouvert, éclat de la case témoin
+UI.HEAL_GOLD = { 0.96, 0.82, 0.48 }
+UI.HEAL_GREEN = { 0.50, 0.89, 0.63 }
+local BEAM = 300 -- longueur du faisceau de l'en-tête
 
 function UI.Magic()
 	return Z.db and Z.db.magicEffects and not Z.db.reduceMotion and true or false
@@ -453,7 +484,9 @@ function UI.SoothingSpark(widget)
 	widget.sparkRise:Play()
 end
 
--- Particule de l'en-tête : apparaît, monte de 22 pixels en s'effaçant, puis attend son tour
+-- Particule de l'en-tête : attend, apparaît, monte de 22 pixels en s'effaçant, puis attend son tour.
+-- Les attentes sont des animations éteintes (opacité 0 à 0), jamais des délais : pendant un délai, la particule
+-- garderait l'opacité 1 de sa couleur (règle C1) et resterait allumée, immobile.
 local function Mote(field, x, delay, rest)
 	local mote = field:CreateTexture(nil, "ARTWORK")
 	mote:SetTexture(UI.MAGIC_SPARK)
@@ -463,20 +496,51 @@ local function Mote(field, x, delay, rest)
 	mote:SetAlpha(0)
 	local group = mote:CreateAnimationGroup()
 	group:SetLooping("REPEAT")
-	AlphaAnim(group, 0, 0.8, 0.8, "OUT", 1, delay)
-	AlphaAnim(group, 0.8, 0, 2.2, "IN", 2):SetEndDelay(rest)
-	for order, rise in ipairs({ { 6, 0.8, delay }, { 16, 2.2 } }) do
+	local first = 1
+	if delay > 0 then
+		AlphaAnim(group, 0, 0, delay, "NONE", 1)
+		first = 2
+	end
+	AlphaAnim(group, 0, 0.8, 0.8, "OUT", first)
+	AlphaAnim(group, 0.8, 0, 2.2, "IN", first + 1)
+	AlphaAnim(group, 0, 0, rest, "NONE", first + 2)
+	for i, rise in ipairs({ { 6, 0.8 }, { 16, 2.2 } }) do
 		local up = group:CreateAnimation("Translation")
 		up:SetOffset(0, rise[1])
 		up:SetDuration(rise[2])
-		if rise[3] then up:SetStartDelay(rise[3]) end
-		up:SetOrder(order)
+		up:SetOrder(first + i - 1)
 	end
 	return mote, group
 end
 
+-- Faisceau de la lumière de soin : un halo doux, puis le trait en trois dégradés (rien, or, vert, rien)
+local function Beam(parent)
+	local beam = CreateFrame("Frame", nil, parent)
+	beam:SetSize(BEAM, 14)
+	beam.haze = beam:CreateTexture(nil, "BACKGROUND")
+	beam.haze:SetTexture(UI.MAGIC_SPARK)
+	beam.haze:SetBlendMode("ADD")
+	beam.haze:SetAllPoints()
+	beam.haze:SetVertexColor(UI.HEAL_GOLD[1], UI.HEAL_GOLD[2], UI.HEAL_GOLD[3], 0.35)
+	local gold, green, third = UI.HEAL_GOLD, UI.HEAL_GREEN, BEAM / 3
+	beam.pieces = {}
+	for i, ends in ipairs({ { false, gold }, { gold, green }, { green, false } }) do
+		local from, to = ends[1] or ends[2], ends[2] or ends[1]
+		local t = beam:CreateTexture(nil, "ARTWORK")
+		t:SetTexture(WHITE)
+		t:SetBlendMode("ADD")
+		t:SetSize(third, 2)
+		t:SetPoint("LEFT", (i - 1) * third, 0)
+		t:SetGradient("HORIZONTAL", CreateColor(from[1], from[2], from[3], ends[1] and 1 or 0),
+			CreateColor(to[1], to[2], to[3], ends[2] and 1 or 0))
+		beam.pieces[i] = t
+	end
+	return beam
+end
+
 -- Effets de l'en-tête d'une fenêtre : cercle runique derrière « logo », particules entre le titre et « right »
--- (le champ de recherche). La zone des particules coupe tout ce qui en sort : rien ne passe derrière le texte.
+-- (le champ de recherche), lumière de soin qui parcourt le trait sous l'en-tête. La zone des particules et celle du
+-- faisceau coupent tout ce qui en sort : rien ne passe derrière le texte.
 function UI.HeaderMagic(w, logo, right)
 	local m = { motes = {}, rises = {} }
 	m.circle = w:CreateTexture(nil, "BORDER")
@@ -503,6 +567,31 @@ function UI.HeaderMagic(w, logo, right)
 		m.motes[i], m.rises[i] = Mote(m.field, spot[1], spot[2], spot[3])
 	end
 
+	-- Trait sous l'en-tête : celui de la fenêtre en Classique et MMORPG (liseré doré), le sien ailleurs
+	m.rail = UI.Paint(UI.Tex(w, "ARTWORK"), "line")
+	m.rail:SetHeight(1)
+	m.rail:SetPoint("TOPLEFT", 22, -HEADER)
+	m.rail:SetPoint("TOPRIGHT", -22, -HEADER)
+	-- Lumière de soin : le faisceau traverse le trait de gauche à droite (7 s), puis se repose (3 s)
+	m.track = CreateFrame("Frame", nil, w)
+	m.track:SetPoint("TOPLEFT", 22, -HEADER + 7)
+	m.track:SetPoint("TOPRIGHT", -22, -HEADER + 7)
+	m.track:SetHeight(14)
+	m.track:SetClipsChildren(true)
+	m.beam = Beam(m.track)
+	m.beam:SetPoint("LEFT", m.track, "LEFT", -BEAM, 0)
+	m.sweep = m.beam:CreateAnimationGroup()
+	m.sweep:SetLooping("REPEAT")
+	m.pass = m.sweep:CreateAnimation("Translation")
+	m.pass:SetDuration(7)
+	m.pass:SetSmoothing("IN_OUT")
+	m.pass:SetEndDelay(3)
+
+	function m.Rail()
+		local kit = UI.Kit()
+		m.rail:SetShown(kit ~= "CLASSIC" and kit ~= "MMO")
+	end
+
 	function m.Paint()
 		MagicColor(m.circle, m.circle:GetAlpha())
 		for _, mote in ipairs(m.motes) do MagicColor(mote) end
@@ -511,6 +600,7 @@ function UI.HeaderMagic(w, logo, right)
 	function m.Stop()
 		m.spin:Stop()
 		m.burst:Stop()
+		m.sweep:Stop()
 		for _, group in ipairs(m.rises) do group:Stop() end
 	end
 
@@ -519,8 +609,13 @@ function UI.HeaderMagic(w, logo, right)
 		local on = UI.Magic()
 		m.circle:SetShown(on)
 		m.field:SetShown(on)
+		m.track:SetShown(on)
 		if not on or not w:IsShown() then return m.Stop() end
 		m.Paint()
+		if not m.sweep:IsPlaying() then
+			m.pass:SetOffset(w:GetWidth() - 44 + BEAM, 0) -- de tout à gauche du trait à tout à droite
+			m.sweep:Play()
+		end
 		if opening and UI.Flash() then
 			m.burst:Stop()
 			m.burst:Play()
@@ -536,8 +631,51 @@ function UI.HeaderMagic(w, logo, right)
 	w:HookScript("OnShow", function() m.Update(true) end)
 	w:HookScript("OnHide", m.Stop)
 	UI.OnSkin(m.Paint)
+	UI.OnSkin(m.Rail)
+	m.Rail()
 	m.Update()
 	return m
+end
+
+-- Éclat de soin au centre de « parent » (case témoin) : une lueur or et vert qui grandit et s'efface en 0,9 s.
+-- Posé au-dessus des cadres de « parent ». burst.Play() le relance.
+function UI.HealBurst(parent)
+	local burst = CreateFrame("Frame", nil, parent)
+	burst:SetAllPoints()
+	burst:SetFrameLevel(parent:GetFrameLevel() + 30) -- au-dessus de la case et de ses icônes
+	burst.glows, burst.groups = {}, {}
+	for i, spec in ipairs({ { 64, UI.HEAL_GOLD, 0.55 }, { 34, UI.HEAL_GREEN, 0.9 } }) do
+		local glow = burst:CreateTexture(nil, "OVERLAY")
+		glow:SetTexture(UI.MAGIC_SPARK)
+		glow:SetBlendMode("ADD")
+		glow:SetSize(spec[1], spec[1])
+		glow:SetPoint("CENTER")
+		glow:SetVertexColor(spec[2][1], spec[2][2], spec[2][3])
+		glow:SetAlpha(0)
+		local group = glow:CreateAnimationGroup()
+		AlphaAnim(group, 0, spec[3], 0.22, "OUT", 1)
+		AlphaAnim(group, spec[3], 0, 0.68, "IN", 2)
+		for order, size in ipairs({ { 0.4, 1, 0.22 }, { 1, 1.6, 0.68 } }) do
+			local grow = group:CreateAnimation("Scale")
+			if grow.SetScaleFrom then
+				grow:SetScaleFrom(size[1], size[1])
+				grow:SetScaleTo(size[2], size[2])
+			end
+			grow:SetDuration(size[3])
+			grow:SetSmoothing("OUT")
+			grow:SetOrder(order)
+		end
+		group:SetToFinalAlpha(true)
+		group:SetScript("OnFinished", function() glow:SetAlpha(0) end)
+		burst.glows[i], burst.groups[i] = glow, group
+	end
+	function burst.Play()
+		for _, group in ipairs(burst.groups) do
+			group:Stop()
+			group:Play()
+		end
+	end
+	return burst
 end
 
 -- Bordure qui s'allume en douceur au survol d'un bouton (créée au premier survol seulement).
@@ -707,6 +845,111 @@ function UI.styles.divider(f, kit)
 	f.right:SetShown(rune)
 end
 
+-- Interrupteur. Moderne : pastille qui glisse dans un rail arrondi. Contraste élevé : même chose, rail carré.
+-- Classique : case et coche du jeu. MMORPG : creux cerclé d'or et rune. Toujours à droite de son libellé.
+local SWITCH_W, SWITCH_H, KNOB = 34, 18, 12
+
+local function KnobX(on)
+	return on and (SWITCH_W - KNOB - 3) or 3
+end
+
+local function PlaceKnob(c)
+	c.knob:ClearAllPoints()
+	c.knob:SetPoint("LEFT", c.box, "LEFT", KnobX(c.on), 0)
+end
+
+-- Allure de l'interrupteur selon son état ; animate : la pastille glisse (0,15 s, jamais en animations réduites)
+local function SwitchLook(c, animate)
+	local on = c.on
+	if c.textured then
+		c.mark:SetShown(on)
+		return
+	end
+	c.mark:Hide()
+	UI.Paint(c.knob, on and "accent" or "dim")
+	UI.Paint(c.track, on and "accent" or "panel", on and 0.3 or 1)
+	UI.Paint(c.box, on and "accent" or "panel", on and 0.3 or 1)
+	UI.Paint(c.border, on and "accent" or "line")
+	c.slide:Stop()
+	if animate and not UI.Calm() then
+		local from = KnobX(not on)
+		c.knob:ClearAllPoints()
+		c.knob:SetPoint("LEFT", c.box, "LEFT", from, 0)
+		c.move:SetOffset(KnobX(on) - from, 0)
+		c.slide:Play() -- à la fin, la pastille est posée à sa place (PlaceKnob)
+	else
+		PlaceKnob(c)
+	end
+end
+UI.SwitchLook = SwitchLook
+
+function UI.styles.switch(c, kit)
+	c.textured = kit == "CLASSIC" or kit == "MMO"
+	if c.textured then
+		UI.styles.check(c, kit) -- la case du thème, puis replacée à droite
+		c.box:ClearAllPoints()
+		c.box:SetPoint("RIGHT", kit == "CLASSIC" and 3 or 1, 0)
+	else
+		c.box:SetTexture(WHITE)
+		c.box:SetTexCoord(0, 1, 0, 1)
+		c.box:SetSize(SWITCH_W, SWITCH_H)
+		c.box:ClearAllPoints()
+		c.box:SetPoint("RIGHT")
+		c.border:Show()
+		c.border:SetRounded(kit == "MODERN")
+	end
+	c.box:SetShown(kit ~= "MODERN") -- rail carré du contraste élevé, ou case des thèmes texturés
+	c.track:SetShown(kit == "MODERN")
+	c.knob:SetShown(not c.textured)
+	c.label:ClearAllPoints()
+	c.label:SetPoint("LEFT")
+	c.label:SetPoint("RIGHT", c.box, "LEFT", -10, 0)
+	c.label:SetJustifyH("LEFT")
+	SwitchLook(c)
+end
+
+-- Un choix d'une rangée de choix côte à côte. Choisi : pastille d'accent (Moderne), fond d'accent (contraste
+-- élevé), bouton du jeu (Classique) ou plaque dorée (MMORPG). Les autres restent transparents.
+function UI.styles.segment(b, kit)
+	UI.styles.button(b, kit)
+	local textured = b.restKey ~= nil
+	if not b.selected then
+		b.restKey = nil -- pas de plaque enfoncée au clic
+		ShowLayer(b, nil)
+	end
+	b.gameLook = b.selected and kit == "CLASSIC"
+	if b.gameLight then b.gameLight:SetShown(b.gameLook) end
+	b.bg:SetShown(b.selected and not textured and kit ~= "MODERN")
+	b.pill:SetShown(b.selected and kit == "MODERN")
+	b.border:Hide()
+	UI.Paint(b.label, b.selected and (textured and "btext" or "bg") or "dim")
+end
+
+-- Cadre de la rangée de choix : arrondi en Moderne, droit ailleurs
+function UI.styles.segmented(s, kit)
+	local rounded = kit == "MODERN"
+	s.strip.round:SetShown(rounded)
+	s.strip.bg:SetShown(not rounded)
+	s.strip.border:SetRounded(rounded)
+end
+
+-- Bouton de chapitre de la barre latérale. Ouvert : fond léger et bordure, nom en clair (doré en Classique et
+-- MMORPG), rune dorée. Fermé : nom et rune discrets. Police des titres en MMORPG.
+function UI.styles.side(b, kit)
+	local active, rounded = b.active, kit == "MODERN"
+	b.bg:SetShown(active and not rounded)
+	b.round:SetShown(active and rounded)
+	b.border:SetShown(active)
+	b.border:SetRounded(rounded)
+	UI.Paint(b.label, active and ((kit == "CLASSIC" or kit == "MMO") and "gold" or "text") or "dim")
+	UI.Paint(b.rune, active and "gold" or "dim", active and 1 or 0.7)
+	local mmo = kit == "MMO"
+	if b.label:SetFont(mmo and UI.skin.headFont or STANDARD_TEXT_FONT, mmo and 14 or 13, "") == false then
+		b.label:SetFont(STANDARD_TEXT_FONT, 13, "")
+	end
+	if b.Light then b:Light() end
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Éléments des fenêtres
 ----------------------------------------------------------------------------------------------------
@@ -740,10 +983,16 @@ function UI.Button(parent, text, width, height, onClick)
 	return UI.Style(b, "button")
 end
 
--- Case à cocher : get() donne l'état, set(valeur) l'enregistre
-function UI.Check(parent, label, get, set)
+-- Après chaque mise à jour d'un réglage affiché : sa rune des réglages changés suit (UI.ChangedRune)
+local function Changed(widget)
+	if widget.changed then widget.changed:Update() end
+end
+
+-- Case à cocher ou interrupteur : même fonctionnement, seule l'allure change (style « check » ou « switch »).
+-- get() donne l'état, set(valeur) l'enregistre.
+local function Toggle(parent, label, get, set, kind)
 	local c = CreateFrame("Button", nil, parent)
-	c:SetSize(250, 20)
+	c:SetSize(250, kind == "switch" and 26 or 20)
 	c.box = UI.Paint(UI.Tex(c, "BACKGROUND"), "panel")
 	c.border = UI.Paint(UI.Border(c, 1), "line")
 	c.border:ClearAllPoints()
@@ -751,35 +1000,110 @@ function UI.Check(parent, label, get, set)
 	c.mark = UI.Paint(UI.Tex(c, "ARTWORK"), "accent")
 	c.label = UI.Label(c, 12)
 	c.label:SetText(label)
-	c.Update = function(self) self.mark:SetShown(get() and true or false) end
+	if kind == "switch" then
+		c.track = UI.Paint(UI.RoundTex(c, "BACKGROUND"), "panel")
+		c.track:SetAllPoints(c.box)
+		c.knob = UI.Paint(UI.RoundTex(c, "ARTWORK"), "dim") -- 12 pixels aux coins de 6 : un rond
+		c.knob:SetSize(KNOB, KNOB)
+		c.slide = c.knob:CreateAnimationGroup()
+		c.move = c.slide:CreateAnimation("Translation")
+		c.move:SetDuration(0.15)
+		c.move:SetSmoothing("OUT")
+		c.slide:SetScript("OnFinished", function() PlaceKnob(c) end)
+	end
+	c.Update = function(self, animate)
+		self.on = get() and true or false
+		if kind == "switch" then SwitchLook(self, animate) else self.mark:SetShown(self.on) end
+		Changed(self)
+	end
 	c:SetScript("OnClick", function(self)
 		Click()
 		set(not get())
-		self:Update()
+		self:Update(true)
 		UI.Confirm(self)
 	end)
-	c:SetScript("OnShow", c.Update)
-	UI.Style(c, "check")
+	c:SetScript("OnShow", function(self) self:Update() end)
+	c.on = get() and true or false
+	UI.Style(c, kind)
 	c:Update()
 	return c
 end
 
--- Valeur numérique avec boutons - et +
+function UI.Check(parent, label, get, set)
+	return Toggle(parent, label, get, set, "check")
+end
+
+-- Interrupteur : un réglage qui s'allume ou s'éteint, libellé à gauche, interrupteur à droite
+function UI.Switch(parent, label, get, set)
+	return Toggle(parent, label, get, set, "switch")
+end
+
+-- Molette passée à la page qui défile autour de « frame » (s'il y en a une)
+local function PassWheel(frame, delta)
+	local p = frame:GetParent()
+	while p do
+		if p.offset and p.ScrollTo then -- une page de UI.Scroll
+			local wheel = p:GetScript("OnMouseWheel")
+			if wheel then wheel(p, delta) end
+			return
+		end
+		p = p:GetParent()
+	end
+end
+
+-- Valeur numérique : boutons - et +, molette sur la valeur, ou saisie directe (clic sur la valeur, Entrée).
+-- La molette change le nombre seulement quand sa valeur est active (après un clic dessus) ou avec Maj : sinon elle
+-- fait défiler la page, sans changer un réglage au passage.
+-- Un nombre saisi est ramené entre les limites et sur le pas le plus proche.
 function UI.Stepper(parent, label, min, max, step, get, set)
 	local s = CreateFrame("Frame", nil, parent)
 	s:SetSize(250, 22)
 	s.label = UI.Label(s, 12)
 	s.label:SetPoint("LEFT")
 	s.label:SetText(label)
-	s.value = UI.Label(s, 12, nil, "accent")
-	s.value:SetPoint("RIGHT", -30, 0)
-	s.value:SetWidth(40)
-	s.Update = function(self) self.value:SetText(get()) end
-	local function change(delta)
-		set(math.max(min, math.min(max, get() + delta)))
+	local e = CreateFrame("EditBox", nil, s)
+	e:SetSize(40, 22)
+	e:SetPoint("RIGHT", -30, 0)
+	e:SetAutoFocus(false)
+	e:SetFont(UI.Font(), 12, "")
+	e:SetJustifyH("CENTER")
+	UI.Paint(e, "accent")
+	s.value = e
+	s.Update = function(self)
+		self.value:SetText(tostring(get()))
+		Changed(self)
+	end
+	local function apply(value)
+		value = math.max(min, math.min(max, value))
+		if value == get() then return s:Update() end
+		set(value)
 		s:Update()
 		UI.Confirm(s)
 	end
+	local function change(delta) apply(get() + delta) end
+	s.Snap = function(value)
+		return math.max(min, math.min(max, min + math.floor((value - min) / step + 0.5) * step))
+	end
+	e:EnableMouseWheel(true)
+	e:SetScript("OnMouseWheel", function(self, delta)
+		if self:HasFocus() or IsShiftKeyDown() then return change(delta > 0 and step or -step) end
+		PassWheel(self, delta)
+	end)
+	e:SetScript("OnEnterPressed", function(self)
+		local typed = tonumber((self:GetText():gsub(",", ".")))
+		self:ClearFocus()
+		if typed then apply(s.Snap(typed)) else s:Update() end
+	end)
+	e:SetScript("OnEscapePressed", function(self) self:ClearFocus() s:Update() end)
+	e:SetScript("OnHide", e.ClearFocus) -- fenêtre fermée : le clavier revient au jeu
+	e:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+	e:SetScript("OnEditFocusLost", function(self) self:HighlightText(0, 0) s:Update() end)
+	e:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(L["Clic : saisir la valeur au clavier, ou l'ajuster à la molette. Maj + molette : la changer sans clic."], 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	e:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	s.plus = UI.Button(s, "+", 22, 22, function() change(step) end)
 	s.plus:SetPoint("RIGHT")
 	s.plus.label:SetJustifyH("CENTER")
@@ -817,10 +1141,336 @@ function UI.Cycle(parent, label, choices, get, set)
 	c.button:SetPoint("RIGHT")
 	c.button.label:SetJustifyH("CENTER")
 	UI.Paint(c.button.label, "accent")
-	c.Update = function(self) self.button.label:SetText(choices[index()][2]) end
+	c.Update = function(self)
+		self.button.label:SetText(choices[index()][2])
+		Changed(self)
+	end
 	c:SetScript("OnShow", c.Update)
 	c:Update()
 	return c
+end
+
+----------------------------------------------------------------------------------------------------
+-- Briques de la fenêtre d'options à chapitres (1.26.0) : choix côte à côte, réglages fins repliables, rune des
+-- réglages changés, page qui défile, bouton de chapitre. Toutes suivent le thème des fenêtres.
+----------------------------------------------------------------------------------------------------
+
+-- Choix côte à côte, pour 2 à 4 possibilités (au-delà, UI.Cycle). choices = { { valeur, "libellé" }, ... }
+function UI.Segmented(parent, label, choices, get, set)
+	local s = CreateFrame("Frame", nil, parent)
+	s:SetSize(250, 26)
+	s.label = UI.Label(s, 12)
+	s.label:SetPoint("LEFT")
+	s.label:SetJustifyH("LEFT")
+	s.label:SetText(label)
+	local strip = CreateFrame("Frame", nil, s)
+	strip:SetPoint("RIGHT")
+	strip.bg = UI.Paint(UI.Tex(strip, "BACKGROUND"), "panel")
+	strip.bg:SetAllPoints()
+	strip.round = UI.Paint(UI.RoundTex(strip, "BACKGROUND"), "panel")
+	strip.round:SetAllPoints()
+	strip.border = UI.Paint(UI.Border(strip, 1), "line")
+	s.strip = strip
+	s.segments = {}
+	local x = 2
+	for i, choice in ipairs(choices) do
+		local b = UI.Button(strip, choice[2], 10, 22, function()
+			if get() == choice[1] then return end
+			set(choice[1])
+			s:Update()
+			UI.Confirm(s)
+		end)
+		b.value = choice[1]
+		b.label:SetJustifyH("CENTER")
+		UI.Paint(b.bg, "accent", 0.85) -- fond du choix sélectionné (contraste élevé)
+		b.pill = UI.Paint(UI.RoundTex(b, "BACKGROUND"), "accent", 0.85) -- le même, arrondi (Moderne)
+		b.pill:SetAllPoints()
+		local width = math.max(48, math.ceil(b.label:GetStringWidth()) + 20)
+		b:SetWidth(width)
+		b:SetPoint("LEFT", strip, "LEFT", x, 0)
+		x = x + width + 2
+		s.segments[i] = b
+	end
+	strip:SetSize(x, 26)
+	s.label:SetPoint("RIGHT", strip, "LEFT", -10, 0)
+	s.Update = function(self)
+		local current, kit = get(), UI.Kit()
+		for _, b in ipairs(self.segments) do
+			b.selected = b.value == current
+			UI.styles.segment(b, kit)
+		end
+		Changed(self)
+	end
+	for _, b in ipairs(s.segments) do UI.Style(b, "segment") end
+	s:SetScript("OnShow", s.Update)
+	UI.Style(s, "segmented")
+	s:Update()
+	return s
+end
+
+-- Réglages fins repliables : « Réglages fins (n) ». L'état de chaque partie (id) est gardé d'une ouverture à
+-- l'autre, pour chaque personnage. onToggle(ouvert) range la page.
+local foldMemory = {} -- avant le chargement des réglages (et pour les tests)
+local function Folds()
+	if not Z.char then return foldMemory end
+	Z.char.optionFolds = Z.char.optionFolds or {}
+	return Z.char.optionFolds
+end
+
+function UI.Fold(parent, id, count, onToggle)
+	local f = CreateFrame("Button", nil, parent)
+	f:SetSize(250, 26)
+	f.arrow = UI.Paint(f:CreateTexture(nil, "ARTWORK"), "dim")
+	f.arrow:SetTexture(GAME.arrow)
+	f.arrow:SetSize(12, 12)
+	f.arrow:SetPoint("LEFT", 2, 0)
+	f.label = UI.Label(f, 12, nil, "dim")
+	f.label:SetPoint("LEFT", f.arrow, "RIGHT", 6, 0)
+	f.id, f.count = id, count
+	f.IsOpen = function(self) return Folds()[self.id] and true or false end
+	f.Update = function(self)
+		local open = self:IsOpen()
+		self.arrow:SetRotation(open and -math.pi / 2 or 0) -- vers le bas quand c'est ouvert
+		self.label:SetText(L[open and "Masquer les réglages fins (%d)" or "Réglages fins (%d)"]:format(self.count))
+	end
+	f.SetOpen = function(self, open)
+		Folds()[self.id] = open and true or nil
+		self:Update()
+		if onToggle then onToggle(open and true or false) end
+	end
+	f:SetScript("OnClick", function(self)
+		Click()
+		self:SetOpen(not self:IsOpen())
+	end)
+	f:SetScript("OnEnter", function(self) UI.Paint(self.label, "accent") UI.Paint(self.arrow, "accent") end)
+	f:SetScript("OnLeave", function(self) UI.Paint(self.label, "dim") UI.Paint(self.arrow, "dim") end)
+	f:Update()
+	return f
+end
+
+-- Deux valeurs de réglage égales ? Les tables (positions, listes) sont comparées champ par champ.
+function UI.Same(a, b)
+	if type(a) ~= "table" or type(b) ~= "table" then return a == b end
+	for k, v in pairs(a) do
+		if not UI.Same(v, b[k]) then return false end
+	end
+	for k in pairs(b) do
+		if a[k] == nil then return false end
+	end
+	return true
+end
+
+-- Valeur d'un réglage en mots, pour l'infobulle de la rune : libellé du choix, « Activé », « Coupé » ou nombre
+function UI.Describe(key, value)
+	for _, choice in ipairs(Z.choices[key] or {}) do
+		if choice[1] == value then return L[choice[2]] end
+	end
+	if type(value) == "boolean" then return L[value and "Activé" or "Coupé"] end
+	if type(value) == "number" or type(value) == "string" then return tostring(value) end
+end
+
+-- Rune d'or à côté d'un réglage changé (valeur différente de Z.defaults). Infobulle « Rétablir : valeur »,
+-- clic : le réglage reprend sa valeur d'installation. Elle suit toute seule l'élément « widget » (case,
+-- interrupteur, nombre, choix) : sa mise à jour la montre ou la cache. Elle se pose à gauche de « anchor »
+-- (la commande de la ligne, entre le nom et elle), ou à gauche de l'élément. describe(valeur) donne la valeur en
+-- mots quand le réglage a sa propre liste de choix (Thème, Texture) : jamais un nom interne dans l'infobulle.
+function UI.ChangedRune(widget, key, get, set, anchor, describe)
+	local r = CreateFrame("Button", nil, widget)
+	r:SetSize(20, 20)
+	r:SetPoint("RIGHT", anchor or widget, "LEFT", -4, 0)
+	r.halo = UI.Paint(UI.CutRune(r:CreateTexture(nil, "BACKGROUND"), 22, 20, UI.HALOS), "gold", 0.5)
+	r.halo:SetPoint("CENTER")
+	r.rune = UI.Paint(UI.Rune(r, "ARTWORK", 22, 14), "gold")
+	r.rune:SetPoint("CENTER")
+	r.key = key
+	r.Update = function(self) self:SetShown(not UI.Same(get(), Z.defaults[self.key])) end
+	r:SetScript("OnEnter", function(self)
+		local default = Z.defaults[self.key]
+		local value = describe and describe(default) or UI.Describe(self.key, default)
+		if value == "" then value = nil end
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(value and L["Rétablir : %s"]:format(value) or L["Rétablir comme à l'installation"], 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	r:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	r:SetScript("OnClick", function(self)
+		Click()
+		GameTooltip:Hide()
+		local value = Z.defaults[self.key]
+		set(type(value) == "table" and CopyTable(value) or value)
+		if widget.Update then widget:Update() end
+		self:Update()
+	end)
+	widget.changed = r
+	r:Update()
+	return r
+end
+
+-- Page qui défile : cadre de défilement du jeu, molette, barre fine aux couleurs du thème (poignée à glisser).
+-- Le contenu se pose dans scroll.content ; sa hauteur est donnée par scroll:SetContentHeight(h).
+-- Aucune boucle : la barre est recalculée au défilement et au changement de taille, la poignée suit la souris
+-- seulement pendant qu'on la tient.
+local WHEEL, BAR = 40, 8
+
+local function ScrollBar(s)
+	local view, range = s:GetHeight() or 0, s:Range()
+	s.bar:SetShown(range > 0)
+	if range <= 0 then return end
+	local track = s.bar:GetHeight() or view
+	local size = math.max(24, track * view / (view + range))
+	s.thumb:SetHeight(size)
+	s.thumb:ClearAllPoints()
+	s.thumb:SetPoint("TOP", s.bar, "TOP", 0, -(track - size) * s.offset / range)
+end
+
+local function ScrollRange(s)
+	return math.max(0, (s.content:GetHeight() or 0) - (s:GetHeight() or 0))
+end
+
+local function ScrollTo(s, y)
+	s.offset = math.max(0, math.min(y, s:Range()))
+	s:SetVerticalScroll(s.offset)
+	ScrollBar(s)
+end
+
+-- Fait défiler jusqu'à un élément de la page (recherche) : il arrive en haut, avec un peu de marge
+local function ScrollToWidget(s, widget)
+	local top, target = s.content:GetTop(), widget:GetTop()
+	if top and target then s:ScrollTo(top - target - 20) end
+end
+
+local function ThumbDrag(thumb)
+	local s = thumb.scroll
+	local _, y = GetCursorPosition()
+	local moved = (thumb.startY - y) / (thumb:GetEffectiveScale() or 1)
+	local room = (s.bar:GetHeight() or 0) - (thumb:GetHeight() or 0)
+	if room > 0 then s:ScrollTo(thumb.startOffset + moved * s:Range() / room) end
+end
+
+function UI.Scroll(parent)
+	local s = CreateFrame("ScrollFrame", nil, parent)
+	s.offset = 0
+	s.content = CreateFrame("Frame", nil, s)
+	s.content:SetSize(1, 1)
+	s:SetScrollChild(s.content)
+	s.Range, s.ScrollTo, s.ScrollToWidget = ScrollRange, ScrollTo, ScrollToWidget
+	s.SetContentHeight = function(self, height)
+		self.content:SetHeight(math.max(1, height))
+		self:ScrollTo(self.offset) -- reste dans les limites si la page a raccourci
+	end
+	s:EnableMouseWheel(true)
+	s:SetScript("OnMouseWheel", function(self, delta) self:ScrollTo(self.offset - delta * WHEEL) end)
+	s:SetScript("OnSizeChanged", function(self, width)
+		self.content:SetWidth(math.max(1, (width or self:GetWidth() or 0) - BAR - 6))
+		self:ScrollTo(self.offset)
+	end)
+	s.bar = CreateFrame("Frame", nil, s)
+	s.bar:SetWidth(BAR)
+	s.bar:SetPoint("TOPRIGHT")
+	s.bar:SetPoint("BOTTOMRIGHT")
+	s.track = UI.Paint(UI.Tex(s.bar, "BACKGROUND"), "line", 0.25)
+	s.track:SetAllPoints()
+	local thumb = CreateFrame("Button", nil, s.bar)
+	thumb:SetWidth(BAR)
+	thumb.scroll = s
+	thumb.tex = UI.Paint(UI.Tex(thumb, "ARTWORK"), "gold", 0.45)
+	thumb.tex:SetAllPoints()
+	thumb:SetScript("OnEnter", function(self) UI.Paint(self.tex, "gold", 0.8) end)
+	thumb:SetScript("OnLeave", function(self) if not self.dragging then UI.Paint(self.tex, "gold", 0.45) end end)
+	thumb:SetScript("OnMouseDown", function(self)
+		local _, y = GetCursorPosition()
+		self.startY, self.startOffset, self.dragging = y, s.offset, true
+		self:SetScript("OnUpdate", ThumbDrag)
+	end)
+	thumb:SetScript("OnMouseUp", function(self)
+		self.dragging = nil
+		self:SetScript("OnUpdate", nil)
+		if not self:IsMouseOver() then UI.Paint(self.tex, "gold", 0.45) end
+	end)
+	thumb:SetScript("OnHide", function(self) self.dragging = nil self:SetScript("OnUpdate", nil) end)
+	s.thumb = thumb
+	ScrollBar(s)
+	return s
+end
+
+-- Bouton de chapitre de la barre latérale : rune, nom, pastille du nombre de réglages changés.
+-- b:SetActive(vrai) pour le chapitre ouvert, b:SetCount(n) pour la pastille (cachée à zéro).
+function UI.SideButton(parent, rune, name, onClick)
+	local b = CreateFrame("Button", nil, parent)
+	b:SetSize(192, 38)
+	b.bg = UI.Paint(UI.Tex(b, "BACKGROUND"), "accent", 0.08)
+	b.bg:SetAllPoints()
+	b.round = UI.Paint(UI.RoundTex(b, "BACKGROUND"), "accent", 0.08)
+	b.round:SetAllPoints()
+	b.border = UI.Paint(UI.Border(b, 1), "line")
+	b.light = b:CreateTexture(nil, "HIGHLIGHT") -- reflet discret au survol
+	b.light:SetTexture(WHITE)
+	b.light:SetVertexColor(1, 1, 1, 0.04)
+	b.light:SetAllPoints()
+	b.rune = UI.Rune(b, "ARTWORK", rune, 16)
+	b.rune:SetPoint("LEFT", 12, 0)
+	-- Chapitre ouvert (effets magiques) : la lumière de soin s'allume derrière sa rune et respire (3 s)
+	b.halo = UI.CutRune(b:CreateTexture(nil, "ARTWORK", nil, -1), rune, 34, UI.HALOS)
+	b.halo:SetPoint("CENTER", b.rune)
+	b.halo:SetBlendMode("ADD")
+	b.halo:SetVertexColor(UI.HEAL_GOLD[1], UI.HEAL_GOLD[2], UI.HEAL_GOLD[3])
+	b.halo:Hide()
+	b.pulse = b.halo:CreateAnimationGroup()
+	b.pulse:SetLooping("BOUNCE")
+	AlphaAnim(b.pulse, 0.35, 0.9, 1.5, "IN_OUT")
+	b.label = UI.Label(b, 13, nil, "dim")
+	b.label:SetPoint("LEFT", b.rune, "RIGHT", 10, 0)
+	b.label:SetPoint("RIGHT", -34, 0)
+	b.label:SetJustifyH("LEFT")
+	b.label:SetWordWrap(false)
+	b.label:SetText(name)
+	b.badge = CreateFrame("Frame", nil, b)
+	b.badge:SetSize(18, 18)
+	b.badge:SetPoint("RIGHT", -8, 0)
+	b.badge.bg = UI.Paint(UI.RoundTex(b.badge, "ARTWORK"), "gold")
+	b.badge.bg:SetAllPoints()
+	b.badge.text = UI.Label(b.badge, 11, nil, "bg")
+	b.badge.text:SetPoint("CENTER")
+	b.SetActive = function(self, active)
+		self.active = active and true or false
+		UI.styles.side(self, UI.Kit())
+	end
+	b.SetCount = function(self, count)
+		self.count = count or 0
+		self.badge:SetShown(self.count > 0)
+		self.badge.text:SetText(self.count > 99 and "99+" or tostring(self.count))
+		self.badge:SetWidth(math.max(18, math.ceil(self.badge.text:GetStringWidth()) + 10))
+		-- Ce sont les choix du joueur, pas des changements de Lyorune : le texte le dit (retour d'essai)
+		self.tip = self.count == 1 and L["1 réglage différent de l'installation, choisi par vous. Une rune d'or le marque dans le chapitre."]
+			or self.count > 1 and L["%d réglages différents de l'installation, choisis par vous. Une rune d'or les marque dans le chapitre."]:format(self.count)
+			or nil
+	end
+	-- Allume ou éteint la lumière de la rune (chapitre ouvert, effets magiques, bouton à l'écran)
+	b.Light = function(self)
+		local on = self.active and UI.Magic() and self:IsVisible() and true or false
+		self.halo:SetShown(on)
+		if not on then
+			self.pulse:Stop()
+		elseif not self.pulse:IsPlaying() then
+			self.halo:SetAlpha(0.35)
+			self.pulse:Play()
+		end
+	end
+	b:HookScript("OnShow", b.Light)
+	b:HookScript("OnHide", function(self) self.pulse:Stop() end)
+	b:SetScript("OnClick", function(self, button)
+		Click()
+		if onClick then onClick(self, button) end
+	end)
+	b:SetScript("OnEnter", function(self)
+		if not self.tip then return end
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	b:SetCount(0)
+	return UI.Style(b, "side")
 end
 
 -- Champ de saisie. onEnter(texte) est appelé à la touche Entrée.
@@ -830,10 +1480,12 @@ function UI.Edit(parent, width, onEnter)
 	e:SetAutoFocus(false)
 	e:SetFont(UI.Font(), 12, "")
 	e:SetTextInsets(6, 6, 0, 0)
+	UI.Paint(e, "text") -- sans couleur, le jeu écrit en blanc pur
 	e.bg = UI.Paint(UI.Tex(e, "BACKGROUND"), "panel")
 	e.bg:SetAllPoints()
 	e.border = UI.Paint(UI.Border(e, 1), "line")
 	e:SetScript("OnEscapePressed", e.ClearFocus)
+	e:SetScript("OnHide", e.ClearFocus) -- fenêtre fermée : le clavier revient au jeu
 	-- Champ actif : bordure d'accent, montrée aussi par-dessus les champs creusés des thèmes texturés
 	e:SetScript("OnEditFocusGained", function(self)
 		self.focused = true
@@ -877,8 +1529,6 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Fenêtres
 ----------------------------------------------------------------------------------------------------
-local HEADER = 44 -- hauteur de l'en-tête (titre, recherche, fermeture), identique dans tous les thèmes
-
 -- Habille une fenêtre selon le thème. Moderne : fond uni aux angles arrondis, bordure fine, liseré givre.
 -- Classique : cadre et fond de boîte de dialogue du jeu. MMORPG : fond de pierre assombri derrière le texte,
 -- bordure dorée du jeu, une rune gravée dans chaque angle. Les calques sont construits une fois.
@@ -924,33 +1574,210 @@ function UI.Decorate(w)
 	if w.ornate then w.ornate:SetShown(kit == "MMO") end
 end
 
--- Une fenêtre secondaire (macros, rapport de bug, journal, nouveautés) s'ouvre à côté de la fenêtre d'options
--- au lieu de la recouvrir : à droite s'il y a la place, sinon à gauche, sinon contre le bord le plus dégagé.
+-- Taille à la mesure de l'écran : une fenêtre plus grande que l'écran (moins une marge) est réduite d'un bloc,
+-- sans rien changer à sa disposition, jamais sous 75 % pour rester lisible (elle ne peut de toute façon pas
+-- sortir de l'écran). Une fenêtre qui a sa fonction Stretch (les options) garde sa largeur réduite et prend la
+-- hauteur qui reste, sa page défile. Refait à chaque ouverture et quand l'écran ou l'échelle de l'interface change.
+local MARGIN_X, MARGIN_Y, MIN_SCALE = 40, 60, 0.75
+function UI.FitScale(width, height, screenW, screenH)
+	if not (screenW and screenH and screenW > MARGIN_X and screenH > MARGIN_Y) then return 1 end
+	return math.max(MIN_SCALE, math.min(1, (screenW - MARGIN_X) / width, (screenH - MARGIN_Y) / height))
+end
+
+function UI.Fit(w)
+	if InCombatLockdown() and w:IsProtected() then return end -- un cadre qui porte des boutons sécurisés
+	local screenW, screenH = UIParent:GetWidth(), UIParent:GetHeight()
+	local scale = UI.FitScale(w:GetWidth(), w.Stretch and 1 or w:GetHeight(), screenW, screenH)
+	if w.Stretch then w.Stretch(screenH and screenH / scale) end
+	if math.abs(w:GetScale() - scale) > 0.001 then w:SetScale(scale) end
+end
+
+-- Bords d'une fenêtre (gauche, droite, haut) en points de l'écran, quelle que soit son échelle
+local function Edges(f)
+	local l, r, t = f:GetLeft(), f:GetRight(), f:GetTop()
+	if not (l and r and t) then return end
+	local k = f:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	return l * k, r * k, t * k
+end
+
+-- Une fenêtre secondaire (macros, placement, rapport de bug, journal, nouveautés, mesure, copie de profil) s'ouvre
+-- à côté de la fenêtre d'options, jamais par-dessus : à droite s'il y a la place, sinon à gauche ; sinon les
+-- options glissent pour lui faire la place si les deux tiennent dans l'écran ; sinon les options s'effacent
+-- (fondu) le temps qu'elle est ouverte et reviennent à sa fermeture, sur le même chapitre, au même défilement.
 local GAP = 8
+local away = {} -- fenêtres ouvertes pendant que les options sont effacées
+local slid      -- la fenêtre pour laquelle les options ont glissé, et où elles étaient
+
+-- Au milieu de la place des options effacées
+local function Center(w, l, r, t)
+	local k = w:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	w:SetPoint("TOP", UIParent, "BOTTOMLEFT", (l + r) / 2 / k, t / k)
+end
+
 function UI.PlaceBeside(w)
 	local main = UI.main
-	if not main or main == w or not main:IsShown() then return end
-	local left, right, screen = main:GetLeft(), main:GetRight(), UIParent:GetWidth()
-	if not left or not right or not screen then return end
-	local width = w:GetWidth()
+	if not main or main == w then return end
+	local left, right, top = Edges(main)
+	local screen = UIParent:GetWidth()
+	if not (left and screen) then return end
+	if next(away) then -- options déjà effacées par une autre fenêtre
+		away[w] = true
+		w:ClearAllPoints()
+		return Center(w, left, right, top)
+	end
+	if not main:IsShown() then return end
+	local width = w:GetWidth() * w:GetEffectiveScale() / UIParent:GetEffectiveScale()
 	w:ClearAllPoints()
 	if screen - right >= width + GAP then
 		w:SetPoint("TOPLEFT", main, "TOPRIGHT", GAP, 0)
 	elseif left >= width + GAP then
 		w:SetPoint("TOPRIGHT", main, "TOPLEFT", -GAP, 0)
-	elseif screen - right >= left then
-		w:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 0, main:GetTop() - UIParent:GetHeight())
+	elseif screen >= right - left + GAP + width then
+		local x, k = math.floor((screen - (right - left) - GAP - width) / 2), main:GetEffectiveScale() / UIParent:GetEffectiveScale()
+		slid = slid or { w = w, point = { main:GetPoint(1) } }
+		slid.w, slid.left = w, x
+		main:ClearAllPoints()
+		main:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / k, top / k)
+		w:SetPoint("TOPLEFT", main, "TOPRIGHT", GAP, 0)
 	else
-		w:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, main:GetTop() - UIParent:GetHeight())
+		away[w] = true
+		Center(w, left, right, top)
+		main:Close()
+	end
+end
+
+-- Vrai quand les options sont effacées le temps d'une fenêtre secondaire : elles reviendront à sa fermeture
+function UI.Away()
+	return next(away) ~= nil
+end
+
+-- Fenêtre posée sur une autre (choix d'un sort, import, assistant de macro). À Échap, le jeu ferme d'un coup
+-- toutes les fenêtres de UISpecialFrames : le temps qu'elle est ouverte, les autres fenêtres de Lyorune quittent
+-- cette liste, et y reviennent à sa fermeture. Échap ferme ainsi seulement celle du dessus. Seulement nos noms,
+-- aucune fonction du jeu touchée. Deux fenêtres l'une sur l'autre (assistant, puis choix d'un sort) : chacune
+-- rend ce qu'elle a retiré.
+local lifted = {} -- nom retiré -> nom de la fenêtre qui l'a retiré
+
+-- Niveau le plus haut d'un cadre et de tous ses enfants
+local function Highest(frame, best)
+	best = math.max(best, frame:GetFrameLevel() or 0)
+	for _, child in ipairs({ frame:GetChildren() }) do best = Highest(child, best) end
+	return best
+end
+
+-- Fenêtre posée sur une autre : au-dessus de toutes les fenêtres de Lyorune ouvertes, enfants compris. Raise seul
+-- la laissait sous les enfants de la fenêtre du dessous (zones de Mes macros lisibles par-dessus l'import, croix
+-- qui ne prenait plus le clic). Le jeu borne les niveaux vers 10 000 : la place de ses propres enfants reste.
+local LEVEL_CAP = 9000
+function UI.Lift(w)
+	local top = 0
+	for _, other in ipairs(windows) do
+		if other ~= w and other:IsShown() then top = Highest(other, top) end
+	end
+	w:SetFrameLevel(math.min(math.max(top + 1, w:GetFrameLevel() or 0), LEVEL_CAP))
+end
+
+function UI.OnTop(w)
+	local name = w:GetName()
+	-- Fond opaque dans tous les thèmes : rien de la fenêtre du dessous ne se lit au travers
+	UI.Paint(w.bg, "bg", 1)
+	UI.Paint(w.shade, "bg", 1)
+	w:HookScript("OnShow", function()
+		UI.Lift(w)
+		if lifted[name] then -- retirée par la fenêtre du dessous : c'est elle, maintenant, le dessus
+			lifted[name] = nil
+			tinsert(UISpecialFrames, name)
+		end
+		for i = #UISpecialFrames, 1, -1 do
+			local other = UISpecialFrames[i]
+			if other ~= name and other:find("^Lyorune") and not lifted[other] then
+				table.remove(UISpecialFrames, i)
+				lifted[other] = name
+			end
+		end
+	end)
+	w:HookScript("OnHide", function()
+		for other, by in pairs(lifted) do
+			if by == name then
+				lifted[other] = nil
+				tinsert(UISpecialFrames, other)
+			end
+		end
+	end)
+end
+
+-- Montre une fenêtre, même pendant son fondu de fermeture (qui l'aurait cachée juste après)
+function UI.Reopen(w)
+	if w.outro and w.outro:IsPlaying() then w.outro:Stop() end
+	w:Show()
+end
+
+-- Fenêtre secondaire fermée : les options reviennent (effacées) ou retournent à leur place (glissées), sauf si le
+-- joueur les a déplacées entre-temps
+local function GiveBack(w)
+	local main = UI.main
+	if away[w] then
+		away[w] = nil
+		if not next(away) and main then UI.Reopen(main) end
+	end
+	if slid and slid.w == w then
+		local left = Edges(main)
+		if left and math.abs(left - slid.left) < 1 and slid.point[1] then
+			main:ClearAllPoints()
+			main:SetPoint(unpack(slid.point))
+		end
+		slid = nil
 	end
 end
 
 -- Apparition : fondu et léger grossissement (0,25 s), ou simple fondu de 0,15 s en animations réduites
 function UI.Appear(w)
-	if w.beside then UI.PlaceBeside(w) end
+	UI.Fit(w)
+	if w.beside then
+		UI.PlaceBeside(w)
+		-- Une seule fenêtre à côté des options : la nouvelle ferme l'ancienne, qui était à la même place
+		-- (après PlaceBeside, pour que les options effacées ou glissées restent comme la nouvelle les veut)
+		for _, other in ipairs(windows) do
+			if other ~= w and other.beside and other:IsShown() then other:Hide() end
+		end
+		-- Visite en cours : sa carte, posée à côté des options, tomberait sur cette fenêtre. Elle s'arrête, et la
+		-- fenêtre se pose à côté des options qu'elle a pu rendre.
+		if Z.TutorialRunning and Z:TutorialRunning() then
+			Z:StopTutorial()
+			UI.PlaceBeside(w)
+		end
+	end
+	if w == UI.main and next(away) then -- options rouvertes par le joueur : les fenêtres qui les effaçaient se ferment
+		local open = away
+		away = {}
+		for f in pairs(open) do f:Hide() end
+	end
 	w.outro:Stop()
 	if UI.Calm() then w.calm:Play() else w.intro:Play() end
 end
+
+-- Ferme d'un coup les fenêtres posées à côté des options (la visite qui commence) ; les options effacées
+-- reviennent
+function UI.CloseBeside()
+	for _, w in ipairs(windows) do
+		if w.beside and w:IsShown() then w:Hide() end
+	end
+end
+
+-- Écran ou échelle de l'interface changés : chaque fenêtre ouverte reprend sa taille, puis sa place
+local function Refit()
+	for _, w in ipairs(windows) do
+		if w:IsShown() then UI.Fit(w) end
+	end
+	for _, w in ipairs(windows) do
+		if w.beside and w:IsShown() then
+			UI.PlaceBeside(w)
+			if w.Placed then w.Placed() end -- ce qui suit la place des options (consigne de Mes macros)
+		end
+	end
+end
+Z:On("UI_SCALE_CHANGED", Refit)
+Z:On("DISPLAY_SIZE_CHANGED", Refit)
 
 -- Fermeture par la croix : fondu de 0,15 s (Échap ferme sans attendre)
 local function WindowClose(self)
@@ -1004,6 +1831,7 @@ function UI.Window(name, title, width, height)
 	AlphaAnim(w.outro, 1, 0, 0.15)
 	w.outro:SetScript("OnFinished", function() w:Hide() end)
 	w:HookScript("OnShow", UI.Appear)
+	w:HookScript("OnHide", GiveBack)
 
 	windows[#windows + 1] = w
 	UI.Decorate(w)

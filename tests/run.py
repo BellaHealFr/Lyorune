@@ -15,6 +15,7 @@ import re
 rt.globals().TOC_VERSION = re.search(r'## Version: (\S+)', read(os.path.join(addon, 'Lyorune.toc'))).group(1)
 rt.execute(read(os.path.join(here, 'mock.lua')))
 
+rt.globals().RUNES_LUA = read(os.path.join(addon, 'Runes.lua')) # rechargé à part (inscription pas encore construite)
 rt.execute('BEFORE = {} for k in pairs(_G) do BEFORE[k] = true end')
 files = [l.strip().replace('\\', '/') for l in read(os.path.join(addon, 'Lyorune.toc')).splitlines() if l.strip().endswith('.lua')]
 rt.execute('NS = {}')
@@ -26,6 +27,22 @@ print('fichiers charges :', len(files))
 scenario = r'''
 local Z = NS
 local step = function(label, fn) local ok, err = pcall(fn) print((ok and "OK    " or "ERREUR ") .. label .. (ok and "" or (" : " .. tostring(err)))) if not ok then FAILED = true end end
+-- Fenêtre d'options : la ligne dessinée à part qui porte ce champ (tableau des profils...), tous les chapitres construits
+local function OptionPart(field)
+  Z:OptionLabels()
+  for _, chapter in ipairs(Z:OptionsTabs()) do
+    for _, part in ipairs(chapter.page and chapter.page.parts or {}) do if part.widget[field] then return part.widget end end
+  end
+end
+-- Chaque page de chapitre est rangée : la hauteur de son contenu suit ce qu'elle montre, elle défile au-delà
+local function CheckChapters()
+  for _, chapter in ipairs(Z:OptionsWindow().chapters) do
+    local page = chapter.page
+    if page then
+      assert(page.used > 64 and page.scroll.content:GetHeight() >= page.used, "page mal rangee : " .. chapter.name)
+    end
+  end
+end
 
 step("demarrage", function()
   FireEvent("ADDON_LOADED", "Lyorune")
@@ -181,11 +198,12 @@ step("combat avec valeurs secretes", function()
   FireEvent("PLAYER_REGEN_ENABLED") Z:Refresh() RunUpdates()
 end)
 
-step("options : neuf onglets, recherche, libelles traduits", function()
+step("options : onze chapitres, recherche, libelles traduits", function()
   SlashCmdList.LYORUNE("")
   local w = Z:OptionsWindow()
-  assert(w and w:IsShown())
-  for i = 1, 9 do w.Select(i) end
+  assert(w and w:IsShown() and #w.chapters == 11, "onze chapitres")
+  assert(Z:OptionChapter() == "Accueil", "premiere ouverture de la partie : l'Accueil")
+  for i = 1, 11 do w.Select(i) end
   w.Select("Clics") w.Select("Inconnu")
   local labels = Z:OptionLabels()
   assert(#labels >= 45, "reglages recenses : " .. #labels)
@@ -315,9 +333,9 @@ step("macros pour les barres de sorts", function()
   Z:ApplyClicks() assert(#MACROS == count, "macros creees en double")
   -- une macro du joueur posee sur un clic donne aussi une macro de barre, au nom du clic
   Z:SetClick("shift-4", "/use 13\n/cast [{cible}] Soins rapides")
-  assert(find("Lyo:shift-4") == "/use 13\n/cast [@mouseover] Soins rapides")
+  assert(find("Lyo:shift-4") == "#showtooltip\n/use 13\n/cast [@mouseover,help][] Soins rapides", tostring(find("Lyo:shift-4")))
   Z:SetClick("shift-4", "/use 14\n/cast [{cible}] Soins rapides")
-  assert(find("Lyo:shift-4") == "/use 14\n/cast [@mouseover] Soins rapides", "macro non mise a jour")
+  assert(find("Lyo:shift-4") == "#showtooltip\n/use 14\n/cast [@mouseover,help][] Soins rapides", "macro non mise a jour")
   Z:SetClick("shift-4", nil)
   assert(not find("Lyo:shift-4") and find("Ma macro") == "/dance", "retrait d'un clic")
   -- en combat : rien n'est cree, tout est rattrape a la fin
@@ -386,10 +404,20 @@ step("macros : fenetre, glisser-deposer, reprise des anciennes", function()
   local cell = Z:ClickCell("ctrl-4")
   local row
   for _, r in ipairs(w.rows) do if r.macro and r.macro.name == "Soin du bijou" then row = r end end
+  -- 6c nonies c : hors combat, la macro part en main comme une macro de /macro (sa copie), qu'une ligne reconnaît
+  Z:MacroDragStart(row)
+  assert(PICKED == "Lyo:Soin du bijo" and CURSOR_INFO and CURSOR_INFO[1] == "macro", "copie en main : " .. tostring(PICKED))
+  assert(not Z:MacroDragStop(), "copie en main : rien a deposer soi-meme")
+  cell:Run("OnReceiveDrag")
+  assert(Z:GetClicks()["ctrl-4"] == "@macro:Soin du bijou" and not Z:FindMacro("Lyo:Soin du bijo"), "copie reconnue : " .. tostring(Z:GetClicks()["ctrl-4"]))
+  -- en combat : pas de copie, la macro se pose encore sur une ligne de Lyorune
+  Z:SetClick("ctrl-4", "Soins")
+  COMBAT = true
   MOUSE_FOCI = { cell.label }
   Z:MacroDragStart(row)
   assert(Z:MacroDragStop(), "rien sous la souris")
   MOUSE_FOCI = false
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
   assert(Z:GetClicks()["ctrl-4"] == "@macro:Soin du bijou")
   assert(cell.label:GetText():find("Soin du bijou", 1, true), cell.label:GetText())
   -- glisser un sort du grimoire, puis une macro de /macro, sur une case
@@ -548,7 +576,7 @@ step("tutoriel", function()
   Z.db.tutorialDone = false
   Z:StartTutorial()
   local card = LyoruneTutorial
-  for i = 1, 8 do card.next:Run("OnClick") end
+  for i = 1, #card.runes do card.next:Run("OnClick") end
   assert(Z.db.tutorialDone and not card:IsShown() and not Z.previewActive)
   Z:StartTutorial() card.next:Run("OnClick") card.back:Run("OnClick") card.close:Run("OnClick")
   -- lot 13 : l'etape « Placer les cadres » libere les cadres, puis rend le verrou du joueur
@@ -637,43 +665,52 @@ step("mana secrete : la regle a sorts annonce la mana faible", function()
   FireEvent("SPELLS_CHANGED") Z.db.manaThreshold = 20 MANA = 1000 FireEvent("UNIT_POWER_UPDATE", "player")
 end)
 
-step("mana secrete : mana remontee estimee par paliers", function()
-  local power, cost, usable, after, now0 = UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, C_Timer.After, NOW
+step("mana secrete : mana remontee estimee avec la regeneration (bug C8)", function()
+  local power, cost, usable, now0 = UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, NOW
   UnitPower = function() return MakeSecret(MANA) end
   local costs = { [139] = 50, [2061] = 190, [527] = 300, [17] = 450 } -- paliers 5, 19, 30 et 45 %
   C_Spell.GetSpellPowerCost = function(id) return costs[id] and { { type = 0, cost = costs[id] } } or {} end
   C_Spell.IsSpellUsable = function(id) local c = costs[id] or 0 return MANA >= c, MANA < c end
-  FireEvent("SPELLS_CHANGED") -- avant de garder les minuteurs : celui des nouveaux sorts doit partir
-  local timers = {} C_Timer.After = function(d, f) timers[#timers + 1] = { d = d, f = f } end
+  -- régénération lue hors combat (boisson comprise), secrète en combat
+  local RATE, regen = 20, GetPowerRegen
+  GetPowerRegen = function() if COMBAT then return MakeSecret(RATE) end return RATE, 0 end
+  FireEvent("SPELLS_CHANGED")
   Z.db.manaThreshold = 20 Z.db.regenThreshold = 90 Z.db.manaAlert = true Z.db.regenAlert = true Z.db.alertChannel = "SAY"
   Z:RefreshAlerts()
-  NOW = 2000 local n = #SENT
-  MANA = 600 FireEvent("UNIT_POWER_UPDATE", "player")
-  MANA = 150 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 1, "mana faible")
-  wipe(timers) -- la mesure de la remontee commence a l'alerte
-  NOW = 2010 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 19 % : un seul, pas encore de vitesse
-  assert(#timers == 0 and #SENT == n + 1, "minuteur sans vitesse connue")
-  NOW = 2020 MANA = 310 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 30 % : 11 de mana par seconde
-  assert(#timers == 1 and math.abs(timers[1].d - 600 / 11) < 0.01, "heure prevue : " .. tostring(timers[1] and timers[1].d))
-  NOW = 2025 MANA = 320 FireEvent("UNIT_POWER_UPDATE", "player") assert(#timers == 1, "pas de nouveau palier")
-  NOW = 2035 MANA = 460 FireEvent("UNIT_POWER_UPDATE", "player") -- palier 45 % : calcul refait
-  assert(#timers == 2, "calcul refait au palier suivant")
-  MANA = 900 timers[1].f() assert(#SENT == n + 1, "ancien minuteur pas annule")
-  timers[2].f()
-  assert(#SENT == n + 2 and SENT[#SENT] == "SAY:Mana remontée (90 %), prêt à repartir !", tostring(SENT[#SENT]))
-  timers[2].f() assert(#SENT == n + 2, "annonce repetee")
-  -- mana depensee pendant la remontee : le minuteur ne dit rien
-  NOW = 2100 MANA = 150 FireEvent("UNIT_POWER_UPDATE", "player") assert(#SENT == n + 3, "nouvelle mana faible")
-  NOW = 2110 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player")
-  NOW = 2120 MANA = 310 FireEvent("UNIT_POWER_UPDATE", "player")
-  MANA = 60 FireEvent("UNIT_POWER_UPDATE", "player")
-  timers[#timers].f() assert(#SENT == n + 3, "annonce apres une depense")
-  -- annonce de remontee decochee : aucun minuteur
-  Z.db.regenAlert = false Z:RefreshAlerts() local t = #timers
-  NOW = 2200 MANA = 200 FireEvent("UNIT_POWER_UPDATE", "player") MANA = 310 NOW = 2210 FireEvent("UNIT_POWER_UPDATE", "player")
-  assert(#timers == t, "minuteur alors que l'annonce est decochee")
+  local function At(t, mana) NOW = t MANA = mana FireEvent("UNIT_POWER_UPDATE", "player") end
+  local n = #SENT
+  At(2000, 600) At(2000, 150) assert(#SENT == n + 1, "mana faible")
+  -- je bois : 20 de mana par seconde depuis le plancher sûr (50, le sort le moins cher)
+  At(2010, 250) assert(#SENT == n + 1, "annonce trop tot (250)")
+  At(2030, 650) assert(#SENT == n + 1, "annonce trop tot (650)")
+  At(2040, 850) assert(#SENT == n + 1, "annonce trop tot (850)")
+  At(2045, 950)
+  assert(#SENT == n + 2 and SENT[#SENT] == "SAY:Mana remontée (95 %), prêt à repartir !", tostring(SENT[#SENT]))
+  At(2050, 1000) assert(#SENT == n + 2, "annonce repetee")
+  -- plafond : une régénération énorme ne passe pas le coût d'un sort qui manque de mana
+  At(2100, 150) assert(#SENT == n + 3, "nouvelle mana faible")
+  RATE = 1000
+  At(2101, 160) At(2110, 200) assert(#SENT == n + 3, "estimation au-dessus d'un sort qui manque de mana")
+  RATE = 20
+  -- un sort lancé pendant la remontée : retour au plancher, et 5 secondes sans régénération
+  At(2120, 460) -- estimation 450 au moins (plancher)
+  FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 2061)
+  At(2124, 270) At(2130, 340) -- plancher 190, 20/s seulement après les 5 s, puis plancher 300
+  At(2155, 800) assert(#SENT == n + 3, "annonce trop tot apres un sort (800 estimes)")
+  At(2165, 1000) assert(#SENT == n + 4, "mana remontee apres un sort")
+  -- en combat la régénération est secrète : rien n'est ajouté, aucune annonce trop tôt
+  At(2200, 150) assert(#SENT == n + 5, "mana faible avant le combat")
+  COMBAT = true
+  At(2210, 200) At(2400, 950) assert(#SENT == n + 5, "annonce en combat sans regeneration connue")
+  COMBAT = false
+  At(2410, 960) At(2450, 1000)
+  assert(#SENT == n + 6, "mana remontee apres le combat")
+  -- annonce de remontée décochée : rien
+  Z.db.regenAlert = false Z:RefreshAlerts()
+  At(2500, 150) At(2600, 1000) assert(#SENT == n + 7, "annonce alors qu'elle est decochee")
   Z.db.regenAlert = true Z:RefreshAlerts()
-  UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, C_Timer.After, NOW = power, cost, usable, after, now0
+  GetPowerRegen = regen
+  UnitPower, C_Spell.GetSpellPowerCost, C_Spell.IsSpellUsable, NOW = power, cost, usable, now0
   FireEvent("SPELLS_CHANGED") MANA = 1000 FireEvent("UNIT_POWER_UPDATE", "player")
 end)
 
@@ -809,7 +846,8 @@ step("journal d'erreurs, diagnostic, nouveautes", function()
   local text = Z:LogText()
   assert(text:find("Frames.lua:42", 1, true) and text:find("PRIEST") and text:find("70938") and text:find("x2", 1, true), text)
   SlashCmdList.LYORUNE("erreurs") SlashCmdList.LYORUNE("diag") SlashCmdList.LYORUNE("nouveautes")
-  assert(LyoruneLog:IsShown() and LyoruneNews:IsShown())
+  -- une seule fenêtre à côté des options : les nouveautés, ouvertes en dernier, ont fermé le journal (retour 15)
+  assert(LyoruneNews:IsShown() and not LyoruneLog:IsShown())
   local news = Z:NewsText()
   assert(news:find("Nouveau", 1, true) and news:find("Corrigé", 1, true) and news:find("n'est plus estompée", 1, true), "rubriques du journal")
   assert(Z.changes[1].version == Z.version, "Changes.lua n'est pas a jour : " .. Z.changes[1].version .. " / " .. Z.version)
@@ -918,12 +956,13 @@ step("anglais : visite guidee, nouveautes, messages", function()
   Z.db.tutorialDone = false Z:StartTutorial()
   local card = LyoruneTutorial
   local titles = { "Welcome to Lyorune", "One cell per player", "Heal with one click", "What the colours say",
-    "Placing the frames", "Trying without a group", "Setting up Lyorune", "Off you go" }
-  for i = 1, 8 do
+    "Placing the frames", "Trying without a group", "The options window", "One page per chapter", "The preview cell",
+    "Search and Home", "Off you go" }
+  for i = 1, #titles do
     assert(card.title:GetText() == titles[i], "titre " .. i .. " : " .. card.title:GetText())
     local body = card.body:GetText()
     assert(i == 3 or not body:find("[\195][\160-\191]"), "etape " .. i .. " encore en francais : " .. body:sub(1, 60))
-    assert(card.next.label:GetText() == (i == 8 and "Finish" or "Next"), card.next.label:GetText())
+    assert(card.next.label:GetText() == (i == #titles and "Finish" or "Next"), card.next.label:GetText())
     card.next:Run("OnClick")
   end
   assert(Z.db.tutorialDone)
@@ -1180,15 +1219,14 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
     assert(button.bg:IsShown() == (theme == "MODERN"), theme .. " : bouton plat")
     assert((layers.gameUp and layers.gameUp:IsShown() or false) == (theme == "CLASSIC"), theme .. " : bouton du jeu")
     assert((layers.plate and layers.plate:IsShown() or false) == (theme == "MMO"), theme .. " : plaque doree")
-    local tab = Z:OptionsTabs()[2].button
-    local tabLayer = tab.layers and tab.layers[theme .. "TabActive"]
-    assert(theme == "MODERN" or (tabLayer and tabLayer:IsShown() and tabLayer._tex == UI.SKIN[theme].tabActive), theme .. " : onglet actif")
-    assert(w.indicator:IsShown() == (theme == "MODERN"), theme .. " : barre d'onglet")
+    local side = Z:OptionsTabs()[3].button -- Apparence, le chapitre ouvert
+    assert(side.active and side.border:IsShown() and side.round:IsShown() == (theme == "MODERN"), theme .. " : chapitre ouvert")
+    assert(side.label._color[1] == (theme == "MODERN" and UI.text or UI.gold)[1], theme .. " : nom du chapitre ouvert")
+    assert(not Z:OptionsTabs()[2].button.border:IsShown(), theme .. " : chapitre ferme")
     local field = w.search.layers and w.search.layers[theme]
     assert(theme == "MODERN" or (field and field:IsShown() and field._tex == UI.SKIN[theme].field), theme .. " : champ creuse")
     assert(sample.mark._tex == (theme == "CLASSIC" and UI.GAME.check or theme == "MMO" and UI.RUNES or UI.WHITE), theme .. " : case a cocher")
     assert(w.title._font == titleFont and w.title._size == titleSize, theme .. " : l'en-tete change de taille")
-    assert(w.indicator._color[2] == skin.accent[2], theme .. " : onglet actif")
     assert(handle.text._color[1] == UI.frameAccent[1], "les etiquettes des cadres de soin ont suivi le theme")
   end
   assert(w.ornate and not w.ornate:IsShown(), "ornements du theme MMORPG restes visibles")
@@ -1204,7 +1242,7 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
   assert(#UI.Windows() == count, "fenetre en double")
   w:Hide() w:Show()
   Z.db.highContrast = true Z:Refresh()
-  assert(UI.bg[1] == 0 and UI.text[1] == 1 and w.bg:IsShown(), "contraste eleve")
+  assert(UI.bg[1] == UI.CONTRAST.bg[1] and UI.text[1] == UI.CONTRAST.text[1] and w.bg:IsShown(), "contraste eleve")
   Z.db.highContrast = false Z:Refresh()
   assert(UI.Hex("accent") == "73c7ff", UI.Hex("accent"))
 
@@ -1276,7 +1314,7 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
   -- Tutoriel : une rune par étape, l'étape en cours respire, la carte glisse
   Z:StartTutorial()
   local card = LyoruneTutorial
-  assert(#card.runes == 8 and card.runes[1].breath:IsPlaying())
+  assert(#card.runes == 11 and card.runes[1].breath:IsPlaying())
   card.next:Run("OnClick")
   assert(card.slide:IsPlaying() and card.runes[2].breath:IsPlaying() and not card.runes[1].breath:IsPlaying())
   assert(card.runes[1]._color[1] == UI.gold[1], "etape vue eteinte")
@@ -1378,8 +1416,8 @@ step("etape 6 : echelle, editeur de placement", function()
   Z.SetOffset("name", 4, -3) Z:Refresh()
   local p = b.name._point
   assert(p[1] == "CENTER" and p[4] == 4 and p[5] == 0, "nom decale")
-  Z.SetOffset("marker", 0, 2) Z:Refresh()
-  assert(b.marker._point[5] == 1, "marqueur decale")
+  Z.SetOffset("marker", 0, -2) Z:Refresh() -- à cheval sur le haut de la case : il peut seulement descendre
+  assert(b.marker._point[5] == -3, "marqueur decale")
   AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 41, spellId = 139 } }
   Z.db.showHots, Z.db.hotStyle = true, "ICONS"
   Z.SetOffset("hots", 5, 0) Z:Refresh() FireEvent("UNIT_AURA", "player") RunUpdates()
@@ -1391,7 +1429,8 @@ step("etape 6 : echelle, editeur de placement", function()
   -- bornes, nettoyage, element inconnu refuse
   Z.SetOffset("name", 999, -999)
   local x, y = Z.Offset("name")
-  assert(x == 40 and y == -40, "decalage borne")
+  local _, right, bottom = Z.OffsetRange("name")
+  assert(x == right and y == bottom and x > 0 and x < 40 and y < 0 and y > -40, "decalage borne au bord de la case")
   Z.SetOffset("name", 0, 0)
   assert(Z.db.placement.TILE.name == nil, "place d'origine : entree effacee")
   Z.SetOffset("inconnu", 1, 1)
@@ -1421,9 +1460,12 @@ step("etape 6 : echelle, editeur de placement", function()
   w.stage:Run("OnMouseUp", "LeftButton")
   assert(not w.stage:GetScript("OnUpdate"), "aucune boucle apres le glissement")
   x, y = Z.Offset("marker")
-  assert(x == 3 and y == 0, "marqueur glisse : " .. x .. "," .. y)
+  assert(x == 3 and y == -4, "marqueur glisse : " .. x .. "," .. y)
   assert(b.marker._point[4] == 3, "les vraies cases suivent")
   CURSOR_X, CURSOR_Y = nil, nil
+  w.resetAll:Run("OnClick")
+  assert(Z.db.placement.TILE ~= nil, "tout remettre en un seul clic")
+  w.resetAll.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
   w.resetAll:Run("OnClick")
   assert(Z.db.placement.TILE == nil, "tout remettre")
   w:Hide()
@@ -1492,11 +1534,10 @@ step("etape 7 : clics et touches sur un seul ecran, nouveau sort sans clic", fun
   NOW = NOW + 1 add:Run("OnClick", "LeftButton") add:Run("OnKeyDown", "ESCAPE")
   assert(not add.capturing and add.label:GetText():find("Ajouter", 1, true))
   -- changer le declencheur d'une ligne
-  local list = page.add and Z:ClickCell("ctrl-shift-2") and select(2, Z:ClickCell("ctrl-shift-2")):GetParent()
-  assert(not Z:ClickCell("CTRL-SHIFT-Q", "key"), "liste sans defilement")
-  list:Run("OnMouseWheel", -100) -- la molette descend au bas de la liste
+  -- toutes les lignes sont visibles (la page du chapitre défile) : la liste s'allonge avec les raccourcis
   cell, row = Z:ClickCell("CTRL-SHIFT-Q", "key")
-  assert(row, "ligne de la touche")
+  assert(row and row:IsShown(), "ligne de la touche")
+  assert(page:GetHeight() >= #Z:Bindings() * 27, "liste trop courte : " .. page:GetHeight())
   NOW = NOW + 1 row.key:Run("OnClick", "LeftButton") row.key:Run("OnMouseDown", "Button7")
   assert(Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-BUTTON7" }) == "Rénovation" and not Z:GetBinding({ kind = "key", key = "CTRL-SHIFT-Q" }))
   IsShiftKeyDown = shift CTRL = false
@@ -1554,6 +1595,8 @@ step("etape 2 : reprise des anciens reglages", function()
   assert(LyoruneCharDB.pos[1] == "CENTER" and LyoruneCharDB.pos[2] == -320, "un personnage neuf part de la position par defaut")
   db.manaBars = "HEALERS" db.lastVersion = "1.7.0" FireEvent("ADDON_LOADED", "Lyorune")
   assert(db.manaBars == "HEALERS", "un choix fait apres la 1.7.0 est respecte")
+  LyoruneCharDB.optionChapter = "Clics" FireEvent("ADDON_LOADED", "Lyorune")
+  assert(LyoruneCharDB.optionChapter == nil, "dernier chapitre des options plus sauve (1.26.0)")
   LyoruneDB, LyoruneCharDB = savedDB, savedChar
   FireEvent("ADDON_LOADED", "Lyorune")
 end)
@@ -1625,11 +1668,10 @@ step("etape 8 : profils automatiques, cible et focalisation", function()
   assert(not Z:Export():find("Donjon", 1, true) and not Z:Export():find("autoProfile", 1, true))
   Z:ResetAll()
   assert(Z.db.profiles.Donjon and Z.db.activeProfile == "" and Z.db.autoProfile == false, "reinitialisation")
-  -- onglet Profils : les cases du tableau font tourner les profils
-  Z:ToggleOptions()
-  local page
-  for _, tab in ipairs(Z:OptionsTabs()) do if tab.page and tab.page.profileCells then page = tab.page end end
-  assert(page, "onglet Profils construit")
+  -- chapitre Profils et partage : les cases du tableau font tourner les profils
+  Z:ToggleOptions("Profils et partage")
+  local page = OptionPart("profileCells")
+  assert(page, "chapitre Profils et partage construit")
   do
     local cell = page.profileCells[1]
     cell:Run("OnClick", "LeftButton")
@@ -2151,10 +2193,8 @@ step("etape 14 : joueurs epingles, signal, chef de groupe", function()
   for _, label in ipairs({ "Cadre des joueurs épinglés", "Chef de groupe et assistants", "Signal du jeu sur une case", "Joueurs épinglés" }) do
     assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
   end
-  -- chaque onglet tient dans la fenetre (528 pixels de haut)
-  for _, tab in ipairs(Z:OptionsWindow().tabs) do
-    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
-  end
+  -- chaque page de chapitre est rangee et defile
+  CheckChapters()
   for k, v in pairs(saved) do Z.db[k] = v end
   GROUP_NAMES.party2 = nil
   Z:Refresh() RunUpdates()
@@ -2240,9 +2280,7 @@ step("etape 15 : bijoux, arreter l'incantation, clic pour lancer du jeu", functi
   -- options
   local labels = table.concat(Z:OptionLabels(), "|")
   assert(labels:find("Signaler un clic pris aussi par le jeu", 1, true), "option de conflit absente")
-  for _, tab in ipairs(Z:OptionsWindow().tabs) do
-    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
-  end
+  CheckChapters()
   for k, v in pairs(saved) do Z.db[k] = v end
   Z:ApplyClicks()
 end)
@@ -2355,16 +2393,14 @@ step("etape 16 : buffs uniques, temps de recharge global", function()
   -- options
   local labels = table.concat(Z:OptionLabels(), "|")
   assert(labels:find("Recharge globale et incantation", 1, true), "option absente")
-  for _, tab in ipairs(Z:OptionsWindow().tabs) do
-    if tab.page and tab.page.used then assert(tab.page.used <= 528, "onglet trop haut : " .. tostring(tab.name) .. " " .. tab.page.used) end
-  end
+  CheckChapters()
   for k, v in pairs(saved) do Z.db[k] = v end
   Z:Refresh()
 end)
 
 step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", function()
   Z.db.profiles, Z.db.autoProfiles, Z.db.activeProfile, Z.db.autoProfile = {}, {}, "", false
-  -- chaque reglage d'un profil a sa partie, celle de l'onglet ou il se regle
+  -- chaque reglage d'un profil a sa partie, celle du chapitre ou il se regle
   local parts = {}
   for _, part in ipairs(Z.profileParts) do parts[part] = true end
   for key in pairs(Z.defaults) do
@@ -2372,10 +2408,12 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
     if Z.notInProfile[key] then assert(part == nil, "hors profil mais classe : " .. key)
     else assert(parts[part], "partie inconnue pour " .. key .. " : " .. tostring(part)) end
   end
-  assert(Z.ProfilePart("width") == "Cadres" and Z.ProfilePart("placement") == "Cadres" and Z.ProfilePart("layout") == "Cadres")
+  assert(Z.ProfilePart("width") == "Disposition" and Z.ProfilePart("placement") == "Disposition" and Z.ProfilePart("layout") == "Disposition")
   assert(Z.ProfilePart("shape") == "Apparence" and Z.ProfilePart("theme") == "Apparence" and Z.ProfilePart("rangeAlpha") == "Apparence")
-  assert(Z.ProfilePart("showRole") == "Indicateurs" and Z.ProfilePart("privateAuraSize") == "Indicateurs")
-  assert(Z.ProfilePart("hotSwipe") == "Soins" and Z.ProfilePart("cornerSpells") == "Soins" and Z.ProfilePart("missingBuffs") == "Soins")
+  assert(Z.ProfilePart("showIncoming") == "Vie et portée" and Z.ProfilePart("farHint") == "Vie et portée")
+  assert(Z.ProfilePart("showRole") == "Joueurs" and Z.ProfilePart("privateAuraSize") == "Affaiblissements")
+  assert(Z.ProfilePart("hotSwipe") == "Mes soins" and Z.ProfilePart("cornerSpells") == "Mes soins" and Z.ProfilePart("missingBuffs") == "Joueurs")
+  assert(Z.ProfilePart("perfMode") == "Disposition", "mode performance")
   assert(Z.ProfilePart("clicks") == nil and Z.ProfilePart("castIndicator") == nil and Z.ProfilePart("windowTheme") == nil, "hors profil")
   -- deux profils, puis copie des Cadres seulement
   Z.db.width, Z.db.shape, Z.db.showRole, Z.db.hotSwipe = 120, "BAR", false, false
@@ -2384,20 +2422,20 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
   assert(Z:SaveProfile("Raid") and Z.db.activeProfile == "Raid")
   local ok, message = Z:CopyProfileParts("Arene", "Raid", {})
   assert(not ok and message:find("au moins une partie"), "aucune partie")
-  assert(not Z:CopyProfileParts("Raid", "Raid", { Cadres = true }), "meme profil")
-  assert(not Z:CopyProfileParts("Inconnu", "Raid", { Cadres = true }), "profil inconnu")
+  assert(not Z:CopyProfileParts("Raid", "Raid", { Disposition = true }), "meme profil")
+  assert(not Z:CopyProfileParts("Inconnu", "Raid", { Disposition = true }), "profil inconnu")
   -- vers le profil en cours : applique tout de suite
-  ok, message = Z:CopyProfileParts("Arene", "Raid", { Cadres = true })
+  ok, message = Z:CopyProfileParts("Arene", "Raid", { Disposition = true })
   assert(ok and message:find("Arene", 1, true), "copie : " .. tostring(message))
   assert(Z.db.width == 120 and Z.db.shape == "TILE" and Z.db.showRole == true, "seulement les cadres, en direct")
   -- depuis le profil en cours : ses reglages du moment ; vers un profil enregistre : rien ne bouge a l'ecran
   Z.db.showRole = false
-  assert(Z:CopyProfileParts("Raid", "Arene", { Indicateurs = true, Soins = true }))
+  assert(Z:CopyProfileParts("Raid", "Arene", { Joueurs = true, ["Mes soins"] = true }))
   assert(Z.db.profiles.Arene.showRole == false and Z.db.profiles.Arene.hotSwipe == true and Z.db.profiles.Arene.shape == "BAR")
   assert(Z.db.profiles.Arene.width == 120 and Z.db.width == 120)
   -- un profil ancien sans un reglage : la valeur d'origine
   Z.db.profiles.Arene.hotCountdown = nil
-  assert(Z:CopyProfileParts("Arene", "Raid", { Soins = true }) and Z.db.hotCountdown == Z.defaults.hotCountdown)
+  assert(Z:CopyProfileParts("Arene", "Raid", { ["Mes soins"] = true }) and Z.db.hotCountdown == Z.defaults.hotCountdown)
   -- champ de bataille et arene
   assert(Z.Situation() == "5" and Z.PvPKind() == nil)
   INSTANCE_TYPE = "pvp" assert(Z.Situation() == "BG")
@@ -2418,15 +2456,14 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
   INSTANCE_TYPE = "pvp" FireEvent("ZONE_CHANGED_NEW_AREA")
   assert(Z.db.activeProfile == "Raid", "champ de bataille sans choix : taille du groupe")
   INSTANCE_TYPE = "none" FireEvent("PLAYER_ENTERING_WORLD")
-  -- onglet Profils : 12 cases (6 situations, 2 specialisations), fenetre de copie
-  Z:ToggleOptions()
-  local page
-  for _, tab in ipairs(Z:OptionsTabs()) do if tab.page and tab.page.profileCells then page = tab.page end end
+  -- chapitre Profils et partage : 12 cases (6 situations, 2 specialisations), fenetre de copie
+  Z:ToggleOptions("Profils et partage")
+  local page = OptionPart("profileCells")
   assert(page and #page.profileCells == 12, "cases du tableau")
   local arena = page.profileCells[11]
   assert(arena.size == "ARENA" and arena.group == 1 and arena.label:GetText() == "Arene", "case arene")
   assert(page.profileCells[9].label:GetText() == "selon la taille", "champ de bataille sans choix")
-  page.copyButton:Run("OnClick", "LeftButton")
+  OptionPart("copyButton").copyButton:Run("OnClick", "LeftButton")
   local w = Z:ProfileCopyWindow()
   assert(w and w:IsShown(), "fenetre de copie")
   assert(w.from.label and w.parts.Apparence, "fenetre complete")
@@ -2768,7 +2805,19 @@ step("C7 : barre de ressource selon la classe (rage, energie, forme du druide), 
     FireEvent("UNIT_DISPLAYPOWER", "party2")
     SECRET = false
     assert(b.powerType == 0, "type secret mal lu")
+    -- réponse secrète sans ressource connue : celle de la classe (un guerrier garde sa rage, pas la mana)
+    local oldClass = UnitClass
+    UnitClass = function() return "Guerrier", "WARRIOR" end
+    b.powerType, b.powerToken = nil, nil
+    SECRET = true
+    FireEvent("UNIT_DISPLAYPOWER", "party2")
+    SECRET = false
+    UnitClass = oldClass
+    assert(b.powerType == 1 and b.power._barColor[3] == 0, "guerrier en mana quand la ressource est secrete")
+    -- sortie de combat : la ressource relue (le guerrier redevient ce que dit le jeu)
     POWER_TYPE, POWER_TOKEN = nil, nil
+    FireEvent("PLAYER_REGEN_ENABLED")
+    assert(b.powerType == 0, "ressource pas relue a la sortie de combat")
     -- mode test : le guerrier et le voleur d'exemple ont leur rage et leur énergie
     Z.db.manaBars = "ALL" Z:Refresh()
     Z:TogglePreview(10)
@@ -2776,6 +2825,14 @@ step("C7 : barre de ressource selon la classe (rage, energie, forme du druide), 
     assert(cells[1].powerType == 1 and cells[1].power._barColor[1] == 1 and cells[1].power._barColor[3] == 0, "guerrier d'exemple en mana")
     assert(cells[6].powerType == 3 and cells[6].power._barColor[3] == 0, "voleur d'exemple en mana")
     assert(cells[2].powerType == 0 and cells[2].power._barColor[3] == Z.manaColors.BLUE[3], "pretre d'exemple sans mana")
+    Z:TogglePreview()
+    -- druides d'exemple (cases 3, 12, 21, 30 du raid) : félin en dégâts, mana en soin, ours en tank, mana en dégâts
+    Z:TogglePreview(40)
+    cells = Z:PreviewCells(40)
+    assert(cells[3].powerType == 3, "druide felin d'exemple sans energie")
+    assert(cells[12].powerType == 0, "druide soigneur d'exemple sans mana")
+    assert(cells[21].powerType == 1 and cells[21].power._barColor[3] == 0, "druide tank d'exemple sans rage")
+    assert(cells[30].powerType == 0, "druide en forme humaine d'exemple sans mana")
     Z:TogglePreview()
   end)
   POWER_TYPE, POWER_TOKEN, SECRET = nil, nil, false
@@ -2829,6 +2886,2356 @@ step("securite : codes et messages abimes", function()
   assert(Z:Import(saved))
   assert(select(1, Z.Offset("name")) == 3 and Z.db.placement.BAR.debuffs[1] == -40, "placements partages")
   Z.db.placement = {} Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
+  local UI = Z.UI
+  local saved = { showPets = Z.db.showPets, horizontal = Z.db.horizontal, width = Z.db.width }
+  local function Get(key) return function() return Z.db[key] end end
+  local function Set(key) return function(value) Z.db[key] = value end end
+  local function Choices(key) local t = {} for _, c in ipairs(Z.choices[key]) do t[#t + 1] = { c[1], Z.L[c[2]] } end return t end
+  local function Build()
+    local w = {}
+    w.switch = UI.Switch(UIParent, "Familiers", Get("showPets"), Set("showPets"))
+    w.seg = UI.Segmented(UIParent, "Sens", Choices("horizontal"), Get("horizontal"), Set("horizontal"))
+    w.side = UI.SideButton(UIParent, 4, "Disposition", function(self) self.clicked = true end)
+    w.fold = UI.Fold(UIParent, "essai", 3)
+    w.scroll = UI.Scroll(UIParent)
+    return w
+  end
+  -- Chaque brique, créée dans chaque thème et en contraste élevé, ou créée avant et repeinte au changement
+  local early = Build()
+  Z.db.showPets, Z.db.horizontal = false, false
+  for _, look in ipairs({ "MODERN", "CLASSIC", "MMO", "CONTRAST" }) do
+    Z.db.windowTheme, Z.db.highContrast = look == "CONTRAST" and "MODERN" or look, look == "CONTRAST"
+    Z:Refresh()
+    local kit = UI.Kit()
+    for _, w in ipairs({ early, Build() }) do
+      local sw = w.switch
+      sw:Update()
+      assert(sw.track:IsShown() == (kit == "MODERN") and sw.knob:IsShown() == (kit == "MODERN" or kit == "FLAT"), look .. " : rail de l'interrupteur")
+      assert(sw.box:IsShown() == (kit ~= "MODERN"), look .. " : case de l'interrupteur")
+      assert(sw.box._tex == (kit == "CLASSIC" and UI.GAME.checkBox or kit == "MMO" and UI.SKIN.MMO.box or UI.WHITE), look .. " : allure de l'interrupteur")
+      assert(sw.mark:IsShown() == ((kit == "CLASSIC" or kit == "MMO") and sw.on), look .. " : marque")
+      w.seg:Update()
+      for _, b in ipairs(w.seg.segments) do
+        local layers = b.layers or {}
+        assert(b.pill:IsShown() == (b.selected and kit == "MODERN"), look .. " : pastille du choix")
+        assert(b.bg:IsShown() == (b.selected and kit == "FLAT"), look .. " : fond du choix")
+        assert((layers.gameUp and layers.gameUp:IsShown() or false) == (b.selected and kit == "CLASSIC"), look .. " : bouton du jeu")
+        assert((layers.plate and layers.plate:IsShown() or false) == (b.selected and kit == "MMO"), look .. " : plaque doree")
+      end
+      assert(w.seg.strip.round:IsShown() == (kit == "MODERN"), look .. " : cadre des choix")
+      w.side:SetActive(true)
+      assert(w.side.border:IsShown() and w.side.round:IsShown() == (kit == "MODERN") and w.side.bg:IsShown() == (kit ~= "MODERN"), look .. " : chapitre ouvert")
+      local strong = (kit == "CLASSIC" or kit == "MMO") and UI.gold or UI.text
+      assert(w.side.label._color[1] == strong[1], look .. " : nom du chapitre ouvert")
+      w.side:SetActive(false)
+      assert(not w.side.border:IsShown() and w.side.label._color[1] == UI.dim[1], look .. " : chapitre ferme")
+      assert(w.side.label._font == (kit == "MMO" and UI.skins.MMO.headFont or STANDARD_TEXT_FONT), look .. " : police du chapitre")
+    end
+  end
+  Z.db.windowTheme, Z.db.highContrast = "MODERN", false Z:Refresh()
+
+  -- Interrupteur : écrit le réglage, la pastille glisse (sauf en animations réduites) et prend l'accent
+  local sw = UI.Switch(UIParent, "Familiers", Get("showPets"), Set("showPets"))
+  sw:Run("OnClick")
+  assert(Z.db.showPets == true and sw.on and sw.slide:IsPlaying(), "interrupteur")
+  assert(sw.knob._color[1] == UI.accent[1] and sw.confirm:IsPlaying(), "interrupteur allume")
+  Z.db.reduceMotion = true
+  sw:Run("OnClick")
+  assert(Z.db.showPets == false and not sw.slide:IsPlaying() and sw.knob._color[1] == UI.dim[1], "interrupteur en animations reduites")
+  Z.db.reduceMotion = false
+  -- Une case à cocher garde son allure d'avant
+  local check = UI.Check(UIParent, "essai", Get("showPets"), Set("showPets"))
+  assert(not check.track and check.box._w == 16, "case a cocher changee")
+
+  -- Choix côte à côte : écrit le réglage, un seul choix sélectionné
+  local seg = UI.Segmented(UIParent, "Sens", Choices("horizontal"), Get("horizontal"), Set("horizontal"))
+  assert(#seg.segments == 2 and seg.segments[1].selected and seg.segments[1].label:GetText() == "En colonnes")
+  seg.segments[2]:Run("OnClick")
+  assert(Z.db.horizontal == true and seg.segments[2].selected and not seg.segments[1].selected, "choix cote a cote")
+  assert(seg.segments[2].label._color[1] == UI.bg[1] and seg.segments[1].label._color[1] == UI.dim[1], "texte des choix")
+
+  -- Nombre : flèches, molette, saisie directe ramenée aux limites et au pas
+  local lo, hi, pas = unpack(Z.limits.width)
+  Z.db.width = 86
+  local st = UI.Stepper(UIParent, "Largeur", lo, hi, pas, Get("width"), Set("width"))
+  assert(st.value:GetText() == "86" and st.value:GetObjectType() == "EditBox")
+  st.value.HasFocus = function() return true end -- valeur active (clic dessus) : la molette la change
+  st.value:Run("OnMouseWheel", 1) assert(Z.db.width == 86 + pas, "molette vers le haut")
+  st.value:Run("OnMouseWheel", -1) st.value:Run("OnMouseWheel", -1) assert(Z.db.width == 86 - pas, "molette vers le bas")
+  st.plus:Run("OnClick") assert(Z.db.width == 86, "fleche +")
+  st.value:SetText("97") st.value:Run("OnEnterPressed") assert(Z.db.width == 98, "saisie ramenee au pas : " .. Z.db.width)
+  st.value:SetText("9999") st.value:Run("OnEnterPressed") assert(Z.db.width == hi, "saisie au-dela du maximum")
+  st.value:SetText("abc") st.value:Run("OnEnterPressed") assert(Z.db.width == hi and st.value:GetText() == tostring(hi), "saisie illisible")
+  st.value:SetText("-5") st.value:Run("OnEnterPressed") assert(Z.db.width == lo, "saisie sous le minimum")
+  st.value:Run("OnMouseWheel", -1) assert(Z.db.width == lo, "molette sous le minimum")
+  assert(Z.L["Clic : saisir la valeur au clavier, ou l'ajuster à la molette. Maj + molette : la changer sans clic."] and st.value:GetScript("OnEnter"))
+
+  -- Rune des réglages changés : visible seulement si la valeur diffère de Z.defaults, clic = valeur d'installation
+  local rune = UI.ChangedRune(st, "width", Get("width"), Set("width"))
+  assert(rune:IsShown() and st.changed == rune, "rune d'un reglage change")
+  rune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : " .. Z.defaults.width, GameTooltip:GetText())
+  rune:Run("OnClick")
+  assert(Z.db.width == Z.defaults.width and not rune:IsShown() and st.value:GetText() == tostring(Z.defaults.width), "retablir")
+  st.plus:Run("OnClick") assert(rune:IsShown(), "la rune suit le nombre")
+  rune:Run("OnClick")
+  local swRune = UI.ChangedRune(sw, "showPets", Get("showPets"), Set("showPets"))
+  assert(not swRune:IsShown()) sw:Run("OnClick") assert(swRune:IsShown(), "la rune suit l'interrupteur")
+  swRune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : Coupé", GameTooltip:GetText())
+  swRune:Run("OnClick") assert(Z.db.showPets == Z.defaults.showPets and not sw.on, "interrupteur retabli")
+  local segRune = UI.ChangedRune(seg, "horizontal", Get("horizontal"), Set("horizontal"))
+  segRune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : En colonnes", GameTooltip:GetText())
+  segRune:Run("OnClick") assert(Z.db.horizontal == false and seg.segments[1].selected, "choix retabli")
+  assert(UI.Same({ 1, { a = 2 } }, { 1, { a = 2 } }) and not UI.Same({ 1 }, { 1, 2 }) and not UI.Same({}, false))
+
+  -- Réglages fins repliables : l'état est gardé pour le personnage
+  Z.char.optionFolds = nil
+  local opened
+  local fold = UI.Fold(UIParent, "essai", 3, function(open) opened = open end)
+  assert(not fold:IsOpen() and fold.label:GetText() == "Réglages fins (3)")
+  fold:Run("OnClick")
+  assert(fold:IsOpen() and opened == true and Z.char.optionFolds.essai and fold.label:GetText() == "Masquer les réglages fins (3)")
+  assert(UI.Fold(UIParent, "essai", 3):IsOpen() and not UI.Fold(UIParent, "autre", 2):IsOpen(), "etat des reglages fins oublie")
+  fold:Run("OnClick") assert(not fold:IsOpen() and opened == false and Z.char.optionFolds.essai == nil)
+
+  -- Page qui défile : molette, limites, barre cachée sans défilement, poignée à glisser, aucune boucle au repos
+  local scroll = UI.Scroll(UIParent)
+  scroll:SetSize(300, 200) scroll.bar:SetHeight(200)
+  scroll:Run("OnSizeChanged", 300, 200)
+  assert(scroll.content:GetWidth() == 300 - 14, "largeur du contenu")
+  scroll:SetContentHeight(600)
+  assert(scroll:Range() == 400 and scroll.bar:IsShown())
+  scroll:Run("OnMouseWheel", -1) assert(scroll.offset == 40, "molette")
+  scroll:Run("OnMouseWheel", 1) scroll:Run("OnMouseWheel", 1) assert(scroll.offset == 0, "au-dessus du haut")
+  scroll:ScrollTo(9999) assert(scroll.offset == 400, "au-dela du bas")
+  scroll:ScrollTo(0)
+  CURSOR_Y = 300 scroll.thumb:Run("OnMouseDown", "LeftButton")
+  assert(scroll.thumb:GetScript("OnUpdate"), "poignee tenue")
+  CURSOR_Y = 250 scroll.thumb:Run("OnUpdate", 0.01)
+  assert(scroll.offset > 100 and scroll.offset < 200, "poignee glissee : " .. scroll.offset)
+  scroll.thumb:Run("OnMouseUp", "LeftButton")
+  assert(not scroll.thumb:GetScript("OnUpdate") and not scroll:GetScript("OnUpdate"), "boucle restee active")
+  CURSOR_Y = nil
+  scroll:SetContentHeight(100) assert(scroll.offset == 0 and not scroll.bar:IsShown(), "page courte")
+  assert(scroll.thumb.tex._color[1] == UI.gold[1], "barre aux couleurs du theme")
+
+  -- Bouton de chapitre : clic, pastille du nombre de réglages changés
+  local side = UI.SideButton(UIParent, 4, "Disposition", function(self) self.clicked = true end)
+  assert(not side.badge:IsShown())
+  side:SetCount(3) assert(side.badge:IsShown() and side.badge.text:GetText() == "3" and side.tip:find("3 réglages", 1, true) and side.tip:find("choisis par vous", 1, true))
+  side:SetCount(1) assert(side.tip:find("1 réglage différent", 1, true), "pastille au singulier")
+  side:SetCount(0) assert(not side.badge:IsShown() and not side.tip)
+  side:Run("OnClick") assert(side.clicked)
+
+  for _, key in ipairs({ "Réglages fins (%d)", "Masquer les réglages fins (%d)", "Activé", "Coupé", "Rétablir : %s",
+    "Rétablir comme à l'installation", "1 réglage différent de l'installation, choisi par vous. Une rune d'or le marque dans le chapitre.",
+    "%d réglages différents de l'installation, choisis par vous. Une rune d'or les marque dans le chapitre.", "Clic : saisir la valeur au clavier, ou l'ajuster à la molette. Maj + molette : la changer sans clic." }) do
+    assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+  end
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", function()
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast }
+  Z:ToggleOptions("Accueil")
+  local w = Z:OptionsWindow()
+  local chapters = w.chapters
+  -- Onze chapitres dans la barre latérale, dans l'ordre de la maquette, textes traduits
+  local names = { "Accueil", "Disposition", "Apparence", "Vie et portée", "Mes soins", "Affaiblissements", "Joueurs",
+    "Sorts et raccourcis", "Alertes", "Profils et partage", "Fenêtre et aide" }
+  local missing, inChapters = {}, {}
+  local function Need(text) if text and not Z.translations.enUS[text] then missing[#missing + 1] = text end end
+  for i, chapter in ipairs(chapters) do
+    assert(chapter.name == names[i], "chapitre " .. i .. " : " .. chapter.name)
+    assert(chapter.button and chapter.rune >= 1 and chapter.rune <= 24, "bouton du chapitre " .. chapter.name)
+    Need(chapter.name) Need(chapter.intro)
+    for _, section in ipairs(chapter.sections) do
+      Need(section[1])
+      for _, item in ipairs(section[2]) do
+        Need(item.desc)
+        local kind = item[1]
+        if kind == "check" or kind == "seg" or kind == "step" or kind == "cycle" then
+          assert(Z.defaults[item[2]] ~= nil, "reglage inconnu : " .. item[2])
+          inChapters[item[2]] = chapter.name
+          assert(kind ~= "seg" or (#Z.choices[item[2]] >= 2 and #Z.choices[item[2]] <= 4), "trop de choix cote a cote : " .. item[2])
+          if item.dep then assert(Z.defaults[item.dep[1]] ~= nil, "reglage parent inconnu : " .. item.dep[1]) end
+        end
+      end
+    end
+  end
+  Need("Parties à copier : les réglages du chapitre du même nom.")
+  Need("Copier seulement une partie d'un profil vers un autre : un ou plusieurs chapitres, de Disposition à Joueurs.")
+  assert(#missing == 0, "sans traduction anglaise : " .. table.concat(missing, " | "))
+
+  -- Chaque réglage a une seule ligne, dans un seul chapitre ; aucun réglage simple n'est oublié
+  local keys = Z:OptionKeys()
+  for key, where in pairs(keys) do assert(#where == 1, "reglage en double : " .. key .. " (" .. table.concat(where, ", ") .. ")") end
+  for key, chapter in pairs(inChapters) do assert(keys[key] and keys[key][1] == chapter, "reglage sans ligne : " .. key) end
+  local elsewhere = { tutorialDone = true, wizardDone = true, minimapAngle = true, macroAutoTarget = true } -- réglés ailleurs
+  for key, value in pairs(Z.defaults) do
+    if (type(value) == "boolean" or type(value) == "number" or Z.choices[key]) and not elsewhere[key] then
+      assert(keys[key], "reglage absent des options : " .. key)
+    end
+  end
+  for _, e in ipairs(Z.db.errors) do assert(not tostring(e.message):find("^option"), "erreur dans les options : " .. tostring(e.message)) end
+
+  -- Anciens noms d'onglet acceptés (tutoriel, guides) ; un seul chapitre visible, un seul bouton allumé ; le
+  -- chapitre ouvert est retenu pendant la partie, pas sauvé
+  Z:ToggleOptions("Disposition") Z:ToggleOptions() Z:ToggleOptions()
+  assert(Z:OptionChapter() == "Disposition" and not Z.char.optionChapter, "la fenetre rouvre le dernier chapitre de la partie")
+  for old, new in pairs({ Cadres = "Disposition", Indicateurs = "Vie et portée", Soins = "Mes soins", Listes = "Affaiblissements",
+    Profils = "Profils et partage", Aide = "Fenêtre et aide", Clics = "Sorts et raccourcis", Inconnu = "Accueil" }) do
+    Z:ToggleOptions(old)
+    assert(Z:OptionChapter() == new, old .. " -> " .. tostring(Z:OptionChapter()))
+    local shown, lit = 0, 0
+    for _, chapter in ipairs(chapters) do
+      if chapter.page and chapter.page.scroll:IsShown() then shown = shown + 1 end
+      if chapter.button.active then lit = lit + 1 end
+    end
+    assert(shown == 1 and lit == 1, old .. " : " .. shown .. " pages, " .. lit .. " boutons")
+  end
+
+  -- Chaque chapitre s'ouvre sans erreur dans les 3 thèmes et en contraste élevé, et sa page est rangée
+  for _, theme in ipairs({ "CLASSIC", "MMO", "MODERN" }) do
+    Z.db.windowTheme = theme Z:Refresh()
+    for i = 1, #chapters do assert(w.Select(i) == chapters[i].page, theme .. " : " .. chapters[i].name) end
+  end
+  Z.db.highContrast = true Z:Refresh()
+  for i = 1, #chapters do w.Select(i) end
+  Z.db.highContrast = false Z:Refresh()
+  CheckChapters()
+
+  -- Réglages fins repliés sous « Réglages fins (n) » ; l'état est gardé pour le personnage
+  Z.char.optionFolds = {}
+  local page = w.Select("Mes soins")
+  local fold, fade
+  for _, part in ipairs(page.parts) do
+    if part.item and part.item[2] == "hotFade" then fade = part fold = part.fold end
+  end
+  assert(fold and fold.count == 4 and not fold:IsOpen() and not fade.widget:IsShown(), "reglages fins replies")
+  local closed = page.used
+  fold:Run("OnClick")
+  assert(fold:IsOpen() and fade.widget:IsShown() and page.used > closed and Z.char.optionFolds["Mes soins.1"], "reglages fins deplies")
+  fold:Run("OnClick")
+  assert(not fade.widget:IsShown() and page.used == closed, "reglages fins replies de nouveau")
+
+  -- Recherche : par le nom, puis par l'explication ; un résultat ouvre le chapitre, déplie, fait défiler
+  w.Select("Accueil")
+  w.search:SetText("moment de relancer") w.search:Run("OnTextChanged", true)
+  local row = w.results.rows[1]
+  assert(w.results:IsShown() and row:IsShown() and row.entry.label == "Icône qui s'efface à la fin", "recherche par l'explication")
+  row:Run("OnClick", "LeftButton")
+  assert(Z:OptionChapter() == "Mes soins" and fold:IsOpen() and fade.widget:IsShown(), "le resultat deplie les reglages fins")
+  assert(page.scroll.offset > 0 and w.found == row.entry and w.search:GetText() == "", "le resultat fait defiler la page")
+  fold:Run("OnClick")
+  w.search:SetText("ajouter un clic") w.search:Run("OnTextChanged", true)
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  assert(Z:OptionChapter() == "Sorts et raccourcis", "reglage d'une page dessinee a part")
+
+  -- Fenêtre de 1080 x 708, jamais plus haute que l'écran moins 60 pixels
+  assert(w:GetWidth() == 1080 and Z.OptionsHeight(1080) == 708 and Z.OptionsHeight(700) == 640 and Z.OptionsHeight(nil) == 708, "hauteur")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
+end)
+
+step("refonte 1.26.0, lot 3a : listes dans leurs chapitres, clics et alertes en une colonne", function()
+  local saved = { extraTracked = Z.db.extraTracked, manaText = Z.db.manaText }
+  Z.db.extraTracked = {}
+  Z.char.optionFolds = {}
+  Z:ToggleOptions("Accueil")
+  local w = Z:OptionsWindow()
+  -- Chaque liste dans son chapitre ; plus aucune page à deux colonnes pour les listes, les clics et les alertes
+  local where, boxes = { pinned = "Disposition", extraTracked = "Mes soins", ignoredNames = "Affaiblissements", importantNames = "Affaiblissements" }, {}
+  for _, chapter in ipairs(w.chapters) do
+    local page = w.Select(chapter.name)
+    for _, part in ipairs(page.parts) do
+      local widget = part.widget
+      if widget.chips then boxes[widget.key] = { box = widget, part = part, chapter = chapter.name } end
+      if chapter.name == "Sorts et raccourcis" or chapter.name == "Alertes" or chapter.name == "Affaiblissements" then
+        assert(not widget.isBlock, "page a deux colonnes : " .. chapter.name)
+      end
+    end
+  end
+  for key, chapter in pairs(where) do assert(boxes[key] and boxes[key].chapter == chapter, "liste " .. key .. " hors de " .. chapter) end
+  assert(boxes.pinned.part.fold and not boxes.extraTracked.part.fold, "joueurs epingles dans les reglages fins")
+
+  -- Un nom tapé puis Entrée entre dans la liste, qui s'allonge avec la page ; un clic sur un nom le retire
+  local tracked = boxes.extraTracked.box
+  local page = w.Select("Mes soins")
+  local before, used = tracked:GetHeight(), page.used
+  for _, name in ipairs({ "Sort A", "Sort B", "Sort C", "Sort D" }) do
+    tracked.edit:SetText(name) tracked.edit:Run("OnEnterPressed")
+  end
+  assert(Z.db.extraTracked["Sort D"] and tracked.edit:GetText() == "", "ajout a la liste")
+  assert(tracked:GetHeight() > before and page.used > used, "la liste et la page s'allongent")
+  local found
+  for _, choice in ipairs(Z.CornerChoices("TOPLEFT")) do if choice[1] == "Sort C" then found = true end end
+  assert(found, "sort suivi absent du choix des coins")
+  assert(tracked.chips[1].name == "Sort A") tracked.chips[1]:Run("OnClick", "LeftButton")
+  assert(not Z.db.extraTracked["Sort A"] and not tracked.chips[4]:IsShown() and tracked:GetHeight() == before and page.used == used, "retrait d'un nom")
+
+  -- La recherche trouve une liste rangée dans les réglages fins : chapitre ouvert, réglages fins dépliés
+  w.search:SetText("joueurs épinglés") w.search:Run("OnTextChanged", true)
+  local hit
+  for _, row in ipairs(w.results.rows) do if row:IsShown() and row.entry.list == "pinned" then hit = row end end
+  assert(hit, "liste des joueurs epingles introuvable")
+  hit:Run("OnClick", "LeftButton")
+  assert(Z:OptionChapter() == "Disposition" and boxes.pinned.part.fold:IsOpen() and boxes.pinned.box:IsShown(), "recherche d'une liste")
+  boxes.pinned.part.fold:Run("OnClick")
+
+  -- Alertes et Clics : chaque réglage a sa ligne dans son chapitre ; le texte d'une annonce s'écrit dans la page
+  local keys = Z:OptionKeys()
+  for _, key in ipairs({ "alertChannel", "manaAlert", "manaThreshold", "regenAlert", "regenThreshold", "resAlert", "soundDispel", "soundMana" }) do
+    assert(keys[key] and keys[key][1] == "Alertes", "Alertes : " .. key)
+  end
+  for _, key in ipairs({ "castOnDown", "autoRes", "clicksPerSpec", "newSpellAlert", "clickConflictAlert", "externalClicks", "actionBarMacros" }) do
+    assert(keys[key] and keys[key][1] == "Sorts et raccourcis", "Sorts et raccourcis : " .. key)
+  end
+  page = w.Select("Alertes")
+  local text
+  for _, part in ipairs(page.parts) do if part.widget.test and not text then text = part.widget end end
+  assert(text and text.edit:GetText() == Z.db.manaText, "texte de l'annonce de mana")
+  text.edit:SetText("Mana basse {mana}") text.edit:Run("OnTextChanged", true)
+  assert(Z.db.manaText == "Mana basse {mana}", "texte de l'annonce enregistre")
+
+  -- Plus aucun texte des chapitres ne cite un ancien onglet (l'onglet de /macro est celui du jeu)
+  for _, chapter in ipairs(w.chapters) do
+    for _, section in ipairs(chapter.sections) do
+      for _, item in ipairs(section[2]) do
+        for _, value in pairs(item) do
+          if type(value) == "string" then
+            assert(not value:gsub("onglet de votre personnage", ""):find("onglet"), "ancien onglet cite : " .. value)
+          end
+        end
+      end
+    end
+  end
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
+end)
+
+step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", function()
+  local saved = { width = Z.db.width, showPets = Z.db.showPets, syncEnabled = Z.db.syncEnabled, profiles = Z.db.profiles,
+    activeProfile = Z.db.activeProfile }
+  Z.char.optionFolds = {}
+  Z:ToggleOptions("Accueil")
+  local w = Z:OptionsWindow()
+  -- Plus aucune page à deux colonnes : chaque ligne tient dans la colonne
+  for _, chapter in ipairs(w.chapters) do
+    local page = w.Select(chapter.name)
+    assert(page.blocks == nil, "page a deux colonnes : " .. chapter.name)
+    for _, part in ipairs(page.parts) do assert(part.widget:GetWidth() <= 520, "ligne trop large dans " .. chapter.name) end
+  end
+  local keys = Z:OptionKeys()
+  for _, key in ipairs({ "autoProfile", "syncEnabled", "resSync", "acceptConfigs", "versionNotice" }) do
+    assert(keys[key] and #keys[key] == 1 and keys[key][1] == "Profils et partage", "Profils et partage : " .. key)
+  end
+
+  -- Synchronisation coupée : les trois réglages qui en dépendent sont grisés
+  local page = w.Select("Profils et partage")
+  local sync = page.content.settings
+  Z.db.syncEnabled = true
+  sync.syncEnabled:Run("OnClick")
+  assert(not Z.db.syncEnabled and sync.resSync:GetAlpha() < 1 and sync.versionNotice:GetAlpha() < 1, "synchronisation coupee : reglages grises")
+  sync.syncEnabled:Run("OnClick")
+  assert(Z.db.syncEnabled and sync.resSync:GetAlpha() == 1, "synchronisation remise")
+
+  -- Un profil enregistré depuis la page devient le profil actif de l'Accueil ; son bouton mène aux profils
+  Z.db.profiles, Z.db.activeProfile = {}, ""
+  local box = OptionPart("copyButton")
+  box.edit:SetText("Essai") box.edit:Run("OnEnterPressed")
+  assert(Z.db.profiles.Essai and Z.db.activeProfile == "Essai", "profil enregistre depuis la page")
+  page = w.Select("Accueil")
+  local home = {}
+  for _, part in ipairs(page.parts) do
+    if part.widget.go then home.profile = part.widget end
+    if part.widget.rows then home.changed = part.widget end
+  end
+  assert(home.profile and home.profile.name:GetText() == "Essai", "profil actif a l'Accueil")
+  home.profile.go:Run("OnClick", "LeftButton")
+  assert(Z:OptionChapter() == "Profils et partage", "bouton vers les profils")
+
+  -- Réglages changés : un réglage changé a sa ligne ; un clic mène au réglage (réglages fins dépliés), la rune le rétablit
+  Z.db.width, Z.db.showPets = Z.defaults.width, Z.defaults.showPets
+  w.Select("Accueil")
+  local before = home.changed.count
+  assert(home.changed.empty:IsShown() == (before == 0), "liste vide annoncee")
+  Z.db.width, Z.db.showPets = Z.defaults.width + 4, not Z.defaults.showPets
+  w.Select("Accueil")
+  assert(home.changed.count == before + 2 and not home.changed.empty:IsShown(), "deux reglages changes")
+  local function Row(key)
+    for _, row in ipairs(home.changed.rows) do if row:IsShown() and row.key == key then return row end end
+  end
+  local row = Row("showPets")
+  assert(row and row.where:GetText() == "Disposition" and row.rune:IsShown(), "ligne du reglage change")
+  assert(row.value:GetText() == (Z.db.showPets and "Activé" or "Coupé"), "valeur du reglage : " .. tostring(row.value:GetText()))
+  assert(Row("width").value:GetText() == tostring(Z.defaults.width + 4), "valeur d'un nombre")
+  row:Run("OnClick", "LeftButton")
+  assert(Z:OptionChapter() == "Disposition" and w.found and w.found.key == "showPets", "clic : aller au reglage")
+  local fold = w.found.widget.part.fold
+  assert(fold and fold:IsOpen(), "reglage fin deplie")
+  fold:Run("OnClick")
+  w.Select("Accueil")
+  Row("showPets").rune:Run("OnClick")
+  assert(Z.db.showPets == Z.defaults.showPets and home.changed.count == before + 1 and not Row("showPets"), "la rune retablit le reglage")
+  Row("width").rune:Run("OnClick")
+  assert(Z.db.width == Z.defaults.width and home.changed.count == before, "la liste se vide")
+
+  -- Fenêtre et aide : légende et commandes en lignes, retrouvées par la recherche
+  page = w.Select("Fenêtre et aide")
+  local commands
+  for _, part in ipairs(page.parts) do if part.widget.list then commands = part.widget end end
+  assert(commands and commands.list:GetText():find("/lyorune diag", 1, true), "liste des commandes")
+  w.search:SetText("donner ma config") w.search:Run("OnTextChanged", true)
+  assert(w.results.rows[1]:IsShown() and w.results.rows[1].entry.label == "Donner ma configuration", "recherche d'un outil de partage")
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  assert(Z:OptionChapter() == "Profils et partage", "recherche : chapitre des profils")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
+end)
+
+step("refonte 1.26.0, lot 4a : rune sur chaque ligne, pastilles, retablir une page, reglages dependants", function()
+  local keys = { "showHots", "hotCount", "hotStyle", "frameAlpha", "manaBars", "powerHeight", "syncEnabled" }
+  local saved = {}
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  for _, key in ipairs(keys) do Z.db[key] = Z.defaults[key] end
+  Z.char.optionFolds = {}
+  Z:ToggleOptions("Mes soins")
+  local w = Z:OptionsWindow()
+  local chapters = Z:OptionsTabs()
+  local function Chapter(name) for _, c in ipairs(chapters) do if c.name == name then return c end end end
+
+  -- Chaque ligne de réglage porte sa rune d'or, cachée tant que le réglage est celui de l'installation (une ligne
+  -- repliée se met à jour en s'affichant : on regarde les lignes affichées, chapitre ouvert)
+  Z:OptionLabels()
+  for _, chapter in ipairs(chapters) do
+    w.Select(chapter.name)
+    for key, widget in pairs(chapter.page.content.settings or {}) do
+      if Z.defaults[key] ~= nil then
+        assert(widget.changed, "rune absente : " .. key)
+        assert(not widget:IsShown() or widget.changed:IsShown() == not Z.UI.Same(Z.db[key], Z.defaults[key]), "rune mal montree : " .. key)
+      end
+    end
+  end
+  assert(Chapter("Accueil").page.reset == nil, "pas de Retablir cette page a l'Accueil")
+
+  -- Un réglage changé depuis sa ligne : rune montrée, pastille du chapitre, « Rétablir cette page » paraît
+  local soins, look = Chapter("Mes soins"), Chapter("Apparence")
+  local page = w.Select("Mes soins")
+  local set = page.content.settings
+  local count = soins.button.count
+  assert(not page.reset:IsShown() == (count == 0), "Retablir cette page suit les reglages changes")
+  set.hotCount.plus:Run("OnClick", "LeftButton")
+  assert(Z.db.hotCount == Z.defaults.hotCount + 1 and set.hotCount.changed:IsShown(), "rune d'un nombre change")
+  assert(soins.button.count == count + 1 and soins.button.badge:IsShown(), "pastille du chapitre")
+  assert(page.reset:IsShown() and page.used > 64, "Retablir cette page montre")
+
+  -- Réglages dépendants : grisés quand le réglage parent est coupé, toujours réglables
+  set.showHots:Run("OnClick")
+  assert(not Z.db.showHots and set.hotCount:GetAlpha() < 1 and set.hotStyle:GetAlpha() < 1, "dependants grises")
+  assert(soins.button.count == count + 2, "pastille : deux reglages")
+  set.hotCount.minus:Run("OnClick", "LeftButton")
+  assert(Z.db.hotCount == Z.defaults.hotCount and not set.hotCount.changed:IsShown(), "un reglage grise reste reglable")
+  set.showHots.changed:Run("OnClick")
+  assert(Z.db.showHots and set.hotCount:GetAlpha() == 1 and soins.button.count == count, "la rune retablit et le grisage suit")
+  local vie = w.Select("Vie et portée").content.settings
+  Z.db.manaBars = "OFF" w.Select("Vie et portée")
+  assert(vie.powerHeight:GetAlpha() < 1, "dependance « tout sauf » : barre de mana coupee")
+  Z.db.manaBars = "HEALERS" w.Select("Vie et portée")
+  assert(vie.powerHeight:GetAlpha() == 1, "dependance « tout sauf » : barre de mana montree")
+  Z.db.manaBars = Z.defaults.manaBars
+  -- Contraste élevé : il remplace le thème et la texture, qui sont grisés (retour d'essai 10)
+  local style = w.Select("Apparence").content.settings
+  assert(style.theme:GetAlpha() == 1 and style.texture:GetAlpha() == 1 and style.theme.desc, "theme et texture reglables")
+  style.highContrast:Run("OnClick")
+  assert(Z.db.highContrast and style.theme:GetAlpha() < 1 and style.texture:GetAlpha() < 1, "contraste eleve : theme et texture grises")
+  style.highContrast:Run("OnClick")
+  assert(not Z.db.highContrast and style.theme:GetAlpha() == 1, "contraste coupe : theme regle de nouveau")
+
+  -- « Rétablir cette page » : deux clics (le premier arme le bouton), et seulement ce chapitre
+  Z.db.frameAlpha = Z.defaults.frameAlpha - 10
+  page = w.Select("Mes soins")
+  set.showHots:Run("OnClick")
+  set.hotCount.plus:Run("OnClick", "LeftButton")
+  local others = look.changes
+  assert(others >= 1 and soins.changes >= 2, "reglages changes dans deux chapitres")
+  page.reset.button:Run("OnClick", "LeftButton")
+  assert(not Z.db.showHots, "premier clic : rien n'est retabli")
+  page.reset.button.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+  page.reset.button:Run("OnClick", "LeftButton")
+  assert(Z.db.showHots == Z.defaults.showHots and Z.db.hotCount == Z.defaults.hotCount, "page retablie")
+  assert(soins.changes == 0 and soins.button.count == 0 and not soins.button.badge:IsShown(), "pastille a zero")
+  assert(not page.reset:IsShown() and not set.hotCount.changed:IsShown() and set.hotCount:GetAlpha() == 1, "page rangee apres retablissement")
+  assert(Z.db.frameAlpha == Z.defaults.frameAlpha - 10 and look.changes == others, "les autres chapitres ne bougent pas")
+
+  -- Changement fait fenêtre fermée (commande, profil) : la pastille suit à la réouverture
+  w:Hide()
+  Z.db.frameAlpha = Z.defaults.frameAlpha
+  Z:ToggleOptions()
+  assert(look.changes == others - 1, "pastille revue a l'ouverture")
+
+  -- Boutons de bijou du chapitre Sorts et raccourcis : cachés sauf réglage fin allumé ou bijou déjà choisi
+  -- (retour d'essai 12), jamais un point d'interrogation
+  local savedClicks, savedTrinkets = Z.db.clicks[Z:ClickSet()], Z.db.clickTrinkets
+  Z.db.clicks[Z:ClickSet()] = { ["shift-1"] = "Soins rapides", ["ctrl-1"] = "Rénovation", ["2"] = "@menu" }
+  Z.db.clickTrinkets = {} Z.db.trinketButtons = false
+  local clickPage = w.Select("Sorts et raccourcis")
+  Z.RefreshClicks()
+  local _, plain = Z:ClickCell("ctrl-1")
+  local _, menu = Z:ClickCell("2")
+  assert(plain and not plain.trinkets[1]:IsShown() and not plain.trinkets[2]:IsShown(), "boutons de bijou caches a l'installation")
+  Z:ToggleTrinket({ kind = "click", key = "shift-1" }, 1) Z.RefreshClicks()
+  local _, worn = Z:ClickCell("shift-1")
+  assert(worn.trinkets[1]:IsShown() and worn.trinkets[2]:IsShown(), "une ligne qui a un bijou garde ses boutons")
+  assert(worn.trinkets[1].chosen:IsShown() and not worn.trinkets[2].chosen:IsShown(), "bordure d'or sur le bijou choisi")
+  assert(worn.trinkets[2].icon._tex == "Interface\\PaperDoll\\UI-PaperDoll-Slot-Trinket", "emplacement vide : icone du jeu")
+  assert(not plain.trinkets[1]:IsShown(), "les autres lignes restent sans bijou")
+  assert(clickPage.content.settings.trinketButtons, "reglage fin dans le chapitre")
+  clickPage.content.settings.trinketButtons:Run("OnClick")
+  assert(Z.db.trinketButtons and plain.trinkets[1]:IsShown() and not menu.trinkets[1]:IsShown(), "reglage fin : boutons sur chaque sort, pas sur le menu")
+  clickPage.content.settings.trinketButtons:Run("OnClick")
+  assert(not Z.db.trinketButtons and not plain.trinkets[1]:IsShown(), "reglage coupe : boutons caches")
+  Z.db.clicks[Z:ClickSet()], Z.db.clickTrinkets = savedClicks, savedTrinkets
+  Z:ApplyClicks()
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide()
+end)
+
+step("refonte 1.26.0, lot 4b : case temoin, faux groupe, boutons du mode test", function()
+  local keys = { "showHots", "hotCount", "hotStyle", "showDispel", "showAbsorb", "absorbStyle", "color", "width", "height",
+    "frameAlpha", "showMarker" }
+  local saved = {}
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  local savedCorners = Z.db.cornerSpells[Z.class]
+  Z.db.cornerSpells[Z.class] = nil
+  Z.db.hotStyle = "ICONS"
+  Z:ToggleOptions("Apparence")
+  local w = Z:OptionsWindow()
+  local col = w.witness
+  assert(col and col:IsShown(), "colonne de la case temoin")
+  local cell = col.stage.cell
+
+  -- De simples cadres, comme les fausses cases du mode test : aucun bouton protégé
+  assert(cell:GetObjectType() == "Frame" and #col.group.slots == 5, "case temoin et faux groupe de cinq")
+  for _, slot in ipairs(col.group.slots) do assert(slot.cell:GetObjectType() == "Frame", "fausse case du groupe") end
+
+  -- Forme : la taille des vraies cases, agrandie pour tenir dans son fond (leçon C2 : chaque barre a ses bornes)
+  Z.db.width, Z.db.height = 150, 50 Z:Refresh()
+  local cw, ch = Z.CellSize()
+  assert(cell:GetWidth() == cw and cell:GetHeight() == ch, "la case temoin suit la taille")
+  assert(math.abs(cell:GetScale() - math.min(1.9, 226 / cw, 116 / ch)) < 0.001, "agrandie dans son fond")
+  for _, bar in ipairs({ cell.hp, cell.incoming, cell.absorb, cell.healAbsorb, cell.power }) do
+    assert(bar._min == 0 and bar._max == 100 and bar._value ~= nil, "barre sans bornes ou sans valeur")
+  end
+
+  -- Couleurs : couleur de la classe, ou couleur de la vie (62 %)
+  Z.db.color = "CLASS" Z:Refresh()
+  local r = Z.ClassColor(Z.class)
+  assert(math.abs(cell.hp._barColor[1] - r) < 0.001, "couleur de classe")
+  Z.db.color = "HEALTH" Z:Refresh()
+  assert(math.abs(cell.hp._barColor[1] - 0.38) < 0.001, "couleur selon la vie")
+
+  -- Soins sur la durée : jusqu'à trois, et la légende les compte
+  Z.db.showHots, Z.db.hotCount = true, 3 Z:Refresh()
+  assert(cell.hots[1] and cell.hots[1]:IsShown(), "soin sur la duree montre")
+  assert(col.legend:GetText():find("sur la durée", 1, true), "legende des soins : " .. col.legend:GetText())
+  Z.db.showHots = false Z:Refresh()
+  assert(not cell.hots[1]:IsShown() and not col.legend:GetText():find("sur la durée", 1, true), "soins coupes")
+
+  -- Coins : le carré du sort choisi, et son nom dans la légende
+  Z.db.cornerSpells[Z.class] = { TOPLEFT = "Récupération" } Z:Refresh()
+  assert(cell.corners and cell.corners.TOPLEFT:IsShown(), "coin montre sur la case temoin")
+  assert(col.legend:GetText():find("Récupération", 1, true), "coin dans la legende")
+  Z.db.cornerSpells[Z.class] = nil Z:Refresh()
+  assert(not cell.corners.TOPLEFT:IsShown(), "coin retire")
+
+  -- Dissipation, bouclier : allumés, ils se voient ; tout coupé, la case est nue
+  Z.db.showDispel, Z.db.showAbsorb, Z.db.absorbStyle = true, true, "FOLLOW" Z:Refresh()
+  assert(col.legend:GetText():find("dissiper", 1, true) and col.legend:GetText():find("à la suite", 1, true), "dissipation et bouclier")
+  assert(cell.absorb:IsShown() and cell.absorb._value > 0, "bouclier sur la case temoin")
+  Z.db.showDispel, Z.db.showAbsorb = false, false Z:Refresh()
+  assert(col.legend:GetText() == Z.L["Case nue : tous les indicateurs sont coupés."], "case nue : " .. col.legend:GetText())
+
+  -- Opacité des cadres : la case et le faux groupe, pas leur fond
+  Z.db.frameAlpha = 50 Z:Refresh()
+  assert(col.stage.holder:GetAlpha() == 0.5 and col.group.holder:GetAlpha() == 0.5 and col.stage:GetAlpha() == 1, "opacite")
+
+  -- Un réglage changé depuis sa ligne redessine la case témoin (Option, puis Z:Refresh)
+  local set = w.Select("Apparence").content.settings
+  set.color.segments[1]:Run("OnClick", "LeftButton")
+  local want = Z.db.color == "CLASS" and r or 0.38
+  assert(math.abs(cell.hp._barColor[1] - want) < 0.001, "la case temoin suit la ligne de reglage")
+
+  -- Boutons du mode test : un clic ouvre, un second clic sur le même nombre ferme
+  local tens = col.test.segments[2]
+  assert(tens.value == 10, "bouton 10")
+  tens:Run("OnClick", "LeftButton")
+  assert(Z.previewActive and Z:PreviewSize() == 10 and tens.selected, "mode test a 10")
+  assert(col.testText:GetText():find("10", 1, true), "phrase du mode test ouvert")
+  col.test.segments[4]:Run("OnClick", "LeftButton")
+  assert(Z.previewActive and Z:PreviewSize() == 40 and col.test.segments[4].selected and not tens.selected, "passage a 40")
+  col.test.segments[4]:Run("OnClick", "LeftButton")
+  assert(not Z.previewActive and not col.test.segments[4].selected, "second clic : mode test ferme")
+  assert(col.testText:GetText() == Z.L["Pose un faux groupe à l'écran, à la vraie taille, pour régler l'apparence en vrai."], "phrase du mode test ferme")
+
+  -- Les boutons ont quitté Disposition ; la recherche les trouve encore
+  for _, chapter in ipairs(Z:OptionsTabs()) do
+    for _, section in ipairs(chapter.sections) do assert(section[1] ~= "Mode test", "Mode test encore dans " .. chapter.name) end
+  end
+  w.search:SetText("mode test") w.search:Run("OnTextChanged", true)
+  local row = w.results.rows[1]
+  assert(row and row:IsShown() and row.entry.widget == col.test, "recherche du mode test")
+  row:Run("OnClick", "LeftButton")
+  assert(Z:OptionChapter() == "Apparence", "la recherche change de chapitre (retour 22 : les boutons clignotent sur place)")
+
+  -- Fenêtre fermée : rien n'est redessiné ; à la réouverture, la case témoin suit
+  w:Hide() col:Hide()
+  Z.db.frameAlpha = 80 Z:Refresh()
+  assert(col.stage.holder:GetAlpha() == 0.5, "rien n'est redessine fenetre fermee")
+  col:Show()
+  assert(col.stage.holder:GetAlpha() == 0.8, "redessinee a l'ouverture")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z.db.cornerSpells[Z.class] = savedCorners
+  Z:Refresh()
+  w:Hide()
+end)
+
+step("refonte 1.26.0, lot 5 : lumiere de soin, rune du chapitre, eclat de la case temoin", function()
+  local UI = Z.UI
+  local saved = { magicEffects = Z.db.magicEffects, reduceMotion = Z.db.reduceMotion, smooth = Z.db.smooth,
+    windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast, showRunes = Z.db.showRunes, color = Z.db.color }
+  Z.db.magicEffects, Z.db.reduceMotion, Z.db.smooth, Z.db.showRunes = true, false, true, true
+  Z:ToggleOptions("Apparence")
+  local w = Z:OptionsWindow()
+  w:Show() w:Run("OnShow")
+  local m, col = w.magic, w.witness
+  local function Open(name) for _, c in ipairs(w.chapters) do if c.name == name then return c end end end
+
+  -- Lumière de soin dans l'en-tête : un faisceau or et vert qui traverse le trait, de bout en bout
+  assert(m.track:IsShown() and m.sweep:IsPlaying(), "faisceau de l'en-tete")
+  assert(#m.beam.pieces == 3 and m.beam.pieces[1]._tex == "Interface\\Buttons\\WHITE8X8", "trois degrades")
+  assert(UI.HEAL_GOLD[1] > UI.HEAL_GOLD[3] and UI.HEAL_GREEN[2] > UI.HEAL_GREEN[1], "or et vert")
+  assert(m.beam.haze._color[1] == UI.HEAL_GOLD[1], "halo du faisceau dore")
+
+  -- Trois thèmes et contraste élevé : la lumière reste or et vert, le trait est celui de la fenêtre en Classique
+  -- et MMORPG (liseré doré), le sien en Moderne et en contraste élevé
+  for _, case in ipairs({ { "MODERN", false, true }, { "CLASSIC", false, false }, { "MMO", false, false }, { "MMO", true, true } }) do
+    Z.db.windowTheme, Z.db.highContrast = case[1], case[2] Z:Refresh()
+    assert(m.rail:IsShown() == case[3], "trait sous l'en-tete : " .. case[1] .. (case[2] and " contraste" or ""))
+    assert(m.track:IsShown() and m.sweep:IsPlaying(), "faisceau : " .. case[1])
+    assert(m.beam.haze._color[1] == UI.HEAL_GOLD[1], "lumiere de soin independante du theme")
+    assert(Open("Apparence").button.halo._color[2] == UI.HEAL_GOLD[2], "rune : lumiere de soin")
+  end
+  Z.db.windowTheme, Z.db.highContrast = "MODERN", false Z:Refresh()
+
+  -- Rune du chapitre ouvert : sa lumière s'allume et respire ; les autres restent éteintes
+  local open, other = Open("Apparence").button, Open("Disposition").button
+  assert(open.active and open.halo:IsShown() and open.pulse:IsPlaying(), "rune du chapitre ouvert allumee")
+  assert(not other.halo:IsShown() and not other.pulse:IsPlaying(), "rune d'un autre chapitre eteinte")
+  w.Select("Disposition")
+  assert(other.halo:IsShown() and other.pulse:IsPlaying() and not open.halo:IsShown() and not open.pulse:IsPlaying(),
+    "la lumiere suit le chapitre ouvert")
+  w.Select("Apparence")
+
+  -- Éclat de la case témoin à chaque réglage changé, et la vie qui remonte (barres animées)
+  NOW = NOW + 5
+  local set = w.Select("Apparence").content.settings
+  local function Change() -- l'autre couleur des barres : un vrai changement de réglage, depuis sa ligne
+    for _, b in ipairs(set.color.segments) do
+      if b.value ~= Z.db.color then return b:Run("OnClick", "LeftButton") end
+    end
+  end
+  Change()
+  local burst, hp = col.stage.burst, col.stage.cell.hp
+  assert(burst.groups[1]:IsPlaying() and burst.groups[2]:IsPlaying(), "eclat de soin sur la case temoin")
+  assert(burst.glows[1]._color[1] == UI.HEAL_GOLD[1] and burst.glows[2]._color[2] == UI.HEAL_GREEN[2], "eclat or et vert")
+  assert(hp._value == 62 and hp._smoothing == Enum.StatusBarInterpolation.ExponentialEaseOut, "la vie remonte")
+  for _, group in ipairs(burst.groups) do group:Stop() end
+  -- Barres non animées : l'éclat, mais la vie ne bouge pas
+  NOW = NOW + 5
+  Z.db.smooth = false
+  Change()
+  assert(burst.groups[1]:IsPlaying() and hp._smoothing == nil, "vie fixe sans barres animees")
+  for _, group in ipairs(burst.groups) do group:Stop() end
+  Z.db.smooth = true
+
+  -- « Effets magiques » coupé ou « Animations réduites » : plus rien ne bouge ni ne brille (les fondus courts
+  -- des pages restent) ; le trait et l'inscription restent
+  for _, setting in ipairs({ "magicEffects", "reduceMotion" }) do
+    NOW = NOW + 5
+    Z.db[setting] = setting == "reduceMotion"
+    Change()
+    assert(not UI.Magic(), setting)
+    assert(not m.track:IsShown() and not m.sweep:IsPlaying(), setting .. " : faisceau")
+    assert(not open.halo:IsShown() and not open.pulse:IsPlaying(), setting .. " : rune du chapitre")
+    assert(not burst.groups[1]:IsPlaying() and hp._smoothing == nil, setting .. " : eclat de la case temoin")
+    assert(m.rail:IsShown() and w.foot:IsShown(), setting .. " : traits")
+    Z.db.magicEffects, Z.db.reduceMotion = true, false
+    Change()
+    assert(m.sweep:IsPlaying() and open.halo:IsShown() and open.pulse:IsPlaying(), setting .. " : effets revenus")
+    for _, group in ipairs(burst.groups) do group:Stop() end -- en jeu, l'éclat s'éteint seul après 0,9 s
+  end
+
+  -- Fenêtre fermée : tout s'arrête ; aucun éclat sur une case témoin cachée
+  w:Hide() w:Run("OnHide") open:Run("OnHide") col:Hide()
+  assert(not m.sweep:IsPlaying() and not open.pulse:IsPlaying(), "effets arretes a la fermeture")
+  NOW = NOW + 5
+  col.Spark()
+  assert(not burst.groups[1]:IsPlaying(), "eclat sur une case temoin cachee")
+  col:Show()
+
+  -- Phrase en runes : au bas de la fenêtre, au milieu de la bande sous le trait
+  local strip = Z:RuneStrip()
+  local p = strip._point
+  assert(strip:GetParent() == w and p[1] == "BOTTOM" and p[3] < 34, "inscription au bas de la fenetre")
+  assert(w.foot._point[1] == "BOTTOMRIGHT" and w.foot._point[3] == 34, "trait du bas")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", function()
+  local UI = Z.UI
+  local w = Z:OptionsWindow()
+  if w:IsShown() then w:Hide() end
+  local saved = { language = Z.db.language, lockMode = Z.db.lockMode, tutorialDone = Z.db.tutorialDone }
+
+  -- Toute la visite, en français puis en anglais : plus aucun onglet, les chapitres à leur place
+  local function Tour()
+    local bodies = {}
+    Z:StartTutorial()
+    local card = LyoruneTutorial
+    for i = 1, #card.runes do
+      bodies[i] = card.body:GetText()
+      card.next:Run("OnClick")
+    end
+    assert(not card:IsShown() and not w:IsShown() and not Z.previewActive, "visite mal refermee")
+    return bodies
+  end
+  local fr = Tour()
+  for i, body in ipairs(fr) do assert(not body:lower():find("onglet", 1, true), "etape " .. i .. " cite un onglet") end
+  -- Lot 6c bis b : la fenêtre d'options en quatre cartes courtes (barre, page, case témoin, recherche)
+  local window = table.concat(fr, "|", 7, 10)
+  for _, word in ipairs({ "chapitre", "pastille", "Réglages fins", "rune d'or", "Rétablir cette page", "case témoin",
+    "mode test", "recherche", "Accueil" }) do
+    assert(window:find(word, 1, true), "cartes de la fenetre sans : " .. word)
+  end
+  assert(fr[3]:find("Bijoux avec les sorts", 1, true) and fr[4]:find("chapitre Mes soins", 1, true), "clics, coins")
+  assert(fr[5]:find("partie Position", 1, true) and fr[5]:find("Cadres affichés", 1, true), "placer les cadres")
+  assert(fr[6]:find("case témoin", 1, true) and fr[6]:find("second clic", 1, true), "boutons du mode test")
+  assert(fr[11]:find("chapitre Sorts et raccourcis", 1, true), "derniere carte")
+
+  Z.db.language = "enUS" Z:SetLanguage()
+  local en = Tour()
+  for i, body in ipairs(en) do
+    -- l'étape 3 montre les sorts du joueur, avec leur nom du jeu
+    assert(not body:find("%f[%a]tab%f[%A]") and (i == 3 or not body:find("[\195][\160-\191]")), "etape " .. i .. " : " .. body:sub(1, 60))
+  end
+  window = table.concat(en, "|", 7, 10)
+  for _, word in ipairs({ "chapter", "badge", "Fine settings", "golden rune", "Reset this page", "preview cell",
+    "test mode", "search", "Home" }) do
+    assert(window:find(word, 1, true), "options window cards without: " .. word)
+  end
+  assert(en[6]:find("preview cell", 1, true) and en[11]:find("Spells and bindings chapter", 1, true))
+
+  -- Messages du chat et textes hors options : chapitres, traduits, anciennes clés retirées
+  for _, key in ipairs({ "... et %d autre(s) : chapitre Sorts et raccourcis.",
+    "nouveau sort sans clic : %s. Chapitre Sorts et raccourcis des options, bouton « Attribuer ».",
+    "Glissez une macro sur une ligne du chapitre Sorts et raccourcis ou dans une barre de sorts du jeu, ou cliquez sur le sort d'une ligne.",
+    "plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Sorts et raccourcis.",
+    "%d macro(s) créée(s) pour vos barres de sorts : chapitre Sorts et raccourcis des options, ou /macro, onglet de votre personnage.",
+    "le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Sorts et raccourcis, ligne en orange).",
+    "La synchronisation entre joueurs est coupée (chapitre Profils et partage).",
+    "la synchronisation entre joueurs est coupée (chapitre Profils et partage).",
+    "Mode performance : activé (chapitre Fenêtre et aide).",
+    "Conseil : activez le mode performance (chapitre Fenêtre et aide) pour les grands raids.",
+    "Mode performance : désactivé, inutile ici (chapitre Fenêtre et aide)." }) do
+    local value = Z.translations.enUS[key]
+    assert(value, "sans traduction anglaise : " .. key)
+    -- seul l'onglet du personnage de la fenêtre /macro du jeu reste un onglet
+    assert(key:find("/macro", 1, true) or not value:find("%f[%a]tab%f[%A]"), "onglet en anglais : " .. value)
+  end
+  assert(not Z.translations.enUS["... et %d autre(s) : onglet Clics."] and not Z.translations.enUS["Mode performance : activé (onglet Aide)."], "anciennes cles")
+
+  -- Cartes de la fenêtre : la carte se pose à côté de la fenêtre d'options, jamais hors de l'écran
+  Z.db.language = saved.language Z:SetLanguage()
+  w.GetLeft = function() return 300 end w.GetRight = function() return 1380 end w.GetTop = function() return 900 end
+  w.GetBottom = function() return 192 end
+  UIParent.GetWidth = function() return 1920 end UIParent.GetHeight = function() return 1080 end
+  Z:StartTutorial()
+  local card = LyoruneTutorial
+  for _ = 1, 6 do card.next:Run("OnClick") end
+  assert(card.title:GetText() == "La fenêtre d'options" and UI.main == w, card.title:GetText())
+  local p = card._point
+  assert(p[1] == "TOPLEFT" and p[2] == w and p[3] == "BOTTOMLEFT" and p[4] == 1380 + 14 - 300, "carte a droite des options")
+  w.GetLeft = function() return 110 end w.GetRight = function() return 1190 end UIParent.GetWidth = function() return 1300 end
+  w.GetBottom = function() return 100 end
+  card.back:Run("OnClick") card.next:Run("OnClick")
+  p = card._point
+  assert(p[2] == UIParent, "petit ecran : carte contre le bord, pas hors de l'ecran")
+  card.close:Run("OnClick")
+  w.GetLeft, w.GetRight, w.GetTop, w.GetBottom, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil, nil
+  assert(not w:IsShown(), "options restees ouvertes")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:SetLanguage() Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c bis b : visite qui rend la fenetre, explique les options, ne couvre pas les cases", function()
+  local w = Z:OptionsWindow()
+  local saved = { language = Z.db.language, lockMode = Z.db.lockMode, tutorialDone = Z.db.tutorialDone }
+  Z.db.language = "AUTO" Z:SetLanguage()
+  local card
+
+  -- Lancée des options (chapitre Apparence) : la fenêtre se ferme, la carte le dit, elle revient à la fin
+  Z:ToggleOptions("Apparence")
+  Z:StartTutorial()
+  card = LyoruneTutorial
+  local light = card.highlight
+  assert(not w:IsShown() and card.body:GetText():find("revient à la fin de la visite", 1, true), "premiere carte")
+  for _ = 1, 6 do card.next:Run("OnClick") end
+  -- Quatre cartes sur la fenêtre, chacune sur sa zone et son chapitre
+  local zones = {
+    { "La fenêtre d'options", "Accueil", function() return w.side end },
+    { "Une page par chapitre", "Disposition", function() return Z:OptionsTabs()[2].page.scroll end },
+    { "La case témoin", "Disposition", function() return w.witness end },
+    { "Recherche et Accueil", "Accueil", function() return w.search end },
+  }
+  for i, zone in ipairs(zones) do
+    assert(card.title:GetText() == zone[1] and w:IsShown() and Z:OptionChapter() == zone[2], "carte " .. i .. " : " .. card.title:GetText())
+    assert(light:IsShown() and light._point[2] == zone[3](), "zone encadree, carte " .. i)
+    card.next:Run("OnClick")
+  end
+  assert(card.title:GetText() == "C'est parti" and not w:IsShown(), "derniere carte : fenetre fermee")
+  card.next:Run("OnClick")
+  assert(not card:IsShown() and w:IsShown() and Z:OptionChapter() == "Apparence", "fenetre rendue sur son chapitre")
+
+  -- Lancée de l'Accueil, fermée par la croix : la fenêtre revient sur l'Accueil
+  Z:ToggleOptions("Accueil")
+  Z:StartTutorial() card.next:Run("OnClick") card.next:Run("OnClick")
+  card.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Accueil", "croix : fenetre rendue")
+
+  -- Lancée fenêtre fermée : rien ne s'ouvre à la fin, le dernier chapitre ne change pas (croix sur une carte de la fenêtre)
+  Z:ToggleOptions("Mes soins") w:Hide()
+  Z:StartTutorial()
+  assert(not card.body:GetText():find("revient", 1, true), "phrase de retour sans fenetre ouverte")
+  for _ = 1, 7 do card.next:Run("OnClick") end
+  assert(w:IsShown() and Z:OptionChapter() == "Disposition")
+  card.close:Run("OnClick")
+  assert(not w:IsShown() and Z:OptionChapter() == "Mes soins", "dernier chapitre change par la visite")
+  Z:StartTutorial()
+  for _ = 1, #card.runes do card.next:Run("OnClick") end
+  assert(not w:IsShown() and Z:OptionChapter() == "Mes soins")
+  -- Ouverte par le joueur pendant les cartes des cases : la fin de la visite la laisse ouverte
+  Z:StartTutorial() card.next:Run("OnClick")
+  Z:ToggleOptions()
+  card.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Mes soins", "fenetre du joueur fermee par la visite")
+  w:Hide()
+
+  -- Une case : la carte se pose à côté du bloc entier des cadres, du côté le plus dégagé, sans le couvrir
+  local frames, block = {}, {}
+  for _, h in ipairs(Z.headers) do
+    if h.def.pos == "pos" and h:IsVisible() then frames[#frames + 1] = h frames[#frames + 1] = h.handle block[#block + 1] = h end
+  end
+  assert(#block > 0, "aucun cadre visible")
+  local button = Z.buttons[1]
+  local function Set(f, l, r, t, b)
+    f.GetLeft = function() return l end f.GetRight = function() return r end
+    f.GetTop = function() return t end f.GetBottom = function() return b end
+  end
+  local function Blocks(l, r, t, b)
+    for _, h in ipairs(block) do Set(h, l, r, t, b) Set(h.handle, l, r, t + 14, t + 2) end
+  end
+  Set(button, 100, 190, 700, 670)
+  UIParent.GetWidth = function() return 1920 end UIParent.GetHeight = function() return 1080 end
+  Blocks(100, 300, 700, 500)
+  Z:StartTutorial() card.next:Run("OnClick")
+  assert(card.title:GetText() == "Une case par joueur" and light._point[2] == button)
+  local p = card._point
+  assert(p[1] == "TOPLEFT" and p[2] == button and p[3] == "BOTTOMLEFT" and 100 + p[4] == 300 + 14, "a droite du bloc")
+  -- Bloc sur toute la largeur : dessous (plus de place que dessus)
+  Blocks(0, 1900, 700, 500)
+  card.next:Run("OnClick") -- Soigner d'un clic
+  p = card._point
+  assert(p[1] == "TOPLEFT" and 670 + p[5] == 500 - 14, "sous le bloc : " .. tostring(p[5]))
+  -- Plus de place nulle part : contre le bord de l'écran le plus loin de la case
+  Blocks(0, 1900, 1000, 100)
+  card.next:Run("OnClick") -- Ce que disent les couleurs
+  p = card._point
+  assert(p[2] == UIParent and p[1] == "TOPRIGHT", "contre le bord")
+  -- Placer les cadres : l'étiquette est encadrée, la carte reste hors du bloc
+  Blocks(100, 300, 700, 500)
+  Z.header.handle.IsVisible = function() return true end -- le faux client ne montre pas l'étiquette
+  card.next:Run("OnClick")
+  Z.header.handle.IsVisible = nil
+  assert(card.title:GetText() == "Placer les cadres" and light._point[2] == Z.header.handle)
+  p = card._point
+  assert(p[1] == "TOPLEFT" and p[3] == "BOTTOMLEFT", "placer : a droite du bloc")
+  card.close:Run("OnClick")
+  for _, f in ipairs(frames) do f.GetLeft, f.GetRight, f.GetTop, f.GetBottom = nil, nil, nil, nil end
+  button.GetLeft, button.GetRight, button.GetTop, button.GetBottom = nil, nil, nil, nil
+  UIParent.GetWidth, UIParent.GetHeight = nil, nil
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:SetLanguage() Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c ter : fenetres a la mesure de l'ecran, jamais l'une sur l'autre", function()
+  local UI, w = Z.UI, Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion }
+  Z.db.reduceMotion = true -- fermetures sans fondu : la fenêtre se cache tout de suite
+  w:Hide()
+  -- Chaque fenêtre secondaire construite, puis fermée
+  Z:ShowBug() Z:ShowNews() Z:ShowLog() Z:ShowMeasure() Z:OpenMacros() Z:OpenPlacement()
+  OptionPart("copyButton").copyButton:Run("OnClick", "LeftButton")
+  local beside = { LyoruneBug, LyoruneNews, LyoruneLog, LyorunePerf, LyoruneMacros, LyorunePlacement, LyoruneProfileCopy }
+  for i, f in ipairs(beside) do
+    assert(f and f.beside, "fenetre a cote des options : " .. i)
+    f:Hide() f:Run("OnHide")
+  end
+
+  -- Quatre écrans (taille de UIParent) et un écran bas : chaque fenêtre tient, jamais sous 75 %
+  local function Screen(width, height)
+    UIParent.GetWidth = function() return width end UIParent.GetHeight = function() return height end
+  end
+  for _, screen in ipairs({ { 1024, 768 }, { 1365, 768 }, { 1920, 1080 }, { 2560, 1440 }, { 1365, 600 } }) do
+    Screen(screen[1], screen[2])
+    for _, f in ipairs(UI.Windows()) do
+      UI.Fit(f)
+      local s = f:GetScale()
+      assert(s >= 0.75 and s <= 1, "echelle " .. s)
+      assert(f:GetWidth() * s <= screen[1] - 40 and f:GetHeight() * s <= screen[2] - 60,
+        "plus grande que l'ecran " .. screen[1] .. " x " .. screen[2] .. " : " .. tostring(f:GetName()))
+    end
+  end
+  Screen(1024, 768) UI.Fit(w)
+  assert(math.abs(w:GetScale() - 984 / 1080) < 0.001 and w:GetHeight() == 708, "options reduites d'un bloc : " .. w:GetScale())
+  Screen(1365, 600) UI.Fit(w)
+  local step = math.floor((540 - 58 - 34 - 16) / 11)
+  assert(w:GetScale() == 1 and w:GetHeight() == 540 and w.chapters[1].button:GetHeight() == step - 2, "options moins hautes")
+  -- l'échelle de l'interface change, fenêtre ouverte : elle reprend sa taille
+  w:Show() Screen(1365, 768) FireEvent("UI_SCALE_CHANGED")
+  assert(w:GetHeight() == 708 and w.chapters[1].button:GetHeight() == 38, "taille reprise")
+  Screen(2560, 1440) FireEvent("DISPLAY_SIZE_CHANGED")
+  assert(w:GetScale() == 1 and w:GetHeight() == 708, "grand ecran")
+
+  -- Écran de 1365 : aucune fenêtre ne tient à côté, les options s'effacent puis reviennent sur le même chapitre
+  Screen(1365, 768)
+  w.GetLeft = function() return 142 end w.GetRight = function() return 1222 end w.GetTop = function() return 738 end
+  Z:ToggleOptions("Apparence")
+  for _, f in ipairs(beside) do
+    f:Show()
+    local p = f._point
+    assert(not w:IsShown(), "options sous " .. f:GetName())
+    assert(p[1] == "TOP" and p[2] == UIParent and p[4] == (142 + 1222) / 2 and p[5] == 738, "a la place des options : " .. f:GetName())
+    f:Hide() f:Run("OnHide")
+    assert(w:IsShown() and Z:OptionChapter() == "Apparence", "options revenues : " .. f:GetName())
+  end
+  -- deux fenêtres ouvertes : les options reviennent à la fermeture de la dernière
+  LyoruneBug:Show() LyoruneLog:Show()
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  assert(not w:IsShown(), "options revenues trop tot")
+  LyoruneLog:Hide() LyoruneLog:Run("OnHide")
+  assert(w:IsShown(), "options pas revenues")
+  -- options rouvertes par le joueur : la fenêtre qui les effaçait se ferme
+  LyoruneBug:Show()
+  Z:ToggleOptions("Apparence")
+  assert(w:IsShown() and not LyoruneBug:IsShown(), "deux fenetres l'une sur l'autre")
+
+  -- Écran de 1920, options au milieu : elles glissent pour faire la place, puis retournent à leur place
+  Screen(1920, 1080)
+  w.GetLeft = function() return 420 end w.GetRight = function() return 1500 end w.GetTop = function() return 900 end
+  LyoruneMacros:Show()
+  local p = w._point
+  assert(w:IsShown() and p[1] == "TOPLEFT" and p[2] == UIParent and p[4] == 106 and p[5] == 900, "options glissees")
+  p = LyoruneMacros._point
+  assert(p[1] == "TOPLEFT" and p[2] == w and p[3] == "TOPRIGHT", "macros a cote")
+  w.GetLeft = function() return 106 end w.GetRight = function() return 1186 end
+  LyoruneMacros:Hide() LyoruneMacros:Run("OnHide")
+  assert(w._point[1] == "CENTER", "options pas revenues a leur place")
+  -- place assez à droite : rien ne bouge
+  w.GetLeft = function() return 100 end w.GetRight = function() return 1180 end
+  w:SetPoint("CENTER") LyoruneMacros:Show()
+  assert(w._point[1] == "CENTER" and LyoruneMacros._point[2] == w, "options deplacees pour rien")
+  LyoruneMacros:Hide() LyoruneMacros:Run("OnHide")
+
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+  w:Hide()
+  for key, value in pairs(saved) do Z.db[key] = value end
+end)
+
+step("refonte 1.26.0, lot 6c quater : annuler mes changements, enregistrer mes reglages", function()
+  local w = Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion, activeProfile = Z.db.activeProfile, profiles = CopyTable(Z.db.profiles),
+    showRunes = Z.db.showRunes }
+  Z.db.reduceMotion = true Z.db.showRunes = true Z:Refresh()
+  -- Fermée par le joueur : la copie est lâchée ; rouverte : nouvelle copie, rien à annuler
+  w:Hide() w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == nil, "copie gardee fenetre fermee")
+  Z:ToggleOptions("Disposition")
+  local copy = Z:OptionsOpenedCopy()
+  assert(copy and not w.undo:IsShown(), "Annuler montre sans changement")
+  assert(copy.profiles == nil and copy.macros and copy.pinned and copy.language == nil and copy.clicks,
+    "copie : reglages prives exclus (sauf les epingles et les macros, constats O12 et M1), clics compris")
+
+  -- Bande du bas : un bouton de chaque côté de l'inscription runique, sans la toucher, dans la bande (34 de haut),
+  -- en retrait des cadres épais ; la fenêtre réduite d'un bloc garde ce rapport
+  local strip, width = Z:RuneStrip(), w:GetWidth()
+  local s, u = w.save._point, w.undo._point
+  assert(s[1] == "BOTTOMLEFT" and u[1] == "BOTTOMRIGHT" and s[2] >= 14 and u[2] <= -14, "places des boutons")
+  assert(s[2] + w.save:GetWidth() + 20 <= (width - strip:GetWidth()) / 2, "Enregistrer touche l'inscription")
+  assert(width + u[2] - w.undo:GetWidth() - 20 >= (width + strip:GetWidth()) / 2, "Annuler touche l'inscription")
+  assert(s[3] >= 6 and s[3] + w.save:GetHeight() <= 34 and u[3] + w.undo:GetHeight() <= 34, "boutons hors de la bande")
+
+  -- Enregistrer mes réglages : la case de nom s'ouvre, Entrée enregistre le profil, aucun réglage n'a changé
+  w.save:Run("OnClick", "LeftButton")
+  local box = w.saveBox
+  assert(box:IsShown() and box.status:GetText():find("Échap", 1, true), "case de nom")
+  box.edit:SetText(string.rep("x", 30)) box.edit:Run("OnEnterPressed")
+  assert(box:IsShown() and box.status:GetText():find("24", 1, true), "nom trop long accepte")
+  box.edit:Run("OnEscapePressed")
+  assert(not box:IsShown(), "Echap ne ferme pas la case")
+  w.save:Run("OnClick", "LeftButton")
+  box.edit:SetText("Essai 6c") box.edit:Run("OnEnterPressed")
+  assert(Z.db.profiles["Essai 6c"] and Z.db.activeProfile == "Essai 6c" and not box:IsShown(), "profil pas enregistre")
+  assert(not w.undo:IsShown(), "Annuler montre apres un simple enregistrement")
+  w.save:Run("OnClick", "LeftButton")
+  assert(box.edit:GetText() == "Essai 6c", "profil en cours propose")
+  w.save:Run("OnClick", "LeftButton")
+  assert(not box:IsShown(), "second clic ne ferme pas la case")
+
+  -- Un réglage, un clic, une liste et le placement changés : Annuler paraît, puis tout revient
+  local before = { width = Z.db.width, click = Z:GetClicks()["alt-5"] }
+  Z.db.width = Z.db.width + 10 Z:Refresh()
+  assert(w.undo:IsShown(), "Annuler cache apres un reglage change")
+  Z:SetClick("alt-5", "Prière")
+  Z.db.ignoredNames["Essai 6c"] = true
+  Z.db.placement.TILE = Z.db.placement.TILE or {}
+  Z.db.placement.TILE.name = { 3, -2 }
+  Z:Refresh()
+  -- Effacée par une fenêtre secondaire (écran de 1365) : la copie est gardée, Annuler revient avec les options
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  w.GetLeft = function() return 142 end w.GetRight = function() return 1222 end w.GetTop = function() return 738 end
+  LyoruneBug:Show()
+  assert(not w:IsShown(), "options pas effacees") w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue sous une fenetre secondaire")
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  assert(w:IsShown() and w.undo:IsShown(), "Annuler perdu au retour des options")
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  Z.UI.Fit(w)
+  -- Visite lancée des options : la copie est gardée, la fenêtre revient avec Annuler
+  Z:StartTutorial()
+  assert(Z:TutorialRunning(), "visite pas en cours") w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue pendant la visite")
+  LyoruneTutorial.close:Run("OnClick")
+  assert(not Z:TutorialRunning() and w:IsShown() and w.undo:IsShown(), "Annuler perdu apres la visite")
+
+  -- En combat : tout revient, les clics à la fin du combat, et le joueur est prévenu
+  local printed, Print = nil, Z.Print
+  Z.Print = function(_, text) printed = text end
+  COMBAT = true
+  w.undo:Run("OnClick", "LeftButton")
+  assert(Z.db.width ~= before.width, "Annuler au premier clic")
+  w.undo.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+  w.undo:Run("OnClick", "LeftButton")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+  Z.Print = Print
+  assert(printed and printed:find("fin du combat", 1, true), "joueur pas prevenu en combat")
+  assert(Z.db.width == before.width and Z:GetClicks()["alt-5"] == before.click, "reglage ou clic pas revenu")
+  assert(not Z.db.ignoredNames["Essai 6c"] and not (Z.db.placement.TILE and Z.db.placement.TILE.name), "liste ou placement pas revenus")
+  assert(Z.db.activeProfile == copy.activeProfile and Z.db.profiles["Essai 6c"], "profil en cours pas revenu, ou profil enregistre perdu")
+  assert(not w.undo:IsShown(), "Annuler encore montre")
+  assert(Z:OptionsOpenedCopy() == copy, "copie lachee apres Annuler")
+
+  -- Fermée puis rouverte : nouvelle copie
+  w:Hide() w:Run("OnHide")
+  Z:ToggleOptions()
+  assert(Z:OptionsOpenedCopy() and Z:OptionsOpenedCopy() ~= copy, "copie pas reprise a l'ouverture")
+  w:Hide() w:Run("OnHide")
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c quinquies : fenetres en gris tres fonce, jamais en noir pur", function()
+  local UI = Z.UI
+  local function lum(c)
+    local function ch(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+    return 0.2126 * ch(c[1]) + 0.7152 * ch(c[2]) + 0.0722 * ch(c[3])
+  end
+  local function ratio(a, b) local x, y = lum(a), lum(b) if x < y then x, y = y, x end return (x + 0.05) / (y + 0.05) end
+  local function black(c) return c[1] == 0 and c[2] == 0 and c[3] == 0 end
+  local function white(c) return c[1] == 1 and c[2] == 1 and c[3] == 1 end
+  -- Chaque thème des fenêtres, puis le contraste élevé par-dessus chacun : aucun fond noir pur, aucun texte blanc
+  -- pur, trois tons distincts (page, colonnes de côté, boutons), texte 4,5:1 au moins (7:1 en contraste élevé)
+  -- partout où il se pose, sans être poussé au maximum
+  local looks = {}
+  for name, skin in pairs(UI.skins) do
+    looks[#looks + 1] = { name, skin, 4.5 }
+    local high = {}
+    for _, role in ipairs(UI.ROLES) do high[role] = UI.CONTRAST[role] or skin[role] end
+    looks[#looks + 1] = { name .. " contraste", high, 7 }
+  end
+  for _, look in ipairs(looks) do
+    local name, p, need = look[1], look[2], look[3]
+    for _, role in ipairs({ "bg", "side", "panel" }) do
+      assert(p[role] and not black(p[role]) and lum(p[role]) < 0.05, name .. " : fond " .. role .. " noir pur ou trop clair")
+    end
+    assert(lum(p.side) > lum(p.bg) and lum(p.panel) > lum(p.bg), name .. " : plans pas separes")
+    assert(not white(p.text) and not white(p.btext), name .. " : texte blanc pur")
+    for _, ground in ipairs({ "bg", "side", "panel" }) do
+      for _, role in ipairs({ "text", "dim", "accent" }) do
+        assert(ratio(p[role], p[ground]) >= need, name .. " : " .. role .. " sur " .. ground .. " peu lisible")
+      end
+      assert(ratio(p.text, p[ground]) <= 18, name .. " : contraste force au maximum")
+    end
+    assert(ratio(p.btext, p.panel) >= need, name .. " : texte des boutons peu lisible")
+  end
+  assert(UI.CONTRAST.bgAlpha == 1, "contraste eleve : fond opaque")
+
+  -- Colonnes de côté peintes au ton « side », thème et contraste élevé suivis en direct
+  Z:ToggleOptions("Apparence")
+  local w = Z:OptionsWindow()
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast }
+  for _, case in ipairs({ { "MODERN", false }, { "CLASSIC", false }, { "MMO", false }, { "MODERN", true }, { "MMO", true } }) do
+    Z.db.windowTheme, Z.db.highContrast = case[1], case[2] Z:Refresh()
+    local skin, look = UI.skins[case[1]], case[1] .. (case[2] and " contraste" or "")
+    local want = case[2] and UI.CONTRAST or skin
+    for _, f in ipairs({ w.side, w.witness }) do
+      assert(f.bg._color[1] == want.side[1] and f.bg._color[4] == want.sideAlpha, look .. " : colonne de cote")
+    end
+    assert(not black(w.bg._color) and not black(UI.bg) and not white(UI.text), look .. " : fenetre en noir et blanc purs")
+  end
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+  w:Hide() w:Run("OnHide")
+end)
+
+step("refonte 1.26.0, lot 6c septies a : corrections de UI.lua (relecture)", function()
+  local UI, mt = Z.UI, getmetatable(UIParent)
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast, texture = Z.db.texture,
+    width = Z.db.width, reduceMotion = Z.db.reduceMotion }
+
+  -- U1 : la rune de confirmation éteinte reste éteinte après un changement de thème (cachée, pas mise à 0)
+  local widget = CreateFrame("Frame", nil, UIParent)
+  UI.Confirm(widget)
+  local rune = widget.confirmRune
+  assert(rune:IsShown() and widget.confirm:IsPlaying(), "rune allumee au changement")
+  widget.confirm:Run("OnFinished")
+  assert(not rune:IsShown(), "rune eteinte a la fin")
+  Z.db.windowTheme = "CLASSIC" Z:Refresh()
+  Z.db.highContrast = not Z.db.highContrast Z:Refresh()
+  assert(not rune:IsShown(), "rune rallumee par le changement de theme")
+  UI.Confirm(widget) assert(rune:IsShown(), "rune rallumee au clic suivant")
+
+  -- U2 : LibSharedMedia a aussi sa « Blizzard » : un seul exemplaire, le tour des choix passe par toutes
+  local list = mt.List
+  mt.List = function() return { "Blizzard", "Lisse", "Raid", "Brillante" } end
+  local names, seen = UI.TextureList(), {}
+  for _, name in ipairs(names) do assert(not seen[name], "texture en double : " .. name) seen[name] = true end
+  assert(#names == 5 and seen.Lisse and seen.Brillante, "textures de LibSharedMedia : " .. #names)
+  local choices = { { "THEME", "Celle du thème" } }
+  for _, name in ipairs(names) do choices[#choices + 1] = { name, name } end
+  Z.db.texture = "THEME"
+  local cycle = UI.Cycle(UIParent, "Texture", choices, function() return Z.db.texture end, function(v) Z.db.texture = v end)
+  local reached = {}
+  for _ = 1, #choices do cycle.button:Run("OnClick", "LeftButton") reached[Z.db.texture] = true end
+  for _, choice in ipairs(choices) do assert(reached[choice[1]], "texture jamais atteinte : " .. choice[1]) end
+  mt.List = list
+
+  -- U5 : texture inconnue (addon désinstallé) : celle du thème, comme l'affiche la ligne
+  local fetch = mt.Fetch
+  mt.Fetch = function() return nil end
+  Z.db.texture = "Absente"
+  assert(UI.BarTexture() == Z:Theme().texture, "texture inconnue : pas celle du theme")
+  mt.Fetch = fetch
+
+  -- U6 et B3 a : un champ rend le clavier quand il est caché et écrit dans la couleur du texte de la palette
+  local edit = UI.Edit(UIParent, 120)
+  assert(edit:GetScript("OnHide"), "champ cache sans rendre le clavier")
+  local c = edit._color
+  assert(c and c[1] == UI.text[1] and c[2] == UI.text[2] and c[3] == UI.text[3], "champ en blanc pur")
+  Z.db.windowTheme = "MMO" Z:Refresh()
+  assert(edit._color[1] == UI.text[1], "champ pas repeint au changement de theme")
+
+  -- U7 : la molette fait défiler la page ; elle change le nombre seulement sur une valeur active ou avec Maj
+  local scroll = UI.Scroll(UIParent)
+  scroll:SetHeight(200) scroll:SetContentHeight(1000)
+  local lo, hi, pas = unpack(Z.limits.width)
+  Z.db.width = 86
+  local st = UI.Stepper(scroll.content, "Largeur", lo, hi, pas, function() return Z.db.width end, function(v) Z.db.width = v end)
+  st.value:Run("OnMouseWheel", -1)
+  assert(Z.db.width == 86 and scroll.offset == 40, "molette sur un nombre au passage : " .. Z.db.width .. ", " .. scroll.offset)
+  local shift = IsShiftKeyDown
+  IsShiftKeyDown = function() return true end
+  st.value:Run("OnMouseWheel", 1)
+  IsShiftKeyDown = shift
+  assert(Z.db.width == 86 + pas and scroll.offset == 40, "Maj + molette")
+  st.value.HasFocus = function() return true end
+  st.value:Run("OnMouseWheel", -1)
+  assert(Z.db.width == 86 and scroll.offset == 40, "molette sur la valeur active")
+
+  -- U4 : options effacées en fondu puis rendues pendant ce fondu : elles restent ouvertes
+  Z.db.reduceMotion = false
+  local w = Z:OptionsWindow()
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  w.GetLeft = function() return 142 end w.GetRight = function() return 1222 end w.GetTop = function() return 738 end
+  Z:ToggleOptions("Apparence")
+  LyoruneBug:Show()
+  assert(w.outro:IsPlaying(), "options pas effacees en fondu")
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  assert(w:IsShown() and not w.outro:IsPlaying(), "fondu pas arrete : les options se cacheraient")
+  -- croix puis réouverture pendant le fondu : la fenêtre reste ; un second appel la ferme
+  w:Close()
+  assert(w.outro:IsPlaying(), "fondu de la croix")
+  Z:ToggleOptions()
+  assert(w:IsShown() and not w.outro:IsPlaying(), "options rouvertes pendant le fondu")
+  w:Close() Z:ToggleOptions("Accueil")
+  assert(w:IsShown() and not w.outro:IsPlaying(), "chapitre ouvert pendant le fondu")
+  Z:ToggleOptions()
+  assert(not w:IsShown(), "deuxieme appel : options fermees")
+  w:Run("OnHide")
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c septies b : corrections d'Options.lua (relecture)", function()
+  local UI, w = Z.UI, Z:OptionsWindow()
+  local saved = { windowTheme = Z.db.windowTheme, highContrast = Z.db.highContrast, reduceMotion = Z.db.reduceMotion,
+    manaText = Z.db.manaText, tutorialDone = Z.db.tutorialDone, wizardDone = Z.db.wizardDone,
+    actionBarMacros = Z.db.actionBarMacros, syncEnabled = Z.db.syncEnabled, width = Z.db.width,
+    clicks = CopyTable(Z.db.clicks), hoverKeys = CopyTable(Z.db.hoverKeys), pinned = CopyTable(Z.db.pinned),
+    autoProfiles = CopyTable(Z.db.autoProfiles or {}), cornerSpells = CopyTable(Z.db.cornerSpells) }
+  Z.db.reduceMotion = true Z:Refresh()
+  local function Fresh(chapter) -- fenêtre fermée par le joueur puis rouverte : nouvelle copie d'« Annuler »
+    w:Hide() w:Run("OnHide")
+    Z:ToggleOptions(chapter)
+    assert(Z:OptionsOpenedCopy() and not w.undo:IsShown(), "copie prise a l'ouverture : " .. chapter)
+  end
+  local function Find(page, test)
+    for _, part in ipairs(page.parts) do if test(part.widget) then return part.widget end end
+  end
+  local function Undo()
+    w.undo.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+    w.undo:Run("OnClick", "LeftButton")
+  end
+
+  -- O8 : la recherche ne tient compte ni des majuscules ni des accents
+  Fresh("Accueil")
+  for _, typed in ipairs({ "échelle", "ECHELLE", "echelle", "ÉCHELLE" }) do
+    w.search:SetText(typed) w.search:Run("OnTextChanged", true)
+    local row = w.results.rows[1]
+    assert(row and row:IsShown() and row.entry.label:find("chelle g", 1, true), "recherche : " .. typed)
+  end
+  w.search:SetText("a ignorer") w.search:Run("OnTextChanged", true)
+  local hit
+  for _, row in ipairs(w.results.rows) do if row:IsShown() and row.entry.label == "À ignorer" then hit = true end end
+  assert(hit, "« a ignorer » ne trouve pas À ignorer")
+  assert(Z.SearchText("Œuvre À Ça") == "oeuvre a ca", Z.SearchText("Œuvre À Ça"))
+  -- O14 : le nom du chapitre d'un résultat suit le thème
+  assert(w.results.rows[1].label:GetText():find(UI.Hex("dim"), 1, true), "chapitre du resultat en gris ecrit en dur")
+  -- O15 a : deux recherches de suite, le premier délai n'éteint pas le second clignotement
+  local after, timers = C_Timer.After, {}
+  C_Timer.After = function(_, f) timers[#timers + 1] = f end
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  w.search:SetText("echelle") w.search:Run("OnTextChanged", true)
+  w.results.rows[1]:Run("OnClick", "LeftButton")
+  assert(#timers == 2 and w.flash:IsShown(), "clignotement : " .. #timers)
+  timers[1]() assert(w.flash:IsShown(), "le premier delai eteint le second clignotement")
+  timers[2]() assert(not w.flash:IsShown(), "clignotement jamais eteint")
+
+  -- O4 : bouton à confirmer armé, confirmé puis réarmé : le premier délai ne le désarme pas
+  timers = {}
+  local done = 0
+  local armed = Z.ArmedButton(UIParent, "Supprimer", "Cliquez encore pour confirmer", 120, function() done = done + 1 end)
+  armed:Run("OnClick", "LeftButton") armed:Run("OnClick", "LeftButton")
+  assert(done == 1 and not armed.armed, "second clic")
+  armed:Run("OnClick", "LeftButton")
+  timers[1]() assert(armed.armed, "desarme par le delai d'avant")
+  timers[2]() assert(not armed.armed, "jamais desarme")
+  C_Timer.After = after
+
+  -- O1 : attente d'un raccourci puis bouton caché : l'attente est annulée, le clavier rendu
+  local page = w.Select("Sorts et raccourcis")
+  local list = Find(page, function(x) return x.add and x.banner end)
+  local add = list.add
+  NOW = NOW + 1 add:Run("OnClick", "LeftButton")
+  assert(add.capturing and add:GetScript("OnKeyDown"), "attente lancee")
+  add:Hide() add:Run("OnHide") add:Show()
+  assert(not add.capturing and not add:GetScript("OnKeyDown") and add.label:GetText() == add.idle, "attente gardee page cachee")
+
+  -- O2 et O6 : la couleur d'un coin revient après un changement de thème ; un coin choisi allume l'éclat
+  page = w.Select("Mes soins")
+  local corner = Find(page, function(x) return x.label and x.button and x.label:GetText() == "En haut à gauche" end)
+  local color = Z.CORNER_COLORS.TOPLEFT
+  Z.db.windowTheme = Z.db.windowTheme == "CLASSIC" and "MODERN" or "CLASSIC" Z:Refresh()
+  assert(corner.label._color[1] == color[1] and corner.label._color[3] == color[3], "couleur du coin perdue")
+  -- O14 : le numéro de version du titre suit le thème
+  assert(w.title:GetText():find(UI.Hex("dim") .. Z.version, 1, true), "titre en gris ecrit en dur")
+  Z.db.highContrast = not Z.db.highContrast Z:Refresh()
+  assert(corner.label._color[1] == color[1], "couleur du coin perdue au contraste eleve")
+  assert(w.title:GetText():find(UI.Hex("dim") .. Z.version, 1, true), "titre pas repeint")
+  local spark, sparks = w.witness.Spark, 0
+  w.witness.Spark = function() sparks = sparks + 1 end
+  corner.button:Run("OnClick", "LeftButton")
+  w.witness.Spark = spark
+  assert(sparks == 1, "coin choisi sans eclat")
+
+  -- O3 : un texte d'annonce changé seul fait paraître « Annuler mes changements »
+  Fresh("Alertes")
+  page = w.Select("Alertes")
+  local text = Find(page, function(x) return x.test and x.edit end)
+  text.edit:SetText("Mana basse O3") text.edit:Run("OnTextChanged", true)
+  assert(w.undo:IsShown(), "Annuler absent apres un texte d'annonce")
+  Undo()
+  assert(Z.db.manaText == saved.manaText, "texte d'annonce pas revenu")
+  -- ... et un profil automatique aussi
+  Fresh("Profils et partage")
+  local grid = OptionPart("profileCells")
+  Z.db.profiles["Essai O3"] = Z.db.profiles["Essai O3"] or {}
+  grid.profileCells[1]:Run("OnClick", "LeftButton")
+  assert(w.undo:IsShown(), "Annuler absent apres un profil automatique")
+  Undo()
+  Z.db.profiles["Essai O3"] = nil
+
+  -- O10 : les clics de la classe se reprennent en deux clics, et « Annuler mes changements » les rend
+  Z:SetClick("alt-5", "Prière")
+  Fresh("Profils et partage")
+  local reset = OptionPart("classClicks").classClicks
+  reset:Run("OnClick", "LeftButton")
+  assert(Z:GetClicks()["alt-5"] == "Prière" and not w.undo:IsShown(), "clics remplaces au premier clic")
+  reset.armed = true reset:Run("OnClick", "LeftButton")
+  assert(Z:GetClicks()["alt-5"] ~= "Prière" and w.undo:IsShown(), "clics pas remplaces, ou Annuler absent")
+  Undo()
+  assert(Z:GetClicks()["alt-5"] == "Prière", "clics pas rendus")
+
+  -- O12 : un joueur épinglé depuis l'ouverture est retiré par « Annuler mes changements »
+  Fresh("Disposition")
+  Z:TogglePin("Essai-O12")
+  assert(Z.db.pinned["Essai-O12"] and w.undo:IsShown(), "Annuler absent apres un epingle")
+  Undo()
+  assert(not Z.db.pinned["Essai-O12"], "epingle pas retire")
+
+  -- O13 : « Retirer les macros de Lyorune » en combat : refusé, l'option reste cochée
+  page = w.Select("Sorts et raccourcis")
+  local remove = Find(page, function(x) return x.label and x.label:GetText() == "Retirer les macros de Lyorune" end)
+  Z.db.actionBarMacros = true
+  local Print = Z.Print
+  Z.Print = function() end
+  COMBAT = true remove:Run("OnClick", "LeftButton") COMBAT = false
+  Z.Print = Print
+  assert(Z.db.actionBarMacros == true, "option decochee alors que les macros restent")
+  remove:Run("OnClick", "LeftButton")
+  assert(Z.db.actionBarMacros == false, "option pas decochee hors combat")
+
+  -- O15 b : sur la liste des réglages changés, la valeur s'arrête avant le nom du chapitre
+  Z.db.width = Z.db.width + 10 Z:Refresh()
+  page = w.Select("Accueil")
+  local changed = Find(page, function(x) return x.rows and x.rows[1] and x.rows[1].where end)
+  local row = changed.rows[1]
+  assert(282 + row.value:GetWidth() < row:GetWidth() - 6 - row.where:GetWidth(), "valeur sur le nom du chapitre")
+  Z.db.width = saved.width Z:Refresh()
+
+  -- O15 c : « Entre joueurs » suit le groupe page ouverte
+  page = w.Select("Profils et partage")
+  Z.db.syncEnabled = true
+  local who = Find(page, function(x) return x.text and x.Update and x:GetScript("OnEnter") and not x.list end)
+  assert(who, "ligne Entre joueurs")
+  local inGroup, members = IsInGroup, Z.SyncMembers
+  IsInGroup = function() return true end
+  Z.SyncMembers = function() return { { name = "Un", version = "1" }, { name = "Deux", version = "1" } } end
+  FireEvent("GROUP_ROSTER_UPDATE")
+  assert(who.text:GetText():find("2", 1, true), "nombre pas revu : " .. who.text:GetText())
+  IsInGroup, Z.SyncMembers = inGroup, members
+  FireEvent("GROUP_ROSTER_UPDATE")
+
+  -- O9 : l'assistant lancé des options garde la copie d'« Annuler » et rend la fenêtre sur l'Accueil
+  Z.db.tutorialDone = true
+  Fresh("Accueil")
+  local copy = Z:OptionsOpenedCopy()
+  page = w.Select("Accueil")
+  local discover = Find(page, function(x) return x.buttons and x.buttons[2] and x.buttons[2].label:GetText() == "Assistant de départ" end)
+  discover.buttons[2]:Run("OnClick", "LeftButton")
+  assert(not w:IsShown() and Z:WizardRunning(), "options pas fermees par l'assistant") w:Run("OnHide")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue pendant l'assistant")
+  LyoruneWizard.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Accueil" and not Z:WizardRunning(), "fenetre pas rendue sur l'Accueil")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue apres l'assistant")
+  -- premier lancement : la visite suit et c'est elle qui rend la fenêtre
+  Z.db.tutorialDone = false
+  discover.buttons[2]:Run("OnClick", "LeftButton") w:Run("OnHide")
+  LyoruneWizard.close:Run("OnClick")
+  assert(Z:TutorialRunning() and not w:IsShown(), "visite pas lancee apres l'assistant")
+  assert(Z:OptionsOpenedCopy() == copy, "copie perdue entre l'assistant et la visite")
+  LyoruneTutorial.close:Run("OnClick")
+  assert(w:IsShown() and Z:OptionChapter() == "Accueil", "fenetre pas rendue apres la visite")
+  -- lancé fenêtre fermée (/lyorune assistant) : la fenêtre reste fermée
+  Z.db.tutorialDone = true
+  w:Hide() w:Run("OnHide")
+  Z:StartWizard() LyoruneWizard.close:Run("OnClick")
+  assert(not w:IsShown(), "options ouvertes par un assistant lance fenetre fermee")
+
+  w:Hide() w:Run("OnHide")
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh() Z:ApplyClicks()
+end)
+
+step("refonte 1.26.0, lot 6c septies c : corrections de Tutorial.lua et Runes.lua (relecture)", function()
+  local w = Z:OptionsWindow()
+  local saved = { language = Z.db.language, lockMode = Z.db.lockMode, tutorialDone = Z.db.tutorialDone,
+    highContrast = Z.db.highContrast, absorbStyle = Z.db.absorbStyle, windowTheme = Z.db.windowTheme,
+    showRunes = Z.db.showRunes, theme = Z.db.theme }
+  Z.db.language = "AUTO" Z:SetLanguage()
+  w:Hide() w:Run("OnHide")
+  local card
+  local function Go(n) for _ = 1, n do card.next:Run("OnClick") end end
+
+  -- T1 : visite lancée fenêtre fermée jusqu'au bout : la copie d'« Annuler » prise par les cartes de la fenêtre est lâchée
+  Z:StartTutorial() card = LyoruneTutorial
+  Go(6)
+  assert(card.title:GetText() == "La fenêtre d'options" and w:IsShown() and Z:OptionsOpenedCopy(), "carte de la fenetre")
+  Go(4)
+  assert(card.title:GetText() == "C'est parti" and not w:IsShown())
+  Go(1)
+  assert(not card:IsShown() and not w:IsShown() and Z:OptionsOpenedCopy() == nil, "copie gardee apres la visite")
+
+  -- T2 a : /reload pendant la carte « Placer les cadres » : le verrou du joueur revient au chargement
+  Z.db.lockMode = "ALT" Z:StartTutorial() Go(4)
+  assert(card.title:GetText() == "Placer les cadres" and Z.db.lockMode == "FREE" and Z.db.lockBeforeTutorial == "ALT")
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(Z.db.lockMode == "ALT" and Z.db.lockBeforeTutorial == nil, "verrou perdu au rechargement : " .. tostring(Z.db.lockMode))
+  card.close:Run("OnClick")
+  assert(Z.db.lockMode == "ALT")
+  -- T2 b : « Verrouillé » choisi pendant la carte (elle le conseille) : gardé
+  Z:StartTutorial() Go(4)
+  Z.db.lockMode = "LOCKED"
+  Go(1)
+  assert(Z.db.lockMode == "LOCKED" and Z.db.lockBeforeTutorial == nil, "choix du joueur ecrase : " .. Z.db.lockMode)
+  card.close:Run("OnClick")
+  -- rechargement sans visite coupée : rien ne change
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(Z.db.lockMode == "LOCKED")
+
+  -- T3 : couleurs des soins en route et du bouclier lues dans le thème des cases, place du bouclier suivie
+  local function Hex(c) return ("%02x%02x%02x"):format(c[1] * 255 + 0.5, c[2] * 255 + 0.5, c[3] * 255 + 0.5) end
+  Z.db.highContrast = true Z.db.absorbStyle = "BAND" Z:Refresh()
+  Z:StartTutorial() Go(1)
+  local body = card.body:GetText()
+  assert(card.title:GetText() == "Une case par joueur")
+  assert(body:find("|cff" .. Hex(Z:Theme().absorb) .. "bande claire", 1, true) and body:find("|cff" .. Hex(Z:Theme().incoming), 1, true), body)
+  assert(not body:find("8cd9ff", 1, true) and not body:find("vert clair", 1, true), "couleurs de l'Epure en dur")
+  Z.db.highContrast = false Z.db.theme = "HEROIC" Z.db.absorbStyle = "FOLLOW" Z:Refresh()
+  card.back:Run("OnClick") Go(1)
+  body = card.body:GetText()
+  assert(body:find("|cff" .. Hex(Z:Theme().absorb) .. "part claire", 1, true) and body:find("prolonge", 1, true), body)
+  card.close:Run("OnClick")
+  Z.db.absorbStyle = saved.absorbStyle Z.db.theme = saved.theme Z.db.highContrast = saved.highContrast Z:Refresh()
+
+  -- T4 : aucune vraie case visible : les cartes des cases ouvrent le faux groupe et l'encadrent, puis le ferment
+  local button = Z.buttons[1]
+  button.IsVisible = function() return false end
+  Z:StartTutorial() Go(1)
+  local light = card.highlight
+  assert(Z.previewActive and Z:PreviewSize() == 5, "faux groupe pas ouvert")
+  assert(light:IsShown() and light._point[2] == Z:PreviewCells(1)[1], "faux groupe pas encadre")
+  Go(2)
+  assert(card.title:GetText() == "Ce que disent les couleurs" and Z.previewActive)
+  Go(1)
+  assert(card.title:GetText() == "Placer les cadres" and not Z.previewActive, "faux groupe laisse ouvert")
+  Go(1)
+  assert(Z.previewActive and light._point[2] == Z:PreviewCells(1)[1], "carte du mode test")
+  card.close:Run("OnClick")
+  assert(not Z.previewActive, "mode test laisse ouvert par la visite")
+  button.IsVisible = nil
+  -- T7 a : mode test ouvert par le joueur avant la visite : il reste ouvert
+  Z:TogglePreview(5)
+  Z:StartTutorial() Go(5)
+  assert(card.title:GetText() == "Essayer sans groupe" and Z.previewActive)
+  Go(1)
+  assert(Z.previewActive, "mode test du joueur ferme par la visite")
+  card.close:Run("OnClick")
+  assert(Z.previewActive) Z:TogglePreview()
+
+  -- T5 : Échap termine la visite comme la croix (fenêtre d'options rendue, copie gardée, verrou rendu)
+  local found
+  for _, name in ipairs(UISpecialFrames) do found = found or name == "LyoruneTutorial" end
+  assert(found, "carte absente de UISpecialFrames")
+  Z:ToggleOptions("Mes soins")
+  local copy = Z:OptionsOpenedCopy()
+  Z:StartTutorial() Go(7)
+  assert(card.title:GetText() == "Une page par chapitre" and w:IsShown())
+  w:Hide() w:Run("OnHide") card:Hide() card:Run("OnHide") -- Échap ferme les deux
+  assert(not Z:TutorialRunning(), "visite pas terminee par Echap")
+  assert(w:IsShown() and Z:OptionChapter() == "Mes soins" and Z:OptionsOpenedCopy() == copy, "fenetre pas rendue apres Echap")
+  w:Hide() w:Run("OnHide")
+  Z.db.lockMode = "SHIFT" Z:StartTutorial() Go(4)
+  card:Hide() card:Run("OnHide")
+  assert(not Z:TutorialRunning() and Z.db.lockMode == "SHIFT", "verrou pas rendu apres Echap")
+  card.close:Run("OnClick") -- déjà finie : sans effet
+
+  -- T6 : fenêtre fermée par sa croix sur une de ses cartes : le cadre lumineux part avec elle
+  Z:StartTutorial() Go(6)
+  assert(light:IsShown() and w:IsShown())
+  w:Hide() w:Run("OnHide")
+  assert(not light:IsShown() and card:IsShown(), "cadre lumineux seul a l'ecran")
+  card.close:Run("OnClick")
+
+  -- T7 b : thème des fenêtres changé pendant la visite : les mots d'accent suivent aussitôt
+  Z:StartTutorial()
+  Z.db.windowTheme = Z.db.windowTheme == "MMO" and "MODERN" or "MMO" Z.UI.ApplySkin()
+  assert(card.body:GetText():find("|cff" .. Z.UI.Hex("accent") .. "/lyorune", 1, true), "accent pas suivi : " .. card.body:GetText())
+  card.close:Run("OnClick")
+  Z.db.windowTheme = saved.windowTheme Z.UI.ApplySkin()
+
+  -- R1 : inscription coupée à la première ouverture, puis rallumée : construite sans attendre un /reload
+  local fresh = setmetatable({}, { __index = Z })
+  local f = assert(loadstring(RUNES_LUA, "@Runes.lua"))
+  f("Lyorune", fresh)
+  Z.db.showRunes = false
+  fresh:RefreshRunes(w)
+  assert(fresh:RuneStrip() == nil)
+  Z.db.showRunes = true
+  fresh:RefreshRunes()
+  local strip = fresh:RuneStrip()
+  assert(strip and strip:IsShown(), "inscription pas construite une fois rallumee")
+  strip:Hide()
+
+  -- R2 : fenêtre fermée la souris sur les runes : éclat du survol et infobulle partent avec elle
+  strip = Z:RuneStrip()
+  strip:Run("OnEnter")
+  assert(strip.lit)
+  local owned = GameTooltip.IsOwned
+  GameTooltip.IsOwned = function(_, owner) return owner == strip end
+  GameTooltip:Show()
+  strip:Run("OnHide")
+  GameTooltip.IsOwned = owned
+  assert(not strip.lit and strip.base[1]._color[4] == 0.5, "runes restees allumees")
+  assert(not GameTooltip:IsShown(), "infobulle restee ouverte")
+
+  w:Hide() w:Run("OnHide")
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:SetLanguage() Z.UI.ApplySkin() Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c septies d : corrections de Macros.lua (relecture)", function()
+  local UI, o, L = Z.UI, Z:OptionsWindow(), Z.L
+  local saved = { reduceMotion = Z.db.reduceMotion, windowTheme = Z.db.windowTheme, macroAutoTarget = Z.db.macroAutoTarget,
+    macros = CopyTable(Z.db.macros), clicks = CopyTable(Z.db.clicks), hoverKeys = CopyTable(Z.db.hoverKeys) }
+  local after, print = C_Timer.After, Z.Print
+  Z.db.reduceMotion = true Z:Refresh()
+  local b = Z.buttons[1]
+  local function Fresh() -- options fermées par le joueur puis rouvertes : nouvelle copie d'« Annuler »
+    o:Hide() o:Run("OnHide")
+    Z:ToggleOptions("Sorts et raccourcis")
+    assert(Z:OptionsOpenedCopy() and not o.undo:IsShown(), "copie prise a l'ouverture")
+  end
+  local function Undo()
+    o.undo.armed = true -- le faux client lance les minuteries tout de suite : second clic dans les 4 secondes
+    o.undo:Run("OnClick", "LeftButton")
+  end
+  Z.db.macros[Z.class] = {}
+  Z:NewMacro("Bijou soin", "/use 13\n/cast Soins")
+  Z:SetClick("alt-5", "@macro:Bijou soin")
+
+  -- M1 : renommer puis « Annuler » : le clic et sa macro reviennent ensemble, la fenêtre reprend la macro
+  Fresh()
+  local w = Z:OpenMacros("Bijou soin")
+  w.name:SetText("Soin du bijou") w.name:Run("OnEnterPressed")
+  assert(Z:GetClicks()["alt-5"] == "@macro:Soin du bijou" and o.undo:IsShown(), "renommage")
+  Undo()
+  assert(Z:GetClicks()["alt-5"] == "@macro:Bijou soin" and Z:FindMacro("Bijou soin") and not Z:FindMacro("Soin du bijou"),
+    "M1 : macro pas revenue avec son clic")
+  assert(w.macro == Z:FindMacro("Bijou soin") and w.name:GetText() == "Bijou soin", "M1 : fenetre restee sur l'ancienne table")
+  assert(b:GetAttribute("alt-macrotext5") == "/use 13\n/cast [@mouseover] Soins", tostring(b:GetAttribute("alt-macrotext5")))
+  -- M2 : supprimer demande un second clic ; puis « Annuler » rend la macro et son clic
+  C_Timer.After = function() end
+  w.remove:Run("OnClick", "LeftButton")
+  assert(Z:FindMacro("Bijou soin") and w.remove.armed, "M2 : supprimee en un clic")
+  w.remove:Run("OnClick", "LeftButton")
+  assert(not Z:FindMacro("Bijou soin") and Z:GetClicks()["alt-5"] == nil, "M2 : second clic sans effet")
+  Undo()
+  assert(Z:FindMacro("Bijou soin") and Z:GetClicks()["alt-5"] == "@macro:Bijou soin" and b:GetAttribute("alt-macrotext5"),
+    "M1 : suppression pas annulee")
+  assert(w.macro == Z:FindMacro("Bijou soin"), "M1 : fenetre apres la suppression annulee")
+  -- M2 : armé sur une macro, puis une autre choisie : le second clic ne la supprime pas
+  Z:NewMacro("Autre", "/cast Soins")
+  w.remove:Run("OnClick", "LeftButton")
+  assert(w.remove.armed)
+  w.SaveCurrent() w.Select(Z:FindMacro("Autre"))
+  assert(not w.remove.armed and w.remove.label:GetText() == L["Supprimer"], "M2 : reste arme sur une autre macro")
+  C_Timer.After = after
+  -- M1 : le texte seul change : « Annuler » paraît et le rend
+  w.Select(Z:FindMacro("Bijou soin"))
+  Fresh()
+  w.edit:SetText("/cast Rénovation") w.save:Run("OnClick")
+  assert(o.undo:IsShown(), "M1 : texte change seul, Annuler absent")
+  Undo()
+  assert(Z:FindMacro("Bijou soin").body == "/use 13\n/cast Soins" and w.edit:GetText() == "/use 13\n/cast Soins", "M1 : texte")
+
+  -- M3 : chaque zone de la colonne de droite a sa hauteur et finit avant le haut de la suivante
+  local function Top(f) return f._point[#f._point] end
+  assert(w.problems:GetHeight() == 6 * 13 and w.preview:GetHeight() == 5 * 13 and w.uses:GetHeight() == 2 * 13
+    and w.help:GetHeight() == 2 * 13, "hauteurs des zones")
+  local box = w.scroll:GetParent()
+  local column = { { -72, box:GetHeight() }, { Top(w.help), w.help:GetHeight() }, { -230 }, { Top(w.problems), w.problems:GetHeight() },
+    { -330 }, { Top(w.preview), w.preview:GetHeight() }, { -417 }, { Top(w.uses), w.uses:GetHeight() }, { Top(w.auto), 24 },
+    { -(w:GetHeight() - 14 - 24) } }
+  for i = 1, #column - 1 do
+    local top, height = column[i][1], column[i][2] or 14
+    assert(top - height >= column[i + 1][1], "M3 : zone " .. i .. " sur la suivante")
+  end
+  -- six fautes et plus : trois montrées, le reste compté au bout du titre
+  w.edit:SetText("a\nb\nc\nd\ne\nf") w.edit:Run("OnTextChanged")
+  local _, breaks = w.problems:GetText():gsub("\n", "")
+  assert(breaks == 2 and w.others:GetText() == L["et %d autres"]:format(4), w.others:GetText())
+  w.edit:SetText("/cast Soins") w.edit:Run("OnTextChanged")
+  assert(w.others:GetText() == "", "compte reste")
+  -- aperçu coupé : texte entier dans l'infobulle
+  w.preview.IsTruncated = function() return true end
+  w.preview.hover:Run("OnEnter")
+  assert(GameTooltip:GetText() == w.preview:GetText(), "M3 : infobulle de l'apercu")
+  w.preview.hover:Run("OnLeave") w.preview.IsTruncated = nil
+  -- zone d'écriture qui défile et suit le curseur
+  local shift = 0
+  w.scroll.GetVerticalScroll = function() return shift end
+  w.scroll.SetVerticalScroll = function(_, v) shift = v end
+  w.edit:Run("OnCursorChanged", 0, -150, 2, 14)
+  assert(shift == 150 + 14 - w.scroll:GetHeight(), "curseur sous la zone : " .. shift)
+  w.edit:Run("OnCursorChanged", 0, -10, 2, 14)
+  assert(shift == 10, "curseur au-dessus : " .. shift)
+  w.scroll.GetVerticalScroll, w.scroll.SetVerticalScroll = nil, nil
+  w.edit:SetText(Z:FindMacro("Bijou soin").body) w.save:Run("OnClick")
+
+  -- M4 : écran de 1365, options effacées : la consigne ne demande pas de glisser sur une ligne invisible
+  local function Screen(width, height)
+    UIParent.GetWidth = function() return width end UIParent.GetHeight = function() return height end
+  end
+  w:Hide() w:Run("OnHide")
+  Screen(1365, 768)
+  o.GetLeft = function() return 142 end o.GetRight = function() return 1222 end o.GetTop = function() return 738 end
+  Z:ToggleOptions("Sorts et raccourcis")
+  Z:OpenMacros()
+  local away = L["Glissez une macro dans une barre de sorts du jeu. Pour un clic, fermez cette fenêtre : les options reviennent, cliquez alors sur le sort d'une ligne."]
+  local drag = L["Glissez une macro sur une ligne du chapitre Sorts et raccourcis ou dans une barre de sorts du jeu, ou cliquez sur le sort d'une ligne."]
+  assert(UI.Away() and w.hint:GetText() == away, "M4 : consigne du glisser, options effacees")
+  w:Hide() w:Run("OnHide")
+  assert(o:IsShown() and not UI.Away())
+  Screen(2560, 1440)
+  Z:OpenMacros()
+  assert(not UI.Away() and w.hint:GetText() == drag, "M4 : consigne du glisser, grand ecran")
+  Screen(1365, 768) FireEvent("UI_SCALE_CHANGED") -- l'écran change, fenêtre ouverte
+  assert(UI.Away() and w.hint:GetText() == away, "M4 : consigne apres le changement d'ecran")
+  w:Hide() w:Run("OnHide")
+  o.GetLeft, o.GetRight, o.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+
+  -- M5 : la macro ouverte a sa bordure, dans les 3 thèmes et après un changement de thème
+  Z:OpenMacros("Autre")
+  for _, theme in ipairs({ "CLASSIC", "MMO", "MODERN" }) do
+    Z.db.windowTheme = theme Z:Refresh()
+    for _, row in ipairs(w.rows) do
+      local chosen = row.macro ~= nil and row.macro == w.macro
+      assert(row.mark:IsShown() == chosen, "M5 : marque " .. theme .. " " .. tostring(row.macro and row.macro.name))
+      if chosen then assert(row.mark[1]._color[1] == UI.accent[1], "M5 : couleur " .. theme) end
+    end
+  end
+  -- M10 : gris et texte du thème
+  w.Refresh()
+  assert(w.uses:GetText():find(UI.Hex("dim"), 1, true) and not w.uses:GetText():find("8a8f99", 1, true), w.uses:GetText())
+  assert(w.preview._color[1] == UI.text[1] and w.uses._color[1] == UI.text[1], "M10 : texte en dur")
+
+  -- M6 : le champ du nom montre toujours le vrai nom
+  local m = w.macro
+  w.name:SetText("") w.name:Run("OnEnterPressed")
+  assert(w.name:GetText() == "Autre" and m.name == "Autre", "M6 : nom vide")
+  w.name:SetText(string.rep("é", 20)) w.name:Run("OnEnterPressed")
+  assert(#m.name <= 32 and w.name:GetText() == m.name, "M6 : nom coupe")
+  local printed
+  Z.Print = function(_, text) printed = text end
+  w.name:SetText("Bijou soin") w.SaveCurrent()
+  Z.Print = print
+  assert(printed == L["Une autre macro porte déjà ce nom."] and w.name:GetText() == m.name, "M6 : nom pris sans message")
+
+  -- M7 : Échap ferme seulement la fenêtre du dessus
+  local function Listed(name)
+    for _, n in ipairs(UISpecialFrames) do if n == name then return true end end
+  end
+  local wiz = Z:OpenMacroWizard()
+  assert(Listed("LyoruneMacroWizard") and not Listed("LyoruneMacros") and not Listed("LyoruneOptions"), "M7 : assistant")
+  wiz.spell:Run("OnClick", "LeftButton") -- choix d'un sort par-dessus l'assistant
+  assert(LyorunePicker:IsShown() and Listed("LyorunePicker") and not Listed("LyoruneMacroWizard"), "M7 : choix d'un sort")
+  LyorunePicker:Hide()
+  assert(Listed("LyoruneMacroWizard") and not Listed("LyoruneMacros"), "M7 : assistant rendu")
+  wiz:Hide()
+  assert(Listed("LyoruneMacros") and Listed("LyoruneOptions") and Listed("LyorunePicker"), "M7 : noms rendus")
+  -- M11 c : classe sans résurrection, la suite remonte d'une ligne
+  local res = Z.classRes[Z.class]
+  Z.classRes[Z.class] = nil
+  Z:OpenMacroWizard()
+  assert(wiz:GetHeight() == 336 and wiz.tail._point[3] == wiz.tailY + 24 and not wiz.res:IsShown(), "M11 c : trou")
+  wiz:Hide()
+  Z.classRes[Z.class] = res
+  Z:OpenMacroWizard()
+  assert(wiz:GetHeight() == 360 and wiz.tail._point[3] == wiz.tailY and wiz.res:IsShown())
+  wiz.opts.spell = nil wiz.Update()
+  assert(wiz.spell.label:GetText():find(UI.Hex("dim"), 1, true), "M10 : Choisir... en gris du theme")
+  wiz:Hide()
+
+  -- M8 : macro tenue au curseur, fenêtre fermée : rien n'est déposé
+  local dropped
+  Z:MacroDragStart(w.rows[1])
+  w:Hide() w:Run("OnHide")
+  MOUSE_FOCI = { { dropValue = function() dropped = true end } }
+  assert(not Z:MacroDragStop() and not dropped, "M8 : macro deposee apres la fermeture")
+  MOUSE_FOCI = false
+  -- M9 : la zone d'écriture rend le clavier à la fermeture
+  assert(w.edit:GetScript("OnHide") == w.edit.ClearFocus, "M9")
+
+  -- M11 a : l'aide suit la case
+  Z:OpenMacros()
+  Z.db.macroAutoTarget = false w.Refresh()
+  assert(w.help:GetText() == L["{cible} est le joueur de la case."], "M11 a")
+  Z.db.macroAutoTarget = true w.Refresh()
+  assert(w.help:GetText():find(L["Une commande sans cible vise la case"], 1, true), "M11 a : case cochee")
+  -- M11 b : plus de macros que de lignes, la molette est annoncée
+  for i = 1, 14 do Z:NewMacro("Macro " .. i, "/cast Soins") end
+  w.Refresh()
+  assert(w.more:IsShown() and w.more:GetText() == L["Molette : %d de plus"]:format(#Z:GetMacros() - 13), w.more:GetText())
+  -- M11 f : aucune macro, une phrase et aucune ligne
+  Z.db.macros[Z.class] = {}
+  w.macro = nil w.Refresh()
+  assert(w.empty:IsShown() and not w.more:IsShown(), "M11 f")
+  for _, row in ipairs(w.rows) do assert(not row:IsShown(), "M11 f : ligne vide montree") end
+  -- M11 d : icônes de l'import espacées de 3
+  MACROS[#MACROS + 1] = { name = "Deux", icon = 1, body = "/dance" }
+  local imp = Z:OpenMacroImport()
+  assert(imp.icons[2]._point[2] - imp.icons[1]._point[2] == 35, "M11 d")
+  imp:Hide()
+  table.remove(MACROS)
+  -- M11 e : options ouvertes, Mes macros n'est plus posée par Z:OpenMacros (UI.Appear le fait) ; fermées, au milieu
+  w:Hide() w:Run("OnHide")
+  w._point = nil
+  Z:OpenMacros()
+  assert(w._point == nil, "M11 e : place posee pour rien")
+  w:Hide() w:Run("OnHide")
+  o:Hide() o:Run("OnHide")
+  Z:OpenMacros()
+  assert(w._point[1] == "CENTER", "M11 e : options fermees")
+  w:Hide() w:Run("OnHide")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh() Z:ApplyClicks()
+end)
+
+step("refonte 1.26.0, lot 6c septies e : corrections de Placement, Bug, Changes, Log et Perf (relecture)", function()
+  local UI, L = Z.UI, Z.L
+  local painted = UI.Painted()
+  local saved = { reduceMotion = Z.db.reduceMotion, errors = Z.db.errors, perfMode = Z.db.perfMode,
+    placement = CopyTable(Z.db.placement) }
+  local after = C_Timer.After
+  Z.db.reduceMotion = true Z:Refresh()
+
+  -- P1 : la plus petite et la plus grande case, poussées de 40 de chaque côté, restent dans la scène
+  Z:OpenPlacement()
+  local w = Z:PlacementWindow()
+  local stage, limit = w.stage, Z.limits.placement
+  local room = math.max(-limit[1], limit[2])
+  for _, size in ipairs({ { Z.limits.width[1], Z.limits.height[1] }, { Z.limits.width[2], Z.limits.height[2] } }) do
+    local scale = w.StageScale(size[1], size[2])
+    assert(scale >= 1 and scale <= 3, "P1 : echelle " .. scale)
+    assert(scale * (size[1] / 2 + room) <= stage:GetWidth() / 2 and scale * (size[2] / 2 + room) <= stage:GetHeight() / 2,
+      "P1 : case " .. size[1] .. "x" .. size[2] .. " poussee hors de la scene")
+  end
+  -- P3 : une seule mise en place à l'ouverture
+  w:Hide() w:Run("OnHide")
+  local draws, set = 0, w.coords.SetText
+  w.coords.SetText = function(self, text) draws = draws + 1 return set(self, text) end
+  Z:OpenPlacement()
+  assert(draws == 1, "P3 : dessinee " .. draws .. " fois")
+  w.coords.SetText = nil
+  -- B2 : rappelée, elle reste ouverte
+  Z:OpenPlacement()
+  assert(w:IsShown(), "B2 : placement ferme au second appel")
+  -- P2 : armé puis fenêtre fermée : désarmé
+  C_Timer.After = function() end
+  w.resetAll:Run("OnClick")
+  assert(w.resetAll.armed and w.resetAll.label:GetText():find(L["Confirmer"], 1, true), "P2 : pas arme")
+  w:Hide() w:Run("OnHide")
+  assert(not w.resetAll.armed and w.resetAll.label:GetText() == L["Tout remettre"], "P2 : reste arme a la fermeture")
+  C_Timer.After = after
+
+  -- B1 : un nom remplacé seulement comme mot entier, nom accentué compris
+  local name, exists = UnitName, UnitExists
+  UnitName = function(u) if u == "player" then return "Lyo" elseif u == "party1" then return "Élyne" end end
+  UnitExists = function(u) return u == "player" or u == "party1" end
+  local text = Z:Anonymize("[Lyorune 1.25.1] Interface/AddOns/Lyorune/Frames.lua:12 Lyo soigne Élyne, pas Élynea ni xÉlyne. (Lyo)")
+  UnitName, UnitExists = name, exists
+  assert(text == "[Lyorune 1.25.1] Interface/AddOns/Lyorune/Frames.lua:12 (joueur) soigne (joueur), pas Élynea ni xÉlyne. ((joueur))",
+    "B1 : " .. text)
+  assert(Z:Anonymize("Mon Royaume, MonRoyaume, MonRoyaumes") == "(royaume), (royaume), MonRoyaumes", "B1 : royaume")
+
+  -- B2 : « Signaler un bug » rappelé garde les réponses ; fermé puis rouvert, il repart à vide
+  Z:ShowBug()
+  local bug = LyoruneBug
+  bug.answers[1]:SetText("en raid")
+  Z:ShowBug()
+  assert(bug:IsShown() and bug.answers[1]:GetText() == "en raid", "B2 : reponse effacee")
+  bug:Hide() bug:Run("OnHide")
+  Z:ShowBug()
+  assert(bug.answers[1]:GetText() == "", "B2 : nouvelle ouverture")
+  -- B3 : zones à copier et phrase dans les couleurs du thème
+  assert(painted[bug.report][1] == "text" and painted[bug.hint][1] == "accent", "B3 : rapport")
+  bug:Hide() bug:Run("OnHide")
+
+  -- L1 : chaque titre de fenêtre a sa traduction
+  local english = {}
+  for key, value in pairs(Z.translations.enUS) do english[key], english[value] = true, true end
+  Z:ShowLog()
+  for _, f in ipairs(UI.Windows()) do -- la fenêtre d'options porte le nom de l'addon et sa version
+    assert(f == UI.main or english[f.title:GetText()], "L1 : titre sans traduction : " .. f.title:GetText())
+  end
+  -- L2 : la phrase s'arrête au bord droit, sur deux lignes au plus
+  local log = LyoruneLog
+  local p = log.hint._point
+  assert(p[1] == "RIGHT" and p[2] == log and p[3] == "BOTTOMRIGHT" and p[4] < 0 and p[5] == 26, "L2 : phrase sans bord droit")
+  -- B3 et L4 : texte du thème, lu depuis le haut à chaque nouveau texte
+  assert(painted[log.edit][1] == "text" and painted[log.hint][1] == "dim", "B3 : journal")
+  local scrolled
+  log.scroll.SetVerticalScroll = function(_, v) scrolled = v end
+  Z.db.errors = { { message = "essai", count = 1, kind = "Erreur Lua", first = "12:00", last = "12:00" } }
+  Z:ShowLog()
+  assert(log:IsShown() and scrolled == 0, "L4 : journal rappele")
+  -- L3 : vider demande un second clic
+  scrolled = nil
+  C_Timer.After = function() end
+  log.clear:Run("OnClick")
+  assert(#Z.db.errors == 1 and log.clear.armed, "L3 : journal vide en un clic")
+  log.clear:Run("OnClick")
+  assert(#Z.db.errors == 0 and scrolled == 0, "L3 : second clic")
+  log.clear:Run("OnClick")
+  log:Hide() log:Run("OnHide")
+  assert(not log.clear.armed, "L3 : reste arme a la fermeture")
+  C_Timer.After = after
+  log.scroll.SetVerticalScroll = nil
+
+  -- N1 : date dans le gris du thème, texte peint ; rappelée, lue depuis le haut
+  Z:ShowNews()
+  local news = LyoruneNews
+  local newsText = news.text:GetText()
+  assert(newsText:find("|cff" .. UI.Hex("dim"), 1, true) and not newsText:find("8a8f99", 1, true), "N1 : date en dur")
+  assert(painted[news.text][1] == "text", "N1 : texte")
+  scrolled = nil
+  news.scroll.SetVerticalScroll = function(_, v) scrolled = v end
+  Z:ShowNews()
+  assert(news:IsShown() and scrolled == 0, "L4 : nouveautes")
+  news.scroll.SetVerticalScroll = nil
+  news:Hide() news:Run("OnHide")
+
+  -- F3 a : virgule en français, point en anglais
+  assert(Z.Decimal(0.25, 2) == "0,25" and Z.Decimal(1536 / 1024, 1) == "1,5" and Z.Decimal(12, 0) == "12", "F3 a")
+  Z.db.language = "enUS" Z:SetLanguage()
+  assert(Z.Decimal(0.25, 2) == "0.25" and L["%s Mo"]:format("1.5") == "1.5 MB", "F3 a : anglais")
+  Z.db.language = "AUTO" Z:SetLanguage()
+  -- F1, F2 : la phrase du mode sous la note, à gauche du bouton ; gris du thème, vert et or dans le texte
+  Z.db.perfMode = true
+  local printed, print = nil, Z.Print
+  Z.Print = function(_, msg) printed = msg end
+  Z:ShowMeasure()
+  Z.Print = print
+  local perf = LyorunePerf
+  assert(perf:GetHeight() == 450, "F1 : hauteur")
+  local m = perf.mode._point
+  assert(m[2] == perf.profiler and m[3] == "BOTTOMLEFT" and m[5] == -8, "F1 : phrase du mode posee par le bas")
+  assert(16 + perf.mode:GetWidth() < perf:GetWidth() - 16 - 150, "F1 : phrase sous le bouton")
+  assert(painted[perf.profiler][1] == "dim" and painted[perf.mode][1] == "dim", "F2 : gris en dur")
+  assert(perf.mode:GetText():find("^|cff73ff8c"), "F2 : vert dans le texte")
+  assert(not perf.groups[1][2]:GetText():find("%d%.%d") and perf.groups[1][2]:GetText():find("%d,%d"), "F3 a : " .. perf.groups[1][2]:GetText())
+  assert(printed and not printed:find("%d%.%d") and printed:find(" ms par seconde", 1, true), "F3 a : chat " .. tostring(printed))
+  Z.Print = function() end
+  Z:ShowMeasure()
+  Z.Print = print
+  assert(perf:IsShown(), "B2 : mesure rappelee")
+  perf:Hide() perf:Run("OnHide")
+
+  Z.db.errors = saved.errors
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, retours d'essai 14 et 15 : infobulle des runes, une fenetre a cote des options", function()
+  local UI, L, o = Z.UI, Z.L, Z:OptionsWindow()
+  local saved = { theme = Z.db.theme, texture = Z.db.texture, text = Z.db.text, reduceMotion = Z.db.reduceMotion }
+  Z.db.reduceMotion = true
+  -- 14 : la rune dit la valeur d'installation en mots, jamais un nom interne (« PURE », « THEME »)
+  Z.db.theme, Z.db.texture, Z.db.text = "HEROIC", "Raid", "PERCENT"
+  Z:Refresh()
+  o:Hide() o:Run("OnHide")
+  Z:ToggleOptions("Accueil")
+  Z:OptionLabels()
+  local seen = {}
+  local function Check(rune, key)
+    rune:Run("OnEnter")
+    local tip = GameTooltip:GetText()
+    assert(not tip:find(": %u[%u_]+$"), "14 : nom interne dans l'infobulle de " .. key .. " : " .. tip)
+    seen[key] = tip
+  end
+  for _, chapter in ipairs(o.chapters) do
+    local page = chapter.page
+    for key, widget in pairs(page and page.content.settings or {}) do
+      if widget.changed then
+        widget.changed:Update() -- page pas encore ouverte : la rune suit le réglage à l'ouverture
+        if widget.changed:IsShown() then Check(widget.changed, key) end
+      end
+    end
+    for _, part in ipairs(page and page.parts or {}) do
+      if part.widget.rows then
+        part.widget:Update()
+        for _, row in ipairs(part.widget.rows) do if row:IsShown() then Check(row.rune, "Accueil " .. row.key) end end
+      end
+    end
+  end
+  assert(seen["Accueil theme"] == L["Rétablir : %s"]:format(L["Épuré"]), tostring(seen["Accueil theme"]))
+  assert(seen["Accueil texture"] == L["Rétablir : %s"]:format(L["Celle du thème"]), tostring(seen["Accueil texture"]))
+  assert(seen.theme == seen["Accueil theme"], "14 : rune du chapitre Apparence : " .. tostring(seen.theme))
+
+  -- 15 : la nouvelle fenêtre ferme l'ancienne ; options effacées sur un petit écran, elles restent effacées
+  -- jusqu'à la fermeture de la dernière, puis reviennent
+  Z:ShowBug()
+  Z:ShowLog()
+  assert(LyoruneLog:IsShown() and not LyoruneBug:IsShown(), "15 : bug et journal l'un sur l'autre")
+  Z:ShowBug()
+  assert(LyoruneBug:IsShown() and not LyoruneLog:IsShown(), "15 : dans l'autre sens")
+  LyoruneBug:Hide() LyoruneBug:Run("OnHide")
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  o.GetLeft = function() return 142 end o.GetRight = function() return 1222 end o.GetTop = function() return 738 end
+  Z:ShowBug()
+  assert(UI.Away() and not o:IsShown(), "options effacees")
+  Z:ShowLog()
+  LyoruneBug:Run("OnHide") -- le faux client ne lance pas OnHide tout seul
+  assert(not LyoruneBug:IsShown() and UI.Away() and not o:IsShown(), "15 : options revenues sous le journal")
+  LyoruneLog:Hide() LyoruneLog:Run("OnHide")
+  assert(not UI.Away() and o:IsShown(), "15 : options pas rendues")
+  o.GetLeft, o.GetRight, o.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c octies : retours 16, 18, 20 et 21 (visite et Mes macros)", function()
+  local UI, L, o = Z.UI, Z.L, Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion }
+  Z.db.reduceMotion = true
+  local function Highest(f, best)
+    best = math.max(best, f:GetFrameLevel())
+    for _, child in ipairs({ f:GetChildren() }) do best = Highest(child, best) end
+    return best
+  end
+
+  -- 21 : l'import posé sur Mes macros passe au-dessus de tous les enfants de Mes macros, même haut placés
+  local win = Z:OpenMacros()
+  local deep = CreateFrame("Frame", nil, win.scroll)
+  deep:SetFrameLevel(win:GetFrameLevel() + 40)
+  local importer = Z:OpenMacroImport()
+  assert(importer:GetFrameLevel() > Highest(win, 0), "21 : import sous un enfant de Mes macros")
+  assert(importer.close:GetFrameLevel() > Highest(win, 0), "21 : croix de l'import sous Mes macros")
+  local level = importer:GetFrameLevel()
+  Z:OpenMacroImport() -- rappelée ouverte : elle reste au-dessus, sans monter pour rien
+  assert(importer:GetFrameLevel() == level, "21 : niveau qui monte a chaque appel")
+  importer:Hide()
+  -- de même l'assistant de macro (capture de l'auteur), et le choix d'un sort ouvert depuis l'assistant ; fond opaque
+  local wizard = Z:OpenMacroWizard()
+  assert(wizard:GetFrameLevel() > Highest(win, 0), "21 : assistant sous Mes macros")
+  assert(wizard.bg._color[4] == 1 and wizard.shade._color[4] == 1, "21 : fond de l'assistant transparent")
+  wizard.spell:Run("OnClick")
+  assert(LyorunePicker:IsShown() and LyorunePicker:GetFrameLevel() > Highest(wizard, 0), "21 : choix d'un sort sous l'assistant")
+  LyorunePicker:Hide()
+  wizard:Hide()
+
+  -- 18 : un sort écrit avec d'autres accents que le grimoire est signalé, avec sa bonne écriture et un clic
+  local problems = Z:CheckMacro("/cast [@cible] renovation")
+  assert(problems.fixes and problems.fixes[1][2] == "Rénovation", "18 : pas de correction proposee")
+  assert(problems[1][2] == L["Ligne %d : « %s » s'écrit « %s » dans votre grimoire."]:format(1, "renovation", "Rénovation"), problems[1][2])
+  assert(Z:FixMacroSpelling("/cast [@cible,help] renovation; renovationx") == "/cast [@cible,help] Rénovation; renovationx",
+    "18 : correction hors du mot entier")
+  assert(not Z:CheckMacro("/cast Tempete").fixes, "18 : correction inventee")
+  local macro = Z:NewMacro("Accents", "/cast [@cible] renovation")
+  win.Select(macro)
+  assert(win.fix:IsShown(), "18 : bouton Corriger absent")
+  win.fix:Run("OnClick")
+  assert(macro.body == "/cast [@cible] Rénovation" and win.edit:GetText() == macro.body, "18 : macro pas corrigee : " .. macro.body)
+  assert(not win.fix:IsShown(), "18 : bouton Corriger reste")
+
+  -- 20 : « Enregistrer » dit deux secondes que c'est fait, puis reprend son nom ; une autre macro le remet
+  local after, later = C_Timer.After
+  C_Timer.After = function(_, f) later = f end
+  win.save:Run("OnClick")
+  assert(win.save.label:GetText() == L["Enregistrée"], "20 : aucun signe")
+  later()
+  assert(win.save.label:GetText() == L["Enregistrer"], "20 : nom pas rendu")
+  win.save:Run("OnClick")
+  win.Select(Z:GetMacros()[1])
+  assert(win.save.label:GetText() == L["Enregistrer"], "20 : « Enregistrée » garde pour une autre macro")
+  later()
+  C_Timer.After = after
+  Z:RemoveMacro(macro)
+  win.Select(Z:GetMacros()[1])
+
+  -- 16 : la visite ferme d'abord les fenêtres posées à côté des options
+  o:Hide() o:Run("OnHide")
+  Z:ToggleOptions("Accueil")
+  Z:OpenMacros()
+  assert(win:IsShown(), "Mes macros ouverte")
+  Z:StartTutorial()
+  assert(not win:IsShown(), "16 : Mes macros reste ouverte sous la visite")
+  local card = LyoruneTutorial
+  while Z:TutorialRunning() and not o:IsShown() do card.next:Run("OnClick") end
+  local chapter = Z:OptionChapter()
+  -- une fenêtre à côté des options ouverte sur une carte de la fenêtre : la visite s'arrête, les options restent
+  Z:OpenMacros()
+  assert(not Z:TutorialRunning() and not card:IsShown() and not card.highlight:IsShown(), "16 : visite pas arretee")
+  assert(o:IsShown() and win:IsShown() and Z:OptionChapter() == chapter, "16 : options pas gardees")
+  win:Hide() win:Run("OnHide")
+  -- petit écran : Mes macros efface les options, la visite s'arrête aussi ; les options reviennent à la fermeture
+  UIParent.GetWidth = function() return 1365 end UIParent.GetHeight = function() return 768 end
+  o.GetLeft = function() return 142 end o.GetRight = function() return 1222 end o.GetTop = function() return 738 end
+  Z:StartTutorial()
+  while Z:TutorialRunning() and not o:IsShown() do card.next:Run("OnClick") end
+  Z:OpenMacros()
+  assert(not Z:TutorialRunning() and not card:IsShown(), "16 : visite pas arretee (petit ecran)")
+  assert(UI.Away() and not o:IsShown(), "16 : options pas effacees")
+  win:Hide() win:Run("OnHide")
+  assert(not UI.Away() and o:IsShown(), "16 : options pas rendues")
+  o.GetLeft, o.GetRight, o.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  for _, f in ipairs(UI.Windows()) do UI.Fit(f) end
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c nonies a : retour 22 (recherche du mode test)", function()
+  local L, o = Z.L, Z:OptionsWindow()
+  local saved = { reduceMotion = Z.db.reduceMotion }
+  o:Hide() o:Run("OnHide")
+  Z:ToggleOptions("Mes soins")
+  local chapter = Z:OptionChapter()
+  local after, timers = C_Timer.After, {}
+  C_Timer.After = function(_, f) timers[#timers + 1] = f end
+  local function Find()
+    o.search:SetText("mode test") o.search:Run("OnTextChanged", true)
+    for _, row in ipairs(o.results.rows) do
+      if row:IsShown() and row.entry.label == L["Mode test"] then return row end
+    end
+  end
+  -- le résultat dit où sont les boutons, et les fait clignoter sans changer de chapitre
+  Z.db.reduceMotion = false
+  local row = Find()
+  assert(row and row.label:GetText():find(L["Case témoin"], 1, true), "22 : resultat sans « Case témoin »")
+  row:Run("OnClick", "LeftButton")
+  local glow = o.witness.glow
+  assert(Z:OptionChapter() == chapter, "22 : la recherche change de chapitre")
+  assert(glow:IsShown() and not o.flash:IsShown(), "22 : boutons du mode test pas montres")
+  local seen = { glow:IsShown() }
+  local i = 1
+  while timers[i] do timers[i]() seen[#seen + 1] = glow:IsShown() i = i + 1 end
+  assert(#seen == 7 and not glow:IsShown(), "22 : clignotement : " .. #seen)
+  assert(seen[2] == false and seen[3] == true, "22 : pas de clignotement")
+  -- Réduire les mouvements : un seul éclat fixe ; une seconde recherche reprend la main sur la première
+  Z.db.reduceMotion = true
+  timers = {}
+  Find():Run("OnClick", "LeftButton")
+  Find():Run("OnClick", "LeftButton")
+  assert(#timers == 2 and glow:IsShown(), "22 : eclat fixe : " .. #timers)
+  timers[1]() assert(glow:IsShown(), "22 : le premier delai eteint le second eclat")
+  timers[2]() assert(not glow:IsShown(), "22 : eclat jamais eteint")
+  C_Timer.After = after
+  for key, value in pairs(saved) do Z.db[key] = value end
+end)
+
+step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case)", function()
+  local keys = { "shape", "width", "height", "corners", "manaBars", "hotStyle", "hotCount", "debuffCount",
+    "privateAuraPoint", "privateAuraSize", "fontSize", "autoShrink" }
+  local saved = { placement = CopyTable(Z.db.placement), corners = Z.db.cornerSpells[Z.class] }
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  local b = Z.buttons[1]
+  -- Place d'un élément recalculée à partir des ancres notées par le faux client, sans passer par Placement.lua.
+  -- Rectangle { gauche, droite, bas, haut }, (0, 0) en bas à gauche de la case.
+  local W, H
+  local function Spot(r, point)
+    local x = point:find("LEFT") and r[1] or point:find("RIGHT") and r[2] or (r[1] + r[2]) / 2
+    local y = point:find("BOTTOM") and r[3] or point:find("TOP") and r[4] or (r[3] + r[4]) / 2
+    return x, y
+  end
+  local Rect
+  local function Anchor(region, p)
+    local relative, relPoint, x, y
+    if type(p[2]) == "table" then
+      relative = p[2]
+      if type(p[3]) == "string" then relPoint, x, y = p[3], p[4], p[5] else relPoint, x, y = p[1], p[3], p[4] end
+    else
+      relative, relPoint, x, y = region._parent, p[1], p[2], p[3]
+    end
+    local px, py = Spot(Rect(relative), relPoint)
+    return px + (x or 0), py + (y or 0)
+  end
+  function Rect(region)
+    if region == b then return { 0, W, 0, H } end
+    if region._all then return Rect(region._all) end
+    local points = region._points
+    assert(points, "element sans ancre")
+    if points.TOPLEFT and points.BOTTOMRIGHT then
+      local left, top = Anchor(region, points.TOPLEFT)
+      local right, bottom = Anchor(region, points.BOTTOMRIGHT)
+      return { left, right, bottom, top }
+    end
+    local p = region._point
+    local x, y = Anchor(region, p)
+    local w, h = region._w, region._kind == "FontString" and region._size or region._h
+    local left = p[1]:find("LEFT") and x or p[1]:find("RIGHT") and x - w or x - w / 2
+    local bottom = p[1]:find("BOTTOM") and y or p[1]:find("TOP") and y - h or y - h / 2
+    return { left, left + w, bottom, bottom + h }
+  end
+  -- Les morceaux de chaque élément, posés comme sur les vraies cases
+  local function Parts(key)
+    if key == "hots" then
+      local row = {}
+      for i = 1, Z.db.hotCount do row[i] = Z.db.hotStyle == "BARS" and Z.HotBar(b, i) or Z.HotIcon(b, i) end
+      return row
+    elseif key == "debuffs" then
+      local row = {}
+      for i = 1, Z.db.debuffCount do row[i] = Z.DebuffIcon(b, i) end
+      return row
+    elseif key == "big" then return { Z.BigIcon(b) }
+    elseif key == "buff" then return { Z.BuffIcon(b) }
+    elseif key == "private" then return { (Z.PrivateHolder(b)) } end
+    return { b[key] }
+  end
+  local function Rects(power)
+    b.powerShown = power
+    Z.StyleButton(b)
+    W, H = Z.CellSize()
+    local all = {}
+    for _, element in ipairs(Z.placeElements) do
+      all[element[1]] = {}
+      for i, part in ipairs(Parts(element[1])) do all[element[1]][i] = Rect(part) end
+    end
+    return all
+  end
+  local function Push(x, y)
+    Z.db.placement = {}
+    for _, element in ipairs(Z.placeElements) do Z.SetOffset(element[1], x, y) end
+    Z:Refresh()
+  end
+  -- Chaque élément poussé au plus loin, dans les 8 directions : jamais plus loin que la case (ou que sa place
+  -- d'origine, quand il y dépasse déjà, comme le marqueur à cheval sur le haut)
+  local PUSHES = { { 40, 0 }, { -40, 0 }, { 0, 40 }, { 0, -40 }, { 40, 40 }, { -40, 40 }, { 40, -40 }, { -40, -40 } }
+  local checked, moved = 0, {}
+  local function Check(label)
+    for _, power in ipairs({ false, true }) do
+      Push(0, 0)
+      local home = Rects(power)
+      for _, push in ipairs(PUSHES) do
+        Push(push[1], push[2])
+        local now = Rects(power)
+        for key, parts in pairs(now) do
+          for i, r in ipairs(parts) do
+            local o = home[key][i]
+            local where = label .. ", " .. key .. " " .. i .. (power and ", mana" or "") .. ", pousse " .. push[1] .. "," .. push[2]
+            assert(r[1] >= math.min(0, o[1]) - 0.01 and r[2] <= math.max(W, o[2]) + 0.01
+              and r[3] >= math.min(0, o[3]) - 0.01 and r[4] <= math.max(H, o[4]) + 0.01,
+              "23 : hors de la case : " .. where .. string.format(" (%.1f %.1f %.1f %.1f dans %dx%d)", r[1], r[2], r[3], r[4], W, H))
+            if math.abs(r[1] - o[1]) >= 1 or math.abs(r[3] - o[3]) >= 1 then moved[key] = true end
+            checked = checked + 1
+          end
+        end
+      end
+    end
+  end
+  Z.db.manaBars, Z.db.autoShrink = "ALL", false
+  for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+    Z.db.shape = shape
+    local default = Z.shapes[shape]
+    local sizes = { { default.width, default.height }, { Z.limits.width[1], Z.limits.height[1] },
+      { Z.limits.width[2], Z.limits.height[2] }, { Z.limits.width[1], Z.limits.height[2] } }
+    for _, size in ipairs(sizes) do
+      Z.db.width, Z.db.height = size[1], size[2]
+      Z.db.corners, Z.db.hotStyle, Z.db.hotCount, Z.db.debuffCount = "SQUARE", "ICONS", 2, 2
+      Z.db.privateAuraPoint, Z.db.privateAuraSize, Z.db.fontSize = "CENTER", 20, default.fontSize
+      Z.db.cornerSpells[Z.class] = nil
+      Check(shape .. " " .. size[1] .. "x" .. size[2])
+      -- Autres réglages : angles arrondis, coins pris, barres fines, rangées longues, auras privées en haut
+      Z.db.corners, Z.db.hotStyle, Z.db.hotCount, Z.db.debuffCount = "ROUND", "BARS", 6, 5
+      Z.db.privateAuraPoint, Z.db.privateAuraSize, Z.db.fontSize = "TOP", 40, Z.limits.fontSize[2]
+      Z.db.cornerSpells[Z.class] = { TOPLEFT = "Rénovation", TOPRIGHT = "Rénovation", BOTTOMRIGHT = "Rénovation", BOTTOMLEFT = "Rénovation" }
+      Check(shape .. " " .. size[1] .. "x" .. size[2] .. " variante")
+    end
+  end
+  for _, element in ipairs(Z.placeElements) do assert(moved[element[1]], "23 : " .. element[1] .. " ne bouge plus du tout") end
+  assert(checked > 5000, "23 : trop peu de verifications : " .. checked)
+
+  -- Le nom rétrécit près du bord au lieu d'en sortir, et garde trois tailles de police de large
+  Z.db.shape, Z.db.width, Z.db.height, Z.db.fontSize = "TILE", 86, 42, 11
+  Z.db.corners, Z.db.hotStyle, Z.db.hotCount, Z.db.debuffCount = "SQUARE", "ICONS", 2, 2
+  Z.db.cornerSpells[Z.class] = nil
+  Push(0, 0)
+  Z.StyleButton(b)
+  assert(b.name._w == 78 and b.text._w == 78, "23 : largeur d'origine du nom : " .. tostring(b.name._w))
+  Z.db.placement = {} Z.SetOffset("name", -40, 0) Z:Refresh()
+  local x = Z.Offset("name")
+  assert(x < 0 and x > -40 and b.name._w < 78 and b.name._w >= 33, "23 : nom pousse a gauche : " .. x .. ", largeur " .. b.name._w)
+  -- Ancien décalage trop grand dans la sauvegarde : ramené au bord à la lecture, jamais réécrit
+  Z.db.placement = { TILE = { name = { -40, 0 } } } Z:Refresh()
+  assert(Z.Offset("name") == x and Z.db.placement.TILE.name[1] == -40, "23 : sauvegarde reecrite")
+  -- Le chef de groupe suit l'icône de rôle poussée au bord gauche : il est repoussé dans la case
+  Z.db.placement = { TILE = { role = { -40, 0 } } } Z:Refresh()
+  W, H = Z.CellSize()
+  local leader = Rect(b.leader)
+  assert(leader[1] >= 0, "23 : chef de groupe hors de la case : " .. leader[1])
+  -- Une autre forme (code de partage) : seulement les limites du réglage
+  Z.SetOffset("debuffs", -40, 12, "BAR")
+  assert(Z.db.placement.BAR.debuffs[1] == -40, "23 : autre forme bornee a la case choisie")
+
+  -- Éditeur : rangées entières, et « au bord » quand une flèche ne pousse plus
+  Z.db.placement = {} Z.db.hotCount = 4 Z:Refresh()
+  Z:OpenPlacement()
+  local w = Z:PlacementWindow()
+  for _, button in ipairs(w.list) do if button.key == "hots" then button:Run("OnClick") end end
+  local shown = 0
+  for _, icon in ipairs(w.cell.hots) do if icon:IsShown() then shown = shown + 1 end end
+  assert(shown == 4, "23 : editeur, rangee de soins : " .. shown)
+  for _ = 1, 30 do w.up:Run("OnClick") end
+  local _, top = Z.Offset("hots")
+  assert(top == select(4, Z.OffsetRange("hots")), "23 : fleche au dela du bord")
+  assert(w.coords:GetText() == Z.L["Au bord de la case : %d, %d"]:format(0, top), "23 : bord pas signale : " .. w.coords:GetText())
+  w:Hide() w:Run("OnHide")
+
+  Z.db.placement = saved.placement
+  Z.db.cornerSpells[Z.class] = saved.corners
+  for _, key in ipairs(keys) do Z.db[key] = saved[key] end
+  Z:Refresh()
+end)
+
+step("refonte 1.26.0, lot 6c nonies c : retour 19 (macros de Mes macros dans les barres du jeu)", function()
+  local L = Z.L
+  local function find(name) local i = GetMacroIndexByName(name) return i > 0 and GetMacroBody(i) or nil end
+  local function printed(text) for i = #PRINTED, 1, -1 do if PRINTED[i]:find(text, 1, true) then return true end end end
+  -- le jeu limite une macro (et le texte d'un bouton) à 255 caractères depuis le patch 11.0.2
+  assert(Z.MACRO_MAX == 255, "limite des macros")
+  local long = "/cast " .. string.rep("a", 260)
+  assert(Z:CheckMacro(long)[1][1] == "err", "macro de plus de 255 caracteres acceptee")
+  -- texte pour une barre : le joueur survolé, sinon la cible
+  local cases = {
+    { "/cast [@cible] Soins rapides", "#showtooltip\n/cast [@mouseover,help][] Soins rapides" },
+    { "/cast [@cible,harm,nodead] Châtiment; [@cible] Soins", "#showtooltip\n/cast [@mouseover,harm,nodead][harm,nodead] Châtiment; [@mouseover,help][] Soins" },
+    { "/cast [@mouseover,help][@player] Soins", "#showtooltip\n/cast [@mouseover,help][help][@player] Soins" },
+    { "#showtooltip Soins\n/cast [@player] Soins", "#showtooltip Soins\n/cast [@player] Soins" },
+    { "/use 13\n/focus [@mouseover]", "#showtooltip\n/use 13\n/focus [@mouseover]" },
+    { "/use [@cible] 13", "#showtooltip\n/use [@mouseover,exists][] 13" },
+  }
+  for _, case in ipairs(cases) do
+    assert(Z:BarText(case[1]) == case[2], "texte de barre : " .. Z:BarText(case[1]))
+  end
+  -- une macro qui tient sur un clic mais pas dans une barre : signalée en jaune
+  local near = "/cast [@cible] " .. string.rep("b", 232)
+  local warned
+  for _, problem in ipairs(Z:CheckMacro(near)) do
+    assert(problem[1] ~= "err", "erreur sur une macro de 251 caracteres : " .. problem[2])
+    if problem[2]:find("barre de sorts", 1, true) then warned = problem[1] end
+  end
+  assert(#Z:ResolveMacro(near) <= 255 and #Z:BarText(near) > 255 and warned == "warn", "avertissement de la barre")
+
+  local before = #MACROS
+  local m = Z:NewMacro("Prière vite", "/cast [@cible] Prière")
+  -- glisser : copie « Lyo: » créée, mise en main, montrée dans la fenêtre
+  local ok = Z:PickupGameCopy(m)
+  assert(ok and PICKED == "Lyo:Prière vite" and find("Lyo:Prière vite") == "#showtooltip\n/cast [@mouseover,help][] Prière", tostring(find("Lyo:Prière vite")))
+  assert(#MACROS == before + 1 and Z:GameCopy(m) == "Lyo:Prière vite")
+  ClearCursor()
+  local w = Z:OpenMacros("Prière vite")
+  assert(w.uses:GetText():find(L["copie dans /macro : %s"]:format("Lyo:Prière vite"), 1, true), w.uses:GetText())
+  assert(w.hint:GetText():find("barre de sorts", 1, true), "consigne sans la barre")
+  -- glissée une seconde fois : la même copie, pas une nouvelle
+  assert(Z:PickupGameCopy(m) and #MACROS == before + 1, "copie en double")
+  ClearCursor()
+  -- le texte change : la copie suit
+  m.body = "/cast [@cible] Soins rapides" Z:ApplyClicks()
+  assert(find("Lyo:Prière vite") == "#showtooltip\n/cast [@mouseover,help][] Soins rapides", "copie pas mise a jour")
+  -- en combat : rien n'est touché, tout est rattrapé à la fin
+  COMBAT = true
+  local held, why = Z:PickupGameCopy(m)
+  assert(not held and why == L["impossible de modifier les macros en combat."], "copie en combat")
+  m.body = "/cast [@cible] Rénovation" Z:ApplyClicks()
+  assert(find("Lyo:Prière vite"):find("Soins rapides", 1, true), "copie modifiee en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(find("Lyo:Prière vite"):find("Rénovation", 1, true), "copie pas rattrapee apres le combat")
+  -- renommée : la copie suit, au même emplacement de /macro (EditMacro, pas une nouvelle)
+  assert(Z:RenameMacro(m, "Prière"))
+  assert(Z:GameCopy(m) == "Lyo:Prière" and not find("Lyo:Prière vite") and #MACROS == before + 1, "renommage de la copie")
+  -- la copie déposée sur une ligne de Lyorune ou sur la liste redevient la macro, sans doublon
+  assert(Z:ImportGameMacro(GetMacroIndexByName("Lyo:Prière")) == m and not Z:FindMacro("Lyo:Prière"), "copie importee en double")
+  -- « Retirer les macros de Lyorune » (option des clics) laisse les copies glissées
+  Z.db.actionBarMacros = true Z:ApplyClicks()
+  Z.db.actionBarMacros = false Z:RemoveBarMacros()
+  assert(find("Lyo:Prière"), "copie retiree avec l'option des clics")
+  -- deux macros au début de nom pareil : deux copies distinctes de 16 octets au plus
+  local a, b = Z:NewMacro("Soins rapides A", "/cast Soins"), Z:NewMacro("Soins rapides B", "/cast Soins")
+  assert(Z:PickupGameCopy(a) and Z:PickupGameCopy(b))
+  assert(Z:GameCopy(a) ~= Z:GameCopy(b) and #Z:GameCopy(a) <= 16 and #Z:GameCopy(b) <= 16, Z:GameCopy(a) .. " / " .. Z:GameCopy(b))
+  ClearCursor()
+  -- trop longue pour une barre : refusée avec sa raison, elle se pose encore sur nos lignes
+  local big = Z:NewMacro("Longue", near)
+  held, why = Z:PickupGameCopy(big)
+  assert(not held and why and why:find("Longue", 1, true) and not Z:GameCopy(big), "copie trop longue")
+  -- plus de place dans l'onglet du personnage : refus clair
+  local saved = #MACROS
+  for i = #MACROS + 1, MAX_CHARACTER_MACROS do MACROS[i] = { name = "Perso " .. i, icon = 1, body = "/dance" } end
+  local c = Z:NewMacro("Pleine", "/cast Soins")
+  held, why = Z:PickupGameCopy(c)
+  assert(not held and why == L["plus de place pour une macro de personnage : supprimez-en une dans /macro."], "places pleines")
+  for i = #MACROS, saved + 1, -1 do MACROS[i] = nil end
+  -- supprimée de Mes macros : sa copie part ; retirée à la main de /macro : jamais recréée
+  Z:RemoveMacro(a)
+  assert(not find(Z.char.barCopies["Soins rapides A"] or "Lyo:Soins rapide") and Z.char.barCopies["Soins rapides A"] == nil, "copie restee apres la suppression")
+  local copyB = Z:GameCopy(b)
+  table.remove(MACROS, GetMacroIndexByName(copyB) - 120)
+  Z:ApplyClicks()
+  assert(not find(copyB) and Z.char.barCopies["Soins rapides B"] == nil, "copie retiree a la main recreee")
+  -- une macro du joueur n'est jamais touchée
+  MACROS[#MACROS + 1] = { name = "Lyo:Perso", icon = 1, body = "/dance" }
+  Z:RemoveMacro(m)
+  assert(not find("Lyo:Prière"), "copie restee")
+  assert(not Z:GameCopy(m), "copie de la macro supprimee")
+  assert(MACROS[#MACROS].body == "/dance", "macro du joueur touchee")
+  table.remove(MACROS)
+  -- clic avec bijou : 255 caractères au plus, une longue macro part sans la ligne du bijou
+  local button, trigger = Z.buttons[1], { kind = "click", key = "shift-3" }
+  Z:SetClick("shift-3", "@macro:Longue")
+  if not Z:HasTrinket(trigger, 1) then Z:ToggleTrinket(trigger, 1) end
+  local sent = button:GetAttribute("shift-macrotext3")
+  assert(sent == Z:ResolveMacro(near) and #sent <= 255, "bijou en trop : " .. #tostring(sent))
+  Z:SetClick("shift-3", "@macro:Pleine")
+  assert(button:GetAttribute("shift-macrotext3"):find("^/use %[@mouseover,nodead%] 13"), "bijou perdu sur une macro courte")
+  Z:ToggleTrinket(trigger, 1) Z:SetClick("shift-3", nil)
+  for _, x in ipairs({ b, big, c }) do Z:RemoveMacro(x) end
+  assert(#MACROS == before, "macros restantes : " .. #MACROS)
+  w:Hide()
 end)
 
 step("aucune variable globale imprevue", function()
@@ -2899,5 +5306,10 @@ for f in files:
     for n, ligne in enumerate(sans_commentaires(read(os.path.join(addon, f))).split('\n'), 1):
         if re.search(r'(?<!\\)(?:\\\\)*\\[^\\nrt"\'0-9abfv|x\[\]]', ligne):
             revue.append('barre inverse seule dans %s, ligne %d' % (f, n))
+# Lot 6c septies e (constat L1) : UI.Window ne traduit pas son titre, il lui arrive déjà traduit (L[...])
+for f in files:
+    for n, ligne in enumerate(sans_commentaires(read(os.path.join(addon, f))).split('\n'), 1):
+        if re.search(r'UI\.Window\(\s*"[^"]*"\s*,\s*"(?!"|Lyorune")', ligne): # sauf titre vide ou nom de l'addon
+            revue.append('titre de fenetre sans traduction dans %s, ligne %d' % (f, n))
 print(('  OK    revue : fonctions, champs et reglages coherents') if not revue else ('  ERREUR revue : ' + ', '.join(revue)))
 sys.exit(1 if rt.eval('FAILED') or found or revue else 0)

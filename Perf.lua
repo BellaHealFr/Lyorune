@@ -147,15 +147,20 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Fenêtre des résultats
 ----------------------------------------------------------------------------------------------------
+-- Nombres écrits pour le joueur (Z.Decimal, Core.lua) : virgule en français, point en anglais
 local function Kilo(value)
 	if not value then return "-" end
-	if value >= 1024 then return ("%.1f Mo"):format(value / 1024) end
-	return ("%.0f Ko"):format(value)
+	if value >= 1024 then return Z.L["%s Mo"]:format(Z.Decimal(value / 1024, 1)) end
+	return Z.L["%s Ko"]:format(Z.Decimal(value, 0))
 end
 
 local function Milli(value, digits)
 	if not value then return "-" end
-	return ("%." .. (digits or 2) .. "f ms"):format(value)
+	return Z.Decimal(value, digits or 2) .. " ms"
+end
+
+local function Percent(value)
+	return Z.Decimal(value, 2)
 end
 
 local COLUMNS_GROUP = { { 16, 120 }, { 140, 170 }, { 314, 130 }, { 448, 96 } }
@@ -181,17 +186,20 @@ local function Fill(row, ...)
 end
 
 local function Note(parent, y)
-	local note = Z.UI.Text(parent, 11)
+	local note = Z.UI.Label(parent, 11, nil, "dim")
 	note:SetPoint("TOPLEFT", 16, y)
 	note:SetWidth(528)
 	note:SetJustifyH("LEFT")
-	note:SetTextColor(0.6, 0.62, 0.68)
 	return note
 end
 
+-- Les deux états colorés de la phrase du mode performance : écrits dans le texte, pour qu'un changement de
+-- thème (qui repeint la phrase en gris) ne les efface pas
+local GREEN, GOLD = "|cff73ff8c", "|cffffd14d"
+
 local function Build()
 	local UI, L = Z.UI, Z.L
-	window = UI.Window("LyorunePerf", L["Performances de Lyorune"], 560, 430)
+	window = UI.Window("LyorunePerf", L["Performances de Lyorune"], 560, 450)
 	window.beside = true -- à côté des options, jamais dessous ni par-dessus
 	window:SetFrameStrata("FULLSCREEN_DIALOG")
 	tinsert(UISpecialFrames, "LyorunePerf")
@@ -213,8 +221,9 @@ local function Build()
 	for i = 1, ADDON_ROWS do window.addons[i] = Row(window, COLUMNS_ADDON, -230 - i * 19) end
 	window.profiler = Note(window, -362)
 
-	window.mode = UI.Text(window, 12)
-	window.mode:SetPoint("BOTTOMLEFT", 16, 22)
+	-- Sous la note (souvent sur deux lignes), jamais dessus ; à gauche du bouton « Mesurer à nouveau »
+	window.mode = UI.Label(window, 12, nil, "dim")
+	window.mode:SetPoint("TOPLEFT", window.profiler, "BOTTOMLEFT", 0, -8)
 	window.mode:SetWidth(360)
 	window.mode:SetJustifyH("LEFT")
 	local again = UI.Button(window, L["Mesurer à nouveau"], 150, 24, function() Z:ShowMeasure() end)
@@ -227,7 +236,7 @@ local function Show(result)
 	for i, row in ipairs(window.groups) do
 		local group = result.groups[i]
 		Fill(row, L["%d joueurs"]:format(group.count), Milli(group.full), Milli(group.perSecond),
-			("%.2f %%"):format(group.perSecond / 10))
+			Percent(group.perSecond / 10) .. " %")
 	end
 	for i, row in ipairs(window.addons) do
 		local addon = result.addons[i]
@@ -243,7 +252,7 @@ local function Show(result)
 	if not result.profiler then
 		profiler = L["Temps par image indisponible : le profileur du jeu est désactivé sur ce client."]
 	elseif result.share then
-		profiler = L["Depuis la connexion, Lyorune représente %.1f %% du temps de tous les addons."]:format(result.share)
+		profiler = L["Depuis la connexion, Lyorune représente %s %% du temps de tous les addons."]:format(Z.Decimal(result.share, 1))
 	else
 		profiler = L["Temps par image : moyenne depuis la connexion, mesurée par le jeu."]
 	end
@@ -252,27 +261,26 @@ local function Show(result)
 
 	local heavy = result.groups[#result.groups].perSecond > ADVICE_AT
 	if result.perfMode then
-		window.mode:SetText(L["Mode performance : activé (onglet Aide)."])
-		window.mode:SetTextColor(0.45, 1, 0.55)
+		window.mode:SetText(GREEN .. L["Mode performance : activé (chapitre Fenêtre et aide)."] .. "|r")
 	elseif heavy then
-		window.mode:SetText(L["Conseil : activez le mode performance (onglet Aide) pour les grands raids."])
-		window.mode:SetTextColor(1, 0.82, 0.3)
+		window.mode:SetText(GOLD .. L["Conseil : activez le mode performance (chapitre Fenêtre et aide) pour les grands raids."] .. "|r")
 	else
-		window.mode:SetText(L["Mode performance : désactivé, inutile ici (onglet Aide)."])
-		window.mode:SetTextColor(0.75, 0.78, 0.85)
+		window.mode:SetText(L["Mode performance : désactivé, inutile ici (chapitre Fenêtre et aide)."])
 	end
 end
 
--- /lyorune mesure et le bouton de l'onglet Aide
+-- /lyorune mesure et le bouton « Mesurer les performances » du chapitre Fenêtre et aide. Rappelée alors qu'elle
+-- est ouverte, la fenêtre mesure à nouveau (c'est son rôle) et passe devant.
 function Z:ShowMeasure()
 	local result, reason = Z:Measure()
 	if not result then return Z:Print(reason) end
 	if not window then Build() end
 	Show(result)
-	window:Show()
+	Z.UI.Reopen(window)
+	window:Raise()
 	local last, mine = result.groups[#result.groups], result.addons[1]
-	Z:Print(Z.L["mesure faite : %d joueurs, %.2f ms par seconde en combat chargé (%.2f %%), mémoire %s."]:format(
-		last.count, last.perSecond, last.perSecond / 10, Kilo(mine.memory)))
+	Z:Print(Z.L["mesure faite : %d joueurs, %s ms par seconde en combat chargé (%s %%), mémoire %s."]:format(
+		last.count, Z.Decimal(last.perSecond, 2), Percent(last.perSecond / 10), Kilo(mine.memory)))
 end
 
 -- Pour les tests
