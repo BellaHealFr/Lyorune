@@ -3465,6 +3465,88 @@ step("refonte 1.26.0, lot 5 : lumiere de soin, rune du chapitre, eclat de la cas
   Z:Refresh()
 end)
 
+step("refonte 1.26.0, lot 6b : visite guidee et messages avec les chapitres", function()
+  local UI = Z.UI
+  local w = Z:OptionsWindow()
+  if w:IsShown() then w:Hide() end
+  local saved = { language = Z.db.language, lockMode = Z.db.lockMode, tutorialDone = Z.db.tutorialDone }
+
+  -- Toute la visite, en français puis en anglais : plus aucun onglet, les chapitres à leur place
+  local function Tour()
+    local bodies = {}
+    Z:StartTutorial()
+    local card = LyoruneTutorial
+    for i = 1, 8 do
+      bodies[i] = card.body:GetText()
+      card.next:Run("OnClick")
+    end
+    assert(not card:IsShown() and not w:IsShown() and not Z.previewActive, "visite mal refermee")
+    return bodies
+  end
+  local fr = Tour()
+  for i, body in ipairs(fr) do assert(not body:lower():find("onglet", 1, true), "etape " .. i .. " cite un onglet") end
+  for _, word in ipairs({ "Disposition", "Vie et portée", "Mes soins", "Affaiblissements", "Profils et partage",
+    "Fenêtre et aide", "Accueil", "case témoin", "rune d'or", "Réglages fins", "recherche" }) do
+    assert(fr[7]:find(word, 1, true), "Regler Lyorune sans : " .. word)
+  end
+  assert(fr[3]:find("Chapitre Clics", 1, true) and fr[4]:find("chapitre Mes soins", 1, true), "clics, coins")
+  assert(fr[5]:find("partie Position", 1, true) and fr[5]:find("Cadres affichés", 1, true), "placer les cadres")
+  assert(fr[6]:find("case témoin", 1, true) and fr[6]:find("second clic", 1, true), "boutons du mode test")
+  assert(fr[8]:find("chapitre Clics", 1, true), "derniere carte")
+
+  Z.db.language = "enUS" Z:SetLanguage()
+  local en = Tour()
+  for i, body in ipairs(en) do
+    -- l'étape 3 montre les sorts du joueur, avec leur nom du jeu
+    assert(not body:find("%f[%a]tab%f[%A]") and (i == 3 or not body:find("[\195][\160-\191]")), "etape " .. i .. " : " .. body:sub(1, 60))
+  end
+  for _, word in ipairs({ "Layout", "Health and range", "My heals", "Debuffs", "Profiles and sharing",
+    "Window and help", "Home", "preview cell", "golden rune", "Fine settings" }) do
+    assert(en[7]:find(word, 1, true), "Setting up Lyorune sans : " .. word)
+  end
+  assert(en[6]:find("preview cell", 1, true) and en[8]:find("Clicks chapter", 1, true))
+
+  -- Messages du chat et textes hors options : chapitres, traduits, anciennes clés retirées
+  for _, key in ipairs({ "... et %d autre(s) : chapitre Clics.",
+    "nouveau sort sans clic : %s. Chapitre Clics des options, bouton « Attribuer ».",
+    "Glissez une macro sur une ligne du chapitre Clics, ou cliquez sur le sort d'une ligne pour la choisir.",
+    "plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Clics.",
+    "%d macro(s) créée(s) pour vos barres de sorts : chapitre Clics des options, ou /macro, onglet de votre personnage.",
+    "le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Clics, ligne en orange).",
+    "La synchronisation entre joueurs est coupée (chapitre Profils et partage).",
+    "la synchronisation entre joueurs est coupée (chapitre Profils et partage).",
+    "Mode performance : activé (chapitre Fenêtre et aide).",
+    "Conseil : activez le mode performance (chapitre Fenêtre et aide) pour les grands raids.",
+    "Mode performance : désactivé, inutile ici (chapitre Fenêtre et aide)." }) do
+    local value = Z.translations.enUS[key]
+    assert(value, "sans traduction anglaise : " .. key)
+    -- seul l'onglet du personnage de la fenêtre /macro du jeu reste un onglet
+    assert(key:find("/macro", 1, true) or not value:find("%f[%a]tab%f[%A]"), "onglet en anglais : " .. value)
+  end
+  assert(not Z.translations.enUS["... et %d autre(s) : onglet Clics."] and not Z.translations.enUS["Mode performance : activé (onglet Aide)."], "anciennes cles")
+
+  -- « Régler Lyorune » : la carte se pose à côté de la fenêtre d'options, jamais hors de l'écran
+  Z.db.language = saved.language Z:SetLanguage()
+  w.GetLeft = function() return 300 end w.GetRight = function() return 1380 end w.GetTop = function() return 900 end
+  UIParent.GetWidth = function() return 1920 end UIParent.GetHeight = function() return 1080 end
+  Z:StartTutorial()
+  local card = LyoruneTutorial
+  for _ = 1, 6 do card.next:Run("OnClick") end
+  assert(card.title:GetText() == "Régler Lyorune" and UI.main == w, card.title:GetText())
+  local p = card._point
+  assert(p[1] == "TOPLEFT" and p[2] == w and p[3] == "TOPRIGHT", "carte a droite des options")
+  w.GetLeft = function() return 110 end w.GetRight = function() return 1190 end UIParent.GetWidth = function() return 1300 end
+  card.back:Run("OnClick") card.next:Run("OnClick")
+  p = card._point
+  assert(p[2] == UIParent, "petit ecran : carte contre le bord, pas hors de l'ecran")
+  card.close:Run("OnClick")
+  w.GetLeft, w.GetRight, w.GetTop, UIParent.GetWidth, UIParent.GetHeight = nil, nil, nil, nil, nil
+  assert(not w:IsShown(), "options restees ouvertes")
+
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:SetLanguage() Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,

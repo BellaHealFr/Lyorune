@@ -194,12 +194,12 @@ Z.translations.enUS = {
 	["Molette : %d autre(s) raccourci(s)"] = "Wheel: %d more shortcut(s)",
 	["Aucun raccourci pour l'instant : cliquez sur « Ajouter », puis faites un clic ou appuyez sur une touche."] = "No shortcut yet: click \"Add\", then click or press a key.",
 	["Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser."] = "Free left click: target. Free right click: player menu. Drag a spell from your spellbook onto a line to set it.",
-	["... et %d autre(s) : onglet Clics."] = "... and %d more: Clicks tab.",
+	["... et %d autre(s) : chapitre Clics."] = "... and %d more: Clicks chapter.",
 	["Nouveau sort sans clic :"] ="New spell without a click:", ["Attribuer"] = "Assign", ["Ne plus proposer ce sort."] = "Stop suggesting this spell.",
 	["Puis, sur le bouton « Ajouter », faites le clic ou la touche qui lancera ce sort."] = "Then, on the \"Add\" button, do the click or key that will cast this spell.",
 	["Signaler un nouveau sort sans clic"] = "Report a new spell without a click",
 	["Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de ce chapitre avec le bouton « Attribuer »."] = "When you learn a spell usable on an ally that has no click or key yet: a message, and the spell at the top of this chapter with the \"Assign\" button.",
-	["nouveau sort sans clic : %s. Onglet Clics des options, bouton « Attribuer »."] = "new spell without a click: %s. Clicks tab of the options, \"Assign\" button.",
+	["nouveau sort sans clic : %s. Chapitre Clics des options, bouton « Attribuer »."] = "new spell without a click: %s. Clicks chapter of the options, \"Assign\" button.",
 	["Clics propres à chaque spécialisation"] = "Separate clicks for each specialization",
 	["Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout."] = "Each talent group has its own clicks and keys; they switch by themselves with your talents. Unticked: the same everywhere.",
 	-- Mes macros
@@ -210,7 +210,7 @@ Z.translations.enUS = {
 	["Importer de /macro"] = "Import from /macro",
 	["Une macro écrite pour vous : cochez ce que vous voulez, Lyorune écrit le texte."] = "A macro written for you: tick what you want, Lyorune writes the text.",
 	["Copie une macro de la fenêtre /macro du jeu. Vous pouvez aussi la glisser depuis /macro sur cette liste."] = "Copies a macro from the game's /macro window. You can also drag it from /macro onto this list.",
-	["Glissez une macro sur une ligne de l'onglet Clics, ou cliquez sur le sort d'une ligne pour la choisir."] = "Drag a macro onto a line of the Clicks tab, or click the spell of a line to pick it.",
+	["Glissez une macro sur une ligne du chapitre Clics, ou cliquez sur le sort d'une ligne pour la choisir."] = "Drag a macro onto a line of the Clicks chapter, or click the spell of a line to pick it.",
 	["Nom"] = "Name", ["Enregistrer"] = "Save", ["Supprimer"] = "Delete",
 	["{cible} est le joueur de la case. Une commande sans cible vise la case."] = "{cible} is the player in the cell. A command without a target aims at the cell.",
 	["Vérification"] = "Check", ["Envoyé au jeu"] = "Sent to the game", ["Posée sur"] = "Used on",
@@ -249,8 +249,8 @@ Z.translations.enUS = {
 	["Cliquez, puis déposez dans une barre de sorts."] = "Click, then drop on an action bar.",
 	["impossible de modifier les macros en combat."] = "macros cannot be changed in combat.",
 	["cette macro n'existe pas encore : elle sera créée dans quelques secondes."] = "this macro does not exist yet: it will be created in a few seconds.",
-	["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou décochez l'option dans l'onglet Clics."] = "no room left for a character macro: delete one in /macro, or untick the option in the Clicks tab.",
-	["%d macro(s) créée(s) pour vos barres de sorts : onglet Clics des options, ou /macro, onglet de votre personnage."] = "%d macro(s) created for your action bars: Clicks tab of the options, or /macro, your character's tab.",
+	["plus de place pour une macro de personnage : supprimez-en une dans /macro, ou coupez l'option dans le chapitre Clics."] = "no room left for a character macro: delete one in /macro, or turn the option off in the Clicks chapter.",
+	["%d macro(s) créée(s) pour vos barres de sorts : chapitre Clics des options, ou /macro, onglet de votre personnage."] = "%d macro(s) created for your action bars: Clicks chapter of the options, or /macro, your character's tab.",
 	["Lancer le sort dès l'appui (plus rapide)"] = "Cast on key press (faster)",
 	["Le même clic relève un joueur mort"] = "The same click resurrects a dead player",
 	["Si la cible est morte, votre sort de soin est remplacé par votre résurrection."] = "If the target is dead, your heal is replaced by your resurrection spell.",
@@ -292,8 +292,8 @@ Z.translations.enUS = {
 	["Avec Lyorune dans le groupe"] = "With Lyorune in the group",
 	["Avec Lyorune dans le groupe : %d (survolez)."] = "With Lyorune in the group: %d (hover).",
 	["Synchronisation coupée."] = "Sync turned off.", ["Pas de groupe : personne avec qui se synchroniser."] = "No group: nobody to sync with.",
-	["La synchronisation entre joueurs est coupée (onglet Profils)."] = "Sync between players is turned off (Profiles tab).",
-	["la synchronisation entre joueurs est coupée (onglet Profils)."] = "sync between players is turned off (Profiles tab).",
+	["La synchronisation entre joueurs est coupée (chapitre Profils et partage)."] = "Sync between players is turned off (Profiles and sharing chapter).",
+	["la synchronisation entre joueurs est coupée (chapitre Profils et partage)."] = "sync between players is turned off (Profiles and sharing chapter).",
 	["vous n'êtes pas en groupe."] = "you are not in a group.",
 	["avec Lyorune dans le groupe : %s."] = "with Lyorune in the group: %s.",
 	["Donner ma configuration"] = "Share my configuration", ["Recevoir une configuration"] = "Receive a configuration",
@@ -389,41 +389,45 @@ Z.translations.enUS = {
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
-			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins). "
+			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (Heals tab). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a cell out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nTop left: your heals over time. Bottom right: their debuffs. The small coloured squares in the corners: the spells you placed there (My heals chapter). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a cell out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
-			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
+			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (chapitre Disposition, partie Position), "
 			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
-			.. "Dans l'onglet Cadres, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat."] =
-		"Drag the |cff33dd88Group|r label above the cells to move the frames wherever you like. In a raid, each group has its number, and any of them moves the whole set.\n\nOnce you are happy, pick \"Locked\" in \"Moving the frames\" (Frames tab), or \"With Alt\" to move them only while holding the key.\n\nIn the Frames tab, \"Show the frames\" lets you see them all the time, or only in combat.",
+			.. "Dans la partie Cadres affichés, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat."] =
+		"Drag the |cff33dd88Group|r label above the cells to move the frames wherever you like. In a raid, each group has its number, and any of them moves the whole set.\n\nOnce you are happy, pick \"Locked\" in \"Moving the frames\" (Layout chapter, Position part), or \"With Alt\" to move them only while holding the key.\n\nIn the Shown frames part, \"Show the frames\" lets you see them all the time, or only in combat.",
 	["Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
-			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Glissez son bandeau pour le déplacer ; le bouton |cff33dd88Fermer|r, au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat."] =
-		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r or from the Frames tab. Drag its banner to move it; the |cff33dd88Close|r button at the end of the banner leaves it; it also closes by itself in combat.",
-	["Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
-			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
-			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case, dont la mana basse des autres soigneurs.\n"
-			.. "|cff33dd88Soins|r : vos soins sur la durée (nombre, décompte, fondu), les coins, le panneau des buffs manquants (tank compris), la recharge globale.\n"
-			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
-			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
-			.. "|cff33dd88Alertes|r : annonces et sons, même quand le jeu cache votre mana.\n"
-			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
-			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
+			.. "Ouvrez-le avec |cff33dd88/lyorune test|r, ou avec « 5 », « 10 », « 25 » ou « 40 » sous la case témoin des options. Glissez son bandeau pour le déplacer ; un second clic sur le même nombre, ou le bouton |cff33dd88Fermer|r au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat."] =
+		"|cff33dd88Test mode|r shows a fake group so you can tune the look in peace: wounded players, incoming heals, dispels, low health.\n\nOpen it with |cff33dd88/lyorune test|r, or with \"5\", \"10\", \"25\" or \"40\" under the preview cell of the options. Drag its banner to move it; a second click on the same number, or the |cff33dd88Close|r button at the end of the banner, leaves it; it also closes by itself in combat.",
+	["Tout se règle ici, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
+			.. "|cff33dd88Accueil|r : vos réglages changés, ce tutoriel, l'assistant, les nouveautés.\n"
+			.. "|cff33dd88Disposition|r : taille, rangement, position, cadres affichés (tanks, cible, épinglés).\n"
+			.. "|cff33dd88Apparence|r : forme des cases, thème, couleurs, texte.\n"
+			.. "|cff33dd88Vie et portée|r : soins en route, bouclier, vie basse, mana, joueurs loin.\n"
+			.. "|cff33dd88Mes soins|r : soins sur la durée, coins, sorts suivis, recharge globale.\n"
+			.. "|cff33dd88Affaiblissements|r : dissipation, icônes, importants, auras privées.\n"
+			.. "|cff33dd88Joueurs|r : rôle, marqueur, menace, buffs manquants, infobulle.\n"
+			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, macros.\n"
+			.. "|cff33dd88Alertes|r : annonces et sons.\n"
+			.. "|cff33dd88Profils et partage|r : profils, partage, entre joueurs.\n"
+			.. "|cff33dd88Fenêtre et aide|r : thème des fenêtres, effets, langue, aide.\n\n"
+			.. "À droite, la |cff33dd88case témoin|r suit chaque réglage en direct. Une |cffffd140rune d'or|r marque un réglage changé : "
+			.. "un clic dessus le rétablit. « Réglages fins » déplie les réglages plus rares.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite."] =
-		"Everything is set here, and nothing is mandatory: every element has its checkbox.\n\n|cff33dd88Frames|r: size, scale, element placement, sorting (group, role, grid) and order, tanks, pets, pinned players, target and focus, test mode.\n|cff33dd88Look|r: cell shape, corners, theme, colours, text, windows.\n|cff33dd88Indicators|r: what is shown on a cell, including other healers' low mana.\n|cff33dd88Heals|r: your heals over time (number, countdown, fading), the corners, the missing buffs panel (tank included), the global cooldown.\n|cff33dd88Lists|r: your spells to track, debuffs to ignore, your pinned players.\n|cff33dd88Clicks|r: clicks and keys on a single list, combinations, my macros, specializations.\n|cff33dd88Alerts|r: announcements and sounds, even when the game hides your mana.\n|cff33dd88Profiles|r: my profiles, switched automatically by group (battleground and arena included), partial copy, sharing, who resurrects whom.\n|cff33dd88Help|r: tutorial, setup assistant, performance mode and measurement, reporting a problem.\n\nCannot find a setting? Type a word in the search box, top right.",
-	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
+		"Everything is set here, and nothing is mandatory: every element has its switch.\n\n|cff33dd88Home|r: your changed settings, this tutorial, the setup assistant, the news.\n|cff33dd88Layout|r: size, sorting, position, shown frames (tanks, target, pinned).\n|cff33dd88Look|r: cell shape, theme, colours, text.\n|cff33dd88Health and range|r: incoming heals, shield, low health, mana, distant players.\n|cff33dd88My heals|r: heals over time, corners, tracked spells, global cooldown.\n|cff33dd88Debuffs|r: dispels, icons, important debuffs, private auras.\n|cff33dd88Players|r: role, marker, threat, missing buffs, tooltip.\n|cff33dd88Clicks|r: clicks and keys on a single list, macros.\n|cff33dd88Alerts|r: announcements and sounds.\n|cff33dd88Profiles and sharing|r: profiles, sharing, between players.\n|cff33dd88Window and help|r: window theme, effects, language, help.\n\nOn the right, the |cff33dd88preview cell|r follows every setting live. A |cffffd140golden rune|r marks a changed setting: click it to reset it. \"Fine settings\" unfolds the less common settings.\n\nCannot find a setting? Type a word in the search box, top right.",
+	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur."] =
-		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Clicks tab. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click).\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
+		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Clicks chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click).\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
 	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a cell to cast a spell on that player, without targeting them.",
-	["Aucun sort n'est encore attribué : vous les choisirez dans l'onglet Clics des options."] = "No spell is assigned yet: you will choose them in the Clicks tab of the options.",
+	["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Clics des options."] = "No spell is assigned yet: you will choose them in the Clicks chapter of the options.",
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
 
 	-- Thèmes
@@ -640,9 +644,9 @@ Z.translations.enUS = {
 	["Depuis la connexion, Lyorune représente %.1f %% du temps de tous les addons."] = "Since login, Lyorune accounts for %.1f%% of the time of all addons.",
 	["Temps par image : moyenne depuis la connexion, mesurée par le jeu."] = "Time per frame: average since login, measured by the game.",
 	["Aucun autre addon de soin chargé."] = "No other healing addon loaded.",
-	["Mode performance : activé (onglet Aide)."] = "Performance mode: on (Help tab).",
-	["Conseil : activez le mode performance (onglet Aide) pour les grands raids."] = "Tip: turn on performance mode (Help tab) for large raids.",
-	["Mode performance : désactivé, inutile ici (onglet Aide)."] = "Performance mode: off, not needed here (Help tab).",
+	["Mode performance : activé (chapitre Fenêtre et aide)."] = "Performance mode: on (Window and help chapter).",
+	["Conseil : activez le mode performance (chapitre Fenêtre et aide) pour les grands raids."] = "Tip: turn on performance mode (Window and help chapter) for large raids.",
+	["Mode performance : désactivé, inutile ici (chapitre Fenêtre et aide)."] = "Performance mode: off, not needed here (Window and help chapter).",
 	["mesure faite : %d joueurs, %.2f ms par seconde en combat chargé (%.2f %%), mémoire %s."] = "measured: %d players, %.2f ms per second in a busy fight (%.2f%%), memory %s.",
 	-- 1.16.0 : panneau des buffs manquants, assistant de départ
 	["Panneau des buffs manquants"] = "Missing buffs panel",
@@ -704,8 +708,8 @@ Z.translations.enUS = {
 	["Signaler un clic pris aussi par le jeu"] = "Warn about a click the game also uses",
 	["Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans ce chapitre. Lyorune ne modifie jamais les raccourcis du jeu."] = "If the game's click casting uses the same combination as a Lyorune click: a message, and the line in orange in this chapter. Lyorune never changes the game's bindings.",
 	["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."] = "The game's click casting also casts %s with this combination, and may go before Lyorune. Change one of them: click here for another combination, or remove it in the game's click casting.",
-	["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (onglet Clics, ligne en orange)."] = "the game's click casting also uses: %s. It may go before Lyorune: change one of them (Clicks tab, line in orange).",
-	["Onglet Clics : les icônes de bijou d'une ligne utilisent votre bijou avec le sort."] = "Clicks tab: the trinket icons on a line use your trinket along with the spell.",
+	["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Clics, ligne en orange)."] = "the game's click casting also uses: %s. It may go before Lyorune: change one of them (Clicks chapter, line in orange).",
+	["Chapitre Clics : les icônes de bijou d'une ligne utilisent votre bijou avec le sort."] = "Clicks chapter: the trinket icons on a line use your trinket along with the spell.",
 	["Bijou avec le sort : sur chaque ligne de l'onglet Clics, deux petites icônes utilisent votre bijou du haut ou du bas juste avant le sort, sur un joueur vivant (#42)."] = "Trinket with the spell: on each line of the Clicks tab, two small icons use your top or bottom trinket right before the spell, on a living player (#42).",
 	["Arrêter l'incantation : un clic ou une touche peut interrompre le sort en cours (#42)."] = "Stop casting: a click or a key can interrupt the spell being cast (#42).",
 	["Clic pris aussi par le jeu : si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune, un message le dit et la ligne passe en orange ; Lyorune ne touche jamais aux raccourcis du jeu (#42)."] = "Click the game also uses: if the game's click casting uses the same combination as a Lyorune click, a message says so and the line turns orange; Lyorune never touches the game's bindings (#42).",

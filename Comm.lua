@@ -143,7 +143,7 @@ end
 
 function Z:PrintSyncMembers()
 	local L = Z.L
-	if not Enabled() then return Z:Print(L["la synchronisation entre joueurs est coupée (onglet Profils)."]) end
+	if not Enabled() then return Z:Print(L["la synchronisation entre joueurs est coupée (chapitre Profils et partage)."]) end
 	if not IsInGroup() then return Z:Print(L["vous n'êtes pas en groupe."]) end
 	local parts = {}
 	for _, entry in ipairs(Z:SyncMembers()) do parts[#parts + 1] = Short(entry.name) .. " (" .. entry.version .. ")" end
@@ -251,7 +251,7 @@ end
 ----------------------------------------------------------------------------------------------------
 function Z:SendConfig(target)
 	local L = Z.L
-	if not Enabled() then return false, L["La synchronisation entre joueurs est coupée (onglet Profils)."] end
+	if not Enabled() then return false, L["La synchronisation entre joueurs est coupée (chapitre Profils et partage)."] end
 	target = (target or ""):match("^%s*(.-)%s*$")
 	if target == "" then return false, L["Indiquez le nom du joueur."] end
 	local code = Z:Export()

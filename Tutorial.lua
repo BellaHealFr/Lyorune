@@ -19,7 +19,7 @@ local function ClickSummary()
 		end
 	end
 	if #lines == 0 then
-		return Z.L["Aucun sort n'est encore attribué : vous les choisirez dans l'onglet Clics des options."]
+		return Z.L["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Clics des options."]
 	end
 	return table.concat(lines, "\n")
 end
@@ -41,7 +41,7 @@ local steps = {
 		title = "Soigner d'un clic",
 		text = function()
 			return Z.L["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] .. "\n\n" .. ClickSummary()
-				.. "\n\n" .. Z.L["Onglet Clics : les icônes de bijou d'une ligne utilisent votre bijou avec le sort."]
+				.. "\n\n" .. Z.L["Chapitre Clics : les icônes de bijou d'une ligne utilisent votre bijou avec le sort."]
 		end,
 		target = function() return Z.buttons[1] end,
 	},
@@ -51,7 +51,7 @@ local steps = {
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
 			.. "En haut à gauche : vos soins sur la durée. En bas à droite : ses affaiblissements. "
-			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (onglet Soins). "
+			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics.",
@@ -61,9 +61,9 @@ local steps = {
 		title = "Placer les cadres",
 		text = "Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
-			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (onglet Cadres), "
+			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (chapitre Disposition, partie Position), "
 			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
-			.. "Dans l'onglet Cadres, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
+			.. "Dans la partie Cadres affichés, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
 		target = function() return Z.header.handle end,
 		-- Les cadres sont libres le temps de l'étape, puis le choix du joueur revient (verrou compris)
 		before = function()
@@ -85,23 +85,27 @@ local steps = {
 		title = "Essayer sans groupe",
 		text = "Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
-			.. "Ouvrez-le avec |cff33dd88/lyorune test|r ou depuis l'onglet Cadres. Glissez son bandeau pour le déplacer ; le bouton |cff33dd88Fermer|r, au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat.",
+			.. "Ouvrez-le avec |cff33dd88/lyorune test|r, ou avec « 5 », « 10 », « 25 » ou « 40 » sous la case témoin des options. Glissez son bandeau pour le déplacer ; un second clic sur le même nombre, ou le bouton |cff33dd88Fermer|r au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat.",
 		target = function() return LyorunePreview end,
 		before = function() if not Z.previewActive then Z:TogglePreview(10) end end,
 		after = function() if Z.previewActive then Z:TogglePreview() end end,
 	},
 	{
 		title = "Régler Lyorune",
-		text = "Tout se règle ici, et rien n'est obligatoire : chaque élément a sa case à cocher.\n\n"
-			.. "|cff33dd88Cadres|r : taille, échelle, placement des éléments, rangement (groupe, rôle, grille) et tri, tanks, familiers, joueurs épinglés, cible et focalisation, mode test.\n"
-			.. "|cff33dd88Apparence|r : forme des cases, angles, thème, couleurs, texte, fenêtres.\n"
-			.. "|cff33dd88Indicateurs|r : ce qui s'affiche sur une case, dont la mana basse des autres soigneurs.\n"
-			.. "|cff33dd88Soins|r : vos soins sur la durée (nombre, décompte, fondu), les coins, le panneau des buffs manquants (tank compris), la recharge globale.\n"
-			.. "|cff33dd88Listes|r : vos sorts à suivre, les affaiblissements à ignorer, vos joueurs épinglés.\n"
-			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, combinaisons, mes macros, spécialisations.\n"
-			.. "|cff33dd88Alertes|r : annonces et sons, même quand le jeu cache votre mana.\n"
-			.. "|cff33dd88Profils|r : mes profils, changés tout seuls selon le groupe (champ de bataille et arène compris), copie d'une partie, partage, qui relève qui.\n"
-			.. "|cff33dd88Aide|r : tutoriel, assistant, mode performance et mesure, signaler un problème.\n\n"
+		text = "Tout se règle ici, et rien n'est obligatoire : chaque élément a son interrupteur.\n\n"
+			.. "|cff33dd88Accueil|r : vos réglages changés, ce tutoriel, l'assistant, les nouveautés.\n"
+			.. "|cff33dd88Disposition|r : taille, rangement, position, cadres affichés (tanks, cible, épinglés).\n"
+			.. "|cff33dd88Apparence|r : forme des cases, thème, couleurs, texte.\n"
+			.. "|cff33dd88Vie et portée|r : soins en route, bouclier, vie basse, mana, joueurs loin.\n"
+			.. "|cff33dd88Mes soins|r : soins sur la durée, coins, sorts suivis, recharge globale.\n"
+			.. "|cff33dd88Affaiblissements|r : dissipation, icônes, importants, auras privées.\n"
+			.. "|cff33dd88Joueurs|r : rôle, marqueur, menace, buffs manquants, infobulle.\n"
+			.. "|cff33dd88Clics|r : clics et touches sur une seule liste, macros.\n"
+			.. "|cff33dd88Alertes|r : annonces et sons.\n"
+			.. "|cff33dd88Profils et partage|r : profils, partage, entre joueurs.\n"
+			.. "|cff33dd88Fenêtre et aide|r : thème des fenêtres, effets, langue, aide.\n\n"
+			.. "À droite, la |cff33dd88case témoin|r suit chaque réglage en direct. Une |cffffd140rune d'or|r marque un réglage changé : "
+			.. "un clic dessus le rétablit. « Réglages fins » déplie les réglages plus rares.\n\n"
 			.. "Un réglage introuvable ? Tapez un mot dans la recherche, en haut à droite.",
 		target = function() return Z:OptionsWindow() end,
 		before = function() Z:ToggleOptions("Clics") end,
@@ -112,7 +116,7 @@ local steps = {
 	},
 	{
 		title = "C'est parti",
-		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez l'onglet Clics. "
+		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Clics. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
@@ -183,7 +187,12 @@ local function Show(index)
 		highlight:Show()
 		highlight.pulse:Stop()
 		if not UI.Calm() then highlight.pulse:Play() end
-		if target:GetWidth() > 400 then
+		if target == UI.main then
+			-- La fenêtre d'options est large : carte à sa droite, sinon à sa gauche, sinon contre le bord le
+			-- plus dégagé (petit écran), comme les fenêtres secondaires
+			card:SetPoint("TOPLEFT", target, "TOPRIGHT", 14, 0)
+			UI.PlaceBeside(card)
+		elseif target:GetWidth() > 400 then
 			card:SetPoint("TOPLEFT", target, "TOPRIGHT", 14, 0)
 		else
 			card:SetPoint("TOPLEFT", target, "BOTTOMRIGHT", 14, -14)

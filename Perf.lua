@@ -247,13 +247,13 @@ local function Show(result)
 
 	local heavy = result.groups[#result.groups].perSecond > ADVICE_AT
 	if result.perfMode then
-		window.mode:SetText(L["Mode performance : activé (onglet Aide)."])
+		window.mode:SetText(L["Mode performance : activé (chapitre Fenêtre et aide)."])
 		window.mode:SetTextColor(0.45, 1, 0.55)
 	elseif heavy then
-		window.mode:SetText(L["Conseil : activez le mode performance (onglet Aide) pour les grands raids."])
+		window.mode:SetText(L["Conseil : activez le mode performance (chapitre Fenêtre et aide) pour les grands raids."])
 		window.mode:SetTextColor(1, 0.82, 0.3)
 	else
-		window.mode:SetText(L["Mode performance : désactivé, inutile ici (onglet Aide)."])
+		window.mode:SetText(L["Mode performance : désactivé, inutile ici (chapitre Fenêtre et aide)."])
 		window.mode:SetTextColor(0.75, 0.78, 0.85)
 	end
 end
