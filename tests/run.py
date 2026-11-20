@@ -1956,6 +1956,8 @@ step("etape 12 : mode performance, mesure des performances", function()
   assert(b.missingBuff, "mise a jour immediate hors mode performance")
   -- mesure sans profileur : faux groupe de 5, 25 et 40, memoire de Lyorune et d'ElvUI
   Z.db.perfDiag = nil MEMORY._updated = nil
+  -- C6 : fausses cases jamais dessinées (mode test pas ouvert dans la partie) : pas de taille d'icône
+  for _, c in ipairs(Z:PreviewCells(40)) do c.iconSize = nil end
   local result = Z:Measure()
   assert(result and MEMORY._updated, "mesure")
   assert(#result.groups == 3 and result.groups[1].count == 5 and result.groups[3].count == 40, "faux groupes")
