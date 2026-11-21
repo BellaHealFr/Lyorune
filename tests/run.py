@@ -5629,6 +5629,60 @@ step("etape 21, lot 4 : decompte des soins a la taille de l'icone (aucun chiffre
   Z:Refresh()
 end)
 
+step("C10 : un reglage change en combat ne donne aucun sens des clics au jeu (action refusee sur une case securisee)", function()
+  -- espion sur chaque case : le faux client n'a pas RegisterForClicks
+  local calls = {}
+  for _, b in ipairs(Z.buttons) do
+    b.RegisterForClicks = function(_, mode) calls[#calls + 1] = mode end
+    b.clickMode = nil
+  end
+  -- actions remises à la fin du combat : seule « sens des clics » compte ici (la disposition l'est toujours)
+  local Safe, waits = Z.Safe, 0
+  Z.Safe = function(self, key, fn)
+    if key == "sens des clics" and InCombatLockdown() then waits = waits + 1 end
+    return Safe(self, key, fn)
+  end
+  local n, fontSize = #Z.buttons, Z.db.fontSize
+  local function all(mode)
+    if #calls ~= n then return false end
+    for _, m in ipairs(calls) do if m ~= mode then return false end end
+    -- C11 : la touche au survol part au même sens que la case
+    for _, b in ipairs(Z.buttons) do
+      if b:GetAttribute("useOnKeyDown") ~= (mode == "AnyDown") then return false end
+    end
+    return true
+  end
+  -- case sans sens connu (creee en combat) : la fin du combat le lui donne
+  Z.db.castOnDown = true
+  FireEvent("PLAYER_REGEN_ENABLED")
+  assert(all("AnyDown"), "fin du combat : " .. #calls .. " appels")
+  -- hors combat, un reglage ordinaire : aucun appel
+  calls = {}
+  Z.db.fontSize = fontSize + 1 Z:Refresh()
+  assert(#calls == 0, "reglage ordinaire hors combat : " .. #calls .. " appels")
+  -- en combat, un reglage ordinaire : aucun appel, aucun message
+  COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
+  Z.db.fontSize = fontSize Z:Refresh()
+  assert(#calls == 0 and waits == 0, "reglage ordinaire en combat : " .. #calls .. " appels, " .. waits .. " messages")
+  -- une case creee en combat (sens encore inconnu) ne fait pas parler un reglage ordinaire
+  Z.buttons[1].clickMode = nil
+  Z.db.fontSize = fontSize + 1 Z:Refresh()
+  assert(#calls == 0 and waits == 0, "case creee en combat : " .. waits .. " messages")
+  -- en combat, « Lancer le sort des l'appui » change : rien tout de suite, remis a la fin du combat
+  Z.db.castOnDown = false Z:Refresh()
+  assert(#calls == 0 and waits == 1, "sens change en combat : " .. #calls .. " appels, " .. waits .. " remises")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(all("AnyUp"), "sens applique a la fin du combat : " .. #calls .. " appels")
+  -- hors combat : applique tout de suite, sans message
+  calls = {}
+  Z.db.castOnDown = true Z:Refresh()
+  assert(all("AnyDown") and waits == 1, "sens change hors combat : " .. #calls .. " appels")
+  Z.Safe = Safe
+  Z.db.fontSize = fontSize
+  for _, b in ipairs(Z.buttons) do b.RegisterForClicks = nil end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

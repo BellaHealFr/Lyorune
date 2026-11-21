@@ -35,6 +35,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | Publiée (v1.23.8) |
 | 20 | 1.26.0 | Nouvelle fenêtre d'options : chapitres, case témoin, réglages changés, lumière de soin | Publiée (v1.26.0) |
 | 21 | 1.27.0 | Icônes à la mesure de chaque forme de case, taille réglable dans l'éditeur de placement | Publiée (v1.27.0) |
+| 22 | 1.28.0 | Rang adapté au niveau du joueur soigné, défensifs et contrôles sur les cases, raccourcis du jeu | À faire |
+| 23 | 1.29.0 | Trois affaiblissements à dissiper, mes sorts externes, joueur qui boit, mana basse au bord de l'écran, règle des 5 secondes | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -278,6 +280,48 @@ taille en pixels (un seul réglage), l'éditeur de placement les déplace seulem
   l'essai en jeu par l'auteur et la publication. Essai de l'auteur : chiffres du décompte qui se chevauchaient en
   Bandeau (C9), corrigés ; puis « tout est ok ». Publiée le 21 novembre 2026
 
+## Étapes 22 et 23 : idées retenues par l'auteur (21 novembre 2026)
+Choisies après une comparaison avec les addons de soin portés sur WoW Forever : on prend l'idée, jamais le code.
+Les points marqués « à vérifier » se décident avec l'auteur avant tout codage. Chaque fonction a son interrupteur.
+
+## Étape 22 : rangs, défensifs, contrôles, raccourcis (1.28.0)
+- [ ] Lot 1 : vérifications techniques, décidées avec l'auteur avant tout codage. Rangs : règle du jeu entre le
+  niveau d'un rang et celui de la cible, fonction qui donne le niveau d'apprentissage d'un rang, niveau d'un
+  joueur lisible en combat ou non. Contrôles : filtre « CROWD_CONTROL » des conteneurs d'auras sur ce client.
+  Défensifs : conteneur « HELPFUL » avec une liste de sorts, quel que soit le lanceur, visible en combat.
+  Raccourcis : `Bindings.xml` et touche qui lance le panneau des buffs manquants (bouton sécurisé)
+- [ ] Lot 2 : rang adapté au niveau du joueur soigné. Un clic sur un joueur de trop bas niveau lance le meilleur
+  rang qu'il peut recevoir, jamais plus fort que le rang choisi ; calculé hors combat, case par case, à chaque
+  changement de niveau ou de groupe ; en combat, la case garde le rang calculé (`Clicks.lua`, interrupteur)
+- [ ] Lot 3 : gros défensifs des autres joueurs sur la case (Mur protecteur, Bouclier divin, Bénédiction de
+  protection, Écorce, Évasion, Bloc de glace...), liste par classe dans `Data.lua` (`Z.defensives`) ; joueurs
+  étourdis, apeurés ou métamorphosés sur la case. Icônes dessinées par le jeu (`Containers.lua`), visibles en
+  combat, placées dans l'éditeur de placement, chacune son interrupteur
+- [ ] Lot 4 : raccourcis du jeu (Options, Raccourcis, AddOns) : ouvrir Lyorune, afficher ou masquer les cadres,
+  poser le prochain buff manquant (hors combat), mode test. Aucune touche posée au départ
+- [ ] Lot 5 : tests, guide du joueur fr et en, une ligne dans une carte existante de la visite, `## Notes`,
+  README, site, essai en jeu par l'auteur, publication
+
+## Étape 23 : dissipation, sorts externes, mana (1.29.0)
+Classées par intérêt pour les joueurs, puis par coût.
+- [ ] Jusqu'à 3 affaiblissements à dissiper par case, le plus important d'abord (aujourd'hui 1 seul : le
+  deuxième reste caché tant que le premier est là). Nombre réglable (`Containers.lua`)
+- [ ] Mes sorts externes sur la case : Infusion de puissance, Innervation ; vérifier Âme affaiblie après un
+  bouclier (`Data.lua`, `Z.trackedSpells`)
+- [ ] Joueur qui boit : un signe sur la case des soigneurs qui boivent, hors combat (auras lisibles), à côté de
+  la mana basse des soigneurs
+- [ ] Mana basse au bord de l'écran : un liseré bleu doux quand ma mana baisse, par une courbe (mana cachée :
+  aucune comparaison), texture de Lyorune seulement
+- [ ] Règle des 5 secondes : un trait sur ma case ou sur la barre d'incantation jusqu'au retour de la
+  régénération (le moment est déjà calculé dans `Alerts.lua`)
+- [ ] Tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication
+
+En réserve, après l'étape 23 : clics « Assister » et « Focaliser » ; clics différents en combat et hors
+combat ; totems du chaman sur les cases ; cases estompées hors combat ; moi en premier ou en dernier dans mon
+groupe ; infobulle des icônes d'auras ; préréglages « Épuré, Standard, Complet » ; texte « Vie » et « Vie et % » ;
+priorité de dissipation ; icône de classe ; « Me montrer » dans les nouveautés ; bilan de la soirée ; vérifier en
+jeu si « Incantation sur soi automatique » gêne les clics.
+
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
 2. Guide des joueurs (`docs/TUTORIEL.md`, `docs/GUIDE.en.md`), visite guidée en jeu, traduction anglaise.
@@ -301,6 +345,7 @@ buffs manquants, appel « Prêt ? », résurrection en cours, alertes de mana, p
 - Alertes « si la vie passe sous X % » : la vie est une valeur secrète en combat.
 - Conseiller de soins de zone et suivi des sorts lancés : indisponibles sur ce client.
 - Bouton de monture, cadres aimantés, protection contre les déconnexions : peu de gain pour la complexité ajoutée.
-- Conseil de rang de sort : en attente, tant qu'il n'est pas sûr que les rangs existent sur ce client.
+- Conseil de rang de sort : les rangs existent bien sur ce client (reconnus depuis la 1.25.0) ; repris à
+  l'étape 22 sous la forme du rang adapté au niveau du joueur soigné.
 - Demande d'Innervation ou d'Infusion de puissance : le jeu bloque les messages entre addons pendant un combat de
   boss, une clé mythique+ et le JcJ coté (vérifié le 17 novembre 2026).

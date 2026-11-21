@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.27.1] - 2026-11-21
+
+### Fixed
+
+- Changing a setting in combat no longer causes an action blocked by the game: the click mode (on press or on release) waits for the end of combat.
+- Hover keys cast their spell even when "Cast on key press" and the game's own "cast on key down" setting do not match.
+
 ## [1.27.0] - 2026-11-21
 
 ### Added
@@ -528,6 +535,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.1...v1.26.0
 [1.25.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.0...v1.25.1

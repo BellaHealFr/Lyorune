@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.27.1] - 2026-11-21
+
+### Corrigé
+
+- Changer un réglage en combat ne provoque plus d'action refusée par le jeu : le sens des clics (dès l'appui ou au relâchement) attend la fin du combat.
+- Les touches au survol lancent leur sort même quand « Lancer le sort dès l'appui » et le réglage « lancer à l'appui » du jeu ne vont pas dans le même sens.
+
 ## [1.27.0] - 2026-11-21
 
 ### Ajouté
@@ -528,6 +535,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.1...v1.26.0
 [1.25.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.0...v1.25.1

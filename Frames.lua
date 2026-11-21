@@ -657,9 +657,39 @@ local function Style(b)
 	Z.HideAuras(b)
 	Z.AnchorPrivateAuras(b)
 	Z.StyleAuraBoxes(b)
-	if b.RegisterForClicks then b:RegisterForClicks(db.castOnDown and "AnyDown" or "AnyUp") end
 end
 Z.StyleButton = Style
+
+-- Sens des clics : dès l'appui ou au relâchement. Le jeu refuse ce réglage en combat sur une case sécurisée
+-- (C10) : il n'est donné qu'à une case dont le sens change, et jamais en combat (la fin du combat le reprend).
+-- Une touche au survol (SetBindingClick) part selon « useOnKeyDown », ou à défaut selon le réglage « lancer à
+-- l'appui » du jeu : posé au même sens que la case, sinon la touche ne lance rien quand les deux diffèrent (C11).
+-- Les clics de souris ne lisent pas cet attribut (SecureActionButton_OnClick du jeu).
+local function ClickMode()
+	return db.castOnDown and "AnyDown" or "AnyUp"
+end
+
+-- Une case déjà réglée a-t-elle un autre sens que celui voulu ? (une case créée en combat attend la fin du
+-- combat sans compter ici : changer un autre réglage en combat n'affiche donc aucun message)
+local function ClickModeChanged()
+	local mode = ClickMode()
+	for _, b in ipairs(buttons) do
+		if b.clickMode and b.clickMode ~= mode then return true end
+	end
+	return false
+end
+
+local function ApplyClickMode()
+	if InCombatLockdown() then return end
+	local mode = ClickMode()
+	for _, b in ipairs(buttons) do
+		if b.clickMode ~= mode and b.RegisterForClicks then
+			b:RegisterForClicks(mode)
+			b:SetAttribute("useOnKeyDown", mode == "AnyDown")
+			b.clickMode = mode
+		end
+	end
+end
 
 ----------------------------------------------------------------------------------------------------
 -- Habillage d'une case : barres, textes, icônes, bordures. Sert aussi aux fausses cases du mode test.
@@ -921,6 +951,7 @@ local function InitButton(_, name)
 	b:HookScript("OnClick", NoteClick) -- après le clic, sans toucher au sort lancé
 
 	Style(b)
+	ApplyClickMode() -- en combat, attend la fin du combat
 	Z:RegisterExternalClicks(b)
 	OnAttributeChanged(b, "unit", b:GetAttribute("unit"))
 end
@@ -1442,6 +1473,7 @@ function Z:Refresh()
 		Style(b)
 		if b:IsVisible() then UpdateAll(b) end
 	end
+	if ClickModeChanged() then Z:Safe("sens des clics", ApplyClickMode) end
 	if Z.RefreshPreview then Z:RefreshPreview() end
 	if Z.RefreshMinimap then Z:RefreshMinimap() end
 	if Z.RefreshRunes then Z:RefreshRunes() end
@@ -1533,6 +1565,7 @@ function Z:CreateFrames()
 	-- en mode « Alt, Ctrl ou Maj », elles apparaissent le temps de maintenir la touche
 	Z:On("PLAYER_REGEN_DISABLED", UpdateHandles)
 	Z:On("PLAYER_REGEN_ENABLED", UpdateHandles)
+	Z:On("PLAYER_REGEN_ENABLED", ApplyClickMode) -- cases créées pendant le combat (C10)
 	Z:On("MODIFIER_STATE_CHANGED", function()
 		if MODIFIERS[db.lockMode] then UpdateHandles() end
 	end)
