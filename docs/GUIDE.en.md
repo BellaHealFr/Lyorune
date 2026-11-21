@@ -78,8 +78,8 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Frame faded further, footprints in the middle | They are far away (about 100 yards or more): you really need to move. Works in dungeons and raids too |
 | An eye in the middle, for 3 seconds | The game just refused your heal: they are out of sight (behind a pillar, a wall). Step aside |
 | "Dead", "Ghost", "Offline" | They are dead, a ghost, or disconnected (their frame stays in place) |
-| Small icons at the top left | Your heals over time on them |
-| Icons at the bottom right | Their debuffs |
+| Small icons at the top left (Tile, Square), at the top right of the health (Bar) or at the top of the block at the end of the cell (Strip) | Your heals over time on them |
+| Icons at the bottom right (Tile, Square), at the bottom right of the health (Bar) or at the bottom of the block at the end of the cell (Strip) | Their debuffs |
 | Large icon on the left | An important debuff (boss, or your own list) |
 | Pulsing golden outline | An important debuff is applied (with a sound for those in your list, if you turn it on) |
 | Icons drawn by the game (in the centre, by default) | Boss debuffs the game hides from addons: it shows them itself on the frame |

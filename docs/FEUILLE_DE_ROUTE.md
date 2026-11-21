@@ -272,7 +272,10 @@ taille en pixels (un seul réglage), l'éditeur de placement les déplace seulem
   recouvrent pas). En combat, la case attend avec les rangées de ses boutons d'avant (`b.boxRows`). Code de
   partage `sX,Y,T`, sans T à 100 % (lisible par les anciennes versions). Guides fr et en à jour
 - [ ] Lot 4 : essai en jeu en groupe de 5 et en raid, en combat ; guide du joueur, une ligne dans une carte
-  existante de la visite, anglais, `## Notes`, README, site, publication
+  existante de la visite, anglais, `## Notes`, README, site, publication. Textes faits le 21 novembre 2026 : carte
+  « Ce que disent les couleurs » (place selon la forme, « Placer les éléments de la case... » règle la taille),
+  tableau « Lire une case » du guide fr et en, rubrique « À votre goût » du README et du site, `## Notes`. Restent
+  l'essai en jeu par l'auteur et la publication
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.

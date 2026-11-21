@@ -77,8 +77,8 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Case encore plus estompée, empreintes au centre | Il est très loin (plus de 100 mètres environ) : il faut vraiment vous déplacer. Marche aussi en donjon et en raid |
 | Un œil au centre, pendant 3 secondes | Le jeu vient de refuser votre soin : il est hors de vue (derrière un pilier, un mur). Décalez-vous |
 | « Mort », « Fantôme », « Déco » | Il est mort, en fantôme, ou déconnecté (sa case reste en place) |
-| Petites icônes en haut à gauche | Vos soins sur la durée posés sur lui |
-| Icônes en bas à droite | Ses affaiblissements |
+| Petites icônes en haut à gauche (Tuile, Carré), en haut à droite de la vie (Barre) ou en haut du bloc au bout de la case (Bandeau) | Vos soins sur la durée posés sur lui |
+| Icônes en bas à droite (Tuile, Carré), en bas à droite de la vie (Barre) ou en bas du bloc au bout de la case (Bandeau) | Ses affaiblissements |
 | Grande icône à gauche | Un affaiblissement important (boss, ou votre liste) |
 | Contour doré qui pulse | Un affaiblissement important est posé (avec un son pour ceux de votre liste, si vous l'allumez) |
 | Icônes dessinées par le jeu (au centre, par défaut) | Des affaiblissements de boss que le jeu cache aux addons : il les montre lui-même sur la case |
