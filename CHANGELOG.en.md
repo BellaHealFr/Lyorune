@@ -6,6 +6,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.27.0] - 2026-11-21
+
+### Added
+
+- Size of each icon in "Place the cell elements..." (Layout chapter): "-" and "+" under the arrows, or the mouse wheel on the icon, from 50 to 200% of its original size, kept for each cell shape along with its position and carried by configuration sharing. A size changed in combat applies as soon as combat ends.
+
+### Improved
+
+- Icons fitted to each cell shape: on Tile and Square, your heals over time at the top left and debuffs at the bottom right, at a size taken from the cell (on Square, a row that is too long wraps to a second line); on Bar, along the top and bottom edges of the health bar, on the right, without covering the name; on Strip, in a block at the end of the cell, with the health number to their left. A row that is too wide shrinks instead of leaving the cell. The offsets of these icons (and of the health number on Strip) start from zero once on Bar, Strip and Square.
+- Guided tour and player guide: where the icons sit for each cell shape, and where to set their size.
+
+### Fixed
+
+- Heal countdown in seconds: the numbers are drawn at the icon's size and no longer spill onto the next icon (they overlapped on Strip).
+
 ## [1.26.0] - 2026-11-20
 
 ### Added
@@ -513,6 +528,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.1...v1.26.0
 [1.25.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.24.0...v1.25.0

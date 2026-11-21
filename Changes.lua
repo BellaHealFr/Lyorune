@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.27.0", date = "2026-11-21",
+		added = {
+			"Taille de chaque icône dans « Placer les éléments de la case... » (chapitre Disposition) : « - » et « + » sous les flèches, ou la molette sur l'icône, de 50 à 200 % de sa taille d'origine, gardée pour chaque forme de case avec sa place et transmise par le partage de configuration. Une taille changée en combat s'applique dès la fin du combat.",
+		},
+		improved = {
+			"Icônes à la mesure de chaque forme de case : en Tuile et en Carré, vos soins sur la durée en haut à gauche et les affaiblissements en bas à droite, à une taille tirée de la case (en Carré, une rangée trop longue passe à la ligne) ; en Barre, collés aux bords haut et bas de la barre de vie, côté droit, sans couvrir le nom ; en Bandeau, en bloc au bout de la case, le chiffre de vie rangé à leur gauche. Une rangée trop large rapetisse au lieu de sortir de la case. Les décalages de ces icônes (et du chiffre de vie en Bandeau) repartent une fois de zéro en Barre, Bandeau et Carré.",
+			"Visite guidée et guide du joueur : la place des icônes selon la forme de case, et où régler leur taille.",
+		},
+		fixed = {
+			"Décompte en secondes des soins : les chiffres sont écrits à la taille de l'icône et ne débordent plus sur la voisine (ils se chevauchaient en Bandeau).",
+		},
+	},
+	{
 		version = "1.26.0", date = "2026-11-20",
 		added = {
 			"Nouvelle fenêtre d'options, entièrement repensée et modernisée : onze chapitres rangés par tâche dans une barre latérale (Accueil, Disposition, Apparence, Vie et portée, Mes soins, Affaiblissements, Joueurs, Sorts et raccourcis, Alertes, Profils et partage, Fenêtre et aide), une page qui défile et se range par parties, et les réglages plus rares pliés sous « Réglages fins » pour garder l'essentiel sous les yeux.",

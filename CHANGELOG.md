@@ -6,6 +6,21 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.27.0] - 2026-11-21
+
+### Ajouté
+
+- Taille de chaque icône dans « Placer les éléments de la case... » (chapitre Disposition) : « - » et « + » sous les flèches, ou la molette sur l'icône, de 50 à 200 % de sa taille d'origine, gardée pour chaque forme de case avec sa place et transmise par le partage de configuration. Une taille changée en combat s'applique dès la fin du combat.
+
+### Amélioré
+
+- Icônes à la mesure de chaque forme de case : en Tuile et en Carré, vos soins sur la durée en haut à gauche et les affaiblissements en bas à droite, à une taille tirée de la case (en Carré, une rangée trop longue passe à la ligne) ; en Barre, collés aux bords haut et bas de la barre de vie, côté droit, sans couvrir le nom ; en Bandeau, en bloc au bout de la case, le chiffre de vie rangé à leur gauche. Une rangée trop large rapetisse au lieu de sortir de la case. Les décalages de ces icônes (et du chiffre de vie en Bandeau) repartent une fois de zéro en Barre, Bandeau et Carré.
+- Visite guidée et guide du joueur : la place des icônes selon la forme de case, et où régler leur taille.
+
+### Corrigé
+
+- Décompte en secondes des soins : les chiffres sont écrits à la taille de l'icône et ne débordent plus sur la voisine (ils se chevauchaient en Bandeau).
+
 ## [1.26.0] - 2026-11-20
 
 ### Ajouté
@@ -513,6 +528,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.1...v1.26.0
 [1.25.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.24.0...v1.25.0

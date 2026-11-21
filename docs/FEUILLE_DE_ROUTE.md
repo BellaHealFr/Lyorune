@@ -34,7 +34,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 18 | 1.24.0 | Demande d'Innervation ou d'Infusion de puissance | Abandonnée (le jeu bloque les messages entre addons pendant un combat de boss) |
 | 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | Publiée (v1.23.8) |
 | 20 | 1.26.0 | Nouvelle fenêtre d'options : chapitres, case témoin, réglages changés, lumière de soin | Publiée (v1.26.0) |
-| 21 | 1.27.0 | Icônes à la mesure de chaque forme de case, taille réglable dans l'éditeur de placement | À faire |
+| 21 | 1.27.0 | Icônes à la mesure de chaque forme de case, taille réglable dans l'éditeur de placement | Publiée (v1.27.0) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -271,11 +271,12 @@ taille en pixels (un seul réglage), l'éditeur de placement les déplace seulem
   taille. En Barre et Bandeau, les rangées agrandies s'arrêtent à la moitié de la barre de vie (elles ne se
   recouvrent pas). En combat, la case attend avec les rangées de ses boutons d'avant (`b.boxRows`). Code de
   partage `sX,Y,T`, sans T à 100 % (lisible par les anciennes versions). Guides fr et en à jour
-- [ ] Lot 4 : essai en jeu en groupe de 5 et en raid, en combat ; guide du joueur, une ligne dans une carte
+- [x] Lot 4 : essai en jeu en groupe de 5 et en raid, en combat ; guide du joueur, une ligne dans une carte
   existante de la visite, anglais, `## Notes`, README, site, publication. Textes faits le 21 novembre 2026 : carte
   « Ce que disent les couleurs » (place selon la forme, « Placer les éléments de la case... » règle la taille),
   tableau « Lire une case » du guide fr et en, rubrique « À votre goût » du README et du site, `## Notes`. Restent
-  l'essai en jeu par l'auteur et la publication
+  l'essai en jeu par l'auteur et la publication. Essai de l'auteur : chiffres du décompte qui se chevauchaient en
+  Bandeau (C9), corrigés ; puis « tous est ok ». Publiée le 21 novembre 2026
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
