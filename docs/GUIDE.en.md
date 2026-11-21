@@ -76,6 +76,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | White border | They are your target |
 | Blue, purple, brown or green outline and light tint | A magic effect, a curse, a disease or a poison that YOU can remove (the name and health stay readable) |
 | Faded frame | They are out of your healing range |
+| Pale health, mana and name (if you turn it on) | They are healthy, above your threshold (90% by default): those who need healing stand out. Their icons, dispels and threat stay sharp, and the cell under the mouse becomes sharp again. Switch "Fade healthy players", Health and range chapter, off by default |
 | Frame faded further, footprints in the middle | They are far away (about 100 yards or more): you really need to move. Works in dungeons and raids too |
 | An eye in the middle, for 3 seconds | The game just refused your heal: they are out of sight (behind a pillar, a wall). Step aside |
 | "Dead", "Ghost", "Offline" | They are dead, a ghost, or disconnected (their frame stays in place) |
@@ -117,6 +118,7 @@ There is no limit: add as many lines as you like. All lines stay visible; when t
 - **Changing the spell**: click the spell of the line, or drag a spell from your spellbook onto it.
 - **Changing the shortcut**: click the click or key of the line, then do the new combination. If it was already taken, the two spells are swapped: nothing is lost.
 - **Using a trinket with the spell**: first turn on "Trinkets with spells" (fine settings of Behaviour). Each line then has two small squares at its end, your top (1) and bottom (2) trinkets; the tooltip says which one. Click one to light it up (golden border, your trinket's icon): the trinket is used right before the spell, only if the player is alive. Click again to turn it off. If the trinket is not ready, the spell is still cast.
+- **See which clicks you use**: turn on "Count my clicks" (Behaviour part). A number appears next to each line: how many times you used it, for this character and this specialization (the tooltip says since when). A line never used is greyed out: a click you may want to free. Every click counts, even if the spell fails (out of range, on cooldown). Changing the spell of a line resets its count; swapping two bindings keeps each spell's count. "Reset my counts" starts again from zero for the specialization shown.
 - **Stop casting**: in the spell choice window, this button turns a click into a "stop" that interrupts the spell being cast (a long heal that is no longer needed, for example).
 - A left or right click without a spell keeps its usual role: target the player, open their menu.
 
@@ -292,7 +294,7 @@ The macros, element placement, bug report, error log, news and performance windo
 
 Every element of the cell has its switch, filed according to what it shows. Nothing is mandatory. You can, for example, only show the debuffs you can dispel.
 
-- **Health and range**: incoming heals, shield, low health overlay (its threshold in the fine settings), heal absorb, mana bar, healers' low mana, and the two range hints below.
+- **Health and range**: incoming heals, shield, low health overlay (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
 - **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown.
 - **Debuffs**: dispelling, icons, important debuffs, crowd-controlled player, boss private auras.
 - **Players**: role icon, raid marker, group leader, big defensives, summon and phase, threat, missing buffs, tooltip.

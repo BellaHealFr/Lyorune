@@ -107,6 +107,10 @@ Z.translations.enUS = {
 	-- Indicateurs
 	["Vie et mana"] = "Health and mana", ["Soins en route"] = "Incoming heals", ["Bouclier d'absorption"] = "Absorb shield",
 	["Voile rouge clignotant quand la vie est basse"] = "Flashing red overlay at low health",
+	["Estomper les joueurs en bonne santé"] = "Fade healthy players",
+	["Au-dessus du seuil, la vie, la mana et le nom d'un joueur s'estompent : ceux qui ont besoin de soins ressortent. Ses icônes, la dissipation et la menace restent nettes. La case survolée reste nette. Le jeu le calcule lui-même : ça marche en combat."] = "Above the threshold, a player's health, mana and name fade: those who need healing stand out. Their icons, dispels and threat stay sharp. The cell under the mouse stays sharp. The game computes it itself: it works in combat.",
+	["Ceux qui ont besoin de soins ressortent."] = "Those who need healing stand out.",
+	["Seuil de bonne santé (%)"] = "Healthy threshold (%)",
 	["Seuil de vie basse (%)"] = "Low health threshold (%)", ["Barre de mana"] = "Mana bar",
 	["Hauteur de la barre de mana"] = "Mana bar height",
 	["Tous : chaque joueur avec sa ressource, à la couleur du jeu (mana, rage, énergie, focalisation...), qui suit la forme du druide. Soigneurs : leur mana seulement."] = "Everyone: each player with their own resource, in the game's colour (mana, rage, energy, focus...), following the druid's form. Healers: only their mana.",
@@ -288,6 +292,13 @@ Z.translations.enUS = {
 	["Le même clic relève un joueur mort"] = "The same click resurrects a dead player",
 	["Si la cible est morte, votre sort de soin est remplacé par votre résurrection."] = "If the target is dead, your heal is replaced by your resurrection spell.",
 	["Laisser Clique ou le jeu gérer les clics"] = "Let Clique or the game handle clicks",
+	["Compter mes clics"] = "Count my clicks",
+	["À côté de chaque ligne de ce chapitre : combien de fois vous l'avez utilisée, par personnage et par spécialisation. Une ligne jamais utilisée est grisée. Chaque clic compte, même si le sort échoue. Changer le sort d'une ligne remet son compte à zéro."] = "Next to each line of this chapter: how many times you used it, per character and per specialization. A line never used is greyed out. Every click counts, even if the spell fails. Changing the spell of a line resets its count.",
+	["Combien de fois chaque ligne a servi."] = "How many times each line was used.",
+	["Remettre mes comptes à zéro"] = "Reset my counts",
+	["Remet à zéro les comptes de la spécialisation affichée."] = "Resets the counts of the specialization shown.",
+	["Utilisé %d fois"] = "Used %d times", ["Depuis le %s"] = "Since %s", ["%d/%m/%Y"] = "%m/%d/%Y",
+	["Chaque clic compte, même si le sort échoue (hors de portée, en recharge)."] = "Every click counts, even if the spell fails (out of range, on cooldown).",
 	["Bijoux avec les sorts"] = "Trinkets with spells",
 	["Deux boutons au bout de chaque ligne : votre bijou du haut ou du bas, utilisé juste avant le sort, sur un joueur vivant. Une ligne qui a déjà un bijou garde ses boutons."] = "Two buttons at the end of each line: your top or bottom trinket, used right before the spell, on a living player. A line that already has a trinket keeps its buttons.",
 	["À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés."] = "Only tick this if you prefer Clique or the game's click-casting: Lyorune's clicks are then turned off.",
@@ -443,7 +454,7 @@ Z.translations.enUS = {
 	["Une boisson près de la mana d'un soigneur : il boit."] = "A drink next to a healer's mana: they are drinking.",
 	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
-			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
+			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue). Vie et nom pâles : il est en bonne santé (à allumer, chapitre Vie et portée).\n\n"
 			.. "Vos soins sur la durée et ses affaiblissements se rangent selon la forme des cases ; "
 			.. "« Placer les éléments de la case... » (chapitre Disposition) les déplace et règle leur taille. "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
@@ -452,7 +463,7 @@ Z.translations.enUS = {
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Liseré |cff73ccffbleu|r : un gros défensif posé sur lui ; liseré |cffff4d33rouge|r au centre : il est étourdi, apeuré ou métamorphosé. "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nYour heals over time and their debuffs are laid out to fit the cell shape; \"Place the cell elements...\" (Layout chapter) moves them and sets their size. The small coloured squares in the corners: the spells you placed there (My heals chapter). A grey icon after your heals: a spell you cannot cast on them again yet (Weakened Soul). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). |cff73ccffBlue|r edge: a big defensive on the player; |cffff4d33red|r edge in the centre: they are stunned, feared or polymorphed. Hover a cell out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight). Pale health and name: they are healthy (to turn on, Health and range chapter).\n\nYour heals over time and their debuffs are laid out to fit the cell shape; \"Place the cell elements...\" (Layout chapter) moves them and sets their size. The small coloured squares in the corners: the spells you placed there (My heals chapter). A grey icon after your heals: a spell you cannot cast on them again yet (Weakened Soul). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). |cff73ccffBlue|r edge: a big defensive on the player; |cffff4d33red|r edge in the centre: they are stunned, feared or polymorphed. Hover a cell out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (chapitre Disposition, partie Position), "
@@ -778,6 +789,7 @@ Z.translations.enUS = {
 	["Le clic pour lancer du jeu lance aussi %s avec cette combinaison, et peut passer avant Lyorune. Changez l'un des deux : cliquez ici pour une autre combinaison, ou retirez-la dans le clic pour lancer du jeu."] = "The game's click casting also casts %s with this combination, and may go before Lyorune. Change one of them: click here for another combination, or remove it in the game's click casting.",
 	["le clic pour lancer du jeu prend aussi : %s. Il peut passer avant Lyorune : changez l'un des deux (chapitre Sorts et raccourcis, ligne en orange)."] = "the game's click casting also uses: %s. It may go before Lyorune: change one of them (Spells and bindings chapter, line in orange).",
 	["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."] = "A trinket with a spell? Spells and bindings chapter, fine settings: Trinkets with spells.",
+	["Combien de fois chaque clic a servi ? « Compter mes clics », même chapitre."] = "How many times each click was used? Count my clicks, same chapter.",
 	["Bijou avec le sort : sur chaque ligne de l'onglet Clics, deux petites icônes utilisent votre bijou du haut ou du bas juste avant le sort, sur un joueur vivant (#42)."] = "Trinket with the spell: on each line of the Clicks tab, two small icons use your top or bottom trinket right before the spell, on a living player (#42).",
 	["Arrêter l'incantation : un clic ou une touche peut interrompre le sort en cours (#42)."] = "Stop casting: a click or a key can interrupt the spell being cast (#42).",
 	["Clic pris aussi par le jeu : si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune, un message le dit et la ligne passe en orange ; Lyorune ne touche jamais aux raccourcis du jeu (#42)."] = "Click the game also uses: if the game's click casting uses the same combination as a Lyorune click, a message says so and the line turns orange; Lyorune never touches the game's bindings (#42).",
@@ -919,4 +931,6 @@ Z.translations.enUS = {
 	["Animation du logo au choix (chapitre Fenêtre et aide) : Aurore, Sceau ou Souffle, aux couleurs des classes de soin, ou Aucune. Le cercle de runes qui tournait disparaît."] = "Logo animation of your choice (Window and help chapter): Aurora, Seal or Breath, in the healing classes' colours, or None. The turning rune circle is gone.",
 	["Règle des 5 secondes : éteinte au départ, à allumer dans la partie Mana ; son trait se pose juste au-dessus de la barre de mana, sans la cacher."] = "Five second rule: off at first, turn it on in the Mana part; its line now sits just above the mana bar, without hiding it.",
 	["Règle des 5 secondes : la pêche et les sorts dont le jeu ne donne pas le coût ne lancent plus le trait."] = "Five second rule: fishing and spells whose cost the game does not give no longer start the line.",
+	["Joueurs en bonne santé estompés (chapitre Vie et portée, éteint au départ) : au-dessus d'un seuil réglable (90 % au départ), leur vie, leur mana et leur nom pâlissent, ceux qui ont besoin de soins ressortent. Icônes, dissipation et menace restent nettes, la case survolée aussi."] = "Healthy players faded (Health and range chapter, off by default): above an adjustable threshold (90% by default), their health, mana and name fade, those who need healing stand out. Icons, dispels and threat stay sharp, and so does the cell under the mouse.",
+	["Compter mes clics (chapitre Sorts et raccourcis, éteint au départ) : à côté de chaque ligne, combien de fois vous l'avez utilisée, par personnage et par spécialisation ; une ligne jamais utilisée est grisée, un bouton remet les comptes à zéro."] = "Count my clicks (Spells and bindings chapter, off by default): next to each line, how many times you used it, per character and per specialization; a line never used is greyed out, a button resets the counts.",
 }

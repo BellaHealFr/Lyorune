@@ -133,6 +133,7 @@ local steps = {
 		text = function()
 			return Z.L["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] .. "\n\n" .. ClickSummary()
 				.. "\n\n" .. Z.L["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."]
+				.. "\n" .. Z.L["Combien de fois chaque clic a servi ? « Compter mes clics », même chapitre."]
 		end,
 		target = Cell,
 		around = Block,
@@ -142,7 +143,7 @@ local steps = {
 		title = "Ce que disent les couleurs",
 		text = "|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
-			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue).\n\n"
+			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue). Vie et nom pâles : il est en bonne santé (à allumer, chapitre Vie et portée).\n\n"
 			.. "Vos soins sur la durée et ses affaiblissements se rangent selon la forme des cases ; "
 			.. "« Placer les éléments de la case... » (chapitre Disposition) les déplace et règle leur taille. "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "

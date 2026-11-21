@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.31.0] - 2026-11-21
+
+### Ajouté
+
+- Joueurs en bonne santé estompés (chapitre Vie et portée, éteint au départ) : au-dessus d'un seuil réglable (90 % au départ), leur vie, leur mana et leur nom pâlissent, ceux qui ont besoin de soins ressortent. Icônes, dissipation et menace restent nettes, la case survolée aussi.
+- Compter mes clics (chapitre Sorts et raccourcis, éteint au départ) : à côté de chaque ligne, combien de fois vous l'avez utilisée, par personnage et par spécialisation ; une ligne jamais utilisée est grisée, un bouton remet les comptes à zéro.
+
 ## [1.30.0] - 2026-11-21
 
 ### Ajouté
@@ -576,6 +583,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0

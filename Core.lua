@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.30.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.31.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -64,6 +64,8 @@ Z.defaults = {
 	rangeAlpha = 35,           -- opacité d'un joueur hors de portée, en %
 	farHint = true,            -- joueur très loin (le jeu ne le voit plus) : case plus estompée, empreintes au centre
 	losHint = true,            -- soin refusé car le joueur est hors de vue : œil au centre de sa case, 3 secondes
+	healthyFade = false,       -- (éteint au départ) joueur en bonne santé : vie, mana et nom estompés au-dessus du seuil (Frames.lua)
+	healthyFadeAt = 90,        -- seuil de bonne santé, en % de vie
 
 	-- Indicateurs (chacun peut être coupé)
 	showIncoming = true,       -- soins en route
@@ -124,6 +126,7 @@ Z.defaults = {
 	trinketButtons = false,    -- montrer les boutons « bijou avec le sort » sur chaque ligne de clic
 	clickConflictAlert = true, -- signaler un clic que le « clic pour lancer » du jeu prend aussi
 	clicksPerSpec = true,      -- des clics et des touches propres à chaque spécialisation (groupe de talents)
+	clickStats = false,        -- (éteint au départ) compter mes clics et mes touches au survol, par personnage (Clicks.lua)
 	macros = {},               -- ma bibliothèque de macros, par classe : macros.PRIEST[1] = { name = "...", body = "..." }
 	macroAutoTarget = true,    -- une commande de macro sans cible vise la case
 
@@ -167,7 +170,7 @@ Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
 	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 200, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
-	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, dispelCount = { 1, 3, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
+	lowHealthAt = { 10, 60, 5 }, healthyFadeAt = { 50, 100, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, dispelCount = { 1, 3, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 }
 
 Z.choices = {
@@ -214,7 +217,7 @@ Z.notInProfile = {
 	minimapButton = true, minimapAngle = true,
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
-	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true,
+	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,

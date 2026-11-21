@@ -295,6 +295,7 @@ function GetRealZoneText() return "Hurlevent" end
 function GetBuildInfo() return "1.60.1", "70938", "Nov 1 2026", INTERFACE or 16001 end
 function SendChatMessage(text, channel) SENT[#SENT + 1] = channel .. ":" .. text end
 function date() return "2026-11-16 21:00:00" end
+function time() return 1795392000 end
 function debugstack() return "Interface/AddOns/Lyorune/Frames.lua:42: in function <UpdateHealth>" end
 local handler = function(msg) LAST_ERROR = msg end
 function geterrorhandler() return handler end
@@ -344,6 +345,8 @@ function UnitHealth() return S(800) end
 function UnitHealthMax() return S(1000) end
 function UnitHealthMissing() return S(200) end
 function UnitHealthPercent(u, p, curve)
+	-- HEALTH_PCT (0 à 1) : un test qui veut une vraie courbe l'évalue lui-même (curve.Evaluate posé par le test)
+	if HEALTH_PCT and type(curve) == "table" and rawget(curve, "Evaluate") then return curve:Evaluate(HEALTH_PCT) end
 	if curve == CurveConstants.ScaleTo100 then return S(80) end
 	local c = { r = S(1), g = S(1), b = S(1), a = S(1) }
 	c.GetRGB = function() return c.r, c.g, c.b end
@@ -413,6 +416,7 @@ function IsAltKeyDown() return false end
 function IsControlKeyDown() return CTRL or false end
 function IsShiftKeyDown() return false end
 rawset(_G, "CTRL", false)
+rawset(_G, "HEALTH_PCT", false)
 rawset(_G, "LyorunePreview", false)
 
 

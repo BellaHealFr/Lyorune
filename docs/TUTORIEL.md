@@ -75,6 +75,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Bordure blanche | C'est votre cible |
 | Contour et léger voile bleu, violet, brun ou vert | Une magie, une malédiction, une maladie ou un poison que VOUS pouvez retirer (le nom et la vie restent lisibles) |
 | Case estompée | Il est hors de portée de vos soins |
+| Vie, mana et nom pâles (si vous l'allumez) | Il est en bonne santé, au-dessus de votre seuil (90 % au départ) : ceux qui ont besoin de soins ressortent. Ses icônes, la dissipation et la menace restent nettes, et la case survolée redevient nette. Interrupteur « Estomper les joueurs en bonne santé », chapitre Vie et portée, éteint au départ |
 | Case encore plus estompée, empreintes au centre | Il est très loin (plus de 100 mètres environ) : il faut vraiment vous déplacer. Marche aussi en donjon et en raid |
 | Un œil au centre, pendant 3 secondes | Le jeu vient de refuser votre soin : il est hors de vue (derrière un pilier, un mur). Décalez-vous |
 | « Mort », « Fantôme », « Déco » | Il est mort, en fantôme, ou déconnecté (sa case reste en place) |
@@ -116,6 +117,7 @@ Il n'y a pas de limite : ajoutez autant de lignes que vous voulez. Toutes les li
 - **Changer le sort** : cliquez sur le sort de la ligne, ou glissez-y un sort de votre grimoire.
 - **Changer le raccourci** : cliquez sur le clic ou la touche de la ligne, puis faites la nouvelle combinaison. Si elle était déjà prise, les deux sorts sont échangés : rien n'est perdu.
 - **Utiliser un bijou avec le sort** : allumez d'abord « Bijoux avec les sorts » (réglages fins de Comportement). Chaque ligne a alors deux petits carrés au bout, vos bijoux du haut (1) et du bas (2) ; l'infobulle dit lequel. Cliquez sur l'un pour l'allumer (bordure d'or, icône de votre bijou) : le bijou est utilisé juste avant le sort, seulement si le joueur est vivant. Cliquez de nouveau pour l'éteindre. Si le bijou n'est pas prêt, le sort part quand même.
+- **Savoir quels clics servent** : allumez « Compter mes clics » (partie Comportement). Un nombre apparaît à côté de chaque ligne : combien de fois vous l'avez utilisée, pour ce personnage et cette spécialisation (l'infobulle dit depuis quand). Une ligne jamais utilisée est grisée : un clic que vous pouvez peut-être libérer. Chaque clic compte, même si le sort échoue (hors de portée, en recharge). Changer le sort d'une ligne remet son compte à zéro ; échanger deux raccourcis garde le compte de chaque sort. « Remettre mes comptes à zéro » repart de zéro pour la spécialisation affichée.
 - **Arrêter l'incantation** : dans la fenêtre de choix du sort, ce bouton fait d'un clic un « stop » qui interrompt le sort en cours (un long soin devenu inutile, par exemple).
 - Un clic gauche ou droit sans sort garde son rôle habituel : cibler le joueur, ouvrir son menu.
 
@@ -291,7 +293,7 @@ Les fenêtres des macros, du placement des éléments, du rapport de bug, du jou
 
 Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper.
 
-- **Vie et portée** : soins en route, bouclier, voile de vie basse (son seuil dans les réglages fins), absorption de soins, barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
+- **Vie et portée** : soins en route, bouclier, voile de vie basse (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale.
 - **Affaiblissements** : dissipation, icônes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
 - **Joueurs** : icône de rôle, marqueur de raid, chef de groupe, gros défensifs, invocation et phase, menace, buffs manquants, infobulle.

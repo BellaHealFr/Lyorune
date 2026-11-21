@@ -49,7 +49,11 @@ local function Fill(cell, index, sample)
 			cell.text:SetText("")
 		end
 	end
-	cell.text:SetAlpha(1)
+	-- Joueur en bonne santé estompé (réglage healthyFade), comme sur les vraies cases
+	local faded = db.healthyFade and not dead and health >= db.healthyFadeAt
+	local alpha = faded and Z.HEALTHY_ALPHA or 1
+	Z.SetHealthyAlpha(cell, alpha)
+	cell.text:SetAlpha(alpha)
 
 	-- Soins en route et bouclier sur quelques joueurs blessés
 	cell.incoming:SetMinMaxValues(0, 100)

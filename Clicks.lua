@@ -264,13 +264,92 @@ function Z:MoveBinding(from, to)
 			if entry.key == from.key then entry.key = to.key end
 		end
 		trinkets[fromId], trinkets[toId] = nil, fromMask
+		Z:MoveClickStats(fromId, toId)
 		return Z:ApplyClicks()
 	end
 	Z:SetBinding(from, other, true)
 	Z:SetBinding(to, moving, true)
 	trinkets[fromId] = Z.TakesTrinket(other) and toMask or nil
 	trinkets[toId] = Z.TakesTrinket(moving) and fromMask or nil
+	Z:MoveClickStats(fromId, toId)
 	Z:ApplyClicks()
+end
+
+----------------------------------------------------------------------------------------------------
+-- STATISTIQUES DE MES CLICS (réglage clickStats, éteint au départ). Chaque clic et chaque touche au survol qui part
+-- depuis une case est compté, après le clic du bouton sécurisé (Frames.lua, NoteClick) : le sort part comme
+-- avant. Rien de secret n'est lu, seulement le bouton et les touches Alt, Ctrl, Maj. On compte les clics, pas les
+-- sorts réussis. Un seul appel par appui : la souris et les touches au survol ont le même sens (C11).
+-- Par personnage et par jeu de clics : LyoruneCharDB.clickStats.PRIEST = { since = date, lines = { ["shift-1"] =
+-- { v = "Rénovation", n = 42 } } }. Le compte va au couple touche + sort : un autre sort sur la ligne repart de zéro.
+----------------------------------------------------------------------------------------------------
+local MOUSE_BUTTONS = { LeftButton = "1", RightButton = "2", MiddleButton = "3", Button4 = "4", Button5 = "5" }
+
+-- Le raccourci qui vient de partir : son identifiant (Z.TriggerId) et ce qu'il lance
+function Z:ClickedTrigger(button)
+	if type(button) ~= "string" then return nil end
+	local index = tonumber(button:match("^zh(%d+)$")) -- touche au survol : bouton virtuel « zh1 », « zh2 »...
+	if index then
+		local entry = Z:GetHoverKeys()[index]
+		if entry and entry.key then return "key:" .. entry.key, entry.spell end
+		return nil
+	end
+	local number = MOUSE_BUTTONS[button]
+	if not number then return nil end
+	local key = (IsAltKeyDown() and "alt-" or "") .. (IsControlKeyDown() and "ctrl-" or "")
+		.. (IsShiftKeyDown() and "shift-" or "") .. number
+	return key, Z:GetClicks()[key]
+end
+
+-- Les comptes du jeu de clics en cours (create : les crée s'il n'y en a pas encore)
+local function StatsOf(create)
+	local all = Z.char and Z.char.clickStats
+	if not all then
+		if not create or not Z.char then return nil end
+		all = {}
+		Z.char.clickStats = all
+	end
+	local set = Z:ClickSet()
+	if not all[set] and create then all[set] = { since = time(), lines = {} } end
+	return all[set]
+end
+
+function Z:CountClick(button)
+	if not Z.db.clickStats or Z.db.externalClicks then return end
+	local id, value = Z:ClickedTrigger(button)
+	if not id or not value or value == "" then return end
+	local lines = StatsOf(true).lines
+	local line = lines[id]
+	if not line or line.v ~= value then
+		line = { v = value, n = 0 }
+		lines[id] = line
+	end
+	line.n = line.n + 1
+end
+
+-- Nombre d'utilisations d'un raccourci avec ce qu'il lance aujourd'hui (0 si jamais, ou si le sort a changé)
+function Z:ClickCount(trigger, value)
+	local stats = StatsOf(false)
+	local line = stats and stats.lines[Z.TriggerId(trigger)]
+	return (line and line.v == value) and line.n or 0
+end
+
+-- Date du début des comptes du jeu de clics en cours, ou nil
+function Z:ClickStatsSince()
+	local stats = StatsOf(false)
+	return stats and stats.since
+end
+
+-- Remise à zéro des comptes du jeu de clics en cours (l'autre spécialisation garde les siens)
+function Z:ResetClickStats()
+	local all = Z.char and Z.char.clickStats
+	if all then all[Z:ClickSet()] = { since = time(), lines = {} } end
+end
+
+-- Deux raccourcis échangés ou une touche renommée : chaque sort garde son compte
+function Z:MoveClickStats(fromId, toId)
+	local stats = StatsOf(false)
+	if stats then stats.lines[fromId], stats.lines[toId] = stats.lines[toId], stats.lines[fromId] end
 end
 
 -- Texte lisible de ce que fait un clic : sort, cibler, menu, ou macro (en jaune, en rouge si elle n'existe plus)

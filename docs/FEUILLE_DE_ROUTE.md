@@ -474,7 +474,7 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
 « à vérifier » se décident avec l'auteur avant tout codage. Chaque fonction a son interrupteur.
 
 ## Étape 24 : joueurs en bonne santé estompés, statistiques de mes clics (1.31.0)
-- [ ] Joueurs en bonne santé estompés, **éteint au départ** (demande de l'auteur) : au-dessus d'un seuil de vie
+- [x] Joueurs en bonne santé estompés, **éteint au départ** (demande de l'auteur) : au-dessus d'un seuil de vie
   réglable (90 % au départ par exemple), la case devient plus transparente, ceux qui ont besoin de soins ressortent.
   Marche en combat : `UnitHealthPercent` avec une courbe, passée à `SetAlpha` (même méthode que le texte caché à
   pleine vie, `hideWhenFullCurve`, Frames.lua), aucune comparaison de la vie. Vérifié dans le code du jeu de ce
@@ -483,14 +483,25 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
     pose donc sur un cadre intérieur pour que les deux se multiplient (un joueur loin et en bonne santé reste
     lisible comme « loin »). Ne jamais estomper une case survolée, ni ma cible si elle est mise en avant.
   - Réglage dans le chapitre Vie et portée, un seul endroit ; case témoin et mode test suivent.
-- [ ] Statistiques de mes clics, éteint au départ : chaque clic et chaque touche au survol qui part depuis une case
+  - **Décidé avec l'auteur (21 novembre 2026)** : s'estompent la vie, la mana, le nom et le chiffre de vie ;
+    icônes d'auras, affaiblissement à dissiper, menace et contour de ma cible restent nets (un joueur en bonne
+    santé mais à dissiper ressort). Interrupteur et seuil seuls (90 % au départ), opacité fixe 50 %, passage net
+    au seuil. La case survolée reste nette. Pas d'exception pour ma cible : « est-ce ma cible » peut être secret
+    et ne se combine pas avec la courbe ; son contour reste net de toute façon.
+- [x] Statistiques de mes clics, éteint au départ : chaque clic et chaque touche au survol qui part depuis une case
   est compté (bouton et touches Alt, Ctrl, Maj, par spécialisation). Dans la liste des clics, à côté de chaque
   ligne : nombre d'utilisations, ligne grisée si jamais utilisée, bouton « Remettre à zéro ».
   Rien de secret n'est lu : seulement le bouton et les touches au moment du clic (hook après le clic du bouton
   sécurisé, jamais avant : le sort part comme aujourd'hui). Compté par personnage dans les variables enregistrées.
   - À voir : compter les clics (simple, sûr) et non les sorts réussis ; le dire dans le guide.
+  - **Décidé avec l'auteur (21 novembre 2026)** : on compte les clics partis, même si le sort échoue. Le compte
+    mesure le couple touche + sort : un autre sort sur la ligne repart de zéro, échanger deux raccourcis garde le
+    compte de chaque sort. Vérifié dans le code du jeu (`SecureActionButton_OnClick`, branche `forever`) : un seul
+    `OnClick` par appui, souris ou touche au survol, puisque les deux ont le même sens depuis C11.
 - [ ] Tests, guide fr et en, visite (une ligne sur une carte existante), `## Notes`, README, site, essai en jeu,
-  publication
+  publication. Fait le 21 novembre 2026 : tests (étapes 24, lots 1 et 2), guides, visite (une ligne sur les cartes
+  « Ce que disent les couleurs » et « Soigner d'un clic »), Notes, README, site, installé dans le jeu. **Reste :
+  essai en jeu de l'auteur, puis publication.**
 
 ## Étape 25 : répartition entre soigneurs (1.32.0)
 - [ ] Lot 1, sans aucun message : je choisis les groupes ou les joueurs dont je m'occupe (fenêtre simple, par

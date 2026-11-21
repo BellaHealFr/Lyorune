@@ -589,6 +589,7 @@ end
 ----------------------------------------------------------------------------------------------------
 local rows, barIcons = {}, {}
 local ROW_H = 27            -- hauteur d'une ligne de raccourci ; toutes sont visibles, la page défile
+local COUNT_W = 44          -- largeur du nombre d'utilisations d'une ligne (statistiques de mes clics)
 local clickList, specLine, barBox -- lignes du chapitre Sorts et raccourcis, créées à sa première ouverture
 
 local function SpellText(value)
@@ -647,6 +648,15 @@ function RefreshClicks()
 					toggle.chosen:SetShown(on)
 				end
 				row.spell:SetPoint("RIGHT", trinkets and row.trinkets[1] or row.clear, "LEFT", -4, 0)
+				-- Statistiques de mes clics (réglage clickStats) : nombre d'utilisations, ligne grisée si jamais utilisée
+				local stats = Z.db.clickStats and not Z.db.externalClicks and binding.value ~= ""
+				local count = stats and Z:ClickCount(binding, binding.value) or 0
+				row.count:SetShown(stats)
+				row.count.label:SetText(count)
+				row.count.n = count
+				row.spell:SetPoint("LEFT", stats and row.count or row.key, "RIGHT", 4, 0)
+				row.key:SetAlpha((stats and count == 0) and 0.5 or 1)
+				row.spell:SetAlpha((stats and count == 0) and 0.5 or 1)
 			end
 		end
 		clickList.empty:SetShown(#bindings == 0)
@@ -947,6 +957,23 @@ function NewRow(i)
 	row.key:SetPoint("LEFT")
 	row.key.label:SetJustifyH("CENTER")
 	row.key.tip = L["Changer ce raccourci : cliquez, puis faites la nouvelle combinaison. S'il était déjà pris, les deux sorts sont échangés."]
+	-- Nombre d'utilisations (statistiques de mes clics), caché sans le réglage
+	row.count = CreateFrame("Frame", nil, row)
+	row.count:SetSize(COUNT_W, 24)
+	row.count:SetPoint("LEFT", row.key, "RIGHT", 4, 0)
+	row.count.label = UI.Label(row.count, 11, nil, "dim")
+	row.count.label:SetAllPoints()
+	row.count.label:SetJustifyH("CENTER")
+	row.count:SetScript("OnEnter", function(self)
+		local since = Z:ClickStatsSince()
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:AddLine(L["Utilisé %d fois"]:format(self.n or 0), 1, 1, 1)
+		if since then GameTooltip:AddLine(L["Depuis le %s"]:format(date(L["%d/%m/%Y"], since)), 0.6, 0.64, 0.7) end
+		GameTooltip:AddLine(L["Chaque clic compte, même si le sort échoue (hors de portée, en recharge)."], 0.6, 0.64, 0.7, true)
+		GameTooltip:Show()
+	end)
+	row.count:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	row.count:Hide()
 	row.spell = UI.Button(row, "", width - 150 - 4 - 4 - 22, 24, function() -- bord droit : RefreshClicks
 		if not row.binding then return end
 		ChooseAction(Trigger(row), Z:TakeCursor()) -- un sort ou une macro tenu sous la souris est posé directement
@@ -1822,6 +1849,8 @@ local function Chapters()
 				{ "seg", "absorbStyle", "Place du bouclier", nil, "Bande en bas : un trait fin sous la vie. À la suite de la vie : comme les cadres du jeu, le bouclier prolonge la vie, et un trait lumineux s'allume au bout quand il dépasse la vie manquante.", dep = { "showAbsorb", true } },
 				{ "check", "lowHealth", "Voile rouge clignotant quand la vie est basse" },
 				{ "step", "lowHealthAt", "Seuil de vie basse (%)", fine = true, dep = { "lowHealth", true } },
+				{ "check", "healthyFade", "Estomper les joueurs en bonne santé", "Au-dessus du seuil, la vie, la mana et le nom d'un joueur s'estompent : ceux qui ont besoin de soins ressortent. Ses icônes, la dissipation et la menace restent nettes. La case survolée reste nette. Le jeu le calcule lui-même : ça marche en combat.", desc = "Ceux qui ont besoin de soins ressortent." },
+				{ "step", "healthyFadeAt", "Seuil de bonne santé (%)", fine = true, dep = { "healthyFade", true } },
 				{ "check", "showHealAbsorb", "Absorption de soins", "Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat.", desc = "Bande rouge sombre : la part qu'un affaiblissement mange avant vos soins.", fine = true },
 			} },
 			{ "Mana", {
@@ -1925,6 +1954,11 @@ local function Chapters()
 				{ "check", "clicksPerSpec", "Clics propres à chaque spécialisation", "Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout.", fine = true },
 				{ "check", "newSpellAlert", "Signaler un nouveau sort sans clic", "Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de ce chapitre avec le bouton « Attribuer ».", fine = true },
 				{ "check", "clickConflictAlert", "Signaler un clic pris aussi par le jeu", "Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans ce chapitre. Lyorune ne modifie jamais les raccourcis du jeu.", fine = true },
+				{ "check", "clickStats", "Compter mes clics", "À côté de chaque ligne de ce chapitre : combien de fois vous l'avez utilisée, par personnage et par spécialisation. Une ligne jamais utilisée est grisée. Chaque clic compte, même si le sort échoue. Changer le sort d'une ligne remet son compte à zéro.", desc = "Combien de fois chaque ligne a servi." },
+				{ "button", "Remettre mes comptes à zéro", function()
+					Z:ResetClickStats()
+					RefreshClicks()
+				end, "Remet à zéro les comptes de la spécialisation affichée.", dep = { "clickStats", true } },
 				{ "check", "trinketButtons", "Bijoux avec les sorts", "Deux boutons au bout de chaque ligne : votre bijou du haut ou du bas, utilisé juste avant le sort, sur un joueur vivant. Une ligne qui a déjà un bijou garde ses boutons.", fine = true },
 				{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés.", fine = true },
 			} },

@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.31.0] - 2026-11-21
+
+### Added
+
+- Healthy players faded (Health and range chapter, off by default): above an adjustable threshold (90% by default), their health, mana and name fade, those who need healing stand out. Icons, dispels and threat stay sharp, and so does the cell under the mouse.
+- Count my clicks (Spells and bindings chapter, off by default): next to each line, how many times you used it, per character and per specialization; a line never used is greyed out, a button resets the counts.
+
 ## [1.30.0] - 2026-11-21
 
 ### Added
@@ -576,6 +583,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0

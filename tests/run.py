@@ -6410,6 +6410,159 @@ step("etape 23, lot 6 : visite guidee, phrases de mana selon les reglages et la 
   assert(ok, err)
 end)
 
+step("etape 24, lot 1 : joueurs en bonne sante estompes (courbe du jeu, survol, mort, interrupteur, mode test)", function()
+  local kept = { healthyFade = Z.db.healthyFade, healthyFadeAt = Z.db.healthyFadeAt, text = Z.db.text }
+  local create = C_CurveUtil.CreateColorCurve
+  HEALTH_PCT = 0.95 -- vie du joueur pour les courbes (faux client)
+  -- Courbe en escalier qui calcule vraiment l'opacité, comme le jeu
+  C_CurveUtil.CreateColorCurve = function()
+    local c = { points = {} }
+    function c:SetType() end
+    function c:AddPoint(x, color) self.points[#self.points + 1] = { x, color } end
+    function c:Evaluate(x)
+      local found = self.points[1][2]
+      for _, p in ipairs(self.points) do if x >= p[1] then found = p[2] end end
+      return found
+    end
+    return c
+  end
+  local ok, err = pcall(function()
+    assert(Z.defaults.healthyFade == false and Z.defaults.healthyFadeAt == 90, "reglage healthyFade : eteint au depart, 90 %")
+    assert(Z.limits.healthyFadeAt, "limites du seuil")
+    local b = Z.buttons[1]
+    b:SetAttribute("unit", "player") b.unit = "player"
+    Z.db.text = "DEFICIT"
+    Z.db.healthyFade = false Z:Refresh() Z.cellUpdates.health(b)
+    assert(b.hp:GetAlpha() == 1 and b.name:GetAlpha() == 1, "eteint : case estompee")
+    Z.db.healthyFade, Z.db.healthyFadeAt = true, 90 Z:Refresh() Z.cellUpdates.health(b)
+    assert(b.hp:GetAlpha() == Z.HEALTHY_ALPHA and b.power:GetAlpha() == Z.HEALTHY_ALPHA and b.name:GetAlpha() == Z.HEALTHY_ALPHA, "95 % : pas estompe")
+    assert(b.text:GetAlpha() == Z.HEALTHY_ALPHA, "95 % : chiffre de vie pas estompe")
+    assert(b.over:GetAlpha() == 1 and b.top:GetAlpha() == 1, "icones et alertes estompees")
+    HEALTH_PCT = 1 Z.cellUpdates.health(b)
+    assert(b.text:GetAlpha() == 0 and b.hp:GetAlpha() == Z.HEALTHY_ALPHA, "100 % : chiffre visible ou case nette")
+    HEALTH_PCT = 0.5 Z.cellUpdates.health(b)
+    assert(b.hp:GetAlpha() == 1 and b.text:GetAlpha() == 1, "50 % : case estompee")
+    -- survol : toujours nette, puis estompée de nouveau
+    HEALTH_PCT = 0.95
+    b:Run("OnEnter")
+    assert(b.hp:GetAlpha() == 1 and b.text:GetAlpha() == 1, "survol : case estompee")
+    b:Run("OnLeave")
+    assert(b.hp:GetAlpha() == Z.HEALTHY_ALPHA, "apres le survol : case nette")
+    -- pourcentage : estompé aussi
+    Z.db.text = "PERCENT" Z:Refresh() Z.cellUpdates.health(b)
+    assert(b.text:GetAlpha() == Z.HEALTHY_ALPHA, "pourcentage pas estompe")
+    -- seuil changé
+    Z.db.healthyFadeAt = 100 Z.db.text = "DEFICIT" Z:Refresh() Z.cellUpdates.health(b)
+    assert(b.hp:GetAlpha() == 1, "seuil 100 % : 95 % estompe")
+    HEALTH_PCT = 1 Z.cellUpdates.health(b)
+    assert(b.hp:GetAlpha() == Z.HEALTHY_ALPHA, "seuil 100 % : pleine vie") -- chiffre : courbe « invisible à 100 % » d'avant
+    -- joueur mort : jamais estompé
+    rawset(_G, "DEAD", true) Z.cellUpdates.health(b)
+    assert(b.hp:GetAlpha() == 1, "joueur mort estompe")
+    rawset(_G, "DEAD", false) Z.cellUpdates.health(b)
+    -- interrupteur coupé : tout redevient net
+    Z.db.healthyFade = false Z:Refresh() Z.cellUpdates.health(b)
+    assert(b.hp:GetAlpha() == 1 and b.name:GetAlpha() == 1 and b.power:GetAlpha() == 1, "coupe : case reste estompee")
+    -- case témoin et mode test : un joueur à pleine vie s'estompe, un blessé non
+    Z.db.healthyFade, Z.db.healthyFadeAt = true, 90
+    local cell = Z.FakeCell(UIParent)
+    Z.DrawFakeCell(cell, 1, true)
+    assert(cell.hp:GetAlpha() == Z.HEALTHY_ALPHA and cell.text:GetAlpha() == Z.HEALTHY_ALPHA, "case temoin pas estompee")
+    Z.DrawFakeCell(cell, 2, false)
+    assert(cell.hp:GetAlpha() == 1, "faux joueur blesse estompe")
+    Z.db.healthyFade = false Z.DrawFakeCell(cell, 1, true)
+    assert(cell.hp:GetAlpha() == 1, "mode test : interrupteur")
+    for _, text in ipairs({ "Estomper les joueurs en bonne santé", "Seuil de bonne santé (%)", "Ceux qui ont besoin de soins ressortent." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end)
+  C_CurveUtil.CreateColorCurve, HEALTH_PCT = create, false
+  rawset(_G, "DEAD", false)
+  for key, value in pairs(kept) do Z.db[key] = value end
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("etape 24, lot 2 : statistiques de mes clics (souris, touches au survol, sort change, echange, remise a zero)", function()
+  local set = Z:ClickSet()
+  local keptClicks, keptKeys, keptStats = Z.db.clicks[set], Z.db.hoverKeys[set], Z.char.clickStats
+  local kept = { clickStats = Z.db.clickStats, externalClicks = Z.db.externalClicks }
+  local shift = IsShiftKeyDown
+  local ok, err = pcall(function()
+    assert(Z.defaults.clickStats == false and Z.notInProfile.clickStats, "reglage clickStats : eteint au depart, hors profil")
+    Z.db.clicks[set] = { ["shift-1"] = "Rénovation", ["1"] = "Soins rapides" }
+    Z.db.hoverKeys[set] = { { key = "F", spell = "Prière de soins" } }
+    Z.char.clickStats = nil
+    Z:ApplyClicks()
+    local b = Z.buttons[1]
+    local renov, plain, key = { kind = "click", key = "shift-1" }, { kind = "click", key = "1" }, { kind = "key", key = "F" }
+    -- éteint : rien n'est compté
+    Z.db.clickStats = false
+    b:Run("OnClick", "LeftButton", false)
+    assert(Z.char.clickStats == nil, "eteint : clic compte")
+    Z.db.clickStats = true
+    -- clic seul, puis avec Maj, puis touche au survol (bouton virtuel « zh1 »)
+    b:Run("OnClick", "LeftButton", false)
+    IsShiftKeyDown = function() return true end
+    b:Run("OnClick", "LeftButton", false) b:Run("OnClick", "LeftButton", false)
+    IsShiftKeyDown = shift
+    b:Run("OnClick", "zh1", true)
+    assert(Z:ClickCount(plain, "Soins rapides") == 1, "clic seul")
+    assert(Z:ClickCount(renov, "Rénovation") == 2, "Maj + clic gauche")
+    assert(Z:ClickCount(key, "Prière de soins") == 1, "touche au survol")
+    assert(type(Z:ClickStatsSince()) == "number", "date du debut des comptes")
+    -- un clic libre (clic droit sans sort) ou un bouton inconnu ne compte pas
+    b:Run("OnClick", "RightButton", false) b:Run("OnClick", "Button9", false) b:Run("OnClick", "zh7", true)
+    assert(not Z.char.clickStats[set].lines["2"], "clic libre compte")
+    -- Clique ou le jeu gèrent les clics : rien n'est compté
+    Z.db.externalClicks = true
+    b:Run("OnClick", "LeftButton", false)
+    Z.db.externalClicks = false
+    assert(Z:ClickCount(plain, "Soins rapides") == 1, "clics externes comptes")
+    -- échange de deux raccourcis : chaque sort garde son compte
+    Z:MoveBinding(renov, plain)
+    assert(Z:ClickCount(plain, "Rénovation") == 2 and Z:ClickCount(renov, "Soins rapides") == 1, "echange : comptes perdus")
+    -- touche renommée : son compte la suit
+    Z:MoveBinding(key, { kind = "key", key = "G" })
+    assert(Z:ClickCount({ kind = "key", key = "G" }, "Prière de soins") == 1, "touche renommee : compte perdu")
+    -- un autre sort sur la ligne : le compte repart de zéro
+    Z:SetBinding(plain, "Soins")
+    assert(Z:ClickCount(plain, "Soins") == 0, "nouveau sort : ancien compte")
+    b:Run("OnClick", "LeftButton", false)
+    assert(Z:ClickCount(plain, "Soins") == 1, "nouveau sort : pas compte")
+    -- liste des options : nombre à côté de chaque ligne, ligne jamais utilisée grisée
+    Z:ToggleOptions("Sorts et raccourcis")
+    local w = Z:OptionsWindow()
+    local page = w.Select("Sorts et raccourcis")
+    Z.RefreshClicks()
+    local _, used = Z:ClickCell("1")
+    local _, other = Z:ClickCell("shift-1")
+    assert(used.count:IsShown() and used.count.n == 1 and used.spell:GetAlpha() == 1, "ligne utilisee")
+    assert(other.count.n == 1, "compte apres echange")
+    Z:SetBinding(renov, "Rénovation") Z.RefreshClicks()
+    local _, never = Z:ClickCell("shift-1")
+    assert(never.count.n == 0 and never.spell:GetAlpha() == 0.5 and never.key:GetAlpha() == 0.5, "ligne jamais utilisee pas grisee")
+    never.count:Run("OnEnter") never.count:Run("OnLeave")
+    assert(page.content.settings.clickStats, "reglage dans le chapitre Sorts et raccourcis")
+    -- remise à zéro : la spécialisation affichée seulement
+    Z.char.clickStats.OTHER = { since = 1, lines = { ["1"] = { v = "x", n = 3 } } }
+    Z:ResetClickStats() Z.RefreshClicks()
+    assert(Z:ClickCount(plain, "Soins") == 0 and Z.char.clickStats.OTHER.lines["1"].n == 3, "remise a zero")
+    -- réglage coupé : plus de nombre, plus de ligne grisée
+    page.content.settings.clickStats:Run("OnClick")
+    assert(not Z.db.clickStats and not used.count:IsShown() and used.spell:GetAlpha() == 1, "coupe : nombre visible")
+    w:Hide()
+    for _, text in ipairs({ "Compter mes clics", "Remettre mes comptes à zéro", "Utilisé %d fois", "Depuis le %s" }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end)
+  IsShiftKeyDown = shift
+  Z.db.clicks[set], Z.db.hoverKeys[set], Z.char.clickStats = keptClicks, keptKeys, keptStats
+  for k, value in pairs(kept) do Z.db[k] = value end
+  Z:ApplyClicks() Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

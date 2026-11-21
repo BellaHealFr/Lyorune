@@ -5,9 +5,9 @@
 Lyorune shows the whole group or raid as frames and casts the healer's spells with one click on a player's frame. It is designed to be simple, light in combat (events per unit, no permanent loop) and pleasant to look at. It suits every healer class on WoW Forever: priest, druid, paladin and shaman. It never changes the game's frames or other addons' frames, so it runs alongside ElvUI, Clique and other interface addons. No dependency.
 
 Main features:
-- Click casting: every mouse button, alone or with Shift, Ctrl, Alt, casts a chosen spell on a player's frame; a trinket can go with the spell.
+- Click casting: every mouse button, alone or with Shift, Ctrl, Alt, casts a chosen spell on a player's frame; a trinket can go with the spell; optional statistics show how often each click is used.
 - Hover keys: a keyboard key, extra mouse button or wheel casts a spell on the hovered frame.
-- Everything at a glance: health, incoming heals, shields, heal absorbs, mana, other healers' low mana and their drink, your external spells (Power Infusion, Innervate), Weakened Soul, heals over time and debuffs (drawn by the game, visible in combat), boss private auras, players' big defensives, stunned, feared or polymorphed players, threat, range in three levels, global cooldown, casting bar or ring.
+- Everything at a glance: health, incoming heals, shields, heal absorbs, mana, other healers' low mana and their drink, your external spells (Power Infusion, Innervate), Weakened Soul, heals over time and debuffs (drawn by the game, visible in combat), boss private auras, players' big defensives, stunned, feared or polymorphed players, healthy players faded (optional), threat, range in three levels, global cooldown, casting bar or ring.
 - Dispels: the frame lights up for magic, curse, disease or poison, up to 3 debuffs to dispel per cell.
 - Mana: a soft blue screen edge when your mana runs low, and a five second rule line on your cell.
 - Resurrection on the same click on a dead player.

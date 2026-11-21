@@ -55,6 +55,20 @@ local function ColorCurve(step, points)
 end
 
 local healthCurve, hideWhenFullCurve, lowHealthCurve, lowManaCurve, healCalculator
+local healthyCurve, healthyDeficitCurve -- joueur en bonne santé estompé (réglage healthyFade, BuildCurves)
+
+-- Joueur en bonne santé estompé (réglage healthyFade, éteint au départ) : au-dessus du seuil, la vie, la mana, le
+-- nom et le chiffre de vie passent à HEALTHY_ALPHA. L'opacité vient d'une courbe du jeu : la vie n'est jamais
+-- comparée, ça marche en combat. Les icônes, la dissipation, la menace et le contour de ma cible restent nets :
+-- un joueur en bonne santé mais à dissiper ressort quand même. La case survolée reste nette (b.hovered).
+-- Ma cible n'a pas d'exception : « est-ce ma cible » peut être secret et ne se combine pas avec la courbe.
+local HEALTHY_ALPHA = 0.5
+Z.HEALTHY_ALPHA = HEALTHY_ALPHA -- le mode test estompe de la même façon
+function Z.SetHealthyAlpha(b, alpha)
+	b.hp:SetAlpha(alpha)
+	b.power:SetAlpha(alpha)
+	b.name:SetAlpha(alpha)
+end
 
 -- Taille d'une case, réduite en grand raid si l'option est cochée.
 -- En mode test, on compte les faux joueurs : l'aperçu à 40 montre la vraie taille d'un raid de 40.
@@ -171,15 +185,22 @@ local function UpdateHealth(b)
 		if db.lowHealth then
 			b.low.fill:SetAlpha(UnitHealthPercent(unit, true, lowHealthCurve).a) -- visible sous le seuil seulement
 		end
+		local fade = db.healthyFade and not b.hovered
 		if db.text == "DEFICIT" then
 			b.text:SetFormattedText("-%s", AbbreviateNumbers(UnitHealthMissing(unit)))
-			b.text:SetAlpha(UnitHealthPercent(unit, true, hideWhenFullCurve).a) -- invisible à 100 %
+			-- invisible à 100 % ; estompé au-dessus du seuil de bonne santé (une seule courbe pour les deux)
+			b.text:SetAlpha(UnitHealthPercent(unit, true, fade and healthyDeficitCurve or hideWhenFullCurve).a)
 		elseif db.text == "PERCENT" and CurveConstants and CurveConstants.ScaleTo100 then
 			b.text:SetFormattedText("%.0f%%", UnitHealthPercent(unit, true, CurveConstants.ScaleTo100))
-			b.text:SetAlpha(1)
+			if fade then b.text:SetAlpha(UnitHealthPercent(unit, true, healthyCurve).a) else b.text:SetAlpha(1) end
 		else
 			b.text:SetText("")
 		end
+	end
+	if db.healthyFade and not b.status and not b.hovered then
+		Z.SetHealthyAlpha(b, UnitHealthPercent(unit, true, healthyCurve).a)
+	else
+		Z.SetHealthyAlpha(b, 1)
 	end
 	UpdatePrediction(b)
 end
@@ -509,6 +530,8 @@ end
 -- Infobulle hors combat : le joueur (infobulle du jeu), puis mes clics et touches (option)
 local function OnEnter(b)
 	b.hover:Show()
+	b.hovered = true -- la case survolée n'est jamais estompée (réglage healthyFade)
+	if db.healthyFade and b.unit then UpdateHealth(b) end
 	Z.hovered = b -- /lyorune epingler : le joueur survolé
 	if not b.unit or InCombatLockdown() then return end
 	local clicks = db.clickTooltip and Z:ClickSummary()
@@ -537,6 +560,8 @@ end
 
 local function OnLeave(b)
 	b.hover:Hide()
+	b.hovered = nil
+	if db.healthyFade and b.unit then UpdateHealth(b) end
 	if Z.hovered == b then Z.hovered = nil end
 	GameTooltip:Hide()
 end
@@ -909,8 +934,9 @@ local function MembersChanged() if Z.UpdateHandles then Z.UpdateHandles() end en
 local LOS_SECONDS, CLICK_WINDOW = 3, 0.5
 local clicked, clickedAt, casting, castEndAt = nil, 0, false, nil
 
-local function NoteClick(b)
+local function NoteClick(b, button)
 	clicked, clickedAt, casting, castEndAt = b, GetTime(), false, nil
+	if db.clickStats then Z:Try("compte des clics", Z.CountClick, Z, button) end -- statistiques de mes clics (Clicks.lua)
 end
 
 -- Mes incantations : celle qui part juste après un clic sur une case est liée à cette case
@@ -1386,6 +1412,17 @@ local function BuildCurves()
 		0.0, 1, 1, 1, 1,
 		1.0, 1, 1, 1, 0,
 	})
+	-- Bonne santé : estompé à partir du seuil ; pour le chiffre de vie manquante, invisible aussi à 100 %
+	local healthy = (tonumber(db.healthyFadeAt) or 90) / 100
+	healthyCurve = ColorCurve(true, {
+		0.0, 1, 1, 1, 1,
+		healthy, 1, 1, 1, HEALTHY_ALPHA,
+	})
+	healthyDeficitCurve = healthy < 1 and ColorCurve(true, {
+		0.0, 1, 1, 1, 1,
+		healthy, 1, 1, 1, HEALTHY_ALPHA,
+		1.0, 1, 1, 1, 0,
+	}) or hideWhenFullCurve
 	lowHealthCurve = ColorCurve(true, {
 		0.0, 1, 1, 1, 1,
 		db.lowHealthAt / 100, 1, 1, 1, 0,
