@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.32.0", date = "2026-11-21",
+		added = {
+			"Répartition entre soigneurs (chapitre Joueurs, partie Mes joueurs) : vos groupes de raid et vos joueurs choisis (un tank, /lyorune pourmoi) portent un trait doré au bord gauche de leur case ; au choix, les autres s'estompent un peu. Marche même si vous êtes seul à avoir Lyorune.",
+			"Le chef ou un assistant envoie qui soigne quoi à tous les soigneurs qui ont Lyorune (« Répartir les soigneurs... », /lyorune repartir), avant le combat : leurs repères suivent tout de suite, et le soigneur prévu s'affiche au survol d'une case. Pendant un combat de boss, le jeu bloque ces messages : l'envoi est refusé avec un message clair.",
+		},
+		improved = {
+			"Guide du joueur et visite guidée : la répartition entre soigneurs.",
+		},
+		fixed = {
+			"Un message entre joueurs freiné par le jeu passait pour envoyé : Lyorune lit maintenant la réponse du jeu.",
+		},
+	},
+	{
 		version = "1.31.0", date = "2026-11-21",
 		added = {
 			"Joueurs en bonne santé estompés (chapitre Vie et portée, éteint au départ) : au-dessus d'un seuil réglable (90 % au départ), leur vie, leur mana et leur nom pâlissent, ceux qui ont besoin de soins ressortent. Icônes, dissipation et menace restent nettes, la case survolée aussi.",

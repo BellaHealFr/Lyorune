@@ -6563,6 +6563,220 @@ step("etape 24, lot 2 : statistiques de mes clics (souris, touches au survol, so
   assert(ok, err)
 end)
 
+step("etape 25, lot 1 : mes joueurs (repere, groupes en raid, joueurs choisis, estompage, nom secret, commande, mode test)", function()
+  local kept = { assignMark = Z.db.assignMark, assignFade = Z.db.assignFade, assignGroups = Z.db.assignGroups, assignPlayers = Z.db.assignPlayers }
+  local keptRaid, keptGrouped, keptMembers, getName = RAID, GROUPED, MEMBERS, GetUnitName
+  local roster = {}
+  rawset(_G, "GetRaidRosterInfo", function(i) return "x", 0, roster[i] or 1 end)
+  local b = Z.buttons[1]
+  local ok, err = pcall(function()
+    assert(Z.defaults.assignMark == true and Z.defaults.assignFade == false and Z.defaults.assignAccept == true, "reglages de depart")
+    assert(Z.notInProfile.assignGroups and Z.notInProfile.assignFade and Z.private.assignGroups and Z.private.assignPlayers, "choix hors profil ou partage")
+    Z.db.assignGroups, Z.db.assignPlayers = {}, {}
+    GROUPED, RAID = true, false
+    b:SetAttribute("unit", "party1") b.unit = "party1"
+    Z.cellUpdates.all(b)
+    local mine, active = Z.AssignState("party1")
+    assert(mine == false and active == false and not b.assign:IsShown() and (b.assignDim or 1) == 1, "rien choisi : repere ou estompage")
+    -- un joueur choisi, en groupe de cinq
+    Z.db.assignPlayers["Joueur-party1"] = true
+    Z.RefreshAssign()
+    assert(b.assign:IsShown(), "joueur choisi sans repere")
+    assert(Z.AssignState("party2") == false, "autre joueur pris pour le mien")
+    assert(select(2, Z.AssignState("target")) == false, "case de ma cible comptee")
+    -- les groupes ne comptent qu'en raid
+    Z.db.assignPlayers, Z.db.assignGroups = {}, { [2] = true }
+    assert(select(2, Z.AssignState("party1")) == false, "groupes comptes hors raid")
+    RAID, MEMBERS = true, 10
+    roster[3], roster[7] = 1, 2
+    assert(Z.AssignState("raid7") == true and Z.AssignState("raid3") == false, "groupe de raid")
+    -- les autres un peu estompés, la portée garde ses paliers
+    Z.db.assignFade = true
+    b:SetAttribute("unit", "raid3") b.unit = "raid3"
+    Z.cellUpdates.all(b)
+    assert(not b.assign:IsShown() and b.assignDim == Z.ASSIGN_DIM and math.abs(b:GetAlpha() - Z.ASSIGN_DIM) < 0.01, "autre joueur pas estompe")
+    b:SetAttribute("unit", "raid7") b.unit = "raid7"
+    Z.cellUpdates.all(b)
+    assert(b.assign:IsShown() and (b.assignDim or 1) == 1 and b:GetAlpha() == 1, "mon joueur estompe")
+    -- nom secret : la case garde son état
+    GetUnitName = function() return MakeSecret() end
+    assert(Z.AssignState("raid7") == nil, "nom secret : etat devine")
+    Z.RefreshAssign()
+    assert(b.assign:IsShown(), "nom secret : repere perdu")
+    GetUnitName = getName
+    -- repère coupé
+    Z.db.assignMark = false Z.RefreshAssign()
+    assert(not b.assign:IsShown(), "repere coupe")
+    Z.db.assignMark = true
+    -- /lyorune pourmoi : le joueur survolé, puis un nom tapé
+    b:Run("OnEnter")
+    SlashCmdList.LYORUNE("pourmoi")
+    b:Run("OnLeave")
+    assert(Z.db.assignPlayers["Joueur-raid7"], "pourmoi : joueur survole")
+    SlashCmdList.LYORUNE("pourmoi joueur-raid7")
+    assert(not Z.db.assignPlayers["Joueur-raid7"], "pourmoi : retrait")
+    -- case témoin et mode test
+    local cell = Z.FakeCell(UIParent)
+    Z.DrawFakeCell(cell, 1, true)
+    assert(cell.assign:IsShown(), "case temoin sans repere")
+    Z.db.assignGroups = { [1] = true }
+    Z.DrawFakeCell(cell, 7, false)
+    assert(not cell.assign:IsShown() and math.abs(cell:GetAlpha() - Z.ASSIGN_DIM) < 0.01, "mode test : autre groupe")
+    Z.DrawFakeCell(cell, 3, false)
+    assert(cell.assign:IsShown() and cell:GetAlpha() == 1, "mode test : mon groupe")
+    Z.db.assignGroups = {}
+    Z.DrawFakeCell(cell, 1, true)
+    assert(not cell.assign:IsShown(), "case temoin : repere sans choix")
+    -- options : chapitre Joueurs
+    Z:ToggleOptions("Joueurs")
+    local w = Z:OptionsWindow()
+    local page = w.Select("Joueurs")
+    assert(page.content.settings.assignMark and page.content.settings.assignFade, "reglages hors du chapitre Joueurs")
+    assert(Z.assignStatus and Z.assignStatus.text:GetText():find("votre choix", 1, true), "etat de la repartition")
+    w:Hide()
+    for _, text in ipairs({ "Repère sur mes joueurs", "Groupes de raid dont je m'occupe", "Joueurs dont je m'occupe", "Estomper un peu les autres", "%s fait partie de vos joueurs." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end)
+  GetUnitName = getName
+  RAID, GROUPED, MEMBERS = keptRaid, keptGrouped, keptMembers
+  rawset(_G, "GetRaidRosterInfo", nil)
+  for key, value in pairs(kept) do Z.db[key] = value end
+  b.assignDim = nil
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("etape 25, lot 2 : repartition du chef (droits, reception, envoi, blocage, code du jeu, depart, effacement, nouveau venu, fenetre)", function()
+  local kept = { assignAccept = Z.db.assignAccept, assignGroups = Z.db.assignGroups, assignPlayers = Z.db.assignPlayers, syncEnabled = Z.db.syncEnabled }
+  local keptRaid, keptGrouped, keptMembers, keptLeader, keptAssists, keptNames = RAID, GROUPED, MEMBERS, LEADER, ASSISTS, GROUP_NAMES
+  local lockdown, send, now = C_ChatInfo.InChatMessagingLockdown, C_ChatInfo.SendAddonMessage, NOW
+  local roster = { 1, 1, 2, 4, 3 }
+  rawset(_G, "GetRaidRosterInfo", function(i) return "x", 0, roster[i] or 1 end)
+  local function Msg(text, sender) FireEvent("CHAT_MSG_ADDON", "Lyorune", text, "RAID", sender) end
+  local ok, err = pcall(function()
+    Z.db.assignGroups, Z.db.assignPlayers, Z.db.syncEnabled, Z.db.assignAccept = { [3] = true }, {}, true, true
+    Z.char.assignShared = nil
+    GROUPED, RAID, MEMBERS, ASSISTS = true, true, 5, {}
+    GROUP_NAMES = { raid1 = "Joueur-player", raid2 = "Chef", raid3 = "Soin", raid4 = "Tankou", raid5 = "Autre" }
+    LEADER = "raid2"
+    -- reçue du chef, en deux parts : appliquée d'office quand tout est là
+    Msg("A:42:1:2:Joueur-player=12/Tankou-MonRoyaume", "Chef")
+    assert(Z.char.assignShared == nil, "appliquee avant la derniere part")
+    Msg("A:42:2:2:Soin-MonRoyaume=3/", "Chef")
+    local shared = Z.char.assignShared
+    assert(shared and shared.by == "Chef" and shared.healers["Joueur-player"].groups[1], "repartition recue")
+    assert(PRINTED[#PRINTED]:find("Chef", 1, true) and PRINTED[#PRINTED]:find("groupes 1 et 2, Tankou", 1, true), "ligne dans la discussion : " .. PRINTED[#PRINTED])
+    -- ma part remplace mon choix (groupe 3)
+    assert(Z.AssignState("raid3") == true and Z.AssignState("raid4") == true and Z.AssignState("raid5") == false, "ma part")
+    local healers = Z.AssignHealers("raid5")
+    assert(healers and healers[1] == "Soin" and #healers == 1, "soigneur prevu au survol")
+    -- sans droit : ignoré ; chef secret : refusé ; assistant en raid : accepté
+    Msg("A:43:1:1:Joueur-player=5/", "Autre")
+    assert(Z.char.assignShared.id == "42", "repartition d'un joueur sans droit")
+    SECRET_LEADER = true Msg("A:45:1:1:Joueur-player=5/", "Chef") SECRET_LEADER = false
+    assert(Z.char.assignShared.id == "42", "chef secret pris pour le chef")
+    ASSISTS = { raid5 = true }
+    Msg("A:44:1:1:Joueur-player=3/", "Autre")
+    assert(Z.char.assignShared.id == "44" and Z.AssignState("raid5") == true, "assistant refuse")
+    ASSISTS = {}
+    -- messages abîmés : rien ne change
+    for _, bad in ipairs({ "A:1:1:1:pasdenom=1/", "A:1:3:2:Joueur-player=1/", "A:1:1:99:Joueur-player=1/", "A:1:1:1:Joueur-player=1/a b-c", "A:x:1:1:Joueur-player=1/", "A:1:1:1:Joueur-player=123456789/" }) do
+      Msg(bad, "Chef")
+      assert(Z.char.assignShared.id == "44", "message abime accepte : " .. bad)
+    end
+    -- effacée : seulement par celui qui l'a envoyée
+    Msg("A:44:0:0:", "Chef")
+    assert(Z.char.assignShared, "effacee par un autre que l'expediteur")
+    ASSISTS = { raid5 = true } Msg("A:44:0:0:", "Autre") ASSISTS = {}
+    assert(Z.char.assignShared == nil and Z.AssignState("raid5") == true and Z.AssignState("raid3") == false, "effacement : mon choix ne revient pas")
+    -- réglage coupé : ignorée
+    Z.db.assignAccept = false
+    Msg("A:46:1:1:Joueur-player=1/", "Chef")
+    assert(Z.char.assignShared == nil, "repartition recue reglage coupe")
+    Z.db.assignAccept = true
+    -- envoi : je suis le chef
+    LEADER = "player"
+    local part = { name = "Soin", groups = { [1] = true, [2] = true }, players = { Tankou = true } }
+    local first = #ADDON_SENT + 1
+    local sent, message = Z:AssignSend({ ["Soin-MonRoyaume"] = part, ["Vide-MonRoyaume"] = { name = "Vide", groups = {}, players = {} } })
+    assert(sent, message)
+    assert(#ADDON_SENT == first and ADDON_SENT[first].channel == "RAID", "soigneur sans rien envoye")
+    assert(ADDON_SENT[first].text == "A:" .. Z.char.assignShared.id .. ":1:1:Soin-MonRoyaume=12/Tankou-MonRoyaume", ADDON_SENT[first].text)
+    Msg(ADDON_SENT[first].text, "Joueur-player") -- mon envoi revient du groupe : rien de plus
+    assert(Z.char.assignShared.from == "Joueur-player", "mon envoi relu")
+    -- trop tôt, bloqué par le jeu, freiné : refusé avec un message
+    sent = Z:AssignSend({ ["Soin-MonRoyaume"] = part })
+    assert(not sent, "renvoi trop rapproche")
+    NOW = NOW + 5
+    C_ChatInfo.InChatMessagingLockdown = function() return true end
+    sent, message = Z:AssignSend({ ["Soin-MonRoyaume"] = part })
+    assert(not sent and message:find("combat de boss", 1, true), "blocage du jeu : " .. tostring(message))
+    C_ChatInfo.InChatMessagingLockdown = lockdown
+    C_ChatInfo.SendAddonMessage = function() return 3 end
+    sent = Z:AssignSend({ ["Soin-MonRoyaume"] = part })
+    assert(not sent, "envoi freine pris pour reussi")
+    C_ChatInfo.SendAddonMessage = send
+    NOW = NOW + 5
+    -- beaucoup de joueurs nommés : 5 au plus, message court
+    local many = { name = "Soin", groups = { [1] = true }, players = {} }
+    for i = 1, 9 do many.players["Joueurtreslongnumero" .. i .. "-RoyaumeAuNomInterminable"] = true end
+    first = #ADDON_SENT + 1
+    assert(Z:AssignSend({ ["Soin-MonRoyaume"] = many }))
+    assert(#ADDON_SENT[first].text <= 255 and select(2, ADDON_SENT[first].text:gsub(",", "")) <= 4, "message trop long")
+    -- sans droit : refusé
+    LEADER = "raid2" NOW = NOW + 5
+    sent, message = Z:AssignSend({ ["Soin-MonRoyaume"] = part })
+    assert(not sent and message:find("chef", 1, true), "envoi sans droit")
+    LEADER = "player"
+    -- un nouveau venu qui a Lyorune la reçoit ; bloqué : dès que le jeu le permet
+    first = #ADDON_SENT + 1
+    Z.AssignNewMember("Nouveau")
+    assert(ADDON_SENT[first] and ADDON_SENT[first].channel == "WHISPER" and ADDON_SENT[first].target == "Nouveau", "nouveau venu oublie")
+    C_ChatInfo.InChatMessagingLockdown = function() return true end
+    first = #ADDON_SENT + 1
+    Z.AssignNewMember("Tardif")
+    assert(#ADDON_SENT == first - 1, "envoi pendant le blocage")
+    C_ChatInfo.InChatMessagingLockdown = lockdown
+    FireEvent("PLAYER_REGEN_ENABLED")
+    assert(ADDON_SENT[first] and ADDON_SENT[first].target == "Tardif", "nouveau venu en attente oublie")
+    -- un soigneur part : ses joueurs restent sans soigneur, je suis prévenu
+    GROUP_NAMES.raid3 = "Remplacant"
+    FireEvent("GROUP_ROSTER_UPDATE")
+    assert(Z.char.assignShared.healers["Soin-MonRoyaume"] == nil and PRINTED[#PRINTED]:find("Soin est parti", 1, true), "depart : " .. PRINTED[#PRINTED])
+    -- fenêtre du chef : une ligne par soigneur, une colonne par groupe de raid ; une case cochée part au groupe
+    Z:OpenAssign()
+    local w = _G.LyoruneAssign
+    assert(w and w:IsShown() and #w.rows >= 5 and w.rows[1].boxes[1], "fenetre de repartition")
+    w.rows[2].boxes[1]:Run("OnClick")
+    NOW = NOW + 5
+    first = #ADDON_SENT + 1
+    w.send:Run("OnClick")
+    assert(ADDON_SENT[first] and ADDON_SENT[first].text:match("^A:%d+:1:%d:"), "envoi depuis la fenetre : " .. tostring(w.status:GetText()))
+    w.clear:Run("OnClick")
+    assert(Z.char.assignShared == nil and ADDON_SENT[#ADDON_SENT].text:match(":0:0:$"), "effacer pour tous")
+    w:Hide()
+    -- oubliée quand je quitte le groupe
+    LEADER = "raid2"
+    Msg("A:47:1:1:Joueur-player=1/", "Chef")
+    assert(Z.char.assignShared and Z.char.assignShared.id == "47", "repartition du chef")
+    GROUPED, RAID = false, false
+    FireEvent("GROUP_ROSTER_UPDATE")
+    assert(Z.char.assignShared == nil, "sortie du groupe : repartition gardee")
+    for _, text in ipairs({ "Répartir les soigneurs", "Envoyer au groupe", "Appliquer la répartition du chef", "Soigneur prévu : %s", "répartition de %s : vous soignez %s.", "%s est parti : %s sans soigneur prévu." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end)
+  C_ChatInfo.InChatMessagingLockdown, C_ChatInfo.SendAddonMessage, NOW = lockdown, send, now
+  RAID, GROUPED, MEMBERS, LEADER, ASSISTS, GROUP_NAMES = keptRaid, keptGrouped, keptMembers, keptLeader, keptAssists, keptNames
+  rawset(_G, "SECRET_LEADER", nil)
+  rawset(_G, "GetRaidRosterInfo", nil)
+  Z.char.assignShared = nil
+  for key, value in pairs(kept) do Z.db[key] = value end
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

@@ -254,21 +254,40 @@ local function SetFar(b, far)
 	UpdateCenter(b)
 end
 
+-- Le joueur d'un autre soigneur (réglage assignFade, UpdateAssign) : toute la case un peu plus estompée, la
+-- portée garde ses paliers par-dessus (b.assignDim vaut 1 ou ASSIGN_DIM)
+local ASSIGN_DIM = 0.6
+Z.ASSIGN_DIM = ASSIGN_DIM -- le mode test estompe de la même façon
+
 local function UpdateRange(b)
+	local k = b.assignDim or 1
 	local me = UnitIsUnit(b.unit, "player")
 	if not issecret(me) and me then SetFar(b, false) return b:SetAlpha(1) end -- je suis toujours à portée de moi-même
 	if IsFar(b.unit) then
 		SetFar(b, true)
-		return b:SetAlpha(math.max(0.1, rangeAlpha * 0.5))
+		return b:SetAlpha(math.max(0.1, rangeAlpha * 0.5) * k)
 	end
 	SetFar(b, false)
 	local inRange, checked = UnitInRange(b.unit)
 	if issecret(inRange) then
-		b:SetAlphaFromBoolean(inRange, 1, rangeAlpha)
+		b:SetAlphaFromBoolean(inRange, k, rangeAlpha * k)
 	elseif checked and not inRange then
-		b:SetAlpha(rangeAlpha)
+		b:SetAlpha(rangeAlpha * k)
 	else
-		b:SetAlpha(1)
+		b:SetAlpha(k)
+	end
+end
+
+-- Répartition entre soigneurs (Assign.lua) : trait doré au bord gauche de mes joueurs ; les autres un peu
+-- estompés (réglage assignFade). Réponse secrète (nom, groupe) : la case garde son état.
+local function UpdateAssign(b)
+	local mine, active = Z.AssignState(b.unit)
+	if mine == nil then return end
+	b.assign:SetShown((db.assignMark and active and mine) or false)
+	local dim = (db.assignFade and active and not mine) and ASSIGN_DIM or 1
+	if dim ~= (b.assignDim or 1) then
+		b.assignDim = dim
+		UpdateRange(b)
 	end
 end
 
@@ -463,6 +482,7 @@ local function UpdateAll(b)
 	UpdateMarker(b)
 	UpdateCenter(b)
 	UpdateTarget(b)
+	UpdateAssign(b)
 	Z.QueueAuras(b)
 end
 
@@ -509,6 +529,8 @@ local function OnAttributeChanged(b, name, value)
 	if name ~= "unit" or b.unit == value then return end
 	b.unit = value
 	b.losUntil = nil -- l'œil « hors de vue » concernait le joueur d'avant : il ne suit pas la case
+	b.assign:Hide() -- le repère « pour moi » aussi (UpdateAssign repose celui du nouveau)
+	b.assignDim = nil
 	b:UnregisterAllEvents()
 	if b.powerShown then
 		b.powerShown = false
@@ -536,12 +558,16 @@ local function OnEnter(b)
 	if not b.unit or InCombatLockdown() then return end
 	local clicks = db.clickTooltip and Z:ClickSummary()
 	if clicks and #clicks == 0 then clicks = nil end
-	if not (db.showTooltip or clicks) then return end
+	local healers = Z.AssignHealers(b.unit) -- répartition reçue du chef : le soigneur prévu pour ce joueur
+	if not (db.showTooltip or clicks or healers) then return end
 	GameTooltip_SetDefaultAnchor(GameTooltip, b)
 	if db.showTooltip then
 		GameTooltip:SetUnit(b.unit)
 	else
 		GameTooltip:SetText(UnitName(b.unit) or "", 1, 1, 1)
+	end
+	if healers then
+		GameTooltip:AddLine(L["Soigneur prévu : %s"]:format(table.concat(healers, ", ")), UI.gold[1], UI.gold[2], UI.gold[3])
 	end
 	if clicks then
 		GameTooltip:AddLine(" ")
@@ -570,6 +596,8 @@ end
 -- Apparence d'une case (appelé à la création et quand une option change)
 ----------------------------------------------------------------------------------------------------
 local HEAL_ABSORB_COLOR = { 0.45, 0.02, 0.10, 0.75 } -- rouge sombre, si le thème n'en donne pas
+local ASSIGN_COLOR = { 1.00, 0.80, 0.30 } -- repère « pour moi » : or, lisible sur toutes les couleurs de classe
+Z.ASSIGN_COLOR = ASSIGN_COLOR
 
 -- Voiles posés sur toute la case : à l'intérieur des angles quand ils sont arrondis
 local function Cover(texture, inset)
@@ -668,6 +696,8 @@ local function Style(b)
 	b.dim:SetAlpha(1 - db.brightness / 100)
 	b.low:SetShown(db.lowHealth)
 	if not db.lowHealth then b.low.fill:SetAlpha(0) end
+	b.assign:SetColorTexture(ASSIGN_COLOR[1], ASSIGN_COLOR[2], ASSIGN_COLOR[3], 0.95)
+	b.assign:SetWidth(math.max(2, math.floor(height / 14)))
 
 	local size = db.fontSize + (theme.fontBonus or 0)
 	b.name:SetFont(theme.font, size, theme.flags)
@@ -877,6 +907,12 @@ function Z.BuildVisuals(b)
 	b.selected = UI.Border(over, 1)
 	b.selected:SetColor(1, 1, 1, 1)
 	b.selected:SetAlpha(0)
+
+	-- Un de mes joueurs (répartition entre soigneurs) : trait doré au bord gauche de la vie, au-dessus des bordures
+	b.assign = top:CreateTexture(nil, "ARTWORK")
+	b.assign:SetPoint("TOPLEFT", hp, "TOPLEFT")
+	b.assign:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT")
+	b.assign:Hide()
 
 	b.hots, b.hotBars, b.debuffs, b.defensives = {}, {}, {}, {}
 end
@@ -1519,6 +1555,14 @@ function Z:ToggleFramesShown()
 end
 
 -- Appelé après chaque changement d'option
+-- Répartition changée (mon choix, répartition reçue, réglage) : seulement le repère et l'estompage
+function Z.RefreshAssign()
+	for _, b in ipairs(buttons) do
+		if b.unit and b:IsVisible() then UpdateAssign(b) end
+	end
+	if Z.RefreshPreview then Z:RefreshPreview() end
+end
+
 function Z:Refresh()
 	-- Thème des fenêtres en premier : il ne dépend pas des cases, une erreur plus bas ne doit pas l'empêcher
 	if Z.UI.SkinChanged() then Z:Try("thème des fenêtres", Z.UI.ApplySkin) end

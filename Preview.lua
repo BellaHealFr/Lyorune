@@ -104,7 +104,15 @@ local function Fill(cell, index, sample)
 	cell.threat:SetShown(db.showThreat and (sample or slot == 0) and not dead)
 	cell.low.fill:SetAlpha((db.lowHealth and not dead and health <= db.lowHealthAt) and 1 or 0)
 	cell.selected:SetAlpha((index == 2 and not sample) and 1 or 0)
-	cell:SetAlpha((index % 10 == 9 and not sample) and db.rangeAlpha / 100 or 1)
+	-- Répartition entre soigneurs : mes groupes (en raid) portent le repère, un joueur choisi est montré par le
+	-- premier tank ; la case témoin le porte dès qu'un choix existe. Les autres s'estompent (réglage assignFade).
+	local groups, players = Z.AssignChoice()
+	local useGroups = size > 5 and next(groups) ~= nil
+	local active = useGroups or next(players) ~= nil
+	local mine = sample or (useGroups and groups[math.floor((index - 1) / 5) + 1]) or (next(players) ~= nil and index == 1)
+	cell.assign:SetShown((db.assignMark and active and mine) and true or false)
+	local dim = (db.assignFade and active and not mine) and Z.ASSIGN_DIM or 1
+	cell:SetAlpha(((index % 10 == 9 and not sample) and db.rangeAlpha / 100 or 1) * dim)
 
 	-- Dissipation possible sur un joueur sur six
 	local dispel = db.showDispel and not dead and (sample or index % 6 == 3) and DISPEL_COLORS[math.floor(index / 6) % #DISPEL_COLORS + 1]

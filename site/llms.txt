@@ -11,6 +11,7 @@ Main features:
 - Dispels: the frame lights up for magic, curse, disease or poison, up to 3 debuffs to dispel per cell.
 - Mana: a soft blue screen edge when your mana runs low, and a five second rule line on your cell.
 - Resurrection on the same click on a dead player.
+- Healer assignments: a gold line marks the players you look after (raid groups, a tank); the leader sends who heals what to every healer who has Lyorune, before the fight.
 - Missing buffs panel out of combat.
 - Game key bindings (AddOns section): open the options, show or hide the frames, cast the next missing buff, test mode.
 - Low mana announcement that still works when WoW Forever hides mana from addons.

@@ -76,6 +76,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Contour et léger voile bleu, violet, brun ou vert | Une magie, une malédiction, une maladie ou un poison que VOUS pouvez retirer (le nom et la vie restent lisibles) |
 | Case estompée | Il est hors de portée de vos soins |
 | Vie, mana et nom pâles (si vous l'allumez) | Il est en bonne santé, au-dessus de votre seuil (90 % au départ) : ceux qui ont besoin de soins ressortent. Ses icônes, la dissipation et la menace restent nettes, et la case survolée redevient nette. Interrupteur « Estomper les joueurs en bonne santé », chapitre Vie et portée, éteint au départ |
+| Trait doré au bord gauche | C'est un de vos joueurs : un groupe de raid ou un joueur dont vous vous occupez (chapitre Joueurs, partie Mes joueurs), ou votre part de la répartition envoyée par le chef. Rien ne s'affiche tant que vous n'avez rien choisi |
 | Case encore plus estompée, empreintes au centre | Il est très loin (plus de 100 mètres environ) : il faut vraiment vous déplacer. Marche aussi en donjon et en raid |
 | Un œil au centre, pendant 3 secondes | Le jeu vient de refuser votre soin : il est hors de vue (derrière un pilier, un mur). Décalez-vous |
 | « Mort », « Fantôme », « Déco » | Il est mort, en fantôme, ou déconnecté (sa case reste en place) |
@@ -296,7 +297,7 @@ Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Ri
 - **Vie et portée** : soins en route, bouclier, voile de vie basse (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale.
 - **Affaiblissements** : dissipation, icônes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
-- **Joueurs** : icône de rôle, marqueur de raid, chef de groupe, gros défensifs, invocation et phase, menace, buffs manquants, infobulle.
+- **Joueurs** : icône de rôle, marqueur de raid, chef de groupe, gros défensifs, invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
 
 ### La portée (chapitre Vie et portée)
 
@@ -318,6 +319,17 @@ Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit 
 - **Recharge globale et incantation** (partie Temps de recharge global, coupé au départ) : une fine barre sous les cadres, ou un anneau autour du curseur, au choix. Blanc pendant le temps de recharge global, couleur d'accent pendant votre incantation. Vous voyez d'un coup d'œil quand le prochain soin peut partir, même en combat.
 
 Tout marche en combat. Le jeu y cache le nom des auras, mais Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.
+
+### Mes joueurs : la répartition entre soigneurs (chapitre Joueurs)
+
+En raid, chaque soigneur s'occupe souvent de quelques groupes ou d'un tank. Partie « Mes joueurs » :
+
+- **Groupes de raid dont je m'occupe** : cliquez sur les numéros (1 à 8). Ils ne comptent qu'en raid.
+- **Joueurs dont je m'occupe** : un tank, un joueur à surveiller. Tapez son nom puis Entrée, ou survolez sa case et tapez `/lyorune pourmoi` (une 2e fois pour le retirer). En groupe de cinq, seuls ces joueurs comptent.
+- **Repère sur mes joueurs** (allumé au départ) : un trait doré au bord gauche de leur case. Rien ne s'affiche tant que vous n'avez rien choisi.
+- **Estomper un peu les autres** (réglages fins, éteint au départ) : les joueurs dont vous ne vous occupez pas deviennent un peu plus transparents. Votre propre case reste nette, et la portée continue d'estomper ceux qui sont loin.
+
+Tout marche sans aucun message, même si vous êtes le seul à avoir Lyorune. Pour que le chef répartisse tout le monde d'un coup, voir « Répartition du chef » au chapitre 12.
 
 ### Les buffs (chapitre Joueurs)
 
@@ -371,11 +383,12 @@ Lyorune se parle de façon invisible avec les autres joueurs du groupe qui l'uti
 
 - **Synchronisation entre joueurs** : l'interrupteur général. Coupé, rien ne part et rien n'est lu ; les réglages du dessous sont grisés.
 - **Qui relève qui** (« Montrer qui relève qui ») : quand un soigneur commence une résurrection, son nom s'affiche en vert à la place de « Mort » sur la case du joueur, chez tous ceux qui ont Lyorune. Vous voyez d'un coup d'œil qui est déjà pris en charge : deux soigneurs ne relèvent plus le même joueur pendant qu'un autre attend. Le nom reste le temps du sort, puis une minute pendant que le joueur décide d'accepter. Pendant un combat de boss, le jeu bloque ces messages : seule l'icône de résurrection du jeu reste.
+- **Répartition du chef** : le chef du groupe ou un assistant ouvre « Répartir les soigneurs... » (chapitre Joueurs, partie Mes joueurs, ou `/lyorune repartir`). Une ligne par soigneur du groupe (en vert : ceux qui ont Lyorune), une colonne par groupe de raid et par tank : il coche, puis « Envoyer au groupe ». Chez chaque soigneur qui a Lyorune, sa part remplace son propre choix : ses repères changent tout de suite, une ligne dans la discussion le dit, et au survol d'une case (hors combat) le soigneur prévu s'affiche. Elle reste valable jusqu'au prochain envoi, jusqu'à « Effacer pour tous », ou jusqu'à ce que vous quittiez le groupe (votre choix revient alors), même après un /reload. Envoyez-la **avant le combat** : pendant un combat de boss, une clé mythique+ ou un match JcJ, le jeu bloque ces messages et Lyorune refuse l'envoi avec un message. Une fois reçue, elle ne demande plus aucun message : elle tient tout le combat. Un soigneur qui quitte le groupe disparaît de la répartition : ses joueurs n'ont plus de soigneur prévu, et celui qui l'a envoyée est prévenu pour en renvoyer une. Un soigneur qui arrive avec Lyorune la reçoit tout seul. Pour l'ignorer : décochez « Appliquer la répartition du chef ».
 - **Qui a Lyorune** : sous ces réglages, Lyorune compte les joueurs du groupe qui l'utilisent. Passez la souris dessus pour la liste, avec la version de chacun, ou tapez `/lyorune groupe`.
 - **Configurations** (« Accepter qu'on me propose une configuration », dans les réglages fins) : vous recevez seulement celles que vous acceptez (voir « Envoi direct » plus haut).
 - **Nouvelle version** (« Me prévenir si une version plus récente existe », dans les réglages fins) : Lyorune vous prévient une fois si une version plus récente existe, avec l'adresse de sa page officielle, où chaque nouveauté est décrite. Après la mise à jour, la fenêtre des nouveautés les détaille aussi en jeu.
 
-Rien n'est jamais appliqué sans votre accord. Un joueur qui envoie trop de messages est ignoré un moment.
+Rien n'est jamais appliqué sans votre accord, sauf la répartition du chef si « Appliquer la répartition du chef » reste coché : elle ne change que vos repères. Un joueur qui envoie trop de messages est ignoré un moment.
 
 Une nouvelle version n'est signalée que si deux joueurs différents l'annoncent. Téléchargez Lyorune uniquement sur sa page officielle : [github.com/BellaHealFr/Lyorune](https://github.com/BellaHealFr/Lyorune/releases/latest). Un autre site, ou un joueur qui vous envoie un fichier, n'est pas une source sûre.
 
@@ -429,6 +442,8 @@ Cette liste se retrouve en jeu : chapitre Fenêtre et aide, « Commandes ».
 | `/lyorune cadres` | Afficher ou masquer les cadres (hors combat) |
 | `/lyorune epingler` | Épingler ou retirer le joueur survolé (ou votre cible, ou le nom tapé après) |
 | `/lyorune porteur` | Le joueur survolé (ou votre cible, ou le nom tapé après) reçoit vos buffs uniques à la place du tank ; une 2e fois : retour au tank |
+| `/lyorune pourmoi` | Ajouter ou retirer le joueur survolé (ou votre cible, ou le nom tapé après) de vos joueurs |
+| `/lyorune repartir` | Répartir les soigneurs (chef ou assistant) |
 | `/lyorune groupe` | Joueurs du groupe qui ont Lyorune |
 | `/lyorune annuler` | Revenir à la configuration d'avant le dernier import |
 | `/lyorune mesure` | Mesurer les performances (hors combat) |

@@ -6,6 +6,21 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.32.0] - 2026-11-21
+
+### Ajouté
+
+- Répartition entre soigneurs (chapitre Joueurs, partie Mes joueurs) : vos groupes de raid et vos joueurs choisis (un tank, /lyorune pourmoi) portent un trait doré au bord gauche de leur case ; au choix, les autres s'estompent un peu. Marche même si vous êtes seul à avoir Lyorune.
+- Le chef ou un assistant envoie qui soigne quoi à tous les soigneurs qui ont Lyorune (« Répartir les soigneurs... », /lyorune repartir), avant le combat : leurs repères suivent tout de suite, et le soigneur prévu s'affiche au survol d'une case. Pendant un combat de boss, le jeu bloque ces messages : l'envoi est refusé avec un message clair.
+
+### Amélioré
+
+- Guide du joueur et visite guidée : la répartition entre soigneurs.
+
+### Corrigé
+
+- Un message entre joueurs freiné par le jeu passait pour envoyé : Lyorune lit maintenant la réponse du jeu.
+
 ## [1.31.0] - 2026-11-21
 
 ### Ajouté
@@ -583,6 +598,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.32.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.31.0...v1.32.0
 [1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0

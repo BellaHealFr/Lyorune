@@ -6,6 +6,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.32.0] - 2026-11-21
+
+### Added
+
+- Healer assignments (Players chapter, My players part): your raid groups and your chosen players (a tank, /lyorune mine) get a gold line on the left edge of their cell; if you like, the others fade a little. Works even if you are the only one with Lyorune.
+- The leader or an assistant sends who heals what to every healer who has Lyorune ("Assign the healers...", /lyorune assign), before the fight: their marks follow right away, and the planned healer shows when hovering a cell. During a boss fight, the game blocks these messages: sending is refused with a clear message.
+
+### Improved
+
+- Player guide and guided tour: healer assignments.
+
+### Fixed
+
+- A message between players slowed down by the game was taken as sent: Lyorune now reads the game's answer.
+
 ## [1.31.0] - 2026-11-21
 
 ### Added
@@ -583,6 +598,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.32.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.31.0...v1.32.0
 [1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0

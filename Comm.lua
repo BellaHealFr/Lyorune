@@ -5,12 +5,14 @@
 --   2. Configuration : envoyer sa configuration à un joueur précis, qui choisit de l'accepter ou non.
 --   3. Qui relève qui : quand je commence une résurrection, le groupe le sait. Le nom du soigneur s'affiche sur
 --      la case du mort, chez tous ceux qui ont Lyorune : deux soigneurs ne relèvent plus le même joueur.
+--   4. Répartition entre soigneurs : le chef ou un assistant l'envoie avant le combat (Assign.lua).
 -- Un interrupteur général coupe tout ; chaque fonction a aussi sa case (onglet Profils). Rien n'est appliqué
 -- sans accord. Pendant un combat de boss, le jeu bloque ces messages : la synchronisation attend la fin.
 --
 -- Messages (préfixe « Lyorune ») :
 --   V:1.17.0          ma version               C:id:n:total:morceau   un morceau de configuration
 --   R:Nom-Royaume     je relève ce joueur      R:-  j'arrête          R:+  sort réussi, il doit accepter
+--   A:...             une part de la répartition entre soigneurs (format dans Assign.lua)
 
 local _, Z = ...
 local issecret = Z.IsSecret
@@ -37,9 +39,18 @@ local prompt
 
 local function Enabled() return Z.db.syncEnabled end
 
+-- Le jeu bloque les messages d'addon pendant un combat de boss, une clé mythique+ ou un match JcJ
+local function Lockdown()
+	return (C_ChatInfo.InChatMessagingLockdown and C_ChatInfo.InChatMessagingLockdown()) and true or false
+end
+Z.CommLockdown = Lockdown
+
+-- Envoi d'un message. Le jeu rend un code (Enum.SendAddonMessageResult : 0 réussi, 3 et 8 freiné, 11 bloqué) ;
+-- un client plus ancien rendait vrai ou rien. Un envoi freiné ou bloqué compte comme raté.
 local function Send(text, channel, target)
-	if C_ChatInfo.InChatMessagingLockdown and C_ChatInfo.InChatMessagingLockdown() then return false end
-	return pcall(C_ChatInfo.SendAddonMessage, PREFIX, text, channel, target)
+	if Lockdown() then return false end
+	local ok, result = pcall(C_ChatInfo.SendAddonMessage, PREFIX, text, channel, target)
+	return ok and (result == nil or result == true or result == 0)
 end
 
 -- Groupe trouvé par l'outil de recherche (donjon, raid) : le canal d'instance ; sinon le groupe ou le raid.
@@ -56,6 +67,8 @@ local function SendGroup(text)
 	if not IsInGroup() then return false end
 	return Send(text, GroupChannel())
 end
+Z.CommSend = Send
+Z.CommSendGroup = SendGroup
 
 -- Nom complet « Nom-Royaume » (le jeu omet mon royaume), puis clé de comparaison sans espace ni apostrophe
 local function Full(name)
@@ -65,6 +78,8 @@ local function Full(name)
 end
 local function Key(name) return (Full(name):gsub("[%s']", "")) end
 local function Short(name) return name:match("^[^-]+") or name end
+Z.CommKey = Key
+Z.CommShort = Short
 
 local function GroupUnits()
 	local units = {}
@@ -318,6 +333,7 @@ local function OnVersion(version, sender)
 		local known = members[key]
 		members[key] = { name = Full(sender), version = version } -- seulement des membres du groupe : 40 au plus
 		if not known and Z.RefreshSyncWho then Z.RefreshSyncWho() end -- « Entre joueurs », si la page est ouverte
+		if not known and Z.AssignNewMember then Z.AssignNewMember(sender) end -- il reçoit la répartition en cours
 		if not known and GetTime() - lastReply >= REPLY_DELAY then
 			lastReply = GetTime()
 			SendGroup("V:" .. Z.version)
@@ -389,6 +405,9 @@ local function OnMessage(prefix, text, _, sender)
 
 	local res = text:match("^R:(.+)$")
 	if res then return OnRes(res, sender) end
+
+	local share = text:match("^A:(.+)$")
+	if share then return Z.AssignReceive(share, sender) end -- Assign.lua
 
 	local id, index, total, chunk = text:match("^C:(%d+):(%d+):(%d+):(.*)$")
 	if id and Z.db.acceptConfigs then OnConfig(id, index, total, chunk, sender, now) end

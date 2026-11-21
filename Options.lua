@@ -585,6 +585,56 @@ local function PinTarget()
 end
 
 ----------------------------------------------------------------------------------------------------
+-- Répartition entre soigneurs (Assign.lua) : mes groupes de raid, et la répartition reçue du chef
+----------------------------------------------------------------------------------------------------
+local function AssignGroups(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 54)
+	box.label = UI.Label(box, 12)
+	box.label:SetPoint("TOPLEFT", 0, -5)
+	box.label:SetText(L["Groupes de raid dont je m'occupe"])
+	box.buttons = {}
+	for g = 1, 8 do
+		local button = UI.Button(box, tostring(g), 36, 22, function()
+			Z.db.assignGroups[g] = not Z.db.assignGroups[g] or nil
+			Z.RefreshAssign()
+			box:Update()
+			if AfterChange then AfterChange() end
+		end)
+		button:SetPoint("TOPLEFT", (g - 1) * 42, -28)
+		button.label:SetJustifyH("CENTER")
+		box.buttons[g] = button
+	end
+	box.Update = function(self)
+		for g, button in ipairs(self.buttons) do UI.SetTab(button, Z.db.assignGroups[g] == true) end
+	end
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Register(page, L["Groupes de raid dont je m'occupe"], box, L["Les groupes ne comptent qu'en raid ; en groupe de cinq, seuls les joueurs choisis."])
+	return box
+end
+
+-- La répartition reçue du chef, si elle compte : elle remplace mon choix
+local function AssignStatus(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 18)
+	box.text = Note(box, "", 0, -2, width)
+	box.Update = function(self)
+		local groups, players, shared = Z.AssignChoice()
+		if shared then
+			self.text:SetText(L["Répartition reçue de %s : vous soignez %s. Elle remplace votre choix jusqu'à la sortie du groupe."]:format(shared.by, Z.AssignDescribe(groups, players)))
+		else
+			self.text:SetText(L["Aucune répartition reçue : votre choix ci-dessus compte."])
+		end
+		Fit(self, math.ceil(self.text:GetStringHeight()) + 4)
+	end
+	box:SetScript("OnShow", box.Update)
+	Z.assignStatus = box
+	box:Update()
+	return box
+end
+
+----------------------------------------------------------------------------------------------------
 -- Page des clics (chapitre Sorts et raccourcis)
 ----------------------------------------------------------------------------------------------------
 local rows, barIcons = {}, {}
@@ -1602,6 +1652,7 @@ local COMMANDS = {
 	{ "", "ouvrir cette fenêtre" }, { " test", "mode test (faux groupe)" }, { " tuto", "relancer le tutoriel" },
 	{ " assistant", "assistant de départ" }, { " verrou", "verrouiller ou libérer la position" },
 	{ " epingler", "épingler ou retirer le joueur survolé" }, { " porteur", "le joueur survolé reçoit mes buffs uniques" },
+	{ " pourmoi", "ajouter ou retirer le joueur survolé de mes joueurs" }, { " repartir", "répartir les soigneurs (chef ou assistant)" },
 	{ " cadres", "afficher ou masquer les cadres" }, { " groupe", "qui a Lyorune dans le groupe" }, { " annuler", "annuler le dernier import" },
 	{ " mesure", "mesurer les performances" }, { " bug", "signaler un bug" }, { " diag", "compatibilité avec le jeu" },
 }
@@ -1934,6 +1985,15 @@ local function Chapters()
 				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", desc = "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
 				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune." },
 			} },
+			{ "Mes joueurs (répartition entre soigneurs)", {
+				{ "note", "Les joueurs dont vous vous occupez portent un trait doré au bord gauche de leur case. Utile même si vous êtes seul à avoir Lyorune.", 30 },
+				{ "check", "assignMark", "Repère sur mes joueurs", "Un trait doré au bord gauche de la case de chaque joueur dont vous vous occupez : vos groupes de raid et vos joueurs choisis. Rien ne s'affiche tant que vous n'avez rien choisi." },
+				{ "custom", AssignGroups },
+				ListBox("assignPlayers", "Joueurs dont je m'occupe", "Un tank, un joueur à surveiller. Tapez un nom puis Entrée, ou survolez sa case et tapez /lyorune pourmoi.", Z.CleanPinName),
+				{ "check", "assignFade", "Estomper un peu les autres", "Les joueurs dont vous ne vous occupez pas sont un peu plus transparents. Votre propre case reste nette.", fine = true },
+				{ "custom", AssignStatus },
+				{ "button", "Répartir les soigneurs...", function() Z:OpenAssign() end, "Chef ou assistant : cochez ce que chaque soigneur soigne et envoyez-le avant le combat. Ceux qui ont Lyorune le voient sur leurs cases, et le soigneur prévu s'affiche au survol. Aussi : /lyorune repartir." },
+			} },
 			{ "Au survol d'une case", {
 				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },
 				{ "check", "clickTooltip", "Mes clics dans l'infobulle", "Au survol d'une case, hors combat : chaque clic et chaque touche avec son sort ou sa macro.", fine = true },
@@ -2015,6 +2075,7 @@ local function Chapters()
 				{ "check", "syncEnabled", "Synchronisation entre joueurs", "Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu." },
 				{ "check", "resSync", "Montrer qui relève qui", "Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss, le jeu bloque ces messages.", dep = { "syncEnabled", true } },
 				{ "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande.", fine = true, dep = { "syncEnabled", true } },
+				{ "check", "assignAccept", "Appliquer la répartition du chef", "Le chef ou un assistant envoie qui soigne quoi : vos repères suivent tout de suite, avec une ligne dans la discussion. Votre propre choix revient quand vous quittez le groupe. Décochée : les répartitions reçues sont ignorées.", dep = { "syncEnabled", true } },
 				{ "check", "versionNotice", "Me prévenir si une version plus récente existe", fine = true, dep = { "syncEnabled", true } },
 				{ "custom", SyncWho }, -- après les trois réglages qu'il grise
 			} },

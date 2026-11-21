@@ -77,6 +77,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Blue, purple, brown or green outline and light tint | A magic effect, a curse, a disease or a poison that YOU can remove (the name and health stay readable) |
 | Faded frame | They are out of your healing range |
 | Pale health, mana and name (if you turn it on) | They are healthy, above your threshold (90% by default): those who need healing stand out. Their icons, dispels and threat stay sharp, and the cell under the mouse becomes sharp again. Switch "Fade healthy players", Health and range chapter, off by default |
+| Gold line on the left edge | It is one of your players: a raid group or a player you look after (Players chapter, My players part), or your share of the assignments sent by the leader. Nothing shows until you have chosen something |
 | Frame faded further, footprints in the middle | They are far away (about 100 yards or more): you really need to move. Works in dungeons and raids too |
 | An eye in the middle, for 3 seconds | The game just refused your heal: they are out of sight (behind a pillar, a wall). Step aside |
 | "Dead", "Ghost", "Offline" | They are dead, a ghost, or disconnected (their frame stays in place) |
@@ -297,7 +298,7 @@ Every element of the cell has its switch, filed according to what it shows. Noth
 - **Health and range**: incoming heals, shield, low health overlay (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
 - **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown.
 - **Debuffs**: dispelling, icons, important debuffs, crowd-controlled player, boss private auras.
-- **Players**: role icon, raid marker, group leader, big defensives, summon and phase, threat, missing buffs, tooltip.
+- **Players**: role icon, raid marker, group leader, big defensives, summon and phase, threat, missing buffs, my players (healer assignments), tooltip.
 
 ### Range (Health and range chapter)
 
@@ -319,6 +320,17 @@ Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your 
 - **Global cooldown and casting** (Global cooldown part, off at first): a thin bar under the frames, or a ring around the cursor, your choice. White during the global cooldown, accent colour during your cast. You see at a glance when the next heal can go, even in combat.
 
 Everything works in combat. The game hides aura names there, but Lyorune recognises your heals by their number, or by the spell you just cast. A heal it cannot recognise stays in the icon row, never in the wrong corner.
+
+### My players: healer assignments (Players chapter)
+
+In a raid, each healer often looks after a few groups or a tank. "My players" part:
+
+- **Raid groups I look after**: click the numbers (1 to 8). They only count in a raid.
+- **Players I look after**: a tank, a player to watch. Type their name then Enter, or hover their cell and type `/lyorune mine` (a 2nd time to remove them). In a group of five, only these players count.
+- **Mark on my players** (on by default): a gold line on the left edge of their cell. Nothing shows until you have chosen something.
+- **Fade the others a little** (fine settings, off by default): the players you do not look after become a little more transparent. Your own cell stays sharp, and range keeps fading those who are far away.
+
+Everything works without any message, even if you are the only one with Lyorune. For the leader to assign everyone at once, see "Leader's assignments" in chapter 12.
 
 ### Buffs (Players chapter)
 
@@ -370,11 +382,12 @@ Lyorune talks invisibly with the other players of the group who use it. Everythi
 
 - **Sync between players**: the main switch. Turned off, nothing is sent and nothing is read; the settings below are greyed out.
 - **Who resurrects whom** ("Show who resurrects whom"): when a healer starts a resurrection, their name shows in green instead of "Dead" on the player's cell, for everyone who has Lyorune. You see at a glance who is already taken care of: two healers no longer resurrect the same player while another one waits. The name stays during the cast, then for a minute while the player decides to accept. During a boss fight, the game blocks these messages: only the game's resurrection icon remains.
+- **Leader's assignments**: the group leader or an assistant opens "Assign the healers..." (Players chapter, My players part, or `/lyorune assign`). One line per healer of the group (in green: those who have Lyorune), one column per raid group and per tank: they tick, then "Send to the group". For each healer who has Lyorune, their share replaces their own choice: their marks change right away, a line in the chat says so, and when hovering a cell (out of combat) the planned healer shows. It stays valid until the next sending, until "Clear for everyone", or until you leave the group (your choice then comes back), even after a /reload. Send it **before the fight**: during a boss fight, a Mythic+ key or a PvP match, the game blocks these messages and Lyorune refuses to send with a message. Once received, it needs no more messages: it holds for the whole fight. A healer who leaves the group disappears from the assignments: their players no longer have a planned healer, and whoever sent them is told so they can send new ones. A healer who joins with Lyorune gets them automatically. To ignore them: untick "Apply the leader's assignments".
 - **Who has Lyorune**: below these settings, Lyorune counts the group players who use it. Hover over it for the list, with each player's version, or type `/lyorune group`.
 - **Configurations** ("Let players offer me their configuration", in the fine settings): you only get the ones you accept (see "Direct sending" above).
 - **New version** ("Tell me when a newer version exists", in the fine settings): Lyorune tells you once if a newer version exists, with the address of its official page, where every new feature is described. After updating, the news window also details them in game.
 
-Nothing is ever applied without your consent. A player who sends too many messages is ignored for a while.
+Nothing is ever applied without your consent, except the leader's assignments if "Apply the leader's assignments" stays ticked: they only change your marks. A player who sends too many messages is ignored for a while.
 
 A new version is only reported when two different players announce it. Download Lyorune only from its official page: [github.com/BellaHealFr/Lyorune](https://github.com/BellaHealFr/Lyorune/releases/latest). Another site, or a player sending you a file, is not a safe source.
 
@@ -426,6 +439,8 @@ This list is also in game: Window and help chapter, "Commands".
 | `/lyorune frames` | Show or hide the frames (out of combat) |
 | `/lyorune pin` | Pin or unpin the hovered player (or your target, or the name typed after) |
 | `/lyorune bearer` | The hovered player (or your target, or the name typed after) gets your single-target buffs instead of the tank; a 2nd time: back to the tank |
+| `/lyorune mine` | Add or remove the hovered player (or your target, or the name typed after) from your players |
+| `/lyorune assign` | Assign the healers (leader or assistant) |
 | `/lyorune group` | Group players who have Lyorune |
 | `/lyorune undo` | Go back to the configuration from before the last import |
 | `/lyorune measure` | Measure performance (out of combat) |

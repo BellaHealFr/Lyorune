@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.31.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.32.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -41,6 +41,11 @@ Z.defaults = {
 	showFocus = false,         -- case de ma focalisation
 	showPinned = true,         -- cadre « Épinglés » : les joueurs de ma liste (vide, il ne s'affiche pas)
 	pinned = {},               -- joueurs épinglés, par nom : pinned["Nom-Royaume"] = true
+	-- Répartition entre soigneurs (Assign.lua) : les joueurs dont je m'occupe portent un repère « pour moi »
+	assignMark = true,         -- repère sur mes joueurs (rien ne s'affiche tant qu'aucun groupe ni joueur n'est choisi)
+	assignGroups = {},         -- groupes de raid dont je m'occupe : assignGroups[3] = true
+	assignPlayers = {},        -- joueurs dont je m'occupe (un tank...), par nom : assignPlayers["Nom-Royaume"] = true
+	assignFade = false,        -- (éteint au départ) estomper un peu les autres joueurs
 	autoShrink = false,        -- réduire les cases en grand raid
 	lockMode = "FREE",         -- déplacement des cadres : libre, verrouillé, ou en maintenant Alt, Ctrl ou Maj
 	showGroupLabels = true,    -- « Groupe 1 »... au-dessus de chaque colonne (ou le rôle en rangement par rôle)
@@ -156,6 +161,7 @@ Z.defaults = {
 	versionNotice = true,      -- prévenir si un membre du groupe a une version plus récente
 	acceptConfigs = true,      -- accepter qu'un joueur me propose sa configuration
 	resSync = true,            -- qui relève qui : le nom du soigneur qui relève s'affiche sur la case du mort
+	assignAccept = true,       -- appliquer la répartition envoyée par le chef ou un assistant (Assign.lua)
 	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
 	windowTheme = "MODERN",    -- thème des fenêtres de Lyorune (pas des cases) : Moderne, Classique, MMORPG
 	reduceMotion = false,      -- animations réduites : fondus courts seulement, rien en boucle
@@ -208,6 +214,7 @@ Z.choices = {
 Z.private = { minimapAngle = true, tutorialDone = true, wizardDone = true, language = true,
 	macros = true, -- mes macros : jamais partagées, jamais effacées par la réinitialisation
 	pinned = true, -- mes joueurs épinglés : des noms, jamais partagés
+	assignGroups = true, assignPlayers = true, -- ma part de la répartition : propre à chaque raid, jamais partagée
 	profiles = true } -- mes profils enregistrés : idem (la réinitialisation quitte seulement le profil en cours)
 
 -- Réglages qu'un profil ne change jamais : clics, listes, annonces, fenêtres de Lyorune, profils eux-mêmes.
@@ -219,6 +226,7 @@ Z.notInProfile = {
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
 	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
+	assignMark = true, assignGroups = true, assignPlayers = true, assignFade = true, assignAccept = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
@@ -506,6 +514,10 @@ function Z.Command(msg)
 		Z:Print(Z.L["position réinitialisée."])
 	elseif pin then
 		Z:PinCommand(pinName) -- le nom garde ses majuscules
+	elseif pinWord and (pinWord:lower() == "pourmoi" or pinWord:lower() == "mine") then
+		Z:AssignCommand(pinName) -- répartition entre soigneurs : ajoute ou retire un de mes joueurs
+	elseif msg == "repartir" or msg == "répartir" or msg == "assign" then
+		Z:OpenAssign()
 	elseif msg == "porteur" or msg:match("^porteur ") or msg == "bearer" or msg:match("^bearer ") then
 		Z:BuffTargetCommand(pinName) -- le nom garde ses majuscules
 	elseif msg == "groupe" or msg == "group" then

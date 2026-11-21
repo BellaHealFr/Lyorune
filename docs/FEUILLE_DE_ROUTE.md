@@ -38,8 +38,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 22 | 1.28.0 | Défensifs et contrôles sur les cases, raccourcis du jeu (le rang adapté, déjà fait par le jeu, est abandonné) | Publiée (v1.28.0) |
 | 23 | 1.29.0 | Trois affaiblissements à dissiper, mes sorts externes, joueur qui boit, mana basse au bord de l'écran, règle des 5 secondes | Publiée (v1.29.0) |
 | 23 bis | 1.30.0 | Animation du logo au choix ; règle des 5 secondes éteinte au départ, trait au-dessus de la barre de mana, pêche corrigée | Publiée (v1.30.0) |
-| 24 | 1.31.0 | Joueurs en bonne santé estompés, statistiques de mes clics | À faire |
-| 25 | 1.32.0 | Répartition entre soigneurs, marquée sur les cases | À faire |
+| 24 | 1.31.0 | Joueurs en bonne santé estompés, statistiques de mes clics | Publiée (v1.31.0) |
+| 25 | 1.32.0 | Répartition entre soigneurs, marquée sur les cases | Publiée (v1.32.0) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -504,10 +504,17 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
   en jeu par l'auteur (« tout est ok ») et publiée le 21 novembre 2026 (1.31.0).
 
 ## Étape 25 : répartition entre soigneurs (1.32.0)
-- [ ] Lot 1, sans aucun message : je choisis les groupes ou les joueurs dont je m'occupe (fenêtre simple, par
+- [x] Lot 1, sans aucun message : je choisis les groupes ou les joueurs dont je m'occupe (fenêtre simple, par
   groupe de raid ou par tank). Leurs cases portent un repère discret « pour moi » ; option : estomper un peu les
   autres. Utile même si je suis le seul à avoir Lyorune.
-- [ ] Lot 2, partage : le chef ou un assistant propose une répartition à tous les soigneurs qui ont Lyorune
+  - **Décidé (carte blanche, 21 novembre 2026)** : chapitre Joueurs, partie « Mes joueurs » : 8 boutons de
+    groupe (`assignGroups`, comptent en raid seulement), liste de noms (`assignPlayers`, un tank...) et
+    `/lyorune pourmoi` sur la case survolée. Repère : trait doré au bord gauche de la vie (`assignMark`, allumé ;
+    rien tant que rien n'est choisi). Estompage des autres (`assignFade`, éteint) : toute la case à 60 %, multiplié
+    avec la portée (`b.assignDim` dans `UpdateRange`) ; ma propre case reste nette. Nom ou groupe secret : la case
+    garde son état. Choix gardé par personnage, hors profil, jamais partagé (`Z.private`). Mode test et case témoin
+    suivent. Fait dans `Assign.lua` et Frames.lua (`UpdateAssign`).
+- [x] Lot 2, partage : le chef ou un assistant propose une répartition à tous les soigneurs qui ont Lyorune
   (Comm.lua, échanges de l'étape 3 bis). Chacun voit ses joueurs, et le nom du soigneur prévu au survol d'une case.
   - **À vérifier, à décider avec l'auteur avant tout codage (synchronisation)** : les messages entre addons sont
     bloqués pendant un combat de boss, une clé mythique+ et le JcJ coté (étape 18 abandonnée pour cette raison).
@@ -515,7 +522,37 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
     `C_ChatInfo.InChatMessagingLockdown()` est vrai (déjà testé dans Comm.lua), rien n'est attendu en combat. Une
     fois reçue, elle reste valable tout le combat sans aucun message. À essayer en jeu : qui peut proposer (chef,
     assistants), accepter ou refuser, ce qui se passe quand un soigneur quitte le groupe.
-- [ ] Tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication
+  - Vérifié dans le code du jeu (branche `forever`, 21 novembre 2026) : `C_ChatInfo.InChatMessagingLockdown()`
+    existe ; restriction « Chat » (`Enum.AddOnRestrictionType`, avec Combat, Encounter, ChallengeMode, PvPMatch,
+    Map) et évènement `ADDON_RESTRICTION_STATE_CHANGED`, envoyé avant le blocage et après sa levée : on sait quand
+    renvoyer, sans boucle. `SendAddonMessage` rend un code (`Enum.SendAddonMessageResult` : 0 réussi, 3 et 8
+    freiné, 11 bloqué) : Comm.lua ne lisait que l'erreur Lua, un envoi freiné passait pour réussi (à corriger).
+    `CHAT_MSG_ADDON` n'a aucun champ secret. Fonctionnement étudié dans PallyPower (porté sur Forever) : chef et
+    assistants seuls, droits vérifiés par celui qui reçoit, application directe sans fenêtre.
+  - **Décidé avec l'auteur (21 novembre 2026)** :
+    - Qui envoie : le chef et les assistants. Celui qui reçoit vérifie lui-même que l'expéditeur l'est.
+    - Réception : appliquée d'office, une ligne dans la discussion (« Répartition de Untel : groupes 1 et 2 »).
+      Un interrupteur refuse toutes les répartitions. Mon choix du lot 1 est gardé et revient quand je quitte le
+      groupe.
+    - Départ d'un soigneur : ses joueurs restent sans soigneur, son nom disparaît du survol, celui qui a envoyé la
+      répartition est prévenu par une ligne (« Untel est parti : groupe 3 sans soigneur »). Rien ne se
+      réattribue tout seul.
+    - Durée : jusqu'à un nouvel envoi, son effacement par l'expéditeur ou la sortie du groupe ; gardée après un
+      /reload.
+    - Envoi refusé avec un message clair pendant un blocage ; jamais d'attente en combat. Un soigneur qui arrive
+      ou fait /reload reçoit la répartition en cours de celui qui l'a envoyée, hors blocage seulement. Le chef
+      répartit tous les soigneurs du groupe ; seuls ceux qui ont Lyorune la voient.
+  - **Fait (21 novembre 2026)** : fenêtre « Répartir les soigneurs » (`/lyorune repartir`, bouton de la partie Mes
+    joueurs) : une ligne par soigneur (rôle du jeu, sinon les classes qui soignent ; en vert ceux qui ont Lyorune),
+    une colonne par groupe de raid présent et par tank (5 au plus). Messages `A:id:i:n:Soigneur=groupes/joueurs`,
+    un par soigneur (12 au plus, 5 joueurs nommés au plus, 250 caractères), `A:id:0:0:` pour effacer. Réglage
+    `assignAccept` (partie Entre joueurs). Répartition gardée dans `LyoruneCharDB.assignShared`. Si elle ne me nomme
+    pas, mon choix reste. Nouveau venu : chuchotement de l'expéditeur, ou dès la fin du blocage
+    (`ADDON_RESTRICTION_STATE_CHANGED`, fin du combat). Comm.lua lit maintenant le code rendu par le jeu.
+- [x] Tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication. Fait le 21 novembre 2026 :
+  tests (étape 25, lots 1 et 2), guides, visite (une phrase sur la carte « Ce que disent les couleurs »), Notes,
+  README, site, installé dans le jeu. Essayée en jeu par l'auteur (« tout est ok ») et publiée le 21 novembre 2026
+  (1.32.0).
 
 ### Vérifié avant ajout : alerte de la chronologie des boss (21 novembre 2026), non retenue pour l'instant
 Idée : avant une grosse technique de boss, les cases s'éclairent ou affichent « dans 5 s ».

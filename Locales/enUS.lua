@@ -454,7 +454,7 @@ Z.translations.enUS = {
 	["Une boisson près de la mana d'un soigneur : il boit."] = "A drink next to a healer's mana: they are drinking.",
 	["|cff3399ffBleu|r, |cffa633ffviolet|r, |cffbf801abrun|r ou |cff1ad933vert|r autour d'une case : "
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
-			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue). Vie et nom pâles : il est en bonne santé (à allumer, chapitre Vie et portée).\n\n"
+			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue). Vie et nom pâles : il est en bonne santé (à allumer, chapitre Vie et portée). |cffffcc4dTrait doré|r à gauche : un de vos joueurs (chapitre Joueurs, partie Mes joueurs).\n\n"
 			.. "Vos soins sur la durée et ses affaiblissements se rangent selon la forme des cases ; "
 			.. "« Placer les éléments de la case... » (chapitre Disposition) les déplace et règle leur taille. "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
@@ -463,7 +463,7 @@ Z.translations.enUS = {
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Liseré |cff73ccffbleu|r : un gros défensif posé sur lui ; liseré |cffff4d33rouge|r au centre : il est étourdi, apeuré ou métamorphosé. "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight). Pale health and name: they are healthy (to turn on, Health and range chapter).\n\nYour heals over time and their debuffs are laid out to fit the cell shape; \"Place the cell elements...\" (Layout chapter) moves them and sets their size. The small coloured squares in the corners: the spells you placed there (My heals chapter). A grey icon after your heals: a spell you cannot cast on them again yet (Weakened Soul). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). |cff73ccffBlue|r edge: a big defensive on the player; |cffff4d33red|r edge in the centre: they are stunned, feared or polymorphed. Hover a cell out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight). Pale health and name: they are healthy (to turn on, Health and range chapter). |cffffcc4dGold line|r on the left: one of your players (Players chapter, My players part).\n\nYour heals over time and their debuffs are laid out to fit the cell shape; \"Place the cell elements...\" (Layout chapter) moves them and sets their size. The small coloured squares in the corners: the spells you placed there (My heals chapter). A grey icon after your heals: a spell you cannot cast on them again yet (Weakened Soul). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). |cff73ccffBlue|r edge: a big defensive on the player; |cffff4d33red|r edge in the centre: they are stunned, feared or polymorphed. Hover a cell out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (chapitre Disposition, partie Position), "
@@ -933,4 +933,54 @@ Z.translations.enUS = {
 	["Règle des 5 secondes : la pêche et les sorts dont le jeu ne donne pas le coût ne lancent plus le trait."] = "Five second rule: fishing and spells whose cost the game does not give no longer start the line.",
 	["Joueurs en bonne santé estompés (chapitre Vie et portée, éteint au départ) : au-dessus d'un seuil réglable (90 % au départ), leur vie, leur mana et leur nom pâlissent, ceux qui ont besoin de soins ressortent. Icônes, dissipation et menace restent nettes, la case survolée aussi."] = "Healthy players faded (Health and range chapter, off by default): above an adjustable threshold (90% by default), their health, mana and name fade, those who need healing stand out. Icons, dispels and threat stay sharp, and so does the cell under the mouse.",
 	["Compter mes clics (chapitre Sorts et raccourcis, éteint au départ) : à côté de chaque ligne, combien de fois vous l'avez utilisée, par personnage et par spécialisation ; une ligne jamais utilisée est grisée, un bouton remet les comptes à zéro."] = "Count my clicks (Spells and bindings chapter, off by default): next to each line, how many times you used it, per character and per specialization; a line never used is greyed out, a button resets the counts.",
+	[" et "] = " and ",
+	["%d soigneurs au plus."] = "%d healers at most.",
+	["%s a effacé la répartition des soigneurs."] = "%s cleared the healer assignments.",
+	["%s est parti : %s sans soigneur prévu."] = "%s has left: %s without a planned healer.",
+	["%s fait partie de vos joueurs."] = "%s is now one of your players.",
+	["%s ne fait plus partie de vos joueurs."] = "%s is no longer one of your players.",
+	["Attendez quelques secondes avant de renvoyer."] = "Wait a few seconds before sending again.",
+	["Aucun groupe de raid ni tank à répartir."] = "No raid group or tank to assign.",
+	["Aucun soigneur dans le groupe."] = "No healer in the group.",
+	["Aucune répartition en cours."] = "No assignment in progress.",
+	["Choisissez au moins un groupe ou un joueur pour un soigneur."] = "Choose at least one group or player for a healer.",
+	["Cochez ce que chaque soigneur soigne, puis envoyez avant le combat : pendant un combat de boss, le jeu bloque les messages. Les soigneurs qui ont Lyorune (en vert) la voient tout de suite ; elle reste valable tout le combat."] = "Tick what each healer heals, then send it before the fight: during a boss fight, the game blocks the messages. Healers who have Lyorune (in green) see it right away; it stays valid for the whole fight.",
+	["Effacer pour tous"] = "Clear for everyone",
+	["Envoi impossible pour le moment (combat ou messages freinés par le jeu). Réessayez dans un instant."] = "Cannot send right now (combat or messages slowed down by the game). Try again in a moment.",
+	["Envoyer au groupe"] = "Send to the group",
+	["G%d"] = "G%d",
+	["Le jeu bloque les messages entre addons pendant un combat de boss, une clé mythique+ ou un match JcJ : envoyez la répartition avant le combat."] = "The game blocks addon messages during a boss fight, a Mythic+ key or a PvP match: send the assignments before the fight.",
+	["Répartir les soigneurs"] = "Assign the healers",
+	["Répartition effacée."] = "Assignments cleared.",
+	["Répartition envoyée : %d soigneur(s). Ceux qui ont Lyorune la voient tout de suite."] = "Assignments sent: %d healer(s). Those who have Lyorune see them right away.",
+	["Seuls le chef du groupe et les assistants peuvent envoyer une répartition."] = "Only the group leader and assistants can send assignments.",
+	["Vous n'êtes pas en groupe."] = "You are not in a group.",
+	["groupe %s"] = "group %s",
+	["groupes %s"] = "groups %s",
+	["personne"] = "nobody",
+	["répartition de %s : vous soignez %s."] = "assignments from %s: you heal %s.",
+	["répartition de %s reçue : elle ne vous nomme pas, votre choix reste."] = "assignments from %s received: they do not name you, your own choice stays.",
+	["Soigneur prévu : %s"] = "Planned healer: %s",
+	["Mes joueurs (répartition entre soigneurs)"] = "My players (healer assignments)",
+	["Les joueurs dont vous vous occupez portent un trait doré au bord gauche de leur case. Utile même si vous êtes seul à avoir Lyorune."] = "The players you look after have a gold line on the left edge of their cell. Useful even if you are the only one with Lyorune.",
+	["Repère sur mes joueurs"] = "Mark on my players",
+	["Un trait doré au bord gauche de la case de chaque joueur dont vous vous occupez : vos groupes de raid et vos joueurs choisis. Rien ne s'affiche tant que vous n'avez rien choisi."] = "A gold line on the left edge of the cell of each player you look after: your raid groups and your chosen players. Nothing shows until you have chosen something.",
+	["Groupes de raid dont je m'occupe"] = "Raid groups I look after",
+	["Les groupes ne comptent qu'en raid ; en groupe de cinq, seuls les joueurs choisis."] = "Groups only count in a raid; in a group of five, only the chosen players do.",
+	["Joueurs dont je m'occupe"] = "Players I look after",
+	["Un tank, un joueur à surveiller. Tapez un nom puis Entrée, ou survolez sa case et tapez /lyorune pourmoi."] = "A tank, a player to watch. Type a name then Enter, or hover their cell and type /lyorune mine.",
+	["Estomper un peu les autres"] = "Fade the others a little",
+	["Les joueurs dont vous ne vous occupez pas sont un peu plus transparents. Votre propre case reste nette."] = "The players you do not look after are a little more transparent. Your own cell stays sharp.",
+	["Répartition reçue de %s : vous soignez %s. Elle remplace votre choix jusqu'à la sortie du groupe."] = "Assignments received from %s: you heal %s. They replace your choice until you leave the group.",
+	["Aucune répartition reçue : votre choix ci-dessus compte."] = "No assignments received: your choice above counts.",
+	["Répartir les soigneurs..."] = "Assign the healers...",
+	["Chef ou assistant : cochez ce que chaque soigneur soigne et envoyez-le avant le combat. Ceux qui ont Lyorune le voient sur leurs cases, et le soigneur prévu s'affiche au survol. Aussi : /lyorune repartir."] = "Leader or assistant: tick what each healer heals and send it before the fight. Those who have Lyorune see it on their cells, and the planned healer shows when hovering. Also: /lyorune assign.",
+	["Appliquer la répartition du chef"] = "Apply the leader's assignments",
+	["Le chef ou un assistant envoie qui soigne quoi : vos repères suivent tout de suite, avec une ligne dans la discussion. Votre propre choix revient quand vous quittez le groupe. Décochée : les répartitions reçues sont ignorées."] = "The leader or an assistant sends who heals what: your marks follow right away, with a line in the chat. Your own choice comes back when you leave the group. Unticked: received assignments are ignored.",
+	["ajouter ou retirer le joueur survolé de mes joueurs"] = "add or remove the hovered player from my players",
+	["répartir les soigneurs (chef ou assistant)"] = "assign the healers (leader or assistant)",
+	["Répartition entre soigneurs (chapitre Joueurs, partie Mes joueurs) : vos groupes de raid et vos joueurs choisis (un tank, /lyorune pourmoi) portent un trait doré au bord gauche de leur case ; au choix, les autres s'estompent un peu. Marche même si vous êtes seul à avoir Lyorune."] = "Healer assignments (Players chapter, My players part): your raid groups and your chosen players (a tank, /lyorune mine) get a gold line on the left edge of their cell; if you like, the others fade a little. Works even if you are the only one with Lyorune.",
+	["Le chef ou un assistant envoie qui soigne quoi à tous les soigneurs qui ont Lyorune (« Répartir les soigneurs... », /lyorune repartir), avant le combat : leurs repères suivent tout de suite, et le soigneur prévu s'affiche au survol d'une case. Pendant un combat de boss, le jeu bloque ces messages : l'envoi est refusé avec un message clair."] = "The leader or an assistant sends who heals what to every healer who has Lyorune (\"Assign the healers...\", /lyorune assign), before the fight: their marks follow right away, and the planned healer shows when hovering a cell. During a boss fight, the game blocks these messages: sending is refused with a clear message.",
+	["Guide du joueur et visite guidée : la répartition entre soigneurs."] = "Player guide and guided tour: healer assignments.",
+	["Un message entre joueurs freiné par le jeu passait pour envoyé : Lyorune lit maintenant la réponse du jeu."] = "A message between players slowed down by the game was taken as sent: Lyorune now reads the game's answer.",
 }

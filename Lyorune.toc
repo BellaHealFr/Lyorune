@@ -1,12 +1,12 @@
 ## Interface: 16001
 ## Title: Lyorune |cff33dd88(Forever)|r
-## Notes: Cadres de soin simples, rapides et élégants pour WoW Forever : clic-soin avec bijoux et macros, touches au survol, statistiques de vos clics, soins entrants, icônes d'auras visibles en combat et rangées à la mesure de chaque forme de case, placement et taille de chaque icône, mana basse des soigneurs et soigneurs qui boivent, vos sorts externes et Âme affaiblie, liseré de mana basse et règle des 5 secondes, gros défensifs et contrôles des joueurs, dissipation (jusqu'à 3 par case), joueurs en bonne santé estompés, distance, buffs manquants, raccourcis du jeu, recharge globale, annonces de mana faible et remontée même avec la mana cachée, joueurs épinglés, signal, thèmes, fenêtre d'options à chapitres avec case témoin et recherche, profils (champ de bataille, arène, copie par partie), partage, tutoriel intégré.
-## Notes-enUS: Simple, fast and elegant healing frames for WoW Forever: click-casting with trinkets and macros, hover keys, click statistics, incoming heals, aura icons visible in combat and laid out to fit each cell shape, position and size of every icon, healers' low mana and drinking healers, your external spells and Weakened Soul, low mana screen edge and five second rule, players' big defensives and crowd control, dispels (up to 3 per cell), healthy players faded, range, missing buffs, game key bindings, global cooldown, low mana and mana restored announcements even with hidden mana, pinned players, pings, themes, options window in chapters with a live preview cell and search, profiles (battleground, arena, partial copy), sharing, built-in tutorial.
+## Notes: Cadres de soin simples, rapides et élégants pour WoW Forever : clic-soin avec bijoux et macros, touches au survol, statistiques de vos clics, soins entrants, icônes d'auras visibles en combat et rangées à la mesure de chaque forme de case, placement et taille de chaque icône, mana basse des soigneurs et soigneurs qui boivent, vos sorts externes et Âme affaiblie, liseré de mana basse et règle des 5 secondes, gros défensifs et contrôles des joueurs, dissipation (jusqu'à 3 par case), joueurs en bonne santé estompés, distance, buffs manquants, raccourcis du jeu, recharge globale, annonces de mana faible et remontée même avec la mana cachée, joueurs épinglés, répartition entre soigneurs, signal, thèmes, fenêtre d'options à chapitres avec case témoin et recherche, profils (champ de bataille, arène, copie par partie), partage, tutoriel intégré.
+## Notes-enUS: Simple, fast and elegant healing frames for WoW Forever: click-casting with trinkets and macros, hover keys, click statistics, incoming heals, aura icons visible in combat and laid out to fit each cell shape, position and size of every icon, healers' low mana and drinking healers, your external spells and Weakened Soul, low mana screen edge and five second rule, players' big defensives and crowd control, dispels (up to 3 per cell), healthy players faded, range, missing buffs, game key bindings, global cooldown, low mana and mana restored announcements even with hidden mana, pinned players, healer assignments, pings, themes, options window in chapters with a live preview cell and search, profiles (battleground, arena, partial copy), sharing, built-in tutorial.
 ## Author: BellaDroode
 ## X-License: Tous droits réservés (voir LICENSE)
 ## X-Website: https://github.com/BellaHealFr/Lyorune
 ## X-Curse-Project-ID: 1815533
-## Version: 1.31.0
+## Version: 1.32.0
 ## IconTexture: Interface\AddOns\Lyorune\Media\Logo
 ## Category-frFR: Portraits d'unités
 ## Category-enUS: Unit Frames
@@ -35,6 +35,7 @@ Macros.lua
 Alerts.lua
 Share.lua
 Comm.lua
+Assign.lua
 Bug.lua
 Preview.lua
 Perf.lua
