@@ -6,6 +6,20 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.29.0] - 2026-11-21
+
+### Ajouté
+
+- Jusqu'à 3 affaiblissements à dissiper par case, le plus important d'abord (chapitre Affaiblissements, 2 au départ).
+- Vos sorts externes sur la case (Infusion de puissance, Innervation), et Âme affaiblie en gris à la dernière place de vos soins (chapitre Mes soins).
+- Soigneur qui boit : l'icône de sa boisson à côté de sa mana basse, avec le temps qui reste (partie Mana).
+- Liseré bleu doux au bord de l'écran quand votre mana baisse (sous 20 % au départ, réglable ou coupé, partie Mana).
+- Règle des 5 secondes : après un sort payé en mana, un trait fin sur votre case se vide jusqu'au retour de la régénération.
+
+### Amélioré
+
+- Guide du joueur et visite guidée : ces nouveautés.
+
 ## [1.28.0] - 2026-11-21
 
 ### Ajouté
@@ -548,6 +562,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0
 [1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0

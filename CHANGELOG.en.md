@@ -6,6 +6,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.29.0] - 2026-11-21
+
+### Added
+
+- Up to 3 debuffs to dispel per cell, the most important first (Debuffs chapter, 2 by default).
+- Your external spells on the cell (Power Infusion, Innervate), and Weakened Soul in grey in the last place of your heals (My heals chapter).
+- Drinking healer: the icon of their drink next to their low mana, with the time left (Mana part).
+- Soft blue edge around the screen when your mana runs low (below 20% by default, adjustable or off, Mana part).
+- Five second rule: after a spell paid with mana, a thin line on your cell empties until your regeneration comes back.
+
+### Improved
+
+- Player guide and guided tour: these new features.
+
 ## [1.28.0] - 2026-11-21
 
 ### Added
@@ -548,6 +562,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0
 [1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0

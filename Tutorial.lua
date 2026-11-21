@@ -109,6 +109,19 @@ local steps = {
 					or "La |cff%sbande claire|r en bas de la case est un bouclier."
 				text = text .. (db.showIncoming and " " or "\n\n") .. L[shield]:format(Hex(theme.absorb))
 			end
+			-- Mana (étape 23) : seulement ce qui est allumé, et rien sur ma mana pour une classe sans mana
+			local mana = {}
+			local mine = Z.class ~= nil and not (Z.classPower and Z.classPower[Z.class])
+			if mine and db.fiveSecondRule then
+				mana[#mana + 1] = L["Après un sort payé en mana, un trait fin sur votre case se vide en 5 secondes : ensuite, votre mana repart."]
+			end
+			if mine and (tonumber(db.manaEdge) or 0) > 0 then
+				mana[#mana + 1] = L["Le bord de l'écran bleuit quand votre mana baisse."]
+			end
+			if db.drinkHealers then
+				mana[#mana + 1] = L["Une boisson près de la mana d'un soigneur : il boit."]
+			end
+			if #mana > 0 then text = text .. "\n\n" .. table.concat(mana, " ") end
 			return text
 		end,
 		target = Cell,
@@ -133,6 +146,7 @@ local steps = {
 			.. "Vos soins sur la durée et ses affaiblissements se rangent selon la forme des cases ; "
 			.. "« Placer les éléments de la case... » (chapitre Disposition) les déplace et règle leur taille. "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
+			.. "Une icône grise au bout de vos soins : un sort que vous ne pouvez pas encore relancer sur lui (Âme affaiblie). "
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
 			.. "Liseré |cff73ccffbleu|r : un gros défensif posé sur lui ; liseré |cffff4d33rouge|r au centre : il est étourdi, apeuré ou métamorphosé. "

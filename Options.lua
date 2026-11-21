@@ -1827,6 +1827,9 @@ local function Chapters()
 			{ "Mana", {
 				{ "seg", "manaBars", "Barre de mana", nil, "Tous : chaque joueur avec sa ressource, à la couleur du jeu (mana, rage, énergie, focalisation...), qui suit la forme du druide. Soigneurs : leur mana seulement." },
 				{ "cycle", "lowManaHealers", "Mana basse des soigneurs", nil, "Une icône de boisson sur la case d'un soigneur dont la mana passe sous ce seuil. Le jeu la calcule lui-même : elle marche en combat, même quand la mana est cachée.", desc = "Une icône de boisson, même en combat." },
+				{ "check", "drinkHealers", "Soigneur qui boit", "Un soigneur qui boit montre l'icône de sa boisson sur sa case, à côté de sa mana basse, avec le temps qui reste. Utile pour attendre qu'il ait fini avant d'avancer.", desc = "L'icône de sa boisson, à côté de sa mana basse." },
+				{ "check", "fiveSecondRule", "Règle des 5 secondes sur ma case", "Après un sort qui coûte de la mana, le jeu coupe votre régénération pendant 5 secondes. Un trait fin sur votre case se vide pendant ce temps : quand il a disparu, votre mana remonte de nouveau.", desc = "Un trait qui se vide jusqu'au retour de la régénération." },
+				{ "cycle", "manaEdge", "Liseré de ma mana basse", nil, "Un liseré bleu doux au bord de l'écran, de plus en plus net à mesure que votre mana descend sous ce seuil. Le jeu le calcule lui-même : il marche en combat, même quand la mana est cachée.", desc = "Un liseré bleu doux au bord de l'écran." },
 				{ "step", "powerHeight", "Hauteur de la barre de mana", fine = true, dep = { "manaBars", "!OFF" } },
 				{ "cycle", "manaColor", "Couleur de la barre de mana", nil, "Seulement pour la mana : rage, énergie et les autres ressources gardent la couleur du jeu.", fine = true, dep = { "manaBars", "!OFF" } },
 				{ "check", "manaPercent", "Pourcentage de mana dans la barre", "Le % de mana écrit au milieu de la barre, lisible en combat. La barre passe alors à 8 pixels de haut au moins.", fine = true, dep = { "manaBars", "!OFF" } },
@@ -1845,6 +1848,7 @@ local function Chapters()
 				{ "check", "hotCountdown", "Décompte en secondes", "Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat).", fine = true, dep = { "showHots", true } },
 				{ "check", "hotFade", "Icône qui s'efface à la fin", "Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer.", fine = true, dep = { "showHots", true } },
 				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges.", fine = true, dep = { "showHots", true } },
+				{ "check", "showLockouts", "Sort que je ne peux pas relancer", "Âme affaiblie, après un Mot de pouvoir : Bouclier (le vôtre ou celui d'un autre prêtre) : son icône assombrie prend la dernière place de la rangée de vos soins. Tant qu'elle est là, pas de nouveau bouclier sur ce joueur.", desc = "Âme affaiblie, assombrie après vos soins (prêtre).", dep = { "showHots", true } },
 			} },
 			{ "Coins de la case", {
 				{ "note", "Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de « Mes sorts à suivre », plus bas.", 46 },
@@ -1869,6 +1873,7 @@ local function Chapters()
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
 				{ "seg", "debuffMode", "Affaiblissements affichés", dep = { "showDebuffs", true } },
 				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher."),
+				{ "step", "dispelCount", "Affaiblissements à dissiper", desc = "Montrés avant les autres, le plus important d'abord.", dep = { "showDebuffs", true } },
 				{ "step", "debuffCount", "Nombre d'affaiblissements", fine = true, dep = { "showDebuffs", true } },
 			} },
 			{ "Importants", {

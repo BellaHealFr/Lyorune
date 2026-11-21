@@ -179,7 +179,7 @@ local function Origins(power, roleRect)
 		Put(key, row.point, row.relative == "HP" and hp or cell, row.point, row.x, row.y, row.width, row.height)
 	end
 	if db.hotStyle == "BARS" then
-		Put("hots", "TOPLEFT", cell, "TOPLEFT", 3 + Shift("TOPLEFT"), -3, math.floor(W * 0.45), db.hotCount * 4)
+		Put("hots", "TOPLEFT", cell, "TOPLEFT", 3 + Shift("TOPLEFT"), -3, math.floor(W * 0.45), Z.HotSlots() * 4)
 	else
 		Row("hots", rows.hots)
 	end
@@ -355,6 +355,7 @@ local SAMPLE_ICONS = {
 local function SampleIcon(icon, texture)
 	icon.texture:SetTexture(texture)
 	icon.texture:SetDesaturated(false)
+	icon.texture:SetVertexColor(1, 1, 1)
 	icon.border:SetColor(0, 0, 0, 1)
 	icon.cooldown:Clear()
 	icon.count:SetText("")
@@ -371,9 +372,9 @@ end
 
 local function Regions(key)
 	if key == "hots" then
-		return Row(Z.db.hotStyle == "BARS" and cell.hotBars or cell.hots, Z.db.hotCount)
+		return Row(Z.db.hotStyle == "BARS" and cell.hotBars or cell.hots, Z.HotSlots())
 	elseif key == "debuffs" then
-		return Row(cell.debuffs, Z.db.debuffCount)
+		return Row(cell.debuffs, Z.DebuffSlots())
 	elseif key == "big" then
 		return { cell.bigIcon }
 	elseif key == "defensives" then
@@ -464,17 +465,24 @@ local function Draw()
 	for _, list in ipairs({ cell.hots, cell.hotBars, cell.debuffs }) do
 		for _, region in ipairs(list) do region:Hide() end
 	end
-	for index = 1, db.hotCount do
+	-- Au bout de mes soins, la place de l'Âme affaiblie (prêtre), assombrie
+	local lockout = Z.ShowsLockouts() and C_Spell.GetSpellTexture(next(Z.lockoutIds))
+	for index = 1, Z.HotSlots() do
+		local locked = index > Z.HotCount()
 		if db.hotStyle == "BARS" then
 			local bar = Z.HotBar(cell, index)
+			local color = locked and Z.LOCKOUT_BAR or Z.BAR_COLORS[index] or Z.BAR_COLORS[1]
+			bar:SetStatusBarColor(color[1], color[2], color[3])
 			bar:SetMinMaxValues(0, 1)
 			bar:SetValue(1 - (index - 1) * 0.2)
 			bar:Show()
 		else
-			SampleIcon(Z.HotIcon(cell, index), C_Spell.GetSpellTexture(spells[(index - 1) % #spells + 1]))
+			local icon = Z.HotIcon(cell, index)
+			SampleIcon(icon, locked and lockout or C_Spell.GetSpellTexture(spells[(index - 1) % #spells + 1]))
+			if locked then Z.DarkenIcon(icon) end
 		end
 	end
-	for index = 1, db.debuffCount do
+	for index = 1, Z.DebuffSlots() do
 		SampleIcon(Z.DebuffIcon(cell, index), SAMPLE_ICONS.debuffs[(index - 1) % #SAMPLE_ICONS.debuffs + 1])
 	end
 	SampleIcon(Z.BigIcon(cell), SAMPLE_ICONS.big)

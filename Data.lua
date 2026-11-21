@@ -13,6 +13,7 @@
 --   6. Z.uniqueBuffs.MACLASSE : ses buffs à poser sur une seule personne (le tank), s'il en a
 --   7. Z.classPower.MACLASSE : sa ressource si ce n'est pas la mana (rage, énergie...)
 --   8. Z.defensives.MACLASSE : ses gros défensifs, montrés sur sa case à tous les soigneurs
+--   9. Z.lockouts.MACLASSE : les affaiblissements qui l'empêchent de relancer un de ses sorts, s'il en a
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -30,8 +31,8 @@ Z.dispelSpells = {
 
 -- Mes sorts à suivre sur les cadres (soins sur la durée, boucliers, protections)
 Z.trackedSpells = {
-	PRIEST  = { 139, 17, 401859, 6346, 552 },          -- Rénovation, Mot de pouvoir : Bouclier, Prière de guérison, Gardien de peur, Abolir maladie
-	DRUID   = { 774, 8936, 408120, 2893 },             -- Récupération, Rétablissement, Croissance sauvage, Abolir le poison
+	PRIEST  = { 139, 17, 401859, 6346, 552, 10060 },   -- Rénovation, Mot de pouvoir : Bouclier, Prière de guérison, Gardien de peur, Abolir maladie, Infusion de puissance
+	DRUID   = { 774, 8936, 408120, 2893, 29166 },      -- Récupération, Rétablissement, Croissance sauvage, Abolir le poison, Innervation
 	PALADIN = { 1022, 6940, 1044, 19752 },             -- Bénédictions de protection, de sacrifice, de liberté, Intervention divine
 	SHAMAN  = { 22419, 408514 },                       -- Remous, Bouclier de terre
 }
@@ -47,6 +48,7 @@ Z.spellRanks = {
 	[8936] = { 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 },              -- Rétablissement
 	[1022] = { 5599, 10278 },                                                  -- Bénédiction de protection
 	[6940] = { 20729 },                                                        -- Bénédiction de sacrifice
+	[29166] = { 456195 },                                                      -- Innervation (variante trouvée dans le jeu)
 }
 
 -- Clics proposés au premier lancement. Pour chaque case, le premier sort connu de la liste est retenu.
@@ -147,6 +149,21 @@ Z.defensives = {
 }
 Z.DEFENSIVE_COUNT = 2 -- gros défensifs montrés au plus sur une case
 
+-- Affaiblissements qui m'empêchent de relancer un de mes sorts sur ce joueur, posés par n'importe qui : leur
+-- icône, assombrie, suit la rangée de mes soins (réglage « showLockouts »), même en combat (Containers.lua).
+-- Une ligne par affaiblissement, comme les gros défensifs : le premier numéro, puis ses doubles éventuels.
+Z.lockouts = {
+	PRIEST = { { 6788 } },                  -- Âme affaiblie (après Mot de pouvoir : Bouclier)
+}
+Z.LOCKOUT_COUNT = 1 -- affaiblissements de ce genre montrés au plus sur une case
+
+-- Boisson : un soigneur qui boit le montre sur sa case, à côté de sa mana basse (réglage « drinkHealers »).
+-- Les numéros des boissons du jeu (eau de chaque niveau, eau invoquée) ; ceux dont le nom, lu dans le jeu,
+-- n'est pas celui du premier sont ignorés (Z:BuildData).
+-- Liste complétée par la recherche dans le jeu du 21 novembre 2026 (build 71037) : 18 numéros nommés « Boisson ».
+Z.drinkSpells = { 430, 431, 432, 1133, 1135, 1137, 10250, 22734, 24355, 25696, 26261, 26402, 26473, 26475, 29007,
+	446714, 468767, 1330734 }
+
 -- Affaiblissements sans intérêt pour un soigneur
 Z.ignoredDebuffs = {
 	[11196] = true, -- Bandé récemment
@@ -234,6 +251,23 @@ function Z:BuildData()
 					if Z.SpellName(id) == name then Z.defensiveIds[id] = true end
 				end
 			end
+		end
+	end
+	-- Affaiblissements qui bloquent un de mes sorts (ma classe seulement) et boissons, vérifiés par leur nom
+	Z.lockoutIds = {}
+	for _, ids in ipairs(Z.lockouts[Z.class] or {}) do
+		local name = Z.SpellName(ids[1])
+		if name then
+			for _, id in ipairs(ids) do
+				if Z.SpellName(id) == name then Z.lockoutIds[id] = true end
+			end
+		end
+	end
+	Z.drinkIds = {}
+	local drink = Z.SpellName(Z.drinkSpells[1])
+	if drink then
+		for _, id in ipairs(Z.drinkSpells) do
+			if Z.SpellName(id) == drink then Z.drinkIds[id] = true end
 		end
 	end
 	-- Les conteneurs d'auras du jeu filtrent par numéro de sort : ils suivent les sorts de la classe

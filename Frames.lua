@@ -320,6 +320,14 @@ local function UpdateRole(b)
 		b.lowManaShown = drop
 		b.lowMana:SetShown(drop)
 	end
+	-- Soigneur qui boit : sa boisson à côté de sa mana basse (conteneur du jeu, sinon lecture des auras)
+	local drinks = (db.drinkHealers and role == "HEALER") or false
+	if drinks ~= b.drinkShown then
+		b.drinkShown = drinks
+		if Z.ShowDrinkBox then Z.ShowDrinkBox(b) end
+		if not drinks and b.drinkIcon then b.drinkIcon:Hide() end
+		if drinks and not b.boxes and Z.QueueAuras then Z.QueueAuras(b) end
+	end
 	-- Les événements de mana servent à la barre comme à l'icône
 	local listen = wanted or drop
 	if listen ~= b.powerListen then
@@ -487,6 +495,7 @@ local function OnAttributeChanged(b, name, value)
 		LayoutBars(b)
 	end
 	b.powerListen, b.lowManaShown = false, false -- événements retirés ci-dessus : UpdateRole les reprendra
+	b.drinkShown = nil -- le rôle du joueur d'avant : UpdateRole repose celui du nouveau
 	b.powerType, b.powerToken = nil, nil -- la ressource du joueur d'avant : UpdateRole repose la sienne
 	b.lowMana:Hide()
 	if value then
@@ -1493,6 +1502,8 @@ function Z:Refresh()
 	if Z.RefreshPlacement then Z:RefreshPlacement() end
 	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
 	if Z.RefreshCastIndicator then Z:RefreshCastIndicator() end
+	if Z.RefreshManaEdge then Z:RefreshManaEdge() end
+	if Z.RefreshFiveSecondRule then Z:RefreshFiveSecondRule() end
 end
 
 function Z:CreateFrames()

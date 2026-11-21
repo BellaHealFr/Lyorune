@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.28.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.29.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -81,10 +81,12 @@ Z.defaults = {
 	hotCountdown = false,      -- icônes de mes soins : secondes restantes, écrites par le jeu
 	hotFade = false,           -- icônes de mes soins : l'icône s'assombrit vers la fin du soin
 	hotCharges = true,         -- icônes de mes soins : nombre de charges
+	showLockouts = true,       -- affaiblissement qui bloque un de mes sorts (Âme affaiblie, Z.lockouts) : assombri après mes soins
 	cornerSpells = {},         -- un de mes sorts par coin de case, par classe : cornerSpells.DRUID.TOPLEFT = "Récupération"
 	threatBar = false,         -- barre fine de menace en haut de la vie (jaune, orange, rouge)
 	showDebuffs = true, debuffMode = "ALL",
 	debuffCount = 2,           -- nombre d'icônes d'affaiblissements par case (celui à dissiper d'abord, puis les autres)
+	dispelCount = 2,           -- affaiblissements que je peux dissiper montrés avant les autres (le plus important d'abord)
 	bossDebuffs = true,        -- affaiblissement important en grand
 	showControls = true,       -- joueur sous contrôle (étourdi, apeuré, métamorphosé) : l'icône au centre de sa case
 	showDefensives = true,     -- gros défensifs posés par n'importe qui (Z.defensives, Data.lua) : leur icône sur la case
@@ -95,7 +97,10 @@ Z.defaults = {
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
+	fiveSecondRule = true,     -- trait sur ma case pendant les 5 secondes sans régénération après un sort (Mana.lua)
+	manaEdge = 20,             -- liseré bleu au bord de l'écran quand ma mana passe sous ce % (0 : jamais ; courbe du jeu)
 	lowManaHealers = 20,       -- icône de boisson sur la case d'un soigneur sous ce % de mana (0 : jamais ; courbe du jeu, marche en combat)
+	drinkHealers = true,       -- soigneur qui boit : l'icône de sa boisson à côté de sa mana basse (Z.drinkSpells, Data.lua)
 	manaPercent = false,       -- pourcentage de mana écrit dans la barre (elle passe alors à 8 pixels au moins)
 	showTooltip = true,
 	clickTooltip = true,       -- mes clics et touches dans l'infobulle d'une case (hors combat)
@@ -161,7 +166,7 @@ Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
 	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 200, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
-	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
+	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, dispelCount = { 1, 3, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 }
 
 Z.choices = {
@@ -173,6 +178,7 @@ Z.choices = {
 		{ "DAMAGER,TANK,HEALER", "Dégâts, tank, soin" }, { "DAMAGER,HEALER,TANK", "Dégâts, soin, tank" },
 	},
 	horizontal = { { false, "En colonnes" }, { true, "En lignes" } },
+	manaEdge = { { 0, "Non" }, { 10, "Sous 10 %" }, { 20, "Sous 20 %" }, { 30, "Sous 30 %" }, { 40, "Sous 40 %" } },
 	lowManaHealers = { { 0, "Non" }, { 10, "Sous 10 %" }, { 20, "Sous 20 %" }, { 30, "Sous 30 %" }, { 40, "Sous 40 %" } },
 	absorbStyle = { { "BAND", "Bande en bas" }, { "FOLLOW", "À la suite de la vie" } },
 	shape = { { "BAR", "Barre" }, { "TILE", "Tuile" }, { "SQUARE", "Carré" }, { "BANNER", "Bandeau" } },

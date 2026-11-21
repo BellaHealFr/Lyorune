@@ -8,6 +8,21 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.29.0", date = "2026-11-21",
+		added = {
+			"Jusqu'à 3 affaiblissements à dissiper par case, le plus important d'abord (chapitre Affaiblissements, 2 au départ).",
+			"Vos sorts externes sur la case (Infusion de puissance, Innervation), et Âme affaiblie en gris à la dernière place de vos soins (chapitre Mes soins).",
+			"Soigneur qui boit : l'icône de sa boisson à côté de sa mana basse, avec le temps qui reste (partie Mana).",
+			"Liseré bleu doux au bord de l'écran quand votre mana baisse (sous 20 % au départ, réglable ou coupé, partie Mana).",
+			"Règle des 5 secondes : après un sort payé en mana, un trait fin sur votre case se vide jusqu'au retour de la régénération.",
+		},
+		improved = {
+			"Guide du joueur et visite guidée : ces nouveautés.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.28.0", date = "2026-11-21",
 		added = {
 			"Gros défensifs des joueurs sur leur case (chapitre Joueurs, partie Sur la case) : Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace..., posés par n'importe qui, avec un liseré bleu, visibles en combat, deux au plus.",

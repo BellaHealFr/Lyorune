@@ -101,6 +101,37 @@ end
 local GAP, MIN_ICON = 2, 5 -- écart entre deux icônes, icône la plus petite
 local SIGN = { TOPLEFT = { 1, -1 }, TOPRIGHT = { -1, -1 }, BOTTOMLEFT = { 1, 1 }, BOTTOMRIGHT = { -1, 1 } }
 
+-- Affaiblissements que je peux dissiper montrés avant les autres (1 à 3)
+function Z.DispelCount()
+	local limits = Z.limits.dispelCount
+	return math.max(limits[1], math.min(limits[2], math.floor(tonumber(Z.db.dispelCount) or limits[1])))
+end
+
+-- Places de la rangée des affaiblissements : ceux à dissiper, puis les autres (« Tous ») ; ceux à dissiper
+-- seulement (« Dissipables par moi »)
+function Z.DebuffSlots()
+	if Z.db.debuffMode == "ALL" then return Z.DispelCount() + Z.db.debuffCount - 1 end
+	return Z.DispelCount()
+end
+
+-- Affaiblissements qui bloquent un de mes sorts (Âme affaiblie) : montrés au bout de la rangée de mes soins si
+-- ma classe en a (Z.lockouts, Data.lua) et si le réglage est coché
+function Z.ShowsLockouts()
+	local db = Z.db
+	return (db.showHots and db.showLockouts and Z.lockoutIds ~= nil and next(Z.lockoutIds) ~= nil) or false
+end
+
+-- Mes soins montrés dans la rangée : l'affaiblissement qui bloque un de mes sorts prend la dernière place (la
+-- rangée garde sa taille, décidée pour chaque forme), sauf si un seul soin est réglé : il s'ajoute alors après lui
+function Z.HotCount()
+	return math.max(1, Z.db.hotCount - (Z.ShowsLockouts() and Z.LOCKOUT_COUNT or 0))
+end
+
+-- Places de la rangée de mes soins : mes soins, puis celle de l'affaiblissement qui bloque un de mes sorts
+function Z.HotSlots()
+	return Z.HotCount() + (Z.ShowsLockouts() and Z.LOCKOUT_COUNT or 0)
+end
+
 -- Une rangée de n icônes de taille « size », qui doit tenir dans « line » pixels de large : elle passe à la
 -- ligne si elle peut (2 lignes au plus), sinon elle rapetisse. Rend la taille, les icônes par ligne, les lignes.
 local function Fit(n, size, line, maxH, canWrap)
@@ -168,8 +199,8 @@ function Z.AuraRows()
 			perLine = perLine, lines = lines, dirX = sign[1], dirY = sign[2],
 			width = perLine * (s + GAP) - GAP, height = lines * (s + GAP) - GAP }
 	end
-	Row("hots", rules.hots, rules.hotLine, db.hotCount)
-	Row("debuffs", rules.debuffs, rules.debuffLine, db.debuffCount)
+	Row("hots", rules.hots, rules.hotLine, Z.HotSlots())
+	Row("debuffs", rules.debuffs, rules.debuffLine, Z.DebuffSlots())
 
 	-- Nom et chiffre de vie sur une ligne (Barre, Bandeau) : places d'origine, sauf en bloc (ci-dessous). Le nom
 	-- part après l'icône de rôle, à sa taille choisie.
@@ -179,8 +210,8 @@ function Z.AuraRows()
 		-- Le bloc fait la largeur de la plus longue rangée réglée (et montrée) ; le chiffre de vie se range à sa
 		-- gauche, le nom s'arrête avant lui
 		local shown = {
-			hots = (db.showHots and db.hotStyle ~= "BARS") and db.hotCount or 0,
-			debuffs = db.showDebuffs and (db.debuffMode == "ALL" and db.debuffCount or 1) or 0,
+			hots = (db.showHots and db.hotStyle ~= "BARS") and Z.HotSlots() or 0,
+			debuffs = db.showDebuffs and Z.DebuffSlots() or 0,
 		}
 		local left
 		for key, n in pairs(shown) do

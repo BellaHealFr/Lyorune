@@ -116,10 +116,11 @@ local function Fill(cell, index, sample)
 	local shown = 0
 	if db.showHots and mine then
 		for _, id in ipairs(Z.trackedSpells[Z.class] or { 139, 774 }) do
-			if shown == math.min(sample and 3 or 2, db.hotCount) then break end
+			if shown == math.min(sample and 3 or 2, Z.HotCount()) then break end
 			shown = shown + 1
 			if db.hotStyle == "BARS" then
-				local bar = Z.HotBar(cell, shown)
+				local bar, color = Z.HotBar(cell, shown), Z.BAR_COLORS[shown] or Z.BAR_COLORS[1]
+				bar:SetStatusBarColor(color[1], color[2], color[3])
 				bar:SetMinMaxValues(0, 1)
 				bar:SetValue(shown == 1 and 0.8 or 0.4)
 				bar:Show()
@@ -132,6 +133,34 @@ local function Fill(cell, index, sample)
 			end
 		end
 	end
+	-- Âme affaiblie (prêtre) : assombrie au bout de mes soins, sur la case témoin et un joueur sur quatre
+	if Z.ShowsLockouts() and not dead and (sample or index % 4 == 1) then
+		local texture = C_Spell.GetSpellTexture(next(Z.lockoutIds))
+		if db.hotStyle == "BARS" then
+			local bar = Z.HotBar(cell, shown + 1)
+			bar:SetStatusBarColor(Z.LOCKOUT_BAR[1], Z.LOCKOUT_BAR[2], Z.LOCKOUT_BAR[3])
+			bar:SetMinMaxValues(0, 1)
+			bar:SetValue(0.6)
+			bar:Show()
+		elseif texture then
+			local icon = Z.HotIcon(cell, shown + 1)
+			icon.texture:SetTexture(texture)
+			Z.DarkenIcon(icon)
+			icon.cooldown:Clear()
+			icon.count:SetText("")
+			icon:Show()
+		end
+	end
+	-- Boisson sur le soigneur à court de mana (comme en vrai : sur les soigneurs seulement)
+	if db.drinkHealers and role == "HEALER" and index % 10 == 2 and not dead then
+		local icon = Z.DrinkIcon(cell)
+		icon.texture:SetTexture("Interface\\Icons\\INV_Drink_18")
+		icon.texture:SetDesaturated(false)
+		icon.texture:SetVertexColor(1, 1, 1)
+		icon.cooldown:Clear()
+		icon.count:SetText("")
+		icon:Show()
+	end
 	-- Coins : un carré par sort choisi, sur les mêmes joueurs (montrés même soins sur la durée coupés, comme en vrai)
 	if mine then
 		for point, name in pairs(Z.MyCorners()) do
@@ -142,12 +171,16 @@ local function Fill(cell, index, sample)
 			end
 		end
 	end
+	-- Affaiblissements : sur la case témoin, autant à dissiper que le réglage le permet (deux au plus)
 	if db.showDebuffs and (dispel or index % 7 == 5) and not dead then
-		local icon = Z.DebuffIcon(cell, 1)
-		icon.texture:SetTexture("Interface\\Icons\\Spell_Shadow_CurseOfTounges")
-		icon.cooldown:Clear()
-		icon.count:SetText("")
-		icon:Show()
+		local textures = { "Interface\\Icons\\Spell_Shadow_CurseOfTounges", "Interface\\Icons\\Spell_Nature_Slow" }
+		for i = 1, (sample and dispel) and math.min(2, Z.DispelCount()) or 1 do
+			local icon = Z.DebuffIcon(cell, i)
+			icon.texture:SetTexture(textures[i])
+			icon.cooldown:Clear()
+			icon.count:SetText("")
+			icon:Show()
+		end
 	end
 	-- Gros défensif (Mur protecteur) sur la case témoin et un joueur sur huit ; contrôle subi (métamorphose) sur
 	-- un joueur sur onze du faux groupe (au centre, il cacherait le nom de la case témoin)

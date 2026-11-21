@@ -36,7 +36,9 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 20 | 1.26.0 | Nouvelle fenêtre d'options : chapitres, case témoin, réglages changés, lumière de soin | Publiée (v1.26.0) |
 | 21 | 1.27.0 | Icônes à la mesure de chaque forme de case, taille réglable dans l'éditeur de placement | Publiée (v1.27.0) |
 | 22 | 1.28.0 | Défensifs et contrôles sur les cases, raccourcis du jeu (le rang adapté, déjà fait par le jeu, est abandonné) | Publiée (v1.28.0) |
-| 23 | 1.29.0 | Trois affaiblissements à dissiper, mes sorts externes, joueur qui boit, mana basse au bord de l'écran, règle des 5 secondes | À faire |
+| 23 | 1.29.0 | Trois affaiblissements à dissiper, mes sorts externes, joueur qui boit, mana basse au bord de l'écran, règle des 5 secondes | Publiée (v1.29.0) |
+| 24 | 1.30.0 | Joueurs en bonne santé estompés, statistiques de mes clics | À faire |
+| 25 | 1.31.0 | Répartition entre soigneurs, marquée sur les cases | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -380,23 +382,130 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
 
 ## Étape 23 : dissipation, sorts externes, mana (1.29.0)
 Classées par intérêt pour les joueurs, puis par coût.
-- [ ] Jusqu'à 3 affaiblissements à dissiper par case, le plus important d'abord (aujourd'hui 1 seul : le
+
+Découpage décidé le 21 novembre 2026, avec l'auteur pour les points techniques :
+- Lot 0 (addon d'essai prêt et installé, recherche à lancer par l'auteur) : recherche des numéros dans le jeu par l'addon d'essai (`essais/LyoruneEssai`, `/lyessai recherche`) :
+  Boisson, Infusion de puissance, Innervation, Âme affaiblie. Les numéros trouvés vont dans `Data.lua`,
+  vérifiés par leur nom au chargement comme les défensifs.
+- Lot 1 : jusqu'à 3 affaiblissements à dissiper. Décidé (carte blanche) : réglage `dispelCount` (1 à 3, 2 au
+  départ), groupe « dispellable » de cette taille, tri « Default » du jeu (les affaiblissements prioritaires
+  du jeu d'abord, vu dans `AuraUtil.DefaultAuraCompare`, branche `forever`) ; la rangée garde
+  `debuffCount - 1` places pour les autres, elle s'allonge donc de `dispelCount - 1` ; en mode « Dissipables
+  par moi », `dispelCount` places. Ancien affichage (lecture des auras), mode test et éditeur suivent.
+  - Fait le 21 novembre 2026 (tests passés) : `Z.DispelCount()` et `Z.DebuffSlots()` (Themes.lua), réglage
+    « Affaiblissements à dissiper » (chapitre Affaiblissements, Icônes), deux à dissiper sur la case témoin,
+    guide fr et en. À voir en jeu : deux affaiblissements à dissiper sur un joueur, les deux montrés.
+- Lot 2 : mes sorts externes (Infusion de puissance, Innervation) dans `Z.trackedSpells`, et Âme affaiblie :
+  nouvelle liste `Z.lockouts` (Data.lua) des affaiblissements qui m'empêchent de relancer un de mes sorts,
+  posés par n'importe qui (filtre « HARMFUL »), montrés dans la rangée de mes soins, assombris.
+  - Fait le 21 novembre 2026 (tests passés, installé), avec les numéros connus (10060, 29166, 6788), vérifiés par
+    leur nom au chargement : un numéro faux est écarté tout seul ; la recherche en jeu confirmera. Réglage
+    `showLockouts` (allumé, chapitre Mes soins, Mes soins sur la durée). Décidé (carte blanche) : Âme affaiblie
+    prend la DERNIÈRE place de la rangée (`Z.HotCount()` mes soins, `Z.HotSlots()` toutes les places, Themes.lua) ;
+    une place en plus rétrécissait les icônes décidées (Bandeau 9 px, Tuile) et passait sous l'icône de rôle en
+    Carré de raid de 40. Avec un seul soin réglé, elle s'ajoute après lui. Elle quitte la rangée des
+    affaiblissements. Barre grise en style Barres. Ancien affichage, mode test, éditeur suivent. À voir en jeu :
+    Âme affaiblie grise après un bouclier (le jeu garde-t-il l'icône grise ?), en combat aussi.
+- Lot 3 : joueur qui boit. Décidé avec l'auteur : liste de numéros « Boisson » (`Z.drinkSpells`, Data.lua),
+  conteneur du jeu (marche partout, même en donjon où le détail des auras peut être caché), à côté de la mana
+  basse des soigneurs, sur les soigneurs seulement, interrupteur.
+  - Fait le 21 novembre 2026 (tests passés, installé) : `Z.drinkSpells` (15 numéros de boisson connus, ceux dont
+    le nom n'est pas « Boisson » sont écartés), septième conteneur « drink » collé à droite de la mana basse (même
+    taille, même décalage de l'éditeur ; à gauche si elle est poussée au bord, `Z.DrinkPlace`), montré seulement
+    si le joueur est soigneur (`b.drinkShown`, Frames.lua). Réglage `drinkHealers` (allumé, partie Mana). Ancien
+    affichage et mode test suivent. Complété par la recherche en jeu du 21 novembre 2026 (18 numéros « Boisson » ; variante 456195 d'Innervation ajoutée à ses rangs). À voir
+    en jeu : la boisson d'un soigneur qui boit, avec le temps qui reste.
+- Lot 4 : liseré bleu doux au bord de l'écran quand ma mana baisse : cadre de Lyorune sur `UIParent`, jamais
+  cliquable, texture de Lyorune (dégradé tga), opacité donnée par `UnitPowerPercent` et une courbe, interrupteur.
+  - Fait le 21 novembre 2026 (tests passés, installé) : nouveau fichier `Mana.lua`, quatre bandes en dégradé de
+    couleur unie (`SetGradient`, aucune image : plus simple qu'un tga), strate « BACKGROUND », jamais cliquable ;
+    réglage `manaEdge` (Non, sous 10, 20, 30 ou 40 %, 20 au départ), chapitre Vie et portée, partie Mana ;
+    jamais pour une classe sans mana (`Z.classPower`). Guide fr et en (section 10). À voir en jeu : le liseré
+    sous 20 % de mana, en combat aussi, et qu'il ne gêne ni les fenêtres ni les clics.
+- Lot 5 : règle des 5 secondes, confirmée en jeu par l'auteur. Décidé avec l'auteur : un trait fin sur la
+  barre de mana de ma propre case, qui se vide en 5 secondes après un sort qui coûte de la mana.
+  - Fait le 21 novembre 2026 (tests passés, installé) : `Mana.lua`, réglage `fiveSecondRule` (allumé au départ,
+    même partie Mana) ; `UNIT_SPELLCAST_SUCCEEDED` du joueur, coût lu par `C_Spell.GetSpellPowerCost` (sort
+    sans mana : rien ; numéro secret : compté comme payé). Le numéro de mes sorts est lisible en combat (journal
+    de l'addon d'essai, étape 22). Trait de 2 pixels en haut de la barre de mana (au bas de la vie si la barre
+    est cachée), vidé par une animation d'échelle du jeu, aucune boucle. Guide fr et en. À voir en jeu : le
+    trait après un soin, rien après un tir de baguette, sa fin au moment où la mana repart.
+- Lot 6 : tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication.
+  - Fait le 21 novembre 2026 (tests passés, installé) : visite (carte « Une case par joueur » : une phrase de
+    mana selon les réglages allumés et la classe ; carte des couleurs : l'icône grise d'Âme affaiblie), `## Notes`
+    fr et en, README fr et en, site fr et en, `llms.txt`. Recherche en jeu faite (14 h 48), essai en jeu (« tout est ok »), publiée le 21 novembre 2026.
+- [x] Jusqu'à 3 affaiblissements à dissiper par case, le plus important d'abord (aujourd'hui 1 seul : le
   deuxième reste caché tant que le premier est là). Nombre réglable (`Containers.lua`)
-- [ ] Mes sorts externes sur la case : Infusion de puissance, Innervation ; vérifier Âme affaiblie après un
+- [x] Mes sorts externes sur la case : Infusion de puissance, Innervation ; vérifier Âme affaiblie après un
   bouclier (`Data.lua`, `Z.trackedSpells`)
-- [ ] Joueur qui boit : un signe sur la case des soigneurs qui boivent, hors combat (auras lisibles), à côté de
+- [x] Joueur qui boit : un signe sur la case des soigneurs qui boivent, hors combat (auras lisibles), à côté de
   la mana basse des soigneurs
-- [ ] Mana basse au bord de l'écran : un liseré bleu doux quand ma mana baisse, par une courbe (mana cachée :
+- [x] Mana basse au bord de l'écran : un liseré bleu doux quand ma mana baisse, par une courbe (mana cachée :
   aucune comparaison), texture de Lyorune seulement
-- [ ] Règle des 5 secondes : un trait sur ma case ou sur la barre d'incantation jusqu'au retour de la
+- [x] Règle des 5 secondes : un trait sur ma case ou sur la barre d'incantation jusqu'au retour de la
   régénération (le moment est déjà calculé dans `Alerts.lua`)
-- [ ] Tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication
+- [x] Tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication
 
 En réserve, après l'étape 23 : clics « Assister » et « Focaliser » ; clics différents en combat et hors
 combat ; totems du chaman sur les cases ; cases estompées hors combat ; moi en premier ou en dernier dans mon
 groupe ; infobulle des icônes d'auras ; préréglages « Épuré, Standard, Complet » ; texte « Vie » et « Vie et % » ;
 priorité de dissipation ; icône de classe ; « Me montrer » dans les nouveautés ; bilan de la soirée ; vérifier en
 jeu si « Incantation sur soi automatique » gêne les clics.
+
+## Étapes 24 et 25 : idées retenues par l'auteur (21 novembre 2026)
+Choisies après une recherche des demandes des joueurs (forums Blizzard, demandes de Cell, Grid2 et FrameSort,
+feuille de route de HealKit et ses 98 idées de joueurs, pages de DandersFrames et des addons de Forever) : des idées
+qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais le code. Les points marqués
+« à vérifier » se décident avec l'auteur avant tout codage. Chaque fonction a son interrupteur.
+
+## Étape 24 : joueurs en bonne santé estompés, statistiques de mes clics (1.30.0)
+- [ ] Joueurs en bonne santé estompés, **éteint au départ** (demande de l'auteur) : au-dessus d'un seuil de vie
+  réglable (90 % au départ par exemple), la case devient plus transparente, ceux qui ont besoin de soins ressortent.
+  Marche en combat : `UnitHealthPercent` avec une courbe, passée à `SetAlpha` (même méthode que le texte caché à
+  pleine vie, `hideWhenFullCurve`, Frames.lua), aucune comparaison de la vie. Vérifié dans le code du jeu de ce
+  client (branche `forever`, 21 novembre 2026) : `UnitHealthPercent` prend une courbe (`SecretWhenCurveSecret`).
+  - À décider : la portée règle déjà l'opacité de toute la case (`b:SetAlpha`, Frames.lua) ; l'estompage se
+    pose donc sur un cadre intérieur pour que les deux se multiplient (un joueur loin et en bonne santé reste
+    lisible comme « loin »). Ne jamais estomper une case survolée, ni ma cible si elle est mise en avant.
+  - Réglage dans le chapitre Vie et portée, un seul endroit ; case témoin et mode test suivent.
+- [ ] Statistiques de mes clics, éteint au départ : chaque clic et chaque touche au survol qui part depuis une case
+  est compté (bouton et touches Alt, Ctrl, Maj, par spécialisation). Dans la liste des clics, à côté de chaque
+  ligne : nombre d'utilisations, ligne grisée si jamais utilisée, bouton « Remettre à zéro ».
+  Rien de secret n'est lu : seulement le bouton et les touches au moment du clic (hook après le clic du bouton
+  sécurisé, jamais avant : le sort part comme aujourd'hui). Compté par personnage dans les variables enregistrées.
+  - À voir : compter les clics (simple, sûr) et non les sorts réussis ; le dire dans le guide.
+- [ ] Tests, guide fr et en, visite (une ligne sur une carte existante), `## Notes`, README, site, essai en jeu,
+  publication
+
+## Étape 25 : répartition entre soigneurs (1.31.0)
+- [ ] Lot 1, sans aucun message : je choisis les groupes ou les joueurs dont je m'occupe (fenêtre simple, par
+  groupe de raid ou par tank). Leurs cases portent un repère discret « pour moi » ; option : estomper un peu les
+  autres. Utile même si je suis le seul à avoir Lyorune.
+- [ ] Lot 2, partage : le chef ou un assistant propose une répartition à tous les soigneurs qui ont Lyorune
+  (Comm.lua, échanges de l'étape 3 bis). Chacun voit ses joueurs, et le nom du soigneur prévu au survol d'une case.
+  - **À vérifier, à décider avec l'auteur avant tout codage (synchronisation)** : les messages entre addons sont
+    bloqués pendant un combat de boss, une clé mythique+ et le JcJ coté (étape 18 abandonnée pour cette raison).
+    La répartition se partage donc avant le combat, jamais pendant : envoi refusé et message clair si
+    `C_ChatInfo.InChatMessagingLockdown()` est vrai (déjà testé dans Comm.lua), rien n'est attendu en combat. Une
+    fois reçue, elle reste valable tout le combat sans aucun message. À essayer en jeu : qui peut proposer (chef,
+    assistants), accepter ou refuser, ce qui se passe quand un soigneur quitte le groupe.
+- [ ] Tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication
+
+### Vérifié avant ajout : alerte de la chronologie des boss (21 novembre 2026), non retenue pour l'instant
+Idée : avant une grosse technique de boss, les cases s'éclairent ou affichent « dans 5 s ».
+- La chronologie existe sur ce client : `C_EncounterTimeline` et les modules `Blizzard_EncounterTimeline` et
+  `Blizzard_EncounterWarnings` sont dans le code du jeu (branche `forever`). DBM installé l'utilise.
+- Mais pour une technique de boss, tout ce qui dit de quoi il s'agit est secret (`SecretWhenEncounterEvent`) :
+  nom, numéro du sort, icônes « soigneur », « tank », « mortel », gravité, couleur. Seuls le numéro de l'évènement,
+  sa source, sa durée et le temps qui reste sont lisibles. Lyorune ne peut donc pas choisir « dégâts de groupe »
+  lui-même ; il pourrait seulement faire dessiner par le jeu l'icône « soigneur » d'une technique sur une texture
+  (`SetEventIconTextures`), à la façon des courbes.
+- Le jeu ne dit pas sur qui tombe la technique : l'alerte serait la même pour toutes les cases, presque un double
+  de la chronologie que le jeu affiche déjà.
+- Inconnu le plus important : WoW Forever reprend des combats de l'époque Vanilla ; rien ne dit que le jeu leur
+  donne une chronologie. À essayer en jeu avant d'en reparler : pendant un combat de boss,
+  `/dump C_EncounterTimeline.IsFeatureAvailable()` puis `/dump C_EncounterTimeline.HasActiveEvents()`.
+  Si les deux sont vrais, on en reparle ; sinon l'idée passe dans « Écarté ».
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.

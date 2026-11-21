@@ -94,6 +94,10 @@ function Obj:SetMinMaxValues(lo, hi) self._min, self._max = lo, hi end
 function Obj:SetValue(v, smoothing) self._value, self._smoothing = v, smoothing end
 function Obj:GetValue() return self._value end
 function Obj:GetAlpha() return self._alpha or 1 end
+function Obj:SetFrameStrata(strata) self._strata = strata end
+function Obj:GetFrameStrata() return self._strata or "MEDIUM" end
+function Obj:EnableMouse(on) self._mouse = on and true or false end
+function Obj:IsMouseEnabled() return self._mouse or false end
 function Obj:SetStatusBarColor(r, g, b, a) self._barColor = { r, g, b, a } end
 function Obj:SetBackdrop(b) self._backdrop = b end
 function Obj:SetPoint(...)
@@ -165,7 +169,9 @@ SOUNDKIT = { IG_MAINMENU_OPTION_CHECKBOX_ON = 856 }
 COMBAT = false
 local names = { [2061] = "Soins rapides", [2060] = "Soins supérieurs", [139] = "Rénovation", [17] = "Mot de pouvoir : Bouclier",
 	[527] = "Dissipation de la magie", [552] = "Abolir maladie", [2006] = "Résurrection", [401859] = "Prière de guérison", [6346] = "Gardien de peur", [596] = "Prière de soins",
-	[528] = "Guérison des maladies", [1243] = "Mot de pouvoir : Robustesse", [21562] = "Prière de robustesse", [2054] = "Soins", [2050] = "Soins inférieurs" }
+	[528] = "Guérison des maladies", [1243] = "Mot de pouvoir : Robustesse", [21562] = "Prière de robustesse", [2054] = "Soins", [2050] = "Soins inférieurs",
+	-- étape 23 : sort externe, Âme affaiblie, boissons (26473 a un autre nom : il doit être écarté)
+	[10060] = "Infusion de puissance", [6788] = "Âme affaiblie", [430] = "Boisson", [431] = "Boisson", [1133] = "Boisson", [26473] = "Nourriture" }
 C_AddOns = { GetAddOnMetadata = function() return TOC_VERSION or "0.0.0" end }
 C_Timer = { After = function(_, f) f() end, NewTicker = function(_, f) TICK = f end }
 C_Spell = {

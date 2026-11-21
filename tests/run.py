@@ -2640,7 +2640,7 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     Z.db.showHots = false Z:Refresh()
     assert(not b.boxes.hots.groups.hots and not b.boxes.bars.groups.bars, "soins affiches malgre l'interrupteur")
     Z.db.showHots = true Z:Refresh()
-    assert(b.boxes.hots.groups.hots.max == 4, "soins non rallumes")
+    assert(b.boxes.hots.groups.hots.max == Z.HotCount() and Z.HotCount() == 3, "soins non rallumes") -- 4 places : 3 soins, Ame affaiblie
     -- liste par nom ou par numero : le numero tape sert tout de suite
     Z.db.ignoredNames = { ["12345"] = true } Z:Refresh()
     assert(b.boxes.debuffs.groups.others.candidates.excludeSpellIDs[12345], "affaiblissement ignore par son numero")
@@ -2677,7 +2677,7 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     assert(b.boxes.hots == kept and b.boxes.slots == keptSlots, "conteneurs refaits en combat")
     assert(b.boxes.hots.maxLine == line, "ligne du conteneur changee avant ses boutons")
     COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
-    assert(b.boxes.hots ~= kept and b.boxes.hots.groups.hots.size > before, "taille des soins non appliquee apres le combat")
+    assert(b.boxes.hots ~= kept and b.boxes.hots.groups.hots.size > before, "taille des soins non appliquee apres le combat ")
     assert(b.boxes.slots ~= keptSlots, "grande icone : taille non appliquee apres le combat")
     Z.SetElementSize("hots", 100) Z.SetElementSize("big", 100) Z:Refresh()
     assert(Z.db.placement[Z.db.shape] == nil, "taille d'origine : entree effacee")
@@ -2688,8 +2688,9 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     Z.db.hotCountdown = not Z.db.hotCountdown Z:Refresh()
     -- nombre d'icones regle par le joueur : conteneurs refaits hors combat
     Z.db.hotCount, Z.db.debuffCount = 6, 4 Z:Refresh()
-    assert(b.boxes.hots.groups.hots.max == 6 and b.boxes.bars.groups.bars.max == 6, "nombre de soins non applique")
-    assert(b.boxes.debuffs.groups.dispellable.max == 1 and b.boxes.debuffs.groups.others.max == 3, "nombre d'affaiblissements")
+    assert(b.boxes.hots.groups.hots.max == 5 and b.boxes.bars.groups.bars.max == 5 and b.boxes.hots.groups.lockouts.max == 1,
+      "nombre de soins non applique") -- 6 places : 5 soins, Ame affaiblie (pretre)
+    assert(b.boxes.debuffs.groups.dispellable.max == Z.db.dispelCount and b.boxes.debuffs.groups.others.max == 3, "nombre d'affaiblissements")
     Z.db.hotCount, Z.db.debuffCount = 4, 2 Z:Refresh()
     assert(b.boxes.debuffs.groups.others.max == 1, "nombre d'affaiblissements non remis")
     -- 1.27.0 (etape 21) : icones a la mesure de la forme, passees au jeu ; Carre : le jeu passe a la ligne
@@ -5164,7 +5165,7 @@ step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case
   for _, button in ipairs(w.list) do if button.key == "hots" then button:Run("OnClick") end end
   local shown = 0
   for _, icon in ipairs(w.cell.hots) do if icon:IsShown() then shown = shown + 1 end end
-  assert(shown == 4, "23 : editeur, rangee de soins : " .. shown)
+  assert(shown == 4, "23 : editeur, rangee de soins : " .. shown) -- 3 soins et Ame affaiblie (pretre)
   for _ = 1, 30 do w.up:Run("OnClick") end
   local _, top = Z.Offset("hots")
   assert(top == select(4, Z.OffsetRange("hots")), "23 : fleche au dela du bord")
@@ -5329,7 +5330,7 @@ step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre,
           local inset = Z.UI.Inset(Z:Theme().borderSize, false)
           local hp = { inset, W - inset, inset + Z.PowerHeight() + 1, H - inset }
           local icon = Z.IconSize()
-          local h, d = Icons(rows.hots, hots, W, H, hp), Icons(rows.debuffs, debuffs, W, H, hp)
+          local h, d = Icons(rows.hots, Z.HotSlots(), W, H, hp), Icons(rows.debuffs, debuffs, W, H, hp)
           assert(rows.hots.lines <= 2 and rows.debuffs.lines <= 2, "plus de deux lignes : " .. where)
           assert(rows.hots.size <= math.floor(H * rules.size + 0.5) and rows.hots.size >= 5, "taille des soins : " .. where)
           for _, list in ipairs({ h, d }) do
@@ -5384,7 +5385,7 @@ step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre,
       end
     end
   end
-  assert(checked == 1344, "nombre de verifications : " .. checked)
+  assert(checked == 1376, "nombre de verifications : " .. checked) -- avec la place d'Ame affaiblie apres un seul soin (pretre, etape 23)
   MEMBERS = 5
 
   -- Tailles décidées sur la maquette (taille d'origine des formes, barre de mana)
@@ -5924,6 +5925,430 @@ step("etape 22, lot 4 : raccourcis du jeu (Bindings.xml, cadres masques, prochai
     assert(Z.translations.enUS[text], "sans traduction : " .. text)
   end
   for _, text in pairs(Z.bindingNames) do assert(Z.translations.enUS[text], "nom sans traduction : " .. text) end
+end)
+
+step("etape 23, lot 1 : jusqu'a 3 affaiblissements a dissiper par case (conteneurs, ancien affichage, rangee, exemple)", function()
+  local oldCreate = CreateFrame
+  local form = {}
+  for _, key in ipairs({ "shape", "width", "height", "fontSize", "powerHeight", "dispelCount", "debuffCount", "debuffMode",
+    "showDebuffs" }) do form[key] = Z.db[key] end
+  local made = {}
+  local function finish()
+    CreateFrame = oldCreate
+    AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle = nil, nil, nil
+    Z.boxWrap = nil
+    for _, c in ipairs(made) do pcall(c.SetAttribute, c, "unit", nil) end
+    for key, value in pairs(form) do Z.db[key] = value end
+    AURAS = {}
+    Z:BuildData() Z:Refresh() RunUpdates()
+  end
+  local ok, err = xpcall(function()
+    -- 1. Le réglage : une seule fois, borné, deux au départ
+    assert(Z.defaults.dispelCount == 2 and Z.limits.dispelCount[1] == 1 and Z.limits.dispelCount[2] == 3, "reglage dispelCount")
+    Z.db.dispelCount = 9 assert(Z.DispelCount() == 3, "borne haute") Z.db.dispelCount = 0 assert(Z.DispelCount() == 1, "borne basse")
+    Z.db.dispelCount, Z.db.debuffCount, Z.db.debuffMode = 3, 2, "ALL"
+    assert(Z.DebuffSlots() == 4, "places de la rangee (Tous)")
+    Z.db.debuffMode = "DISPEL" assert(Z.DebuffSlots() == 3, "places de la rangee (Dissipables par moi)")
+    Z.db.debuffMode = "ALL"
+    assert(Z.translations.enUS["Affaiblissements à dissiper"] and Z.translations.enUS["Montrés avant les autres, le plus important d'abord."],
+      "reglage sans traduction")
+
+    -- 2. Ancien affichage : trois à dissiper (le jeu les donne dans l'ordre), puis un autre ; jamais deux fois le même
+    local b = Z.buttons[1]
+    AURAS = {}
+    local d1 = { name = "A", icon = 1, auraInstanceID = 71, spellId = 1001, dispelName = "Magic" }
+    local d2 = { name = "B", icon = 2, auraInstanceID = 72, spellId = 1002, dispelName = "Magic" }
+    local d3 = { name = "C", icon = 3, auraInstanceID = 73, spellId = 1003, dispelName = "Disease" }
+    local d4 = { name = "D", icon = 4, auraInstanceID = 74, spellId = 1004, dispelName = "Magic" }
+    local other = { name = "E", icon = 5, auraInstanceID = 75, spellId = 1005 }
+    AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = { d1, d2, d3, d4 }
+    AURAS["HARMFUL"] = { d1, other, d2, d3, d4 }
+    Z:Refresh() Z.UpdateAurasNow(b)
+    local function shown()
+      local n = 0
+      for i = 1, #b.debuffs do if b.debuffs[i]:IsShown() then n = i end end
+      return n
+    end
+    assert(shown() == 4, "3 a dissiper et 1 autre attendus : " .. shown())
+    assert(b.debuffs[1].texture._tex == 1 and b.debuffs[3].texture._tex == 3 and b.debuffs[4].texture._tex == 5,
+      "ordre : ceux a dissiper d'abord, puis l'autre")
+    Z.db.dispelCount = 1 Z:Refresh() Z.UpdateAurasNow(b)
+    assert(shown() == 2 and b.debuffs[2].texture._tex == 5, "un seul a dissiper : le comportement d'avant")
+    Z.db.dispelCount, Z.db.debuffMode = 2, "DISPEL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(shown() == 2 and b.debuffs[2].texture._tex == 2, "Dissipables par moi : deux, sans les autres")
+    Z.db.debuffMode = "ALL"
+    -- le filtre du jeu ne dit rien : mes propres sorts reconnaissent le type (pretre : magie et maladie)
+    AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = nil
+    local canDispel = Z.canDispel
+    Z.canDispel = { Magic = true }
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(b.debuffs[1].texture._tex == 1 and b.debuffs[2].texture._tex == 2, "repli sur mes sorts")
+    Z.canDispel = canDispel
+    AURAS = {}
+
+    -- 3. Conteneurs du jeu : groupe des dissipables à la taille réglée, rangée assez longue
+    CreateFrame = function(kind, name, parent, template)
+      local f = oldCreate(kind, name, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      f.groups = {}
+      function f:AddAuraGroup(key, filter, options)
+        local button = oldCreate("Button", nil, self)
+        button.Edge = { SetColorTexture = function() end }
+        self.groups[key] = { filter = filter, max = options.maxFrameCount, sort = options.sortMethod, size = options.layout.elementWidth }
+        options.initializeFrame(button)
+      end
+      function f:AddAuraSlot(_, _, options)
+        local button = oldCreate("Button", nil, self)
+        options.initializeFrame(button)
+        return button
+      end
+      function f:SetEnabled(on) self.enabled = on end
+      function f:SetUnit(unit) self.unit = unit end
+      function f:UpdateAllAuras() end
+      function f:SetFlowLayoutMaximumLineSize(size) self.maxLine = size end
+      function f:SetFlowLayoutAnchorPoint(point) self.flowPoint = point end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton33", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    c:SetAttribute("unit", "player")
+    Z.db.dispelCount, Z.db.debuffCount = 3, 3 Z:Refresh()
+    local groups = c.boxes.debuffs.groups
+    assert(groups.dispellable.max == 3 and groups.dispellable.sort == AuraContainerSortMethod.Default, "dissipables : 3, tri du jeu")
+    assert(groups.others.max == 2, "autres : debuffCount - 1")
+    -- chaque forme : la rangée tient dans la case (passage à la ligne ou icônes plus petites)
+    for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+      Z:ApplyShape(shape)
+      local rows, W, H = Z.AuraRows(), Z.CellSize()
+      local row = rows.debuffs
+      assert(row.perLine * row.lines >= 5, shape .. " : rangee trop courte")
+      assert(row.width <= W and row.height <= H, shape .. " : rangee hors de la case")
+    end
+    Z:ApplyShape("TILE")
+
+    -- 4. Éditeur de placement et mode test
+    Z:OpenPlacement()
+    local w = Z:PlacementWindow()
+    assert(w.cell.debuffs[5] and w.cell.debuffs[5]:IsShown(), "case d'exemple : toutes les places")
+    w:Hide()
+    local cell = Z.FakeCell(UIParent)
+    Z.db.showDispel = true
+    Z.DrawFakeCell(cell, 1, true)
+    assert(cell.debuffs[2] and cell.debuffs[2]:IsShown(), "case temoin : deux a dissiper")
+  end, debug.traceback)
+  finish()
+  assert(ok, err)
+end)
+
+step("etape 23, lot 4 : liseré de ma mana basse au bord de l'écran (courbe du jeu, classes sans mana, interrupteur)", function()
+  local kept, class, power = Z.db.manaEdge, Z.class, UnitPowerPercent
+  local ok, err = pcall(function()
+    assert(Z.defaults.manaEdge == 20 and Z.choices.manaEdge[1][1] == 0, "reglage manaEdge")
+    Z.db.manaEdge = 30 Z:Refresh()
+    local edge = Z:ManaEdge()
+    assert(edge and edge:IsShown() and edge:GetFrameStrata() == "BACKGROUND", "lisere absent")
+    assert(not edge:IsMouseEnabled(), "lisere cliquable")
+    -- l'opacité vient de la courbe passée au jeu, jamais d'une comparaison de la mana (secrète)
+    local seen
+    UnitPowerPercent = function(unit, kind, predicted, curve)
+      seen = { unit = unit, kind = kind, curve = curve }
+      return CreateColor(1, 1, 1, MakeSecret and MakeSecret() or 0.4)
+    end
+    Z:RefreshManaEdge()
+    assert(seen and seen.unit == "player" and seen.kind == 0 and seen.curve, "courbe non passee au jeu")
+    UnitPowerPercent = power
+    -- une classe sans mana (guerrier) n'a jamais de liseré
+    Z.class = "WARRIOR" Z:RefreshManaEdge()
+    assert(not edge:IsShown(), "lisere pour une classe sans mana")
+    Z.class = class
+    Z.db.manaEdge = 0 Z:Refresh()
+    assert(not edge:IsShown(), "interrupteur du lisere")
+    for _, text in ipairs({ "Liseré de ma mana basse", "Un liseré bleu doux au bord de l'écran." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end)
+  Z.db.manaEdge, Z.class, UnitPowerPercent = kept, class, power
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("etape 23, lot 5 : regle des 5 secondes, un trait qui se vide sur ma case apres un sort paye en mana", function()
+  local kept, isUnit, cost, class = Z.db.fiveSecondRule, UnitIsUnit, C_Spell.GetSpellPowerCost, Z.class
+  local ok, err = pcall(function()
+    assert(Z.defaults.fiveSecondRule == true, "reglage fiveSecondRule")
+    local b = Z.buttons[1]
+    b:SetAttribute("unit", "player") b.unit = "player"
+    UnitIsUnit = function(a, c) return a == "player" and c == "player" end
+    local costs = { [2061] = { { type = 0, cost = 120 } }, [5019] = {} }
+    C_Spell.GetSpellPowerCost = function(id) return costs[id] end
+    Z.db.fiveSecondRule = true Z:Refresh()
+    -- un tir de baguette (sans mana) : aucun trait
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 5019)
+    assert(not (b.fiveLine and b.fiveLine:IsShown()), "trait apres un sort sans mana")
+    -- un soin payé en mana : le trait part et se vide par une animation du jeu
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 2061)
+    assert(b.fiveLine and b.fiveLine:IsShown() and b.fiveLine.drain:IsPlaying(), "trait absent apres un soin")
+    -- numéro secret : compté comme payé (le trait ne manque jamais)
+    b.fiveLine:Hide() b.fiveLine.drain:Stop()
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", MakeSecret())
+    assert(b.fiveLine:IsShown(), "numero secret : trait absent")
+    -- la fin de l'animation cache le trait
+    b.fiveLine.drain:Run("OnFinished")
+    assert(not b.fiveLine:IsShown(), "trait reste apres 5 secondes")
+    -- interrupteur, et classe sans mana
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 2061)
+    Z.db.fiveSecondRule = false Z:Refresh()
+    assert(not b.fiveLine:IsShown(), "interrupteur : trait reste")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 2061)
+    assert(not b.fiveLine:IsShown(), "interrupteur : trait relance")
+    Z.db.fiveSecondRule, Z.class = true, "ROGUE" Z:Refresh()
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 2061)
+    assert(not b.fiveLine:IsShown(), "classe sans mana : trait")
+    Z.class = class
+    for _, text in ipairs({ "Règle des 5 secondes sur ma case", "Un trait qui se vide jusqu'au retour de la régénération." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end)
+  Z.db.fiveSecondRule, UnitIsUnit, C_Spell.GetSpellPowerCost, Z.class = kept, isUnit, cost, class
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("etape 23, lot 2 : sorts externes, Ame affaiblie au bout de mes soins (donnees, ancien affichage, conteneurs, exemple)", function()
+  local oldCreate, class, role = CreateFrame, Z.class, UnitGroupRolesAssigned
+  local form = {}
+  for _, key in ipairs({ "showLockouts", "showHots", "hotCount", "hotStyle", "showDebuffs", "debuffMode", "debuffCount",
+    "drinkHealers" }) do form[key] = Z.db[key] end
+  local made = {}
+  local function finish()
+    CreateFrame, Z.class, UnitGroupRolesAssigned = oldCreate, class, role
+    AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle = nil, nil, nil
+    Z.boxWrap = nil
+    for _, c in ipairs(made) do pcall(c.SetAttribute, c, "unit", nil) end
+    for key, value in pairs(form) do Z.db[key] = value end
+    AURAS = {}
+    Z:BuildData() Z:Refresh() RunUpdates()
+  end
+  local ok, err = xpcall(function()
+    -- 1. Données : sorts externes suivis, Âme affaiblie vérifiée par son nom, boissons au bon nom seulement
+    assert(Z.defaults.showLockouts == true and Z.defaults.drinkHealers == true, "reglages showLockouts, drinkHealers")
+    Z:BuildData()
+    assert(Z.trackedNames["Infusion de puissance"], "Infusion de puissance non suivie")
+    assert(Z.lockoutIds[6788] and Z.drinkIds[430] and Z.drinkIds[431] and Z.drinkIds[1133], "numeros verifies par leur nom")
+    assert(not Z.drinkIds[26473] and not Z.drinkIds[432], "numero au mauvais nom garde")
+    local found
+    for _, id in ipairs(Z.trackedSpells.DRUID) do if id == 29166 then found = true end end
+    assert(found, "Innervation absente des sorts du druide")
+    Z.db.showHots, Z.db.showLockouts, Z.db.hotCount = true, true, 3
+    assert(Z.HotSlots() == 3 and Z.HotCount() == 2, "Ame affaiblie a la derniere place")
+    Z.db.hotCount = 1 assert(Z.HotSlots() == 2 and Z.HotCount() == 1, "un seul soin : Ame affaiblie apres lui")
+    Z.db.hotCount = 3
+    Z.db.showLockouts = false assert(Z.HotSlots() == 3 and Z.HotCount() == 3, "interrupteur : place gardee")
+    Z.db.showLockouts = true
+    Z.class = "DRUID" Z:BuildData()
+    assert(next(Z.lockoutIds) == nil and Z.HotSlots() == 3, "classe sans blocage : place gardee")
+    Z.class = class Z:BuildData()
+    for _, text in ipairs({ "Sort que je ne peux pas relancer", "Âme affaiblie, assombrie après vos soins (prêtre)." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+
+    -- 2. Ancien affichage : Rénovation, puis Âme affaiblie assombrie ; elle quitte la rangée des affaiblissements
+    local b = Z.buttons[1]
+    AURAS = {}
+    local renew = { name = "Rénovation", icon = 11, auraInstanceID = 81, spellId = 139 }
+    local weak = { name = "Âme affaiblie", icon = 77, auraInstanceID = 82, spellId = 6788 }
+    local other = { name = "Autre", icon = 55, auraInstanceID = 83, spellId = 1005 }
+    AURAS["HELPFUL|PLAYER"] = { renew }
+    AURAS["HARMFUL"] = { weak, other }
+    Z.db.hotStyle, Z.db.showDebuffs, Z.db.debuffMode, Z.db.debuffCount = "ICONS", true, "ALL", 3
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(b.hots[1]:IsShown() and b.hots[1].texture._tex == 11, "mon soin d'abord")
+    assert(b.hots[2] and b.hots[2]:IsShown() and b.hots[2].texture._tex == 77, "Ame affaiblie au bout de mes soins")
+    assert(b.hots[2].texture._color[1] == Z.LOCKOUT_SHADE, "Ame affaiblie non assombrie")
+    for i = 1, #b.debuffs do
+      assert(not (b.debuffs[i]:IsShown() and b.debuffs[i].texture._tex == 77), "Ame affaiblie montree deux fois")
+    end
+    -- une icône réutilisée pour un soin reprend sa couleur
+    AURAS["HARMFUL"] = { other }
+    AURAS["HELPFUL|PLAYER"] = { renew, { name = "Mot de pouvoir : Bouclier", icon = 12, auraInstanceID = 84, spellId = 17 } }
+    Z.UpdateAurasNow(b)
+    assert(b.hots[2].texture._tex == 12 and b.hots[2].texture._color[1] == 1, "icone reutilisee restee sombre")
+    -- interrupteur : Âme affaiblie revient parmi les affaiblissements
+    AURAS["HELPFUL|PLAYER"] = { renew }
+    AURAS["HARMFUL"] = { weak, other }
+    Z.db.showLockouts = false Z:Refresh() Z.UpdateAurasNow(b)
+    assert(not b.hots[2]:IsShown(), "interrupteur : Ame affaiblie reste apres mes soins")
+    local back
+    for i = 1, #b.debuffs do if b.debuffs[i]:IsShown() and b.debuffs[i].texture._tex == 77 then back = true end end
+    assert(back, "interrupteur : Ame affaiblie absente des affaiblissements")
+    Z.db.showLockouts = true
+    -- style « Barres » : une barre grise après les miennes
+    Z.db.hotStyle = "BARS" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(b.hotBars[2] and b.hotBars[2]:IsShown(), "barre d'Ame affaiblie absente")
+    Z.db.hotStyle = "ICONS"
+    AURAS = {}
+
+    -- 3. Conteneurs du jeu : groupe « HARMFUL » au bout de la rangée de mes soins, exclu des affaiblissements
+    CreateFrame = function(kind, name, parent, template)
+      local f = oldCreate(kind, name, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      f.groups = {}
+      function f:AddAuraGroup(key, filter, options)
+        local button = oldCreate("Button", nil, self)
+        button.Edge = { SetColorTexture = function() end }
+        button.Icon = oldCreate("Frame", nil, button):CreateTexture()
+        self.groups[key] = { filter = filter, max = options.maxFrameCount, candidates = options.candidateFilters,
+          index = options.layout.layoutIndex, size = options.layout.elementWidth, button = button }
+        options.initializeFrame(button)
+      end
+      function f:AddAuraSlot(_, _, options)
+        local button = oldCreate("Button", nil, self)
+        options.initializeFrame(button)
+        return button
+      end
+      function f:SetEnabled(on) self.enabled = on end
+      function f:SetUnit(unit) self.unit = unit end
+      function f:UpdateAllAuras() end
+      function f:SetFlowLayoutMaximumLineSize(size) self.maxLine = size end
+      function f:SetFlowLayoutAnchorPoint(point) self.flowPoint = point end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton34", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    c:SetAttribute("unit", "player")
+    Z:Refresh()
+    local lock = c.boxes.hots.groups.lockouts
+    assert(lock and lock.filter == "HARMFUL" and lock.max == Z.LOCKOUT_COUNT and lock.index == 2, "groupe Ame affaiblie")
+    assert(lock.candidates.includeSpellIDs[6788], "Ame affaiblie absente du filtre")
+    assert(lock.button.Icon._color[1] == Z.LOCKOUT_SHADE, "icone du jeu non assombrie")
+    assert(c.boxes.bars.groups.lockbars, "barre d'Ame affaiblie absente (conteneur)")
+    assert(c.boxes.debuffs.groups.others.candidates.excludeSpellIDs[6788], "Ame affaiblie encore parmi les affaiblissements")
+    assert(not c.boxes.hots.groups.hots.candidates.includeSpellIDs[6788], "Ame affaiblie parmi mes soins")
+    Z.db.showLockouts = false Z:Refresh()
+    assert(not c.boxes.hots.groups.lockouts, "interrupteur : groupe garde")
+    Z.db.showLockouts = true Z:Refresh()
+    -- la rangée tient dans la case avec la place de plus, dans chaque forme
+    Z.db.hotCount = 6
+    for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+      Z:ApplyShape(shape)
+      local rows, W, H = Z.AuraRows(), Z.CellSize()
+      local row = rows.hots
+      assert(row.perLine * row.lines >= Z.HotSlots() and Z.HotSlots() == 6, shape .. " : rangee trop courte")
+      assert(row.width <= W and row.height <= H, shape .. " : rangee hors de la case")
+    end
+    Z:ApplyShape("TILE")
+    Z.db.hotCount = 3
+
+    -- 4. Éditeur de placement et case témoin : la place assombrie au bout de mes soins
+    Z:OpenPlacement()
+    local w = Z:PlacementWindow()
+    assert(w.cell.hots[3] and w.cell.hots[3]:IsShown() and w.cell.hots[3].texture._color[1] == Z.LOCKOUT_SHADE
+      and w.cell.hots[2].texture._color[1] == 1 and not (w.cell.hots[4] and w.cell.hots[4]:IsShown()),
+      "case d'exemple : place d'Ame affaiblie")
+    w:Hide()
+    local cell = Z.FakeCell(UIParent)
+    local _, _, shown = Z.DrawFakeCell(cell, 1, true)
+    assert(cell.hots[shown + 1] and cell.hots[shown + 1]:IsShown(), "case temoin : Ame affaiblie absente")
+
+    -- 5. Lot 3, soigneur qui boit : conteneur à côté de la mana basse, montré sur les soigneurs seulement
+    local drink = c.boxes.drink.groups.drink
+    assert(drink and drink.filter == "HELPFUL" and drink.max == 1 and drink.candidates.includeSpellIDs[430], "groupe boisson")
+    assert(not drink.candidates.includeSpellIDs[26473], "boisson au mauvais nom dans le filtre")
+    assert(c.boxes.drink:IsShown(), "boisson cachee sur un soigneur")
+    local x, y, size = Z.DrinkPlace()
+    assert(drink.size == size and x > size, "boisson pas a cote de la mana basse")
+    UnitGroupRolesAssigned = function() return "DAMAGER" end
+    Z:Refresh() RunUpdates()
+    assert(not c.boxes.drink:IsShown(), "boisson montree sur un joueur qui n'est pas soigneur")
+    UnitGroupRolesAssigned = role
+    Z.db.drinkHealers = false Z:Refresh()
+    assert(not c.boxes.drink.groups.drink, "interrupteur : groupe boisson garde")
+    Z.db.drinkHealers = true
+  end, debug.traceback)
+  finish()
+  assert(ok, err)
+end)
+
+step("etape 23, lot 3 : soigneur qui boit, ancien affichage et mode test", function()
+  local role, kept = UnitGroupRolesAssigned, Z.db.drinkHealers
+  local ok, err = xpcall(function()
+    for _, text in ipairs({ "Soigneur qui boit", "L'icône de sa boisson, à côté de sa mana basse." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+    local b = Z.buttons[1]
+    AURAS = {}
+    AURAS["HELPFUL"] = { { name = "Boisson", icon = 99, auraInstanceID = 91, spellId = 430 } }
+    Z.db.drinkHealers = true Z:Refresh() Z.UpdateAurasNow(b)
+    assert(b.drinkIcon and b.drinkIcon:IsShown() and b.drinkIcon.texture._tex == 99, "boisson absente sur un soigneur")
+    -- une autre aura que la boisson : rien
+    AURAS["HELPFUL"] = { { name = "Nourriture", icon = 98, auraInstanceID = 92, spellId = 26473 } }
+    Z.UpdateAurasNow(b)
+    assert(not b.drinkIcon:IsShown(), "boisson montree pour une autre aura")
+    AURAS["HELPFUL"] = { { name = "Boisson", icon = 99, auraInstanceID = 91, spellId = 430 } }
+    UnitGroupRolesAssigned = function() return "TANK" end
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(not b.drinkIcon:IsShown(), "boisson montree sur un tank")
+    UnitGroupRolesAssigned = role
+    Z.db.drinkHealers = false Z:Refresh() Z.UpdateAurasNow(b)
+    assert(not b.drinkIcon:IsShown(), "interrupteur : boisson reste")
+    -- mode test : la boisson sur le soigneur à court de mana
+    Z.db.drinkHealers = true
+    local cell = Z.FakeCell(UIParent)
+    Z.DrawFakeCell(cell, 2, false)
+    assert(cell.drinkIcon and cell.drinkIcon:IsShown(), "mode test : boisson absente")
+    Z.DrawFakeCell(cell, 3, false)
+    assert(not cell.drinkIcon:IsShown(), "mode test : boisson sur un joueur qui n'est pas soigneur")
+  end, debug.traceback)
+  UnitGroupRolesAssigned, Z.db.drinkHealers = role, kept
+  AURAS = {}
+  Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("etape 23, lot 6 : visite guidee, phrases de mana selon les reglages et la classe, Ame affaiblie", function()
+  local form, class = {}, Z.class
+  for _, key in ipairs({ "fiveSecondRule", "manaEdge", "drinkHealers", "tutorialDone" }) do form[key] = Z.db[key] end
+  local function CellText()
+    Z:StartTutorial()
+    local card = LyoruneTutorial
+    card.next:Run("OnClick")
+    local body = card.body:GetText()
+    card.next:Run("OnClick") card.next:Run("OnClick")
+    local colors = card.body:GetText()
+    card.close:Run("OnClick")
+    return body, colors
+  end
+  local ok, err = xpcall(function()
+    local five, edge, drink = "trait fin sur votre case", "bord de l'écran bleuit", "boisson près de la mana"
+    Z.class = "PRIEST" Z.db.fiveSecondRule, Z.db.manaEdge, Z.db.drinkHealers = true, 20, true
+    local body, colors = CellText()
+    assert(body:find(five, 1, true) and body:find(edge, 1, true) and body:find(drink, 1, true), "phrases de mana absentes")
+    assert(colors:find("Âme affaiblie", 1, true), "Ame affaiblie absente de la carte des couleurs")
+    -- chaque phrase suit son interrupteur
+    Z.db.fiveSecondRule, Z.db.manaEdge, Z.db.drinkHealers = false, 0, false
+    body = CellText()
+    assert(not body:find(five, 1, true) and not body:find(edge, 1, true) and not body:find(drink, 1, true), "phrase d'un reglage eteint")
+    -- classe sans mana : rien sur ma mana, la boisson des soigneurs reste
+    Z.class = "WARRIOR" Z.db.fiveSecondRule, Z.db.manaEdge, Z.db.drinkHealers = true, 20, true
+    body = CellText()
+    assert(not body:find(five, 1, true) and not body:find(edge, 1, true) and body:find(drink, 1, true), "classe sans mana")
+    for _, text in ipairs({ "Après un sort payé en mana, un trait fin sur votre case se vide en 5 secondes : ensuite, votre mana repart.",
+      "Le bord de l'écran bleuit quand votre mana baisse.", "Une boisson près de la mana d'un soigneur : il boit." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end, debug.traceback)
+  for key, value in pairs(form) do Z.db[key] = value end
+  Z.class = class
+  Z:Refresh()
+  assert(ok, err)
 end)
 
 step("aucune variable globale imprevue", function()

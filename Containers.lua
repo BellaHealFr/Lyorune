@@ -3,12 +3,14 @@
 -- En combat, le jeu refuse à tout addon la lecture des auras (« auras secrètes »). Il prête en revanche des
 -- conteneurs : Lyorune leur dit quoi montrer (filtres, numéros de sorts) et où, le jeu y dessine les auras,
 -- leur durée et la couleur de dissipation. Rien n'est lu, rien ne tourne en boucle.
--- Six conteneurs par case :
---   hots       : mes soins sur la durée en icônes (place et taille selon la forme, Z.AuraRows dans Themes.lua)
+-- Sept conteneurs par case :
+--   hots       : mes soins sur la durée en icônes (place et taille selon la forme, Z.AuraRows dans Themes.lua),
+--                puis, assombri, l'affaiblissement qui bloque un de mes sorts (Âme affaiblie, Z.lockouts)
 --   bars       : les mêmes en barres fines (style « Barres »)
 --   debuffs    : affaiblissements (selon la forme aussi), celui que je peux dissiper en premier
 --   defensives : gros défensifs posés par n'importe qui (Z.defensives, Data.lua)
 --   controls   : contrôle subi (étourdi, apeuré, métamorphosé), filtre « CROWD_CONTROL » du jeu
+--   drink      : la boisson d'un soigneur qui boit (Z.drinkSpells), à côté de sa mana basse
 --   slots      : places fixes : un carré par coin, la bordure de dissipation, la grande icône et son contour
 -- Si le jeu n'a pas ces conteneurs, Auras.lua garde l'ancien affichage (lecture des auras).
 
@@ -52,7 +54,7 @@ local function Show(value)
 end
 
 function Z.DescribeAuraBoxes(b, Add)
-	for _, name in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "slots" }) do
+	for _, name in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "drink", "slots" }) do
 		local box = b.boxes[name]
 		local ok, text = pcall(function()
 			local point, relative, _, x, y = box:GetPoint()
@@ -74,7 +76,9 @@ function Z.DescribeAuraBoxes(b, Add)
 		return ok and text or ("illisible : " .. tostring(text))
 	end
 	for key, list in pairs(b.boxButtons) do
-		local box = b.boxes[key] or b.boxes.debuffs -- « dispellable » et « others » sont dans « debuffs »
+		-- « dispellable » et « others » sont dans « debuffs », « lockouts » dans « hots », « lockbars » dans « bars »
+		local box = b.boxes[key] or (key == "lockouts" and b.boxes.hots) or (key == "lockbars" and b.boxes.bars)
+			or b.boxes.debuffs
 		Add(("  groupe %s : boutons habillés %d, comptés par le jeu %s, premier %s"):format(key, #list,
 			Show(Call(box, "GetAuraGroupFrameCount", key)), Frame(Call(box, "GetAuraGroupFrame", key, 1))))
 	end
@@ -139,9 +143,17 @@ local function Wanted()
 	local ignored = {}
 	for id in pairs(Z.ignoredDebuffs) do ignored[id] = true end
 	for name in pairs(db.ignoredNames) do AddIds(ignored, name) end
+	-- Affaiblissement qui bloque un de mes sorts : au bout de mes soins, il quitte la rangée des affaiblissements
+	local lockouts = {}
+	if Z.ShowsLockouts() then
+		for id in pairs(Z.lockoutIds) do
+			lockouts[id] = true
+			ignored[id] = true
+		end
+	end
 	local important = {}
 	for name in pairs(db.importantNames) do AddIds(important, name) end
-	return hots, corners, ignored, important, defensives
+	return hots, corners, ignored, important, defensives, lockouts
 end
 
 -- Un nom qui intéresse Lyorune (soins suivis, coins, listes) : son numéro vaut la peine d'être retenu
@@ -205,9 +217,14 @@ local function StyleIcon(button, mine, size)
 	Call(button.Veil, "SetAlpha", (mine and db.hotFade) and 1 or 0)
 end
 
--- Icône d'aura ; mine = un de mes soins ; size = taille de sa rangée ; edge = couleur du liseré (noir sinon)
-local function DressIcon(button, mine, size, edge)
+-- Icône d'aura ; mine = un de mes soins ; size = taille de sa rangée ; edge = couleur du liseré (noir sinon) ;
+-- dark = assombrie (un sort que je ne peux pas relancer)
+local function DressIcon(button, mine, size, edge, dark)
 	Silent(button)
+	if dark then
+		Call(button.Icon, "SetDesaturated", true)
+		Call(button.Icon, "SetVertexColor", Z.LOCKOUT_SHADE, Z.LOCKOUT_SHADE, Z.LOCKOUT_SHADE)
+	end
 	if edge then Call(button.Edge, "SetColorTexture", edge[1], edge[2], edge[3], 1) end
 	Call(button.Texts, "SetFrameLevel", (Call(button.Cooldown, "GetFrameLevel") or 1) + 1)
 	Call(button, "SetIcon", button.Icon)
@@ -218,10 +235,10 @@ local function DressIcon(button, mine, size, edge)
 	StyleIcon(button, mine, size)
 end
 
--- Barre fine : couleur selon son rang, largeur selon la case
-local function DressBar(button, index)
+-- Barre fine : couleur selon son rang (grise pour un sort que je ne peux pas relancer), largeur selon la case
+local function DressBar(button, index, color)
 	Silent(button)
-	local color = Z.BAR_COLORS[index] or Z.BAR_COLORS[1]
+	color = color or Z.BAR_COLORS[index] or Z.BAR_COLORS[1]
 	Call(button.Bar, "SetStatusBarColor", color[1], color[2], color[3])
 	Call(button.Bar, "SetWidth", math.floor(Z.CellSize() * 0.45))
 	Call(button, "SetDurationBar", button.Bar, { direction = Enum.StatusBarTimerDirection and Enum.StatusBarTimerDirection.RemainingTime })
@@ -300,19 +317,20 @@ local function NilIfEmpty(set) if set and next(set) then return set end end
 -- Chaque entrée : conteneur, clé, filtre du jeu, filtres de candidats, nombre (groupes) ou place fixe.
 local function Plan(b)
 	local db = Z.db
-	local hots, corners, ignored, important, defensives = Wanted()
+	local hots, corners, ignored, important, defensives, lockouts = Wanted()
 	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place et taille de la
 	-- grande icône, taille des coins, largeur des barres, taille et coin de départ des rangées (Z.AuraRows),
 	-- réglages des icônes. Un changement reconstruit les conteneurs (en combat : à la fin du combat).
 	local rows = b.rows or Z.AuraRows()
 	local bigX, bigY = Z.Offset("big")
-	local look = table.concat({ bigX, bigY, Z.BigIconSize(), Z.CornerSize(b), math.floor(Z.CellSize() * 0.45),
+	local drinkSize = select(3, Z.DrinkPlace())
+	local look = table.concat({ bigX, bigY, Z.BigIconSize(), Z.CornerSize(b), math.floor(Z.CellSize() * 0.45), drinkSize,
 		rows.hots.size, rows.hots.point, rows.debuffs.size, rows.debuffs.point, rows.defensives.size, rows.controls.size,
 		tostring(db.hotSwipe), tostring(db.hotCountdown), tostring(db.hotFade), tostring(db.hotCharges),
 		tostring(db.bossDebuffs), tostring(db.importantGlow) }, ",")
 	local plan = { look = look, groups = {}, slots = {}, rows = rows }
-	local function Group(box, key, filter, candidates, max, index, template, dress)
-		local size = rows[box] and rows[box].size or 12 -- barres fines : leur taille est donnée à part (Build)
+	local function Group(box, key, filter, candidates, max, index, template, dress, size)
+		size = size or rows[box] and rows[box].size or 12 -- barres fines : leur taille est donnée à part (Build)
 		table.insert(plan.groups, { box = box, key = key, filter = filter, candidates = candidates, max = max,
 			index = index, template = template, dress = dress, size = size })
 	end
@@ -321,8 +339,17 @@ local function Plan(b)
 	end
 
 	if db.showHots and not Empty(hots) then
-		Group("hots", "hots", "HELPFUL|PLAYER", { includeSpellIDs = hots }, db.hotCount, 1, "LyoruneAuraIcon", "mine")
-		Group("bars", "bars", "HELPFUL|PLAYER", { includeSpellIDs = hots }, db.hotCount, 1, "LyoruneAuraBar", "bar")
+		Group("hots", "hots", "HELPFUL|PLAYER", { includeSpellIDs = hots }, Z.HotCount(), 1, "LyoruneAuraIcon", "mine")
+		Group("bars", "bars", "HELPFUL|PLAYER", { includeSpellIDs = hots }, Z.HotCount(), 1, "LyoruneAuraBar", "bar")
+	end
+	-- Âme affaiblie (posée par n'importe qui) : après mes soins, dans la même rangée, assombrie
+	if not Empty(lockouts) then
+		Group("hots", "lockouts", "HARMFUL", { includeSpellIDs = lockouts }, Z.LOCKOUT_COUNT, 2, "LyoruneAuraIcon", "lockout")
+		Group("bars", "lockbars", "HARMFUL", { includeSpellIDs = lockouts }, Z.LOCKOUT_COUNT, 2, "LyoruneAuraBar", "lockbar")
+	end
+	-- Boisson : montrée seulement sur les soigneurs (Visibility), à côté de leur mana basse
+	if db.drinkHealers and Z.drinkIds and not Empty(Z.drinkIds) then
+		Group("drink", "drink", "HELPFUL", { includeSpellIDs = Z.drinkIds }, 1, 1, "LyoruneAuraIcon", "other", drinkSize)
 	end
 	for _, point in ipairs(Z.CORNERS) do
 		if corners[point] then
@@ -330,10 +357,11 @@ local function Plan(b)
 		end
 	end
 
-	-- Celui que je peux dissiper d'abord, puis les autres (réglage « debuffCount », deux au moins)
+	-- Ceux que je peux dissiper d'abord (réglage « dispelCount », le jeu met ses affaiblissements prioritaires en
+	-- tête), puis les autres (réglage « debuffCount » : une place pour le premier à dissiper, le reste aux autres)
 	local excluded = NilIfEmpty(ignored)
 	if db.showDebuffs then
-		Group("debuffs", "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", { excludeSpellIDs = excluded }, 1, 1,
+		Group("debuffs", "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", { excludeSpellIDs = excluded }, Z.DispelCount(), 1,
 			"LyoruneAuraIcon", "other")
 		if db.debuffMode == "ALL" then
 			local canDispel = {}
@@ -390,7 +418,9 @@ local function Dresser(b, entry)
 	if how == "other" then return function(button) DressIcon(button, false, entry.size) end end
 	if how == "defensive" then return function(button) DressIcon(button, false, entry.size, Z.DEFENSIVE_EDGE) end end
 	if how == "control" then return function(button) DressIcon(button, false, entry.size, Z.CONTROL_EDGE) end end
+	if how == "lockout" then return function(button) DressIcon(button, false, entry.size, nil, true) end end
 	if how == "bar" then return DressBar end
+	if how == "lockbar" then return function(button, index) DressBar(button, index, Z.LOCKOUT_BAR) end end
 	if how == "corner" then return DressCorner(b, entry.key) end
 	if how == "dispel" then return DressDispel(b) end
 	return DressBig(b)
@@ -439,7 +469,12 @@ local function Place(b)
 
 	Call(boxes.bars, "ClearAllPoints")
 	Call(boxes.bars, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy - 3)
-	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), db.hotCount * 4)
+	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), Z.HotSlots() * 4)
+
+	local x, y, size = Z.DrinkPlace()
+	Call(boxes.drink, "ClearAllPoints")
+	Call(boxes.drink, "SetPoint", "BOTTOMLEFT", b.hp, "BOTTOMLEFT", x, y)
+	Call(boxes.drink, "SetSize", size, size)
 
 	dx, dy = Z.Offset("debuffs")
 	PlaceRow(b, boxes.debuffs, rows.debuffs, dx, dy)
@@ -459,7 +494,7 @@ local function Place(b)
 		if Open(button) then StyleIcon(button, true, rows.hots.size) end
 	end
 	for key, row in pairs({ dispellable = rows.debuffs, others = rows.debuffs, defensives = rows.defensives,
-		controls = rows.controls }) do
+		controls = rows.controls, lockouts = rows.hots }) do
 		for _, button in ipairs(b.boxButtons[key] or {}) do
 			if Open(button) then StyleIcon(button, false, row.size) end
 		end
@@ -469,7 +504,7 @@ local function Place(b)
 	end
 end
 
--- Montrés ou cachés : pas de joueur, ennemi visé, style d'icônes (icônes ou barres)
+-- Montrés ou cachés : pas de joueur, ennemi visé, style d'icônes (icônes ou barres), boisson des soigneurs
 local function Visibility(b)
 	if not b.boxes then return end
 	local shown = b.unit ~= nil and b.boxesShown ~= false
@@ -480,6 +515,7 @@ local function Visibility(b)
 	Call(b.boxes.controls, "SetShown", shown)
 	Call(b.boxes.hots, "SetShown", shown and not bars)
 	Call(b.boxes.bars, "SetShown", shown and bars)
+	Call(b.boxes.drink, "SetShown", shown and b.drinkShown == true)
 end
 
 local function EachBox(b, method, ...)
@@ -501,14 +537,16 @@ local function Build(b, plan)
 	boxes.debuffs = NewBox(b, 1)
 	boxes.defensives = NewBox(b, 2)
 	boxes.controls = NewBox(b, 3) -- au-dessus des autres icônes : un joueur qui ne peut plus agir se voit d'abord
+	boxes.drink = NewBox(b, 1)
 	boxes.slots = NewBox(b, 4) -- au-dessus des icônes, sous les auras privées
-	for _, key in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "slots" }) do
+	for _, key in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "drink", "slots" }) do
 		if not boxes[key] then error("création refusée") end
 	end
 
 	-- 1. ancrer (les rangées de soins et d'affaiblissements prennent leur sens dans Place)
 	local DIR = AnchorUtil.FlowDirection
 	Flow(boxes.bars, "TOPLEFT", DIR.Right, DIR.Down, AnchorUtil.FlowLayoutAxis.Vertical)
+	Flow(boxes.drink, "BOTTOMLEFT", DIR.Right, DIR.Up)
 	Place(b)
 
 	-- 2. le joueur suivi, avant les groupes
@@ -633,6 +671,11 @@ end
 -- Toutes les cases : nouveau numéro de sort appris, sorts de la classe changés
 function Z.RefreshAuraBoxes()
 	for _, b in ipairs(Z.buttons or {}) do Z.StyleAuraBoxes(b) end
+end
+
+-- Le rôle du joueur a changé (Frames.lua) : la boisson ne se montre que sur un soigneur
+function Z.ShowDrinkBox(b)
+	Visibility(b)
 end
 
 -- Case cible ou focalisation sur un ennemi : rien à lui montrer.

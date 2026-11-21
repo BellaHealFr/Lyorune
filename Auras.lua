@@ -30,6 +30,9 @@ local GetSpellName = C_Spell and C_Spell.GetSpellName
 
 local BAR_COLORS = { { 0.35, 0.95, 0.45 }, { 0.30, 0.80, 1.00 }, { 1.00, 0.85, 0.30 }, { 1.00, 0.50, 0.85 } }
 Z.BAR_COLORS = BAR_COLORS
+-- Sort que je ne peux pas relancer (Âme affaiblie) : icône grise et assombrie, barre grise
+Z.LOCKOUT_SHADE = 0.55
+Z.LOCKOUT_BAR = { 0.45, 0.45, 0.50 }
 
 -- Liste des auras d'un joueur pour un filtre donné (nil si le client refuse le filtre)
 local function Auras(unit, filter, count)
@@ -127,6 +130,7 @@ local function ShowAura(icon, unit, aura, mine)
 	local db = Z.db
 	icon.texture:SetTexture(aura.icon)
 	icon.texture:SetDesaturated(false)
+	icon.texture:SetVertexColor(1, 1, 1)
 	local duration = GetAuraDuration(unit, id)
 	icon.duration = mine and duration or nil
 	if duration then
@@ -283,6 +287,38 @@ function Z.DebuffIcon(b, index)
 	return RowIcon(b, b.debuffs, index, (b.rows or Z.AuraRows()).debuffs, dx, dy)
 end
 
+-- Boisson d'un soigneur : à droite de son icône de mana basse, à la même taille et avec le même décalage
+-- (éditeur de placement). Poussée trop à droite, elle passe à gauche de l'icône. Rend x, y et la taille, depuis
+-- le coin bas gauche de la barre de vie.
+function Z.DrinkPlace()
+	local dx, dy = Z.Offset("lowMana")
+	local size = Z.ElementSize("lowMana", Z.IconSize() - 1)
+	local x = 2 + dx + size + 2
+	if x + size > Z.CellSize() - 4 then x = 2 + dx - size - 2 end
+	return x, 2 + dy, size
+end
+
+function Z.DrinkIcon(b)
+	b.drinkList = b.drinkList or {}
+	local icon = b.drinkList[1]
+	if not icon then
+		icon = NewIcon(b)
+		b.drinkList[1] = icon
+	end
+	local x, y, size = Z.DrinkPlace()
+	icon:SetSize(size, size)
+	icon:ClearAllPoints()
+	icon:SetPoint("BOTTOMLEFT", b.hp, "BOTTOMLEFT", x, y)
+	b.drinkIcon = icon
+	return icon
+end
+
+-- Icône assombrie d'un sort que je ne peux pas relancer
+function Z.DarkenIcon(icon)
+	icon.texture:SetDesaturated(true)
+	icon.texture:SetVertexColor(Z.LOCKOUT_SHADE, Z.LOCKOUT_SHADE, Z.LOCKOUT_SHADE)
+end
+
 -- Liseré des gros défensifs (bleu clair) et du contrôle subi (rouge) : on les distingue des affaiblissements
 Z.DEFENSIVE_EDGE = { 0.45, 0.80, 1.00 }
 Z.CONTROL_EDGE = { 1.00, 0.30, 0.20 }
@@ -419,6 +455,7 @@ function Z.HideAuras(b)
 	if b.controlIcon then b.controlIcon:Hide() end
 	if b.bigIcon then b.bigIcon:Hide() end
 	if b.buffIcon then b.buffIcon:Hide() end
+	if b.drinkIcon then b.drinkIcon:Hide() end
 	if b.glow then b.glow:Hide() end
 end
 
@@ -521,6 +558,20 @@ local function IsDefensive(aura)
 	return Z.db.showDefensives and not issecret(id) and Z.defensiveIds ~= nil and Z.defensiveIds[id] == true
 end
 
+-- Un affaiblissement qui bloque un de mes sorts (Âme affaiblie) ? Montré alors au bout de mes soins
+local function IsLockout(aura)
+	local id = aura.spellId
+	return not issecret(id) and Z.lockoutIds ~= nil and Z.lockoutIds[id] == true
+end
+
+-- La boisson d'un soigneur (Z.drinkIds, Data.lua) ? Lisible hors combat seulement
+local function FindDrink(unit)
+	for _, aura in ipairs(Auras(unit, "HELPFUL", 40) or {}) do
+		local id = aura.spellId
+		if not issecret(id) and Z.drinkIds and Z.drinkIds[id] then return aura end
+	end
+end
+
 local function IsIgnored(aura)
 	local id, name = aura.spellId, aura.name
 	if not issecret(id) and Z.ignoredDebuffs[id] then return true end
@@ -619,6 +670,7 @@ local function UpdateWithReading(b)
 		if name ~= "" then cornerOf[name] = point end
 	end
 	local wantCorners = next(cornerOf) ~= nil
+	local mine = Z.HotCount()
 	if not enemy and ((db.showHots and (next(Z.trackedNames) or next(db.extraTracked))) or wantCorners) then
 		local list = Auras(unit, "HELPFUL|PLAYER", 16)
 		if list then
@@ -631,13 +683,36 @@ local function UpdateWithReading(b)
 						used[point] = true
 						ShowCorner(GetCorner(b, point), unit, aura)
 					end
-				elseif db.showHots and shown < db.hotCount and IsTracked(aura) and not IsDefensive(aura) then
+				elseif db.showHots and shown < mine and IsTracked(aura) and not IsDefensive(aura) then
 					shown = shown + 1
 					if bars then
-						ShowBar(Z.HotBar(b, shown), unit, aura)
+						local bar, color = Z.HotBar(b, shown), BAR_COLORS[shown] or BAR_COLORS[1]
+						bar:SetStatusBarColor(color[1], color[2], color[3])
+						ShowBar(bar, unit, aura)
 					else
 						ShowAura(Z.HotIcon(b, shown), unit, aura, true)
 					end
+				end
+			end
+		end
+	end
+	-- Âme affaiblie (posée par n'importe qui) : au bout de mes soins, assombrie
+	local harmful = not enemy and Auras(unit, "HARMFUL", 8)
+	local lockouts = not enemy and harmful and Z.ShowsLockouts()
+	if lockouts then
+		local placed = 0
+		for i = 1, #harmful do
+			if placed >= Z.LOCKOUT_COUNT then break end
+			if IsLockout(harmful[i]) then
+				shown, placed = shown + 1, placed + 1
+				if bars then
+					local bar = Z.HotBar(b, shown)
+					bar:SetStatusBarColor(Z.LOCKOUT_BAR[1], Z.LOCKOUT_BAR[2], Z.LOCKOUT_BAR[3])
+					ShowBar(bar, unit, harmful[i])
+				else
+					local icon = Z.HotIcon(b, shown)
+					ShowAura(icon, unit, harmful[i], false)
+					Z.DarkenIcon(icon)
 				end
 			end
 		end
@@ -650,19 +725,22 @@ local function UpdateWithReading(b)
 	for i = (bars and 1 or shown + 1), #b.hots do b.hots[i]:Hide() end
 	for i = (bars and shown + 1 or 1), #b.hotBars do b.hotBars[i]:Hide() end
 
-	-- 2. Affaiblissement que je peux dissiper : d'abord le filtre du jeu, sinon mes propres sorts
-	local harmful = not enemy and Auras(unit, "HARMFUL", 8)
-	local dispellable = not enemy and Auras(unit, "HARMFUL|RAID_PLAYER_DISPELLABLE", 1)
-	local toDispel = dispellable and dispellable[1]
-	if not toDispel and harmful then
+	-- 2. Affaiblissements que je peux dissiper (réglage « dispelCount ») : d'abord le filtre du jeu, sinon mes
+	-- propres sorts
+	local dispelMax = Z.DispelCount()
+	local dispellable = {}
+	for _, aura in ipairs(not enemy and Auras(unit, "HARMFUL|RAID_PLAYER_DISPELLABLE", dispelMax) or {}) do
+		if #dispellable < dispelMax then dispellable[#dispellable + 1] = aura end
+	end
+	if #dispellable == 0 and harmful then
 		for i = 1, #harmful do
 			local kind = harmful[i].dispelName
-			if kind and not issecret(kind) and Z.canDispel[kind] then
-				toDispel = harmful[i]
-				break
+			if #dispellable < dispelMax and kind and not issecret(kind) and Z.canDispel[kind] then
+				dispellable[#dispellable + 1] = harmful[i]
 			end
 		end
 	end
+	local toDispel = dispellable[1]
 
 	local color = toDispel and db.showDispel and GetDispelColor(unit, toDispel.auraInstanceID, dispelCurve)
 	if color then
@@ -672,22 +750,25 @@ local function UpdateWithReading(b)
 		Z.ShowDispel(b, false)
 	end
 
-	-- 3. Icônes d'affaiblissements : celui à dissiper en premier
+	-- 3. Icônes d'affaiblissements : ceux à dissiper en premier, puis les autres (comme les conteneurs du jeu :
+	-- une place pour le premier à dissiper, « debuffCount - 1 » pour les autres)
 	shown = 0
 	if db.showDebuffs and harmful then
-		local firstId = toDispel and toDispel.auraInstanceID
-		if issecret(firstId) then firstId = nil end
-		if toDispel then
-			shown = 1
-			ShowAura(Z.DebuffIcon(b, 1), unit, toDispel)
+		local first = {}
+		for _, aura in ipairs(dispellable) do
+			shown = shown + 1
+			ShowAura(Z.DebuffIcon(b, shown), unit, aura)
+			local id = aura.auraInstanceID
+			if id and not issecret(id) then first[id] = true end
 		end
 		if db.debuffMode == "ALL" then
+			local others = 0
 			for i = 1, #harmful do
-				if shown >= db.debuffCount then break end
+				if others >= db.debuffCount - 1 then break end
 				local aura = harmful[i]
 				local id = aura.auraInstanceID
-				if not (firstId and not issecret(id) and id == firstId) and not IsIgnored(aura) then
-					shown = shown + 1
+				if not (id and not issecret(id) and first[id]) and not IsIgnored(aura) and not (lockouts and IsLockout(aura)) then
+					shown, others = shown + 1, others + 1
 					ShowAura(Z.DebuffIcon(b, shown), unit, aura)
 				end
 			end
@@ -731,6 +812,13 @@ local function UpdateWithReading(b)
 		ShowAura(Z.ControlIcon(b), unit, control[1])
 	elseif b.controlIcon then
 		b.controlIcon:Hide()
+	end
+	-- Soigneur qui boit (b.drinkShown, Frames.lua)
+	local drink = not enemy and b.drinkShown and FindDrink(unit)
+	if drink then
+		ShowAura(Z.DrinkIcon(b), unit, drink)
+	elseif b.drinkIcon then
+		b.drinkIcon:Hide()
 	end
 
 	UpdateBuffs(b, unit, enemy)
