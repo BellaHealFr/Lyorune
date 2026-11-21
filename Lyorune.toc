@@ -1,12 +1,12 @@
 ## Interface: 16001
 ## Title: Lyorune |cff33dd88(Forever)|r
-## Notes: Cadres de soin simples, rapides et élégants pour WoW Forever : clic-soin avec bijoux et macros, touches au survol, soins entrants, icônes d'auras visibles en combat et rangées à la mesure de chaque forme de case, placement et taille de chaque icône, mana basse des soigneurs, dissipation, distance, buffs manquants, recharge globale, annonces de mana faible et remontée même avec la mana cachée, joueurs épinglés, signal, thèmes, fenêtre d'options à chapitres avec case témoin et recherche, profils (champ de bataille, arène, copie par partie), partage, tutoriel intégré.
-## Notes-enUS: Simple, fast and elegant healing frames for WoW Forever: click-casting with trinkets and macros, hover keys, incoming heals, aura icons visible in combat and laid out to fit each cell shape, position and size of every icon, healers' low mana, dispels, range, missing buffs, global cooldown, low mana and mana restored announcements even with hidden mana, pinned players, pings, themes, options window in chapters with a live preview cell and search, profiles (battleground, arena, partial copy), sharing, built-in tutorial.
+## Notes: Cadres de soin simples, rapides et élégants pour WoW Forever : clic-soin avec bijoux et macros, touches au survol, soins entrants, icônes d'auras visibles en combat et rangées à la mesure de chaque forme de case, placement et taille de chaque icône, mana basse des soigneurs, gros défensifs et contrôles des joueurs, dissipation, distance, buffs manquants, raccourcis du jeu, recharge globale, annonces de mana faible et remontée même avec la mana cachée, joueurs épinglés, signal, thèmes, fenêtre d'options à chapitres avec case témoin et recherche, profils (champ de bataille, arène, copie par partie), partage, tutoriel intégré.
+## Notes-enUS: Simple, fast and elegant healing frames for WoW Forever: click-casting with trinkets and macros, hover keys, incoming heals, aura icons visible in combat and laid out to fit each cell shape, position and size of every icon, healers' low mana, players' big defensives and crowd control, dispels, range, missing buffs, game key bindings, global cooldown, low mana and mana restored announcements even with hidden mana, pinned players, pings, themes, options window in chapters with a live preview cell and search, profiles (battleground, arena, partial copy), sharing, built-in tutorial.
 ## Author: BellaDroode
 ## X-License: Tous droits réservés (voir LICENSE)
 ## X-Website: https://github.com/BellaHealFr/Lyorune
 ## X-Curse-Project-ID: 1815533
-## Version: 1.27.1
+## Version: 1.28.0
 ## IconTexture: Interface\AddOns\Lyorune\Media\Logo
 ## Category-frFR: Portraits d'unités
 ## Category-enUS: Unit Frames

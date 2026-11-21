@@ -20,8 +20,8 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 | Apparence | Forme des cases, thème, couleurs, transparence, texte |
 | Vie et portée | Soins en route, bouclier, vie basse, barre de mana, joueurs loin ou hors de vue |
 | Mes soins | Vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale |
-| Affaiblissements | Dissipation, icônes, affaiblissements importants, auras privées des boss |
-| Joueurs | Rôle, marqueur, chef, menace, buffs manquants, infobulle |
+| Affaiblissements | Dissipation, icônes, affaiblissements importants, joueur sous contrôle, auras privées des boss |
+| Joueurs | Rôle, marqueur, chef, gros défensifs, menace, buffs manquants, infobulle |
 | Sorts et raccourcis | Vos sorts sur les clics et les touches, vos macros |
 | Alertes | Annonces dans le chat et sons |
 | Profils et partage | Profils, partage de configuration, échanges entre joueurs, remise à zéro |
@@ -81,6 +81,8 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Icônes en bas à droite (Tuile, Carré), en bas à droite de la vie (Barre) ou en bas du bloc au bout de la case (Bandeau) | Ses affaiblissements |
 | Grande icône à gauche | Un affaiblissement important (boss, ou votre liste) |
 | Contour doré qui pulse | Un affaiblissement important est posé (avec un son pour ceux de votre liste, si vous l'allumez) |
+| Icône à liseré bleu au bord droit (Tuile, Carré), ou juste avant le chiffre de vie (Barre, Bandeau) | Un gros défensif posé sur lui, par n'importe qui : Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace... (deux au plus) |
+| Icône à liseré rouge au centre | Il est sous contrôle : étourdi, apeuré, métamorphosé, endormi... |
 | Icônes dessinées par le jeu (au centre, par défaut) | Des affaiblissements de boss que le jeu cache aux addons : il les montre lui-même sur la case |
 | Icône grise en bas à gauche | Il lui manque votre buff de groupe (visible hors combat) |
 | Icône de résurrection au centre | Quelqu'un est en train de le relever |
@@ -105,6 +107,8 @@ Pour choisir vos sorts : `/lyorune`, chapitre **Sorts et raccourcis**. Tous vos 
 1. Cliquez sur « + Ajouter un clic ou une touche ».
 2. Faites sur ce même bouton la combinaison voulue : un clic (gauche, droit, milieu, boutons 4 et 5), avec ou sans Alt, Ctrl, Maj, et même plusieurs à la fois (Ctrl + Maj + clic droit). Une touche du clavier, un bouton de souris supplémentaire ou la molette marchent aussi.
 3. Choisissez le sort dans la fenêtre qui s'ouvre. Lyorune ne propose que les sorts que votre personnage connaît à son niveau.
+
+**Un joueur de bas niveau ?** Rien à régler : pour un buff ou un soin sur la durée, le jeu lance tout seul le rang le plus fort que ce joueur peut recevoir.
 
 Il n'y a pas de limite : ajoutez autant de lignes que vous voulez. Toutes les lignes restent visibles ; quand la liste est longue, faites défiler la page à la molette.
 
@@ -236,7 +240,7 @@ Tout se règle dans le chapitre **Disposition**.
 - **Sans étiquettes** : coupez « Numéro de groupe au-dessus des cases ». Elles reviennent seulement le temps de déplacer les cadres.
 - **Taille** : partie Taille des cases, « Largeur » et « Hauteur » ; « Espacement » est dans les réglages fins.
 - **Échelle générale** : « Échelle générale (%) », de 50 à 200 %. Tout grandit ou rapetisse ensemble (cases, icônes, textes, étiquettes), sans changer vos réglages de taille. Le mode test suit la même échelle. En combat, le changement attend la fin du combat.
-- **Placer les éléments de la case** : bouton « Placer les éléments de la case... » (partie Taille des cases). Une case d'exemple agrandie montre tous les éléments : nom, texte de vie, icône de rôle, marqueur de raid, chef de groupe, icône centrale, vos soins sur la durée, affaiblissements, affaiblissement important, buff manquant et auras privées. Glissez un élément avec la souris, ou choisissez-le dans la liste et poussez-le avec « Gauche », « Haut », « Bas », « Droite » : un pixel par clic, cinq avec Maj. Le décalage s'affiche sous la case et vos vraies cases suivent aussitôt. Pour la taille, « - » et « + » sous les flèches, ou la molette sur une icône de la case, la rapetissent ou la grandissent de 10 % par cran, de 50 à 200 % de sa taille d'origine ; vos soins sur la durée et les affaiblissements changent de taille ensemble, et leur rangée passe à la ligne ou rapetisse si elle ne tient plus. Une icône ne devient jamais plus grande que la case : « Au plus grand pour cette case » s'affiche alors. Le nom et le texte de vie suivent « Taille du texte », les auras privées « Taille des auras privées », et les barres fines de vos soins gardent leur épaisseur. Une taille changée en combat s'applique aux icônes d'auras dès la fin du combat. « Remettre à sa place » rend sa place et sa taille d'origine à l'élément choisi, « Tout remettre » à tous (un second clic confirme). Un élément s'arrête au bord de la case : il n'en sort jamais, ni sur la case d'exemple ni sur vos vraies cases, quelles que soient la forme et la taille des cases. Le nom et le texte de vie rétrécissent près du bord au lieu d'en sortir (un nom long finit alors par « ... »). Vos soins sur la durée et les affaiblissements sont montrés avec le nombre d'icônes que vous avez réglé : c'est la rangée entière qui reste dans la case. Quand une flèche ne peut plus pousser, « Au bord de la case » s'affiche sous la case. Le marqueur de raid, posé à cheval sur le haut de la case, peut descendre mais pas monter. Si vous réduisez ensuite la taille des cases, un élément poussé loin revient au bord tout seul, et retrouve sa place si les cases regrandissent. Chaque forme de case (Barre, Tuile, Carré, Bandeau) garde ses propres placements et ses propres tailles.
+- **Placer les éléments de la case** : bouton « Placer les éléments de la case... » (partie Taille des cases). Une case d'exemple agrandie montre tous les éléments : nom, texte de vie, icône de rôle, marqueur de raid, chef de groupe, icône centrale, vos soins sur la durée, affaiblissements, affaiblissement important, joueur sous contrôle, gros défensifs, buff manquant et auras privées. Glissez un élément avec la souris, ou choisissez-le dans la liste et poussez-le avec « Gauche », « Haut », « Bas », « Droite » : un pixel par clic, cinq avec Maj. Le décalage s'affiche sous la case et vos vraies cases suivent aussitôt. Pour la taille, « - » et « + » sous les flèches, ou la molette sur une icône de la case, la rapetissent ou la grandissent de 10 % par cran, de 50 à 200 % de sa taille d'origine ; vos soins sur la durée et les affaiblissements changent de taille ensemble, et leur rangée passe à la ligne ou rapetisse si elle ne tient plus. Une icône ne devient jamais plus grande que la case : « Au plus grand pour cette case » s'affiche alors. Le nom et le texte de vie suivent « Taille du texte », les auras privées « Taille des auras privées », et les barres fines de vos soins gardent leur épaisseur. Une taille changée en combat s'applique aux icônes d'auras dès la fin du combat. « Remettre à sa place » rend sa place et sa taille d'origine à l'élément choisi, « Tout remettre » à tous (un second clic confirme). Un élément s'arrête au bord de la case : il n'en sort jamais, ni sur la case d'exemple ni sur vos vraies cases, quelles que soient la forme et la taille des cases. Le nom et le texte de vie rétrécissent près du bord au lieu d'en sortir (un nom long finit alors par « ... »). Vos soins sur la durée et les affaiblissements sont montrés avec le nombre d'icônes que vous avez réglé : c'est la rangée entière qui reste dans la case. Quand une flèche ne peut plus pousser, « Au bord de la case » s'affiche sous la case. Le marqueur de raid, posé à cheval sur le haut de la case, peut descendre mais pas monter. Si vous réduisez ensuite la taille des cases, un élément poussé loin revient au bord tout seul, et retrouve sa place si les cases regrandissent. Chaque forme de case (Barre, Tuile, Carré, Bandeau) garde ses propres placements et ses propres tailles.
 - **Rangement** : par groupe, par rôle ou en grille (partie Rangement). Par rôle, choisissez l'ordre (tank, soin, dégâts, ou une autre des six combinaisons) avec « Ordre des rôles », dans les réglages fins. En grille, tout le raid tient d'un seul bloc, sans trou entre les groupes : « Cases par colonne en grille » (réglages fins) règle sa hauteur (8 cases par colonne donnent 5 colonnes pour 40 joueurs). Un réglage qui ne sert pas avec le rangement choisi est grisé.
 - **Ordre dans chaque bloc** : l'ordre du groupe, par nom, ou par classe puis par nom (tous les prêtres ensemble, puis tous les druides...). C'est le jeu qui tient cet ordre à jour, même en plein combat, quand quelqu'un arrive ou change de groupe. En rangement par rôle, « par classe » range par nom dans chaque rôle.
 - **Chaque groupe garde sa place** (réglages fins) : en rangement par groupe, le groupe 3 reste toujours en 3e colonne, même si le groupe 2 est vide. Pratique pour retrouver un joueur d'un coup d'œil. Coupé, les groupes se resserrent.
@@ -283,8 +287,8 @@ Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Ri
 
 - **Vie et portée** : soins en route, bouclier, voile de vie basse (son seuil dans les réglages fins), absorption de soins, barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale.
-- **Affaiblissements** : dissipation, icônes, affaiblissements importants, auras privées des boss.
-- **Joueurs** : icône de rôle, marqueur de raid, chef de groupe, invocation et phase, menace, buffs manquants, infobulle.
+- **Affaiblissements** : dissipation, icônes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
+- **Joueurs** : icône de rôle, marqueur de raid, chef de groupe, gros défensifs, invocation et phase, menace, buffs manquants, infobulle.
 
 ### La portée (chapitre Vie et portée)
 
@@ -308,7 +312,7 @@ Tout marche en combat. Le jeu y cache le nom des auras, mais Lyorune reconnaît 
 
 ### Les buffs (chapitre Joueurs)
 
-- **Panneau des buffs manquants** (prêtre, druide, mage) : hors combat, une petite fenêtre liste les joueurs à qui manque votre buff de groupe (Robustesse, Marque du fauve, Intelligence des arcanes). Un clic sur un nom lui lance le buff, sans le cibler ; un clic droit lance la version de groupe. Quand trois joueurs d'un même groupe n'ont pas le buff, une seule ligne « Groupe N » lance directement la version de groupe. Un joueur hors de portée est estompé. Le panneau se cache en combat et revient après ; la croix le ferme jusqu'à la fin du prochain combat. Déplacez-le par son titre : sa place est gardée pour chaque personnage. Il a son propre interrupteur, séparé de la petite icône grise sur la case (« Buff de groupe manquant »).
+- **Panneau des buffs manquants** (prêtre, druide, mage) : hors combat, une petite fenêtre liste les joueurs à qui manque votre buff de groupe (Robustesse, Marque du fauve, Intelligence des arcanes). Un clic sur un nom lui lance le buff, sans le cibler ; un clic droit lance la version de groupe. Quand trois joueurs d'un même groupe n'ont pas le buff, une seule ligne « Groupe N » lance directement la version de groupe. Un joueur hors de portée est estompé. Le panneau se cache en combat et revient après ; la croix le ferme jusqu'à la fin du prochain combat. Une touche peut aussi lancer sa première ligne, même panneau fermé : choisissez-la dans les raccourcis du jeu (voir « Les raccourcis du jeu », plus bas). Déplacez-le par son titre : sa place est gardée pour chaque personnage. Il a son propre interrupteur, séparé de la petite icône grise sur la case (« Buff de groupe manquant »).
 - **Buffs à poser sur une seule personne** (chaman : Bouclier de terre ; druide : Épines) : tant que le vôtre n'est sur personne, le panneau des buffs manquants propose une ligne pour le tank, hors combat. Vous préférez un autre joueur ? Survolez sa case et tapez `/lyorune porteur` (ou `/lyorune porteur Nom`) : il passe avant le tank, pour ce personnage. La même commande sur le même joueur vous ramène au tank. Si votre buff est déjà sur quelqu'un, Lyorune ne vous demande rien.
 
 ### Les listes
@@ -319,6 +323,10 @@ Chaque liste est rangée dans son chapitre : « Mes sorts à suivre » dans Mes 
 
 - **Auras privées des boss** (chapitre Affaiblissements) : certains affaiblissements de boss sont cachés aux addons. Le jeu accepte pourtant de les dessiner lui-même sur la case : choisissez leur taille et leur place (au centre, en haut, en bas, à gauche ou à droite) dans les réglages fins. Deux au plus par joueur.
 - **Absorption de soins** (chapitre Vie et portée, réglages fins de la partie Vie) : la bande rouge sombre au bout de la vie montre ce qu'un affaiblissement « mange ». Vos soins la remplissent d'abord. Le montant vient du jeu, il reste juste en combat.
+- **Joueur sous contrôle** (chapitre Affaiblissements, partie Importants) : un joueur étourdi, apeuré, métamorphosé ou endormi montre l'icône du contrôle au centre de sa case, avec un liseré rouge. C'est le jeu qui reconnaît les contrôles : ça marche en plein combat.
+
+- **Gros défensifs des joueurs** (chapitre Joueurs, partie Sur la case) : Mur protecteur, Dernier rempart, Bouclier divin, Protection divine, Bénédictions de protection et de sacrifice, Évasion, Écorce, Bloc de glace, Dissuasion et Forme de pierre montrent leur icône, avec un liseré bleu, sur la case du joueur qui les porte, quel que soit celui qui les a lancés. Deux au plus, au bord droit de la case (juste avant le chiffre de vie en Barre et en Bandeau). Vous savez ainsi qui encaisse sans risque et qui a besoin de vos soins. Si vous lancez vous-même un de ces sorts (Bénédiction de protection), il quitte la rangée de vos soins pour ne pas être montré deux fois.
+
 - **Contour lumineux et son** (chapitre Affaiblissements, partie Importants) : un affaiblissement de votre liste « À mettre en avant », ou d'un boss, entoure la case d'un contour doré. Le son, à allumer dans les réglages fins, part pour ceux de votre liste.
   À savoir : en combat, le jeu cache souvent le nom des affaiblissements de boss. Lyorune ne peut alors pas savoir lequel est posé : le contour reste possible (le jeu décide lui-même s'il s'agit d'un boss), le son non.
 
@@ -405,6 +413,7 @@ Cette liste se retrouve en jeu : chapitre Fenêtre et aide, « Commandes ».
 | `/lyorune assistant` | Assistant de départ (trois questions) |
 | `/lyorune verrou` | Verrouiller ou libérer la position |
 | `/lyorune reset` | Remettre les cadres au centre |
+| `/lyorune cadres` | Afficher ou masquer les cadres (hors combat) |
 | `/lyorune epingler` | Épingler ou retirer le joueur survolé (ou votre cible, ou le nom tapé après) |
 | `/lyorune porteur` | Le joueur survolé (ou votre cible, ou le nom tapé après) reçoit vos buffs uniques à la place du tank ; une 2e fois : retour au tank |
 | `/lyorune groupe` | Joueurs du groupe qui ont Lyorune |
@@ -412,3 +421,14 @@ Cette liste se retrouve en jeu : chapitre Fenêtre et aide, « Commandes ».
 | `/lyorune mesure` | Mesurer les performances (hors combat) |
 | `/lyorune bug` | Signaler un problème |
 | `/lyorune nouveautes` | Voir les nouveautés de la version |
+
+## Les raccourcis du jeu
+
+Quatre actions de Lyorune peuvent recevoir une touche : Échap, Options, Raccourcis, rubrique AddOns, Lyorune. Aucune touche n'est posée au départ : vous choisissez les vôtres.
+
+| Raccourci | Effet |
+|---|---|
+| Ouvrir ou fermer les options | Comme `/lyorune` |
+| Afficher ou masquer les cadres | Hors combat. Masqués, ils le restent même en combat, jusqu'au prochain appui (ou `/lyorune cadres`). Ils reviennent d'eux-mêmes après un `/reload` ou à la prochaine connexion. |
+| Poser le prochain buff manquant | Hors combat : lance la première ligne du panneau des buffs manquants, même panneau fermé. Appuyez autant de fois qu'il reste de lignes. |
+| Mode test | Comme `/lyorune test` |

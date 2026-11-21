@@ -21,6 +21,35 @@ local rows = {}
 local queued = false
 local closed = false   -- fermé par la croix : revient à la fin du prochain combat
 
+-- Raccourci « Poser le prochain buff manquant » (Bindings.xml : CLICK LyoruneNextBuff:LeftButton). Un bouton
+-- sécurisé caché, créé au chargement (hors combat), qui lance la première ligne du panneau. Il est vidé dès que
+-- le panneau n'a plus rien à proposer et à l'entrée en combat : une touche ne lance jamais un ancien buff.
+-- Il suit le panneau même fermé par la croix (le joueur n'a pas besoin de le voir pour appuyer).
+local nextBuff = CreateFrame("Button", "LyoruneNextBuff", UIParent, "SecureActionButtonTemplate")
+nextBuff:Hide()
+
+local function SetNextBuff(entry)
+	if InCombatLockdown() then return end
+	-- une touche part selon « useOnKeyDown », posé au même sens que les clics (comme les cases, C11)
+	local castOnDown = Z.db and Z.db.castOnDown
+	nextBuff:RegisterForClicks(castOnDown and "AnyDown" or "AnyUp")
+	nextBuff:SetAttribute("useOnKeyDown", castOnDown and true or false)
+	nextBuff:SetAttribute("unit", entry and entry.unit)
+	nextBuff:SetAttribute("type", entry and "spell")
+	nextBuff:SetAttribute("spell", entry and entry.spell)
+	nextBuff.entry = entry
+end
+
+-- Après l'appui : un mot quand rien n'est parti (combat, ou aucun buff à poser), pour que la touche ne semble
+-- pas cassée
+nextBuff:SetScript("PostClick", function(self)
+	if InCombatLockdown() then
+		Z:Print(Z.L["le prochain buff manquant se pose hors combat seulement."])
+	elseif not self.entry then
+		Z:Print(Z.L["aucun buff manquant à poser."])
+	end
+end)
+
 -- Groupe de raid d'une unité (1 en groupe de 5 ; 0 pour un familier, toujours sur sa propre ligne)
 local function SubGroup(unit)
 	local index = unit:match("^raid(%d+)$")
@@ -202,7 +231,9 @@ end
 function Z:UpdateBuffPanel()
 	queued = false
 	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
-	local list = (Z.db.buffPanel and not closed and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
+	local list = (Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
+	SetNextBuff(list[1])
+	if closed then list = {} end
 	if #list == 0 then
 		if panel then panel:Hide() end
 		return
@@ -265,6 +296,7 @@ end
 
 -- Entrée en combat : le jeu verrouille les boutons juste après cet événement, on cache le panneau avant
 Z:On("PLAYER_REGEN_DISABLED", function()
+	SetNextBuff(nil)
 	if panel and not InCombatLockdown() then panel:Hide() end
 end)
 Z:On("PLAYER_REGEN_ENABLED", function()

@@ -8,6 +8,8 @@
 --   bordure colorée   : je peux dissiper quelque chose
 --   contour lumineux  : un affaiblissement important est posé (avec un son pour ceux de ma liste)
 --   auras privées     : affaiblissements de boss cachés aux addons, que le jeu dessine lui-même sur la case
+--   au bord droit     : un gros défensif posé par n'importe qui (Mur protecteur, Bouclier divin...)
+--   au centre         : un contrôle subi (étourdi, apeuré, métamorphosé)
 -- Performance : plusieurs changements d'auras dans la même image ne déclenchent qu'une seule mise à jour.
 
 local _, Z = ...
@@ -281,6 +283,26 @@ function Z.DebuffIcon(b, index)
 	return RowIcon(b, b.debuffs, index, (b.rows or Z.AuraRows()).debuffs, dx, dy)
 end
 
+-- Liseré des gros défensifs (bleu clair) et du contrôle subi (rouge) : on les distingue des affaiblissements
+Z.DEFENSIVE_EDGE = { 0.45, 0.80, 1.00 }
+Z.CONTROL_EDGE = { 1.00, 0.30, 0.20 }
+
+function Z.DefensiveIcon(b, index)
+	local dx, dy = Z.Offset("defensives")
+	b.defensives = b.defensives or {}
+	local icon = RowIcon(b, b.defensives, index, (b.rows or Z.AuraRows()).defensives, dx, dy)
+	icon.border:SetColor(Z.DEFENSIVE_EDGE[1], Z.DEFENSIVE_EDGE[2], Z.DEFENSIVE_EDGE[3], 1)
+	return icon
+end
+
+function Z.ControlIcon(b)
+	local dx, dy = Z.Offset("controls")
+	b.controlList = b.controlList or {}
+	b.controlIcon = RowIcon(b, b.controlList, 1, (b.rows or Z.AuraRows()).controls, dx, dy)
+	b.controlIcon.border:SetColor(Z.CONTROL_EDGE[1], Z.CONTROL_EDGE[2], Z.CONTROL_EDGE[3], 1)
+	return b.controlIcon
+end
+
 function Z.BigIcon(b)
 	local dx, dy = Z.Offset("big")
 	b.bigList = b.bigList or {}
@@ -391,9 +413,10 @@ castWatcher:SetScript("OnEvent", function(_, _, _, _, spellID) Z:Try("mes sorts 
 -- Cache toutes les icônes d'une case (changement de style ou de taille)
 function Z.HideAuras(b)
 	if b.corners then for _, square in pairs(b.corners) do square:Hide() end end
-	for _, list in ipairs({ b.hots, b.hotBars, b.debuffs }) do
+	for _, list in ipairs({ b.hots, b.hotBars, b.debuffs, b.defensives or {} }) do
 		for _, element in ipairs(list) do element:Hide() end
 	end
+	if b.controlIcon then b.controlIcon:Hide() end
 	if b.bigIcon then b.bigIcon:Hide() end
 	if b.buffIcon then b.buffIcon:Hide() end
 	if b.glow then b.glow:Hide() end
@@ -490,6 +513,12 @@ local function IsTracked(aura)
 	local name = aura.name
 	if issecret(name) then return true end
 	return Z.trackedNames[name] or Z.db.extraTracked[name]
+end
+
+-- Un gros défensif (Z.defensiveIds) ? Montré alors à part, quel que soit le lanceur (réglage « showDefensives »)
+local function IsDefensive(aura)
+	local id = aura.spellId
+	return Z.db.showDefensives and not issecret(id) and Z.defensiveIds ~= nil and Z.defensiveIds[id] == true
 end
 
 local function IsIgnored(aura)
@@ -602,7 +631,7 @@ local function UpdateWithReading(b)
 						used[point] = true
 						ShowCorner(GetCorner(b, point), unit, aura)
 					end
-				elseif db.showHots and shown < db.hotCount and IsTracked(aura) then
+				elseif db.showHots and shown < db.hotCount and IsTracked(aura) and not IsDefensive(aura) then
 					shown = shown + 1
 					if bars then
 						ShowBar(Z.HotBar(b, shown), unit, aura)
@@ -685,6 +714,24 @@ local function UpdateWithReading(b)
 		b.glow:Hide()
 	end
 	ImportantSound(b, important or {}, fromList)
+
+	-- 5. Gros défensifs, posés par n'importe qui, et contrôle subi (étourdi, apeuré, métamorphosé)
+	shown = 0
+	local helpful = not enemy and db.showDefensives and next(Z.defensiveIds or {}) and Auras(unit, "HELPFUL", 40)
+	for i = 1, helpful and #helpful or 0 do
+		if shown >= Z.DEFENSIVE_COUNT then break end
+		if IsDefensive(helpful[i]) then
+			shown = shown + 1
+			ShowAura(Z.DefensiveIcon(b, shown), unit, helpful[i])
+		end
+	end
+	for i = shown + 1, #(b.defensives or {}) do b.defensives[i]:Hide() end
+	local control = not enemy and db.showControls and Auras(unit, "HARMFUL|CROWD_CONTROL", 1)
+	if control and control[1] then
+		ShowAura(Z.ControlIcon(b), unit, control[1])
+	elseif b.controlIcon then
+		b.controlIcon:Hide()
+	end
 
 	UpdateBuffs(b, unit, enemy)
 end

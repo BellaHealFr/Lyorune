@@ -183,7 +183,8 @@ def write_release_notes(version):
 
 def addon_files():
     # Exactement les fichiers chargés par le jeu : le .toc, ce qu'il cite, les images du dossier Media, et la licence
-    files = ['Lyorune.toc', 'LICENSE']
+    # (Bindings.xml n'est pas cité dans le .toc : le jeu le charge tout seul)
+    files = ['Lyorune.toc', 'LICENSE', 'Bindings.xml']
     files += ['Media/' + name for name in sorted(os.listdir(os.path.join(ROOT, 'Media'))) if name.endswith('.tga')]
     for line in read('Lyorune.toc').splitlines():
         line = line.strip()

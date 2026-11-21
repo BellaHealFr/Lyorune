@@ -21,8 +21,8 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 | Look | Cell shape, theme, colours, transparency, text |
 | Health and range | Incoming heals, shield, low health, mana bar, players far away or out of sight |
 | My heals | Your heals over time, the cell corners, your tracked spells, the global cooldown |
-| Debuffs | Dispelling, icons, important debuffs, boss private auras |
-| Players | Role, marker, leader, threat, missing buffs, tooltip |
+| Debuffs | Dispelling, icons, important debuffs, crowd-controlled player, boss private auras |
+| Players | Role, marker, leader, big defensives, threat, missing buffs, tooltip |
 | Spells and bindings | Your spells on clicks and keys, your macros |
 | Alerts | Chat announcements and sounds |
 | Profiles and sharing | Profiles, sharing a configuration, exchanges between players, reset |
@@ -82,6 +82,8 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Icons at the bottom right (Tile, Square), at the bottom right of the health (Bar) or at the bottom of the block at the end of the cell (Strip) | Their debuffs |
 | Large icon on the left | An important debuff (boss, or your own list) |
 | Pulsing golden outline | An important debuff is applied (with a sound for those in your list, if you turn it on) |
+| Icon with a blue edge on the right edge (Tile, Square), or just before the health number (Bar, Strip) | A big defensive on the player, cast by anyone: Shield Wall, Divine Shield, Blessing of Protection, Barkskin, Evasion, Ice Block... (two at most) |
+| Icon with a red edge in the centre | The player is crowd-controlled: stunned, feared, polymorphed, asleep... |
 | Icons drawn by the game (in the centre, by default) | Boss debuffs the game hides from addons: it shows them itself on the frame |
 | Grey icon at the bottom left | They lack your group buff (shown out of combat) |
 | Resurrection icon in the centre | Someone is resurrecting them |
@@ -106,6 +108,8 @@ To choose your spells: `/lyorune`, **Spells and bindings** chapter. All your sho
 1. Click "+ Add a click or a key".
 2. On that same button, do the combination you want: a click (left, right, middle, buttons 4 and 5), with or without Alt, Ctrl, Shift, even several at once (Ctrl + Shift + right click). A keyboard key, an extra mouse button or the wheel work too.
 3. Pick the spell in the window that opens. Lyorune only offers spells your character knows at its level.
+
+**A low-level player?** Nothing to set: for a buff or a heal over time, the game itself casts the strongest rank that player can receive.
 
 There is no limit: add as many lines as you like. All lines stay visible; when the list is long, scroll the page with the mouse wheel.
 
@@ -237,7 +241,7 @@ Everything is set in the **Layout** chapter.
 - **Without labels**: turn off "Group number above the cells". They only come back while you move the frames.
 - **Size**: Cell size part, "Width" and "Height"; "Spacing" is in the fine settings.
 - **Overall scale**: "Overall scale (%)", from 50 to 200%. Everything grows or shrinks together (cells, icons, texts, labels) without changing your size settings. Test mode follows the same scale. In combat, the change waits for the end of the fight.
-- **Place the cell elements**: "Place the cell elements..." button (Cell size part). An enlarged sample cell shows every element: name, health text, role icon, raid marker, group leader, centre icon, your heals over time, debuffs, important debuff, missing buff and private auras. Drag an element with the mouse, or pick it in the list and nudge it with "Left", "Up", "Down", "Right": one pixel per click, five with Shift. The offset is shown under the cell and your real cells follow at once. For the size, "-" and "+" under the arrows, or the mouse wheel on an icon of the cell, make it smaller or larger by 10 % per step, from 50 to 200 % of its original size; your heals over time and debuffs change size together, and their row wraps or shrinks when it no longer fits. An icon never grows larger than the cell: "As large as this cell allows" is then shown. The name and the health text follow "Text size", private auras "Private aura size", and the thin bars of your heals keep their thickness. A size changed in combat applies to aura icons as soon as combat ends. "Put it back" gives the chosen element its original place and size, "Reset all" does it for all of them (a second click confirms). An element stops at the edge of the cell: it never leaves it, neither on the sample cell nor on your real cells, whatever the shape and size of the cells. The name and the health text shrink near the edge instead of going out (a long name then ends with "..."). Your heals over time and debuffs are shown with the number of icons you have set: the whole row stays in the cell. When an arrow cannot push any further, "At the edge of the cell" is shown under the cell. The raid marker, which sits astride the top of the cell, can move down but not up. If you later make the cells smaller, an element pushed far comes back to the edge by itself, and gets its place back if the cells grow again. Each cell shape (Bar, Tile, Square, Strip) keeps its own placements and sizes.
+- **Place the cell elements**: "Place the cell elements..." button (Cell size part). An enlarged sample cell shows every element: name, health text, role icon, raid marker, group leader, centre icon, your heals over time, debuffs, important debuff, crowd-controlled player, big defensives, missing buff and private auras. Drag an element with the mouse, or pick it in the list and nudge it with "Left", "Up", "Down", "Right": one pixel per click, five with Shift. The offset is shown under the cell and your real cells follow at once. For the size, "-" and "+" under the arrows, or the mouse wheel on an icon of the cell, make it smaller or larger by 10 % per step, from 50 to 200 % of its original size; your heals over time and debuffs change size together, and their row wraps or shrinks when it no longer fits. An icon never grows larger than the cell: "As large as this cell allows" is then shown. The name and the health text follow "Text size", private auras "Private aura size", and the thin bars of your heals keep their thickness. A size changed in combat applies to aura icons as soon as combat ends. "Put it back" gives the chosen element its original place and size, "Reset all" does it for all of them (a second click confirms). An element stops at the edge of the cell: it never leaves it, neither on the sample cell nor on your real cells, whatever the shape and size of the cells. The name and the health text shrink near the edge instead of going out (a long name then ends with "..."). Your heals over time and debuffs are shown with the number of icons you have set: the whole row stays in the cell. When an arrow cannot push any further, "At the edge of the cell" is shown under the cell. The raid marker, which sits astride the top of the cell, can move down but not up. If you later make the cells smaller, an element pushed far comes back to the edge by itself, and gets its place back if the cells grow again. Each cell shape (Bar, Tile, Square, Strip) keeps its own placements and sizes.
 - **Sorting**: by group, by role or as a grid (Sorting part). By role, choose the order (tank, healer, damage, or any of the six combinations) with "Role order", in the fine settings. As a grid, the whole raid is one block with no gap between groups: "Cells per column in grid" (fine settings) sets its height (8 cells per column give 5 columns for 40 players). A setting that does not apply to the chosen sorting is greyed out.
 - **Order in each block**: group order, by name, or by class then name (all priests together, then all druids...). The game keeps this order up to date by itself, even in combat, when someone joins or changes group. When arranged by role, "by class" sorts by name within each role.
 - **Each group keeps its place** (fine settings): when arranged by group, group 3 always stays in the 3rd column, even if group 2 is empty. Handy to find a player at a glance. Turned off, groups close up.
@@ -284,8 +288,8 @@ Every element of the cell has its switch, filed according to what it shows. Noth
 
 - **Health and range**: incoming heals, shield, low health overlay (its threshold in the fine settings), heal absorb, mana bar, healers' low mana, and the two range hints below.
 - **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown.
-- **Debuffs**: dispelling, icons, important debuffs, boss private auras.
-- **Players**: role icon, raid marker, group leader, summon and phase, threat, missing buffs, tooltip.
+- **Debuffs**: dispelling, icons, important debuffs, crowd-controlled player, boss private auras.
+- **Players**: role icon, raid marker, group leader, big defensives, summon and phase, threat, missing buffs, tooltip.
 
 ### Range (Health and range chapter)
 
@@ -309,7 +313,7 @@ Everything works in combat. The game hides aura names there, but Lyorune recogni
 
 ### Buffs (Players chapter)
 
-- **Missing buffs panel** (priest, druid, mage): out of combat, a small window lists the players who lack your group buff (Fortitude, Mark of the Wild, Arcane Intellect). Click a name to cast the buff on them, without targeting them; right-click casts the group version. When three players of the same group lack the buff, a single "Group N" line casts the group version directly. A player out of range is faded. The panel hides in combat and comes back afterwards; the cross closes it until the end of the next fight. Drag it by its title: its position is kept for each character. It has its own switch, separate from the small grey icon on the cell ("Missing group buff").
+- **Missing buffs panel** (priest, druid, mage): out of combat, a small window lists the players who lack your group buff (Fortitude, Mark of the Wild, Arcane Intellect). Click a name to cast the buff on them, without targeting them; right-click casts the group version. When three players of the same group lack the buff, a single "Group N" line casts the group version directly. A player out of range is faded. The panel hides in combat and comes back afterwards; the cross closes it until the end of the next fight. A key can also cast its first line, even with the panel closed: pick it in the game key bindings (see "Game key bindings" below). Drag it by its title: its position is kept for each character. It has its own switch, separate from the small grey icon on the cell ("Missing group buff").
 - **Buffs meant for a single person** (shaman: Earth Shield; druid: Thorns): as long as yours is on nobody, the missing buffs panel offers a line for the tank, out of combat. Prefer another player? Hover their cell and type `/lyorune bearer` (or `/lyorune bearer Name`): they come before the tank, for this character. The same command on the same player brings you back to the tank. If your buff is already on someone, Lyorune asks nothing.
 
 ### Lists
@@ -320,6 +324,10 @@ Each list sits in its own chapter: "My spells to track" in My heals (Tracked spe
 
 - **Boss private auras** (Debuffs chapter): some boss debuffs are hidden from addons. The game still agrees to draw them itself on the frame: choose their size and position (centre, top, bottom, left or right) in the fine settings. Two at most per player.
 - **Heal absorb** (Health and range chapter, fine settings of the Health part): the dark red band at the end of the health shows what a debuff "eats". Your heals fill it first. The amount comes from the game and stays accurate in combat.
+- **Crowd-controlled player** (Debuffs chapter, Important part): a stunned, feared, polymorphed or sleeping player shows the icon of the crowd control in the centre of their cell, with a red edge. The game itself recognises crowd control: it works in the middle of combat.
+
+- **Players' big defensives** (Players chapter, On the cell part): Shield Wall, Last Stand, Divine Shield, Divine Protection, Blessings of Protection and Sacrifice, Evasion, Barkskin, Ice Block, Deterrence and Stoneform show their icon, with a blue edge, on the cell of the player who has them, whoever cast them. Two at most, on the right edge of the cell (just before the health number in Bar and Strip). You know at once who is taking hits safely and who needs your heals. If you cast one of these spells yourself (Blessing of Protection), it leaves the row of your heals so it is not shown twice.
+
 - **Glow and sound** (Debuffs chapter, Important part): a debuff from your "Highlight" list, or a boss debuff, surrounds the frame with a golden outline. The sound, to turn on in the fine settings, plays for those in your list.
   Good to know: in combat the game often hides boss debuff names. Lyorune then cannot tell which one is applied: the outline still works (the game itself decides whether it is a boss debuff), the sound does not.
 
@@ -402,6 +410,7 @@ This list is also in game: Window and help chapter, "Commands".
 | `/lyorune assistant` | Setup assistant (three questions) |
 | `/lyorune verrou` | Lock or unlock the position |
 | `/lyorune reset` | Move the frames back to the centre |
+| `/lyorune frames` | Show or hide the frames (out of combat) |
 | `/lyorune pin` | Pin or unpin the hovered player (or your target, or the name typed after) |
 | `/lyorune bearer` | The hovered player (or your target, or the name typed after) gets your single-target buffs instead of the tank; a 2nd time: back to the tank |
 | `/lyorune group` | Group players who have Lyorune |
@@ -409,3 +418,14 @@ This list is also in game: Window and help chapter, "Commands".
 | `/lyorune measure` | Measure performance (out of combat) |
 | `/lyorune bug` | Report a problem |
 | `/lyorune nouveautes` | See what is new in this version |
+
+## Game key bindings
+
+Four Lyorune actions can get a key: Esc, Options, Keybindings, AddOns section, Lyorune. No key is set at first: you choose your own.
+
+| Binding | Effect |
+|---|---|
+| Open or close the options | Same as `/lyorune` |
+| Show or hide the frames | Out of combat. Once hidden, they stay hidden even in combat, until the next press (or `/lyorune frames`). They come back by themselves after a `/reload` or at your next login. |
+| Cast the next missing buff | Out of combat: casts the first line of the missing buffs panel, even with the panel closed. Press as many times as there are lines left. |
+| Test mode | Same as `/lyorune test` |

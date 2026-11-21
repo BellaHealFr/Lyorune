@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.28.0] - 2026-11-21
+
+### Added
+
+- Players' big defensives on their cell (Players chapter, On the cell section): Shield Wall, Divine Shield, Blessing of Protection, Barkskin, Evasion, Ice Block..., cast by anyone, with a blue edge, visible in combat, two at most.
+- Stunned, feared or polymorphed players: the crowd control icon in the centre of their cell, with a red edge, recognised by the game even in combat (Debuffs chapter, Important section).
+- Game key bindings (Esc, Options, Keybindings, AddOns, Lyorune): open the options, show or hide the frames, cast the next missing buff, test mode. No key set by default. Also /lyorune frames to show or hide the frames.
+
+### Improved
+
+- Both new icons can be placed and resized in "Place the cell elements...", and show on the preview cell and in test mode.
+- Player guide and guided tour: the new icons, the game key bindings, and spell ranks on a low-level player (the game already picks the right one).
+
 ## [1.27.1] - 2026-11-21
 
 ### Fixed
@@ -535,6 +548,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0
 [1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.1...v1.26.0

@@ -844,7 +844,7 @@ function Z.BuildVisuals(b)
 	b.selected:SetColor(1, 1, 1, 1)
 	b.selected:SetAlpha(0)
 
-	b.hots, b.hotBars, b.debuffs = {}, {}, {}
+	b.hots, b.hotBars, b.debuffs, b.defensives = {}, {}, {}, {}
 end
 
 -- Dissipation possible : contour et voile de la couleur du type (shown = false : rien).
@@ -1160,6 +1160,7 @@ end
 -- Lyorune n'a donc jamais à afficher ou masquer un cadre pendant un combat (le jeu le lui interdirait).
 -- En mode test, les vrais cadres reviennent d'eux-mêmes si un combat commence.
 local function VisibilityRule(def)
+	if Z.framesHidden then return "hide" end -- masqués par le joueur (raccourci ou /lyorune cadres), même en combat
 	local combat = Z.previewActive or db.visibility == "COMBAT"
 	if def.raid then
 		return combat and "[group:raid,combat] show; hide" or "[group:raid] show; hide"
@@ -1458,6 +1459,17 @@ end
 
 function Z:SaveFrameState(key)
 	if Z.header then db[key or "frameState"] = Z:FrameState() end
+end
+
+-- Raccourci « Afficher ou masquer les cadres » et /lyorune cadres. Hors combat seulement : le jeu interdit de
+-- changer la règle de visibilité en combat. Pour cette session : après /reload ou à la connexion, les cadres
+-- reviennent (un joueur qui a oublié les avoir masqués ne croit pas l'addon cassé).
+function Z:ToggleFramesShown()
+	if InCombatLockdown() then return Z:Print(L["les cadres s'affichent ou se masquent hors combat seulement."]) end
+	Z.framesHidden = not Z.framesHidden or nil
+	Z:Safe("layout", ApplyLayout)
+	Z:Print(Z.framesHidden and L["cadres masqués, même en combat. La même touche ou /lyorune cadres les ramène."]
+		or L["cadres affichés."])
 end
 
 -- Appelé après chaque changement d'option

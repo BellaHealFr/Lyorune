@@ -135,6 +135,7 @@ local steps = {
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
+			.. "Liseré |cff73ccffbleu|r : un gros défensif posé sur lui ; liseré |cffff4d33rouge|r au centre : il est étourdi, apeuré ou métamorphosé. "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics.",
 		target = Cell,
 		around = Block,
@@ -213,7 +214,8 @@ local steps = {
 		title = "C'est parti",
 		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
-			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
+			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
+			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns.\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur.",
 	},

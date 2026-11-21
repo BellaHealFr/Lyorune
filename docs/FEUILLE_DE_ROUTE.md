@@ -35,7 +35,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 19 | 1.23.x | Revue complète du code, par lots ; une version corrective par lot qui corrige un bug | Publiée (v1.23.8) |
 | 20 | 1.26.0 | Nouvelle fenêtre d'options : chapitres, case témoin, réglages changés, lumière de soin | Publiée (v1.26.0) |
 | 21 | 1.27.0 | Icônes à la mesure de chaque forme de case, taille réglable dans l'éditeur de placement | Publiée (v1.27.0) |
-| 22 | 1.28.0 | Rang adapté au niveau du joueur soigné, défensifs et contrôles sur les cases, raccourcis du jeu | À faire |
+| 22 | 1.28.0 | Défensifs et contrôles sur les cases, raccourcis du jeu (le rang adapté, déjà fait par le jeu, est abandonné) | Publiée (v1.28.0) |
 | 23 | 1.29.0 | Trois affaiblissements à dissiper, mes sorts externes, joueur qui boit, mana basse au bord de l'écran, règle des 5 secondes | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -285,22 +285,98 @@ Choisies après une comparaison avec les addons de soin portés sur WoW Forever 
 Les points marqués « à vérifier » se décident avec l'auteur avant tout codage. Chaque fonction a son interrupteur.
 
 ## Étape 22 : rangs, défensifs, contrôles, raccourcis (1.28.0)
-- [ ] Lot 1 : vérifications techniques, décidées avec l'auteur avant tout codage. Rangs : règle du jeu entre le
+- [x] Lot 1 : vérifications techniques, décidées avec l'auteur avant tout codage. Rangs : règle du jeu entre le
   niveau d'un rang et celui de la cible, fonction qui donne le niveau d'apprentissage d'un rang, niveau d'un
   joueur lisible en combat ou non. Contrôles : filtre « CROWD_CONTROL » des conteneurs d'auras sur ce client.
   Défensifs : conteneur « HELPFUL » avec une liste de sorts, quel que soit le lanceur, visible en combat.
   Raccourcis : `Bindings.xml` et touche qui lance le panneau des buffs manquants (bouton sécurisé)
-- [ ] Lot 2 : rang adapté au niveau du joueur soigné. Un clic sur un joueur de trop bas niveau lance le meilleur
+  - Vérifié dans le code du jeu de ce client (21 novembre 2026) : `C_Spell.GetSpellLevelLearned` existe et
+    n'est pas secret, `UnitLevel` non plus ; un bouton sécurisé lance un rang précis quand l'attribut « spell »
+    est un numéro (`CastSpellByID`) ; `Bindings.xml` se charge tout seul, et une touche `CLICK Bouton:LeftButton`
+    clique un bouton sécurisé (forme déjà utilisée sur ce client). Le filtre « CROWD_CONTROL » et les listes de
+    sorts sont lus par le jeu lui-même : seul un essai en jeu les confirme.
+  - Règle des rangs (celle de Classic) : un sort qui pose une aura (buff, soin sur la durée, bouclier,
+    bénédiction) échoue sur un joueur qui a plus de 10 niveaux de moins que le niveau d'apprentissage du rang.
+    Les soins directs ne sont pas concernés. À confirmer pendant l'essai.
+  - Les catégories toutes faites du jeu pour les défensifs laissent passer tous les buffs d'un joueur dans une
+    autre zone : liste de sorts à nous, numéros de Forever trouvés par une recherche dans le jeu.
+  - Décidé (carte blanche de l'auteur, 21 novembre 2026) : le rang adapté vaut aussi pour le panneau des buffs
+    (rangs des buffs de groupe ajoutés à `Data.lua`) ; son interrupteur est activé au départ (il ne lance jamais
+    plus fort que le rang choisi, il évite seulement l'échec) ; essai en jeu court avant les lots 2 et 3, avec un
+    petit addon d'essai local jamais publié (`essais/LyoruneEssai`) : niveaux des rangs, règle des 10 niveaux,
+    filtre des contrôles, listes de sorts sur un allié (affaiblissements et buffs), recherche des numéros des
+    défensifs et des rangs des buffs. L'essai vérifie aussi la liste « À mettre en avant », déjà publiée : une
+    liste de numéros ne trouverait pas les affaiblissements d'un allié (signalé dans HealKit).
+  - Touche du prochain buff : poser `useOnKeyDown` sur les lignes du panneau (comme C11) et vider les lignes
+    cachées, pour qu'une touche ne lance jamais un ancien buff. Afficher ou masquer les cadres : hors combat.
+  - Résultat de l'essai en jeu (21 novembre 2026, druide niveau 22, build 1.60.1.71037) : le niveau
+    d'apprentissage d'un rang suit celui de Classic (Récupération 4, 10, 16...) et reste lisible en combat, comme
+    le niveau du joueur, de party1 et de la cible. Un conteneur « HELPFUL » avec une liste de numéros montre un
+    buff posé par un autre joueur, sur moi comme sur party1 : la méthode des défensifs marche. Le filtre
+    « HARMFUL|CROWD_CONTROL » est accepté sans erreur, mais aucun contrôle n'était actif pendant l'essai.
+    Numéros des défensifs et des rangs des buffs de groupe trouvés (ceux de Classic, plus quelques doubles
+    propres à Forever) ; absents du jeu : Cape d'ombre, Suppression de la douleur, Esprit gardien, Écorce de fer,
+    Instincts de survie, Rage du chaman, Bénédiction de salut (1038, 25895). Pas encore vu : la règle des
+    10 niveaux (aucun joueur de bas niveau ciblé ; l'essai ne retrouvait pas la cible, car sur Forever le nom reçu
+    au lancement porte le nom de famille, corrigé) et un affaiblissement sur un allié pour la liste
+    « À mettre en avant ». Complément d'essai court demandé à l'auteur.
+  - Complément d'essai (21 novembre 2026, 12:15) : Marque du fauve lancée normalement (par son nom) sur des
+    joueurs de niveau 1 à 17 : le jeu a lancé tout seul le rang 2 (appris au niveau 10) sur les niveaux 1 à 8 et
+    le rang 3 (appris au niveau 20) sur les niveaux 13 et 17. **Le jeu baisse déjà le rang** selon la règle de
+    Classic (niveau d'apprentissage moins 10). Le filtre « CROWD_CONTROL » montre bien Sonner ou Racines
+    empoignantes sur un monstre (vu par l'auteur). Reste à voir pendant l'essai du lot 5 : un affaiblissement
+    sur un allié dans la liste « À mettre en avant ».
+  - Décidé (carte blanche, 21 novembre 2026) : le lot 2 est abandonné. Les clics de Lyorune (`Clicks.lua`) et
+    le panneau des buffs (`Buffs.lua`) lancent les sorts par leur nom : le jeu choisit déjà le meilleur rang que
+    le joueur peut recevoir. Une phrase du guide le dira aux joueurs. Les lots 3 et 4 restent prévus.
+- [x] Lot 2 (abandonné : le jeu le fait déjà, voir le lot 1) : rang adapté au niveau du joueur soigné. Un clic sur un joueur de trop bas niveau lance le meilleur
   rang qu'il peut recevoir, jamais plus fort que le rang choisi ; calculé hors combat, case par case, à chaque
   changement de niveau ou de groupe ; en combat, la case garde le rang calculé (`Clicks.lua`, interrupteur)
-- [ ] Lot 3 : gros défensifs des autres joueurs sur la case (Mur protecteur, Bouclier divin, Bénédiction de
+- [x] Lot 3 : gros défensifs des autres joueurs sur la case (Mur protecteur, Bouclier divin, Bénédiction de
   protection, Écorce, Évasion, Bloc de glace...), liste par classe dans `Data.lua` (`Z.defensives`) ; joueurs
   étourdis, apeurés ou métamorphosés sur la case. Icônes dessinées par le jeu (`Containers.lua`), visibles en
   combat, placées dans l'éditeur de placement, chacune son interrupteur
-- [ ] Lot 4 : raccourcis du jeu (Options, Raccourcis, AddOns) : ouvrir Lyorune, afficher ou masquer les cadres,
+  - Fait le 21 novembre 2026 (tests passés, installé, à essayer en jeu au lot 5). Décidé avec carte blanche :
+    deux conteneurs de plus par case, « defensives » (filtre « HELPFUL », numéros de `Z.defensiveIds`, deux
+    icônes au plus, `Z.DEFENSIVE_COUNT`) et « controls » (filtre « HARMFUL|CROWD_CONTROL », une icône) ;
+    réglages `showDefensives` (chapitre Joueurs, Sur la case) et `showControls` (Affaiblissements, Importants),
+    allumés au départ ; éléments « defensives » et « controls » dans l'éditeur de placement, taille réglable.
+  - Places d'origine (`Z.AuraRows`, Themes.lua) : défensifs au milieu du bord droit en Tuile et Carré, sur la
+    ligne du texte juste avant le chiffre de vie en Barre et Bandeau, à la taille des soins ; contrôle au centre
+    de la case (de la barre de vie en Barre et Bandeau), 1,2 fois l'icône de rôle. Liseré bleu clair pour les
+    défensifs, rouge pour le contrôle (`Z.DEFENSIVE_EDGE`, `Z.CONTROL_EDGE`, posés par `SetColorTexture` à la
+    création du bouton). Un de mes sorts suivis qui est aussi un défensif (Bénédiction de protection) quitte la
+    rangée de mes soins tant que les défensifs sont allumés : jamais montré deux fois.
+  - Numéros vérifiés par leur nom dans le jeu (`Z:BuildData`), comme les rangs. Ancien affichage (client sans
+    conteneurs), mode test (défensif sur la case témoin, contrôle sur un faux joueur sur onze) et case
+    d'exemple de l'éditeur suivent. Guide fr et en et une ligne dans la carte « Ce que disent les couleurs »
+    de la visite déjà faits.
+  - À voir pendant l'essai en jeu : le liseré de couleur (`SetColorTexture` sur un bouton du jeu), un
+    contrôle sur un allié (le filtre a été vu sur un monstre), un défensif d'un autre joueur en combat, la
+    place en Barre et en Bandeau (le chiffre de vie ne doit pas être couvert).
+- [x] Lot 4 : raccourcis du jeu (Options, Raccourcis, AddOns) : ouvrir Lyorune, afficher ou masquer les cadres,
   poser le prochain buff manquant (hors combat), mode test. Aucune touche posée au départ
-- [ ] Lot 5 : tests, guide du joueur fr et en, une ligne dans une carte existante de la visite, `## Notes`,
+  - Fait le 21 novembre 2026 (tests passés, installé, à essayer en jeu au lot 5). `Bindings.xml` (chargé tout
+    seul par le jeu, absent du .toc : `publier.py` l'ajoute à l'archive, le paquet CurseForge le prend déjà),
+    rubrique AddOns, en-tête « Lyorune ». Noms traduits dans `Z.bindingNames` (Core.lua), posés par
+    `Z.NameBindings` à la fin de `Z:SetLanguage` ; actions par `Lyorune_Binding("OPTIONS" | "FRAMES" | "TEST")`.
+  - Décidé (carte blanche) : cadres masqués par `Z.framesHidden` (règle de visibilité « hide », Frames.lua),
+    hors combat seulement (le jeu interdit de changer la règle en combat), masqués même en combat, jamais
+    sauvé (retour à la connexion ou après /reload) ; aussi `/lyorune cadres` (`frames`), ajouté à la liste
+    des commandes. Prochain buff : bouton sécurisé caché `LyoruneNextBuff` (Buffs.lua, créé au chargement),
+    copie de la première ligne du panneau, même panneau fermé par la croix ; vidé quand plus rien ne manque,
+    panneau éteint, et à l'entrée en combat ; sens de la touche comme les cases (`useOnKeyDown`, C11) ; un mot
+    dans le chat si on appuie en combat ou sans buff à poser. Phrase des raccourcis sous « Commandes » et dans
+    la description du panneau des buffs ; guide fr et en (section « Les raccourcis du jeu »).
+  - À voir pendant l'essai en jeu : la rubrique Lyorune dans les raccourcis (noms en français), une touche
+    sur le prochain buff (bouton caché cliqué par le jeu), « lancer à l'appui » du jeu allumé puis éteint.
+- [x] Lot 5 : tests, guide du joueur fr et en, une ligne dans une carte existante de la visite, `## Notes`,
   README, site, essai en jeu par l'auteur, publication
+  - Fait le 21 novembre 2026 : tests passés (89 étapes), phrase des rangs dans le guide fr et en (section
+    « Soigner d'un clic »), raccourcis du jeu ajoutés à la carte « C'est parti » de la visite (fr et en),
+    `## Notes`, README fr et en, site (liste, carte « Tout voir », llms.txt), installé. Reste : essai en jeu
+    par l'auteur (points des lots 3 et 4, et un affaiblissement d'un allié dans « À mettre en avant ») : « tout est ok »,
+    description GitHub, publication, retrait de `essais/LyoruneEssai` de `Interface\AddOns`.
 
 ## Étape 23 : dissipation, sorts externes, mana (1.29.0)
 Classées par intérêt pour les joueurs, puis par coût.

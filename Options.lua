@@ -1575,7 +1575,7 @@ local COMMANDS = {
 	{ "", "ouvrir cette fenêtre" }, { " test", "mode test (faux groupe)" }, { " tuto", "relancer le tutoriel" },
 	{ " assistant", "assistant de départ" }, { " verrou", "verrouiller ou libérer la position" },
 	{ " epingler", "épingler ou retirer le joueur survolé" }, { " porteur", "le joueur survolé reçoit mes buffs uniques" },
-	{ " groupe", "qui a Lyorune dans le groupe" }, { " annuler", "annuler le dernier import" },
+	{ " cadres", "afficher ou masquer les cadres" }, { " groupe", "qui a Lyorune dans le groupe" }, { " annuler", "annuler le dernier import" },
 	{ " mesure", "mesurer les performances" }, { " bug", "signaler un bug" }, { " diag", "compatibilité avec le jeu" },
 }
 
@@ -1591,6 +1591,8 @@ local function CommandList(page, width)
 	box.Update = function()
 		local c, lines = "|cff" .. UI.Hex("accent"), {}
 		for i, command in ipairs(COMMANDS) do lines[i] = c .. "/lyorune" .. command[1] .. "|r  " .. L[command[2]] end
+		-- les raccourcis du jeu (Bindings.xml) : où les trouver, aucune touche n'étant posée au départ
+		lines[#lines + 1] = "\n" .. L["Touches au choix dans les raccourcis du jeu (Échap, Options, Raccourcis, AddOns, Lyorune) : ouvrir les options, afficher ou masquer les cadres, poser le prochain buff manquant, mode test. Aucune touche au départ."]
 		list:SetText(table.concat(lines, "\n"))
 		Fit(box, math.ceil(list:GetStringHeight()) + 2)
 	end
@@ -1872,6 +1874,7 @@ local function Chapters()
 			{ "Importants", {
 				{ "check", "bossDebuffs", "Affaiblissement important en grand", "Ceux des boss, et ceux de votre liste « À mettre en avant », plus bas." },
 				{ "check", "importantGlow", "Contour lumineux si important", "La case s'entoure d'un contour doré qui pulse. Marche en combat pour les affaiblissements de boss : le jeu décide lui-même." },
+				{ "check", "showControls", "Joueur sous contrôle", "Étourdi, apeuré, métamorphosé, endormi... : l'icône du contrôle au centre de la case, avec un liseré rouge. Le jeu le reconnaît lui-même, même en combat.", desc = "Étourdi, apeuré, métamorphosé : son icône au centre de la case." },
 				ListBox("importantNames", "À mettre en avant", "Affaiblissements affichés en grand comme ceux des boss, avec contour lumineux et son."),
 				{ "check", "importantSound", "Son pour ceux de ma liste", "Un son d'alerte quand un affaiblissement de la liste « À mettre en avant » est posé. En combat, le jeu cache souvent le nom des affaiblissements de boss : le son ne peut alors pas partir.", fine = true },
 			} },
@@ -1886,6 +1889,7 @@ local function Chapters()
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
 				{ "check", "showMarker", "Marqueur de raid" },
 				{ "check", "showLeader", "Chef de groupe et assistants", desc = "Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid." },
+				{ "check", "showDefensives", "Gros défensifs des joueurs", "Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace... : posés par n'importe qui, avec un liseré bleu, même en combat. Deux au plus, au bord droit de la case (juste avant le chiffre de vie en Barre et en Bandeau). Un de vos sorts de la liste quitte alors la rangée de vos soins.", desc = "Mur protecteur, Bouclier divin, Écorce... : posés par n'importe qui." },
 				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte).", fine = true },
 			} },
 			{ "Menace", {
@@ -1894,7 +1898,7 @@ local function Chapters()
 			} },
 			{ "Buffs", {
 				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", desc = "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
-				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat." },
+				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune." },
 			} },
 			{ "Au survol d'une case", {
 				{ "check", "showTooltip", "Infobulle au survol (hors combat)" },

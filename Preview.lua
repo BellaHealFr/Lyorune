@@ -149,6 +149,21 @@ local function Fill(cell, index, sample)
 		icon.count:SetText("")
 		icon:Show()
 	end
+	-- Gros défensif (Mur protecteur) sur la case témoin et un joueur sur huit ; contrôle subi (métamorphose) sur
+	-- un joueur sur onze du faux groupe (au centre, il cacherait le nom de la case témoin)
+	local function Sample(icon, texture)
+		icon.texture:SetTexture(texture)
+		icon.texture:SetDesaturated(false)
+		icon.cooldown:Clear()
+		icon.count:SetText("")
+		icon:Show()
+	end
+	if db.showDefensives and not dead and (sample or index % 8 == 4) then
+		Sample(Z.DefensiveIcon(cell, 1), "Interface\\Icons\\Ability_Warrior_ShieldWall")
+	end
+	if db.showControls and not dead and not sample and index % 11 == 3 then
+		Sample(Z.ControlIcon(cell), "Interface\\Icons\\Spell_Nature_Polymorph")
+	end
 	return shown
 end
 

@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.27.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.28.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -86,6 +86,8 @@ Z.defaults = {
 	showDebuffs = true, debuffMode = "ALL",
 	debuffCount = 2,           -- nombre d'icônes d'affaiblissements par case (celui à dissiper d'abord, puis les autres)
 	bossDebuffs = true,        -- affaiblissement important en grand
+	showControls = true,       -- joueur sous contrôle (étourdi, apeuré, métamorphosé) : l'icône au centre de sa case
+	showDefensives = true,     -- gros défensifs posés par n'importe qui (Z.defensives, Data.lua) : leur icône sur la case
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
 	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris
@@ -237,6 +239,32 @@ function Z:SetLanguage()
 	if wanted == "AUTO" then wanted = (GetLocale() == "frFR") and "frFR" or "enUS" end
 	activeTranslation = Z.translations[wanted] or {}
 	Z.decimalPoint = Z.translations[wanted] ~= nil -- textes traduits (anglais) : 0.25 ; en français : 0,25
+	Z.NameBindings()
+end
+
+-- Raccourcis du jeu (Bindings.xml, chargé tout seul par le jeu) : Échap, Options, Raccourcis, AddOns, Lyorune.
+-- Aucune touche n'est posée au départ : le joueur choisit les siennes. Le jeu lit ces noms quand il affiche la liste.
+Z.bindingNames = {
+	LYORUNE_OPTIONS = "Ouvrir ou fermer les options",
+	LYORUNE_FRAMES = "Afficher ou masquer les cadres (hors combat)",
+	["CLICK LyoruneNextBuff:LeftButton"] = "Poser le prochain buff manquant (hors combat)",
+	LYORUNE_TEST = "Mode test (faux groupe)",
+}
+function Z.NameBindings()
+	_G.BINDING_HEADER_LYORUNE = "Lyorune"
+	for name, text in pairs(Z.bindingNames) do _G["BINDING_NAME_" .. name] = Z.L[text] end
+end
+
+-- Appelée par les raccourcis de Bindings.xml (le prochain buff est un clic sur un bouton sécurisé, Buffs.lua)
+function Lyorune_Binding(action)
+	if not Z.header then return end -- Lyorune n'a pas pu démarrer
+	if action == "OPTIONS" then
+		Z:Try("raccourci : options", Z.ToggleOptions, Z)
+	elseif action == "FRAMES" then
+		Z:Try("raccourci : cadres", Z.ToggleFramesShown, Z)
+	elseif action == "TEST" then
+		Z:Try("raccourci : mode test", Z.TogglePreview, Z)
+	end
 end
 
 -- Nombre à virgule écrit pour le joueur : « 0,25 » en français, « 0.25 » en anglais
@@ -470,6 +498,8 @@ function Z.Command(msg)
 		Z:Print(select(2, Z:UndoImport()))
 	elseif msg == "test" then
 		Z:TogglePreview()
+	elseif msg == "cadres" or msg == "frames" then
+		Z:ToggleFramesShown()
 	elseif msg == "mesure" or msg == "perf" or msg == "measure" then
 		Z:ShowMeasure()
 	elseif msg == "nouveautes" or msg == "nouveautés" or msg == "news" then

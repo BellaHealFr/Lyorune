@@ -25,6 +25,8 @@ Z.placeElements = {
 	{ "hots", "Mes soins sur la durée" },
 	{ "debuffs", "Affaiblissements" },
 	{ "big", "Affaiblissement important" },
+	{ "controls", "Joueur sous contrôle" },
+	{ "defensives", "Gros défensifs" },
 	{ "buff", "Buff manquant" },
 	{ "private", "Auras privées" },
 }
@@ -32,7 +34,7 @@ local KNOWN = {}
 for _, element in ipairs(Z.placeElements) do KNOWN[element[1]] = true end
 -- Ceux dont la taille se règle ici : les icônes (le nom, le texte de vie et les auras privées ont leur réglage)
 local SIZED = { role = true, marker = true, leader = true, center = true, lowMana = true, hots = true,
-	debuffs = true, big = true, buff = true }
+	debuffs = true, big = true, buff = true, controls = true, defensives = true }
 
 function Z.IsPlaceElement(key)
 	return KNOWN[key] == true
@@ -182,6 +184,8 @@ local function Origins(power, roleRect)
 		Row("hots", rows.hots)
 	end
 	Row("debuffs", rows.debuffs)
+	Row("defensives", rows.defensives)
+	Row("controls", rows.controls)
 	local big, buff = Z.BigIconSize(), Z.ElementSize("buff", icon)
 	Put("big", "LEFT", cell, "LEFT", 3, 0, big, big)
 	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, buff, buff)
@@ -333,7 +337,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- La fenêtre : la liste des éléments à gauche, la case d'exemple à droite, les flèches dessous
 ----------------------------------------------------------------------------------------------------
-local WIDTH, HEIGHT = 580, 480
+local WIDTH, HEIGHT = 580, 512
 local STAGE_W, STAGE_H = 352, 232
 local win, stage, cell, highlight
 local selected = "name"
@@ -342,6 +346,8 @@ local drag
 local SAMPLE_ICONS = {
 	debuffs = { "Interface\\Icons\\Spell_Shadow_CurseOfTounges", "Interface\\Icons\\Spell_Nature_Slow" },
 	big = "Interface\\Icons\\Spell_Shadow_ShadowWordPain",
+	defensives = { "Interface\\Icons\\Ability_Warrior_ShieldWall", "Interface\\Icons\\Spell_Holy_DivineIntervention" },
+	controls = "Interface\\Icons\\Spell_Nature_Polymorph",
 	buff = "Interface\\Icons\\Spell_Holy_WordFortitude",
 	private = "Interface\\Icons\\INV_Misc_QuestionMark",
 }
@@ -370,6 +376,10 @@ local function Regions(key)
 		return Row(cell.debuffs, Z.db.debuffCount)
 	elseif key == "big" then
 		return { cell.bigIcon }
+	elseif key == "defensives" then
+		return Row(cell.defensives, Z.DEFENSIVE_COUNT)
+	elseif key == "controls" then
+		return { cell.controlIcon }
 	elseif key == "buff" then
 		return { cell.buffIcon }
 	elseif key == "private" then
@@ -468,6 +478,15 @@ local function Draw()
 		SampleIcon(Z.DebuffIcon(cell, index), SAMPLE_ICONS.debuffs[(index - 1) % #SAMPLE_ICONS.debuffs + 1])
 	end
 	SampleIcon(Z.BigIcon(cell), SAMPLE_ICONS.big)
+	-- Gros défensifs et contrôle : leur liseré de couleur, comme sur les vraies cases
+	local function Edge(icon, color) icon.border:SetColor(color[1], color[2], color[3], 1) end
+	for index = 1, Z.DEFENSIVE_COUNT do
+		local icon = Z.DefensiveIcon(cell, index)
+		SampleIcon(icon, SAMPLE_ICONS.defensives[(index - 1) % #SAMPLE_ICONS.defensives + 1])
+		Edge(icon, Z.DEFENSIVE_EDGE)
+	end
+	SampleIcon(Z.ControlIcon(cell), SAMPLE_ICONS.controls)
+	Edge(cell.controlIcon, Z.CONTROL_EDGE)
 	local buff = Z.BuffIcon(cell)
 	SampleIcon(buff, SAMPLE_ICONS.buff)
 	buff.texture:SetDesaturated(true)
@@ -698,7 +717,7 @@ local function BuildWindow()
 	win.reset:SetPoint("TOPLEFT", win.smaller, "BOTTOMLEFT", 0, -8)
 	win.reset.label:SetJustifyH("CENTER")
 	win.reset.tip = L["Place et taille d'origine de cet élément."]
-	-- Les 12 éléments d'un coup : un second clic confirme (Options.lua)
+	-- Tous les éléments d'un coup : un second clic confirme (Options.lua)
 	win.resetAll = Z.ArmedButton(win, "Tout remettre", "Confirmer", 172, function()
 		Z.ResetPlacement()
 		Changed()
@@ -709,7 +728,7 @@ local function BuildWindow()
 	win.resetAll.tip = L["Tous les éléments de cette forme de case reviennent à leur place et à leur taille d'origine."]
 
 	local note = UI.Label(win, 11, nil, "dim")
-	note:SetPoint("TOPLEFT", 16, -404)
+	note:SetPoint("TOPLEFT", 16, -436)
 	note:SetPoint("RIGHT", -16, 0)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)

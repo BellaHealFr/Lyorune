@@ -113,7 +113,7 @@ local function Fit(n, size, line, maxH, canWrap)
 	return math.min(size, small), each, math.ceil(n / each)
 end
 
--- Rend { hots = rangée, debuffs = rangée, textX, textW, nameX, nameW }. Une rangée : point d'accroche, cadre
+-- Rend { hots, debuffs, defensives, controls (des rangées), textX, textW, nameX, nameW }. Une rangée : point d'accroche, cadre
 -- ("CELL" la case, "HP" la barre de vie), décalage x et y, taille des icônes, icônes par ligne, lignes, sens
 -- (dirX, dirY), largeur et hauteur. textX, textW, nameX, nameW : place du chiffre de vie et du nom, et leurs
 -- largeurs (Barre, Bandeau). La taille choisie dans l'éditeur de placement (Z.ElementScale) agrandit ou réduit
@@ -198,6 +198,26 @@ function Z.AuraRows()
 
 		end
 	end
+
+	-- Gros défensifs des joueurs (Z.DEFENSIVE_COUNT au plus) : Tuile et Carré, au milieu du bord droit, entre l'icône
+	-- de rôle et les affaiblissements ; Barre et Bandeau, sur la ligne du texte, juste avant le chiffre de vie. Ils
+	-- partent du côté droit vers la gauche. « flow » : coin d'où le conteneur du jeu range ses icônes.
+	local n = Z.DEFENSIVE_COUNT
+	local wanted = math.max(MIN_ICON, math.floor(size * Z.ElementScale("defensives") + 0.5))
+	local hpH = H - 2 * inset - (db.manaBars ~= "OFF" and Z.PowerHeight() + 1 or 0)
+	local s = Fit(n, wanted, math.floor(W * 0.5), inline and math.max(MIN_ICON, hpH - 2) or maxH, false)
+	local x = -2
+	if inline then
+		x = rows.textX - (inline == "BLOCK" and rows.textW or math.ceil(font * 3.2)) - GAP
+	end
+	rows.defensives = { point = "RIGHT", relative = inline and "HP" or "CELL", x = x, y = 0, size = s, perLine = n,
+		lines = 1, dirX = -1, dirY = -1, flow = "TOPRIGHT", width = n * (s + GAP) - GAP, height = s }
+
+	-- Contrôle subi (étourdi, apeuré, métamorphosé) : une icône au centre, un peu plus grande que les autres
+	wanted = math.max(MIN_ICON, math.floor(math.floor(icon * 1.2 + 0.5) * Z.ElementScale("controls") + 0.5))
+	s = Fit(1, wanted, W - 4, inline and math.max(MIN_ICON, hpH - 2) or H - 4, false)
+	rows.controls = { point = "CENTER", relative = inline and "HP" or "CELL", x = 0, y = 0, size = s, perLine = 1,
+		lines = 1, dirX = 1, dirY = -1, flow = "TOPLEFT", width = s, height = s }
 	return rows
 end
 

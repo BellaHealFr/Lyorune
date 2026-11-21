@@ -12,6 +12,7 @@
 --   5. Z.raidBuffs.MACLASSE : ses buffs de groupe, s'il en a
 --   6. Z.uniqueBuffs.MACLASSE : ses buffs à poser sur une seule personne (le tank), s'il en a
 --   7. Z.classPower.MACLASSE : sa ressource si ce n'est pas la mana (rage, énergie...)
+--   8. Z.defensives.MACLASSE : ses gros défensifs, montrés sur sa case à tous les soigneurs
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -121,6 +122,31 @@ Z.uniqueBuffs = {
 	DRUID  = { 467 },     -- Épines
 }
 
+-- Gros défensifs, posés par n'importe quel joueur : leur icône va sur la case de celui qui les porte (réglage
+-- « showDefensives »), même en combat (Containers.lua). Une ligne par sort : le premier numéro, puis les autres
+-- numéros du même sort sur WoW Forever (rangs, doubles propres au jeu), trouvés par une recherche dans le jeu
+-- le 21 novembre 2026. Un numéro dont le nom, lu dans le jeu, n'est pas celui du premier est ignoré (Z:BuildData).
+-- Absents de ce client : Cape d'ombre, Suppression de la douleur, Esprit gardien, Écorce de fer, Instincts de
+-- survie, Rage du chaman, Bénédiction de salut. RACIAL : les sorts de race, pour toutes les classes.
+Z.defensives = {
+	WARRIOR = {
+		{ 871, 15062, 29061, 1277424 },     -- Mur protecteur
+		{ 12975, 12976 },                   -- Dernier rempart
+	},
+	PALADIN = {
+		{ 642, 1020, 13874 },               -- Bouclier divin
+		{ 498, 5573, 13007, 27778, 458312, 458371, 1213300 }, -- Protection divine
+		{ 1022, 5599, 10278, 442948 },      -- Bénédiction de protection
+		{ 6940, 20729 },                    -- Bénédiction de sacrifice
+	},
+	ROGUE   = { { 5277, 15087 } },          -- Évasion
+	DRUID   = { { 22812 } },                -- Écorce
+	MAGE    = { { 11958, 27619 } },         -- Bloc de glace
+	HUNTER  = { { 19263 } },                -- Dissuasion
+	RACIAL  = { { 20594, 7020 } },          -- Forme de pierre (nain)
+}
+Z.DEFENSIVE_COUNT = 2 -- gros défensifs montrés au plus sur une case
+
 -- Affaiblissements sans intérêt pour un soigneur
 Z.ignoredDebuffs = {
 	[11196] = true, -- Bandé récemment
@@ -196,6 +222,18 @@ function Z:BuildData()
 				if Z.SpellName(id) == name then set[id] = true end
 			end
 			Z.rankIds[name] = set
+		end
+	end
+	-- Numéros des gros défensifs de toutes les classes, vérifiés par leur nom : Z.defensiveIds[871] = true
+	Z.defensiveIds = {}
+	for _, spells in pairs(Z.defensives) do
+		for _, ids in ipairs(spells) do
+			local name = Z.SpellName(ids[1])
+			if name then
+				for _, id in ipairs(ids) do
+					if Z.SpellName(id) == name then Z.defensiveIds[id] = true end
+				end
+			end
 		end
 	end
 	-- Les conteneurs d'auras du jeu filtrent par numéro de sort : ils suivent les sorts de la classe

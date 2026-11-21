@@ -8,6 +8,20 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.28.0", date = "2026-11-21",
+		added = {
+			"Gros défensifs des joueurs sur leur case (chapitre Joueurs, partie Sur la case) : Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace..., posés par n'importe qui, avec un liseré bleu, visibles en combat, deux au plus.",
+			"Joueurs étourdis, apeurés ou métamorphosés : l'icône du contrôle au centre de leur case, avec un liseré rouge, reconnue par le jeu même en combat (chapitre Affaiblissements, partie Importants).",
+			"Raccourcis du jeu (Échap, Options, Raccourcis, AddOns, Lyorune) : ouvrir les options, afficher ou masquer les cadres, poser le prochain buff manquant, mode test. Aucune touche au départ. Aussi /lyorune cadres pour afficher ou masquer les cadres.",
+		},
+		improved = {
+			"Les deux nouvelles icônes se placent et se dimensionnent dans « Placer les éléments de la case... », et se voient sur la case témoin et dans le mode test.",
+			"Guide du joueur et visite guidée : les nouvelles icônes, les raccourcis du jeu, et le rang des sorts sur un joueur de bas niveau (le jeu choisit déjà le bon).",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.27.1", date = "2026-11-21",
 		added = {
 		},

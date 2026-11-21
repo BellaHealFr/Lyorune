@@ -16,6 +16,7 @@ rt.globals().TOC_VERSION = re.search(r'## Version: (\S+)', read(os.path.join(add
 rt.execute(read(os.path.join(here, 'mock.lua')))
 
 rt.globals().RUNES_LUA = read(os.path.join(addon, 'Runes.lua')) # rechargé à part (inscription pas encore construite)
+rt.globals().BINDINGS_XML = read(os.path.join(addon, 'Bindings.xml')) # raccourcis du jeu (étape 22, lot 4)
 rt.execute('BEFORE = {} for k in pairs(_G) do BEFORE[k] = true end')
 files = [l.strip().replace('\\', '/') for l in read(os.path.join(addon, 'Lyorune.toc')).splitlines() if l.strip().endswith('.lua')]
 rt.execute('NS = {}')
@@ -5011,7 +5012,7 @@ end)
 step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case)", function()
   local keys = { "shape", "width", "height", "corners", "manaBars", "hotStyle", "hotCount", "debuffCount",
     "privateAuraPoint", "privateAuraSize", "fontSize", "autoShrink" }
-  local saved = { placement = CopyTable(Z.db.placement), corners = Z.db.cornerSpells[Z.class] }
+  local saved = { placement = CopyTable(Z.db.placement), cornerSpells = Z.db.cornerSpells[Z.class] }
   for _, key in ipairs(keys) do saved[key] = Z.db[key] end
   local b = Z.buttons[1]
   -- Place d'un élément recalculée à partir des ancres notées par le faux client, sans passer par Placement.lua.
@@ -5063,6 +5064,11 @@ step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case
       return row
     elseif key == "big" then return { Z.BigIcon(b) }
     elseif key == "buff" then return { Z.BuffIcon(b) }
+    elseif key == "defensives" then
+      local row = {}
+      for i = 1, Z.DEFENSIVE_COUNT do row[i] = Z.DefensiveIcon(b, i) end
+      return row
+    elseif key == "controls" then return { Z.ControlIcon(b) }
     elseif key == "private" then return { (Z.PrivateHolder(b)) } end
     return { b[key] }
   end
@@ -5166,7 +5172,7 @@ step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case
   w:Hide() w:Run("OnHide")
 
   Z.db.placement = saved.placement
-  Z.db.cornerSpells[Z.class] = saved.corners
+  Z.db.cornerSpells[Z.class] = saved.cornerSpells
   for _, key in ipairs(keys) do Z.db[key] = saved[key] end
   Z:Refresh()
 end)
@@ -5280,7 +5286,7 @@ end)
 step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre, Bandeau), raid de 40", function()
   local keys = { "shape", "width", "height", "corners", "manaBars", "hotStyle", "hotCount", "debuffCount", "fontSize",
     "powerHeight", "autoShrink", "showHots", "showDebuffs", "debuffMode" }
-  local saved = { placement = CopyTable(Z.db.placement), corners = Z.db.cornerSpells[Z.class], members = MEMBERS }
+  local saved = { placement = CopyTable(Z.db.placement), cornerSpells = Z.db.cornerSpells[Z.class], members = MEMBERS }
   for _, key in ipairs(keys) do saved[key] = Z.db[key] end
   local b = Z.buttons[1]
   Z.db.placement = {} Z.db.cornerSpells[Z.class] = nil
@@ -5444,7 +5450,7 @@ step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre,
   FireEvent("ADDON_LOADED", "Lyorune")
 
   Z.db.placement = saved.placement
-  Z.db.cornerSpells[Z.class] = saved.corners
+  Z.db.cornerSpells[Z.class] = saved.cornerSpells
   MEMBERS = saved.members
   for _, key in ipairs(keys) do Z.db[key] = saved[key] end
   Z:Refresh()
@@ -5453,7 +5459,7 @@ end)
 step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50 a 200 %, par forme, partage, combat)", function()
   local keys = { "shape", "width", "height", "corners", "manaBars", "hotStyle", "hotCount", "debuffCount", "fontSize",
     "powerHeight", "autoShrink", "showHots", "showDebuffs", "debuffMode" }
-  local saved = { placement = CopyTable(Z.db.placement), corners = Z.db.cornerSpells[Z.class], members = MEMBERS }
+  local saved = { placement = CopyTable(Z.db.placement), cornerSpells = Z.db.cornerSpells[Z.class], members = MEMBERS }
   for _, key in ipairs(keys) do saved[key] = Z.db[key] end
   local b, L = Z.buttons[1], Z.L
   Z.db.placement = {} Z.db.cornerSpells[Z.class] = nil
@@ -5591,7 +5597,7 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   assert(Z.db.placement.TILE.name[3] == nil and Z.GetElementSize("marker") == 200, "taille d'un texte, ou hors limites")
 
   Z.db.placement = saved.placement
-  Z.db.cornerSpells[Z.class] = saved.corners
+  Z.db.cornerSpells[Z.class] = saved.cornerSpells
   MEMBERS = saved.members
   for _, key in ipairs(keys) do Z.db[key] = saved[key] end
   Z:Refresh()
@@ -5683,15 +5689,253 @@ step("C10 : un reglage change en combat ne donne aucun sens des clics au jeu (ac
   Z:Refresh()
 end)
 
+step("etape 22, lot 3 : gros defensifs des joueurs et controles sur la case (conteneurs du jeu, ancien affichage, placement)", function()
+  local oldName, oldCreate = C_Spell.GetSpellName, CreateFrame
+  local extra = { [871] = "Mur protecteur", [15062] = "Mur protecteur", [29061] = "Autre sort", [22812] = "Écorce" }
+  C_Spell.GetSpellName = function(id) return extra[id] or oldName(id) end
+  local form = { placement = CopyTable(Z.db.placement) }
+  for _, key in ipairs({ "shape", "width", "height", "fontSize", "powerHeight", "showDefensives", "showControls", "showHots" }) do
+    form[key] = Z.db[key]
+  end
+  local made = {}
+  local function finish()
+    C_Spell.GetSpellName, CreateFrame = oldName, oldCreate
+    AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle = nil, nil, nil
+    Z.boxWrap = nil
+    for _, c in ipairs(made) do pcall(c.SetAttribute, c, "unit", nil) end
+    for key, value in pairs(form) do Z.db[key] = value end
+    AURAS = {}
+    Z:BuildData() Z:Refresh() RunUpdates()
+  end
+  local ok, err = xpcall(function()
+    Z:BuildData()
+    -- numéros vérifiés par leur nom dans le jeu : un numéro inconnu ou d'un autre sort n'est jamais filtré
+    assert(Z.defensiveIds[871] and Z.defensiveIds[15062] and Z.defensiveIds[22812], "numeros des defensifs")
+    assert(not Z.defensiveIds[29061] and not Z.defensiveIds[1277424], "numero au mauvais nom garde")
+    for _, spells in pairs(Z.defensives) do
+      for _, ids in ipairs(spells) do assert(type(ids[1]) == "number", "ligne de Z.defensives sans numero") end
+    end
+    Z.db.placement = {}
+    Z:ApplyShape("TILE")
+
+    -- 1. Ancien affichage (client sans conteneurs) : un défensif posé par n'importe qui, un contrôle
+    local b = Z.buttons[1]
+    AURAS = {}
+    AURAS["HELPFUL"] = { { name = "Autre", icon = 9, auraInstanceID = 62, spellId = 5 },
+      { name = "Mur protecteur", icon = 8, auraInstanceID = 61, spellId = 871 } }
+    AURAS["HARMFUL|CROWD_CONTROL"] = { { name = "Métamorphose", icon = 10, auraInstanceID = 63, spellId = 118 } }
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(b.defensives[1] and b.defensives[1]:IsShown() and not (b.defensives[2] and b.defensives[2]:IsShown()),
+      "defensif absent, ou autre buff pris pour un defensif")
+    assert(b.controlIcon and b.controlIcon:IsShown(), "controle absent")
+    local row = Z.AuraRows()
+    assert(b.defensives[1]._point[1] == "RIGHT" and b.controlIcon._point[1] == "CENTER", "places d'origine (Tuile)")
+    Z.db.showDefensives, Z.db.showControls = false, false
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(not b.defensives[1]:IsShown() and not b.controlIcon:IsShown(), "interrupteurs (ancien affichage)")
+    Z.db.showDefensives, Z.db.showControls = true, true
+    -- un de mes sorts suivis qui est aussi un défensif : montré une seule fois, avec les défensifs
+    table.insert(Z.defensives.RACIAL, { 139 })
+    Z:BuildData()
+    AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 11, spellId = 139 } }
+    AURAS["HELPFUL"] = AURAS["HELPFUL|PLAYER"]
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(not (b.hots[1] and b.hots[1]:IsShown()) and b.defensives[1]:IsShown(), "defensif montre deux fois")
+    Z.db.showDefensives = false
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(b.hots[1]:IsShown(), "defensifs coupes : le sort revient dans la rangee de mes soins")
+    Z.db.showDefensives = true
+
+    -- 2. Conteneurs du jeu : filtres, liseré de couleur, places, interrupteurs
+    CreateFrame = function(kind, name, parent, template)
+      local f = oldCreate(kind, name, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      assert(not COMBAT, "conteneur cree en combat")
+      f.groups = {}
+      function f:AddAuraGroup(key, filter, options)
+        local button = oldCreate("Button", nil, self)
+        button.Edge = { SetColorTexture = function(edge, r, g, bl) edge.color = { r, g, bl } end }
+        self.groups[key] = { filter = filter, candidates = options.candidateFilters or {}, max = options.maxFrameCount,
+          size = options.layout.elementWidth, button = button }
+        options.initializeFrame(button)
+      end
+      function f:AddAuraSlot(_, _, options)
+        local button = oldCreate("Button", nil, self)
+        options.initializeFrame(button)
+        return button
+      end
+      function f:SetEnabled(on) self.enabled = on end
+      function f:SetUnit(unit) self.unit = unit end
+      function f:UpdateAllAuras() end
+      function f:SetFlowLayoutMaximumLineSize(size) self.maxLine = size end
+      function f:SetFlowLayoutAnchorPoint(point) self.flowPoint = point end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton32", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    c:SetAttribute("unit", "player")
+    assert(c.boxes and c.boxes.defensives and c.boxes.controls, "conteneurs des defensifs et des controles absents")
+    local g = c.boxes.defensives.groups.defensives
+    assert(g.filter == "HELPFUL" and g.candidates.includeSpellIDs[871] and g.max == Z.DEFENSIVE_COUNT, "defensifs : filtre")
+    assert(g.size == Z.AuraRows().defensives.size, "defensifs : taille")
+    assert(g.button.Edge.color and g.button.Edge.color[3] == Z.DEFENSIVE_EDGE[3], "defensifs : lisere bleu")
+    assert(not c.boxes.hots.groups.hots.candidates.includeSpellIDs[139], "mon sort defensif reste dans la rangee des soins")
+    local cc = c.boxes.controls.groups.controls
+    assert(cc.filter == "HARMFUL|CROWD_CONTROL" and cc.max == 1, "controles : filtre")
+    assert(cc.button.Edge.color[1] == Z.CONTROL_EDGE[1], "controles : lisere rouge")
+    local box = c.boxes.defensives
+    assert(box._point[1] == "RIGHT" and box._point[2] == c.over and box.flowPoint == "TOPRIGHT", "Tuile : defensifs au bord droit")
+    assert(c.boxes.controls._point[1] == "CENTER" and c.boxes.controls._point[2] == c.over, "Tuile : controle au centre")
+    -- Barre et Bandeau : sur la barre de vie, avant le chiffre de vie
+    for _, shape in ipairs({ "BAR", "BANNER" }) do
+      Z:ApplyShape(shape)
+      local rows = Z.AuraRows()
+      box = c.boxes.defensives
+      assert(box._point[2] == c.hp and c.boxes.controls._point[2] == c.hp, shape .. " : sur la barre de vie")
+      assert(rows.defensives.x < rows.textX, shape .. " : defensifs sur le chiffre de vie")
+      if shape == "BANNER" then
+        assert(rows.defensives.x <= rows.textX - rows.textW, "Bandeau : defensifs sur le chiffre de vie")
+      end
+      assert(rows.defensives.size >= 5 and rows.controls.size >= 5, shape .. " : icones trop petites")
+    end
+    Z:ApplyShape("TILE")
+    -- déplacés dans l'éditeur : le conteneur suit sans être refait (il n'est pas protégé)
+    local kept = c.boxes.defensives
+    Z.SetOffset("defensives", -6, 3) Z:Refresh()
+    assert(c.boxes.defensives == kept and kept._point[4] == -2 - 6 and kept._point[5] == 3, "defensifs deplaces")
+    -- plus grands : boutons refaits (le jeu fixe leur taille à la création)
+    Z.SetElementSize("controls", 150) Z:Refresh()
+    assert(c.boxes.controls.groups.controls.size == Z.AuraRows().controls.size and c.boxes.defensives ~= kept,
+      "taille du controle non appliquee")
+    Z.db.showDefensives, Z.db.showControls = false, false Z:Refresh()
+    assert(not c.boxes.defensives.groups.defensives and not c.boxes.controls.groups.controls, "interrupteurs (conteneurs)")
+    assert(c.boxes.hots.groups.hots.candidates.includeSpellIDs[139], "defensifs coupes : sort rendu a la rangee")
+    table.remove(Z.defensives.RACIAL)
+    Z.db.showDefensives, Z.db.showControls = true, true
+
+    -- 3. Éditeur de placement et mode test
+    assert(Z.IsPlaceElement("defensives") and Z.IsPlaceElement("controls") and Z.CanSize("defensives") and Z.CanSize("controls"))
+    Z:OpenPlacement()
+    local w = Z:PlacementWindow()
+    for _, button in ipairs(w.list) do if button.key == "controls" then button:Run("OnClick") end end
+    assert(w.cell.controlIcon:IsShown() and w.cell.defensives[Z.DEFENSIVE_COUNT]:IsShown(), "case d'exemple sans les nouveaux elements")
+    w:Hide()
+    local cell = Z.FakeCell(UIParent)
+    Z.DrawFakeCell(cell, 1, true)
+    assert(cell.defensives[1] and cell.defensives[1]:IsShown(), "case temoin : defensif d'exemple absent")
+    assert(not (cell.controlIcon and cell.controlIcon:IsShown()), "case temoin : controle sur le nom")
+    Z.DrawFakeCell(cell, 3, false)
+    assert(cell.controlIcon and cell.controlIcon:IsShown(), "mode test : controle d'exemple absent")
+  end, debug.traceback)
+  finish()
+  assert(ok, err)
+end)
+
+step("etape 22, lot 4 : raccourcis du jeu (Bindings.xml, cadres masques, prochain buff manquant)", function()
+  local L = Z.L
+  -- 1. Le fichier : chaque raccourci a son nom (traduit), aucune touche posée au départ, chaque action est connue
+  local names = {}
+  for attrs in BINDINGS_XML:gmatch("<Binding%s([^>]*)>") do
+    assert(not attrs:find("default", 1, true), "touche posee au depart : " .. attrs)
+    assert(attrs:find('category="ADDONS"', 1, true), "raccourci hors de la rubrique AddOns : " .. attrs)
+    local name = attrs:match('name="([^"]+)"')
+    names[#names + 1] = name
+    assert(Z.bindingNames[name], "raccourci sans nom : " .. name)
+    assert(_G["BINDING_NAME_" .. name] == L[Z.bindingNames[name]], "nom absent du jeu : " .. name)
+  end
+  assert(#names == 4 and BINDING_HEADER_LYORUNE == "Lyorune", "4 raccourcis attendus")
+  local count = 0 for _ in pairs(Z.bindingNames) do count = count + 1 end
+  assert(count == #names, "nom sans raccourci dans Bindings.xml")
+  for action in BINDINGS_XML:gmatch('Lyorune_Binding%("(%u+)"%)') do
+    assert(action == "OPTIONS" or action == "FRAMES" or action == "TEST", "action inconnue : " .. action)
+  end
+  local clickName = BINDINGS_XML:match('name="CLICK ([^:"]+):LeftButton"')
+  assert(clickName == "LyoruneNextBuff" and _G[clickName], "bouton du prochain buff absent")
+
+  -- 2. Ouvrir les options, mode test : les mêmes fonctions que /lyorune et /lyorune test
+  local window = Z:OptionsWindow()
+  local wasShown = window and window:IsShown()
+  Lyorune_Binding("OPTIONS")
+  Lyorune_Binding("OPTIONS")
+  Lyorune_Binding("TEST")
+  assert(Z.previewActive, "mode test non ouvert par le raccourci")
+  Lyorune_Binding("TEST")
+  assert(not Z.previewActive, "mode test non ferme par le raccourci")
+
+  -- 3. Afficher ou masquer les cadres : hors combat seulement, même en combat une fois masqués, rien de sauvé
+  Z:Refresh() RunUpdates()
+  local main = Z.header
+  assert(main:IsShown(), "cadre principal cache au depart")
+  Lyorune_Binding("FRAMES")
+  assert(Z.framesHidden and not main:IsShown(), "cadres non masques")
+  for _, h in ipairs(Z.headers) do assert(not h:IsShown(), "un cadre reste visible : " .. h.def.key) end
+  COMBAT = true FireEvent("PLAYER_REGEN_DISABLED") ApplyStateDrivers()
+  assert(not main:IsShown(), "cadres masques revenus en combat")
+  local printed = #PRINTED
+  Z:ToggleFramesShown()
+  assert(Z.framesHidden and #PRINTED == printed + 1 and PRINTED[#PRINTED]:find(L["les cadres s'affichent ou se masquent hors combat seulement."], 1, true), "combat : pas de message")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") ApplyStateDrivers() RunUpdates()
+  assert(Z.db.framesHidden == nil and Z.char.framesHidden == nil, "etat sauve")
+  SlashCmdList.LYORUNE("cadres")
+  assert(not Z.framesHidden and main:IsShown(), "/lyorune cadres ne ramene pas les cadres")
+
+  -- 4. Prochain buff manquant : la première ligne du panneau, vidée quand plus rien ne manque et en combat
+  local saved = { buffPanel = Z.db.buffPanel, castOnDown = Z.db.castOnDown }
+  local nextBuff = LyoruneNextBuff
+  Z.db.buffPanel = true
+  AURAS = {} Z:Refresh() RunUpdates() Z:UpdateBuffPanel()
+  local list = Z.BuffRows()
+  assert(#list >= 1, "aucun buff manquant pour l'essai")
+  assert(nextBuff:GetAttribute("type") == "spell" and nextBuff:GetAttribute("spell") == list[1].spell
+    and nextBuff:GetAttribute("unit") == list[1].unit, "prochain buff mal regle")
+  assert(nextBuff:GetAttribute("spell") == LyoruneBuffsRow1:GetAttribute("spell1"), "pas la premiere ligne du panneau")
+  assert(nextBuff:GetAttribute("useOnKeyDown") == (Z.db.castOnDown and true or false), "sens de la touche")
+  Z.db.castOnDown = not Z.db.castOnDown Z:UpdateBuffPanel()
+  assert(nextBuff:GetAttribute("useOnKeyDown") == (Z.db.castOnDown and true or false), "sens de la touche non suivi")
+  -- fermé par la croix : la touche marche encore
+  Z:BuffPanel().close:Run("OnClick")
+  Z:UpdateBuffPanel()
+  assert(not Z:BuffPanel():IsShown() and nextBuff:GetAttribute("spell") == list[1].spell, "panneau ferme : touche videe")
+  printed = #PRINTED nextBuff:Run("PostClick")
+  assert(#PRINTED == printed, "message alors qu'un buff part")
+  -- entrée en combat : vidé avant le verrouillage, un mot si on appuie quand même
+  FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true
+  assert(nextBuff:GetAttribute("type") == nil and nextBuff:GetAttribute("spell") == nil, "ancien buff garde en combat")
+  nextBuff:Run("PostClick")
+  assert(PRINTED[#PRINTED]:find(L["le prochain buff manquant se pose hors combat seulement."], 1, true), "combat : pas de message")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates() Z:UpdateBuffPanel()
+  assert(nextBuff:GetAttribute("spell") == list[1].spell, "pas repris apres le combat")
+  -- plus rien ne manque, ou panneau éteint : vidé, et un mot à l'appui
+  Z.db.buffPanel = false Z:UpdateBuffPanel()
+  assert(nextBuff:GetAttribute("spell") == nil and nextBuff:GetAttribute("unit") == nil, "panneau eteint : touche pas videe")
+  nextBuff:Run("PostClick")
+  assert(PRINTED[#PRINTED]:find(L["aucun buff manquant à poser."], 1, true), "pas de message sans buff")
+  for key, value in pairs(saved) do Z.db[key] = value end
+  Z:Refresh() RunUpdates()
+  if window and not wasShown then window:Hide() end
+
+  -- 5. Les options en parlent : commande dans la liste, phrase des raccourcis, langue anglaise complète
+  for _, text in ipairs({ "afficher ou masquer les cadres", "cadres affichés.", "aucun buff manquant à poser.",
+    "Touches au choix dans les raccourcis du jeu (Échap, Options, Raccourcis, AddOns, Lyorune) : ouvrir les options, afficher ou masquer les cadres, poser le prochain buff manquant, mode test. Aucune touche au départ." }) do
+    assert(Z.translations.enUS[text], "sans traduction : " .. text)
+  end
+  for _, text in pairs(Z.bindingNames) do assert(Z.translations.enUS[text], "nom sans traduction : " .. text) end
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,
+    Lyorune_Binding = true, BINDING_HEADER_LYORUNE = true, -- raccourcis du jeu (Bindings.xml)
     CURSOR_X = true, CURSOR_Y = true,
     PRIVATE = true, PRIVATE_NEXT = true, SUMMON = true, PHASE = true, C_IncomingSummon = true, UnitPhaseReason = true, UnitIsPlayer = true }
   local leaks = {}
   for name in pairs(_G) do
-    if not BEFORE[name] and not allowed[name] and not name:match("^Lyorune%u") then leaks[#leaks + 1] = name end
+    if not BEFORE[name] and not allowed[name] and not name:match("^Lyorune%u") and not (Z.bindingNames[(name:gsub("^BINDING_NAME_", ""))] and name:find("^BINDING_NAME_")) then leaks[#leaks + 1] = name end
   end
   table.sort(leaks)
   assert(#leaks == 0, "variables globales en trop : " .. table.concat(leaks, ", "))

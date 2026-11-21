@@ -6,6 +6,19 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.28.0] - 2026-11-21
+
+### Ajouté
+
+- Gros défensifs des joueurs sur leur case (chapitre Joueurs, partie Sur la case) : Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace..., posés par n'importe qui, avec un liseré bleu, visibles en combat, deux au plus.
+- Joueurs étourdis, apeurés ou métamorphosés : l'icône du contrôle au centre de leur case, avec un liseré rouge, reconnue par le jeu même en combat (chapitre Affaiblissements, partie Importants).
+- Raccourcis du jeu (Échap, Options, Raccourcis, AddOns, Lyorune) : ouvrir les options, afficher ou masquer les cadres, poser le prochain buff manquant, mode test. Aucune touche au départ. Aussi /lyorune cadres pour afficher ou masquer les cadres.
+
+### Amélioré
+
+- Les deux nouvelles icônes se placent et se dimensionnent dans « Placer les éléments de la case... », et se voient sur la case témoin et dans le mode test.
+- Guide du joueur et visite guidée : les nouvelles icônes, les raccourcis du jeu, et le rang des sorts sur un joueur de bas niveau (le jeu choisit déjà le bon).
+
 ## [1.27.1] - 2026-11-21
 
 ### Corrigé
@@ -535,6 +548,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0
 [1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.25.1...v1.26.0

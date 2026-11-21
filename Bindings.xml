@@ -1,0 +1,9 @@
+<!-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE. -->
+<!-- Raccourcis du jeu : Échap, Options, Raccourcis, AddOns, Lyorune. Aucune touche posée au départ. -->
+<!-- Le jeu charge ce fichier tout seul (il n'est pas cité dans le .toc). Les noms affichés sont dans Core.lua. -->
+<Bindings>
+	<Binding name="LYORUNE_OPTIONS" header="LYORUNE" category="ADDONS">Lyorune_Binding("OPTIONS")</Binding>
+	<Binding name="LYORUNE_FRAMES" category="ADDONS">Lyorune_Binding("FRAMES")</Binding>
+	<Binding name="CLICK LyoruneNextBuff:LeftButton" category="ADDONS"/>
+	<Binding name="LYORUNE_TEST" category="ADDONS">Lyorune_Binding("TEST")</Binding>
+</Bindings>

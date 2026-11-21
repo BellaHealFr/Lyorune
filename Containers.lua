@@ -3,11 +3,13 @@
 -- En combat, le jeu refuse à tout addon la lecture des auras (« auras secrètes »). Il prête en revanche des
 -- conteneurs : Lyorune leur dit quoi montrer (filtres, numéros de sorts) et où, le jeu y dessine les auras,
 -- leur durée et la couleur de dissipation. Rien n'est lu, rien ne tourne en boucle.
--- Quatre conteneurs par case :
---   hots    : mes soins sur la durée en icônes (place et taille selon la forme, Z.AuraRows dans Themes.lua)
---   bars    : les mêmes en barres fines (style « Barres »)
---   debuffs : affaiblissements (selon la forme aussi), celui que je peux dissiper en premier
---   slots   : places fixes : un carré par coin, la bordure de dissipation, la grande icône et son contour
+-- Six conteneurs par case :
+--   hots       : mes soins sur la durée en icônes (place et taille selon la forme, Z.AuraRows dans Themes.lua)
+--   bars       : les mêmes en barres fines (style « Barres »)
+--   debuffs    : affaiblissements (selon la forme aussi), celui que je peux dissiper en premier
+--   defensives : gros défensifs posés par n'importe qui (Z.defensives, Data.lua)
+--   controls   : contrôle subi (étourdi, apeuré, métamorphosé), filtre « CROWD_CONTROL » du jeu
+--   slots      : places fixes : un carré par coin, la bordure de dissipation, la grande icône et son contour
 -- Si le jeu n'a pas ces conteneurs, Auras.lua garde l'ancien affichage (lecture des auras).
 
 local _, Z = ...
@@ -50,7 +52,7 @@ local function Show(value)
 end
 
 function Z.DescribeAuraBoxes(b, Add)
-	for _, name in ipairs({ "hots", "bars", "debuffs", "slots" }) do
+	for _, name in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "slots" }) do
 		local box = b.boxes[name]
 		local ok, text = pcall(function()
 			local point, relative, _, x, y = box:GetPoint()
@@ -72,7 +74,7 @@ function Z.DescribeAuraBoxes(b, Add)
 		return ok and text or ("illisible : " .. tostring(text))
 	end
 	for key, list in pairs(b.boxButtons) do
-		local box = (key == "hots" and b.boxes.hots) or (key == "bars" and b.boxes.bars) or b.boxes.debuffs
+		local box = b.boxes[key] or b.boxes.debuffs -- « dispellable » et « others » sont dans « debuffs »
 		Add(("  groupe %s : boutons habillés %d, comptés par le jeu %s, premier %s"):format(key, #list,
 			Show(Call(box, "GetAuraGroupFrameCount", key)), Frame(Call(box, "GetAuraGroupFrame", key, 1))))
 	end
@@ -126,12 +128,20 @@ local function Wanted()
 	end
 	for name in pairs(db.extraTracked) do AddIds(hots, name) end
 	for id in pairs(inCorner) do hots[id] = nil end -- un sort placé dans un coin n'est plus dans la rangée
+	-- Gros défensifs : montrés à part pour tout lanceur, ils quittent la rangée de mes soins (jamais deux fois)
+	local defensives = {}
+	if db.showDefensives then
+		for id in pairs(Z.defensiveIds or {}) do
+			defensives[id] = true
+			hots[id] = nil
+		end
+	end
 	local ignored = {}
 	for id in pairs(Z.ignoredDebuffs) do ignored[id] = true end
 	for name in pairs(db.ignoredNames) do AddIds(ignored, name) end
 	local important = {}
 	for name in pairs(db.importantNames) do AddIds(important, name) end
-	return hots, corners, ignored, important
+	return hots, corners, ignored, important, defensives
 end
 
 -- Un nom qui intéresse Lyorune (soins suivis, coins, listes) : son numéro vaut la peine d'être retenu
@@ -195,9 +205,10 @@ local function StyleIcon(button, mine, size)
 	Call(button.Veil, "SetAlpha", (mine and db.hotFade) and 1 or 0)
 end
 
--- Icône d'aura ; mine = un de mes soins ; size = taille de sa rangée
-local function DressIcon(button, mine, size)
+-- Icône d'aura ; mine = un de mes soins ; size = taille de sa rangée ; edge = couleur du liseré (noir sinon)
+local function DressIcon(button, mine, size, edge)
 	Silent(button)
+	if edge then Call(button.Edge, "SetColorTexture", edge[1], edge[2], edge[3], 1) end
 	Call(button.Texts, "SetFrameLevel", (Call(button.Cooldown, "GetFrameLevel") or 1) + 1)
 	Call(button, "SetIcon", button.Icon)
 	Call(button, "SetDurationCooldown", button.Cooldown)
@@ -289,14 +300,14 @@ local function NilIfEmpty(set) if set and next(set) then return set end end
 -- Chaque entrée : conteneur, clé, filtre du jeu, filtres de candidats, nombre (groupes) ou place fixe.
 local function Plan(b)
 	local db = Z.db
-	local hots, corners, ignored, important = Wanted()
+	local hots, corners, ignored, important, defensives = Wanted()
 	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place et taille de la
 	-- grande icône, taille des coins, largeur des barres, taille et coin de départ des rangées (Z.AuraRows),
 	-- réglages des icônes. Un changement reconstruit les conteneurs (en combat : à la fin du combat).
 	local rows = b.rows or Z.AuraRows()
 	local bigX, bigY = Z.Offset("big")
 	local look = table.concat({ bigX, bigY, Z.BigIconSize(), Z.CornerSize(b), math.floor(Z.CellSize() * 0.45),
-		rows.hots.size, rows.hots.point, rows.debuffs.size, rows.debuffs.point,
+		rows.hots.size, rows.hots.point, rows.debuffs.size, rows.debuffs.point, rows.defensives.size, rows.controls.size,
 		tostring(db.hotSwipe), tostring(db.hotCountdown), tostring(db.hotFade), tostring(db.hotCharges),
 		tostring(db.bossDebuffs), tostring(db.importantGlow) }, ",")
 	local plan = { look = look, groups = {}, slots = {}, rows = rows }
@@ -330,6 +341,15 @@ local function Plan(b)
 			Group("debuffs", "others", "HARMFUL", { excludeSpellIDs = excluded, excludeDispelTypes = NilIfEmpty(canDispel) },
 				db.debuffCount - 1, 2, "LyoruneAuraIcon", "other")
 		end
+	end
+	-- Gros défensifs de tout lanceur, et contrôle subi : le jeu les reconnaît lui-même, même en combat
+	if db.showDefensives and not Empty(defensives) then
+		Group("defensives", "defensives", "HELPFUL", { includeSpellIDs = defensives }, Z.DEFENSIVE_COUNT, 1,
+			"LyoruneAuraIcon", "defensive")
+	end
+	if db.showControls then
+		Group("controls", "controls", "HARMFUL|CROWD_CONTROL", { excludeSpellIDs = excluded }, 1, 1, "LyoruneAuraIcon",
+			"control")
 	end
 	if db.showDispel then Slot("dispel", "HARMFUL|RAID_PLAYER_DISPELLABLE", nil, "LyoruneAuraCover", "dispel") end
 	if db.bossDebuffs or db.importantGlow then
@@ -368,6 +388,8 @@ local function Dresser(b, entry)
 	local how = entry.dress
 	if how == "mine" then return function(button) DressIcon(button, true, entry.size) end end
 	if how == "other" then return function(button) DressIcon(button, false, entry.size) end end
+	if how == "defensive" then return function(button) DressIcon(button, false, entry.size, Z.DEFENSIVE_EDGE) end end
+	if how == "control" then return function(button) DressIcon(button, false, entry.size, Z.CONTROL_EDGE) end end
 	if how == "bar" then return DressBar end
 	if how == "corner" then return DressCorner(b, entry.key) end
 	if how == "dispel" then return DressDispel(b) end
@@ -392,12 +414,14 @@ end
 -- Une rangée de Z.AuraRows : coin de départ, sens, et longueur d'une ligne (au-delà, le jeu passe à la ligne).
 -- La longueur compte l'écart après la dernière icône : juste assez pour row.perLine icônes, que le jeu compte
 -- cet écart ou non.
+-- row.flow : coin de départ des icônes quand la rangée s'accroche par un bord ou par son centre (défensifs,
+-- contrôle) ; une rangée accrochée au centre a juste sa largeur, pour rester centrée.
 local function PlaceRow(b, box, row, dx, dy)
 	local DIR = AnchorUtil.FlowDirection
 	Call(box, "ClearAllPoints")
 	Call(box, "SetPoint", row.point, row.relative == "HP" and b.hp or b.over, row.point, row.x + dx, row.y + dy)
-	Call(box, "SetSize", row.perLine * (row.size + SPACING), row.height)
-	Flow(box, row.point, row.dirX < 0 and DIR.Left or DIR.Right, row.dirY < 0 and DIR.Down or DIR.Up)
+	Call(box, "SetSize", row.point == "CENTER" and row.width or row.perLine * (row.size + SPACING), row.height)
+	Flow(box, row.flow or row.point, row.dirX < 0 and DIR.Left or DIR.Right, row.dirY < 0 and DIR.Down or DIR.Up)
 	if Z.boxWrap then Call(box, "SetFlowLayoutMaximumLineSize", row.perLine * (row.size + SPACING)) end
 end
 
@@ -419,6 +443,8 @@ local function Place(b)
 
 	dx, dy = Z.Offset("debuffs")
 	PlaceRow(b, boxes.debuffs, rows.debuffs, dx, dy)
+	PlaceRow(b, boxes.defensives, rows.defensives, Z.Offset("defensives"))
+	PlaceRow(b, boxes.controls, rows.controls, Z.Offset("controls"))
 
 	Call(boxes.slots, "SetAllPoints", b.over)
 
@@ -432,9 +458,10 @@ local function Place(b)
 	for _, button in ipairs(b.boxButtons.hots or {}) do
 		if Open(button) then StyleIcon(button, true, rows.hots.size) end
 	end
-	for _, key in ipairs({ "dispellable", "others" }) do
+	for key, row in pairs({ dispellable = rows.debuffs, others = rows.debuffs, defensives = rows.defensives,
+		controls = rows.controls }) do
 		for _, button in ipairs(b.boxButtons[key] or {}) do
-			if Open(button) then StyleIcon(button, false, rows.debuffs.size) end
+			if Open(button) then StyleIcon(button, false, row.size) end
 		end
 	end
 	for _, button in ipairs(b.boxButtons.bars or {}) do
@@ -449,6 +476,8 @@ local function Visibility(b)
 	local bars = Z.db.hotStyle == "BARS"
 	Call(b.boxes.slots, "SetShown", shown)
 	Call(b.boxes.debuffs, "SetShown", shown)
+	Call(b.boxes.defensives, "SetShown", shown)
+	Call(b.boxes.controls, "SetShown", shown)
 	Call(b.boxes.hots, "SetShown", shown and not bars)
 	Call(b.boxes.bars, "SetShown", shown and bars)
 end
@@ -470,8 +499,12 @@ local function Build(b, plan)
 	boxes.hots = NewBox(b, 1)
 	boxes.bars = NewBox(b, 1)
 	boxes.debuffs = NewBox(b, 1)
+	boxes.defensives = NewBox(b, 2)
+	boxes.controls = NewBox(b, 3) -- au-dessus des autres icônes : un joueur qui ne peut plus agir se voit d'abord
 	boxes.slots = NewBox(b, 4) -- au-dessus des icônes, sous les auras privées
-	if not (boxes.hots and boxes.bars and boxes.debuffs and boxes.slots) then error("création refusée") end
+	for _, key in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "slots" }) do
+		if not boxes[key] then error("création refusée") end
+	end
 
 	-- 1. ancrer (les rangées de soins et d'affaiblissements prennent leur sens dans Place)
 	local DIR = AnchorUtil.FlowDirection

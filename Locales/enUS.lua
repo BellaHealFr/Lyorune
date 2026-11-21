@@ -147,6 +147,12 @@ Z.translations.enUS = {
 	["Absorption de soins"] = "Heal absorb",
 	["Bande rouge sombre au bout de la vie : la part qu'un affaiblissement « mange » avant que vos soins comptent. Calculée par le jeu, visible en combat."] = "Dark red band at the end of the health bar: the part a debuff \"eats\" before your heals count. Computed by the game, visible in combat.",
 	["Invocation en cours, autre phase"] = "Pending summon, other phase",
+	-- Gros défensifs et contrôles (1.28.0)
+	["Gros défensifs des joueurs"] = "Players' big defensives",
+	["Mur protecteur, Bouclier divin, Écorce... : posés par n'importe qui."] = "Shield Wall, Divine Shield, Barkskin...: cast by anyone.",
+	["Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace... : posés par n'importe qui, avec un liseré bleu, même en combat. Deux au plus, au bord droit de la case (juste avant le chiffre de vie en Barre et en Bandeau). Un de vos sorts de la liste quitte alors la rangée de vos soins."] = "Shield Wall, Divine Shield, Blessing of Protection, Barkskin, Evasion, Ice Block...: cast by anyone, with a blue edge, even in combat. Two at most, on the right edge of the cell (just before the health number in Bar and Banner). One of your own spells from this list then leaves the row of your heals.",
+	["Étourdi, apeuré, métamorphosé : son icône au centre de la case."] = "Stunned, feared, polymorphed: its icon in the centre of the cell.",
+	["Étourdi, apeuré, métamorphosé, endormi... : l'icône du contrôle au centre de la case, avec un liseré rouge. Le jeu le reconnaît lui-même, même en combat."] = "Stunned, feared, polymorphed, asleep...: the icon of the crowd control in the centre of the cell, with a red edge. The game recognises it itself, even in combat.",
 	["Joueur très loin : empreintes"] = "Player far away: footprints",
 	["Trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (plus de 100 mètres environ : case encore plus estompée, empreintes au centre)."] = "Three levels, even in dungeons and raids: in healing range, close (faded cell), far away (about 100 yards or more: cell faded further, footprints in the middle).",
 	["Soin refusé, hors de vue : un œil"] = "Heal refused, out of sight: an eye",
@@ -299,6 +305,18 @@ Z.translations.enUS = {
 	["Accepter qu'on me propose une configuration"] = "Let players offer me their configuration",
 	["Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande."] = "Only from a group member, a guild member or a friend. Nothing is applied without your consent: a window asks you first.",
 	["Me prévenir si une version plus récente existe"] = "Tell me when a newer version exists",
+	-- Raccourcis du jeu (étape 22)
+	["Ouvrir ou fermer les options"] = "Open or close the options",
+	["Afficher ou masquer les cadres (hors combat)"] = "Show or hide the frames (out of combat)",
+	["Poser le prochain buff manquant (hors combat)"] = "Cast the next missing buff (out of combat)",
+	["Mode test (faux groupe)"] = "Test mode (fake group)",
+	["afficher ou masquer les cadres"] = "show or hide the frames",
+	["les cadres s'affichent ou se masquent hors combat seulement."] = "frames can only be shown or hidden out of combat.",
+	["cadres masqués, même en combat. La même touche ou /lyorune cadres les ramène."] = "frames hidden, even in combat. The same key or /lyorune frames brings them back.",
+	["cadres affichés."] = "frames shown.",
+	["le prochain buff manquant se pose hors combat seulement."] = "the next missing buff can only be cast out of combat.",
+	["aucun buff manquant à poser."] = "no missing buff to cast.",
+	["Touches au choix dans les raccourcis du jeu (Échap, Options, Raccourcis, AddOns, Lyorune) : ouvrir les options, afficher ou masquer les cadres, poser le prochain buff manquant, mode test. Aucune touche au départ."] = "Keys of your choice in the game key bindings (Esc, Options, Keybindings, AddOns, Lyorune): open the options, show or hide the frames, cast the next missing buff, test mode. No key set at first.",
 	["Annuler l'import"] = "Undo import", ["qui a Lyorune dans le groupe"] = "who has Lyorune in the group", ["annuler le dernier import"] = "undo the last import",
 	["Remet la configuration d'avant le dernier import (code collé ou configuration reçue). Aussi : /lyorune annuler."] = "Restores the configuration from before the last import (pasted code or received configuration). Also: /lyorune undo.",
 	["Aucun import à annuler."] = "No import to undo.", ["Configuration d'avant l'import rétablie."] = "Configuration from before the import restored.",
@@ -416,8 +434,9 @@ Z.translations.enUS = {
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste). "
+			.. "Liseré |cff73ccffbleu|r : un gros défensif posé sur lui ; liseré |cffff4d33rouge|r au centre : il est étourdi, apeuré ou métamorphosé. "
 			.. "Survolez une case hors combat : l'infobulle rappelle vos clics."] =
-		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nYour heals over time and their debuffs are laid out to fit the cell shape; \"Place the cell elements...\" (Layout chapter) moves them and sets their size. The small coloured squares in the corners: the spells you placed there (My heals chapter). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). Hover a cell out of combat: the tooltip reminds you of your clicks.",
+		"|cff3399ffBlue|r, |cffa633ffpurple|r, |cffbf801abrown|r or |cff1ad933green|r around a cell: a magic effect, a curse, a disease or a poison that YOU can dispel.\n\n|cffff2626Red border|r: the player is being attacked. Faded cell: out of range (footprints: far away; an eye: out of sight).\n\nYour heals over time and their debuffs are laid out to fit the cell shape; \"Place the cell elements...\" (Layout chapter) moves them and sets their size. The small coloured squares in the corners: the spells you placed there (My heals chapter). These icons are drawn by the game: they stay visible in the middle of combat.\n\n|cffffd140Golden outline|r: an important debuff (boss, or your list). |cff73ccffBlue|r edge: a big defensive on the player; |cffff4d33red|r edge in the centre: they are stunned, feared or polymorphed. Hover a cell out of combat: the tooltip reminds you of your clicks.",
 	["Faites glisser l'étiquette |cff33dd88Groupe|r au-dessus des cases pour déplacer les cadres où vous voulez. "
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (chapitre Disposition, partie Position), "
@@ -444,10 +463,11 @@ Z.translations.enUS = {
 		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
-			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit).\n\n"
+			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
+			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns.\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur."] =
-		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click).\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
+		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click). A key can do it too, or hide the frames and cast the next missing buff: game key bindings, AddOns section.\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
 	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a cell to cast a spell on that player, without targeting them.",
 	["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."] = "No spell is assigned yet: you will choose them in the Spells and bindings chapter of the options.",
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
@@ -460,6 +480,7 @@ Z.translations.enUS = {
 	["Placement des éléments"] = "Element placement",
 	["Icône de rôle"] = "Role icon", ["Icône centrale"] = "Centre icon", ["Affaiblissement important"] = "Important debuff",
 	["Buff manquant"] = "Missing buff", ["Auras privées"] = "Private auras",
+	["Joueur sous contrôle"] = "Crowd-controlled player", ["Gros défensifs"] = "Big defensives",
 	["Gauche"] = "Left", ["Haut"] = "Up", ["Bas"] = "Down", ["Droite"] = "Right",
 	["Un pixel par clic, cinq avec Maj."] = "One pixel per click, five with Shift.",
 	["Remettre à sa place"] = "Put it back", ["Tout remettre"] = "Reset all",
@@ -681,7 +702,7 @@ Z.translations.enUS = {
 	["mesure faite : %d joueurs, %s ms par seconde en combat chargé (%s %%), mémoire %s."] = "measured: %d players, %s ms per second in a busy fight (%s%%), memory %s.",
 	-- 1.16.0 : panneau des buffs manquants, assistant de départ
 	["Panneau des buffs manquants"] = "Missing buffs panel",
-	["Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat."] = "Out of combat, a small window lists the players without your group buff: one click casts it on them. A whole group without it: a single line for the group version. A buff meant for a single person (Earth Shield, Thorns) is offered for the tank, or for the player chosen with /lyorune bearer. It hides in combat.",
+	["Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune."] = "Out of combat, a small window lists the players without your group buff: one click casts it on them. A whole group without it: a single line for the group version. A buff meant for a single person (Earth Shield, Thorns) is offered for the tank, or for the player chosen with /lyorune bearer. It hides in combat. A key can cast the first line: game key bindings, AddOns, Lyorune.",
 	["Buffs manquants"] = "Missing buffs", ["Clic : %s"] = "Click: %s", ["Clic droit : %s (tout son groupe)"] = "Right-click: %s (their whole group)",
 	["et %d autres"] = "and %d more",
 	["Assistant de départ"] = "Setup assistant", ["assistant de départ"] = "setup assistant",
@@ -868,4 +889,9 @@ Z.translations.enUS = {
 	["Décompte en secondes des soins : les chiffres sont écrits à la taille de l'icône et ne débordent plus sur la voisine (ils se chevauchaient en Bandeau)."] = "Heal countdown in seconds: the numbers are drawn at the icon's size and no longer spill onto the next icon (they overlapped on Strip).",
 	["Changer un réglage en combat ne provoque plus d'action refusée par le jeu : le sens des clics (dès l'appui ou au relâchement) attend la fin du combat."] = "Changing a setting in combat no longer causes an action blocked by the game: the click mode (on press or on release) waits for the end of combat.",
 	["Les touches au survol lancent leur sort même quand « Lancer le sort dès l'appui » et le réglage « lancer à l'appui » du jeu ne vont pas dans le même sens."] = "Hover keys cast their spell even when \"Cast on key press\" and the game's own \"cast on key down\" setting do not match.",
+	["Gros défensifs des joueurs sur leur case (chapitre Joueurs, partie Sur la case) : Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace..., posés par n'importe qui, avec un liseré bleu, visibles en combat, deux au plus."] = "Players' big defensives on their cell (Players chapter, On the cell section): Shield Wall, Divine Shield, Blessing of Protection, Barkskin, Evasion, Ice Block..., cast by anyone, with a blue edge, visible in combat, two at most.",
+	["Joueurs étourdis, apeurés ou métamorphosés : l'icône du contrôle au centre de leur case, avec un liseré rouge, reconnue par le jeu même en combat (chapitre Affaiblissements, partie Importants)."] = "Stunned, feared or polymorphed players: the crowd control icon in the centre of their cell, with a red edge, recognised by the game even in combat (Debuffs chapter, Important section).",
+	["Raccourcis du jeu (Échap, Options, Raccourcis, AddOns, Lyorune) : ouvrir les options, afficher ou masquer les cadres, poser le prochain buff manquant, mode test. Aucune touche au départ. Aussi /lyorune cadres pour afficher ou masquer les cadres."] = "Game key bindings (Esc, Options, Keybindings, AddOns, Lyorune): open the options, show or hide the frames, cast the next missing buff, test mode. No key set by default. Also /lyorune frames to show or hide the frames.",
+	["Les deux nouvelles icônes se placent et se dimensionnent dans « Placer les éléments de la case... », et se voient sur la case témoin et dans le mode test."] = "Both new icons can be placed and resized in \"Place the cell elements...\", and show on the preview cell and in test mode.",
+	["Guide du joueur et visite guidée : les nouvelles icônes, les raccourcis du jeu, et le rang des sorts sur un joueur de bas niveau (le jeu choisit déjà le bon)."] = "Player guide and guided tour: the new icons, the game key bindings, and spell ranks on a low-level player (the game already picks the right one).",
 }
