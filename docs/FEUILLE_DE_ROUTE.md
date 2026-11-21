@@ -276,7 +276,7 @@ taille en pixels (un seul réglage), l'éditeur de placement les déplace seulem
   « Ce que disent les couleurs » (place selon la forme, « Placer les éléments de la case... » règle la taille),
   tableau « Lire une case » du guide fr et en, rubrique « À votre goût » du README et du site, `## Notes`. Restent
   l'essai en jeu par l'auteur et la publication. Essai de l'auteur : chiffres du décompte qui se chevauchaient en
-  Bandeau (C9), corrigés ; puis « tous est ok ». Publiée le 21 novembre 2026
+  Bandeau (C9), corrigés ; puis « tout est ok ». Publiée le 21 novembre 2026
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
