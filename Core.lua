@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.29.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.30.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -97,7 +97,7 @@ Z.defaults = {
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
-	fiveSecondRule = true,     -- trait sur ma case pendant les 5 secondes sans régénération après un sort (Mana.lua)
+	fiveSecondRule = false,    -- (éteint au départ, au choix du joueur) trait sur ma case pendant les 5 secondes sans régénération après un sort (Mana.lua)
 	manaEdge = 20,             -- liseré bleu au bord de l'écran quand ma mana passe sous ce % (0 : jamais ; courbe du jeu)
 	lowManaHealers = 20,       -- icône de boisson sur la case d'un soigneur sous ce % de mana (0 : jamais ; courbe du jeu, marche en combat)
 	drinkHealers = true,       -- soigneur qui boit : l'icône de sa boisson à côté de sa mana basse (Z.drinkSpells, Data.lua)
@@ -156,7 +156,8 @@ Z.defaults = {
 	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
 	windowTheme = "MODERN",    -- thème des fenêtres de Lyorune (pas des cases) : Moderne, Classique, MMORPG
 	reduceMotion = false,      -- animations réduites : fondus courts seulement, rien en boucle
-	magicEffects = true,       -- effets magiques des fenêtres : cercle runique, particules, étincelle de soin
+	magicEffects = true,       -- effets magiques des fenêtres : animation du logo, particules, étincelle de soin
+	logoAnimation = "AURORA",  -- animation autour du logo des options (avec les effets magiques) : Aurore, Sceau, Souffle, Aucune
 	errorNotice = true,        -- message discret (une fois par session) quand Lyorune rencontre une erreur
 	tutorialDone = false,
 	wizardDone = false,        -- assistant du premier lancement (Wizard.lua) déjà vu
@@ -196,6 +197,7 @@ Z.choices = {
 	privateAuraPoint = { { "CENTER", "Au centre" }, { "TOP", "En haut" }, { "BOTTOM", "En bas" }, { "LEFT", "À gauche" }, { "RIGHT", "À droite" } },
 	alertChannel = { { "SAY", "Dire" }, { "GROUP", "Groupe ou raid" } },
 	windowTheme = { { "MODERN", "Moderne" }, { "CLASSIC", "Classique" }, { "MMO", "MMORPG" } },
+	logoAnimation = { { "AURORA", "Aurore" }, { "SEAL", "Sceau" }, { "BREATH", "Souffle" }, { "OFF", "Aucune" } },
 	language = { { "AUTO", "Automatique" }, { "frFR", "Français" }, { "enUS", "English" } },
 }
 
@@ -218,7 +220,7 @@ Z.notInProfile = {
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
-	reduceMotion = true, magicEffects = true, errorNotice = true, tutorialDone = true, wizardDone = true,
+	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
 	buffPanel = true, castIndicator = true,
 }
 
@@ -370,6 +372,11 @@ local function Migrate(db)
 				if not next(saved) then db.placement[shape] = nil end
 			end
 		end
+	end
+	-- 1.29.1 : la règle des 5 secondes devient éteinte au départ (demande de l'auteur). La 1.29.0 l'avait allumée
+	-- pour tous sans que le joueur la choisisse : elle repart du nouveau défaut, une seule fois.
+	if db.lastVersion and Z.VersionNumber(db.lastVersion) == 12900 and Z.VersionNumber(Z.version) >= 12901 then
+		db.fiveSecondRule = nil
 	end
 end
 

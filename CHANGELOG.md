@@ -6,6 +6,20 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.30.0] - 2026-11-21
+
+### Ajouté
+
+- Animation du logo au choix (chapitre Fenêtre et aide) : Aurore, Sceau ou Souffle, aux couleurs des classes de soin, ou Aucune. Le cercle de runes qui tournait disparaît.
+
+### Amélioré
+
+- Règle des 5 secondes : éteinte au départ, à allumer dans la partie Mana ; son trait se pose juste au-dessus de la barre de mana, sans la cacher.
+
+### Corrigé
+
+- Règle des 5 secondes : la pêche et les sorts dont le jeu ne donne pas le coût ne lancent plus le trait.
+
 ## [1.29.0] - 2026-11-21
 
 ### Ajouté
@@ -562,6 +576,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0
 [1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1

@@ -6,6 +6,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.30.0] - 2026-11-21
+
+### Added
+
+- Logo animation of your choice (Window and help chapter): Aurora, Seal or Breath, in the healing classes' colours, or None. The turning rune circle is gone.
+
+### Improved
+
+- Five second rule: off at first, turn it on in the Mana part; its line now sits just above the mana bar, without hiding it.
+
+### Fixed
+
+- Five second rule: fishing and spells whose cost the game does not give no longer start the line.
+
 ## [1.29.0] - 2026-11-21
 
 ### Added
@@ -562,6 +576,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.1...v1.28.0
 [1.27.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.27.0...v1.27.1

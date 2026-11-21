@@ -1254,13 +1254,47 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
   -- Bordure des cases : chaque trait garde au moins un vrai pixel (bord droit qui disparaissait en jeu)
   for i = 1, 4 do assert(c.border[i]._pixels == 1, "trait " .. i .. " de la case arrondi a zero") end
 
-  -- Effets magiques : étincelle avec la rune, cercle et particules de l'en-tête, au plus 3 éclairs par seconde
+  -- Effets magiques : étincelle avec la rune, animation du logo et particules de l'en-tête, au plus 3 éclairs par seconde
   assert(Z.db.magicEffects == true and UI.Magic())
   NOW = NOW + 5 c:Run("OnClick")
   assert(c.spark and c.sparkRise:IsPlaying() and c.spark._tex == UI.MAGIC_SPARK, "etincelle de soin")
   assert(c.spark._color[1] == UI.skin.runeGlow[1], "etincelle : couleur du theme")
   local m = w.magic
-  assert(m and m.circle:IsShown() and m.spin:IsPlaying() and m.rises[1]:IsPlaying(), "cercle et particules")
+  -- Animation du logo : Aurore au départ, construite à son premier affichage ; une couleur par classe de soin
+  local logo = m.logo
+  local function Playing(key)
+    local st = logo.styles[key]
+    return st and st.groups[1]:IsPlaying() and st.groups[#st.groups]:IsPlaying() and st.regions[1]:IsShown()
+  end
+  local function Quiet(key)
+    local st = logo.styles[key]
+    if not st then return true end
+    for _, g in ipairs(st.groups) do if g:IsPlaying() then return false end end
+    return not st.regions[1]:IsShown()
+  end
+  assert(Z.db.logoAnimation == "AURORA" and Playing("AURORA") and m.rises[1]:IsPlaying(), "aurore et particules")
+  assert(not logo.styles.SEAL and not logo.styles.BREATH, "seule l'animation choisie est construite")
+  local healers = 0
+  for _ in pairs(Z.trackedSpells) do healers = healers + 1 end
+  local aurora = logo.styles.AURORA
+  -- par classe : une lueur et une etincelle ; plus le reflet
+  assert(#aurora.groups == 2 * healers + 1 and #aurora.regions == 2 * healers + 1, "aurore : une lueur et une etincelle par classe de soin")
+  assert(aurora.regions[1]._color[1] == 1 and aurora.regions[1]._color[2] == 0.49, "aurore : druide en premier, couleur de classe")
+  -- Sceau et Souffle : l'un remplace l'autre, rien ne reste allumé derrière
+  for _, key in ipairs({ "SEAL", "BREATH", "AURORA" }) do
+    Z.db.logoAnimation = key Z:Refresh()
+    assert(Playing(key), key .. " lance")
+    for other in pairs(logo.styles) do
+      if other ~= key then assert(Quiet(other), other .. " arrete quand " .. key .. " est choisi") end
+    end
+  end
+  -- halo, gemmes (lueur, pierre, serti), anneau, et 9 points de traînée par classe ; aucune rotation (trop rapide en jeu)
+  assert(#logo.styles.SEAL.regions == 4 * healers + 1 + 9 * healers, "sceau : halo, gemme et trainee par classe")
+  assert(#logo.styles.BREATH.regions == 2 * healers and #logo.styles.BREATH.groups == 2 * healers, "souffle : une lueur et une onde par classe")
+  Z.db.logoAnimation = "OFF" Z:Refresh()
+  for key in pairs(logo.styles) do assert(Quiet(key), "aucune animation : " .. key) end
+  assert(m.rises[1]:IsPlaying(), "particules gardees sans animation du logo")
+  Z.db.logoAnimation = "AURORA" Z:Refresh()
   Z.db.windowTheme = "MMO" Z:Refresh()
   assert(m.motes[1]._color[2] == UI.skins.MMO.runeGlow[2], "particules : couleur du theme")
   Z.db.windowTheme = "MODERN" Z:Refresh()
@@ -1272,14 +1306,14 @@ step("etape 4 bis : themes des fenetres, animations, runes, tutoriel", function(
   assert(UI.Flash(), "eclair refuse une seconde plus tard")
   for _, setting in ipairs({ "reduceMotion", "magicEffects" }) do
     Z.db[setting] = setting == "reduceMotion" Z:Refresh()
-    assert(not UI.Magic() and not m.circle:IsShown() and not m.spin:IsPlaying() and not m.rises[1]:IsPlaying(), setting)
+    assert(not UI.Magic() and Quiet("AURORA") and not m.rises[1]:IsPlaying(), setting)
     c.sparkRise:Stop() c:Run("OnClick")
     assert(not c.sparkRise:IsPlaying(), setting .. " : etincelle")
     Z.db.reduceMotion, Z.db.magicEffects = false, true Z:Refresh()
   end
-  assert(m.spin:IsPlaying() and m.circle:IsShown(), "effets revenus")
+  assert(Playing("AURORA"), "effets revenus")
   w:Hide() m.Stop() w:Show()
-  assert(m.spin:IsPlaying(), "effets a la reouverture")
+  assert(Playing("AURORA"), "effets a la reouverture")
 
   -- Runes : même phrase, animations jouées à l'ouverture, arrêtées à la fermeture, aucune en animations réduites
   local spelled = 0
@@ -6079,7 +6113,7 @@ end)
 step("etape 23, lot 5 : regle des 5 secondes, un trait qui se vide sur ma case apres un sort paye en mana", function()
   local kept, isUnit, cost, class = Z.db.fiveSecondRule, UnitIsUnit, C_Spell.GetSpellPowerCost, Z.class
   local ok, err = pcall(function()
-    assert(Z.defaults.fiveSecondRule == true, "reglage fiveSecondRule")
+    assert(Z.defaults.fiveSecondRule == false, "reglage fiveSecondRule : eteint au depart")
     local b = Z.buttons[1]
     b:SetAttribute("unit", "player") b.unit = "player"
     UnitIsUnit = function(a, c) return a == "player" and c == "player" end
@@ -6089,6 +6123,13 @@ step("etape 23, lot 5 : regle des 5 secondes, un trait qui se vide sur ma case a
     -- un tir de baguette (sans mana) : aucun trait
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 5019)
     assert(not (b.fiveLine and b.fiveLine:IsShown()), "trait apres un sort sans mana")
+    -- 1.29.1 : la pêche (coût que le jeu ne donne pas : nil) et un coût illisible ne lancent pas le trait
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 7620)
+    assert(not (b.fiveLine and b.fiveLine:IsShown()), "trait apres la peche")
+    C_Spell.GetSpellPowerCost = function() error("sort inconnu") end
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 7620)
+    assert(not (b.fiveLine and b.fiveLine:IsShown()), "trait apres un cout illisible")
+    C_Spell.GetSpellPowerCost = function(id) return costs[id] end
     -- un soin payé en mana : le trait part et se vide par une animation du jeu
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 2061)
     assert(b.fiveLine and b.fiveLine:IsShown() and b.fiveLine.drain:IsPlaying(), "trait absent apres un soin")
@@ -6112,6 +6153,24 @@ step("etape 23, lot 5 : regle des 5 secondes, un trait qui se vide sur ma case a
     for _, text in ipairs({ "Règle des 5 secondes sur ma case", "Un trait qui se vide jusqu'au retour de la régénération." }) do
       assert(Z.translations.enUS[text], "sans traduction : " .. text)
     end
+    -- 1.29.1 : éteinte au départ ; la 1.29.0 l'avait allumée pour tous, elle repart éteinte une seule fois
+    local savedDB, savedChar, version = LyoruneDB, LyoruneCharDB, Z.version
+    local fine, why = pcall(function()
+      local db = { lastVersion = "1.29.0", fiveSecondRule = true }
+      LyoruneDB = db
+      Z.version = "1.29.0" FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.fiveSecondRule == true, "remise avant la 1.29.1")
+      Z.version = "1.29.1" FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.fiveSecondRule == false, "1.29.0 : regle des 5 secondes pas eteinte")
+      db.lastVersion, db.fiveSecondRule = "1.29.1", true FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.fiveSecondRule == true, "choix du joueur ecrase apres la 1.29.1")
+      db = { lastVersion = "1.28.0" } LyoruneDB = db FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.fiveSecondRule == false, "ancien joueur : regle allumee")
+    end)
+    Z.version = version
+    LyoruneDB, LyoruneCharDB = savedDB, savedChar
+    FireEvent("ADDON_LOADED", "Lyorune")
+    assert(fine, why)
   end)
   Z.db.fiveSecondRule, UnitIsUnit, C_Spell.GetSpellPowerCost, Z.class = kept, isUnit, cost, class
   Z:Refresh()

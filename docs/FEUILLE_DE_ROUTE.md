@@ -37,8 +37,9 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 21 | 1.27.0 | Icônes à la mesure de chaque forme de case, taille réglable dans l'éditeur de placement | Publiée (v1.27.0) |
 | 22 | 1.28.0 | Défensifs et contrôles sur les cases, raccourcis du jeu (le rang adapté, déjà fait par le jeu, est abandonné) | Publiée (v1.28.0) |
 | 23 | 1.29.0 | Trois affaiblissements à dissiper, mes sorts externes, joueur qui boit, mana basse au bord de l'écran, règle des 5 secondes | Publiée (v1.29.0) |
-| 24 | 1.30.0 | Joueurs en bonne santé estompés, statistiques de mes clics | À faire |
-| 25 | 1.31.0 | Répartition entre soigneurs, marquée sur les cases | À faire |
+| 23 bis | 1.30.0 | Animation du logo au choix ; règle des 5 secondes éteinte au départ, trait au-dessus de la barre de mana, pêche corrigée | Publiée (v1.30.0) |
+| 24 | 1.31.0 | Joueurs en bonne santé estompés, statistiques de mes clics | À faire |
+| 25 | 1.32.0 | Répartition entre soigneurs, marquée sur les cases | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -427,7 +428,7 @@ Découpage décidé le 21 novembre 2026, avec l'auteur pour les points technique
   - Fait le 21 novembre 2026 (tests passés, installé) : `Mana.lua`, réglage `fiveSecondRule` (allumé au départ,
     même partie Mana) ; `UNIT_SPELLCAST_SUCCEEDED` du joueur, coût lu par `C_Spell.GetSpellPowerCost` (sort
     sans mana : rien ; numéro secret : compté comme payé). Le numéro de mes sorts est lisible en combat (journal
-    de l'addon d'essai, étape 22). Trait de 2 pixels en haut de la barre de mana (au bas de la vie si la barre
+    de l'addon d'essai, étape 22). Trait de 2 pixels juste au-dessus de la barre de mana (1.29.1 ; en haut de la barre dans la 1.29.0) (au bas de la vie si la barre
     est cachée), vidé par une animation d'échelle du jeu, aucune boucle. Guide fr et en. À voir en jeu : le
     trait après un soin, rien après un tir de baguette, sa fin au moment où la mana repart.
 - Lot 6 : tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication.
@@ -445,6 +446,20 @@ Découpage décidé le 21 novembre 2026, avec l'auteur pour les points technique
 - [x] Règle des 5 secondes : un trait sur ma case ou sur la barre d'incantation jusqu'au retour de la
   régénération (le moment est déjà calculé dans `Alerts.lua`)
 - [x] Tests, guide fr et en, visite, `## Notes`, README, site, essai en jeu, publication
+- Ajouté le 21 novembre 2026 (demande de l'auteur, cercle de runes jugé trop rapide et peu esthétique), pour la
+  1.29.1 : réglage « Animation du logo » (`logoAnimation`, Fenêtre et aide), trois animations aux couleurs des
+  classes de soin (classes de `Z.trackedSpells`, couleurs du jeu) dans `Logo.lua`, images de `outils/runes.py` :
+  Aurore (par défaut : lueurs en trajectoire lente, reflet sous masque rond, étincelles), Sceau (anneau fixe,
+  gemmes, traînée qui passe de l'une à l'autre, halo en fondu enchaîné), Souffle (onde qui s'élargit toutes les
+  4 s), ou Aucune. Choix de l'auteur sur un aperçu animé : les trois, au choix du joueur. Bonnes pratiques
+  suivies : boucles lentes, courbes douces, rien ne tourne sur lui-même, rien ne clignote, coupé par
+  « Animations réduites ». Vu en jeu le 21 novembre 2026 (captures d'écran, 10 images par seconde) : une animation
+  de rotation tournait bien plus vite que demandé sur ce client (traînée du sceau : plusieurs tours en 1 s au lieu
+  d'un quart de tour ; c'était aussi la cause de l'ancien cercle de runes « trop rapide ») : plus aucune rotation,
+  la traînée est une rangée de points fixes qui s'allument l'un après l'autre. Trajectoire de l'aurore en points
+  reliés en ligne droite (la courbe lissée accélérait à chaque tour). Les trois vérifiées ensuite en jeu : traînée
+  régulière, aurore sans à-coup, onde toutes les 4,0 s à vitesse égale. Attention pendant les essais : l'application
+  CurseForge remplace le dossier de l'addon par la version publiée dès qu'elle est approuvée (vu à 16 h 13).
 
 En réserve, après l'étape 23 : clics « Assister » et « Focaliser » ; clics différents en combat et hors
 combat ; totems du chaman sur les cases ; cases estompées hors combat ; moi en premier ou en dernier dans mon
@@ -458,7 +473,7 @@ feuille de route de HealKit et ses 98 idées de joueurs, pages de DandersFrames 
 qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais le code. Les points marqués
 « à vérifier » se décident avec l'auteur avant tout codage. Chaque fonction a son interrupteur.
 
-## Étape 24 : joueurs en bonne santé estompés, statistiques de mes clics (1.30.0)
+## Étape 24 : joueurs en bonne santé estompés, statistiques de mes clics (1.31.0)
 - [ ] Joueurs en bonne santé estompés, **éteint au départ** (demande de l'auteur) : au-dessus d'un seuil de vie
   réglable (90 % au départ par exemple), la case devient plus transparente, ceux qui ont besoin de soins ressortent.
   Marche en combat : `UnitHealthPercent` avec une courbe, passée à `SetAlpha` (même méthode que le texte caché à
@@ -477,7 +492,7 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
 - [ ] Tests, guide fr et en, visite (une ligne sur une carte existante), `## Notes`, README, site, essai en jeu,
   publication
 
-## Étape 25 : répartition entre soigneurs (1.31.0)
+## Étape 25 : répartition entre soigneurs (1.32.0)
 - [ ] Lot 1, sans aucun message : je choisis les groupes ou les joueurs dont je m'occupe (fenêtre simple, par
   groupe de raid ou par tank). Leurs cases portent un repère discret « pour moi » ; option : estomper un peu les
   autres. Utile même si je suis le seul à avoir Lyorune.

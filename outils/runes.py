@@ -2,7 +2,7 @@
 # Dessine Media/Runes.tga : les 24 runes de l'ancien futhark (alphabet historique), tracées trait par trait.
 #   pip install pillow
 #   python outils/runes.py
-# Elle dessine aussi les images des effets magiques (Media/MagieCercle.tga, Media/MagieEtincelle.tga).
+# Elle dessine aussi les images des effets magiques (Media/Magie*.tga).
 # La même commande dessine aussi les images de la page du projet : docs/images/runes.png (l'inscription)
 # et docs/images/runes/<lettre>.png (une médaille par rune, pour le tableau des fonctions).
 # Grille de 8 colonnes sur 4 lignes, cases de 16 pixels, blanc sur fond transparent (la couleur est donnée en jeu).
@@ -146,30 +146,58 @@ def page():
 
 def magie():
     """Images des effets magiques des fenêtres, blanches sur fond transparent (la couleur du thème est donnée en jeu).
-    Media/MagieCercle.tga : cercle runique tournant derrière le logo (deux anneaux, huit runes entre eux).
+    Media/MagieLueur, MagieOnde, MagieSceau, MagieGemme, MagieGemmeSerti, MagieReflet : animations du
+    logo (Aurore, Sceau, Souffle), colorées en jeu aux couleurs des classes de soin.
     Media/MagieEtincelle.tga : point de lumière doux à quatre rayons (particules de l'en-tête, étincelle de soin)."""
     from PIL import ImageFilter
     import math
-    traits = dict(RUNES)
+    k = 4
 
-    taille, k = 128, 4
+    # Images des animations du logo (blanches, colorées en jeu). Chaque image est dessinée 4 fois plus grande,
+    # puis réduite : bords nets et lueurs sans marches.
+    def enregistrer(masque, nom, taille):
+        alpha = masque.resize((taille, taille), Image.LANCZOS)
+        sortie = Image.new('RGBA', alpha.size, (255, 255, 255, 0))
+        sortie.putalpha(alpha)
+        sortie.save(os.path.join(ROOT, 'Media', nom + '.tga'))
+
+    def radial(taille, profil):
+        grand = taille * k
+        masque = Image.new('L', (grand, grand), 0)
+        centre = (grand - 1) / 2
+        for y in range(grand):
+            for x in range(grand):
+                masque.putpixel((x, y), int(255 * profil(math.hypot(x - centre, y - centre) / grand)))
+        return masque
+
+    # Lueur ronde et douce (aurore, halo du sceau et du souffle, lueur des gemmes)
+    enregistrer(radial(64, lambda r: math.exp(-(r / 0.25) ** 2) * (1 - (r / 0.5) ** 2) if r < 0.5 else 0), 'MagieLueur', 64)
+    # Onde du souffle : un anneau fin et doux au bord de l'image
+    enregistrer(radial(64, lambda r: math.exp(-((r - 0.46) / 0.022) ** 2) if r < 0.5 else 0), 'MagieOnde', 64)
+    # Sceau : un anneau franc et un second, plus fin, juste à l'intérieur
+    enregistrer(radial(64, lambda r: max(math.exp(-((r - 0.47) / 0.012) ** 2), 0.45 * math.exp(-((r - 0.43) / 0.008) ** 2))), 'MagieSceau', 64)
+
+    # Gemme du sceau (losange plein) et son serti (contour), colorés séparément en jeu
+    taille = 16
+    grand = taille * k
+    for nom, plein in (('MagieGemme', True), ('MagieGemmeSerti', False)):
+        masque = Image.new('L', (grand, grand), 0)
+        points = [(grand / 2, grand * 0.06), (grand * 0.8, grand / 2), (grand / 2, grand * 0.94), (grand * 0.2, grand / 2)]
+        if plein:
+            ImageDraw.Draw(masque).polygon(points, fill=255)
+        else:
+            ImageDraw.Draw(masque).line(points + [points[0]], fill=255, width=int(1.6 * k), joint='curve')
+        enregistrer(masque, nom, taille)
+
+    # Reflet de l'aurore : une bande douce en diagonale qui glisse sur le médaillon (coupée par un masque rond)
+    taille = 64
     grand = taille * k
     masque = Image.new('L', (grand, grand), 0)
-    dessin = ImageDraw.Draw(masque)
-    centre = grand / 2
-    for rayon, epaisseur in ((0.47, 2.2), (0.30, 1.6)):
-        r = grand * rayon
-        dessin.ellipse((centre - r, centre - r, centre + r, centre + r), outline=255, width=int(epaisseur * k))
-    cote, rayon = grand * 0.12, grand * 0.385
-    for n, nom in enumerate(('f', 'u', 'th', 'a', 'r', 'k', 'g', 'w')):
-        angle = n * math.pi / 4
-        x, y = centre + rayon * math.sin(angle) - cote / 2, centre - rayon * math.cos(angle) - cote / 2
-        tracer(dessin, traits[nom], x, y, cote, cote, int(1.8 * k))
-    lueur = masque.filter(ImageFilter.GaussianBlur(3 * k)).point(lambda v: int(v * 0.6))
-    alpha = Image.composite(masque, lueur, masque).resize((taille, taille), Image.LANCZOS)
-    sortie = Image.new('RGBA', alpha.size, (255, 255, 255, 0))
-    sortie.putalpha(alpha)
-    sortie.save(os.path.join(ROOT, 'Media', 'MagieCercle.tga'))
+    for y in range(grand):
+        for x in range(grand):
+            d = ((x - grand / 2) + (y - grand / 2) * 0.55) / grand
+            masque.putpixel((x, y), int(255 * math.exp(-(d / 0.07) ** 2)))
+    enregistrer(masque, 'MagieReflet', taille)
 
     taille = 32
     grand = taille * k
@@ -190,7 +218,7 @@ def magie():
     sortie = Image.new('RGBA', alpha.size, (255, 255, 255, 0))
     sortie.putalpha(alpha)
     sortie.save(os.path.join(ROOT, 'Media', 'MagieEtincelle.tga'))
-    print('Media/MagieCercle.tga et Media/MagieEtincelle.tga : effets magiques')
+    print('Media/Magie*.tga : effets magiques')
 
 
 if __name__ == '__main__':

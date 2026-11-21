@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.30.0", date = "2026-11-21",
+		added = {
+			"Animation du logo au choix (chapitre Fenêtre et aide) : Aurore, Sceau ou Souffle, aux couleurs des classes de soin, ou Aucune. Le cercle de runes qui tournait disparaît.",
+		},
+		improved = {
+			"Règle des 5 secondes : éteinte au départ, à allumer dans la partie Mana ; son trait se pose juste au-dessus de la barre de mana, sans la cacher.",
+		},
+		fixed = {
+			"Règle des 5 secondes : la pêche et les sorts dont le jeu ne donne pas le coût ne lancent plus le trait.",
+		},
+	},
+	{
 		version = "1.29.0", date = "2026-11-21",
 		added = {
 			"Jusqu'à 3 affaiblissements à dissiper par case, le plus important d'abord (chapitre Affaiblissements, 2 au départ).",

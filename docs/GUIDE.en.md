@@ -278,7 +278,12 @@ Type `/lyorune test`, or click "5", "10", "25" or "40" under "Test mode", in the
   - **Modern** (default): dark, clean background with rounded corners, flat buttons, switches with a sliding knob, frost blue and the logo's gold.
   - **Classic**: like the game's own windows, with the game's dialog frame, red buttons and checkboxes, and sunken input fields.
   - **MMORPG**: a grimoire, with a stone background veiled behind the text, a golden border, a rune carved in each corner, bronze plates with a golden bevel as buttons (they sink when clicked), sunken input fields, gold-rimmed switches marked with a rune and section titles in an ancient script.
-- **Magic effects** (on by default): a healing light, gold and green, sweeps across the header; a rune circle slowly turns behind the logo and lights up when the window opens; small motes of light rise in the header; the rune of the open chapter lights up in the sidebar; and each time you change a setting, a healing burst passes over the preview cell while its health rises. The circle and the motes take the theme colour (frost in Modern, gold in Classic, ember in MMORPG). None of this ever touches the healing cells.
+- **Magic effects** (on by default): a healing light, gold and green, sweeps across the header; an animation surrounds the logo, in the healing classes' colours (druid, paladin, priest, shaman); small motes of light rise in the header; the rune of the open chapter lights up in the sidebar; and each time you change a setting, a healing burst passes over the preview cell while its health rises. The motes take the theme colour (frost in Modern, gold in Classic, ember in MMORPG). None of this ever touches the healing cells.
+- **Logo animation** (with magic effects): pick one of three, all slow and soft, nothing flashing.
+  - **Aurora** (default): one glow per healing class drifts around the logo and the colours blend; a gleam slides across the medallion every 10 seconds and small healing sparks rise from its edge.
+  - **Seal**: a golden ring holds one gem per class; a trail of light runs from one gem to the next, which lights up and gives its colour to the halo behind the logo.
+  - **Breath**: every 4 seconds, a healing wave leaves the edge of the logo and fades as it widens, each time in the next class's colour.
+  - **None**: just the logo, the other magic effects stay.
 - **Reduced motion**: windows open with a simple fade, runes and logo stay still, nothing moves in a loop, and the magic effects are turned off. Handy if motion bothers you.
 
 The macros, element placement, bug report, error log, news and performance windows open next to the options window and never cover it. When there is not enough room, the options window slides aside; on a small screen, it fades out while the other window is open and comes back afterwards, on the same chapter. A window bigger than your screen is scaled down to fit. Only one of these windows is open at a time: opening one closes the previous one. Called again while it is already open, a window comes to the front without losing anything: your bug report answers stay.
@@ -341,7 +346,7 @@ Good to know: outside dungeons and raids, the game does not let an addon write i
 
 **My low mana edge** (Health and range chapter, Mana part): without announcing anything, a soft blue edge lights up around the screen when your mana drops below the chosen threshold (20% at first), clearer and clearer as it goes down. The game works it out itself: it works in combat, even when mana is hidden. It covers no window and gets in the way of no click.
 
-**Five-second rule on my frame** (same part, on at first): after a spell that costs mana, the game stops your regeneration for 5 seconds. A thin line, along the top of the mana bar of your own frame, empties during that time: once it is gone, your mana comes back again. Waiting for it to end before the next heal, when the group allows it, makes your mana last. A wand or an item does not restart it.
+**Five-second rule on my frame** (same part, off at first: up to you to turn it on): after a spell that costs mana, the game stops your regeneration for 5 seconds. A thin line, just above the mana bar of your own frame, empties during that time: once it is gone, your mana comes back again. Waiting for it to end before the next heal, when the group allows it, makes your mana last. A wand or an item does not restart it.
 
 ## 11. Profiles and sharing
 

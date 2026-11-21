@@ -40,7 +40,10 @@ Z.translations.enUS = {
 	["Bleu magie, violet malédiction, vert poison, brun maladie."] = "Blue magic, purple curse, green poison, brown disease.",
 	["Le jeu les dessine lui-même sur la case."] = "The game draws them on the cell itself.",
 	["Options, visite guidée et petites fenêtres (pas les cases)."] = "Options, guided tour and small windows (not the cells).",
-	["Lumière dans l'en-tête, cercle runique, étincelle quand un réglage change."] = "Light in the header, rune circle, a spark when a setting changes.",
+	["Lumière dans l'en-tête, animation du logo, étincelle quand un réglage change."] = "Light in the header, logo animation, a spark when a setting changes.",
+	["Animation du logo"] = "Logo animation", ["Aurore"] = "Aurora", ["Sceau"] = "Seal", ["Souffle"] = "Breath", ["Aucune"] = "None",
+	["Autour du logo de cette fenêtre, aux couleurs des classes de soin. Aurore : des lueurs qui dérivent lentement, un reflet, des étincelles de soin. Sceau : quatre gemmes, une lumière passe de l'une à l'autre. Souffle : une onde de soin lente, d'une couleur à l'autre. Demande « Effets magiques », coupée par « Animations réduites »."] = "Around this window's logo, in the healing classes' colours. Aurora: slowly drifting glows, a gleam, healing sparks. Seal: four gems, a light passes from one to the next. Breath: a slow healing wave, from one colour to the next. Needs \"Magic effects\", turned off by \"Reduced motion\".",
+	["Aurore, Sceau ou Souffle, aux couleurs des classes de soin."] = "Aurora, Seal or Breath, in the healing classes' colours.",
 
 	-- Cadres
 	["Taille des cases"] = "Cell size", ["Largeur"] = "Width", ["Hauteur"] = "Height", ["Espacement"] = "Spacing",
@@ -93,7 +96,7 @@ Z.translations.enUS = {
 	["Animations réduites"] = "Reduced motion",
 	["Seulement des fondus courts : runes fixes, logo immobile, rien ne bouge en boucle. La lueur au survol reste."] = "Short fades only: still runes, still logo, nothing moves in a loop. The hover glow stays.",
 	["Effets magiques"] = "Magic effects",
-	["Lumière de soin, or et vert, qui traverse l'en-tête, cercle runique derrière le logo, particules de lumière, rune du chapitre ouvert qui s'allume, éclat sur la case témoin quand un réglage change. Jamais sur vos vraies cases de soin. Coupés par « Animations réduites »."] = "A gold and green healing light crossing the header, a rune circle behind the logo, motes of light, the open chapter's rune lighting up, a glow on the preview cell when a setting changes. Never on your real healing cells. Turned off by \"Reduced motion\".",
+	["Lumière de soin, or et vert, qui traverse l'en-tête, animation du logo, particules de lumière, rune du chapitre ouvert qui s'allume, éclat sur la case témoin quand un réglage change. Jamais sur vos vraies cases de soin. Coupés par « Animations réduites »."] = "A gold and green healing light crossing the header, the logo animation, motes of light, the open chapter's rune lighting up, a glow on the preview cell when a setting changes. Never on your real healing cells. Turned off by \"Reduced motion\".",
 	["Barres animées"] = "Animated bars", ["Texte"] = "Text", ["Texte de vie"] = "Health text", ["Taille du texte"] = "Text size",
 	["Couleurs et transparence"] = "Colours and transparency", ["Couleur des barres"] = "Bar colour",
 	["Luminosité des barres (%)"] = "Bar brightness (%)", ["Opacité des cadres (%)"] = "Frame opacity (%)",
@@ -913,4 +916,7 @@ Z.translations.enUS = {
 	["Liseré bleu doux au bord de l'écran quand votre mana baisse (sous 20 % au départ, réglable ou coupé, partie Mana)."] = "Soft blue edge around the screen when your mana runs low (below 20% by default, adjustable or off, Mana part).",
 	["Règle des 5 secondes : après un sort payé en mana, un trait fin sur votre case se vide jusqu'au retour de la régénération."] = "Five second rule: after a spell paid with mana, a thin line on your cell empties until your regeneration comes back.",
 	["Guide du joueur et visite guidée : ces nouveautés."] = "Player guide and guided tour: these new features.",
+	["Animation du logo au choix (chapitre Fenêtre et aide) : Aurore, Sceau ou Souffle, aux couleurs des classes de soin, ou Aucune. Le cercle de runes qui tournait disparaît."] = "Logo animation of your choice (Window and help chapter): Aurora, Seal or Breath, in the healing classes' colours, or None. The turning rune circle is gone.",
+	["Règle des 5 secondes : éteinte au départ, à allumer dans la partie Mana ; son trait se pose juste au-dessus de la barre de mana, sans la cacher."] = "Five second rule: off at first, turn it on in the Mana part; its line now sits just above the mana bar, without hiding it.",
+	["Règle des 5 secondes : la pêche et les sorts dont le jeu ne donne pas le coût ne lancent plus le trait."] = "Five second rule: fishing and spells whose cost the game does not give no longer start the line.",
 }

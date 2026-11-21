@@ -119,10 +119,14 @@ local RULE_HEIGHT = 2
 local ruleEvents
 
 -- Ce sort a-t-il coûté de la mana ? (baguette, objet, sort sans coût : non)
+-- Seul un numéro ou un coût caché par le jeu compte comme payé (le trait ne manque jamais un soin en combat).
+-- Un coût que le jeu ne donne pas (pêche, métiers, objets) compte comme gratuit : aucun trait (1.29.1).
 local function PaidMana(spellID)
-	if issecret(spellID) or not spellID then return true end
+	if issecret(spellID) then return true end
+	if not spellID then return false end
 	local ok, costs = pcall(C_Spell.GetSpellPowerCost, spellID)
-	if not ok or type(costs) ~= "table" or issecret(costs) then return true end
+	if ok and issecret(costs) then return true end
+	if not ok or type(costs) ~= "table" then return false end
 	for _, cost in ipairs(costs) do
 		if issecret(cost.type) or issecret(cost.cost) then return true end
 		if cost.type == MANA and (cost.cost or 0) > 0 then return true end
@@ -130,7 +134,7 @@ local function PaidMana(spellID)
 	return false
 end
 
--- Le trait d'une case : sur le haut de la barre de mana si elle est montrée, sinon au bas de la vie
+-- Le trait d'une case : juste au-dessus de la barre de mana si elle est montrée, sinon au bas de la vie
 local function RuleLine(b)
 	local line = b.fiveLine
 	if not line then
@@ -152,8 +156,9 @@ local function RuleLine(b)
 	local bar = b.powerShown and b.power or b.hp
 	line:ClearAllPoints()
 	if b.powerShown then
-		line:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
-		line:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
+		-- Juste au-dessus de la barre de mana, collé à elle, sans la recouvrir (demande de l'auteur, 1.29.1)
+		line:SetPoint("BOTTOMLEFT", bar, "TOPLEFT", 0, 0)
+		line:SetPoint("BOTTOMRIGHT", bar, "TOPRIGHT", 0, 0)
 	else
 		line:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", 0, 0)
 		line:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, 0)

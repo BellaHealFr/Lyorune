@@ -422,11 +422,11 @@ function UI.Confirm(widget)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Effets magiques (réglage « magicEffects ») : cercle runique derrière le logo, particules de lumière dans
--- l'en-tête, étincelle de soin avec la rune de confirmation. Couleur de la lueur du thème (givre, or, braise).
+-- Effets magiques (réglage « magicEffects ») : animation du logo au choix (Logo.lua), particules de lumière dans
+-- l'en-tête, étincelle de soin avec la rune de confirmation. Couleur de la lueur du thème (givre, or, braise) pour
+-- les particules et l'étincelle.
 -- Jamais sur les cases de soin. Coupés par « Animations réduites ». Images : outils/runes.py.
 ----------------------------------------------------------------------------------------------------
-UI.MAGIC_CIRCLE = MEDIA .. "MagieCercle"
 UI.MAGIC_SPARK = MEDIA .. "MagieEtincelle"
 local FLASHES = 3 -- au plus 3 éclairs par seconde, toutes fenêtres confondues
 local flashes = {}
@@ -538,26 +538,12 @@ local function Beam(parent)
 	return beam
 end
 
--- Effets de l'en-tête d'une fenêtre : cercle runique derrière « logo », particules entre le titre et « right »
+-- Effets de l'en-tête d'une fenêtre : animation derrière « logo » (Logo.lua, chargé après ce fichier), particules entre le titre et « right »
 -- (le champ de recherche), lumière de soin qui parcourt le trait sous l'en-tête. La zone des particules et celle du
 -- faisceau coupent tout ce qui en sort : rien ne passe derrière le texte.
 function UI.HeaderMagic(w, logo, right)
 	local m = { motes = {}, rises = {} }
-	m.circle = w:CreateTexture(nil, "BORDER")
-	m.circle:SetTexture(UI.MAGIC_CIRCLE)
-	m.circle:SetSize(38, 38)
-	m.circle:SetPoint("CENTER", logo)
-	m.circle:SetBlendMode("ADD")
-	m.spin = m.circle:CreateAnimationGroup()
-	m.spin:SetLooping("REPEAT")
-	local turn = m.spin:CreateAnimation("Rotation")
-	turn:SetDegrees(-360)
-	turn:SetDuration(300) -- un tour toutes les 5 minutes : à peine perceptible
-	-- Éclat à l'ouverture : le cercle s'allume doucement, puis retombe lentement à son éclat de repos
-	m.burst = m.circle:CreateAnimationGroup()
-	AlphaAnim(m.burst, 0, 0.75, 1.2, "IN_OUT", 1)
-	AlphaAnim(m.burst, 0.75, 0.35, 2.5, "IN_OUT", 2)
-	m.burst:SetToFinalAlpha(true)
+	m.logo = UI.LogoMagic(w, logo)
 
 	m.field = CreateFrame("Frame", nil, w)
 	m.field:SetPoint("TOPLEFT", w.title, "TOPRIGHT", 12, 12)
@@ -593,42 +579,33 @@ function UI.HeaderMagic(w, logo, right)
 	end
 
 	function m.Paint()
-		MagicColor(m.circle, m.circle:GetAlpha())
 		for _, mote in ipairs(m.motes) do MagicColor(mote) end
 	end
 
 	function m.Stop()
-		m.spin:Stop()
-		m.burst:Stop()
+		m.logo.Stop()
 		m.sweep:Stop()
 		for _, group in ipairs(m.rises) do group:Stop() end
 	end
 
 	-- À l'ouverture et à chaque changement de réglage : tout part, ou tout s'arrête et se cache
-	function m.Update(opening)
+	function m.Update()
 		local on = UI.Magic()
-		m.circle:SetShown(on)
 		m.field:SetShown(on)
 		m.track:SetShown(on)
+		m.logo.Update(on and w:IsShown())
 		if not on or not w:IsShown() then return m.Stop() end
 		m.Paint()
 		if not m.sweep:IsPlaying() then
 			m.pass:SetOffset(w:GetWidth() - 44 + BEAM, 0) -- de tout à gauche du trait à tout à droite
 			m.sweep:Play()
 		end
-		if opening and UI.Flash() then
-			m.burst:Stop()
-			m.burst:Play()
-		elseif not m.burst:IsPlaying() then
-			m.circle:SetAlpha(0.35)
-		end
-		if not m.spin:IsPlaying() then m.spin:Play() end
 		for _, group in ipairs(m.rises) do
 			if not group:IsPlaying() then group:Play() end
 		end
 	end
 
-	w:HookScript("OnShow", function() m.Update(true) end)
+	w:HookScript("OnShow", function() m.Update() end)
 	w:HookScript("OnHide", m.Stop)
 	UI.OnSkin(m.Paint)
 	UI.OnSkin(m.Rail)
