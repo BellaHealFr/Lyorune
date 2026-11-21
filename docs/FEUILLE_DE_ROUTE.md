@@ -498,10 +498,10 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
     mesure le couple touche + sort : un autre sort sur la ligne repart de zéro, échanger deux raccourcis garde le
     compte de chaque sort. Vérifié dans le code du jeu (`SecureActionButton_OnClick`, branche `forever`) : un seul
     `OnClick` par appui, souris ou touche au survol, puisque les deux ont le même sens depuis C11.
-- [ ] Tests, guide fr et en, visite (une ligne sur une carte existante), `## Notes`, README, site, essai en jeu,
+- [x] Tests, guide fr et en, visite (une ligne sur une carte existante), `## Notes`, README, site, essai en jeu,
   publication. Fait le 21 novembre 2026 : tests (étapes 24, lots 1 et 2), guides, visite (une ligne sur les cartes
-  « Ce que disent les couleurs » et « Soigner d'un clic »), Notes, README, site, installé dans le jeu. **Reste :
-  essai en jeu de l'auteur, puis publication.**
+  « Ce que disent les couleurs » et « Soigner d'un clic »), Notes, README, site, installé dans le jeu. Essayée
+  en jeu par l'auteur (« tout est ok ») et publiée le 21 novembre 2026 (1.31.0).
 
 ## Étape 25 : répartition entre soigneurs (1.32.0)
 - [ ] Lot 1, sans aucun message : je choisis les groupes ou les joueurs dont je m'occupe (fenêtre simple, par
