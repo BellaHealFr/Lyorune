@@ -21,6 +21,8 @@
 <a href="README.md">Version française</a>
 </p>
 
+<p align="center"><img src="docs/images/captures/banniere.jpg" alt="Lyorune, healing frames for World of Warcraft: Forever" width="100%"></p>
+
 ---
 
 The tank who survives by a miracle. The mage who "just wanted to see". The heal that lands at the very last second, and the whole group breathing again. **Those are the moments we play healers for.**
@@ -39,6 +41,14 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 </table>
 
 <!-- captures:debut -->
+## Screenshots
+
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/images/captures/cases.jpg" alt="Lyorune frames: health, mana, heals and role at a glance"><br><em>Lyorune frames: health, mana, heals and role at a glance</em></td>
+<td width="50%" align="center"><img src="docs/images/captures/options.png" alt="The options: every setting has its checkbox"><br><em>The options: every setting has its checkbox</em></td>
+</tr>
+</table>
 <!-- captures:fin -->
 
 ## What Lyorune does for you

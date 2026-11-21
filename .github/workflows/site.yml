@@ -36,7 +36,8 @@ jobs:
           cp -r site/. public/
           mkdir -p public/images
           cp docs/images/*.png public/images/
-          cp -r docs/images/runes docs/images/piliers public/images/
+          cp -r docs/images/runes docs/images/piliers docs/images/captures public/images/
+          rm -f public/images/captures/*.md
           touch public/.nojekyll
           version=$(grep -oP '## Version: \K\S+' Lyorune.toc)
           date=$(date -u +%Y-%m-%d)

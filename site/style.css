@@ -160,6 +160,13 @@ footer nav { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
   box-shadow: 0 0 60px rgba(212, 169, 78, .15);
 }
 
+/* En images : la bannière, puis les captures côte à côte (l'une sous l'autre sur téléphone) */
+.galerie img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--bord); }
+.galerie .banniere { max-width: 960px; margin: 0 auto 20px; box-shadow: 0 0 60px rgba(212, 169, 78, .15); }
+.captures { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
+.captures figure { margin: 0; }
+.captures figcaption { margin-top: 8px; color: var(--doux); font-size: 15px; text-align: center; }
+
 /* Les quatre voies du soin */
 .voies { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
 .voie {

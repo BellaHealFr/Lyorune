@@ -17,7 +17,9 @@ DOSSIER = os.path.join(ROOT, 'docs', 'images', 'captures')
 LARGEUR_MAX = 1600
 
 # (nom du fichier sans extension, légende française, légende anglaise)
+# banniere.jpg, dans le même dossier, est l'image d'en-tête : placée à la main en haut des deux pages et du site.
 CAPTURES = [
+    ('cases', 'Les cases de Lyorune : vie, mana, soins et rôle d\'un coup d\'œil', 'Lyorune frames: health, mana, heals and role at a glance'),
     ('groupe', 'En donjon : tout le groupe sous les yeux', 'In a dungeon: the whole group at a glance'),
     ('raid', 'En raid : 25 ou 40 joueurs, toujours lisibles', 'In a raid: 25 or 40 players, still readable'),
     ('dissipation', 'Une case se colore : vous pouvez dissiper', 'A frame lights up: you can dispel'),

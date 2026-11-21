@@ -21,6 +21,8 @@
 <a href="README.en.md">English</a>
 </p>
 
+<p align="center"><img src="docs/images/captures/banniere.jpg" alt="Lyorune, des cadres de soin pour World of Warcraft: Forever" width="100%"></p>
+
 ---
 
 Le tank qui tient par miracle. Le mage qui a encore « juste voulu voir ». Le soin qui part à la dernière seconde, et tout le groupe qui respire. **C'est pour ces moments-là qu'on joue soigneur.**
@@ -32,6 +34,14 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 <p align="center"><img src="docs/images/piliers.png" alt="Soignez avec précision, protégez vos alliés, anticipez chaque menace, devenez indispensable" width="100%"></p>
 
 <!-- captures:debut -->
+## En images
+
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/images/captures/cases.jpg" alt="Les cases de Lyorune : vie, mana, soins et rôle d'un coup d'œil"><br><em>Les cases de Lyorune : vie, mana, soins et rôle d'un coup d'œil</em></td>
+<td width="50%" align="center"><img src="docs/images/captures/options.png" alt="Les options : chaque réglage a sa case à cocher"><br><em>Les options : chaque réglage a sa case à cocher</em></td>
+</tr>
+</table>
 <!-- captures:fin -->
 
 ## Ce que Lyorune fait pour vous
