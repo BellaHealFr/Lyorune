@@ -75,6 +75,21 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Icônes et barres
 ----------------------------------------------------------------------------------------------------
+-- Police du décompte à la mesure de l'icône (6 à 12 points) : le chiffre tient dans son icône au lieu de mordre
+-- sur la voisine (icônes de 8 à 10 pixels en Barre, Carré et Bandeau). Le jeu demande le nom d'une police : une
+-- par hauteur, créée une seule fois.
+local countdownFonts = {}
+function Z.CountdownFont(size)
+	local height = math.max(6, math.min(12, math.floor((size or 12) * 0.62 + 0.5)))
+	if not countdownFonts[height] then
+		local name = "LyoruneCountdown" .. height
+		local font = _G[name] or CreateFont(name)
+		font:SetFont(STANDARD_TEXT_FONT, height, "OUTLINE")
+		countdownFonts[height] = name
+	end
+	return countdownFonts[height]
+end
+
 local function NewIcon(b)
 	local icon = CreateFrame("Frame", nil, b.over)
 	icon.texture = icon:CreateTexture(nil, "ARTWORK")
@@ -120,9 +135,12 @@ local function ShowAura(icon, unit, aura, mine)
 	-- Cercle et décompte sont dessinés par le jeu : ils marchent en combat, même sur une durée secrète
 	icon.cooldown:SetDrawSwipe(not mine or db.hotSwipe)
 	icon.cooldown:SetHideCountdownNumbers(not (mine and db.hotCountdown))
-	if mine and db.hotCountdown and icon.cooldown.SetCountdownFont and not icon.smallNumbers then
-		icon.smallNumbers = true
-		icon.cooldown:SetCountdownFont("GameFontHighlightSmallOutline")
+	if mine and db.hotCountdown and icon.cooldown.SetCountdownFont then
+		local font = Z.CountdownFont(icon:GetWidth())
+		if icon.countdownFont ~= font then
+			icon.countdownFont = font
+			icon.cooldown:SetCountdownFont(font)
+		end
 	end
 	icon.count:SetText((not mine or db.hotCharges) and GetAuraCount(unit, id, 2, 99) or "")
 	icon:SetAlpha(1)

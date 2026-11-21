@@ -183,19 +183,20 @@ local function Silent(button)
 	Call(button, "SetMouseMotionEnabled", false)
 end
 
--- Réglages d'une icône : cercle, décompte, charges, voile de fin (seulement pour mes soins)
-local function StyleIcon(button, mine)
+-- Réglages d'une icône : cercle, décompte (police à la taille de l'icône), charges, voile de fin (seulement pour
+-- mes soins)
+local function StyleIcon(button, mine, size)
 	local db = Z.db
 	local cooldown = button.Cooldown
 	Call(cooldown, "SetDrawSwipe", not mine or db.hotSwipe)
 	Call(cooldown, "SetHideCountdownNumbers", not (mine and db.hotCountdown))
-	if mine and db.hotCountdown then Call(cooldown, "SetCountdownFont", "GameFontHighlightSmallOutline") end
+	if mine and db.hotCountdown then Call(cooldown, "SetCountdownFont", Z.CountdownFont(size)) end
 	Call(button.Texts, "SetAlpha", (not mine or db.hotCharges) and 1 or 0)
 	Call(button.Veil, "SetAlpha", (mine and db.hotFade) and 1 or 0)
 end
 
--- Icône d'aura ; mine = un de mes soins
-local function DressIcon(button, mine)
+-- Icône d'aura ; mine = un de mes soins ; size = taille de sa rangée
+local function DressIcon(button, mine, size)
 	Silent(button)
 	Call(button.Texts, "SetFrameLevel", (Call(button.Cooldown, "GetFrameLevel") or 1) + 1)
 	Call(button, "SetIcon", button.Icon)
@@ -203,7 +204,7 @@ local function DressIcon(button, mine)
 	Call(button, "SetApplicationCount", Part(button.Texts, "Count"), {})
 	-- Fin du soin : le jeu montre ce voile pendant les derniers instants (réglage « hotFade »)
 	if mine then Call(button, "AddPandemicRegion", button.Veil) end
-	StyleIcon(button, mine)
+	StyleIcon(button, mine, size)
 end
 
 -- Barre fine : couleur selon son rang, largeur selon la case
@@ -365,8 +366,8 @@ end
 
 local function Dresser(b, entry)
 	local how = entry.dress
-	if how == "mine" then return function(button) DressIcon(button, true) end end
-	if how == "other" then return function(button) DressIcon(button, false) end end
+	if how == "mine" then return function(button) DressIcon(button, true, entry.size) end end
+	if how == "other" then return function(button) DressIcon(button, false, entry.size) end end
 	if how == "bar" then return DressBar end
 	if how == "corner" then return DressCorner(b, entry.key) end
 	if how == "dispel" then return DressDispel(b) end
@@ -429,11 +430,11 @@ local function Place(b)
 		end
 	end
 	for _, button in ipairs(b.boxButtons.hots or {}) do
-		if Open(button) then StyleIcon(button, true) end
+		if Open(button) then StyleIcon(button, true, rows.hots.size) end
 	end
 	for _, key in ipairs({ "dispellable", "others" }) do
 		for _, button in ipairs(b.boxButtons[key] or {}) do
-			if Open(button) then StyleIcon(button, false) end
+			if Open(button) then StyleIcon(button, false, rows.debuffs.size) end
 		end
 	end
 	for _, button in ipairs(b.boxButtons.bars or {}) do

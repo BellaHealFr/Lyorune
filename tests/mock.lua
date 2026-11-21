@@ -87,6 +87,7 @@ function Obj:GetObjectType() return self._kind end
 function Obj:SetVertexColor(r, g, b, a) self._color = { r, g, b, a } if a ~= nil then self._alpha = a end end -- comme le jeu : l'opacité de la couleur remplace celle de la texture
 function Obj:SetTextColor(r, g, b, a) self._color = { r, g, b, a } end
 function Obj:SetFont(file, size) self._font, self._size = file, size return true end
+function Obj:SetCountdownFont(name) self._countdownFont = name end
 function Obj:SetTexture(t) self._tex = t end
 function Obj:SetAlpha(a) self._alpha = a end
 function Obj:SetMinMaxValues(lo, hi) self._min, self._max = lo, hi end
@@ -128,6 +129,7 @@ function Obj:SetScale(s) self._scale = s end
 function Obj:GetScale() return self._scale or 1 end
 function GetCursorPosition() return CURSOR_X or 500, CURSOR_Y or 300 end
 GameTooltip = new("GameTooltip", "GameTooltip")
+function CreateFont(name) return new("Font", name) end
 function CreateFrame(kind, name, parent)
 	local o = new(kind, name, parent)
 	if parent and parent ~= UIParent then -- UIParent : trop d'enfants pour les compter, et personne ne les lit

@@ -5597,6 +5597,38 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   Z:Refresh()
 end)
 
+step("etape 21, lot 4 : decompte des soins a la taille de l'icone (aucun chiffre ne mord sur l'icone voisine)", function()
+  local keys = { "shape", "hotCountdown", "hotStyle", "hotCount", "showHots", "placement" }
+  local saved = {}
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  -- Police : 62 % de l'icone, de 6 a 12 points, une seule par hauteur
+  assert(Z.CountdownFont(9) == "LyoruneCountdown6" and LyoruneCountdown6._size == 6, "icone de 9 pixels : 6 points")
+  assert(Z.CountdownFont(11) == "LyoruneCountdown7" and Z.CountdownFont(4) == "LyoruneCountdown6", "Tuile, et plancher")
+  assert(Z.CountdownFont(40) == "LyoruneCountdown12" and Z.CountdownFont(nil) == "LyoruneCountdown7", "plafond, et taille inconnue")
+  local font = LyoruneCountdown6
+  assert(Z.CountdownFont(9.4) == "LyoruneCountdown6" and LyoruneCountdown6 == font, "police creee une seule fois")
+  -- Chaque forme : le chiffre est plus petit que son icone, et suit la taille choisie dans l'editeur
+  local b, corners = Z.buttons[1], Z.db.cornerSpells[Z.class]
+  Z.db.cornerSpells[Z.class] = nil
+  AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 41, spellId = 139 } }
+  Z.db.placement, Z.db.hotStyle, Z.db.hotCount, Z.db.showHots, Z.db.hotCountdown = {}, "ICONS", 4, true, true
+  for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+    Z:ApplyShape(shape) Z:Refresh() FireEvent("UNIT_AURA", "player") RunUpdates()
+    local icon, size = b.hots[1], Z.AuraRows().hots.size
+    assert(icon:IsShown(), shape .. " : icone de soin")
+    local wanted = Z.CountdownFont(size)
+    assert(icon.cooldown._countdownFont == wanted, shape .. " : police " .. tostring(icon.cooldown._countdownFont) .. " au lieu de " .. wanted)
+    assert(_G[wanted]._size <= math.max(6, size * 0.7), shape .. " : chiffre trop grand pour une icone de " .. size)
+  end
+  Z.SetElementSize("hots", 200) Z:Refresh() FireEvent("UNIT_AURA", "player") RunUpdates()
+  local big = Z.AuraRows().hots.size
+  assert(b.hots[1].cooldown._countdownFont == Z.CountdownFont(big), "icones agrandies : chiffre agrandi")
+  AURAS["HELPFUL|PLAYER"] = nil
+  Z.db.cornerSpells[Z.class] = corners
+  for _, key in ipairs(keys) do Z.db[key] = saved[key] end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

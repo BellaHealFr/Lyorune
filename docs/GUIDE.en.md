@@ -298,7 +298,7 @@ Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your 
 - **Heals shown**: from 1 to 6 per cell (4 at first). In the Debuffs chapter, **Debuffs shown** (fine settings of the Icons part) does the same for debuffs: from 2 to 5 (2 at first), the one you can dispel always first. A change made in combat applies when the fight ends.
 - **Icons or thin bars**: pick the display. On icons, four fine settings combine as you like:
   - **Draining circle**: a shade turns as time passes;
-  - **Countdown in seconds**: the remaining seconds, drawn by the game;
+  - **Countdown in seconds**: the remaining seconds, drawn by the game, sized to the icon (they never spill onto the next one);
   - **Icon fades at the end**: near the end of the heal the icon darkens. Time to recast;
   - **Number of charges**: a small number when the heal has several.
 - **Cell corners**: place one of your spells in each corner. It becomes a small coloured square (green, blue, yellow, pink) that drains over time, and leaves the icon row. At a glance you see who lacks your Renew or Rejuvenation. Each class keeps its own corners: your druid and your priest never mix. The chosen corners also show on the preview cell and in test mode.

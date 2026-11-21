@@ -297,7 +297,7 @@ Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit 
 - **Nombre de soins affichés** : de 1 à 6 par case (4 au départ). Dans le chapitre Affaiblissements, **Nombre d'affaiblissements** (réglages fins de la partie Icônes) fait de même pour les affaiblissements : de 2 à 5 (2 au départ), celui que vous pouvez dissiper toujours en premier. Un changement fait en combat s'applique dès la fin du combat.
 - **Icônes ou barres fines** : choisissez l'affichage. Sur les icônes, quatre réglages fins se combinent comme vous voulez :
   - **Cercle qui se vide** : un voile tourne à mesure que le temps passe ;
-  - **Décompte en secondes** : les secondes restantes, écrites par le jeu ;
+  - **Décompte en secondes** : les secondes restantes, écrites par le jeu, à la taille de l'icône (elles ne débordent jamais sur la voisine) ;
   - **Icône qui s'efface à la fin** : vers la fin du soin, l'icône s'assombrit. C'est le moment de relancer ;
   - **Nombre de charges** : un petit chiffre quand le soin en a plusieurs.
 - **Coins de la case** : placez un de vos sorts dans chaque coin. Il devient un petit carré de couleur (vert, bleu, jaune, rose) qui se vide avec le temps, et quitte la rangée d'icônes. D'un coup d'œil, vous voyez qui n'a pas votre Rénovation ou votre Récupération. Chaque classe garde ses propres coins : votre druide et votre prêtre ne se mélangent pas. Les coins choisis se voient aussi sur la case témoin et dans le mode test.
