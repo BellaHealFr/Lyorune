@@ -6,7 +6,8 @@
 -- Format : Lyorune2;cle=tVALEUR;...   avec t = n (nombre), b (oui/non) ou s (texte).
 --   c.CLASSE.touche=sSort   un clic de souris        h.CLASSE.numero=sTOUCHE|Sort   une touche au survol
 --   l.liste=sNom            une entrée d'une liste personnelle
---   p.FORME.element=sX,Y    un élément décalé dans l'éditeur de placement
+--   p.FORME.element=sX,Y    un élément décalé dans l'éditeur de placement ; sX,Y,T avec sa taille T en %
+--                           (absente à 100 % : un code sans taille reste lisible par les anciennes versions)
 -- Les caractères spéciaux sont écrits %XX. A l'import, chaque valeur est contrôlée avec les tables
 -- Z.defaults, Z.limits et Z.choices (Core.lua) : un code abîmé ou malveillant ne peut rien casser.
 -- Un texte libre (les annonces dites dans le chat) n'est jamais partagé : un code reçu pourrait sinon faire dire
@@ -96,7 +97,8 @@ function Z:Export()
 	end
 	for shape, elements in pairs(Z.db.placement) do
 		for key, at in pairs(elements) do
-			parts[#parts + 1] = "p." .. shape .. "." .. key .. "=s" .. Encode(at[1] .. "," .. at[2])
+			local size = at[3] and ("," .. at[3]) or ""
+			parts[#parts + 1] = "p." .. shape .. "." .. key .. "=s" .. Encode(at[1] .. "," .. at[2] .. size)
 		end
 	end
 	return table.concat(parts, ";")
@@ -181,16 +183,24 @@ function Z:Import(code)
 					count = count + 1
 				end
 			elseif shape then
-				-- forme et élément connus, deux nombres entiers bornés : rien d'autre n'entre
-				local x, y = raw:match("^(%-?%d+),(%-?%d+)$")
+				-- forme et élément connus, deux nombres entiers bornés, et la taille d'une icône : rien d'autre n'entre
+				local x, y, size = raw:match("^(%-?%d+),(%-?%d+),?(%d*)$")
 				local limit = Z.limits.placement
 				if kind == "s" and x and Z.shapes[shape] and Z.IsPlaceElement(element) then
 					x = math.max(limit[1], math.min(limit[2], tonumber(x)))
 					y = math.max(limit[1], math.min(limit[2], tonumber(y)))
+					size = tonumber(size)
+					if size and Z.IsSizedElement(element) then
+						size = math.max(limit.size[1], math.min(limit.size[2], size))
+						if size == 100 then size = nil end
+					else
+						size = nil
+					end
 					places[shape] = places[shape] or {}
-					places[shape][element] = { x, y }
+					places[shape][element] = { x, y, size }
 					count = count + 1
 				end
+
 			elseif list then
 				if kind == "s" and LISTS[list] and #raw > 0 and #raw <= 80 then
 					lists[list] = lists[list] or {}

@@ -24,7 +24,8 @@ Z.defaults = {
 	-- Cadres
 	width = 86, height = 42, spacing = 3,
 	scale = 100,               -- échelle générale de tous les cadres, en %
-	placement = {},            -- place de chaque élément de la case, par forme, en pixels : placement.TILE.name = { 3, -2 }
+	placement = {},            -- place et taille de chaque élément de la case, par forme : placement.TILE.role = { 3, -2, 150 }
+	                           -- (décalage en pixels, puis taille en %, absente à 100 %)
 	layout = "GROUP",          -- rangement : par groupe de raid, par rôle, ou en une seule grille
 	sortOrder = "INDEX",       -- ordre dans chaque bloc : celui du groupe, par nom, ou par classe puis nom
 	keepGroupPlace = false,    -- en raid, chaque groupe garde sa place, même vide (rangement par groupe)
@@ -157,7 +158,7 @@ Z.defaults = {
 Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
-	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1 }, -- placement : décalage d'un élément, dans chaque sens
+	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 200, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
 	lowHealthAt = { 10, 60, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 }
 

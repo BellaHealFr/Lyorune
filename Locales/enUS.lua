@@ -462,10 +462,17 @@ Z.translations.enUS = {
 	["Gauche"] = "Left", ["Haut"] = "Up", ["Bas"] = "Down", ["Droite"] = "Right",
 	["Un pixel par clic, cinq avec Maj."] = "One pixel per click, five with Shift.",
 	["Remettre à sa place"] = "Put it back", ["Tout remettre"] = "Reset all",
-	["Tous les éléments de cette forme de case reviennent à leur place d'origine."] = "Every element of this cell shape goes back to its original place.",
+	["Tous les éléments de cette forme de case reviennent à leur place et à leur taille d'origine."] = "Every element of this cell shape goes back to its original place and size.",
+	["Place et taille d'origine de cet élément."] = "Original place and size of this element.",
+	["Taille : %d %%"] = "Size: %d %%", ["Au plus grand pour cette case : %d %%"] = "As large as this cell allows: %d %%",
+	["Au plus petit : %d %%"] = "Smallest size: %d %%", ["Taille : réglage « %s »"] = "Size: \"%s\" setting",
+	["Les barres fines gardent leur épaisseur."] = "Thin bars keep their thickness.",
+	["Plus petit : 10 % par clic, ou la molette sur la case."] = "Smaller: 10 % per click, or the mouse wheel on the cell.",
+	["Plus grand : 10 % par clic, ou la molette sur la case."] = "Larger: 10 % per click, or the mouse wheel on the cell.",
 	["Décalage : %d, %d"] = "Offset: %d, %d", ["Forme : %s"] = "Shape: %s",
 	["Au bord de la case : %d, %d"] = "At the edge of the cell: %d, %d",
-	["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). Il s'arrête au bord de la case. Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."] = "Drag an element on the cell, or pick it in the list and nudge it with the arrows (Shift: 5 pixels). It stops at the edge of the cell. Each cell shape keeps its own placements. Every element is shown here, even those switched off in the options.",
+	["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."] = "Drag an element on the cell, or pick it in the list and nudge it with the arrows (Shift: 5 pixels). The mouse wheel on an icon, or \"-\" and \"+\", changes its size. Nothing leaves the cell. Each cell shape keeps its own placements. Every element is shown here, even those switched off in the options.",
+
 
 	-- Forme des cases, angles, couleurs (1.9.0)
 	["Forme des cases"] = "Cell shape", ["Barre"] = "Bar", ["Tuile"] = "Tile", ["Carré"] = "Square", ["Bandeau"] = "Strip",

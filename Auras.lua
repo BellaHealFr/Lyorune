@@ -92,13 +92,12 @@ local function NewIcon(b)
 end
 
 -- Icône numéro « index » d'une rangée, créée à la demande. direction : 1 vers la droite, -1 vers la gauche
-local function GetIcon(b, list, index, point, x, y, direction, scale)
+local function GetIcon(b, list, index, point, x, y, direction, size)
 	local icon = list[index]
 	if not icon then
 		icon = NewIcon(b)
 		list[index] = icon
 	end
-	local size = math.floor(b.iconSize * (scale or 1) + 0.5)
 	icon:SetSize(size, size)
 	icon:ClearAllPoints()
 	icon:SetPoint(point, b.over, point, x + direction * (index - 1) * (size + 2), y)
@@ -267,14 +266,16 @@ end
 function Z.BigIcon(b)
 	local dx, dy = Z.Offset("big")
 	b.bigList = b.bigList or {}
-	b.bigIcon = GetIcon(b, b.bigList, 1, "LEFT", 3 + dx, dy, 1, 1.6)
+	b.bigIcon = GetIcon(b, b.bigList, 1, "LEFT", 3 + dx, dy, 1, Z.BigIconSize())
 	return b.bigIcon
 end
 
 function Z.BuffIcon(b)
 	local dx, dy = Z.Offset("buff")
 	b.buffList = b.buffList or {}
-	b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, 1)
+	b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, 1,
+		Z.ElementSize("buff", Z.IconSize()))
+
 	return b.buffIcon
 end
 

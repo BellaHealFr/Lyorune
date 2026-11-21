@@ -2667,6 +2667,19 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     Z.SetOffset("hots", 4, -2) Z:Refresh()
     assert(b.boxes.hots == kept, "conteneur refait pour un simple deplacement")
     Z.SetOffset("big", 0, 0) Z.SetOffset("hots", 0, 0) Z:Refresh()
+    -- taille d'une rangee ou de la grande icone (1.27.0) : boutons refaits, en combat seulement a la fin du combat ;
+    -- en attendant, le conteneur garde la longueur de ligne de ses boutons d'avant
+    kept = b.boxes.hots
+    local keptSlots, line, before = b.boxes.slots, b.boxes.hots.maxLine, b.boxes.hots.groups.hots.size
+    COMBAT = true
+    Z.SetElementSize("hots", 150) Z.SetElementSize("big", 120) Z:Refresh()
+    assert(b.boxes.hots == kept and b.boxes.slots == keptSlots, "conteneurs refaits en combat")
+    assert(b.boxes.hots.maxLine == line, "ligne du conteneur changee avant ses boutons")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+    assert(b.boxes.hots ~= kept and b.boxes.hots.groups.hots.size > before, "taille des soins non appliquee apres le combat")
+    assert(b.boxes.slots ~= keptSlots, "grande icone : taille non appliquee apres le combat")
+    Z.SetElementSize("hots", 100) Z.SetElementSize("big", 100) Z:Refresh()
+    assert(Z.db.placement[Z.db.shape] == nil, "taille d'origine : entree effacee")
     -- reglage des icones (decompte) : applique par reconstruction
     kept = b.boxes.hots
     Z.db.hotCountdown = not Z.db.hotCountdown Z:Refresh()
@@ -5437,7 +5450,155 @@ step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre,
   Z:Refresh()
 end)
 
+step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50 a 200 %, par forme, partage, combat)", function()
+  local keys = { "shape", "width", "height", "corners", "manaBars", "hotStyle", "hotCount", "debuffCount", "fontSize",
+    "powerHeight", "autoShrink", "showHots", "showDebuffs", "debuffMode" }
+  local saved = { placement = CopyTable(Z.db.placement), corners = Z.db.cornerSpells[Z.class], members = MEMBERS }
+  for _, key in ipairs(keys) do saved[key] = Z.db[key] end
+  local b, L = Z.buttons[1], Z.L
+  Z.db.placement = {} Z.db.cornerSpells[Z.class] = nil
+  Z.db.corners, Z.db.hotStyle, Z.db.manaBars, Z.db.autoShrink = "SQUARE", "ICONS", "ALL", true
+  Z.db.showHots, Z.db.showDebuffs, Z.db.debuffMode = true, true, "ALL"
+  Z:ApplyShape("TILE")
+  local icon = Z.IconSize()
+
+  -- Réglage : taille gardée avec le décalage, bornée, effacée à 100 %
+  assert(Z.GetElementSize("role") == 100 and Z.ElementScale("role") == 1, "taille d'origine")
+  Z.SetElementSize("role", 150) Z:Refresh()
+  assert(Z.db.placement.TILE.role[1] == 0 and Z.db.placement.TILE.role[3] == 150, "taille enregistree")
+  assert(b.role._w == math.floor((icon - 2) * 1.5 + 0.5), "icone de role agrandie : " .. b.role._w)
+  Z.SetOffset("role", -3, -1)
+  assert(Z.db.placement.TILE.role[3] == 150 and Z.db.placement.TILE.role[1] == -3, "le decalage garde la taille")
+  Z.SetOffset("role", 0, 0)
+  assert(Z.db.placement.TILE.role and Z.db.placement.TILE.role[3] == 150, "place d'origine : la taille reste")
+  Z.SetElementSize("role", 100)
+  assert(Z.db.placement.TILE == nil, "place et taille d'origine : entree effacee")
+  Z.SetElementSize("marker", 500) assert(Z.GetElementSize("marker") == 200, "200 % au plus")
+  Z.SetElementSize("marker", 10) assert(Z.GetElementSize("marker") == 50, "50 % au moins")
+  Z:Refresh()
+  assert(b.marker._w == math.floor(icon * 0.5 + 0.5), "marqueur rapetisse")
+  Z.SetElementSize("marker", 100)
+  -- Le nom, le texte de vie et les auras privées gardent leur propre réglage ; les barres fines leur épaisseur
+  for _, key in ipairs({ "name", "text", "private" }) do
+    Z.SetElementSize(key, 150)
+    assert(not Z.CanSize(key) and Z.GetElementSize(key) == 100 and Z.ElementScale(key) == 1, "taille de " .. key)
+  end
+  assert(Z.db.placement.TILE == nil, "taille d'un texte enregistree")
+  Z.db.hotStyle = "BARS" assert(not Z.CanSize("hots"), "barres fines") Z.db.hotStyle = "ICONS"
+  -- Chaque forme garde ses tailles
+  Z.SetElementSize("big", 150)
+  Z:ApplyShape("BAR")
+  assert(Z.GetElementSize("big") == 100 and Z.GetElementSize("big", "TILE") == 150, "taille propre a chaque forme")
+  Z:ApplyShape("TILE") Z:Refresh()
+  assert(Z.BigIcon(b)._w == Z.BigIconSize() and Z.BigIconSize() == math.floor(math.floor(icon * 1.6 + 0.5) * 1.5 + 0.5), "grande icone")
+  Z.SetElementSize("big", 100)
+  -- Jamais plus grand que la case
+  Z:ApplyShape("BANNER")
+  Z.SetElementSize("center", 200) Z:Refresh()
+  local W, H = Z.CellSize()
+  assert(b.center._w <= math.min(W, H), "icone centrale plus grande que la case")
+  local left, right, low, high = Z.OffsetRange("center")
+  assert(left <= right and low <= high, "bornes a l'envers")
+  Z.SetElementSize("center", 100)
+  -- Sur une ligne, le nom part après l'icône de rôle, à sa taille
+  Z:ApplyShape("BAR")
+  Z.SetElementSize("role", 150) Z:Refresh()
+  local rows = Z.AuraRows()
+  assert(rows.nameX == Z.ElementSize("role", Z.IconSize() - 2) + 5 and b.name._point[4] == rows.nameX, "nom apres l'icone de role")
+  Z.SetElementSize("role", 100) Z:Refresh()
+  assert(Z.AuraRows().nameX == Z.IconSize() + 3, "nom a sa place d'origine")
+
+  -- Rangées de soins et d'affaiblissements à toutes les tailles : dans la case, deux lignes au plus
+  local checked = 0
+  for _, members in ipairs({ 5, 40 }) do
+    MEMBERS = members
+    for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+      Z:ApplyShape(shape)
+      Z.db.hotCount, Z.db.debuffCount = 4, 3
+      local base = Z.AuraRows()
+      for _, size in ipairs({ 50, 80, 100, 150, 200 }) do
+        Z.SetElementSize("hots", size) Z.SetElementSize("debuffs", size)
+        Z.ForgetPlacementRanges()
+        local r = Z.AuraRows()
+        W, H = Z.CellSize()
+        local where = shape .. " a " .. size .. " %, groupe de " .. members
+        for _, key in ipairs({ "hots", "debuffs" }) do
+          local row = r[key]
+          assert(row.lines <= 2 and row.size >= 5 and row.width <= W and row.height <= H, "rangee hors de la case : " .. where)
+          if size < 100 then assert(row.size <= base[key].size, "rangee pas plus petite : " .. where) end
+          if size > 100 then assert(row.size >= base[key].size, "rangee pas plus grande : " .. where) end
+          local lo, hi = Z.OffsetRange(key)
+          assert(lo <= hi, "bornes a l'envers : " .. where)
+          checked = checked + 1
+        end
+      end
+      Z.SetElementSize("hots", 100) Z.SetElementSize("debuffs", 100)
+    end
+  end
+  assert(checked == 80, "nombre de verifications : " .. checked)
+  MEMBERS = 5
+  Z:ApplyShape("TILE")
+  local normal = Z.AuraRows().hots.size
+  Z.SetElementSize("hots", 150)
+  assert(Z.AuraRows().hots.size > normal, "Tuile : soins agrandis")
+  Z.SetElementSize("hots", 100)
+
+  -- L'éditeur : « - », « + », molette, messages, éléments sans taille, remise à l'origine
+  Z:Refresh()
+  Z:OpenPlacement()
+  local w = Z:PlacementWindow()
+  local function Pick(key) for _, button in ipairs(w.list) do if button.key == key then button:Run("OnClick") end end end
+  Pick("role")
+  assert(w.size:GetText():find("100", 1, true) and w.bigger:GetAlpha() == 1, "taille affichee")
+  w.bigger:Run("OnClick")
+  assert(Z.GetElementSize("role") == 110 and w.size:GetText():find("110", 1, true), "plus grand")
+  w.stage:Run("OnMouseWheel", -1) w.stage:Run("OnMouseWheel", -1)
+  assert(Z.GetElementSize("role") == 90, "molette : " .. Z.GetElementSize("role"))
+  Pick("name")
+  assert(w.bigger:GetAlpha() < 1 and w.size:GetText():find(L["Taille du texte"], 1, true), "nom : renvoi a la taille du texte")
+  w.bigger:Run("OnClick")
+  assert(Z.GetElementSize("name") == 100, "nom agrandi")
+  Pick("private")
+  assert(w.size:GetText():find(L["Taille des auras privées"], 1, true), "auras privees : renvoi a leur reglage")
+  Pick("role")
+  w.reset:Run("OnClick")
+  assert(Z.db.placement.TILE == nil, "remettre a sa place : la taille aussi")
+  -- Case pleine : le « + » s'arrête et le dit
+  Z:ApplyShape("BANNER")
+  Pick("center")
+  for _ = 1, 12 do w.bigger:Run("OnClick") end
+  local most = Z.GetElementSize("center")
+  assert(most <= 200 and w.size:GetText():find(L["Au plus grand pour cette case : %d %%"]:format(most), 1, true), "case pleine : " .. w.size:GetText())
+  local _, cellH = Z.CellSize()
+  assert(Z.ElementSize("center", Z.IconSize() + 8) <= cellH, "icone centrale hors de la case")
+  for _ = 1, 20 do w.smaller:Run("OnClick") end
+  assert(Z.GetElementSize("center") == 50 and w.size:GetText():find("50", 1, true), "au plus petit")
+  w.resetAll.armed = true w.resetAll:Run("OnClick")
+  assert(Z.db.placement.BANNER == nil, "tout remettre : tailles comprises")
+  w:Hide()
+
+  -- Partage : la taille voyage avec le décalage ; un ancien code (sans taille) reste lisible
+  Z:ApplyShape("TILE")
+  Z.SetOffset("buff", 2, 1) Z.SetElementSize("buff", 140) Z.SetElementSize("debuffs", 70, "BAR")
+  local code = Z:Export()
+  assert(code:find("p.TILE.buff=s2%2C1%2C140", 1, true) and code:find("p.BAR.debuffs=s0%2C0%2C70", 1, true), "taille absente du code")
+  Z.db.placement = {}
+  assert(Z:Import(code), "import")
+  assert(Z.GetElementSize("buff") == 140 and Z.db.placement.TILE.buff[1] == 2 and Z.GetElementSize("debuffs", "BAR") == 70, "taille importee")
+  Z.db.placement = {}
+  assert(Z:Import("Lyorune2;p.TILE.role=s3%2C1;p.TILE.name=s0%2C0%2C150;p.TILE.marker=s0%2C0%2C999"), "ancien code")
+  assert(Z.db.placement.TILE.role[1] == 3 and Z.GetElementSize("role") == 100, "ancien code : decalage seul")
+  assert(Z.db.placement.TILE.name[3] == nil and Z.GetElementSize("marker") == 200, "taille d'un texte, ou hors limites")
+
+  Z.db.placement = saved.placement
+  Z.db.cornerSpells[Z.class] = saved.corners
+  MEMBERS = saved.members
+  for _, key in ipairs(keys) do Z.db[key] = saved[key] end
+  Z:Refresh()
+end)
+
 step("aucune variable globale imprevue", function()
+
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
     SLASH_LYORUNE1 = true, SLASH_LYORUNE2 = true, Lyorune_OnAddonCompartmentClick = true, ClickCastFrames = true,
     CURSOR_X = true, CURSOR_Y = true,

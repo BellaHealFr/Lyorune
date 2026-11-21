@@ -113,9 +113,11 @@ local function Fit(n, size, line, maxH, canWrap)
 	return math.min(size, small), each, math.ceil(n / each)
 end
 
--- Rend { hots = rangée, debuffs = rangée, textX, textW, nameW }. Une rangée : point d'accroche, cadre ("CELL" la
--- case, "HP" la barre de vie), décalage x et y, taille des icônes, icônes par ligne, lignes, sens (dirX, dirY),
--- largeur et hauteur. textX, textW, nameW : place du chiffre de vie et largeurs du nom et du chiffre (Barre, Bandeau).
+-- Rend { hots = rangée, debuffs = rangée, textX, textW, nameX, nameW }. Une rangée : point d'accroche, cadre
+-- ("CELL" la case, "HP" la barre de vie), décalage x et y, taille des icônes, icônes par ligne, lignes, sens
+-- (dirX, dirY), largeur et hauteur. textX, textW, nameX, nameW : place du chiffre de vie et du nom, et leurs
+-- largeurs (Barre, Bandeau). La taille choisie dans l'éditeur de placement (Z.ElementScale) agrandit ou réduit
+-- chaque rangée ; trop grande, elle passe à la ligne ou rapetisse comme une rangée trop longue.
 function Z.AuraRows()
 	local db, theme = Z.db, Z:Theme()
 	local shape = Z:Shape()
@@ -130,10 +132,12 @@ function Z.AuraRows()
 	local inline = rules.inline
 	local canWrap = rules.wrap and not inline and Z.CanWrapAuras()
 
-	-- Ce qui borne une rangée : l'icône de rôle (en haut à droite, ou à gauche sur une ligne) et le buff manquant
-	local role = shape.inline and { inset + 3, inset + 1 + icon }
-		or { W - 2 - Shift("TOPRIGHT") - (icon - 2), W - 2 - Shift("TOPRIGHT") }
-	local buff = { 2 + Shift("BOTTOMLEFT"), 2 + Shift("BOTTOMLEFT") + icon }
+	-- Ce qui borne une rangée : l'icône de rôle (en haut à droite, ou à gauche sur une ligne) et le buff manquant,
+	-- à leur taille choisie dans l'éditeur
+	local roleW, buffW = Z.ElementSize("role", icon - 2), Z.ElementSize("buff", icon)
+	local role = shape.inline and { inset + 3, inset + 3 + roleW }
+		or { W - 2 - Shift("TOPRIGHT") - roleW, W - 2 - Shift("TOPRIGHT") }
+	local buff = { 2 + Shift("BOTTOMLEFT"), 2 + Shift("BOTTOMLEFT") + buffW }
 	local function Start(point)
 		return point:find("LEFT") and 2 + Shift(point) or W - 2 - Shift(point)
 	end
@@ -146,15 +150,17 @@ function Z.AuraRows()
 
 	local size, maxH = want, math.floor((H - 4) / (canWrap and 2 or 1)) - (canWrap and 1 or 0)
 	if inline then
-		-- La barre de vie la plus basse : celle d'une case avec sa barre de mana
+		-- La barre de vie la plus basse : celle d'une case avec sa barre de mana. Plus grandes que prévu (éditeur),
+		-- les deux rangées se partagent la hauteur de la barre sans se recouvrir.
 		local hpH = H - 2 * inset - (db.manaBars ~= "OFF" and Z.PowerHeight() + 1 or 0)
 		local room = inline == "EDGES" and math.floor((hpH - math.ceil(font * 0.72)) / 2) or math.floor((hpH - 1) / 2)
 		size = math.max(MIN_ICON, math.min(want, room))
-		maxH = size
+		maxH = math.max(MIN_ICON, math.floor((hpH - 1) / 2))
 	end
 	local rows = {}
 	local function Row(key, point, spec, n)
-		local s, perLine, lines = Fit(n, size, Line(spec, point), maxH, canWrap)
+		local wanted = math.max(MIN_ICON, math.floor(size * Z.ElementScale(key) + 0.5))
+		local s, perLine, lines = Fit(n, wanted, Line(spec, point), maxH, canWrap)
 		local sign = SIGN[point]
 		local x, y = sign[1] * (2 + Shift(point)), sign[2] * 2
 		if inline then x, y = sign[1] * (2 + Shift(point) - inset), 0 end -- au bord de la barre de vie
@@ -165,8 +171,10 @@ function Z.AuraRows()
 	Row("hots", rules.hots, rules.hotLine, db.hotCount)
 	Row("debuffs", rules.debuffs, rules.debuffLine, db.debuffCount)
 
-	-- Nom et chiffre de vie sur une ligne (Barre, Bandeau) : places d'origine, sauf en bloc (ci-dessous)
-	rows.textX, rows.textW, rows.nameW = -4, W - 2 * inset - 8, math.max(20, W - icon - 46)
+	-- Nom et chiffre de vie sur une ligne (Barre, Bandeau) : places d'origine, sauf en bloc (ci-dessous). Le nom
+	-- part après l'icône de rôle, à sa taille choisie.
+	rows.nameX = roleW + 5
+	rows.textX, rows.textW, rows.nameW = -4, W - 2 * inset - 8, math.max(20, W - roleW - 48)
 	if inline == "BLOCK" then
 		-- Le bloc fait la largeur de la plus longue rangée réglée (et montrée) ; le chiffre de vie se range à sa
 		-- gauche, le nom s'arrête avant lui
@@ -186,7 +194,8 @@ function Z.AuraRows()
 			local textRight = math.max(inset + 1, left - 4)
 			rows.textW = math.max(1, math.min(math.ceil(font * 3.2), textRight - inset))
 			rows.textX = textRight - (W - inset)
-			rows.nameW = math.max(20, textRight - rows.textW - 2 - (inset + icon + 3))
+			rows.nameW = math.max(20, textRight - rows.textW - 2 - (inset + rows.nameX))
+
 		end
 	end
 	return rows

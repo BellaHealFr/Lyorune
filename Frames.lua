@@ -558,7 +558,7 @@ end
 local function PlaceTexts(b, icon)
 	if Z:Shape().inline then
 		Place(b.role, "role", "LEFT", b.hp, "LEFT", 3, 0)
-		Place(b.name, "name", "LEFT", b.hp, "LEFT", icon + 3, 0)
+		Place(b.name, "name", "LEFT", b.hp, "LEFT", b.rows.nameX, 0) -- après l'icône de rôle, à sa taille
 		b.name:SetJustifyH("LEFT")
 		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", b.rows.textX, 0) -- en Bandeau, à gauche du bloc d'icônes
 		b.text:SetJustifyH("RIGHT")
@@ -643,12 +643,17 @@ local function Style(b)
 	b.iconSize = icon
 	b.rows = Z.AuraRows() -- rangées de mes soins et des affaiblissements, à la mesure de la forme (Themes.lua)
 	PlaceTexts(b, icon)
-	b.role:SetSize(icon - 2, icon - 2)
-	local badge = Z:Shape().inline and math.max(8, math.floor(icon * 0.7)) or icon - 2
-	b.leader:SetSize(badge, badge)
-	b.marker:SetSize(icon, icon)
-	b.center:SetSize(icon + 8, icon + 8)
-	b.lowMana:SetSize(icon - 1, icon - 1)
+	-- Tailles d'origine, fois la taille choisie dans l'éditeur de placement (Z.ElementSize, Placement.lua)
+	local function Size(region, key, base)
+		local size = Z.ElementSize(key, base)
+		region:SetSize(size, size)
+	end
+	Size(b.role, "role", icon - 2)
+	Size(b.leader, "leader", Z.BadgeSize(icon))
+	Size(b.marker, "marker", icon)
+	Size(b.center, "center", icon + 8)
+	Size(b.lowMana, "lowMana", icon - 1)
+
 	Z.HideAuras(b)
 	Z.AnchorPrivateAuras(b)
 	Z.StyleAuraBoxes(b)

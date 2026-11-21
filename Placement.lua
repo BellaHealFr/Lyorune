@@ -3,7 +3,11 @@
 -- Chaque élément de la case (nom, texte de vie, icônes...) se décale au pixel près sur une case d'exemple
 -- agrandie : on le glisse à la souris, ou on le pousse avec les flèches. Le décalage est gardé pour chaque
 -- forme de case (Barre, Tuile, Carré, Bandeau), car chaque forme a sa propre disposition d'origine.
--- Un seul réglage : Z.db.placement (Core.lua). Frames.lua et Auras.lua lisent Z.Offset en posant chaque élément.
+-- Les icônes se grandissent ou se rapetissent aussi (molette, « - » et « + »), de 50 à 200 % de leur taille
+-- d'origine, gardée par forme avec le décalage. Le nom et le texte de vie suivent la taille de la police, les auras
+-- privées leur propre réglage en pixels (un seul réglage pour chaque taille).
+-- Un seul réglage : Z.db.placement (Core.lua). Frames.lua, Auras.lua et Themes.lua lisent Z.Offset et
+-- Z.ElementSize en posant chaque élément.
 
 local _, Z = ...
 local UI = Z.UI
@@ -26,6 +30,9 @@ Z.placeElements = {
 }
 local KNOWN = {}
 for _, element in ipairs(Z.placeElements) do KNOWN[element[1]] = true end
+-- Ceux dont la taille se règle ici : les icônes (le nom, le texte de vie et les auras privées ont leur réglage)
+local SIZED = { role = true, marker = true, leader = true, center = true, lowMana = true, hots = true,
+	debuffs = true, big = true, buff = true }
 
 function Z.IsPlaceElement(key)
 	return KNOWN[key] == true
@@ -38,13 +45,65 @@ local function Limit(value)
 	return math.max(limit[1], math.min(limit[2], value))
 end
 
+-- Une taille en %, entière, bornée par Z.limits.placement.size
+local function LimitSize(value)
+	local limit = Z.limits.placement.size
+	value = math.floor((tonumber(value) or 100) + 0.5)
+	return math.max(limit[1], math.min(limit[2], value))
+end
+
+-- Entrée enregistrée d'un élément, pour la forme choisie ou une autre
+local function Entry(key, shape)
+	local db = Z.db
+	local all = db and type(db.placement) == "table" and db.placement[shape or db.shape]
+	local at = type(all) == "table" and all[key]
+	return type(at) == "table" and at or nil
+end
+
 -- Décalage enregistré, tel quel (seulement borné par Z.limits.placement)
 local function Saved(key)
-	local db = Z.db
-	local shape = db and type(db.placement) == "table" and db.placement[db.shape]
-	local at = type(shape) == "table" and shape[key]
-	if type(at) ~= "table" then return 0, 0 end
+	local at = Entry(key)
+	if not at then return 0, 0 end
 	return Limit(at[1]), Limit(at[2])
+end
+
+-- Taille enregistrée, en % (100 : taille d'origine)
+local function SavedSize(key, shape)
+	local at = Entry(key, shape)
+	return (at and at[3]) and LimitSize(at[3]) or 100
+end
+
+-- Élément dont la taille se règle dans l'éditeur (code de partage)
+function Z.IsSizedElement(key)
+	return SIZED[key] == true
+end
+
+-- La taille de cet élément se règle-t-elle dans l'éditeur ? Les barres fines des soins gardent leurs 3 pixels.
+function Z.CanSize(key)
+	return SIZED[key] == true and not (key == "hots" and Z.db.hotStyle == "BARS")
+end
+
+-- Facteur de taille d'un élément pour la forme choisie (1 : taille d'origine)
+function Z.ElementScale(key)
+	if not SIZED[key] then return 1 end
+	return SavedSize(key) / 100
+end
+
+-- Taille d'un élément carré : sa taille d'origine (base) fois sa taille dans l'éditeur, jamais plus grande que
+-- la case. Les rangées de soins et d'affaiblissements ont leur propre calcul (Z.AuraRows, Themes.lua).
+function Z.ElementSize(key, base)
+	local W, H = Z.CellSize()
+	return math.max(1, math.min(math.floor(base * Z.ElementScale(key) + 0.5), W, H))
+end
+
+-- Taille d'origine de la couronne du chef : un petit badge sur une ligne (Barre, Bandeau), sinon une icône
+function Z.BadgeSize(icon)
+	return Z:Shape().inline and math.max(8, math.floor(icon * 0.7)) or icon - 2
+end
+
+-- Grande icône d'affaiblissement (vraies cases, conteneurs du jeu, éditeur)
+function Z.BigIconSize()
+	return Z.ElementSize("big", math.floor(Z.IconSize() * 1.6 + 0.5))
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -95,21 +154,23 @@ local function Origins(power, roleRect)
 		o[key] = { point, ax, ay, w, h, text = text }
 	end
 
+	local role, badge = Z.ElementSize("role", icon - 2), Z.ElementSize("leader", Z.BadgeSize(icon))
 	if Z:Shape().inline then
-		Put("role", "LEFT", hp, "LEFT", 3, 0, icon - 2, icon - 2)
-		Put("name", "LEFT", hp, "LEFT", icon + 3, 0, rows.nameW, font + 2, true)
+		Put("role", "LEFT", hp, "LEFT", 3, 0, role, role)
+		Put("name", "LEFT", hp, "LEFT", rows.nameX, 0, rows.nameW, font + 2, true)
 		Put("text", "RIGHT", hp, "RIGHT", rows.textX, 0, rows.textW, font + 1, true)
-		local badge = math.max(8, math.floor(icon * 0.7))
 		if roleRect then Put("leader", "CENTER", roleRect, "TOPRIGHT", 0, 0, badge, badge) end
 	else
-		Put("role", "TOPRIGHT", cell, "TOPRIGHT", -2 - Shift("TOPRIGHT"), -2, icon - 2, icon - 2)
+		Put("role", "TOPRIGHT", cell, "TOPRIGHT", -2 - Shift("TOPRIGHT"), -2, role, role)
 		Put("name", "CENTER", hp, "CENTER", 0, 3, W - 8, font + 2, true)
 		Put("text", "BOTTOM", hp, "BOTTOM", 0, 4, W - 8, font + 1, true)
-		if roleRect then Put("leader", "TOPRIGHT", roleRect, "TOPLEFT", -1, 0, icon - 2, icon - 2) end
+		if roleRect then Put("leader", "TOPRIGHT", roleRect, "TOPLEFT", -1, 0, badge, badge) end
 	end
-	Put("marker", "CENTER", cell, "TOP", 0, -1, icon, icon)
-	Put("center", "CENTER", cell, "CENTER", 0, 0, icon + 8, icon + 8)
-	Put("lowMana", "BOTTOMLEFT", hp, "BOTTOMLEFT", 2, 2, icon - 1, icon - 1)
+	local marker, center = Z.ElementSize("marker", icon), Z.ElementSize("center", icon + 8)
+	local lowMana = Z.ElementSize("lowMana", icon - 1)
+	Put("marker", "CENTER", cell, "TOP", 0, -1, marker, marker)
+	Put("center", "CENTER", cell, "CENTER", 0, 0, center, center)
+	Put("lowMana", "BOTTOMLEFT", hp, "BOTTOMLEFT", 2, 2, lowMana, lowMana)
 
 	-- Rangées : toutes les icônes réglées (la rangée la plus longue que la case montrera), sur une ou deux lignes
 	local function Row(key, row)
@@ -121,9 +182,9 @@ local function Origins(power, roleRect)
 		Row("hots", rows.hots)
 	end
 	Row("debuffs", rows.debuffs)
-	local big = math.floor(icon * 1.6 + 0.5)
+	local big, buff = Z.BigIconSize(), Z.ElementSize("buff", icon)
 	Put("big", "LEFT", cell, "LEFT", 3, 0, big, big)
-	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, icon, icon)
+	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, buff, buff)
 	local size, point = db.privateAuraSize, db.privateAuraPoint
 	local spot = Z.PRIVATE_OFFSETS[point] or Z.PRIVATE_OFFSETS.CENTER
 	if not Z.PRIVATE_OFFSETS[point] then point = "CENTER" end
@@ -228,19 +289,40 @@ function Z.TextWidth(key)
 	return math.min(w, 2 * x, 2 * (all.W - x))
 end
 
--- Enregistre un décalage. (0, 0) efface l'entrée : le réglage reste léger. Pour la forme choisie, le décalage
--- s'arrête au bord de la case ; pour une autre forme (code de partage), seulement aux limites du réglage.
-function Z.SetOffset(key, x, y, shape)
-	if not KNOWN[key] then return end
+-- Écrit l'entrée d'un élément : { x, y } ou { x, y, taille }. Place et taille d'origine effacent l'entrée : le
+-- réglage reste léger.
+local function Store(shape, key, x, y, size)
 	local all = Z.db.placement
-	shape = shape or Z.db.shape
-	x, y = Limit(x), Limit(y)
-	if shape == Z.db.shape then x, y = Clamp(Ranges().ranges[key], x, y) end
 	all[shape] = all[shape] or {}
-	all[shape][key] = (x ~= 0 or y ~= 0) and { x, y } or nil
+	if size == 100 then size = nil end
+	all[shape][key] = (x ~= 0 or y ~= 0 or size) and { x, y, size } or nil
 	if not next(all[shape]) then all[shape] = nil end
 	cache = nil
 end
+
+-- Enregistre un décalage, la taille reste. Pour la forme choisie, le décalage s'arrête au bord de la case ;
+-- pour une autre forme (code de partage), seulement aux limites du réglage.
+function Z.SetOffset(key, x, y, shape)
+	if not KNOWN[key] then return end
+	shape = shape or Z.db.shape
+	x, y = Limit(x), Limit(y)
+	if shape == Z.db.shape then x, y = Clamp(Ranges().ranges[key], x, y) end
+	Store(shape, key, x, y, SavedSize(key, shape))
+end
+
+-- Enregistre une taille en % (bornée par Z.limits.placement.size), le décalage reste
+function Z.SetElementSize(key, size, shape)
+	if not SIZED[key] then return end
+	shape = shape or Z.db.shape
+	local at = Entry(key, shape)
+	Store(shape, key, at and Limit(at[1]) or 0, at and Limit(at[2]) or 0, LimitSize(size))
+end
+
+-- Taille enregistrée d'un élément, en % (pour l'éditeur, le partage et les tests)
+function Z.GetElementSize(key, shape)
+	return SIZED[key] and SavedSize(key, shape) or 100
+end
+
 
 -- Tous les éléments de la forme choisie reviennent à leur place d'origine
 function Z.ResetPlacement()
@@ -251,7 +333,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- La fenêtre : la liste des éléments à gauche, la case d'exemple à droite, les flèches dessous
 ----------------------------------------------------------------------------------------------------
-local WIDTH, HEIGHT = 580, 450
+local WIDTH, HEIGHT = 580, 480
 local STAGE_W, STAGE_H = 352, 232
 local win, stage, cell, highlight
 local selected = "name"
@@ -406,6 +488,20 @@ local function Draw()
 
 	local x, y = Z.Offset(selected)
 	win.coords:SetText(L["Décalage : %d, %d"]:format(x, y))
+	-- Taille : les icônes seulement ; le nom, le texte de vie et les auras privées renvoient à leur réglage
+	local sized = Z.CanSize(selected)
+	for _, button in ipairs({ win.smaller, win.bigger }) do
+		button:SetEnabled(sized)
+		button:SetAlpha(sized and 1 or 0.4)
+	end
+	if sized then
+		win.size:SetText(L["Taille : %d %%"]:format(Z.GetElementSize(selected)))
+	elseif selected == "hots" then
+		win.size:SetText(L["Les barres fines gardent leur épaisseur."])
+	else
+		local setting = selected == "private" and "Taille des auras privées" or "Taille du texte"
+		win.size:SetText(L["Taille : réglage « %s »"]:format(L[setting]))
+	end
 	win.shape:SetText(L["Forme : %s"]:format(ShapeName(db.shape)))
 	for _, button in ipairs(win.list) do UI.SetTab(button, button.key == selected) end
 	ShowHighlight()
@@ -429,6 +525,39 @@ local function Nudge(dx, dy)
 	Changed()
 	local newX, newY = Z.Offset(selected)
 	if newX == x and newY == y then win.coords:SetText(L["Au bord de la case : %d, %d"]:format(x, y)) end
+end
+
+-- Taille de l'élément sur la case : celle d'une icône de la rangée, ou la largeur de l'icône
+local function Measure(key)
+	local row = Z.AuraRows()[key]
+	if row then return row.size end
+	local spec = Ranges().specs[key]
+	if spec then return spec[4] end
+	return Z.ElementSize(key, Z.BadgeSize(Z.IconSize())) -- la couronne, accrochée à l'icône de rôle
+end
+
+
+-- Grandit (+1) ou rapetisse (-1) l'élément choisi de 10 %. Il s'arrête quand la case est pleine et le dit (une
+-- taille qui ne gagne pas un pixel, par arrondi, n'arrête rien : on regarde si la plus grande taille gagnerait).
+local function Resize(delta)
+	if not Z.CanSize(selected) then return end
+	local limit = Z.limits.placement.size
+	local old, before = Z.GetElementSize(selected), Measure(selected)
+	Z.SetElementSize(selected, old + delta * limit[3])
+	local full = false
+	if delta > 0 and Z.GetElementSize(selected) ~= old and Measure(selected) <= before then
+		local wanted = Z.GetElementSize(selected)
+		Z.SetElementSize(selected, limit[2])
+		full = Measure(selected) <= before
+		Z.SetElementSize(selected, full and old or wanted)
+	end
+	Changed()
+	local size = Z.GetElementSize(selected)
+	if full or (delta > 0 and size == old) then
+		win.size:SetText(L["Au plus grand pour cette case : %d %%"]:format(size))
+	elseif delta < 0 and size == old then
+		win.size:SetText(L["Au plus petit : %d %%"]:format(size))
+	end
 end
 
 -- L'élément sous la souris ; s'ils se recouvrent, le plus petit (une icône posée sur le nom)
@@ -512,6 +641,14 @@ local function BuildWindow()
 	stage:SetScript("OnMouseDown", StartDrag)
 	stage:SetScript("OnMouseUp", StopDrag)
 	stage:SetScript("OnHide", StopDrag)
+	-- Molette : l'élément sous la souris (sinon celui choisi) grandit ou rapetisse
+	stage:EnableMouseWheel(true)
+	stage:SetScript("OnMouseWheel", function(_, delta)
+		if drag then return end
+		local key = ElementAt()
+		if key and key ~= selected then Select(key) end
+		Resize(delta > 0 and 1 or -1)
+	end)
 
 	cell = CreateFrame("Frame", nil, stage)
 	cell:SetPoint("CENTER")
@@ -537,12 +674,30 @@ local function BuildWindow()
 	win.right = Arrow("Droite", 1, 0)
 	win.right:SetPoint("LEFT", win.down, "RIGHT", 6, 0)
 
+	-- Taille : 10 % par clic, ou la molette sur la case
+	local function SizeButton(label, delta, tip)
+		local button = UI.Button(win, label, 64, 22, function() Resize(delta) end)
+		button.label:SetJustifyH("CENTER")
+		button.tip = L[tip]
+		return button
+	end
+	win.smaller = SizeButton("-", -1, "Plus petit : 10 % par clic, ou la molette sur la case.")
+	win.smaller:SetPoint("TOPLEFT", win.left, "BOTTOMLEFT", 0, -8)
+	win.bigger = SizeButton("+", 1, "Plus grand : 10 % par clic, ou la molette sur la case.")
+	win.bigger:SetPoint("LEFT", win.smaller, "RIGHT", 6, 0)
+	win.size = UI.Label(win, 12, nil, "accent")
+	win.size:SetPoint("LEFT", win.bigger, "RIGHT", 10, 0)
+	win.size:SetPoint("RIGHT", stage, "RIGHT", 0, 0)
+	win.size:SetJustifyH("LEFT")
+
 	win.reset = UI.Button(win, L["Remettre à sa place"], 172, 22, function()
 		Z.SetOffset(selected, 0, 0)
+		Z.SetElementSize(selected, 100)
 		Changed()
 	end)
-	win.reset:SetPoint("TOPLEFT", win.left, "BOTTOMLEFT", 0, -8)
+	win.reset:SetPoint("TOPLEFT", win.smaller, "BOTTOMLEFT", 0, -8)
 	win.reset.label:SetJustifyH("CENTER")
+	win.reset.tip = L["Place et taille d'origine de cet élément."]
 	-- Les 12 éléments d'un coup : un second clic confirme (Options.lua)
 	win.resetAll = Z.ArmedButton(win, "Tout remettre", "Confirmer", 172, function()
 		Z.ResetPlacement()
@@ -551,14 +706,15 @@ local function BuildWindow()
 	win.resetAll:SetHeight(22)
 	win.resetAll:SetPoint("LEFT", win.reset, "RIGHT", 8, 0)
 	win:HookScript("OnHide", win.resetAll.Disarm)
-	win.resetAll.tip = L["Tous les éléments de cette forme de case reviennent à leur place d'origine."]
+	win.resetAll.tip = L["Tous les éléments de cette forme de case reviennent à leur place et à leur taille d'origine."]
 
 	local note = UI.Label(win, 11, nil, "dim")
-	note:SetPoint("TOPLEFT", 16, -374)
+	note:SetPoint("TOPLEFT", 16, -404)
 	note:SetPoint("RIGHT", -16, 0)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)
-	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). Il s'arrête au bord de la case. Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."])
+	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."])
+
 
 	win:HookScript("OnShow", Draw)
 	win.StageScale = StageScale -- pour les tests

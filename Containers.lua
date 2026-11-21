@@ -226,7 +226,7 @@ end
 local function PlaceBig(b, button)
 	local db = Z.db
 	local dx, dy = Z.Offset("big")
-	local big = math.floor((b.iconSize or 12) * 1.6 + 0.5)
+	local big = Z.BigIconSize()
 	Call(button, "SetAllPoints", b.boxes.slots)
 	Call(button.Face, "SetSize", big, big)
 	Call(button.Face, "ClearAllPoints")
@@ -289,16 +289,16 @@ local function NilIfEmpty(set) if set and next(set) then return set end end
 local function Plan(b)
 	local db = Z.db
 	local hots, corners, ignored, important = Wanted()
-	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place de la grande
-	-- icône, taille des coins, largeur des barres, taille et coin de départ des rangées (Z.AuraRows), réglages des
-	-- icônes. Un changement reconstruit les conteneurs.
+	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place et taille de la
+	-- grande icône, taille des coins, largeur des barres, taille et coin de départ des rangées (Z.AuraRows),
+	-- réglages des icônes. Un changement reconstruit les conteneurs (en combat : à la fin du combat).
 	local rows = b.rows or Z.AuraRows()
 	local bigX, bigY = Z.Offset("big")
-	local look = table.concat({ bigX, bigY, Z.CornerSize(b), math.floor(Z.CellSize() * 0.45),
+	local look = table.concat({ bigX, bigY, Z.BigIconSize(), Z.CornerSize(b), math.floor(Z.CellSize() * 0.45),
 		rows.hots.size, rows.hots.point, rows.debuffs.size, rows.debuffs.point,
 		tostring(db.hotSwipe), tostring(db.hotCountdown), tostring(db.hotFade), tostring(db.hotCharges),
 		tostring(db.bossDebuffs), tostring(db.importantGlow) }, ",")
-	local plan = { look = look, groups = {}, slots = {} }
+	local plan = { look = look, groups = {}, slots = {}, rows = rows }
 	local function Group(box, key, filter, candidates, max, index, template, dress)
 		local size = rows[box] and rows[box].size or 12 -- barres fines : leur taille est donnée à part (Build)
 		table.insert(plan.groups, { box = box, key = key, filter = filter, candidates = candidates, max = max,
@@ -400,10 +400,14 @@ local function PlaceRow(b, box, row, dx, dy)
 	if Z.boxWrap then Call(box, "SetFlowLayoutMaximumLineSize", row.perLine * (row.size + SPACING)) end
 end
 
--- Places des conteneurs dans la case (les conteneurs ne sont pas protégés : refait librement)
+local waiting = {} -- cases à construire à la fin du combat (Rebuild)
+
+-- Places des conteneurs dans la case (les conteneurs ne sont pas protégés : refait librement). Une case qui
+-- attend la fin du combat pour être refaite (une taille changée) garde les rangées de ses boutons d'avant.
 local function Place(b)
 	local db = Z.db
-	local boxes, rows = b.boxes, b.rows or Z.AuraRows()
+	local boxes = b.boxes
+	local rows = (waiting[b] and b.boxRows) or b.rows or Z.AuraRows()
 
 	local dx, dy = Z.Offset("hots")
 	PlaceRow(b, boxes.hots, rows.hots, dx, dy)
@@ -523,7 +527,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Points d'entrée (Frames.lua, Auras.lua)
 ----------------------------------------------------------------------------------------------------
-local waiting = {} -- cases à construire à la fin du combat
+
 
 -- Un premier conteneur, hors combat, dit si le jeu sait passer à la ligne (Z.CanWrapAuras). Sans réponse, la
 -- taille des rangées compte sur le passage à la ligne : la case est refaite dès que la réponse change la taille.
@@ -555,7 +559,7 @@ local function Rebuild(b)
 		Z:Print("Conteneur d'auras : " .. tostring(err))
 		return
 	end
-	b.boxesSig = signature
+	b.boxesSig, b.boxRows = signature, plan.rows
 	Z.HideAuras(b)
 	Z.ShowDispel(b, false)
 end

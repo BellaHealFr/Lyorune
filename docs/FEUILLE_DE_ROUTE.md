@@ -260,10 +260,17 @@ taille en pixels (un seul réglage), l'éditeur de placement les déplace seulem
   (`Z.boxWrap`) ; remise à zéro à la première connexion en 1.27.0 (`Migrate`, Core.lua). Limite admise : en raid
   de 40, la Barre (21 pixels) garde des icônes de 5 pixels qui mordent d'un pixel sur la ligne du texte, restée
   devant elles
-- [ ] Lot 3 : taille de l'élément choisi dans l'éditeur de placement (molette ou « - » et « + », de 50 à 200 %),
+- [x] Lot 3 : taille de l'élément choisi dans l'éditeur de placement (molette ou « - » et « + », de 50 à 200 %),
   gardée par forme avec son décalage dans `Z.db.placement`, bornes dans `Z.limits`, partage de profil
   (`Share.lua`) ; en combat, une taille changée attend la sortie du combat (conteneurs d'auras du jeu reconstruits
-  seulement hors combat) ; test
+  seulement hors combat) ; test. Fait le 21 novembre 2026 : entrée `{ x, y, taille }` (taille absente à 100 %),
+  borne `Z.limits.placement.size` ; `Z.ElementSize` (jamais plus grand que la case) et `Z.ElementScale` lus par
+  Frames.lua, Auras.lua, Containers.lua, Themes.lua (`Z.AuraRows`, chaque rangée a son facteur) et Placement.lua.
+  Décidé (carte blanche) : seules les icônes ont une taille ici ; le nom et le texte de vie suivent « Taille du
+  texte », les auras privées leur réglage, les barres fines gardent 3 pixels. « Remettre à sa place » rend aussi la
+  taille. En Barre et Bandeau, les rangées agrandies s'arrêtent à la moitié de la barre de vie (elles ne se
+  recouvrent pas). En combat, la case attend avec les rangées de ses boutons d'avant (`b.boxRows`). Code de
+  partage `sX,Y,T`, sans T à 100 % (lisible par les anciennes versions). Guides fr et en à jour
 - [ ] Lot 4 : essai en jeu en groupe de 5 et en raid, en combat ; guide du joueur, une ligne dans une carte
   existante de la visite, anglais, `## Notes`, README, site, publication
 
