@@ -2091,7 +2091,7 @@ local function Chapters()
 				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste chaque buff qui manque à chaque joueur : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune." },
 				{ "custom", BuffWatchList },
 				{ "step", "buffRefresh", "Proposer à nouveau sous (minutes)", "Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque.", desc = "0 : seulement quand le buff manque." },
-				{ "step", "buffGroupAt", "Version de groupe dès (joueurs)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", fine = true },
+				{ "step", "buffGroupAt", "Sort de groupe dès (joueurs sans le buff)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", desc = "Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve.", fine = true },
 			} },
 			{ "Mes joueurs (répartition entre soigneurs)", {
 				{ "note", "Les joueurs dont vous vous occupez portent un trait doré au bord gauche de leur case. Utile même si vous êtes seul à avoir Lyorune.", 30 },

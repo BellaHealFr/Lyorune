@@ -7026,7 +7026,7 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     local shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
     assert(shown == 7, "lignes du pretre : " .. shown) -- 6 buffs et Gardien de peur
     local labels = table.concat(Z:OptionLabels(), "|")
-    for _, text in ipairs({ "Mes buffs", "Proposer à nouveau sous (minutes)", "Version de groupe dès (joueurs)" }) do
+    for _, text in ipairs({ "Mes buffs", "Proposer à nouveau sous (minutes)", "Sort de groupe dès (joueurs sans le buff)" }) do
       assert(labels:find(text, 1, true), "absent de la recherche : " .. text)
     end
     for _, text in ipairs({ "Mes buffs", "JcE", "JcJ", "une personne", "sur vous", " ou ", "Bénédictions (une de vous par joueur)",
