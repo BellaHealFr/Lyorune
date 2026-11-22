@@ -281,7 +281,8 @@ end
 -- spell : le sort lancé ; groupSpell : sa version de groupe ; choices : les bénédictions ou les armes connues.
 function Z.BuffCheck(entry)
 	local ids = Z.BuffIds(entry)
-	local check = { id = ids[1], names = {}, self = entry.self, mana = entry.mana, pve = entry.pve, pvp = entry.pvp }
+	local check = { id = ids[1], ids = ids, names = {}, self = entry.self, mana = entry.mana, pve = entry.pve,
+		pvp = entry.pvp }
 	for _, id in ipairs(ids) do
 		local name = Z.SpellName(id)
 		if name then check.names[name] = true end
@@ -413,6 +414,19 @@ function Z:BuildData()
 			Z.uniqueChecks[#Z.uniqueChecks + 1] = { id = id, name = name, spell = name, icon = Z.SpellIcon(id),
 				unique = true, pve = entry.pve, pvp = entry.pvp }
 		end
+	end
+	-- Noms suivis, pour la mémoire des buffs (BuffMemory.lua) : ceux de tout le monde, et les miens seulement
+	-- (bénédictions, auras, buffs uniques : celui d'un autre joueur ne compte pas)
+	Z.buffNames = {}
+	Z.ownNames = {}
+	for _, check in ipairs(Z.buffChecks) do
+		for name in pairs(check.names) do
+			Z.buffNames[name] = true
+			if check.blessing or check.aura then Z.ownNames[name] = true end
+		end
+	end
+	for _, check in ipairs(Z.uniqueChecks) do
+		Z.ownNames[check.name] = true
 	end
 
 	Z.trackedNames = {}

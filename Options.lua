@@ -1834,7 +1834,7 @@ local COMMANDS = {
 	{ " assistant", "assistant de départ" }, { " verrou", "verrouiller ou libérer la position" },
 	{ " epingler", "épingler ou retirer le joueur survolé" }, { " porteur", "le joueur survolé reçoit mes buffs uniques" },
 	{ " pourmoi", "ajouter ou retirer le joueur survolé de mes joueurs" }, { " repartir", "répartir les soigneurs (chef ou assistant)" },
-	{ " cadres", "afficher ou masquer les cadres" }, { " sorts", "quels sorts Lyorune propose, et pourquoi un sort manque" }, { " groupe", "qui a Lyorune dans le groupe" }, { " annuler", "annuler le dernier import" },
+	{ " cadres", "afficher ou masquer les cadres" }, { " sorts", "quels sorts Lyorune propose, et pourquoi un sort manque" }, { " buffs", "buffs lisibles ici, ou cachés par le jeu" }, { " groupe", "qui a Lyorune dans le groupe" }, { " annuler", "annuler le dernier import" },
 	{ " mesure", "mesurer les performances" }, { " bug", "signaler un bug" }, { " diag", "compatibilité avec le jeu" },
 }
 

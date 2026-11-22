@@ -498,10 +498,10 @@ Z.translations.enUS = {
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
-			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, les buffs qui manquent s'affichent sous vos cadres, à leur forme : un clic les pose. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs.\n\n"
+			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, les buffs qui manquent s'affichent sous vos cadres, à leur forme : un clic les pose. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs. En champ de bataille, en arène et en clé mythique, le jeu les cache : Lyorune retient les vôtres.\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur."] =
-		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click). A key can do it too, or hide the frames and cast the next missing buff: game key bindings, AddOns section. Out of combat, missing buffs show under your frames, in their shape: one click casts them. Your buffs to watch, in PvE and in PvP: Players chapter.\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
+		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click). A key can do it too, or hide the frames and cast the next missing buff: game key bindings, AddOns section. Out of combat, missing buffs show under your frames, in their shape: one click casts them. Your buffs to watch, in PvE and in PvP: Players chapter. In battlegrounds, arenas and mythic keystones, the game hides them: Lyorune remembers yours.\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
 	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a cell to cast a spell on that player, without targeting them.",
 	["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."] = "No spell is assigned yet: you will choose them in the Spells and bindings chapter of the options.",
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
@@ -814,6 +814,17 @@ Z.translations.enUS = {
 	["Barre sous les cadres"] = "Bar under the frames", ["Anneau au curseur"] = "Ring at the cursor",
 	["choisi"] = "chosen", ["tank"] = "tank",
 	["Un autre joueur : /lyorune porteur en survolant sa case."] = "Another player: /lyorune bearer while hovering their cell.",
+	["Buffs cachés par le jeu ici : Lyorune retient vos propres buffs, pas ceux des autres joueurs."] = "Buffs hidden by the game here: Lyorune remembers your own buffs, not other players'.",
+	["buffs cachés par le jeu ici : Lyorune retient vos propres buffs, pas ceux des autres joueurs."] = "buffs hidden by the game here: Lyorune remembers your own buffs, not other players'.",
+	["buffs : cachés par le jeu ici (mémoire de vos sorts)."] = "buffs: hidden by the game here (memory of your casts).",
+	["buffs : lisibles ici."] = "buffs: readable here.",
+	["aucun buff de votre classe à surveiller."] = "no buff of your class to watch.",
+	["%d min"] = "%d min",
+	["buffs lisibles ici, ou cachés par le jeu"] = "buffs readable here, or hidden by the game",
+	["durée inconnue (10 min)"] = "unknown duration (10 min)",
+	["lisible"] = "readable",
+	["caché"] = "hidden",
+	["mémoire : %d fiche(s) de joueur en cours."] = "memory: %d player record(s) in use.",
 	["buffs uniques : de retour sur le tank."] = "single-target buffs: back on the tank.",
 	["buffs uniques : %s les recevra."] = "single-target buffs: %s will get them.",
 	["le joueur survolé reçoit mes buffs uniques"] = "the hovered player gets my single-target buffs",
@@ -1053,4 +1064,6 @@ Z.translations.enUS = {
 	["Buffs manquants sous les cadres : une seule case, comme une touche, qui passe au buff suivant après chaque sort (plus de cases en dessous) ; « + N » dans son coin dit combien il en reste ; icône deux fois plus petite."] = "Missing buffs under the frames: a single cell, like a key, that moves on to the next buff after each cast (no more cells below it); \"+ N\" in its corner says how many are left; icon half the size.",
 	["Sorts et raccourcis propose tous vos soins et buffs, même sans cible : Feu intérieur, boucliers et armes du chaman, auras et Fureur vertueuse du paladin, Nova sacrée, Prière de soins, Tranquillité, totems de soins. Jamais un sort offensif. Même liste dans Mes macros."] = "Spells and bindings offers all your heals and buffs, even those without a target: Inner Fire, shaman shields and weapons, paladin auras and Righteous Fury, Holy Nova, Prayer of Healing, Tranquility, healing totems. Never an offensive spell. Same list in My macros.",
 	["/lyorune sorts : les sorts proposés, ceux de votre classe qui manquent et pourquoi (pas appris, autre spécialisation, passif), et ceux qui sont écartés."] = "/lyorune spells: the spells offered, the spells of your class that are missing and why (not learned, other specialization, passive), and the ones left out.",
+	["Buffs manquants en champ de bataille, en arène et en clé mythique : le jeu y cache les buffs, même hors combat, et le panneau restait vide. Lyorune lit les buffs que le jeu laisse lisibles, note ceux de chacun juste avant le match, retient les buffs que vous lancez pendant leur durée et les oublie à la mort (au cimetière, ils sont proposés de nouveau)."] = "Missing buffs in battlegrounds, arenas and mythic keystones: the game hides buffs there, even out of combat, and the panel stayed empty. Lyorune reads the buffs the game leaves readable, notes everyone's buffs just before the match, remembers the buffs you cast for their duration and forgets them on death (at the graveyard, they are offered again).",
+	["/lyorune buffs : pour chacun de vos buffs, lisible ici ou caché par le jeu, et la durée connue. Un message au début du match et une ligne dans l'infobulle disent ce que Lyorune sait."] = "/lyorune buffs: for each of your buffs, readable here or hidden by the game, and the known duration. A message at the start of the match and a line in the tooltip say what Lyorune knows.",
 }

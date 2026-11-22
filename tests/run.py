@@ -6942,9 +6942,9 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31, expirationTime = 0 } }
     Update() assert(not Ids(other):find("1243", 1, true), "buff sans fin compte presque fini")
     Z.db.buffRefresh = 0
-    -- nom secret : rien de faux
+    -- nom secret (1.35.0) : Robustesse lue juste avant reste connue (BuffMemory.lua), le reste inconnu est propose
     AURAS["HELPFUL"] = { { name = MakeSecret(), icon = 9, auraInstanceID = 31 } }
-    Update() assert(not other.missingBuff and not other.missingBuffs, "nom secret")
+    Update() assert(Ids(other) == "14752,976", "nom secret : " .. Ids(other))
     AURAS = {}
 
     -- Buffs uniques : Gardien de peur eteint au depart, attend la fin de sa recharge
@@ -7663,6 +7663,113 @@ step("1.34.1 : tous mes soins et buffs dans Sorts et raccourcis, /lyorune sorts,
   end)
   C_Spell.GetSpellName, C_Spell.IsSpellHelpful, C_Spell.IsSpellPassive, Z.class = realName, realHelpful, realPassive, class
   C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo = info, lines
+  assert(ok, err)
+end)
+
+step("1.35.0 : buffs caches par le jeu (champ de bataille, arene, cle mythique) : photo, memoire de mes sorts, mort, buff lisible, version de groupe, /reload, /lyorune buffs", function()
+  local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit, after = C_Timer.After,
+    secrets = C_Secrets, guid = UnitGUID, instance = INSTANCE, kind = INSTANCE_TYPE, types = Enum.AddOnRestrictionType, states = Enum.AddOnRestrictionState, class = Z.class }
+  local ok, err = pcall(function()
+    local extra = { [14752] = "Esprit divin", [27681] = "Prière d'esprit", [976] = "Protection contre l'ombre", [588] = "Feu intérieur" }
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
+    C_Timer.After = function(s, f) if s < 1 then f() end end
+    local me = Z.buttons[1]
+    local other
+    for _, b in ipairs(Z.buttons) do
+      if b ~= me and b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then other = other or b end
+    end
+    UnitIsUnit = function(a, b) return a == b or (b == "player" and a == me.unit) end
+    UnitGUID = function(u) return "G-" .. (u == me.unit and "player" or u) end
+    local hidden, never = false, {}
+    C_Secrets = { ShouldAurasBeSecret = function() return hidden end, ShouldSpellAuraBeSecret = function(id) return not never[id] end }
+    Enum.AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3 }
+    Enum.AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 }
+    local function Ids(b)
+      local t = {} for _, m in ipairs(b.missingBuffs or {}) do t[#t + 1] = m.check.id end
+      return table.concat(t, ",")
+    end
+    local function Update() Z:Refresh() RunUpdates() end
+    INSTANCE, INSTANCE_TYPE, NOW = true, "pvp", 5000
+    Z.db.buffWatch, Z.db.buffRefresh, Z.db.buffGroupAt, Z.db.buffDurations = {}, 0, 3, nil
+    Z.db.missingBuffs, Z.db.buffPanel = true, true
+    Z.class = "PRIEST" Z:BuildData()
+    assert(Z.buffNames["Mot de pouvoir : Robustesse"] and Z.buffNames["Prière d'esprit"], "noms suivis")
+    -- avant le match : tout se lit, l'etat de chacun est retenu, la duree apprise
+    AURAS = { HELPFUL = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31, expirationTime = NOW + 3000, duration = 3600 } } }
+    Update()
+    assert(Ids(other) == "14752,976", "avant le match : " .. Ids(other))
+    assert(Z.db.buffDurations["Mot de pouvoir : Robustesse"] == 3600, "duree non apprise")
+    -- le match commence : un message, une seule fois ; une rencontre de boss n'en donne pas
+    local printed = #PRINTED
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 1)
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 2)
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 1)
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 1, 1)
+    assert(#PRINTED == printed + 1 and PRINTED[#PRINTED]:find("cachés par le jeu", 1, true), "message du match")
+    -- pendant le match : noms secrets ; Robustesse connue par la photo, le reste inconnu donc propose (plus de panneau vide)
+    hidden = true
+    AURAS = { HELPFUL = { { name = MakeSecret(), icon = 9, auraInstanceID = 31 } } }
+    Update()
+    assert(Ids(other) == "14752,976", "pendant le match : " .. Ids(other))
+    assert(Z.AurasHidden(), "restriction non vue")
+    assert(#Z.BuffRows() > 0, "panneau vide en champ de bataille")
+    -- Esprit divin pose pendant le match : retenu (cible donnee par le jeu, sort reussi), duree inconnue = 10 minutes
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit), "cast-1", 14752)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-1", 14752)
+    RunUpdates()
+    assert(Ids(other) == "976", "buff pose pendant le match : " .. Ids(other))
+    -- un autre lancement ne compte pas
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit), "cast-2", 976)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-3", 976)
+    RunUpdates()
+    assert(Ids(other) == "976", "sort d'un autre lancement compte : " .. Ids(other))
+    -- fin des 10 minutes : propose de nouveau
+    NOW = NOW + 601 Update()
+    assert(Ids(other) == "14752,976", "buff retenu sans fin : " .. Ids(other))
+    -- mort : tout est oublie, au cimetiere tout est propose
+    Z.ForgetBuffs(other.unit) Update()
+    assert(Ids(other) == "1243,14752,976", "mort : " .. Ids(other))
+    -- buff que le jeu laisse lisible : son absence est sure, sa presence aussi
+    never[976], never[27683] = true, true -- les deux versions doivent etre lisibles
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 0, 2)
+    AURAS = { HELPFUL = { { name = MakeSecret(), icon = 9, auraInstanceID = 31 },
+      { name = "Protection contre l'ombre", icon = 9, auraInstanceID = 32, expirationTime = NOW + 500, duration = 600 } } }
+    Update()
+    assert(Ids(other) == "1243,14752", "buff lisible pendant le match : " .. Ids(other))
+    -- version de groupe : tout le groupe de la cible, vivants et a portee
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit), "cast-4", 27681)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-4", 27681)
+    RunUpdates()
+    assert(Ids(other) == "1243" and not Ids(me):find("14752", 1, true), "version de groupe : " .. Ids(other) .. " / " .. Ids(me))
+    -- /reload pendant le match : la memoire est gardee avec le personnage
+    FireEvent("PLAYER_LOGOUT")
+    local saved = Z.char.buffMemory
+    assert(saved and saved.at == NOW and saved.seen["G-" .. other.unit]["Prière d'esprit"], "memoire non gardee au /reload")
+    Z.char.buffMemory = nil
+    -- /lyorune buffs : une ligne par buff, lisible ou cache
+    printed = #PRINTED
+    Z.Command("buffs")
+    local text = table.concat(PRINTED, "|", printed + 1)
+    assert(text:find("cachés par le jeu ici", 1, true) and text:find("Protection contre l'ombre : lisible", 1, true)
+      and text:find("Mot de pouvoir : Robustesse : caché, 60 min", 1, true), "commande /lyorune buffs : " .. text)
+    -- fin du match : tout se relit
+    hidden = false
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 0)
+    AURAS = {} Update()
+    assert(Ids(other) == "1243,14752,976", "apres le match : " .. Ids(other))
+    for _, key in ipairs({ "Buffs cachés par le jeu ici : Lyorune retient vos propres buffs, pas ceux des autres joueurs.",
+      "buffs cachés par le jeu ici : Lyorune retient vos propres buffs, pas ceux des autres joueurs.",
+      "buffs : cachés par le jeu ici (mémoire de vos sorts).", "buffs : lisibles ici.", "aucun buff de votre classe à surveiller.",
+      "%d min", "durée inconnue (10 min)", "lisible", "caché", "mémoire : %d fiche(s) de joueur en cours." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit, C_Timer.After = old.name, old.known, old.isUnit, old.after
+  C_Secrets, UnitGUID, Enum.AddOnRestrictionType, Enum.AddOnRestrictionState, Z.class = old.secrets, old.guid, old.types, old.states, old.class
+  INSTANCE, INSTANCE_TYPE, AURAS = old.instance, old.kind, {}
+  Z.db.buffDurations = nil
+  Z:BuildData() Z:Refresh() RunUpdates()
   assert(ok, err)
 end)
 

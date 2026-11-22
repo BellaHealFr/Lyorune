@@ -125,6 +125,13 @@ local function SubGroup(unit)
 	return 1
 end
 
+-- Pour la mémoire des buffs (BuffMemory.lua) : groupe, portée, et le joueur du dernier clic sur ce buff
+Z.BuffSubGroup = SubGroup
+Z.BuffAway = Away
+function Z.LastBuffTry(spell)
+	if tried and tried.spell == spell and GetTime() - tried.at <= 3 then return tried.unit end
+end
+
 -- Buffs qui manquent aux joueurs, lus sur les cases visibles (chaque joueur une seule fois) : une entrée par
 -- joueur et par buff
 local function Missing()
@@ -320,6 +327,9 @@ local function RowEnter(self)
 	end
 	if self.spell2Name then
 		GameTooltip:AddLine(L["Clic droit : %s (tout son groupe)"]:format(self.spell2Name), 0.8, 0.8, 0.8)
+	end
+	if Z.AurasHidden() then -- champ de bataille, arène, clé mythique : le jeu cache les buffs (BuffMemory.lua)
+		GameTooltip:AddLine(L["Buffs cachés par le jeu ici : Lyorune retient vos propres buffs, pas ceux des autres joueurs."], 1, 0.82, 0.3, true)
 	end
 	GameTooltip:Show()
 end

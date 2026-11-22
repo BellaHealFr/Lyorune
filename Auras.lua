@@ -688,25 +688,32 @@ local function Concerns(check, unit, me)
 end
 
 -- Buffs de ma liste que ce joueur n'a pas, tous, dans l'ordre de Data.lua : { { check, spell, icon }, ... }, et
--- une clé qui les résume. Lisible hors combat seulement. Un buff qui finit dans moins de « buffRefresh » minutes
+-- une clé qui les résume. Hors combat seulement. Un buff qui finit dans moins de « buffRefresh » minutes
 -- compte comme absent (au plus le quart de sa durée, Until).
+-- Là où le jeu cache les buffs même hors combat (champ de bataille, arène, clé mythique) : un buff qui reste
+-- lisible se lit, les autres viennent de la mémoire (BuffMemory.lua), et un buff inconnu compte comme absent.
 local function FindMissingBuffs(b, unit)
 	if not (Z.db.missingBuffs or Z.db.buffPanel) or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL", 40)
 	if not list then return end
 	local now, margin = GetTime(), Z.db.buffRefresh * 60
-	local present, mine = {}, nil
+	local present, mine, hidden = {}, nil, false
 	for i = 1, #list do
 		local name = list[i].name
-		if issecret(name) then return end
-		present[name] = math.max(present[name] or -math.huge, Until(list[i], now, margin))
+		if issecret(name) then
+			hidden = true
+		else
+			present[name] = math.max(present[name] or -math.huge, Until(list[i], now, margin))
+		end
 	end
+	if not hidden then Z.NoteBuffs(unit, list, Z.buffNames, false) end
 	local me = UnitIsUnit(unit, "player")
 	if issecret(me) then me = false end
 	local missing, key, soonest = {}, Z.buffGeneration .. "|", math.huge
 	for _, check in ipairs(Z.buffChecks) do
 		if Concerns(check, unit, me) then
 			local left, choice = -math.huge, nil -- secondes avant de le proposer à nouveau (absent : jamais assez)
+			local own = check.blessing or check.aura
 			if check.weapon then
 				local weapon = WeaponLeft()
 				choice = Z.LastChoice(check)
@@ -714,28 +721,41 @@ local function FindMissingBuffs(b, unit)
 					left = weapon - margin
 					soonest = math.min(soonest, weapon) -- l'arme ne prévient pas quand elle s'éteint
 				end
-			elseif check.blessing or check.aura then
+			elseif own then
 				-- seule une bénédiction ou une aura de moi compte : celle d'un autre paladin ne remplace pas la mienne
 				if not mine then
 					mine = {}
-					local own = Auras(unit, "HELPFUL|PLAYER", 16)
-					if not own then return end
-					for i = 1, #own do
-						local name = own[i].name
-						if issecret(name) then return end
-						mine[name] = math.max(mine[name] or -math.huge, Until(own[i], now, margin))
+					local list2 = Auras(unit, "HELPFUL|PLAYER", 16)
+					if not list2 then return end
+					local hidden2 = false
+					for i = 1, #list2 do
+						local name = list2[i].name
+						if issecret(name) then
+							hidden2 = true
+						else
+							mine[name] = math.max(mine[name] or -math.huge, Until(list2[i], now, margin))
+						end
 					end
+					if hidden2 then hidden = true else Z.NoteBuffs(unit, list2, Z.ownNames, true) end
 				end
 				for name in pairs(check.names) do left = math.max(left, mine[name] or -math.huge) end
 				choice = check.blessing and Z.BlessingFor(check, unit) or Z.LastChoice(check)
 			else
 				for name in pairs(check.names) do left = math.max(left, present[name] or -math.huge) end
 			end
+			-- caché par le jeu : la mémoire (photo d'avant la restriction, mes sorts), relue à la fin du buff retenu
+			local remembered = false
+			if hidden and left <= 0 and not check.weapon and not Z.BuffReadable(check) then
+				for name in pairs(check.names) do
+					local memory = Z.BuffMemoryLeft(unit, name, own, now, margin)
+					if memory then left, remembered = math.max(left, memory), true end
+				end
+			end
 			if left <= 0 then
 				local spell = choice and choice.name or check.spell
 				missing[#missing + 1] = { check = check, spell = spell, icon = choice and choice.icon or check.icon }
 				key = key .. check.id .. ":" .. spell .. ";"
-			elseif margin > 0 then
+			elseif margin > 0 or remembered then
 				soonest = math.min(soonest, left)
 			end
 		end
@@ -744,20 +764,28 @@ local function FindMissingBuffs(b, unit)
 	if #missing > 0 then return missing, key end
 end
 
--- Mes buffs uniques (Bouclier de terre...) posés sur ce joueur : leur nom, ou nil. Lisible hors combat seulement.
+-- Mes buffs uniques (Bouclier de terre...) posés sur ce joueur : leur nom, ou nil. Hors combat seulement. Caché
+-- par le jeu : ceux que je lui ai lancés et qui durent encore (BuffMemory.lua).
 local function FindMyUniques(b, unit)
 	if not Z.db.buffPanel or #Z.uniqueChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL|PLAYER", 16)
 	if not list then return end
-	local mine
+	local mine, hidden
 	for i = 1, #list do
 		local name = list[i].name
-		if issecret(name) then return end
-		for _, check in ipairs(Z.uniqueChecks) do
-			if check.name == name then mine = (mine and mine .. "," or "") .. name end
+		if issecret(name) then
+			hidden = true
+		else
+			for _, check in ipairs(Z.uniqueChecks) do
+				if check.name == name then mine = (mine and mine .. "," or "") .. name end
+			end
 		end
 	end
-	return mine
+	if not hidden then
+		Z.NoteBuffs(unit, list, Z.ownNames, true)
+		return mine
+	end
+	return mine or Z.UniquesInMemory(unit)
 end
 
 ----------------------------------------------------------------------------------------------------

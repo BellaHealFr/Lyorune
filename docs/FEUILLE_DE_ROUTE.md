@@ -43,7 +43,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
 | 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
 | 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | Fait : bloc sous les cadres (1.34.0), Sorts et raccourcis et `/lyorune sorts` (1.34.1) |
-| 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | À faire |
+| 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | Fait (1.35.0) : aussi en clé mythique et pendant un boss |
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | À faire |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | À faire |
@@ -703,7 +703,25 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   **Aussi en 1.34.1 (demandes de l'auteur pendant la session, 22 novembre 2026)** : icône du bloc divisée par 2
   (« bien trop grosse », au moins 14 pixels) ; une seule case au lieu de la première et de 3 suivantes, comme le
   bouton de HealKit : elle passe au buff suivant après chaque sort, « + N » dans son coin, rien en dessous.
-- [ ] 26 b (1.35.0), **PROCHAINE, demandée en priorité par l'auteur le 22 novembre 2026** : faire apparaître les
+- [x] 26 b (1.35.0), **faite le 22 novembre 2026** (accord de l'auteur sur la proposition : « Oui, tout »).
+  **Comparaison** : HealKit (`BuffHelper.lua`) : en champ de bataille et en arène seulement (`IsInInstance`), chaque
+  buff lancé depuis son bouton compte pendant sa durée (vue hors JcJ, table, sinon 5 min), par identifiant, confirmé
+  par la réussite, oublié à la mort, gardé au /reload ; buffs vus avant d'entrer reportés ; arrêt pendant un boss ;
+  relecture deux fois par seconde. VuhDo : `C_Secrets.ShouldSpellAuraBeSecret` buff par buff, rien pour les buffs
+  cachés. HealBot : saute toute aura secrète. Code du jeu (`SecretPredicatesDocumentation`) : un sort peut être
+  marqué « jamais secret », prioritaire sur les restrictions. Option du jeu `addonPvPMatchRestrictionsForced`
+  (vue dans Leatrix, VuhDo) : restrictions JcJ partout, pour essayer sans champ de bataille.
+  **Fait (BuffMemory.lua)** : buff lisible lu partout (`Z.BuffReadable`, tous les numéros de la ligne) ; dernier
+  état lu de chaque joueur (`Z.NoteBuffs`) et photo à l'état `Activating` des restrictions JcJ, clé mythique et
+  boss ; mes sorts réussis retenus par identifiant (`UNIT_SPELLCAST_SENT` donne la cible : clic de case, panneau,
+  macro, cible ; version de groupe = groupe vivant et à portée) ; durées apprises (`LyoruneDB.buffDurations`, par
+  nom), sinon 10 min ; oubli à la mort (Frames.lua) ; mémoire gardée au /reload (`Z.char.buffMemory`, contrôle de
+  l'heure) ; un buff inconnu compte comme absent ; aucune boucle (rendez-vous par case, Auras.lua) ; message une
+  fois par match ou clé, ligne dans l'infobulle, `/lyorune buffs`. Écart avec la proposition : pas de table de
+  durées dans Data.lua (impossible à vérifier hors jeu sans reprendre celle de HealKit) : durées apprises seules.
+  **À vérifier en jeu** : buffs « jamais secrets » sur Forever (`/lyorune buffs` en champ de bataille), cible de
+  `UNIT_SPELLCAST_SENT` lisible en JcJ, photo prise avant les portes.
+  Texte d'origine de l'étape : faire apparaître les
   buffs manquants partout (champ de bataille, arène, raid, donjon, instance). **Commencer par étudier comment
   HealKit y arrive** (BuffHelper.lua : mémoire des sorts lancés `castMemory`, `bounced`, `inEncounter`, lecture des
   auras secrètes), puis HealBot, VuhDo et le reste du dossier, et présenter la comparaison à l'auteur.

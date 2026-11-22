@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.35.0] - 2026-11-22
+
+### Ajouté
+
+- /lyorune buffs : pour chacun de vos buffs, lisible ici ou caché par le jeu, et la durée connue. Un message au début du match et une ligne dans l'infobulle disent ce que Lyorune sait.
+
+### Corrigé
+
+- Buffs manquants en champ de bataille, en arène et en clé mythique : le jeu y cache les buffs, même hors combat, et le panneau restait vide. Lyorune lit les buffs que le jeu laisse lisibles, note ceux de chacun juste avant le match, retient les buffs que vous lancez pendant leur durée et les oublie à la mort (au cimetière, ils sont proposés de nouveau).
+
 ## [1.34.1] - 2026-11-22
 
 ### Ajouté
@@ -701,6 +711,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.35.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.1...v1.35.0
 [1.34.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.0...v1.34.1
 [1.34.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.7...v1.34.0
 [1.33.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.6...v1.33.7

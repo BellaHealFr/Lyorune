@@ -136,6 +136,7 @@ local function UpdateState(b)
 	local dead = UnitIsDeadOrGhost(unit)
 	if issecret(dead) then dead = false end
 	if b.dead and not dead then Z.ClearResFor(unit) end -- relevé : le nom du soigneur ne sert plus
+	if dead and not b.dead and not b.extra and Z.ForgetBuffs then Z.ForgetBuffs(unit) end -- ses buffs sont partis
 	b.dead = dead
 
 	local status, rezzer

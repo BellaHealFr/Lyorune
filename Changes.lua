@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.35.0", date = "2026-11-22",
+		added = {
+			"/lyorune buffs : pour chacun de vos buffs, lisible ici ou caché par le jeu, et la durée connue. Un message au début du match et une ligne dans l'infobulle disent ce que Lyorune sait.",
+		},
+		improved = {
+		},
+		fixed = {
+			"Buffs manquants en champ de bataille, en arène et en clé mythique : le jeu y cache les buffs, même hors combat, et le panneau restait vide. Lyorune lit les buffs que le jeu laisse lisibles, note ceux de chacun juste avant le match, retient les buffs que vous lancez pendant leur durée et les oublie à la mort (au cimetière, ils sont proposés de nouveau).",
+		},
+	},
+	{
 		version = "1.34.1", date = "2026-11-22",
 		added = {
 			"/lyorune sorts : les sorts proposés, ceux de votre classe qui manquent et pourquoi (pas appris, autre spécialisation, passif), et ceux qui sont écartés.",
