@@ -45,7 +45,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | Fait : bloc sous les cadres (1.34.0), Sorts et raccourcis et `/lyorune sorts` (1.34.1) |
 | 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | Fait (1.35.0) : aussi pendant un boss |
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | Fait |
-| 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
+| 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | Publiée (v1.37.0) |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | À faire |
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
 | 27 c | 1.40.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
@@ -760,7 +760,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   du jeu (`HELPFUL`, tous les rangs du buff) qui dessine le buff par-dessus quand il est là. Raccourci « mon buff
   unique sur son porteur », préparé hors combat. À vérifier avec l'auteur avant codage : ordre de dessin et
   opacité, conteneur vide invisible, numéros de tous les rangs, coût en raid de 40.
-- [ ] 26 c (1.37.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
+- [x] 26 c (1.37.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
   1.32.0), synchronisation des paladins, guide et visite.
   Comparaison (22 novembre 2026) : HealKit choisit une bénédiction par ligne (Tank, Soigneur, chaque classe, moi),
   sans aucune entente entre paladins ; HealBot et VuhDo donnent une cible par buff (moi, groupe, raid, mêlée,
@@ -777,7 +777,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   - Synchronisation : les paladins qui ont Lyorune s'annoncent leurs bénédictions par type de joueur (avant le
     combat, jamais pendant un blocage) ; le chef ou un assistant peut envoyer la répartition des buffs (groupes et
     bénédictions) depuis la fenêtre « Répartir », mêmes règles que la 1.32.0 (appliquée d'office, interrupteur).
-  - **Fait (22 novembre 2026), pas encore publié** : nouveau fichier `BuffAssign.lua`. Réglages `buffGroups`
+  - **Fait et publié (22 novembre 2026, v1.37.0, essayé en jeu par l'auteur : « tout est ok »)** : nouveau fichier `BuffAssign.lua`. Réglages `buffGroups`
     (Z.private), `blessingPick`, `blessingSync` ; `assignAccept` vaut pour les deux répartitions. Grille
     `Z.blessingSlots`, `Z.blessingSlotNames`, `Z.manaBlessings` (Data.lua) ; `Z.BlessingFor(check, unit, taken)`
     déplacé de Data.lua ; filtre de groupe dans `Concerns` (Auras.lua). Messages `P:` (annonces, priorité
