@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.39.0] - 2026-11-22
+
+### Ajouté
+
+- Variantes d'un raccourci : le « + » au bout d'une ligne (chapitre Sorts et raccourcis) lui donne un autre sort sur un ennemi (case Cible, Focalisation, allié sous Contrôle mental), en champ de bataille et en arène, ou hors combat. Chaque variante est une sous-ligne, réglable et retirable ; elles suivent le raccourci, l'infobulle « Mes clics » et les codes de partage.
+- Aucun soin sur un ennemi (partie Comportement, coché au départ) : un raccourci sans variante « Sur un ennemi » ne fait rien sur un ennemi, au lieu d'envoyer votre soin. Cibler, Menu du joueur et Arrêter l'incantation marchent partout.
+
 ## [1.38.1] - 2026-11-22
 
 ### Amélioré
@@ -759,6 +766,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.39.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.1...v1.39.0
 [1.38.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.1...v1.38.0
 [1.37.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.0...v1.37.1

@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.39.0] - 2026-11-22
+
+### Added
+
+- Binding variants: the "+" at the end of a line (Spells and bindings chapter) gives it another spell on an enemy (Target, Focus frame, ally under Mind Control), in battlegrounds and arenas, or out of combat. Each variant is a sub-line you can change or remove; they follow the binding, the "My clicks" tooltip and sharing codes.
+- No healing on an enemy (Behaviour section, ticked at first): a binding without an "On an enemy" variant does nothing on an enemy, instead of sending your heal. Target, Player menu and Stop casting work everywhere.
+
 ## [1.38.1] - 2026-11-22
 
 ### Improved
@@ -759,6 +766,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.39.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.1...v1.39.0
 [1.38.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.1...v1.38.0
 [1.37.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.0...v1.37.1

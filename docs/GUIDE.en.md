@@ -118,6 +118,17 @@ To choose your spells: `/lyorune`, **Spells and bindings** chapter. All your sho
 
 **A low-level player?** Nothing to set: for a buff or a heal over time cast at the highest rank, the game itself casts the strongest rank that player can receive. A rank you chose adapts too: on the cell of a player whose level is too low, Lyorune sets the best of your ranks they can receive, never stronger than the chosen one ("Rank adapted to the healed player's level", fine settings, ticked at first). It is worked out out of combat, on every change of group, level, target or focus; in combat, the cell keeps its rank until the fight ends. If none of your ranks is low enough, the chosen rank is cast and the game may refuse it.
 
+**Another spell depending on the situation (variants)**: the small "+" at the end of a line adds a variant of that binding, shown just below it, indented. The same click then casts something else:
+- **On an enemy**: on a frame showing an enemy (Target, Focus, an ally under Mind Control), for example Smite or Dispel Magic instead of your heal. The choice window then offers your offensive spells. The game chooses at the moment of the click, even in combat.
+- **In PvP**: in battlegrounds and arenas, for example a lower rank or a faster heal. Lyorune sets this spell when you enter and puts the other one back when you leave (if you leave in combat, at the end of the fight).
+- **Out of combat**: a spell only, for example a buff out of combat and your heal in combat. The game chooses at the moment of the click.
+
+A variant has its own "x" to remove it alone; removing the binding also removes its variants, and changing its combination takes them along. They go into sharing codes and into the frames' "My clicks" tooltip.
+
+**No healing on an enemy** (Behaviour section, ticked at first): on a frame showing an enemy, a binding without an "On an enemy" variant does nothing, instead of sending your heal to them (otherwise the game may cast it on you). Target, Player menu and Stop casting work everywhere.
+
+**What is impossible**: choosing a spell by the player's health or mana. The game hides these values in combat and no macro can read them.
+
 There is no limit: add as many lines as you like. All lines stay visible; when the list is long, scroll the page with the mouse wheel.
 
 - **Changing the spell**: click the spell of the line, or drag a spell from your spellbook onto it.

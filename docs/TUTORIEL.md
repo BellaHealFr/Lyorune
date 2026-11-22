@@ -117,6 +117,17 @@ Pour choisir vos sorts : `/lyorune`, chapitre **Sorts et raccourcis**. Tous vos 
 
 **Un joueur de bas niveau ?** Rien à régler : pour un buff ou un soin sur la durée lancé au rang le plus haut, le jeu lance tout seul le rang le plus fort que ce joueur peut recevoir. Un rang que vous avez choisi s'adapte lui aussi : sur la case d'un joueur de trop bas niveau, Lyorune pose le meilleur de vos rangs qu'il peut recevoir, jamais plus fort que celui choisi (« Rang adapté au niveau du joueur soigné », réglages fins, coché au départ). C'est calculé hors combat, à chaque changement de groupe, de niveau, de cible ou de focalisation ; en combat, la case garde son rang jusqu'à la fin du combat. Si aucun de vos rangs n'est assez bas, le rang choisi part et le jeu peut le refuser.
 
+**Un autre sort selon la situation (variantes)** : le petit « + » au bout d'une ligne ajoute une variante de ce raccourci, montrée juste en dessous, en retrait. Le même clic lance alors autre chose :
+- **Sur un ennemi** : sur une case qui montre un ennemi (Cible, Focalisation, un allié sous Contrôle mental), par exemple Châtiment ou Dissipation de la magie au lieu de votre soin. La fenêtre de choix propose alors vos sorts offensifs. Le jeu choisit au moment du clic, même en combat.
+- **En JcJ** : en champ de bataille et en arène, par exemple un rang plus bas ou un soin plus rapide. Lyorune pose ce sort à votre entrée et remet l'autre à votre sortie (si vous sortez en combat, à la fin du combat).
+- **Hors combat** : un sort seulement, par exemple un buff hors combat et votre soin en combat. Le jeu choisit au moment du clic.
+
+Une variante a son « x » pour la retirer seule ; retirer le raccourci retire aussi ses variantes, et changer sa combinaison les emmène avec lui. Elles passent dans les codes de partage et dans l'infobulle « Mes clics » des cases.
+
+**Aucun soin sur un ennemi** (partie Comportement, coché au départ) : sur une case qui montre un ennemi, un raccourci sans variante « Sur un ennemi » ne fait rien, au lieu d'envoyer votre soin vers lui (le jeu peut sinon le lancer sur vous). Cibler, Menu du joueur et Arrêter l'incantation marchent partout.
+
+**Ce qui est impossible** : choisir un sort selon la vie ou la mana du joueur. Le jeu cache ces valeurs en combat et aucune macro ne peut les lire.
+
 Il n'y a pas de limite : ajoutez autant de lignes que vous voulez. Toutes les lignes restent visibles ; quand la liste est longue, faites défiler la page à la molette.
 
 - **Changer le sort** : cliquez sur le sort de la ligne, ou glissez-y un sort de votre grimoire.

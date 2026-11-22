@@ -8276,6 +8276,129 @@ step("1.38.1 : choix du rang eteint au depart (toujours le plus haut), rang adap
   assert(ok, err)
 end)
 
+step("1.39.0 : variantes d'un raccourci (sur un ennemi, en JcJ, hors combat) et aucun soin sur un ennemi", function()
+  local old = { clicks = CopyTable(Z:GetClicks()), keys = CopyTable(Z:GetHoverKeys()), res = Z.db.autoRes, class = Z.class,
+    guard = Z.db.enemyGuard, harmful = C_Spell.IsSpellHarmful, helpful = C_Spell.IsSpellHelpful, info = C_SpellBook.GetSpellBookItemInfo,
+    lines = C_SpellBook.GetSpellBookSkillLineInfo, name = C_Spell.GetSpellName }
+  local ok, err = pcall(function()
+    assert(Z.defaults.enemyGuard == true and type(Z.defaults.clickVariants) == "table", "reglages de depart")
+    assert(Z.notInProfile.enemyGuard and Z.notInProfile.clickVariants, "reglages hors profil")
+    Z.class, Z.db.autoRes, Z.db.enemyGuard = "PRIEST", false, true
+    local b = Z.buttons[1]
+    local one, shift = { kind = "click", key = "1" }, { kind = "click", key = "shift-1" }
+    Z:SetClick("1", "Soins")
+    Z:SetClick("2", "@target")
+    Z:SetClick("shift-1", "Rénovation")
+    -- garde : sur un ennemi, un soin passe sur un bouton sans action ; Cibler reste Cibler
+    assert(b:GetAttribute("harmbutton1") == "zxnone" and b:GetAttribute("*type-zxnone") == nil, "garde : " .. tostring(b:GetAttribute("harmbutton1")))
+    assert(b:GetAttribute("harmbutton2") == nil, "Cibler garde sur un ennemi")
+    assert(b:GetAttribute("shift-harmbutton1") == "zxnone", "garde avec Maj")
+    -- touche au survol gardee aussi
+    Z:SetBinding({ kind = "key", key = "F" }, "Rénovation")
+    local index
+    for i, entry in ipairs(Z:GetHoverKeys()) do if entry.key == "F" then index = i end end
+    assert(b:GetAttribute("*harmbutton-zh" .. index) == "zxnone", "garde de la touche")
+    -- garde eteinte : plus rien
+    Z.db.enemyGuard = false Z:ApplyClicks()
+    assert(b:GetAttribute("harmbutton1") == nil, "garde eteinte")
+    Z.db.enemyGuard = true Z:ApplyClicks()
+    -- variante ennemie : le bouton du jeu passe sur « zx1 » / « zxshift1 », qui lance le sort offensif
+    Z:SetVariant(one, "enemy", "Châtiment")
+    assert(b:GetAttribute("harmbutton1") == "zx1" and b:GetAttribute("*type-zx1") == "spell" and b:GetAttribute("*spell-zx1") == "Châtiment", "variante ennemie")
+    assert(b:GetAttribute("type1") == "spell" and b:GetAttribute("spell1") == "Soins", "le clic sur un allie change")
+    Z:SetVariant(shift, "enemy", "@target")
+    assert(b:GetAttribute("shift-harmbutton1") == "zxshift1" and b:GetAttribute("*type-zxshift1") == "target", "Maj sur un ennemi : cibler")
+    Z:SetVariant({ kind = "key", key = "F" }, "enemy", "Mot de l'ombre : Douleur")
+    assert(b:GetAttribute("*harmbutton-zh" .. index) == "zxh" .. index and b:GetAttribute("*spell-zxh" .. index) == "Mot de l'ombre : Douleur", "touche sur un ennemi")
+    -- infobulle de la case : la variante en retrait
+    local found
+    for _, line in ipairs(Z:ClickSummary()) do if line[2] == "Châtiment" then found = line[1] end end
+    assert(found and found:find("Sur un ennemi", 1, true), "infobulle sans variante")
+    -- hors combat : un sort seulement ; le jeu choisit par la macro
+    Z:SetVariant(one, "ooc", "@macro:Test")
+    assert(Z:VariantsOf(one).ooc == nil, "macro acceptee hors combat")
+    Z:SetVariant(one, "ooc", "Mot de pouvoir : Robustesse")
+    assert(b:GetAttribute("type1") == "macro" and b:GetAttribute("macrotext1") == "/cast [nocombat,@mouseover] Mot de pouvoir : Robustesse; [@mouseover] Soins",
+      tostring(b:GetAttribute("macrotext1")))
+    Z.db.autoRes = true Z:ApplyClicks()
+    local text = b:GetAttribute("macrotext1")
+    assert(text:find("dead", 1, true) and text:find("[nocombat,@mouseover] Mot de pouvoir : Robustesse; [@mouseover] Soins", 1, true), text)
+    Z.db.autoRes = false Z:ApplyClicks()
+    -- devant une macro : le sort hors combat, puis la macro s'arrete hors combat
+    Z:SetClick("3", "/cast [@mouseover] Prière de soins")
+    Z:SetVariant({ kind = "click", key = "3" }, "ooc", "Rénovation")
+    assert(b:GetAttribute("macrotext3"):find("^/cast %[nocombat,@mouseover%] Rénovation\n/stopmacro %[nocombat%]\n/cast %[@mouseover%] Prière de soins"), b:GetAttribute("macrotext3"))
+    -- en JcJ : la variante est posee a l'entree, hors combat, et retiree a la sortie
+    Z:SetVariant(one, "ooc", nil)
+    Z:SetVariant(one, "pvp", "Soins rapides")
+    assert(b:GetAttribute("spell1") == "Soins", "variante JcJ hors du JcJ")
+    INSTANCE_TYPE = "pvp" FireEvent("ZONE_CHANGED_NEW_AREA")
+    assert(b:GetAttribute("spell1") == "Soins rapides", "variante JcJ absente en champ de bataille")
+    assert(b:GetAttribute("harmbutton1") == "zx1", "variante ennemie perdue en JcJ")
+    -- sortie en combat : attendue jusqu'a la fin du combat, sans message
+    local printed = #PRINTED
+    COMBAT = true INSTANCE_TYPE = "none" FireEvent("ZONE_CHANGED_NEW_AREA")
+    assert(b:GetAttribute("spell1") == "Soins rapides" and #PRINTED == printed, "change en combat")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+    assert(b:GetAttribute("spell1") == "Soins", "variante JcJ restee apres la sortie")
+    INSTANCE_TYPE = "arena" FireEvent("PLAYER_ENTERING_WORLD")
+    assert(b:GetAttribute("spell1") == "Soins rapides", "arene")
+    INSTANCE_TYPE = "none" FireEvent("PLAYER_ENTERING_WORLD")
+    -- deplacer un raccourci : ses variantes suivent ; le retirer : elles partent
+    Z:MoveBinding(one, { kind = "click", key = "4" })
+    assert(Z:VariantsOf({ kind = "click", key = "4" }).enemy == "Châtiment" and not next(Z:VariantsOf(one)), "variantes non deplacees")
+    assert(b:GetAttribute("harmbutton4") == "zx4", "variante deplacee non posee")
+    -- partage : les variantes passent avec les clics, jamais une macro
+    local code = Z:Export()
+    assert(code:find("v.PRIEST.4.enemy=s", 1, true), "variante absente du code")
+    Z:SetVariant({ kind = "click", key = "4" }, "enemy", nil)
+    assert(Z:Import(code) and Z:VariantsOf({ kind = "click", key = "4" }).enemy == "Châtiment", "variante non importee")
+    assert(Z:VariantsOf({ kind = "click", key = "4" }).pvp == "Soins rapides", "variante JcJ non importee")
+    Z:SetBinding({ kind = "click", key = "4" }, nil)
+    assert(not next(Z:VariantsOf({ kind = "click", key = "4" })), "variantes restees apres le retrait")
+    -- sorts pour un ennemi : ceux que le jeu dit offensifs
+    local items = { 585, 139 }
+    C_Spell.GetSpellName = function(id) return id == 585 and "Châtiment" or old.name(id) end
+    C_Spell.IsSpellHarmful = function(id) return id == 585 end
+    C_Spell.IsSpellHelpful = function(id) return id ~= 585 end
+    C_SpellBook.GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = #items } end
+    C_SpellBook.GetSpellBookItemInfo = function(slot) return { itemType = 1, spellID = items[slot] } end
+    local enemy = Z:KnownSpells("enemy")
+    assert(#enemy == 1 and enemy[1].name == "Châtiment", "sorts pour un ennemi")
+    for _, spell in ipairs(Z:KnownSpells()) do assert(spell.name ~= "Châtiment", "sort offensif propose sur un allie") end
+    assert(Z:SpellIsBound("Mot de l'ombre : Douleur"), "sort d'une variante non reconnu")
+    -- l'ecran : la sous-ligne sous son raccourci, le « + » ouvre le choix (sans menu du jeu : la premiere variante libre)
+    Z:SetClick("1", "Soins")
+    Z:ToggleOptions("Clics")
+    local _, row = Z:ClickCell("1")
+    assert(row and row.add:IsShown(), "bouton +")
+    row.add:Run("OnClick", "LeftButton")
+    assert(LyorunePicker:IsShown(), "choix de la variante")
+    LyorunePicker.Choose("Châtiment")
+    assert(Z:VariantsOf(one).enemy == "Châtiment", "variante choisie a l'ecran")
+    local _, sub = Z:ClickCell("1", "click", "enemy")
+    assert(sub and sub:IsShown() and not sub.add:IsShown() and sub.spell.label:GetText() == "Châtiment", "sous-ligne")
+    sub.clear:Run("OnClick", "LeftButton")
+    assert(not Z:VariantsOf(one).enemy and Z:GetClicks()["1"] == "Soins", "retrait de la variante seule")
+    Z:ToggleOptions()
+    local labels = table.concat(Z:OptionLabels(), "|")
+    assert(labels:find("Aucun soin sur un ennemi", 1, true), "interrupteur absent")
+    for _, key in ipairs({ "Sur un ennemi", "En JcJ", "Hors combat", "Ajouter une variante", "Retirer cette variante",
+      "hors combat : un sort seulement, pas de macro." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  C_Spell.IsSpellHarmful, C_Spell.GetSpellName, C_Spell.IsSpellHelpful = old.harmful, old.name, old.helpful
+  C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo = old.info, old.lines
+  INSTANCE_TYPE, COMBAT = "none", false
+  if LyorunePicker then LyorunePicker:Hide() end
+  Z.db.clickVariants = {}
+  Z.db.clicks[Z:ClickSet()], Z.db.hoverKeys[Z:ClickSet()] = old.clicks, old.keys
+  Z.db.autoRes, Z.class, Z.db.enemyGuard = old.res, old.class, old.guard
+  Z:ApplyClicks()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

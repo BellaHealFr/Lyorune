@@ -40,7 +40,7 @@ local DIMMED = 0.42         -- transparence d'un réglage sans effet (son régla
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
 ----------------------------------------------------------------------------------------------------
 local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true, clicksPerSpec = true,
-	clickConflictAlert = true, rankChoice = true, rankAdapt = true }
+	clickConflictAlert = true, rankChoice = true, rankAdapt = true, enemyGuard = true }
 
 local function Option(key)
 	return function() return Z.db[key] end, function(value)
@@ -972,6 +972,13 @@ local function TrinketIcon(slot, chosen)
 end
 local NewRow        -- une ligne de raccourci de plus (définie plus bas)
 
+-- Bulle de la situation d'une sous-ligne de variante
+local VARIANT_TIPS = {
+	enemy = "Sur une case qui montre un ennemi (Cible, Focalisation, allié sous Contrôle mental), ce raccourci lance ceci. Le jeu choisit au moment du clic, en combat aussi.",
+	pvp = "En champ de bataille et en arène, ce raccourci lance ceci. Posé à l'entrée du lieu, retiré à la sortie.",
+	ooc = "Hors combat, ce raccourci lance ce sort ; en combat, le sort de la ligne du dessus. Le jeu choisit au moment du clic.",
+}
+
 function RefreshClicks()
 	if clickList then
 		-- Nouveau sort sans clic : le plus ancien, sous le bouton « Ajouter »
@@ -986,15 +993,38 @@ function RefreshClicks()
 		local top = spell and 66 or 36
 		clickList.list:ClearAllPoints()
 		clickList.list:SetPoint("TOPLEFT", 0, -top)
-		-- Une ligne par clic ou par touche
+		-- Une ligne par clic ou par touche, suivie d'une sous-ligne par variante (sur un ennemi, en JcJ, hors combat)
 		local bindings = Z:Bindings()
 		local conflicts = Z.db.clickConflictAlert and Z:GameClickConflicts() or {}
-		for i = #rows + 1, #bindings do rows[i] = NewRow(i) end
+		local lines = {}
+		for _, binding in ipairs(bindings) do
+			lines[#lines + 1] = { binding = binding }
+			for _, kind in ipairs(Z.variantKinds) do
+				local value = binding.variants and binding.variants[kind[1]]
+				if value then lines[#lines + 1] = { binding = binding, variant = kind, value = value } end
+			end
+		end
+		for i = #rows + 1, #lines do rows[i] = NewRow(i) end
 		for i, row in ipairs(rows) do
-			local binding = bindings[i]
-			row.binding = binding
+			local line = lines[i]
+			local binding = line and line.binding
+			row.binding, row.variant = binding, line and line.variant
 			row:SetShown(binding ~= nil)
-			if binding then
+			row.add:SetShown(line ~= nil and not line.variant)
+			if line and line.variant then
+				-- sous-ligne : la situation, en retrait, puis ce que lance la variante
+				row.key.label:SetText("|cff" .. UI.Hex("dim") .. L[line.variant[2]] .. "|r")
+				row.key.tip = L[VARIANT_TIPS[line.variant[1]]]
+				row.spell.label:SetText(SpellText(line.value))
+				for _, toggle in ipairs(row.trinkets) do toggle:Hide() end
+				row.count:Hide()
+				row.spell:SetPoint("LEFT", row.key, "RIGHT", 4, 0)
+				row.spell:SetPoint("RIGHT", row.clear, "LEFT", -4, 0)
+				row.key:SetAlpha(1)
+				row.spell:SetAlpha(1)
+				row.clear.tip = L["Retirer cette variante"]
+			elseif binding then
+				row.clear.tip = L["Retirer ce raccourci"]
 				-- en orange : le clic pour lancer du jeu prend aussi cette combinaison
 				local game = binding.kind == "click" and conflicts[binding.key]
 				row.key.label:SetText((game and "|cffff9933" or "") .. Z:TriggerLabel(binding))
@@ -1010,7 +1040,7 @@ function RefreshClicks()
 					toggle.icon:SetAlpha(on and 1 or 0.6)
 					toggle.chosen:SetShown(on)
 				end
-				row.spell:SetPoint("RIGHT", trinkets and row.trinkets[1] or row.clear, "LEFT", -4, 0)
+				row.spell:SetPoint("RIGHT", trinkets and row.trinkets[1] or row.add, "LEFT", -4, 0)
 				-- Statistiques de mes clics (réglage clickStats) : nombre d'utilisations, ligne grisée si jamais utilisée
 				local stats = Z.db.clickStats and not Z.db.externalClicks and binding.value ~= ""
 				local count = stats and Z:ClickCount(binding, binding.value) or 0
@@ -1023,7 +1053,7 @@ function RefreshClicks()
 			end
 		end
 		clickList.empty:SetShown(#bindings == 0)
-		local height = math.max(1, #bindings) * ROW_H
+		local height = math.max(1, #lines) * ROW_H
 		clickList.list:SetHeight(height)
 		Fit(clickList, top + height)
 	end
@@ -1153,7 +1183,8 @@ end
 
 -- Fenêtre de choix d'un sort : une icône par sort connu. onChoose(valeur) reçoit le choix.
 -- spellsOnly : seulement les sorts (pour l'assistant de macro), sans « Cibler », « Menu » ni macros.
-local function OpenPicker(title, onChoose, spellsOnly)
+-- side = "enemy" : les sorts offensifs (variante « Sur un ennemi »)
+local function OpenPicker(title, onChoose, spellsOnly, side)
 	if not picker then
 		picker = UI.Window("LyorunePicker", "", 372, 200)
 		picker:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -1202,7 +1233,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 	picker.actions:SetShown(not spellsOnly)
 
 	-- Les sorts connus, puis les macros de ma bibliothèque
-	local spells, macros = Z:KnownSpells(), spellsOnly and {} or Z:GetMacros()
+	local spells, macros = Z:KnownSpells(side), spellsOnly and {} or Z:GetMacros()
 	local perRow, size = 10, 32
 	local function Place(index, slot, top)
 		local icon = picker.icons[index]
@@ -1367,6 +1398,36 @@ local function Trigger(row)
 	return { kind = row.binding.kind, key = row.binding.key }
 end
 
+-- Ouvre la fenêtre de choix pour la variante « kind » d'un raccourci ; « value » est posé directement s'il est donné.
+-- Sur un ennemi : les sorts offensifs ; hors combat : un sort seulement (une macro ne peut pas en lancer une autre).
+local function ChooseVariant(trigger, kind, value)
+	if value then
+		if not Z.ValidVariant(kind[1], value) then return Z:Print(L["hors combat : un sort seulement, pas de macro."]) end
+		Z:SetVariant(trigger, kind[1], value)
+		return RefreshClicks()
+	end
+	OpenPicker(Z:TriggerLabel(trigger) .. " : " .. L[kind[2]]:lower(), function(chosen)
+		if chosen == nil or Z.ValidVariant(kind[1], chosen) then Z:SetVariant(trigger, kind[1], chosen) end
+	end, kind[1] == "ooc", kind[1] == "enemy" and "enemy" or nil)
+end
+
+-- Le « + » d'une ligne : la liste des variantes qu'elle n'a pas encore (menu du jeu ; sans lui, la première)
+local function AddVariant(row)
+	local trigger, have = Trigger(row), row.binding.variants or {}
+	local missing = {}
+	for _, kind in ipairs(Z.variantKinds) do
+		if not have[kind[1]] and (kind[1] ~= "ooc" or Z.TakesTrinket(row.binding.value)) then missing[#missing + 1] = kind end
+	end
+	if #missing == 0 then return end
+	if not (MenuUtil and MenuUtil.CreateContextMenu) or #missing == 1 then return ChooseVariant(trigger, missing[1]) end
+	MenuUtil.CreateContextMenu(row.add, function(_, root)
+		root:CreateTitle(L["Ajouter une variante"])
+		for _, kind in ipairs(missing) do
+			root:CreateButton(L[kind[2]], function() ChooseVariant(trigger, kind) end)
+		end
+	end)
+end
+
 -- Une ligne de raccourci : déclencheur, sort, bijoux, retirer
 function NewRow(i)
 	local width = clickList.width
@@ -1374,7 +1435,7 @@ function NewRow(i)
 	row:SetSize(width, 24)
 	row:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_H)
 	row.key = UI.Button(row, "", 150, 24, function(self)
-		if self.capturing or GetTime() < (self.ignoreUntil or 0) or not row.binding then return end
+		if self.capturing or GetTime() < (self.ignoreUntil or 0) or not row.binding or row.variant then return end
 		local from = Trigger(row)
 		CaptureTrigger(self, function(to)
 			Z:MoveBinding(from, to)
@@ -1403,23 +1464,36 @@ function NewRow(i)
 	row.count:Hide()
 	row.spell = UI.Button(row, "", width - 150 - 4 - 4 - 22, 24, function() -- bord droit : RefreshClicks
 		if not row.binding then return end
-		ChooseAction(Trigger(row), Z:TakeCursor()) -- un sort ou une macro tenu sous la souris est posé directement
+		-- un sort ou une macro tenu sous la souris est posé directement
+		if row.variant then return ChooseVariant(Trigger(row), row.variant, Z:TakeCursor()) end
+		ChooseAction(Trigger(row), Z:TakeCursor())
 	end)
 	row.spell:SetPoint("LEFT", row.key, "RIGHT", 4, 0)
 	row.spell.label:SetJustifyH("CENTER")
 	Droppable(row.spell, function(value)
-		if row.binding then Z:SetBinding(Trigger(row), value) end
+		if row.variant then
+			if row.binding and Z.ValidVariant(row.variant[1], value) then Z:SetVariant(Trigger(row), row.variant[1], value) end
+		elseif row.binding then
+			Z:SetBinding(Trigger(row), value)
+		end
 	end)
 	row.clear = UI.Button(row, "x", 22, 24, function()
 		if not row.binding then return end
-		Z:SetBinding(Trigger(row), nil)
+		if row.variant then Z:SetVariant(Trigger(row), row.variant[1], nil) else Z:SetBinding(Trigger(row), nil) end
 		RefreshClicks()
 	end)
 	row.clear:SetPoint("RIGHT")
+	-- « + » : ajouter une variante (sur un ennemi, en JcJ, hors combat)
+	row.add = UI.Button(row, "+", 22, 24, function()
+		if row.binding and not row.variant then AddVariant(row) end
+	end)
+	row.add:SetPoint("RIGHT", row.clear, "LEFT", -2, 0)
+	row.add.label:SetJustifyH("CENTER")
+	row.add.tip = L["Ajouter une variante : un autre sort sur un ennemi, en champ de bataille et en arène, ou hors combat."]
 	-- Bijou 1 (emplacement 13) et bijou 2 (emplacement 14), utilisés juste avant le sort : deux carrés à la hauteur
 	-- de la ligne, posés de droite à gauche devant « x » ; bordure d'or quand le bijou est choisi
 	row.trinkets = {}
-	local anchor = row.clear
+	local anchor = row.add
 	for index = #Z.TRINKET_SLOTS, 1, -1 do
 		local slot = Z.TRINKET_SLOTS[index]
 		local toggle = UI.Button(row, "", 24, 24, function()
@@ -2392,12 +2466,13 @@ local function Chapters()
 				{ "note", "Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée.", 30 },
 				{ "custom", SpecLine },
 				{ "custom", ClickList },
-				{ "note", "Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser.", 30 },
+				{ "note", "Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser. Le « + » d'une ligne ajoute une variante : sur un ennemi, en JcJ, hors combat.", 44 },
 				{ "button", "Mes macros...", function() Z:OpenMacros() end, "Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic ou dans une barre de sorts." },
 			} },
 			{ "Comportement", {
 				{ "check", "castOnDown", "Lancer le sort dès l'appui (plus rapide)" },
 				{ "check", "autoRes", "Le même clic relève un joueur mort", "Si la cible est morte, votre sort de soin est remplacé par votre résurrection." },
+				{ "check", "enemyGuard", "Aucun soin sur un ennemi", "Sur une case qui montre un ennemi (Cible, Focalisation, allié sous Contrôle mental), un raccourci sans variante « Sur un ennemi » ne fait rien : votre soin ne part jamais vers lui. Cibler, Menu du joueur et Arrêter l'incantation marchent partout.", desc = "Un raccourci sans variante ennemie n'y fait rien." },
 				{ "check", "clicksPerSpec", "Clics propres à chaque spécialisation", "Chaque groupe de talents a ses clics et ses touches ; ils changent tout seuls avec vos talents. Décoché : les mêmes partout.", fine = true },
 				{ "check", "newSpellAlert", "Signaler un nouveau sort sans clic", "Quand vous apprenez un sort utilisable sur un allié qui n'a encore ni clic ni touche : un message, et le sort en haut de ce chapitre avec le bouton « Attribuer ».", fine = true },
 				{ "check", "clickConflictAlert", "Signaler un clic pris aussi par le jeu", "Si le « clic pour lancer » du jeu utilise la même combinaison qu'un clic de Lyorune : un message, et la ligne en orange dans ce chapitre. Lyorune ne modifie jamais les raccourcis du jeu.", fine = true },
@@ -3243,9 +3318,10 @@ function Z:BarIcons()
 end
 
 -- La ligne d'un raccourci dans le chapitre Sorts et raccourcis (bouton du sort, puis la ligne) ; kind : "click" ou "key"
-function Z:ClickCell(key, kind)
+function Z:ClickCell(key, kind, variant) -- variant : "enemy", "pvp", "ooc" pour une sous-ligne
 	for _, row in ipairs(rows) do
-		if row.binding and row.binding.key == key and row.binding.kind == (kind or "click") then return row.spell, row end
+		if row.binding and row.binding.key == key and row.binding.kind == (kind or "click") and row:IsShown()
+			and (row.variant and row.variant[1]) == variant then return row.spell, row end
 	end
 end
 

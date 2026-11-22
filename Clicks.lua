@@ -101,6 +101,55 @@ end
 
 Z.TRINKET_SLOTS = { 13, 14 } -- bijou 1 (masque 1) et bijou 2 (masque 2)
 
+----------------------------------------------------------------------------------------------------
+-- VARIANTES D'UN RACCOURCI (1.39.0). Un raccourci peut lancer autre chose selon la situation, sur la même ligne :
+--   enemy : sur un ennemi (case Cible, Focalisation, allié sous Contrôle mental). Le bouton sécurisé du jeu passe
+--           tout seul sur son « bouton ennemi » (harmbutton) quand l'unité peut être attaquée, au moment du clic,
+--           en combat aussi ;
+--   pvp   : en champ de bataille et en arène. Lyorune pose ce sort à l'entrée du lieu (hors combat : on y entre
+--           toujours hors combat ; sinon à la fin du combat) et remet l'autre à la sortie ;
+--   ooc   : hors combat, un sort seulement. Le jeu choisit au clic : macro « /cast [nocombat] A; B ».
+-- Rangement, par jeu de clics comme les bijoux : clickVariants.PRIEST["shift-1"] = { enemy = "...", pvp = "...",
+-- ooc = "..." } (identifiant Z.TriggerId : « key:F » pour une touche). Rien de propre à une classe.
+-- GARDE « AUCUN SOIN SUR UN ENNEMI » (réglage enemyGuard, allumé au départ) : un raccourci sans variante ennemie
+-- ne fait rien sur un ennemi (le jeu peut sinon renvoyer le soin sur vous) ; Cibler, Menu et Arrêter l'incantation
+-- marchent partout.
+----------------------------------------------------------------------------------------------------
+Z.variantKinds = {
+	{ "enemy", "Sur un ennemi" },
+	{ "pvp", "En JcJ" },
+	{ "ooc", "Hors combat" },
+}
+
+-- Variantes des raccourcis de la spécialisation active
+function Z:GetVariants()
+	Z.db.clickVariants = Z.db.clickVariants or {}
+	return Set(Z.db.clickVariants)
+end
+
+-- Variantes d'un raccourci : { enemy = ..., pvp = ..., ooc = ... } (table vide s'il n'en a pas)
+function Z:VariantsOf(trigger)
+	return Z:GetVariants()[Z.TriggerId(trigger)] or {}
+end
+
+-- Une valeur acceptée pour cette sorte de variante : « hors combat » ne prend qu'un sort (une macro ne peut pas en
+-- lancer une autre)
+function Z.ValidVariant(kind, value)
+	if type(value) ~= "string" or value == "" then return false end
+	if kind == "ooc" then return Z.TakesTrinket(value) and not Z.IsMacro(value) and not Z.MacroRef(value) end
+	return kind == "enemy" or kind == "pvp"
+end
+
+-- Pose (ou retire, value nil) la variante « kind » d'un raccourci
+function Z:SetVariant(trigger, kind, value, noApply)
+	local list, id = Z:GetVariants(), Z.TriggerId(trigger)
+	if value ~= nil and not Z.ValidVariant(kind, value) then return end
+	local entry = list[id] or {}
+	entry[kind] = value
+	list[id] = next(entry) and entry or nil
+	if not noApply then Z:ApplyClicks() end
+end
+
 -- Identifiant d'un raccourci dans la table des bijoux : « shift-1 » pour un clic, « key:F » pour une touche
 function Z.TriggerId(trigger)
 	return trigger.kind == "click" and trigger.key or "key:" .. trigger.key
@@ -136,6 +185,8 @@ function Z:CopyOtherSpec()
 	Z.db.hoverKeys[set] = CopyTable(Z.db.hoverKeys[other] or {})
 	Z:GetTrinkets()
 	Z.db.clickTrinkets[set] = CopyTable(Z.db.clickTrinkets[other] or {})
+	Z:GetVariants()
+	Z.db.clickVariants[set] = CopyTable(Z.db.clickVariants[other] or {})
 	Z:ApplyClicks()
 end
 
@@ -202,17 +253,20 @@ end
 -- { { kind = "click", key = "shift-1", value = "Rénovation" }, { kind = "key", key = "F", value = "...", index = 1 } }
 function Z:Bindings()
 	local list = {}
-	local clicks, trinkets = Z:GetClicks(), Z:GetTrinkets()
+	local clicks, trinkets, variants = Z:GetClicks(), Z:GetTrinkets(), Z:GetVariants()
 	for _, button in ipairs(Z.clickButtons) do
 		for _, modifier in ipairs(Z.clickModifiers) do
 			local key = modifier[1] .. button[1]
 			local value = clicks[key]
-			if value and value ~= "" then list[#list + 1] = { kind = "click", key = key, value = value, trinkets = trinkets[key] } end
+			if value and value ~= "" then
+				list[#list + 1] = { kind = "click", key = key, value = value, trinkets = trinkets[key], variants = variants[key] }
+			end
 		end
 	end
 	for index, entry in ipairs(Z:GetHoverKeys()) do
 		if entry.key then
-			list[#list + 1] = { kind = "key", key = entry.key, value = entry.spell or "", index = index, trinkets = trinkets["key:" .. entry.key] }
+			local id = "key:" .. entry.key
+			list[#list + 1] = { kind = "key", key = entry.key, value = entry.spell or "", index = index, trinkets = trinkets[id], variants = variants[id] }
 		end
 	end
 	return list
@@ -230,6 +284,7 @@ end
 function Z:SetBinding(trigger, value, noApply)
 	if value == "" then value = nil end
 	if not Z.TakesTrinket(value) then Z:GetTrinkets()[Z.TriggerId(trigger)] = nil end -- raccourci retiré : bijoux retirés
+	if not value then Z:GetVariants()[Z.TriggerId(trigger)] = nil end -- et ses variantes
 	if trigger.kind == "click" then
 		if not Z.ParseClickKey(trigger.key) then return end
 		Z:GetClicks()[trigger.key] = value
@@ -258,12 +313,16 @@ function Z:MoveBinding(from, to)
 	local trinkets = Z:GetTrinkets()
 	local fromId, toId = Z.TriggerId(from), Z.TriggerId(to)
 	local fromMask, toMask = trinkets[fromId], trinkets[toId]
+	-- les variantes aussi
+	local variants = Z:GetVariants()
+	local fromVariants, toVariants = variants[fromId], variants[toId]
 	-- une touche garde sa place dans la liste : on la renomme au lieu de la retirer puis de l'ajouter
 	if from.kind == "key" and to.kind == "key" and not other then
 		for _, entry in ipairs(Z:GetHoverKeys()) do
 			if entry.key == from.key then entry.key = to.key end
 		end
 		trinkets[fromId], trinkets[toId] = nil, fromMask
+		variants[fromId], variants[toId] = nil, fromVariants
 		Z:MoveClickStats(fromId, toId)
 		return Z:ApplyClicks()
 	end
@@ -271,6 +330,8 @@ function Z:MoveBinding(from, to)
 	Z:SetBinding(to, moving, true)
 	trinkets[fromId] = Z.TakesTrinket(other) and toMask or nil
 	trinkets[toId] = Z.TakesTrinket(moving) and fromMask or nil
+	variants[fromId] = other and toVariants or nil
+	variants[toId] = moving and fromVariants or nil
 	Z:MoveClickStats(fromId, toId)
 	Z:ApplyClicks()
 end
@@ -376,6 +437,10 @@ function Z:ClickSummary()
 			local text = Z:ActionText(binding.value)
 			if binding.trinkets and Z.TakesTrinket(binding.value) then text = text .. " + " .. Z.L["bijou"] end
 			list[#list + 1] = { Z:TriggerLabel(binding), text }
+			for _, kind in ipairs(Z.variantKinds) do -- ses variantes, en retrait
+				local value = binding.variants and binding.variants[kind[1]]
+				if value then list[#list + 1] = { "   " .. Z.L[kind[2]], Z:ActionText(value) } end
+			end
 		end
 	end
 	return list
@@ -487,16 +552,41 @@ function Z.TrinketLines(mask)
 end
 
 -- Rangs fixes posés par ApplyClicks, que chaque case peut baisser selon le niveau de son joueur (Z:FitRanks) :
--- { { key = attribut, id = rang choisi, before = début de la macro ou nil (attribut « spell ») }, ... }
+-- { { key = attribut, id = rang choisi }, ... } pour un attribut « spell » ; { key = attribut, parts = morceaux } pour
+-- une macro : ses morceaux sont du texte ou le numéro d'un rang choisi (une macro hors combat en a deux)
 local fixedRanks = {}
-local function NoteRank(key, value, before)
+
+-- Le sort d'un raccourci dans une macro, en morceau : le numéro d'un rang choisi et appris, sinon son texte
+local function Piece(value)
 	local cast = Z.CastOf(value)
-	if type(cast) == "number" then fixedRanks[#fixedRanks + 1] = { key = key, id = cast, before = before } end
+	return type(cast) == "number" and cast or Z.MacroSpell(value)
 end
 
--- Ajoute à « attributes » ce qu'il faut pour que le bouton « suffix » lance « value » (avec ses bijoux)
-local function AddAction(attributes, prefix, suffix, value, resPrefix, trinkets)
-	local use = Z.TakesTrinket(value) and Z.TrinketLines(trinkets) or ""
+-- Le texte d'une macro à partir de ses morceaux, chaque rang choisi adapté au niveau « level » (nil : tel quel)
+local function Build(parts, level)
+	local text = {}
+	for index, part in ipairs(parts) do
+		text[index] = type(part) == "number" and Z.MacroSpell("#" .. Z.FitRank(part, level)) or part
+	end
+	return table.concat(text)
+end
+
+local function NoteParts(key, parts)
+	for _, part in ipairs(parts) do
+		if type(part) == "number" then
+			fixedRanks[#fixedRanks + 1] = { key = key, parts = parts }
+			return
+		end
+	end
+end
+
+-- Ajoute à « attributes » ce qu'il faut pour que le bouton « suffix » lance « value ». Options :
+-- res (début de macro de la résurrection automatique), trinkets (masque des bijoux), ooc (sort hors combat),
+-- enemy (variante ennemie : ni résurrection, ni bijou, ni rang adapté au niveau d'un allié)
+local function AddAction(attributes, prefix, suffix, value, options)
+	options = options or {}
+	local use = Z.TakesTrinket(value) and Z.TrinketLines(options.trinkets) or ""
+	local ooc = options.ooc and Z.ValidVariant("ooc", options.ooc) and Z.CastOf(options.ooc) and Z.TakesTrinket(value) and options.ooc
 	if value == "@target" then
 		attributes[prefix .. "type" .. suffix] = "target"
 	elseif value == "@menu" then
@@ -504,30 +594,60 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix, trinkets)
 	elseif value == "@stop" then
 		attributes[prefix .. "type" .. suffix] = "macro"
 		attributes[prefix .. "macrotext" .. suffix] = "/stopcasting"
-	elseif Z.MacroRef(value) then -- une macro de ma bibliothèque, sans la résurrection automatique
-		local macro = Z:FindMacro(Z.MacroRef(value))
-		if macro and macro.body:find("%S") then
-			local text = Z:ResolveMacro(macro.body)
-			if #(use .. text) > Z.MACRO_MAX then use = "" end -- 255 caractères au plus : sans les bijoux, elle part
+	elseif Z.MacroRef(value) or Z.IsMacro(value) then
+		-- une macro de ma bibliothèque, ou écrite sur le clic (avant la 1.6.0), sans la résurrection automatique ;
+		-- hors combat, le sort de la variante part et la macro s'arrête là
+		local macro = Z.MacroRef(value) and Z:FindMacro(Z.MacroRef(value))
+		local body = macro and macro.body or (Z.IsMacro(value) and value)
+		if body and body:find("%S") then
+			local parts = { use }
+			if ooc then
+				parts[#parts + 1] = "/cast [nocombat,@mouseover] "
+				parts[#parts + 1] = Piece(ooc)
+				parts[#parts + 1] = "\n/stopmacro [nocombat]\n"
+			end
+			parts[#parts + 1] = Z:ResolveMacro(body)
+			if #Build(parts) > Z.MACRO_MAX then parts[1] = "" end -- 255 caractères au plus : sans les bijoux, elle part
 			attributes[prefix .. "type" .. suffix] = "macro"
-			attributes[prefix .. "macrotext" .. suffix] = use .. text
+			attributes[prefix .. "macrotext" .. suffix] = Build(parts)
+			if not options.enemy then NoteParts(prefix .. "macrotext" .. suffix, parts) end
 		end
-	elseif Z.IsMacro(value) then -- macro écrite sur le clic (avant la 1.6.0, rangée ensuite dans la bibliothèque)
-		local text = Z:ResolveMacro(value)
-		if #(use .. text) > Z.MACRO_MAX then use = "" end
-		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = use .. text
 	elseif not Z.CastOf(value) then -- numéro de sort que le jeu ne connaît pas : rien
-	elseif resPrefix or use ~= "" then
-		local before = use .. "/cast " .. (resPrefix or "") .. "[@mouseover] "
+	elseif options.res or use ~= "" or ooc then
+		local parts = { use .. "/cast " .. (options.res or "") }
+		if ooc then
+			parts[#parts + 1] = "[nocombat,@mouseover] "
+			parts[#parts + 1] = Piece(ooc)
+			parts[#parts + 1] = "; "
+		end
+		parts[#parts + 1] = "[@mouseover] "
+		parts[#parts + 1] = Piece(value)
 		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = before .. Z.MacroSpell(value)
-		NoteRank(prefix .. "macrotext" .. suffix, value, before)
+		attributes[prefix .. "macrotext" .. suffix] = Build(parts)
+		if not options.enemy then NoteParts(prefix .. "macrotext" .. suffix, parts) end
 	else
+		local cast = Z.CastOf(value)
 		attributes[prefix .. "type" .. suffix] = "spell"
-		attributes[prefix .. "spell" .. suffix] = Z.CastOf(value) -- un numéro : le jeu lance ce rang (CastSpellByID)
-		NoteRank(prefix .. "spell" .. suffix, value)
+		attributes[prefix .. "spell" .. suffix] = cast -- un numéro : le jeu lance ce rang (CastSpellByID)
+		if type(cast) == "number" and not options.enemy then fixedRanks[#fixedRanks + 1] = { key = prefix .. "spell" .. suffix, id = cast } end
 	end
+end
+
+-- Sur un ennemi : le bouton du jeu passe sur « vbutton » (attribut « harmKey »), qui lance la variante ennemie ;
+-- sans elle, la garde le fait passer sur un bouton sans action (rien ne part). « value » : ce que lance le raccourci.
+local function AddEnemy(attributes, harmKey, vbutton, enemy, value)
+	if enemy and enemy ~= "" then
+		attributes[harmKey] = vbutton
+		AddAction(attributes, "*", "-" .. vbutton, enemy, { enemy = true })
+	elseif Z.db.enemyGuard and Z.TakesTrinket(value) then
+		attributes[harmKey] = "zxnone"
+	end
+end
+
+-- Le lieu compte-t-il comme JcJ pour les variantes ? (champ de bataille ou arène)
+local appliedPvP = false
+local function InPvP()
+	return Z.PvPKind ~= nil and Z.PvPKind() ~= nil
 end
 
 -- Clique, ou le clic-soin du jeu, peuvent gérer les cases à la place de Lyorune (option)
@@ -547,22 +667,33 @@ function Z:ApplyClicks()
 	local attributes = {}
 	fixedRanks = {}
 	local resPrefix = ResPrefix()
-	local trinkets = Z:GetTrinkets()
+	local trinkets, variants = Z:GetTrinkets(), Z:GetVariants()
 	local onEnter = "self:ClearBindings()"
+	appliedPvP = InPvP()
+
+	-- Ce que lance un raccourci ici : sa variante JcJ en champ de bataille ou en arène, sinon lui-même
+	local function Wanted(value, id)
+		return appliedPvP and (variants[id] or {}).pvp or value
+	end
 
 	if not Z.db.externalClicks then
-		-- Clics de souris
+		-- Clics de souris ; sur un ennemi, « shift-harmbutton1 » passe Maj + Clic gauche sur le bouton « zxshift1 »
 		for key, value in pairs(Z:GetClicks()) do
 			local modifier, button = Z.ParseClickKey(key)
 			if modifier and value and value ~= "" then
-				AddAction(attributes, modifier, button, value, resPrefix, trinkets[key])
+				local v, wanted = variants[key] or {}, Wanted(value, key)
+				AddAction(attributes, modifier, button, wanted, { res = resPrefix, trinkets = trinkets[key], ooc = v.ooc })
+				AddEnemy(attributes, modifier .. "harmbutton" .. button, "zx" .. modifier:gsub("%-", "") .. button, v.enemy, wanted)
 			end
 		end
 		-- Touches au survol : à l'entrée de la souris, la touche « clique » un bouton virtuel de la case
 		for i, entry in ipairs(Z:GetHoverKeys()) do
 			local key = Z.ValidKey(entry.key) and entry.key -- jamais de guillemet ni d'antislash dans le code sécurisé
 			if key and entry.spell and entry.spell ~= "" then
-				AddAction(attributes, "*", "-zh" .. i, entry.spell, resPrefix, trinkets["key:" .. key])
+				local id = "key:" .. key
+				local v, wanted = variants[id] or {}, Wanted(entry.spell, id)
+				AddAction(attributes, "*", "-zh" .. i, wanted, { res = resPrefix, trinkets = trinkets[id], ooc = v.ooc })
+				AddEnemy(attributes, "*harmbutton-zh" .. i, "zxh" .. i, v.enemy, wanted)
 				onEnter = onEnter .. (' self:SetBindingClick(true, "%s", self, "zh%d")'):format(key, i)
 			end
 		end
@@ -596,6 +727,30 @@ function Z:ApplyClicks()
 	Z:WarnClickConflicts()
 	if Z.RefreshClicks then Z.RefreshClicks() end
 end
+
+-- Entrée ou sortie d'un champ de bataille ou d'une arène : les variantes JcJ suivent. On y entre hors combat ;
+-- sinon tout est reposé à la fin du combat, sans message (rien n'a été demandé par le joueur).
+local pvpAfterCombat
+local function PvPChanged()
+	if not (Z.db and Z.class) or InPvP() == appliedPvP then return end
+	local any = false
+	for _, entry in pairs(Z:GetVariants()) do any = any or entry.pvp ~= nil end
+	if not any then
+		appliedPvP = InPvP()
+	elseif InCombatLockdown() then
+		pvpAfterCombat = true
+	else
+		Z:ApplyClicks()
+	end
+end
+Z:On("PLAYER_ENTERING_WORLD", PvPChanged)
+Z:On("ZONE_CHANGED_NEW_AREA", PvPChanged)
+Z:On("PLAYER_REGEN_ENABLED", function()
+	if pvpAfterCombat then
+		pvpAfterCombat = false
+		PvPChanged()
+	end
+end)
 
 ----------------------------------------------------------------------------------------------------
 -- CLIC POUR LANCER DU JEU : les combinaisons qu'il prend aussi. Lecture seule, jamais de modification.
@@ -1023,7 +1178,15 @@ local function RankNumber(sub, fallback)
 	return tonumber(type(sub) == "string" and sub:match("%d+") or nil) or fallback
 end
 
-function Z:KnownSpells()
+-- Le jeu dit-il ce sort offensif ? (variante « sur un ennemi » ; sans réponse du jeu : non)
+local function Harmful(id)
+	if not C_Spell.IsSpellHarmful then return false end
+	local ok, harmful = pcall(C_Spell.IsSpellHarmful, id)
+	return ok and harmful == true
+end
+
+-- side = "enemy" : les sorts pour un ennemi (variante « sur un ennemi ») : ceux que le jeu dit offensifs
+function Z:KnownSpells(side)
 	local spells, seen = {}, {}
 	local function add(id, sub)
 		local name = id and C_Spell.GetSpellName(id)
@@ -1042,7 +1205,9 @@ function Z:KnownSpells()
 
 	local mine = Z:ClassSpellNames()
 	for _, item in ipairs(Grimoire()) do
-		if not item.passive and not item.offSpec and (mine[item.name] or Helpful(item.id)) then add(item.id, item.sub) end
+		local wanted
+		if side == "enemy" then wanted = Harmful(item.id) else wanted = mine[item.name] or Helpful(item.id) end
+		if not item.passive and not item.offSpec and wanted then add(item.id, item.sub) end
 	end
 	for _, spell in ipairs(spells) do
 		table.sort(spell.ranks, function(a, b) return a.n < b.n end)
@@ -1050,7 +1215,7 @@ function Z:KnownSpells()
 	end
 
 	-- Grimoire illisible : on propose au moins les sorts connus de la classe
-	if #spells == 0 then
+	if #spells == 0 and side ~= "enemy" then
 		for name, id in pairs(mine) do
 			if Z.Knows(id) and not Z.IsPassive(id) then add(id) end
 		end
@@ -1131,8 +1296,7 @@ function Z:FitRanks(b)
 	if #fixedRanks == 0 or InCombatLockdown() then return end
 	local level = Z.db.rankAdapt and b.unit and UnitLevel(b.unit)
 	for _, entry in ipairs(fixedRanks) do
-		local id = Z.FitRank(entry.id, level)
-		b:SetAttribute(entry.key, entry.before and entry.before .. Z.MacroSpell("#" .. id) or id)
+		b:SetAttribute(entry.key, entry.parts and Build(entry.parts, level) or Z.FitRank(entry.id, level))
 	end
 end
 
@@ -1202,13 +1366,18 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Vrai si l'un de mes raccourcis (spécialisation active) lance ce sort, seul ou dans une macro
 function Z:SpellIsBound(name)
-	for _, binding in ipairs(Z:Bindings()) do
-		local value = binding.value
+	local function launches(value)
 		if value == name or (Z.RankId(value) and C_Spell.GetSpellName(Z.RankId(value)) == name) then return true end
 		local ref = Z.MacroRef(value)
 		local macro = ref and Z:FindMacro(ref)
 		local body = macro and macro.body or (Z.IsMacro(value) and value)
-		if body and body:find(name, 1, true) then return true end
+		return body and body:find(name, 1, true) and true or false
+	end
+	for _, binding in ipairs(Z:Bindings()) do
+		if launches(binding.value) then return true end
+		for _, value in pairs(binding.variants or {}) do -- une variante (JcJ, hors combat) le lance aussi
+			if launches(value) then return true end
+		end
 	end
 	return false
 end

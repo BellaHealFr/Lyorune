@@ -33,7 +33,7 @@ end
 
 -- Sauvegarde avant import (#29) : tout ce qu'un import peut remplacer, copié juste avant. Un seul niveau,
 -- gardé dans mes réglages (Z.db.importBackup) : il survit à un /reload, le prochain import le remplace.
-local BACKUP_TABLES = { "clicks", "hoverKeys", "clickTrinkets", "placement", "extraTracked", "ignoredNames", "importantNames" }
+local BACKUP_TABLES = { "clicks", "hoverKeys", "clickTrinkets", "clickVariants", "placement", "extraTracked", "ignoredNames", "importantNames" }
 
 local function Backup()
 	local copy = { settings = {} }
@@ -87,6 +87,16 @@ function Z:Export()
 			end
 			if value and not Z.IsMacro(value) and not Z.MacroRef(value) then
 				parts[#parts + 1] = "t." .. class .. "." .. Encode(id) .. "=n" .. mask
+			end
+		end
+	end
+	-- variantes d'un raccourci (sur un ennemi, en JcJ, hors combat) : jamais une macro, comme les clics
+	for class, marks in pairs(Z.db.clickVariants or {}) do
+		for id, entry in pairs(marks) do
+			for kind, value in pairs(entry) do
+				if not Z.IsMacro(value) and not Z.MacroRef(value) then
+					parts[#parts + 1] = "v." .. class .. "." .. Encode(id) .. "." .. kind .. "=s" .. Encode(value)
+				end
 			end
 		end
 	end
@@ -147,7 +157,7 @@ function Z:Import(code)
 	end
 
 	local settings, clicks, hovers, lists, places, count = {}, {}, {}, {}, {}, 0
-	local trinkets = {}
+	local trinkets, variants = {}, {}
 	for entry in code:gmatch("[^;]+") do
 		local key, kind, raw = entry:match("^([%w%.%%]+)=(%a)(.*)$")
 		if key then
@@ -155,6 +165,7 @@ function Z:Import(code)
 			local class, click = key:match("^c%.(%u+%d?)%.(.+)$") -- PRIEST, ou PRIEST2 : seconde spécialisation
 			local hoverClass, index = key:match("^h%.(%u+%d?)%.(%d+)$")
 			local trinketClass, trinketId = key:match("^t%.(%u+%d?)%.(.+)$")
+			local variantClass, variantId, variantKind = key:match("^v%.(%u+%d?)%.([%w%%]+)%.(%a+)$")
 			local list = key:match("^l%.(%a+)$")
 			local shape, element = key:match("^p%.(%u+)%.(%a+)$")
 			if class then
@@ -162,6 +173,17 @@ function Z:Import(code)
 				if kind == "s" and Z.ParseClickKey(click) and SafeSpell(raw) then
 					clicks[class] = clicks[class] or {}
 					clicks[class][click] = raw
+					count = count + 1
+				end
+			elseif variantClass then
+				-- une variante connue, sur un clic ou une touche valable, avec un sort reçu (jamais une macro)
+				variantId = Decode(variantId)
+				local hoverKey = variantId:match("^key:(.+)$")
+				local validId = hoverKey and Z.ValidKey(hoverKey) or not hoverKey and Z.ParseClickKey(variantId)
+				if kind == "s" and validId and SafeSpell(raw) and Z.ValidVariant(variantKind, raw) then
+					variants[variantClass] = variants[variantClass] or {}
+					variants[variantClass][variantId] = variants[variantClass][variantId] or {}
+					variants[variantClass][variantId][variantKind] = raw
 					count = count + 1
 				end
 			elseif trinketClass then
@@ -228,6 +250,10 @@ function Z:Import(code)
 	Z.db.clickTrinkets = Z.db.clickTrinkets or {}
 	for class in pairs(clicks) do Z.db.clickTrinkets[class] = trinkets[class] or {} end
 	for class in pairs(hovers) do Z.db.clickTrinkets[class] = trinkets[class] or {} end
+	-- et leurs variantes
+	Z.db.clickVariants = Z.db.clickVariants or {}
+	for class in pairs(clicks) do Z.db.clickVariants[class] = variants[class] or {} end
+	for class in pairs(hovers) do Z.db.clickVariants[class] = variants[class] or {} end
 	for list, names in pairs(lists) do Z.db[list] = names end
 	for shape, elements in pairs(places) do Z.db.placement[shape] = elements end
 	Z:Refresh()

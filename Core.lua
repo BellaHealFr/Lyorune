@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.38.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.39.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -137,6 +137,8 @@ Z.defaults = {
 	clicks = {},               -- clics de souris par classe : clicks.PRIEST["shift-1"] = "Rénovation" (PRIEST2 : 2e spécialisation)
 	hoverKeys = {},            -- touches au survol par classe : hoverKeys.PRIEST[1] = { key = "F", spell = "Rénovation" }
 	clickTrinkets = {},        -- bijoux utilisés avant le sort : clickTrinkets.PRIEST["shift-1"] = 1, 2 ou 3 (voir Clicks.lua)
+	clickVariants = {},        -- variantes d'un raccourci : clickVariants.PRIEST["shift-1"] = { enemy = ..., pvp = ..., ooc = ... } (Clicks.lua)
+	enemyGuard = true,         -- aucun soin sur un ennemi : un raccourci sans variante « sur un ennemi » n'y fait rien
 	trinketButtons = false,    -- montrer les boutons « bijou avec le sort » sur chaque ligne de clic
 	clickConflictAlert = true, -- signaler un clic que le « clic pour lancer » du jeu prend aussi
 	clicksPerSpec = true,      -- des clics et des touches propres à chaque spécialisation (groupe de talents)
@@ -240,7 +242,7 @@ Z.notInProfile = {
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
 	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
-	rankChoice = true, rankAdapt = true,
+	rankChoice = true, rankAdapt = true, clickVariants = true, enemyGuard = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	assignMark = true, assignGroups = true, assignPlayers = true, assignFade = true, assignAccept = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,

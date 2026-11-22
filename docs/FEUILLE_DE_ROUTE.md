@@ -48,7 +48,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | Publiée (v1.37.0) |
 | 26 c bis | 1.37.1 | Bloc des buffs manquants en bandeau fin ; interrupteurs « En combat » et « En champ de bataille et en arène » (priorité haute) | Publiée (v1.37.1) |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | Publiée (v1.38.0) |
-| 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
+| 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, hors combat), aucun soin sur un ennemi | Publiée (v1.39.0) |
+| 27 b bis | 1.39.1 | Variante « sur un tank » (selon le rôle) | À faire |
 | 27 c | 1.40.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
 | 28 | 1.41.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
 | 29 a | 1.42.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
@@ -825,8 +826,24 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   joueur peut recevoir (niveau d'apprentissage moins 10), jamais plus fort que le rang choisi (`fixedRanks`,
   `Z.FitRank`, `Z:FitRanks`, `Z:FitAllRanks` ; changement de joueur dans la case, groupe, niveau, cible,
   focalisation, fin du combat). Le rang le plus haut reste lancé par son nom (le jeu l'adapte). Tests (1.38.1).
-- [ ] 27 b (1.39.0) : variantes d'un raccourci (sur un ennemi, en JcJ, selon le rôle par le groupe « Tanks », hors
-  combat) ; garde « aucun soin sur un ennemi ».
+- [x] 27 b (1.39.0) : variantes d'un raccourci (sur un ennemi, en JcJ, hors combat) ; garde « aucun soin sur un
+  ennemi ». Choix de l'auteur (22 novembre 2026, les trois recommandés) : la variante « selon le rôle » part en
+  1.39.1 (27 b bis) ; garde allumée au départ ; variantes en sous-lignes ajoutées par un « + » au bout de la ligne.
+  Comparaison : HealKit passe chaque raccourci utilisé sur un bouton ennemi (`harmbutton` du modèle sécurisé du
+  jeu), sans sort ennemi le clic ne fait rien ; HealBot a des jeux de raccourcis « Ennemi » à part ; VuhDo écrit des
+  macros `[harm]`. Aucun n'a de variante JcJ ni hors combat sur la même ligne. Lyorune : `clickVariants[jeu][id] =
+  { enemy, pvp, ooc }` (Clicks.lua, comme les bijoux : suit le déplacement, le retrait, la copie de spécialisation,
+  le partage `v.CLASSE.id.sorte`, la sauvegarde avant import) ; sur un ennemi, `shift-harmbutton1` mène au bouton
+  `zxshift1` (touches : `*harmbutton-zh1` vers `zxh1`), la garde `enemyGuard` mène à `zxnone` (aucune action) ;
+  JcJ posé par `ApplyClicks` selon `Z.PvPKind()` à `PLAYER_ENTERING_WORLD` et `ZONE_CHANGED_NEW_AREA`, attendu
+  après un combat sans message ; hors combat : macro `/cast [nocombat,@mouseover] A; [@mouseover] B` (devant une
+  macro : `/stopmacro [nocombat]`), rangs choisis des deux sorts adaptés au niveau (macro rangée en morceaux,
+  `Build`). Sorts offensifs proposés pour un ennemi (`Z:KnownSpells("enemy")`, `C_Spell.IsSpellHarmful`).
+  Écran : sous-lignes en retrait, « + » par `MenuUtil.CreateContextMenu` (sinon la première variante libre).
+  Tests (1.39.0). **À essayer en jeu** : variante ennemie et garde sur la case Cible (clic et touche au survol,
+  avec Maj) ; variante JcJ à l'entrée d'un champ de bataille ; variante hors combat avec un rang choisi.
+- [ ] 27 b bis (1.39.1) : variante « sur un tank » (selon le rôle : groupe « Tanks » et paquets par rôle sûrs en
+  combat, autres cases reposées hors combat ; voir `PLAN-CORRECTIF.md`, 1c-1, « Ajout décidé »).
 - [ ] 27 c (1.40.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;
   Pénitence (trait de canalisation si le jeu ne la prédit pas).
 
