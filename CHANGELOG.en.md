@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.37.1] - 2026-11-22
+
+### Improved
+
+- Missing buffs under the frames: a thin strip, the same for every cell shape, as wide as a cell (never too narrow): the icon, then the player ("You", a name, "Group 3") and, below, "+N others" or the short spell name. Its height follows the text size; the full name is in the tooltip.
+- Buffs drawn by the game on the cells: two switches, "In combat" and "In battlegrounds and arenas" (both on, as before). Nothing appears on a player none of your buffs concern.
+
 ## [1.37.0] - 2026-11-22
 
 ### Added
@@ -735,6 +742,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.37.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.0...v1.37.1
 [1.37.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.36.0...v1.37.0
 [1.36.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.35.0...v1.36.0
 [1.35.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.1...v1.35.0

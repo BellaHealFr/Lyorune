@@ -347,9 +347,16 @@ local function NilIfEmpty(set) if set and next(set) then return set end end
 ----------------------------------------------------------------------------------------------------
 local fighting = false -- entre PLAYER_REGEN_DISABLED et PLAYER_REGEN_ENABLED (le verrou arrive juste après)
 
+-- Deux interrupteurs (1.37.1, retour d'un joueur) : en champ de bataille et en arène, seul « pvpBuffs » décide ;
+-- ailleurs (combat, boss hors combat), seul « combatBuffs ».
 function Z.BuffMarksOn()
 	local db = Z.db
-	if not (db and db.missingBuffs and db.combatBuffs) then return false end
+	if not (db and db.missingBuffs) then return false end
+	if Z.PvPKind and Z.PvPKind() then
+		if not db.pvpBuffs then return false end
+	elseif not db.combatBuffs then
+		return false
+	end
 	return fighting or InCombatLockdown() or Z.AurasHidden()
 end
 
@@ -370,7 +377,8 @@ end
 local function Marks(b)
 	local db, list = Z.db, {}
 	local unit = b.unit
-	if not (db.missingBuffs and db.combatBuffs) or b.extra or not unit or InCombatLockdown() then return list end
+	-- préparés dès qu'un des deux interrupteurs est allumé : Z.BuffMarksOn choisit selon le lieu, sans reconstruire
+	if not (db.missingBuffs and (db.combatBuffs or db.pvpBuffs)) or b.extra or not unit or InCombatLockdown() then return list end
 	local me = UnitIsUnit(unit, "player")
 	if issecret(me) then return list end
 	for _, check in ipairs(Z.buffChecks or {}) do

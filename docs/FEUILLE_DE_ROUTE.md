@@ -46,6 +46,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | Fait (1.35.0) : aussi pendant un boss |
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | Fait |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | Publiée (v1.37.0) |
+| 26 c bis | 1.37.1 | Bloc des buffs manquants en bandeau fin ; interrupteurs « En combat » et « En champ de bataille et en arène » (priorité haute) | Publiée (v1.37.1) |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | À faire |
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
 | 27 c | 1.40.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
@@ -760,6 +761,19 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   du jeu (`HELPFUL`, tous les rangs du buff) qui dessine le buff par-dessus quand il est là. Raccourci « mon buff
   unique sur son porteur », préparé hors combat. À vérifier avec l'auteur avant codage : ordre de dessin et
   opacité, conteneur vide invisible, numéros de tous les rangs, coût en raid de 40.
+- [x] 26 c bis (1.37.1), **priorité haute, avant toute autre étape** : bloc des buffs manquants en bandeau fin (demande de l'auteur après essai : trop haut, pas
+  assez clair ; modèle : le bouton de HealKit). Décidé : même disposition pour les quatre formes, hauteur qui suit
+  la taille du texte, largeur d'une case (au moins 110), icône de toute la hauteur, trait, ligne 1 le joueur, ligne 2
+  « +N autres » ou le nom court du sort en gris ; nom complet dans l'infobulle.
+  Aussi (retour d'un joueur) : deux interrupteurs « En combat » et « En champ de bataille et en arène » à la place
+  d'un seul, et aucun repère ni cadre vide sur une case quand aucun buff ne concerne le joueur.
+  - **Fait (22 novembre 2026, v1.37.1)** : `StyleTile` et `ShowBlock` réécrits (Buffs.lua : `BlockSize`, hauteur
+    `2 * taille du texte + 4 + 2 * marge`, largeur `max(110, case)`, trait `tile.line`, « Vous », « +1 autre » /
+    « +%d autres », plus de compteur `blockMore` ni d'`ICON_MIN`) ; règle `buffs` retirée de `Z.shapes`
+    (Themes.lua). Réglage `pvpBuffs` (Core.lua) ; `Z.BuffMarksOn` (Containers.lua) : en JcJ seul `pvpBuffs`
+    décide, ailleurs `combatBuffs` ; repères préparés dès qu'un des deux est allumé (aucune reconstruction en
+    entrant en champ de bataille). Liste vide : conteneur et repères cachés (`Visibility`, déjà le cas). Tests
+    1.34.0 et 1.36.0 adaptés (107 étapes), tutoriel, guide anglais, visite (carte « C'est parti »), Notes, README.
 - [x] 26 c (1.37.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
   1.32.0), synchronisation des paladins, guide et visite.
   Comparaison (22 novembre 2026) : HealKit choisit une bénédiction par ligne (Tank, Soigneur, chaque classe, moi),

@@ -364,7 +364,7 @@ local function RowEnter(self)
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 	if self.sample then
 		GameTooltip:SetText(L["Exemple"], 1, 1, 1)
-		GameTooltip:AddLine(L["Hors combat, vos buffs manquants s'afficheront ici, à la forme de vos cases : un clic les pose."], 0.8, 0.8, 0.8, true)
+		GameTooltip:AddLine(L["Hors combat, vos buffs manquants s'afficheront ici, un à la fois : un clic le pose, puis le suivant prend sa place."], 0.8, 0.8, 0.8, true)
 		GameTooltip:Show()
 		return
 	end
@@ -469,15 +469,18 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Bloc collé aux cadres (« Emplacement : avec les cadres », le départ). Sous la case la plus basse des cadres
 -- du groupe, aligné sur la première colonne, à l'échelle et à l'écart des cases ; au-dessus quand la place
--- manque en bas de l'écran. Il prend la forme des cases (Z.shapes[...].buffs, Themes.lua), leur taille, leur
--- thème, leur texture et leurs angles. Une seule case (demande de l'auteur, 22 novembre 2026, idée vue chez
--- HealKit) : le prochain buff, celui que lance aussi la touche « prochain buff » ; après chaque sort, la case
--- passe au suivant. Dans son coin, « + N » dit combien il en reste après lui. Replacé seulement quand les cadres changent (groupe, taille,
--- déplacement, réglages) : aucune boucle, sauf la portée deux fois par seconde quand il est visible.
+-- manque en bas de l'écran. Une seule case (demande de l'auteur, 22 novembre 2026, idée vue chez HealKit) : le
+-- prochain buff, celui que lance aussi la touche « prochain buff » ; après chaque sort, la case passe au suivant.
+-- Bandeau fin (1.37.1, choix de l'auteur) : même disposition pour Barre, Tuile, Carré et Bandeau. Hauteur tirée
+-- de la taille du texte (deux lignes), largeur d'une case mais jamais sous BLOCK_MIN_W ; icône carrée de toute la
+-- hauteur, un trait, puis le joueur et, dessous, « +N autres » ou le nom court du sort. Thème, texture, angles et
+-- échelle des cases. Replacé seulement quand les cadres changent (groupe, taille, déplacement, réglages) : aucune
+-- boucle, sauf la portée deux fois par seconde quand il est visible.
 ----------------------------------------------------------------------------------------------------
 local LABEL_GAP = 14 -- place de l'étiquette « Groupe » au-dessus des cases (LABEL_SPACE, Frames.lua)
 local PANEL_OUTSET = 3 -- débord du fond de groupe autour des cases (Frames.lua)
-local block, blockMore
+local BLOCK_MIN_W = 110 -- largeur minimale du bandeau : un Carré (54) le rendrait illisible
+local block
 
 -- Nom court d'un sort : « Mot de pouvoir : Robustesse » devient « Robustesse »
 local function ShortSpell(name)
@@ -496,6 +499,7 @@ local function Tile(index)
 	tile.hover:Hide()
 	tile.icon = tile:CreateTexture(nil, "OVERLAY")
 	tile.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	tile.line = tile:CreateTexture(nil, "OVERLAY") -- trait entre l'icône et le texte
 	tile.label = UI.Text(tile, 11)
 	tile.label:SetWordWrap(false)
 	tile.sub = UI.Text(tile, 11)
@@ -508,16 +512,22 @@ local function Tile(index)
 	return tile
 end
 
--- Icône d'une case du bloc : la moitié de la place qu'elle aurait (demande de l'auteur, 22 novembre 2026 : « bien
--- trop grosse »), jamais sous ICON_MIN pour rester lisible sur les cases basses (Barre, Bandeau)
-local ICON_MIN = 14
+-- Taille du bandeau : deux lignes de texte et leurs marges (environ 28 à la taille 11), largeur d'une case
+local function BlockSize(theme, inset)
+	local size = Z.db.fontSize + (theme.fontBonus or 0)
+	local w = Z.CellSize()
+	return math.max(BLOCK_MIN_W, w), 2 * size + 4 + 2 * inset, size
+end
 
--- Habille une case du bloc comme une case des cadres, puis range son icône et ses textes selon « style » :
--- "LINE", "TWO" ou "ICON" (Z.shapes)
-local function StyleTile(tile, w, h, style, entry)
-	local db, theme = Z.db, Z:Theme()
+-- Habille la case du bloc comme une case des cadres (thème, texture, angles), en bandeau fin : icône à gauche,
+-- trait, ligne 1 le joueur (« Vous », « Groupe 3 ») en couleur de classe, ligne 2 « +N autres » s'il en reste
+-- (« others » : nombre de buffs après celui-ci), sinon le nom court du sort en gris. Le nom complet est dans
+-- l'infobulle. Rend la largeur et la hauteur.
+local function StyleTile(tile, entry, others)
+	local db, theme, L = Z.db, Z:Theme(), Z.L
 	local rounded = db.corners == "ROUND"
 	local inset = UI.Inset(theme.borderSize, rounded)
+	local w, h, size = BlockSize(theme, inset)
 	tile:SetSize(w, h)
 	tile.bg:SetVertexColor(unpack(theme.bg))
 	tile.bgRound:SetVertexColor(unpack(theme.bg))
@@ -533,49 +543,47 @@ local function StyleTile(tile, w, h, style, entry)
 	end
 	local text, r, g, b = EntryText(entry)
 	tile.fill:SetTexture(UI.BarTexture())
-	tile.fill:SetVertexColor(r, g, b, 0.35) -- la couleur de la classe en fond léger : le texte reste lisible
-	tile.icon:SetTexture(entry.icon or entry.check.icon)
+	tile.fill:SetVertexColor(r, g, b, 0.25) -- la couleur de la classe en fond léger : le texte reste lisible
 	tile.tip = text
-	local size = db.fontSize + (theme.fontBonus or 0)
+	local icon = h - 2 * inset
+	tile.icon:SetTexture(entry.icon or entry.check.icon)
+	tile.icon:ClearAllPoints()
+	tile.icon:SetSize(icon, icon)
+	tile.icon:SetPoint("TOPLEFT", inset, -inset)
+	tile.line:ClearAllPoints()
+	tile.line:SetColorTexture(theme.border[1], theme.border[2], theme.border[3], 0.8)
+	tile.line:SetWidth(1)
+	tile.line:SetPoint("TOPLEFT", tile.icon, "TOPRIGHT", 0, 0)
+	tile.line:SetPoint("BOTTOMLEFT", tile.icon, "BOTTOMRIGHT", 0, 0)
 	tile.label:SetFont(theme.font, size, theme.flags)
 	tile.sub:SetFont(theme.font, size - 1, theme.flags)
-	tile.icon:ClearAllPoints()
 	tile.label:ClearAllPoints()
 	tile.sub:ClearAllPoints()
-	tile.label:Show()
-	tile.sub:Hide()
-	if style == "ICON" then -- icône, le nom dessous
-		local icon = math.max(ICON_MIN, math.floor(math.min(w, h) * 0.55 / 2))
-		tile.icon:SetSize(icon, icon)
-		tile.icon:SetPoint("TOP", 0, -inset - 3)
-		tile.label:SetPoint("BOTTOMLEFT", inset + 1, inset + 2)
-		tile.label:SetPoint("BOTTOMRIGHT", -inset - 1, inset + 2)
-		tile.label:SetJustifyH("CENTER")
-		tile.label:SetText(entry.count and Z.L["Groupe %d"]:format(entry.group) or entry.name)
-		tile.label:SetTextColor(r, g, b)
-	else
-		local icon = math.max(ICON_MIN, math.floor((h - 2 * inset - 4) / 2))
-		tile.icon:SetSize(icon, icon)
-		tile.icon:SetPoint("LEFT", inset + 2, 0)
-		tile.label:SetJustifyH("LEFT")
-		tile.sub:SetJustifyH("LEFT")
-		if style == "TWO" then -- le sort, puis le joueur
-			tile.label:SetPoint("BOTTOMLEFT", tile.icon, "RIGHT", 4, 1)
-			tile.label:SetPoint("RIGHT", -inset - 3, 0)
-			tile.label:SetText(ShortSpell(entry.spell))
-			tile.label:SetTextColor(unpack(UI.accent))
-			tile.sub:SetPoint("TOPLEFT", tile.icon, "RIGHT", 4, -1)
-			tile.sub:SetPoint("RIGHT", -inset - 3, 0)
-			tile.sub:SetText(text)
-			tile.sub:SetTextColor(r, g, b)
-			tile.sub:Show()
-		else -- une ligne : le joueur, puis le sort en gris
-			tile.label:SetPoint("LEFT", tile.icon, "RIGHT", 4, 0)
-			tile.label:SetPoint("RIGHT", -inset - 3, 0)
-			tile.label:SetText(text .. "  |cff9a9a9a" .. ShortSpell(entry.spell) .. "|r")
-			tile.label:SetTextColor(r, g, b)
-		end
+	tile.label:SetJustifyH("LEFT")
+	tile.sub:SetJustifyH("LEFT")
+	tile.label:SetPoint("BOTTOMLEFT", tile.line, "RIGHT", 5, 1)
+	tile.label:SetPoint("RIGHT", -inset - 3, 0)
+	tile.sub:SetPoint("TOPLEFT", tile.line, "RIGHT", 5, -1)
+	tile.sub:SetPoint("RIGHT", -inset - 3, 0)
+	local who = entry.name
+	if entry.count then
+		who = L["Groupe %d"]:format(entry.group)
+	elseif entry.unit and not entry.sample then
+		local me = UnitIsUnit(entry.unit, "player")
+		if me and not issecret(me) then who = L["Vous"] end
 	end
+	tile.label:SetText(who or "")
+	tile.label:SetTextColor(r, g, b)
+	tile.label:Show()
+	if others and others > 0 then
+		tile.sub:SetText(others == 1 and L["+1 autre"] or L["+%d autres"]:format(others))
+		tile.sub:SetTextColor(0.85, 0.85, 0.85)
+	else
+		tile.sub:SetText(ShortSpell(entry.spell))
+		tile.sub:SetTextColor(0.6, 0.6, 0.6)
+	end
+	tile.sub:Show()
+	return w, h
 end
 
 -- Bord des cases des cadres du groupe (pas les tanks, familiers, épinglés ni la cible), en pixels de l'écran
@@ -634,8 +642,6 @@ local function BuildBlock()
 	block = CreateFrame("Frame", "LyoruneBuffsBlock", UIParent)
 	block:SetFrameStrata("MEDIUM")
 	block:SetClampedToScreen(true)
-	blockMore = UI.Text(Tile(1), 10) -- « + N » dans le coin de l'unique case
-	blockMore:SetTextColor(0.7, 0.7, 0.7)
 	local elapsed = 0
 	block:SetScript("OnUpdate", function(_, delta) -- portée seulement, et seulement bloc visible
 		elapsed = elapsed + delta
@@ -658,31 +664,14 @@ end
 
 local function ShowBlock(list)
 	if not block then BuildBlock() end
-	local db = Z.db
-	local w, h = Z.CellSize()
 	local entry, tile = list[1], Tile(1)
 	Arm(tile, entry)
 	tile:ClearAllPoints()
-	StyleTile(tile, w, h, Z:Shape().buffs or "LINE", entry)
+	local w, h = StyleTile(tile, entry, #list - 1)
 	tile:SetPoint("TOPLEFT", 0, 0)
 	tile:Show()
-	blockMore:ClearAllPoints()
-	if #list > 1 then
-		local theme = Z:Theme()
-		local inset = UI.Inset(theme.borderSize, db.corners == "ROUND")
-		blockMore:SetFont(theme.font, math.max(8, db.fontSize - 1), theme.flags)
-		blockMore:SetText(Z.L["+ %d"]:format(#list - 1))
-		blockMore:SetPoint("TOPRIGHT", -inset - 3, -inset - 2)
-		blockMore:Show()
-		if (Z:Shape().buffs or "LINE") ~= "ICON" then -- le texte de la case s'arrête avant le compteur
-			tile.label:SetPoint("RIGHT", -inset - 6 - blockMore:GetStringWidth(), 0)
-		end
-	else
-		blockMore:Hide()
-	end
-	local y = h
-	block:SetScale(db.scale / 100)
-	block:SetSize(w, y)
+	block:SetScale(Z.db.scale / 100)
+	block:SetSize(w, h)
 	PlaceBlock()
 	UpdateRange()
 	if not block:IsShown() then block:Show() end

@@ -78,17 +78,14 @@ end
 --   inline      : "EDGES" rangées collées aux bords haut et bas de la barre de vie, à une taille qui laisse libre
 --                 la ligne du texte ; "BLOCK" les deux rangées l'une sur l'autre au bout de la case, le chiffre
 --                 de vie rangé à leur gauche. Ces deux rangées partent d'un coin de droite.
--- « buffs » : allure des buffs manquants collés sous les cadres (Buffs.lua) : "LINE" une ligne par buff (icône,
---   joueur, sort), "TWO" le sort puis le joueur sur deux lignes, "ICON" une grande icône et le nom, les suivants en
---   petites icônes. Une forme ajoutée choisit l'une des trois.
 Z.shapes = {
-	BAR    = { width = 124, height = 30, fontSize = 11, powerHeight = 3, inline = true, buffs = "LINE",
+	BAR    = { width = 124, height = 30, fontSize = 11, powerHeight = 3, inline = true,
 		auras = { size = 0.34, hots = "TOPRIGHT", debuffs = "BOTTOMRIGHT", hotLine = 0.5, debuffLine = 0.5, inline = "EDGES" } },
-	TILE   = { width = 86,  height = 42, fontSize = 11, powerHeight = 4, buffs = "TWO",
+	TILE   = { width = 86,  height = 42, fontSize = 11, powerHeight = 4,
 		auras = { size = 0.26, hots = "TOPLEFT", debuffs = "BOTTOMRIGHT", hotLine = "ROLE", debuffLine = "BUFF" } },
-	SQUARE = { width = 54,  height = 54, fontSize = 10, powerHeight = 4, buffs = "ICON",
+	SQUARE = { width = 54,  height = 54, fontSize = 10, powerHeight = 4,
 		auras = { size = 0.19, hots = "TOPLEFT", debuffs = "BOTTOMRIGHT", hotLine = "ROLE", debuffLine = "BUFF", wrap = true } },
-	BANNER = { width = 170, height = 24, fontSize = 10, powerHeight = 2, inline = true, buffs = "LINE",
+	BANNER = { width = 170, height = 24, fontSize = 10, powerHeight = 2, inline = true,
 		auras = { size = 0.38, hots = "TOPRIGHT", debuffs = "BOTTOMRIGHT", hotLine = 0.3, debuffLine = 0.3, inline = "BLOCK" } },
 }
 Z.shapeKeys = { "width", "height", "fontSize", "powerHeight" } -- les réglages qu'une forme décide

@@ -7409,7 +7409,7 @@ step("1.33.7 : version simple et de groupe cochees a part, Mes buffs aligne, buf
   assert(ok, err)
 end)
 
-step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Barre, Tuile, Carre, Bandeau)", function()
+step("1.34.0 / 1.37.1 : buffs manquants colles sous les cadres, en bandeau fin pour les quatre formes", function()
   local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
   local oldRange, realRows, realName, realNow = UnitInRange, Z.BuffRows, C_Spell.GetSpellName, NOW
   local patched = {}
@@ -7433,29 +7433,48 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
       return n
     end
     assert(Shown() == 1, "une seule case attendue : " .. Shown())
-    assert(block:GetHeight() == select(2, Z.CellSize()), "bloc plus haut qu'une case : rien ne doit apparaitre dessous")
+    assert(block:GetHeight() == tile:GetHeight(), "bloc plus haut que sa case : rien ne doit apparaitre dessous")
 
     tile:Run("OnEnter") tile:Run("OnLeave")
-    -- forme des cases : taille d'une case, allure decidee par Z.shapes
+    -- 1.37.1 : bandeau fin, meme disposition pour les quatre formes (choix de l'auteur, modele : le bouton de HealKit)
+    local L = Z.L
     for _, id in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
-      assert(Z.shapes[id].buffs, "forme sans allure des buffs : " .. id)
+      assert(Z.shapes[id].buffs == nil, id .. " : allure des buffs par forme devenue inutile")
       Z:ApplyShape(id) RunUpdates() Z:UpdateBuffPanel()
-      local w, h = Z.CellSize()
-      assert(tile:GetWidth() == w and tile:GetHeight() == h, id .. " : premiere case a la taille d'une case")
-      -- 1.34.1 : icone divisee par 2 (demande de l'auteur), jamais sous 14
-      local icon = tile.icon:GetWidth()
-      assert(icon >= 14 and (icon == 14 or icon <= math.ceil(h / 2)), id .. " : icone trop grosse : " .. icon)
+      local w = Z.CellSize()
+      local size = Z.db.fontSize + (Z:Theme().fontBonus or 0)
+      local h = tile:GetHeight()
+      assert(tile:GetWidth() == math.max(110, w), id .. " : largeur d'une case, au moins 110 : " .. tile:GetWidth())
+      assert(h >= 2 * size + 4 and h <= 2 * size + 10, id .. " : hauteur tiree du texte : " .. h)
+      assert(block:GetWidth() == tile:GetWidth() and block:GetHeight() == h, id .. " : bloc a la taille du bandeau")
+      assert(tile.icon:GetWidth() == tile.icon:GetHeight() and tile.icon:GetHeight() >= h - 6, id .. " : icone de toute la hauteur")
+      assert(tile.line._points and tile.line._points.TOPLEFT, id .. " : trait entre l'icone et le texte")
+      assert(tile.label:IsShown() and tile.sub:IsShown(), id .. " : deux lignes")
+      assert(not tile.label:GetText():find("|c", 1, true), id .. " : ligne 1, le joueur seul")
       local second = rawget(_G, "LyoruneBuffsTile2")
-      if id == "TILE" then
-        assert(tile.sub:IsShown() and tile.label:GetText() ~= "", "Tuile : le sort puis le joueur")
-      elseif id == "SQUARE" then
-        assert(not tile.sub:IsShown() and tile.label:IsShown(), "Carre : grande icone et nom")
-      else
-        assert(not tile.sub:IsShown() and tile.label:GetText():find("|cff9a9a9a", 1, true), id .. " : une ligne, joueur et sort")
-        assert(not (second and second:IsShown()), id .. " : une case suivante montree")
-      end
+      assert(not (second and second:IsShown()), id .. " : une case suivante montree")
     end
     Z:UndoShape() RunUpdates()
+    -- ligne 1 : « Vous » sur ma case, « Groupe N » pour un groupe ; ligne 2 : « +N autres » ou le nom court du sort
+    local fakeCheck = list[1].check
+    local realIsUnit = UnitIsUnit
+    UnitIsUnit = function(a, b) return a == b end
+    Z.BuffRows = function() return { { check = fakeCheck, spell = "Mot de pouvoir : Robustesse", unit = "player", name = "Moi", class = "PRIEST" } } end
+    Z:UpdateBuffPanel()
+    UnitIsUnit = realIsUnit
+    assert(tile.label:GetText() == L["Vous"], "ma case : Vous attendu : " .. tostring(tile.label:GetText()))
+    assert(tile.sub:GetText() == "Robustesse", "un seul buff : nom court du sort : " .. tostring(tile.sub:GetText()))
+    Z.BuffRows = function() return { { check = fakeCheck, spell = "Mot de pouvoir : Robustesse", unit = "raid9", count = 4, group = 3, class = "PRIEST" },
+      { check = fakeCheck, spell = "x", unit = "player", name = "Moi" } } end
+    Z:UpdateBuffPanel()
+    assert(tile.label:GetText() == L["Groupe %d"]:format(3), "groupe : Groupe 3 attendu")
+    assert(tile.sub:GetText() == L["+1 autre"], "deux buffs : +1 autre attendu : " .. tostring(tile.sub:GetText()))
+    Z.BuffRows = function() return { { check = fakeCheck, spell = "a", unit = "player", name = "Moi" }, { check = fakeCheck, spell = "b", unit = "player" },
+      { check = fakeCheck, spell = "c", unit = "player" } } end
+    Z:UpdateBuffPanel()
+    assert(tile.sub:GetText() == L["+%d autres"]:format(2), "trois buffs : +2 autres attendu")
+    Z.BuffRows = realRows
+    Z:UpdateBuffPanel()
     -- theme, texture et angles des cases
     Z.db.corners = "ROUND" Z:UpdateBuffPanel()
     assert(tile.bgRound:IsShown() and not tile.bg:IsShown(), "angles arrondis non suivis")
@@ -7571,7 +7590,7 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
     Z:ToggleOptions("Joueurs") Z:OptionsWindow():Hide() Z:UpdateBuffPanel()
     assert(not block:IsShown(), "exemple encore la, options fermees")
     Z.BuffRows = oldRows
-    for _, key in ipairs({ "Exemple", "Hors combat, vos buffs manquants s'afficheront ici, à la forme de vos cases : un clic les pose." }) do
+    for _, key in ipairs({ "Exemple", "Hors combat, vos buffs manquants s'afficheront ici, un à la fois : un clic le pose, puis le suivant prend sa place." }) do
       assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
     end
     -- tout pose, ou interrupteur coupe : rien
@@ -7580,7 +7599,7 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
     -- options : un seul reglage, dans la recherche, traduit
     local labels = table.concat(Z:OptionLabels(), "|")
     assert(labels:find("Emplacement des buffs manquants", 1, true), "reglage absent des options")
-    for _, key in ipairs({ "Avec les cadres", "Où vous voulez", "+ %d", "Emplacement des buffs manquants" }) do
+    for _, key in ipairs({ "Avec les cadres", "Où vous voulez", "+1 autre", "+%d autres", "Vous", "Emplacement des buffs manquants" }) do
       assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
     end
   end)
@@ -7850,24 +7869,40 @@ step("1.36.0 : buffs en combat : reperes dessines par le jeu (tous les rangs, co
     assert(c.marksShown, "reperes absents en champ de bataille")
     hidden = false FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 0)
     assert(not c.marksShown, "reperes gardes apres le match")
-    -- interrupteurs
+    -- interrupteurs (1.37.1 : « En combat » et « En champ de bataille et en arene », chacun a sa place)
+    local realKind = Z.PvPKind
+    Z.db.combatBuffs = false Z:Refresh() RunUpdates()
+    assert(c.boxes.buffs.slots.buff1243, "reperes non prepares alors que le champ de bataille les veut")
+    FireEvent("PLAYER_REGEN_DISABLED")
+    assert(not c.marksShown, "En combat eteint : reperes montres en combat")
+    Z.PvPKind = function() return "BG" end Z.RecheckBuffMarks()
+    assert(c.marksShown, "En champ de bataille allume : reperes absents en champ de bataille")
+    FireEvent("PLAYER_REGEN_ENABLED")
+    Z.db.combatBuffs, Z.db.pvpBuffs = true, false Z:Refresh() RunUpdates()
+    FireEvent("PLAYER_REGEN_DISABLED")
+    assert(not c.marksShown, "champ de bataille eteint : reperes montres en champ de bataille")
+    Z.PvPKind = realKind Z.RecheckBuffMarks()
+    assert(c.marksShown, "En combat allume : reperes absents en combat hors champ de bataille")
+    FireEvent("PLAYER_REGEN_ENABLED")
     Z.db.combatBuffs = false Z:Refresh() RunUpdates()
     FireEvent("PLAYER_REGEN_DISABLED")
-    assert(not c.marksShown and not c.boxes.buffs.slots.buff1243, "interrupteur des reperes")
+    assert(not c.marksShown and not c.boxes.buffs.slots.buff1243, "deux interrupteurs eteints : reperes prepares")
     FireEvent("PLAYER_REGEN_ENABLED")
+    Z.db.pvpBuffs = true
+    assert(Z.defaults.combatBuffs == true and Z.defaults.pvpBuffs == true, "deux interrupteurs allumes au depart")
     Z.db.combatBuffs, Z.db.combatKey = true, false
     FireEvent("PLAYER_REGEN_DISABLED")
     assert(key:GetAttribute("type") == nil, "interrupteur de la touche")
     FireEvent("PLAYER_REGEN_ENABLED")
-    for _, text in ipairs({ "Aussi en combat et en champ de bataille", "En combat, la touche relance mon buff unique",
-      "Couleur : posé. Gris à bord rouge : il manque.", "Buff manquant sur la case" }) do
+    for _, text in ipairs({ "En combat", "En champ de bataille et en arène", "En combat, la touche relance mon buff unique",
+      "Couleur : posé, rien à faire. Gris à bord rouge : il manque.", "Buff manquant sur la case" }) do
       assert(Z.translations.enUS[text], "sans traduction anglaise : " .. text)
     end
   end)
   CreateFrame, C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit = old.create, old.name, old.known, old.isUnit
   C_Secrets, Z.class, C_Timer.After = old.secrets, old.class, old.after
   AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle, Z.boxWrap = nil, nil, nil, nil
-  Z.db.combatBuffs, Z.db.combatKey, Z.char.buffTarget, COMBAT = true, true, {}, false
+  Z.db.combatBuffs, Z.db.pvpBuffs, Z.db.combatKey, Z.char.buffTarget, COMBAT = true, true, true, {}, false
   for _, button in ipairs(made) do pcall(button.SetAttribute, button, "unit", nil) end
   Z:BuildData() Z:Refresh() RunUpdates()
   assert(ok, err)

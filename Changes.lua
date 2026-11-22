@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.37.1", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+			"Buffs manquants sous les cadres : un bandeau fin, le même pour toutes les formes de cases, de la largeur d'une case (jamais trop étroit) : l'icône, puis le joueur (« Vous », un nom, « Groupe 3 ») et, dessous, « +N autres » ou le nom court du sort. Sa hauteur suit la taille du texte ; le nom complet est dans l'infobulle.",
+			"Buffs dessinés par le jeu sur les cases : deux interrupteurs, « En combat » et « En champ de bataille et en arène » (tous deux allumés, comme avant). Rien n'apparaît sur un joueur qu'aucun de vos buffs ne concerne.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.37.0", date = "2026-11-22",
 		added = {
 			"Qui buffe qui : vos groupes de raid à buffer (Mes buffs), avec un bouton « Comme mes soins ».",

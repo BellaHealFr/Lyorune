@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.37.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.37.1"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -99,7 +99,8 @@ Z.defaults = {
 	showDefensives = true,     -- gros défensifs posés par n'importe qui (Z.defensives, Data.lua) : leur icône sur la case
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
-	combatBuffs = true,        -- quand le jeu cache les buffs (combat, champ de bataille) : mes buffs dessinés par le jeu, gris s'ils manquent (Containers.lua)
+	combatBuffs = true,        -- en combat (et boss hors combat), le jeu cache les buffs : mes buffs dessinés par le jeu, gris s'ils manquent (Containers.lua)
+	pvpBuffs = true,           -- même chose en champ de bataille et en arène ; là, seul ce réglage décide (Z.BuffMarksOn)
 	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris
 	combatKey = true,          -- en combat, la touche du prochain buff relance mon buff unique sur son porteur (Buffs.lua)
 	buffPlace = "FRAMES",      -- où : collé sous les cadres, à la forme des cases (départ), ou fenêtre posée où l'on veut
