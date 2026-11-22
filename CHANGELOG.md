@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.3] - 2026-11-22
+
+### Amélioré
+
+- Mes buffs : tous les buffs sont actifs au départ, en JcE comme en JcJ (Protection contre l'ombre, Fureur vertueuse et Gardien de peur compris). Décochez ce qui ne vous sert pas ; vos choix déjà faits restent les vôtres.
+
 ## [1.33.2] - 2026-11-22
 
 ### Corrigé
@@ -632,6 +638,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.33.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.2...v1.33.3
 [1.33.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.1...v1.33.0

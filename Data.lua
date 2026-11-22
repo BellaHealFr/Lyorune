@@ -128,21 +128,22 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 --   weapon = { id }      enchantement de mon arme principale (le jeu le dit à part, pas dans les auras) : le
 --                        dernier que j'ai lancé, sinon le premier connu de la liste
 --   racial = true       sort de race : absent de « Mes buffs » si mon personnage ne l'a pas
---   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ
+--   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ. Aucun buff ne
+--                        l'est aujourd'hui : tous sont actifs au départ (demande de l'auteur, 22 novembre 2026)
 -- Le premier numéro de la ligne la désigne dans le réglage « buffWatch ». Numéros vérifiés hors jeu (HealKit,
 -- PallyPower et VuhDo portés sur Forever) ; un sort que je ne connais pas est ignoré (Z.Knows).
 Z.raidBuffs = {
 	PRIEST = {
 		{ 1243, 21562 },                -- Mot de pouvoir : Robustesse, Prière de robustesse
 		{ 14752, 27681, mana = true },  -- Esprit divin, Prière d'esprit
-		{ 976, 27683, pve = false },    -- Protection contre l'ombre, Prière de protection contre l'ombre (JcJ)
+		{ 976, 27683 },                 -- Protection contre l'ombre, Prière de protection contre l'ombre
 		{ 588, self = true },           -- Feu intérieur
 		{ 2652, self = true, racial = true },  -- Toucher de faiblesse (sort de race)
 		{ 18137, self = true, racial = true }, -- Garde de l'ombre (sort de race)
 	},
 	PALADIN = {
 		{ blessing = { 19740, 19742, 20217, 20911 } }, -- Bénédictions de puissance, de sagesse, des rois, du sanctuaire
-		{ 25780, self = true, pve = false, pvp = false }, -- Fureur vertueuse (tanks seulement)
+		{ 25780, self = true },         -- Fureur vertueuse
 	},
 	SHAMAN = {
 		{ 408510, any = { 324 }, self = true },        -- Bouclier d'eau, ou Bouclier de foudre
@@ -158,7 +159,7 @@ Z.raidBuffs = {
 Z.uniqueBuffs = {
 	SHAMAN  = { 408514 },                             -- Bouclier de terre
 	DRUID   = { 467 },                                -- Épines
-	PRIEST  = { { 6346, pve = false, pvp = false } }, -- Gardien de peur
+	PRIEST  = { 6346 },                               -- Gardien de peur
 	PALADIN = { 1328548 },                            -- Serment de lumière (talent de WoW Forever)
 }
 

@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.3] - 2026-11-22
+
+### Improved
+
+- My buffs: every buff is on at first, in PvE as in PvP (Shadow Protection, Righteous Fury and Fear Ward included). Untick what you do not need; the choices you already made stay yours.
+
 ## [1.33.2] - 2026-11-22
 
 ### Fixed
@@ -632,6 +638,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.2...v1.33.3
 [1.33.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.1...v1.33.0

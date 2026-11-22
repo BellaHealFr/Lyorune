@@ -6885,14 +6885,14 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     Z.db.missingBuffs, Z.db.buffPanel = true, true
 
     -- Pretre : Robustesse, Esprit divin (joueurs a mana), Feu interieur (sur moi) ; Protection contre l'ombre
-    -- seulement en JcJ au depart ; sorts de race inconnus ignores
+    -- aussi, tous actifs au depart ; sorts de race inconnus ignores
     Z.class = "PRIEST" Z:BuildData() AURAS = {} Update()
     assert(#Z.buffChecks == 4, "buffs du pretre : " .. #Z.buffChecks)
-    assert(Ids(me) == "1243,14752,588", "pretre, sur moi : " .. Ids(me))
-    assert(Ids(other) == "1243,14752", "pretre, un autre joueur : " .. Ids(other))
+    assert(Ids(me) == "1243,14752,976,588", "pretre, sur moi : " .. Ids(me))
+    assert(Ids(other) == "1243,14752,976", "pretre, un autre joueur : " .. Ids(other))
     assert(me.missingBuff == me.missingBuffs[1] and me.buffIcon:IsShown(), "icone de la case : le premier")
     classes[other.unit] = "WARRIOR" Update()
-    assert(Ids(other) == "1243", "Esprit divin propose a un guerrier : " .. Ids(other))
+    assert(Ids(other) == "1243,976", "Esprit divin propose a un guerrier : " .. Ids(other))
     classes[other.unit] = nil
     -- toutes les absences d'un joueur : une ligne chacune dans le panneau
     Z.db.buffGroupAt = 5 Update()
@@ -6918,10 +6918,10 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     assert(Ids(me) == "1243,14752,976,588", "liste JcJ : " .. Ids(me))
     INSTANCE_TYPE = "arena" Update() assert(Ids(other) == "1243,14752,976", "arene : " .. Ids(other))
     INSTANCE_TYPE = "party"
-    Z.db.buffWatch[976] = { pve = true } Update()
-    assert(Ids(other) == "1243,14752,976", "buff coche en JcE : " .. Ids(other))
+    Z.db.buffWatch[976] = { pvp = false } Update()
+    assert(Ids(other) == "1243,14752,976", "decoche en JcJ seulement : " .. Ids(other))
     Z.db.buffWatch = { [1243] = { pve = false } } Update()
-    assert(Ids(other) == "14752", "buff decoche en JcE : " .. Ids(other))
+    assert(Ids(other) == "14752,976", "buff decoche en JcE : " .. Ids(other))
     INSTANCE_TYPE = "pvp" Update() assert(Ids(other):find("1243", 1, true), "decoche en JcE seulement")
     INSTANCE_TYPE = "party" Z.db.buffWatch = {}
     -- buff present, puis presque fini (reglage « buffRefresh ») : relu tout seul au passage du seuil
@@ -6949,9 +6949,10 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     UnitGroupRolesAssigned = function(u) return u == other.unit and "TANK" or "HEALER" end
     local function Fear() for _, row in ipairs(Z.BuffRows()) do if row.spell == "Gardien de peur" then return row end end end
     Update()
-    assert(#Z.uniqueChecks == 1 and not Fear(), "Gardien de peur propose alors qu'il est eteint")
-    Z.db.buffWatch[6346] = { pve = true } Update()
-    assert(Fear() and Fear().unit == other.unit, "Gardien de peur coche, pas propose au tank")
+    assert(#Z.uniqueChecks == 1 and Fear() and Fear().unit == other.unit, "Gardien de peur actif au depart, pas propose au tank")
+    Z.db.buffWatch[6346] = { pve = false } Update()
+    assert(not Fear(), "Gardien de peur decoche encore propose")
+    Z.db.buffWatch = {} Update()
     later = {}
     C_Spell.GetSpellCooldown = function() return { startTime = NOW - 5, duration = 30, isOnGCD = false } end
     assert(not Fear(), "Gardien de peur propose pendant sa recharge")
@@ -6964,9 +6965,9 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     Z.db.buffWatch = {}
 
     -- Paladin : une benediction de moi par joueur (Sagesse a mana, Puissance, Rois au tank et au chasseur) ;
-    -- Fureur vertueuse eteinte au depart
+    -- Fureur vertueuse active au depart
     Z.class = "PALADIN" Z:BuildData() UnitGroupRolesAssigned = function() return "HEALER" end Update()
-    assert(Ids(me) == "19740" and Spell(me, 19740) == "Bénédiction de sagesse", "paladin, joueur a mana : " .. tostring(Spell(me, 19740)))
+    assert(Ids(me) == "19740,25780" and Spell(me, 19740) == "Bénédiction de sagesse", "paladin, joueur a mana : " .. tostring(Spell(me, 19740)))
     classes[other.unit] = "WARRIOR" Update()
     assert(Spell(other, 19740) == "Bénédiction de puissance", "guerrier : " .. tostring(Spell(other, 19740)))
     classes[other.unit] = "HUNTER" Update()
@@ -6983,8 +6984,8 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     AURAS["HELPFUL|PLAYER"] = { { name = "Bénédiction des rois", icon = 9, auraInstanceID = 42 } }
     Update() assert(Ids(other) == "", "ma benediction non reconnue : " .. Ids(other))
     AURAS = {}
-    Z.db.buffWatch[25780] = { pve = true } Update()
-    assert(Ids(me) == "19740,25780" and Ids(other) == "19740", "Fureur vertueuse cochee : " .. Ids(me))
+    Z.db.buffWatch[25780] = { pve = false } Update()
+    assert(Ids(me) == "19740" and Ids(other) == "19740", "Fureur vertueuse decochee : " .. Ids(me))
     Z.db.buffWatch = {}
 
     -- Chaman : Bouclier d'eau ou de foudre sur moi, enchantement d'arme (le dernier lance)
@@ -7018,9 +7019,9 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     box:Update()
     local row976
     for _, row in ipairs(box.lines) do if row:IsShown() and row.entry.id == 976 then row976 = row end end
-    assert(row976 and not row976.checks[1].on and row976.checks[2].on, "Protection contre l'ombre : JcJ seulement au depart")
+    assert(row976 and row976.checks[1].on and row976.checks[2].on, "Protection contre l'ombre : active au depart")
     row976.checks[1]:Run("OnClick")
-    assert(Z.db.buffWatch[976] and Z.db.buffWatch[976].pve == true, "case JcE non enregistree")
+    assert(Z.db.buffWatch[976] and Z.db.buffWatch[976].pve == false, "case JcE non enregistree")
     row976.checks[1]:Run("OnClick")
     assert(Z.db.buffWatch[976] == nil, "retour au depart non efface")
     local shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end

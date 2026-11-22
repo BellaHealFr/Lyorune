@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.3", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+			"Mes buffs : tous les buffs sont actifs au départ, en JcE comme en JcJ (Protection contre l'ombre, Fureur vertueuse et Gardien de peur compris). Décochez ce qui ne vous sert pas ; vos choix déjà faits restent les vôtres.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.33.2", date = "2026-11-22",
 		added = {
 		},
