@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.1", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+			"Le réglage « Sort de groupe dès (joueurs sans le buff) » (anciennement « Version de groupe dès ») est expliqué par un exemple sous son nom.",
+		},
+		fixed = {
+			"Options, chapitre Joueurs, « Mes buffs » : les cases JcE et JcJ sont alignées sur les interrupteurs du dessus, et chaque titre de colonne est centré sur ses cases, dans les trois thèmes.",
+		},
+	},
+	{
 		version = "1.33.0", date = "2026-11-22",
 		added = {
 			"Buffs complets des soigneurs : prêtre (Robustesse, Esprit divin pour les joueurs à mana, Protection contre l'ombre, Feu intérieur et sorts de race sur vous), paladin (une bénédiction de vous par joueur : Rois pour le tank et le chasseur, Sagesse pour les joueurs à mana, Puissance pour les autres ; Fureur vertueuse au choix), chaman (Bouclier d'eau ou de foudre, enchantement de votre arme), druide (Marque du fauve). Gardien de peur et Serment de lumière rejoignent les buffs à poser sur une seule personne.",

@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.1] - 2026-11-22
+
+### Improved
+
+- The "Group spell from (players without the buff)" setting (formerly "Group version from") is explained by an example under its name.
+
+### Fixed
+
+- Options, Players chapter, "My buffs": the PvE and PvP boxes line up with the switches above, and each column title is centred on its boxes, in all three themes.
+
 ## [1.33.0] - 2026-11-22
 
 ### Added
@@ -616,6 +626,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.31.0...v1.32.0
