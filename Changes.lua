@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.6", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+			"Mes buffs : la version de groupe de chaque buff (Prière de robustesse, Prière d'Esprit, Prière de protection contre l'Ombre, Don du fauve, Illumination des arcanes) a sa propre ligne, en retrait sous le buff, avec ses cases JcE et JcJ. Décochée, le panneau ne propose que la version simple, joueur par joueur, sans dépenser de composant. Tout reste coché au départ.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.33.5", date = "2026-11-22",
 		added = {
 		},

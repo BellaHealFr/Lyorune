@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.6] - 2026-11-22
+
+### Improved
+
+- My buffs: each buff's group version (Prayer of Fortitude, Prayer of Spirit, Prayer of Shadow Protection, Gift of the Wild, Arcane Brilliance) has its own line, indented under the buff, with its PvE and PvP boxes. Unticked, the panel only offers the single version, player by player, without spending a reagent. Everything stays ticked at first.
+
 ## [1.33.5] - 2026-11-22
 
 ### Fixed
@@ -656,6 +662,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.3...v1.33.4
 [1.33.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.2...v1.33.3

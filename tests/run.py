@@ -7062,7 +7062,23 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     local row976
     for _, row in ipairs(box.lines) do if row:IsShown() and row.entry.id == 976 then row976 = row end end
     assert(row976 and row976.checks[1].on and row976.checks[2].on, "Protection contre l'ombre : active au depart")
-    assert(row976.name:GetText():find("Prière de protection contre l'ombre", 1, true), "version de groupe absente de la ligne : " .. row976.name:GetText())
+    -- la version de groupe a sa propre ligne, juste en dessous : decochee, le panneau ne propose que la version simple
+    local rowPrayer
+    for _, row in ipairs(box.lines) do if row:IsShown() and row.entry.id == 21562 then rowPrayer = row end end
+    assert(rowPrayer and rowPrayer.entry.group and rowPrayer.checks[1].on, "ligne de la Priere de robustesse")
+    assert(not row976.name:GetText():find("Prière", 1, true), "Priere encore sur la ligne du buff simple")
+    AURAS = {} Z.db.buffGroupAt = 2 Update()
+    local function HasPrayer()
+      for _, r in ipairs(Z.BuffRows()) do if r.spell == "Prière de robustesse" or r.spell2 == "Prière de robustesse" then return true end end
+    end
+    assert(HasPrayer(), "Priere de robustesse non proposee au depart")
+    rowPrayer.checks[1]:Run("OnClick")
+    assert(Z.db.buffWatch[21562] and Z.db.buffWatch[21562].pve == false, "case de la Priere non enregistree")
+    Update() assert(not HasPrayer(), "Priere decochee encore proposee")
+    local simple = false
+    for _, r in ipairs(Z.BuffRows()) do if r.spell == "Mot de pouvoir : Robustesse" then simple = true end end
+    assert(simple, "version simple absente quand la Priere est decochee")
+    rowPrayer.checks[1]:Run("OnClick") Z.db.buffGroupAt = 3 Update()
     row976.checks[1]:Run("OnClick")
     assert(Z.db.buffWatch[976] and Z.db.buffWatch[976].pve == false, "case JcE non enregistree")
     row976.checks[1]:Run("OnClick")
@@ -7084,12 +7100,12 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     end
     Z.char.buffTarget = {} GROUP_NAMES[third.unit] = nil
     local shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
-    assert(shown == 5, "lignes du pretre : " .. shown) -- 4 buffs et Gardien de peur, sans les sorts de race que je n'ai pas
+    assert(shown == 8, "lignes du pretre : " .. shown) -- 4 buffs, 3 Prieres et Gardien de peur, sans les sorts de race que je n'ai pas
     for _, row in ipairs(box.lines) do assert(not row:IsShown() or row.entry.id ~= 15473, "Forme d'ombre proposee a un soigneur") end
     for _, row in ipairs(box.lines) do assert(not row:IsShown() or (row.entry.id ~= 2652 and row.entry.id ~= 18137), "sort de race d'une autre race") end
     extra[2652] = "Toucher de faiblesse" box:Update()
     shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
-    assert(shown == 6, "sort de race que j'ai : absent de Mes buffs")
+    assert(shown == 9, "sort de race que j'ai : absent de Mes buffs")
     extra[2652] = nil
     local labels = table.concat(Z:OptionLabels(), "|")
     for _, text in ipairs({ "Mes buffs", "Proposer à nouveau sous (minutes)", "Sort de groupe dès (joueurs sans le buff)" }) do

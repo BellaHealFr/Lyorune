@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.6] - 2026-11-22
+
+### Amélioré
+
+- Mes buffs : la version de groupe de chaque buff (Prière de robustesse, Prière d'Esprit, Prière de protection contre l'Ombre, Don du fauve, Illumination des arcanes) a sa propre ligne, en retrait sous le buff, avec ses cases JcE et JcJ. Décochée, le panneau ne propose que la version simple, joueur par joueur, sans dépenser de composant. Tout reste coché au départ.
+
 ## [1.33.5] - 2026-11-22
 
 ### Corrigé
@@ -656,6 +662,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.3...v1.33.4
 [1.33.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.2...v1.33.3

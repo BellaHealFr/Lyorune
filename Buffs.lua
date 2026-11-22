@@ -180,12 +180,13 @@ function Z.BuffRows()
 		end
 		for _, group in ipairs(order) do
 			local players = byGroup[group]
-			if check.groupSpell and group > 0 and #players >= Z.db.buffGroupAt then
-				result[#result + 1] = { check = check, spell = check.groupSpell, icon = check.icon, unit = players[1].unit,
+			local groupSpell = Z.GroupSpell(check) -- décochée dans « Mes buffs » : la version simple seulement
+			if groupSpell and group > 0 and #players >= Z.db.buffGroupAt then
+				result[#result + 1] = { check = check, spell = groupSpell, icon = check.icon, unit = players[1].unit,
 					group = group, count = #players, players = players }
 			else
 				for _, entry in ipairs(players) do
-					result[#result + 1] = { check = check, spell = entry.spell, spell2 = check.groupSpell, icon = entry.icon,
+					result[#result + 1] = { check = check, spell = entry.spell, spell2 = groupSpell, icon = entry.icon,
 						unit = entry.unit, name = entry.name, class = entry.class }
 				end
 			end

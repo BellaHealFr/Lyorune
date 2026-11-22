@@ -652,15 +652,18 @@ local function BuffWatchList(page, width)
 			elseif entry.aura then name = L["Aura (la dernière lancée)"]
 			else
 				for _, id in ipairs(entry.any or {}) do name = name .. L[" ou "] .. (Z.SpellName(id) or "#" .. id) end
-				-- sa version de groupe sur la même ligne (Prière de robustesse...) : un seul réglage pour les deux
-				local group = entry[2] and Z.SpellName(entry[2])
-				if group then name = name .. "  |cffb3b3b3+ " .. group .. "|r" end
 				if entry.self then name = name .. "  |cffb3b3b3(" .. L["sur vous"] .. ")|r" end
 			end
 			local passive = not (entry.blessing or entry.weapon or entry.aura) and Z.IsPassive(ids[1])
 			if (known or not entry.racial) and not passive then -- sort de race d'une autre race, sort passif : rien à régler
 				list[#list + 1] = { id = ids[1], pve = entry.pve, pvp = entry.pvp, name = name, known = known,
 					icon = icon or Z.SpellIcon(ids[1]) }
+				-- sa version de groupe (Prière de robustesse...) : sa propre ligne, juste en dessous, en retrait
+				local group = entry[2] and Z.SpellName(entry[2])
+				if group then
+					list[#list + 1] = { id = entry[2], group = true, known = Z.Knows(entry[2]), icon = Z.SpellIcon(entry[2]),
+						name = group .. "  |cffb3b3b3(" .. L["groupe"] .. ")|r" }
+				end
 			end
 		end
 		for _, entry in ipairs(Z.uniqueBuffs[Z.class] or {}) do
@@ -767,6 +770,8 @@ local function BuffWatchList(page, width)
 			y = y + row:GetHeight()
 			ShowBearer(row)
 			row.icon:SetTexture(entry.icon)
+			row.icon:ClearAllPoints()
+			row.icon:SetPoint("TOPLEFT", entry.group and 20 or 2, -(WATCH_ROW - 18) / 2) -- version de groupe : en retrait
 			row.name:SetText(entry.name)
 			row.name:SetAlpha(entry.known and 1 or DIMMED) -- pas encore appris : grisé, mais réglable
 			for _, check in ipairs(row.checks) do check:Update() end

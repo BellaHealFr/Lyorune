@@ -130,6 +130,8 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 --   aura = { id }        auras du paladin : une des miennes suffit ; la dernière lancée, sinon la première connue
 --   Un sort passif sur ce client (Augure de clarté, d'après HealKit) n'est jamais proposé (Z.IsPassive).
 --   racial = true       sort de race : absent de « Mes buffs » si mon personnage ne l'a pas
+--   La version de groupe a sa propre ligne dans « Mes buffs » (réglage buffWatch[son numéro]) : décochée, le
+--   panneau ne propose que la version simple, joueur par joueur (aucun composant dépensé).
 --   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ. Aucun buff ne
 --                        l'est aujourd'hui : tous sont actifs au départ (demande de l'auteur, 22 novembre 2026)
 -- Le premier numéro de la ligne la désigne dans le réglage « buffWatch ». Numéros vérifiés hors jeu (HealKit,
@@ -297,13 +299,20 @@ function Z.BuffCheck(entry)
 	end
 	if not check.spell then return end
 	local group = entry[2] and Z.Knows(entry[2]) and Z.SpellName(entry[2])
-	if group and group ~= check.spell then check.groupSpell = group end
+	if group and group ~= check.spell then check.groupSpell, check.groupId = group, entry[2] end
 	return check
 end
 
 -- La liste qui compte ici : « pvp » en champ de bataille et en arène, « pve » partout ailleurs
 function Z.BuffContext()
 	return Z.PvPKind and Z.PvPKind() and "pvp" or "pve"
+end
+
+-- La version de groupe de ce buff (Prière de robustesse...), si je la connais et si je veux l'utiliser ici
+function Z.GroupSpell(check)
+	if not check.groupSpell then return end
+	if not Z.BuffWatched({ id = check.groupId }) then return end
+	return check.groupSpell
 end
 
 -- Ce buff est-il dans ma liste (« Mes buffs », options) pour ce lieu ? Mon choix, sinon le départ de Data.lua
