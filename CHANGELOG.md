@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.2] - 2026-11-22
+
+### Corrigé
+
+- Mes buffs (options, chapitre Joueurs), panneau et cases : chaque buff montre l'icône de votre grimoire, celle que le jeu donne au sort que vous connaissez, pour le prêtre, le paladin, le chaman et le druide. Les sorts de race d'une autre race (Toucher de faiblesse, Garde de l'ombre) ne sont plus proposés à un prêtre qui ne les a pas.
+
 ## [1.33.1] - 2026-11-22
 
 ### Amélioré
@@ -626,6 +632,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.33.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.0...v1.32.1

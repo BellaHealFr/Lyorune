@@ -639,8 +639,13 @@ local function BuffWatchList(page, width)
 	local function Entries()
 		local list = {}
 		for _, entry in ipairs(Z.raidBuffs[Z.class] or {}) do
-			local ids, known = Z.BuffIds(entry), false
-			for _, id in ipairs(ids) do known = known or Z.Knows(id) end
+			local ids, known, icon = Z.BuffIds(entry), false, nil
+			for _, id in ipairs(ids) do
+				if Z.Knows(id) then
+					known = true
+					icon = icon or Z.SpellIcon(id) -- la bénédiction, l'arme ou le bouclier que je connais
+				end
+			end
 			local name = Z.SpellName(ids[1]) or ("#" .. ids[1])
 			if entry.blessing then name = L["Bénédictions (une de vous par joueur)"]
 			elseif entry.weapon then name = L["Enchantement de l'arme"]
@@ -648,11 +653,14 @@ local function BuffWatchList(page, width)
 				for _, id in ipairs(entry.any or {}) do name = name .. L[" ou "] .. (Z.SpellName(id) or "#" .. id) end
 				if entry.self then name = name .. "  |cffb3b3b3(" .. L["sur vous"] .. ")|r" end
 			end
-			list[#list + 1] = { id = ids[1], pve = entry.pve, pvp = entry.pvp, name = name, known = known }
+			if known or not entry.racial then -- sort de race d'une autre race : rien à régler
+				list[#list + 1] = { id = ids[1], pve = entry.pve, pvp = entry.pvp, name = name, known = known,
+					icon = icon or Z.SpellIcon(ids[1]) }
+			end
 		end
 		for _, entry in ipairs(Z.uniqueBuffs[Z.class] or {}) do
 			entry = type(entry) == "table" and entry or { entry }
-			list[#list + 1] = { id = entry[1], pve = entry.pve, pvp = entry.pvp, known = Z.Knows(entry[1]),
+			list[#list + 1] = { id = entry[1], pve = entry.pve, pvp = entry.pvp, known = Z.Knows(entry[1]), icon = Z.SpellIcon(entry[1]),
 				name = (Z.SpellName(entry[1]) or "#" .. entry[1]) .. "  |cffb3b3b3(" .. L["une personne"] .. ")|r" }
 		end
 		return list
@@ -696,7 +704,7 @@ local function BuffWatchList(page, width)
 			row.entry = entry
 			row:ClearAllPoints()
 			row:SetPoint("TOPLEFT", 0, -28 - (i - 1) * WATCH_ROW)
-			row.icon:SetTexture(C_Spell.GetSpellTexture(entry.id))
+			row.icon:SetTexture(entry.icon)
 			row.name:SetText(entry.name)
 			row.name:SetAlpha(entry.known and 1 or DIMMED) -- pas encore appris : grisé, mais réglable
 			for _, check in ipairs(row.checks) do check:Update() end

@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.2", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Mes buffs (options, chapitre Joueurs), panneau et cases : chaque buff montre l'icône de votre grimoire, celle que le jeu donne au sort que vous connaissez, pour le prêtre, le paladin, le chaman et le druide. Les sorts de race d'une autre race (Toucher de faiblesse, Garde de l'ombre) ne sont plus proposés à un prêtre qui ne les a pas.",
+		},
+	},
+	{
 		version = "1.33.1", date = "2026-11-22",
 		added = {
 		},

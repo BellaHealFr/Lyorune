@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.2] - 2026-11-22
+
+### Fixed
+
+- My buffs (options, Players chapter), panel and cells: each buff shows the icon from your spellbook, the one the game gives to the spell you know, for the priest, paladin, shaman and druid. Racial spells of another race (Touch of Weakness, Shadowguard) are no longer offered to a priest who does not have them.
+
 ## [1.33.1] - 2026-11-22
 
 ### Improved
@@ -626,6 +632,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.0...v1.32.1

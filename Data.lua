@@ -127,6 +127,7 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 --                        pas) ; tank : Rois, joueur à mana : Sagesse, les autres : Puissance (Z.BlessingFor)
 --   weapon = { id }      enchantement de mon arme principale (le jeu le dit à part, pas dans les auras) : le
 --                        dernier que j'ai lancé, sinon le premier connu de la liste
+--   racial = true       sort de race : absent de « Mes buffs » si mon personnage ne l'a pas
 --   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ
 -- Le premier numéro de la ligne la désigne dans le réglage « buffWatch ». Numéros vérifiés hors jeu (HealKit,
 -- PallyPower et VuhDo portés sur Forever) ; un sort que je ne connais pas est ignoré (Z.Knows).
@@ -136,8 +137,8 @@ Z.raidBuffs = {
 		{ 14752, 27681, mana = true },  -- Esprit divin, Prière d'esprit
 		{ 976, 27683, pve = false },    -- Protection contre l'ombre, Prière de protection contre l'ombre (JcJ)
 		{ 588, self = true },           -- Feu intérieur
-		{ 2652, self = true },          -- Toucher de faiblesse (sort de race)
-		{ 18137, self = true },         -- Garde de l'ombre (sort de race)
+		{ 2652, self = true, racial = true },  -- Toucher de faiblesse (sort de race)
+		{ 18137, self = true, racial = true }, -- Garde de l'ombre (sort de race)
 	},
 	PALADIN = {
 		{ blessing = { 19740, 19742, 20217, 20911 } }, -- Bénédictions de puissance, de sagesse, des rois, du sanctuaire
@@ -231,6 +232,14 @@ function Z.Knows(id)
 		and C_SpellBook.FindSpellBookSlotForSpell(name) ~= nil
 end
 
+-- Icône d'un sort : celle de mon grimoire (lue par le nom du sort, la version que je connais), sinon celle que le
+-- jeu donne au numéro. Aucune icône n'est choisie par Lyorune.
+function Z.SpellIcon(id)
+	local name = Z.SpellName(id)
+	local mine = name and Z.Knows(id) and C_Spell.GetSpellTexture(name)
+	return mine or C_Spell.GetSpellTexture(id)
+end
+
 -- Tous les numéros d'une ligne de Z.raidBuffs ; le premier désigne la ligne (réglage « buffWatch »)
 function Z.BuffIds(entry)
 	local ids = {}
@@ -254,7 +263,7 @@ function Z.BuffCheck(entry)
 		check.choices = {}
 		for _, id in ipairs(choices) do
 			local name = Z.Knows(id) and Z.SpellName(id)
-			if name then check.choices[#check.choices + 1] = { id = id, name = name, icon = C_Spell.GetSpellTexture(id) } end
+			if name then check.choices[#check.choices + 1] = { id = id, name = name, icon = Z.SpellIcon(id) } end
 			if entry.weapon then Z.weaponIds[id] = true end
 		end
 		if #check.choices == 0 then return end
@@ -267,7 +276,7 @@ function Z.BuffCheck(entry)
 	for _, id in ipairs(entry.any or {}) do castable[#castable + 1] = id end
 	for _, id in ipairs(castable) do
 		if Z.Knows(id) then
-			check.spell, check.icon = Z.SpellName(id), C_Spell.GetSpellTexture(id)
+			check.spell, check.icon = Z.SpellName(id), Z.SpellIcon(id)
 			break
 		end
 	end
@@ -350,7 +359,7 @@ function Z:BuildData()
 		local id = entry[1]
 		local name = Z.Knows(id) and Z.SpellName(id)
 		if name then
-			Z.uniqueChecks[#Z.uniqueChecks + 1] = { id = id, name = name, spell = name, icon = C_Spell.GetSpellTexture(id),
+			Z.uniqueChecks[#Z.uniqueChecks + 1] = { id = id, name = name, spell = name, icon = Z.SpellIcon(id),
 				unique = true, pve = entry.pve, pvp = entry.pvp }
 		end
 	end
