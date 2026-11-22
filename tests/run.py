@@ -7422,7 +7422,7 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
     assert(#list >= 1, "aucun buff manquant pour l'essai")
     assert(block and block:IsShown(), "bloc absent alors que des buffs manquent")
     assert(not (panel and panel:IsShown()), "fenetre ouverte en plus du bloc")
-    -- premiere case = ce que lance la touche ; jusqu'a 3 suivantes ; « + N autres »
+    -- une seule case (1.34.1, comme HealKit) = ce que lance la touche ; « + N » dans son coin
     local tile = LyoruneBuffsTile1
     assert(tile:GetAttribute("type1") == "spell" and tile:GetAttribute("spell1") == list[1].spell
       and tile:GetAttribute("unit") == list[1].unit, "premiere case mal reglee")
@@ -7432,7 +7432,9 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
       for i = 1, 8 do local t = rawget(_G, "LyoruneBuffsTile" .. i) if t and t:IsShown() then n = n + 1 end end
       return n
     end
-    assert(Shown() == math.min(#list, 4), "nombre de cases : " .. Shown())
+    assert(Shown() == 1, "une seule case attendue : " .. Shown())
+    assert(block:GetHeight() == select(2, Z.CellSize()), "bloc plus haut qu'une case : rien ne doit apparaitre dessous")
+
     tile:Run("OnEnter") tile:Run("OnLeave")
     -- forme des cases : taille d'une case, allure decidee par Z.shapes
     for _, id in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
@@ -7440,20 +7442,17 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
       Z:ApplyShape(id) RunUpdates() Z:UpdateBuffPanel()
       local w, h = Z.CellSize()
       assert(tile:GetWidth() == w and tile:GetHeight() == h, id .. " : premiere case a la taille d'une case")
+      -- 1.34.1 : icone divisee par 2 (demande de l'auteur), jamais sous 14
+      local icon = tile.icon:GetWidth()
+      assert(icon >= 14 and (icon == 14 or icon <= math.ceil(h / 2)), id .. " : icone trop grosse : " .. icon)
       local second = rawget(_G, "LyoruneBuffsTile2")
       if id == "TILE" then
         assert(tile.sub:IsShown() and tile.label:GetText() ~= "", "Tuile : le sort puis le joueur")
       elseif id == "SQUARE" then
         assert(not tile.sub:IsShown() and tile.label:IsShown(), "Carre : grande icone et nom")
-        if second and second:IsShown() then
-          assert(second:GetWidth() == second:GetHeight() and second:GetWidth() < w and not second.label:IsShown(),
-            "Carre : les suivantes en petites icones")
-        end
       else
         assert(not tile.sub:IsShown() and tile.label:GetText():find("|cff9a9a9a", 1, true), id .. " : une ligne, joueur et sort")
-        if second and second:IsShown() then
-          assert(second:GetWidth() == w and second:GetHeight() < h, id .. " : les suivantes plus basses")
-        end
+        assert(not (second and second:IsShown()), id .. " : une case suivante montree")
       end
     end
     Z:UndoShape() RunUpdates()
@@ -7581,7 +7580,7 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
     -- options : un seul reglage, dans la recherche, traduit
     local labels = table.concat(Z:OptionLabels(), "|")
     assert(labels:find("Emplacement des buffs manquants", 1, true), "reglage absent des options")
-    for _, key in ipairs({ "Avec les cadres", "Où vous voulez", "+ %d autres", "Emplacement des buffs manquants" }) do
+    for _, key in ipairs({ "Avec les cadres", "Où vous voulez", "+ %d", "Emplacement des buffs manquants" }) do
       assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
     end
   end)
@@ -7592,6 +7591,78 @@ step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Bar
   Z.BuffRows, C_Spell.GetSpellName, NOW = realRows, realName, realNow
   for k, v in pairs(saved) do Z.db[k] = v end
   AURAS = {} Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("1.34.1 : tous mes soins et buffs dans Sorts et raccourcis, /lyorune sorts, revue des quatre classes", function()
+  local realName, realHelpful, realPassive, class = C_Spell.GetSpellName, C_Spell.IsSpellHelpful, C_Spell.IsSpellPassive, Z.class
+  local info, lines = C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo
+  -- sorts de l'essai : numero -> { nom, utilisable sur un allie d'apres le jeu }
+  local fake = {
+    [2061] = { "Soins rapides", true }, [588] = { "Feu intérieur" }, [15237] = { "Nova sacrée" },
+    [585] = { "Châtiment" }, [13908] = { "Prière du désespoir" }, [1243] = { "Mot de pouvoir : Robustesse", true },
+    [19750] = { "Eclair lumineux", true }, [25780] = { "Fureur vertueuse" }, [465] = { "Aura de dévotion" }, [20271] = { "Jugement" },
+    [331] = { "Vague de soins", true }, [324] = { "Bouclier de foudre" }, [8017] = { "Arme Croque-roc" },
+    [5394] = { "Totem guérisseur" }, [403] = { "Éclair" },
+    [5185] = { "Toucher guérisseur", true }, [740] = { "Tranquillité" }, [16864] = { "Augure de clarté" }, [5176] = { "Colère" },
+  }
+  local ok, err = pcall(function()
+    C_Spell.GetSpellName = function(id) return fake[id] and fake[id][1] or realName(id) end
+    C_Spell.IsSpellHelpful = function(id) return fake[id] ~= nil and fake[id][2] == true end
+    C_Spell.IsSpellPassive = nil
+    -- grimoire : { numero, passif, autre specialisation }
+    local function Book(items)
+      C_SpellBook.GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = #items } end
+      C_SpellBook.GetSpellBookItemInfo = function(slot)
+        local item = items[slot]
+        return { itemType = 1, spellID = item[1], isPassive = item[2] == true, isOffSpec = item[3] == true }
+      end
+    end
+    local function Names()
+      local set = {}
+      for _, spell in ipairs(Z:KnownSpells()) do set[spell.name] = true end
+      return set
+    end
+    local cases = {
+      PRIEST  = { book = { { 2061 }, { 588 }, { 15237 }, { 585 }, { 13908, false, true } },
+                  yes = { "Soins rapides", "Feu intérieur", "Nova sacrée" }, no = { "Châtiment", "Prière du désespoir" },
+                  why = { "Prière du désespoir (autre spécialisation)", "Mot de pouvoir : Robustesse (pas appris)" }, out = "Châtiment" },
+      PALADIN = { book = { { 19750 }, { 25780 }, { 465 }, { 20271 } },
+                  yes = { "Eclair lumineux", "Fureur vertueuse", "Aura de dévotion" }, no = { "Jugement" }, out = "Jugement" },
+      SHAMAN  = { book = { { 331 }, { 324 }, { 8017 }, { 5394 }, { 403 } },
+                  yes = { "Vague de soins", "Bouclier de foudre", "Arme Croque-roc", "Totem guérisseur" }, no = { "Éclair" }, out = "Éclair" },
+      DRUID   = { book = { { 5185 }, { 740 }, { 16864, true }, { 5176 } },
+                  yes = { "Toucher guérisseur", "Tranquillité" }, no = { "Augure de clarté", "Colère" },
+                  why = { "Augure de clarté (passif)" }, out = "Colère" },
+    }
+    for name, case in pairs(cases) do
+      Z.class = name
+      Book(case.book)
+      local set = Names()
+      for _, spell in ipairs(case.yes) do assert(set[spell], name .. " : absent de la liste : " .. spell) end
+      for _, spell in ipairs(case.no) do assert(not set[spell], name .. " : propose a tort : " .. spell) end
+      local proposed, missing, filtered = Z:SpellReport()
+      assert(#proposed == #case.yes, name .. " : " .. table.concat(proposed, ", "))
+      local text = table.concat(missing, "|")
+      for _, line in ipairs(case.why or {}) do assert(text:find(line, 1, true), name .. " : raison absente : " .. line .. " dans " .. text) end
+      assert(table.concat(filtered, "|") == case.out, name .. " : ecartes : " .. table.concat(filtered, ", "))
+    end
+    -- la commande ecrit les trois lignes, en francais et en anglais
+    Z.class = "PRIEST" Book(cases.PRIEST.book)
+    local printed = #PRINTED
+    Z.Command("sorts")
+    assert(#PRINTED == printed + 3, "commande /lyorune sorts muette")
+    assert(PRINTED[printed + 1]:find("3 sorts proposés", 1, true) and PRINTED[printed + 3]:find("Châtiment", 1, true), PRINTED[printed + 1])
+    for _, key in ipairs({ "quels sorts Lyorune propose, et pourquoi un sort manque", "%d sorts proposés dans « Sorts et raccourcis » : %s.",
+      "Sorts de votre classe absents : %s.", "Écartés (offensifs ou sans effet sur un allié) : %s.", "pas appris", "autre spécialisation", "passif" }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+    -- grimoire illisible : les sorts connus de ma classe, comme avant
+    C_SpellBook.GetSpellBookSkillLineInfo = function() error("pas de grimoire") end
+    assert(#Z:KnownSpells() > 0, "grimoire illisible : liste vide")
+  end)
+  C_Spell.GetSpellName, C_Spell.IsSpellHelpful, C_Spell.IsSpellPassive, Z.class = realName, realHelpful, realPassive, class
+  C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo = info, lines
   assert(ok, err)
 end)
 

@@ -878,7 +878,60 @@ function Z:SetClick(key, value)
 	Z:ApplyClicks()
 end
 
--- Sorts du grimoire que l'on peut lancer sur un allié, pour la fenêtre de choix
+-- Sorts de ma classe connus de Lyorune (Data.lua) : soins sans cible, buffs (sur moi, de groupe, à une personne,
+-- auras, armes), dissipations, résurrections, sorts suivis, clics de départ. Ils sont proposés même quand le jeu
+-- ne les dit pas « utilisables sur un allié » (Feu intérieur, boucliers du chaman, Tranquillité...).
+-- Clé : nom du sort (tous ses rangs ont le même), valeur : un de ses numéros.
+function Z:ClassSpellNames()
+	local names, class = {}, Z.class
+	local function add(id)
+		local name = type(id) == "number" and Z.SpellName(id)
+		if name and not names[name] then names[name] = id end
+	end
+	local function addAll(list)
+		for _, id in pairs(list or {}) do
+			if type(id) == "table" then addAll(id) else add(id) end
+		end
+	end
+	addAll(Z.groupHeals[class])
+	addAll(Z.dispelSpells[class])
+	addAll(Z.classRes[class])
+	addAll(Z.trackedSpells[class])
+	addAll(Z.clickDefaults[class])
+	addAll(Z.uniqueBuffs[class])
+	for _, entry in ipairs(Z.raidBuffs[class] or {}) do addAll(Z.BuffIds(entry)) end
+	return names
+end
+
+-- Sorts de mon grimoire : { { id, name, passive, offSpec }, ... } (vide si le jeu ne répond pas)
+local function Grimoire()
+	local items = {}
+	pcall(function()
+		local bank = Enum.SpellBookSpellBank.Player
+		for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+			local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
+			for slot = info.itemIndexOffset + 1, info.itemIndexOffset + info.numSpellBookItems do
+				local item = C_SpellBook.GetSpellBookItemInfo(slot, bank)
+				local id = item and item.itemType == Enum.SpellBookItemType.Spell and (item.spellID or item.actionID)
+				local name = id and C_Spell.GetSpellName(id)
+				if name then
+					items[#items + 1] = { id = id, name = name, passive = item.isPassive, offSpec = item.isOffSpec }
+				end
+			end
+		end
+	end)
+	return items
+end
+
+-- Le jeu dit-il ce sort utilisable sur un allié ? (sans réponse du jeu : oui, comme avant la 1.34.1)
+local function Helpful(id)
+	if not C_Spell.IsSpellHelpful then return true end
+	local ok, helpful = pcall(C_Spell.IsSpellHelpful, id)
+	return not ok or helpful == true
+end
+
+-- Sorts que « Sorts et raccourcis » propose : ceux de ma spécialisation active, ni passifs, que le jeu dit
+-- utilisables sur un allié ou que Data.lua connaît pour ma classe. Un sort offensif n'est jamais proposé.
 function Z:KnownSpells()
 	local spells, seen = {}, {}
 	local function add(id)
@@ -889,30 +942,57 @@ function Z:KnownSpells()
 		end
 	end
 
-	pcall(function()
-		local bank = Enum.SpellBookSpellBank.Player
-		for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
-			local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
-			for slot = info.itemIndexOffset + 1, info.itemIndexOffset + info.numSpellBookItems do
-				local item = C_SpellBook.GetSpellBookItemInfo(slot, bank)
-				if item and item.itemType == Enum.SpellBookItemType.Spell and not item.isPassive and not item.isOffSpec then
-					local id = item.spellID or item.actionID
-					if id and (not C_Spell.IsSpellHelpful or C_Spell.IsSpellHelpful(id)) then add(id) end
-				end
-			end
-		end
-	end)
+	local mine = Z:ClassSpellNames()
+	for _, item in ipairs(Grimoire()) do
+		if not item.passive and not item.offSpec and (mine[item.name] or Helpful(item.id)) then add(item.id) end
+	end
 
 	-- Grimoire illisible : on propose au moins les sorts connus de la classe
 	if #spells == 0 then
-		for _, ids in pairs(Z.clickDefaults[Z.class] or {}) do
-			for _, id in ipairs(ids) do
-				if Z.Knows(id) then add(id) end
-			end
+		for name, id in pairs(mine) do
+			if Z.Knows(id) and not Z.IsPassive(id) then add(id) end
 		end
 	end
 	table.sort(spells, function(a, b) return a.name < b.name end)
 	return spells
+end
+
+-- Ce que Lyorune voit (/lyorune sorts) : les sorts proposés, les sorts de ma classe absents avec leur raison
+-- (« pas appris », « autre spécialisation », « passif »), et les sorts du grimoire écartés (offensifs, ou sans
+-- effet sur un allié). Listes de noms triées.
+function Z:SpellReport()
+	local L, mine, book = Z.L, Z:ClassSpellNames(), {}
+	for _, item in ipairs(Grimoire()) do
+		local known = book[item.name] -- un rang lançable l'emporte sur un rang passif ou d'une autre spécialisation
+		if not known or known.passive or known.offSpec then book[item.name] = item end
+	end
+	local proposed, missing, filtered = {}, {}, {}
+	for _, spell in ipairs(Z:KnownSpells()) do proposed[#proposed + 1] = spell.name end
+	for name in pairs(mine) do
+		local item = book[name]
+		local why = not item and "pas appris" or item.offSpec and "autre spécialisation" or item.passive and "passif"
+		if why then missing[#missing + 1] = ("%s (%s)"):format(name, L[why]) end
+	end
+	for name, item in pairs(book) do
+		if not mine[name] and not item.passive and not item.offSpec and not Helpful(item.id) then
+			filtered[#filtered + 1] = name
+		end
+	end
+	table.sort(missing)
+	table.sort(filtered)
+	return proposed, missing, filtered
+end
+
+function Z:SpellsCommand()
+	local L = Z.L
+	local proposed, missing, filtered = Z:SpellReport()
+	Z:Print(L["%d sorts proposés dans « Sorts et raccourcis » : %s."]:format(#proposed, table.concat(proposed, ", ")))
+	if #missing > 0 then
+		Z:Print(L["Sorts de votre classe absents : %s."]:format(table.concat(missing, ", ")))
+	end
+	if #filtered > 0 then
+		Z:Print(L["Écartés (offensifs ou sans effet sur un allié) : %s."]:format(table.concat(filtered, ", ")))
+	end
 end
 
 ----------------------------------------------------------------------------------------------------

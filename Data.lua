@@ -15,6 +15,7 @@
 --      cette table compte comme classe à mana (buffs réservés aux joueurs à mana, comme Esprit divin)
 --   8. Z.defensives.MACLASSE : ses gros défensifs, montrés sur sa case à tous les soigneurs
 --   9. Z.lockouts.MACLASSE : les affaiblissements qui l'empêchent de relancer un de ses sorts, s'il en a
+--  10. Z.groupHeals.MACLASSE : ses soins sans cible (de zone, sur soi, totems), pour « Sorts et raccourcis »
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -102,6 +103,16 @@ Z.clickDefaults = {
 	MAGE = {
 		["3"] = { 475 },                   -- Délivrance de la malédiction mineure
 	},
+}
+
+-- Soins sans cible (de zone, sur soi, totems) : le jeu ne les dit pas « utilisables sur un allié », mais
+-- « Sorts et raccourcis » les propose quand même (Z:KnownSpells), comme tous les sorts de ma classe listés
+-- dans ce fichier. Numéros vérifiés hors jeu (HealKit, HealBot et VuhDo portés sur Forever) ; un sort que je
+-- ne connais pas n'est pas proposé.
+Z.groupHeals = {
+	PRIEST = { 15237, 596, 13908 },     -- Nova sacrée, Prière de soins, Prière du désespoir
+	DRUID  = { 740 },                   -- Tranquillité
+	SHAMAN = { 5394, 16190 },           -- Totem guérisseur, Totem de vague de mana
 }
 
 -- Sorts de résurrection (toutes classes), pour l'annonce « je ressuscite untel »

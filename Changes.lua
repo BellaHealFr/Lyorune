@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.34.1", date = "2026-11-22",
+		added = {
+			"/lyorune sorts : les sorts proposés, ceux de votre classe qui manquent et pourquoi (pas appris, autre spécialisation, passif), et ceux qui sont écartés.",
+		},
+		improved = {
+			"Sorts et raccourcis propose tous vos soins et buffs, même sans cible : Feu intérieur, boucliers et armes du chaman, auras et Fureur vertueuse du paladin, Nova sacrée, Prière de soins, Tranquillité, totems de soins. Jamais un sort offensif. Même liste dans Mes macros.",
+			"Buffs manquants sous les cadres : une seule case, comme une touche, qui passe au buff suivant après chaque sort (plus de cases en dessous) ; « + N » dans son coin dit combien il en reste ; icône deux fois plus petite.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.34.0", date = "2026-11-22",
 		added = {
 			"Buffs manquants collés sous vos cadres, à la forme de vos cases (Barre, Tuile, Carré, Bandeau), avec leur taille, leur thème, leur texture et leurs angles : le premier est celui que lance votre touche, puis jusqu'à 3 suivants cliquables. Ils suivent vos cadres, passent au-dessus s'ils sont trop bas, disparaissent en combat et quand tout est posé. Réglage « Emplacement des buffs manquants » : avec les cadres, ou où vous voulez (l'ancienne fenêtre).",

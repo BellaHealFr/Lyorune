@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.34.1] - 2026-11-22
+
+### Added
+
+- /lyorune spells: the spells offered, the spells of your class that are missing and why (not learned, other specialization, passive), and the ones left out.
+
+### Improved
+
+- Spells and bindings offers all your heals and buffs, even those without a target: Inner Fire, shaman shields and weapons, paladin auras and Righteous Fury, Holy Nova, Prayer of Healing, Tranquility, healing totems. Never an offensive spell. Same list in My macros.
+- Missing buffs under the frames: a single cell, like a key, that moves on to the next buff after each cast (no more cells below it); "+ N" in its corner says how many are left; icon half the size.
+
 ## [1.34.0] - 2026-11-22
 
 ### Added
@@ -690,6 +701,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.34.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.0...v1.34.1
 [1.34.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.7...v1.34.0
 [1.33.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.6...v1.33.7
 [1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6

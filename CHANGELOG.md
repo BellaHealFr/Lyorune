@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.34.1] - 2026-11-22
+
+### Ajouté
+
+- /lyorune sorts : les sorts proposés, ceux de votre classe qui manquent et pourquoi (pas appris, autre spécialisation, passif), et ceux qui sont écartés.
+
+### Amélioré
+
+- Sorts et raccourcis propose tous vos soins et buffs, même sans cible : Feu intérieur, boucliers et armes du chaman, auras et Fureur vertueuse du paladin, Nova sacrée, Prière de soins, Tranquillité, totems de soins. Jamais un sort offensif. Même liste dans Mes macros.
+- Buffs manquants sous les cadres : une seule case, comme une touche, qui passe au buff suivant après chaque sort (plus de cases en dessous) ; « + N » dans son coin dit combien il en reste ; icône deux fois plus petite.
+
 ## [1.34.0] - 2026-11-22
 
 ### Ajouté
@@ -690,6 +701,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.34.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.0...v1.34.1
 [1.34.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.7...v1.34.0
 [1.33.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.6...v1.33.7
 [1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6

@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.34.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.34.1"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -534,6 +534,8 @@ function Z.Command(msg)
 		Z:OpenAssign()
 	elseif msg == "porteur" or msg:match("^porteur ") or msg == "bearer" or msg:match("^bearer ") then
 		Z:BuffTargetCommand(pinName) -- le nom garde ses majuscules
+	elseif msg == "sorts" or msg == "spells" then
+		Z:SpellsCommand()
 	elseif msg == "groupe" or msg == "group" then
 		Z:PrintSyncMembers()
 	elseif msg == "annuler" or msg == "undo" then

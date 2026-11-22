@@ -42,7 +42,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 25 | 1.32.0 | Répartition entre soigneurs, marquée sur les cases | Publiée (v1.32.0) |
 | 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
 | 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
-| 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | Bloc sous les cadres codé (1.34.0) ; Sorts et raccourcis en 1.34.1 |
+| 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | Fait : bloc sous les cadres (1.34.0), Sorts et raccourcis et `/lyorune sorts` (1.34.1) |
 | 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | À faire |
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | À faire |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
@@ -617,7 +617,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   `buffRefresh` (0 au départ : aucun changement pour les joueurs actuels), `buffGroupAt` (3) ; Gardien de peur
   (éteint au départ, attend sa recharge) et Serment de lumière en buffs uniques. Pendant un match JcJ, le panneau
   reste vide (auras secrètes) : suivi pendant le match à l'étape 26 b.
-- [ ] 26 a bis (1.34.0), **priorité haute** (demande de l'auteur, 22 novembre 2026 : « mieux qu'un panneau qui se
+- [x] 26 a bis (1.34.0 et 1.34.1), **priorité haute** (demande de l'auteur, 22 novembre 2026 : « mieux qu'un panneau qui se
   balade seul ») : les buffs manquants dans un bloc collé sous le dernier groupe (au-dessus si les cadres poussent
   vers le haut), aligné sur la première colonne, à l'échelle et à l'écart des cases ; il **prend la forme des
   cases** (Barre, Tuile, Carré, Bandeau : règles par forme dans `Z.shapes`, une forme ajoutée n'a qu'une ligne de
@@ -689,7 +689,25 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   restant coloré du vert au rouge), ArcAuras (`UI/AD_MissingBuffs.lua` : icônes des buffs manquants dessinées par
   le jeu, **visibles en combat** : piste directe pour la 26 b bis), Details_RaidCheck (liste de contrôle du raid :
   flacons, nourriture, rien de cliquable).
-- [ ] 26 b (1.35.0), **priorité haute** : champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
+  **Fait en 1.34.1 (Sorts et raccourcis, accord de l'auteur le 22 novembre 2026)** : la liste propose les sorts que
+  le jeu dit utilisables sur un allié **et** tous les sorts de ma classe connus de Data.lua (`Z:ClassSpellNames` :
+  buffs simples et de groupe, sur moi, à une personne, auras, armes, dissipations, résurrections, sorts suivis,
+  clics de départ) et la nouvelle liste `Z.groupHeals` (soins sans cible : Nova sacrée, Prière de soins, Prière du
+  désespoir, Tranquillité, Totem guérisseur, Totem de vague de mana). Jamais un sort offensif, ni passif ; autre
+  spécialisation écartée (choix de l'auteur), mais expliquée par `/lyorune sorts` (`Z:SpellReport` : proposés,
+  absents avec leur raison, écartés). Bibliothèque de macros : même liste (`Z:KnownSpells`). Comparaison : HealKit
+  (tout le grimoire sauf les sorts qui ne font que blesser, donc Cri psychique et métiers aussi, exceptions à la
+  main pour Nova sacrée et Pénitence), HealBot (ses listes par classe, autre spécialisation sautée), VuhDo (nom tapé
+  à la main), ArcAuras (grimoire sans passifs ni autre spécialisation) ; aucun ne dit pourquoi un sort manque.
+  Test par classe (prêtre, paladin, chaman, druide).
+  **Aussi en 1.34.1 (demandes de l'auteur pendant la session, 22 novembre 2026)** : icône du bloc divisée par 2
+  (« bien trop grosse », au moins 14 pixels) ; une seule case au lieu de la première et de 3 suivantes, comme le
+  bouton de HealKit : elle passe au buff suivant après chaque sort, « + N » dans son coin, rien en dessous.
+- [ ] 26 b (1.35.0), **PROCHAINE, demandée en priorité par l'auteur le 22 novembre 2026** : faire apparaître les
+  buffs manquants partout (champ de bataille, arène, raid, donjon, instance). **Commencer par étudier comment
+  HealKit y arrive** (BuffHelper.lua : mémoire des sorts lancés `castMemory`, `bounced`, `inEncounter`, lecture des
+  auras secrètes), puis HealBot, VuhDo et le reste du dossier, et présenter la comparaison à l'auteur.
+  Détail du plan validé, champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
   2026)** : les buffs manquants ne fonctionnent pas en champ de bataille. Cause connue (analyse 1a, B2) : pendant
   un match JcJ, le jeu rend les noms des buffs secrets, même hors combat ; Lyorune s'arrête au premier nom secret,
   le panneau reste vide et l'icône grise ne s'affiche plus, sans rien dire. Correction : photo des buffs juste

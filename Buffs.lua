@@ -412,11 +412,11 @@ end
 -- Bloc collé aux cadres (« Emplacement : avec les cadres », le départ). Sous la case la plus basse des cadres
 -- du groupe, aligné sur la première colonne, à l'échelle et à l'écart des cases ; au-dessus quand la place
 -- manque en bas de l'écran. Il prend la forme des cases (Z.shapes[...].buffs, Themes.lua), leur taille, leur
--- thème, leur texture et leurs angles. Première case = ce que lance la touche « prochain buff », puis jusqu'à
--- 3 suivantes, cliquables, puis « + N autres ». Replacé seulement quand les cadres changent (groupe, taille,
+-- thème, leur texture et leurs angles. Une seule case (demande de l'auteur, 22 novembre 2026, idée vue chez
+-- HealKit) : le prochain buff, celui que lance aussi la touche « prochain buff » ; après chaque sort, la case
+-- passe au suivant. Dans son coin, « + N » dit combien il en reste après lui. Replacé seulement quand les cadres changent (groupe, taille,
 -- déplacement, réglages) : aucune boucle, sauf la portée deux fois par seconde quand il est visible.
 ----------------------------------------------------------------------------------------------------
-local NEXT_TILES = 3
 local LABEL_GAP = 14 -- place de l'étiquette « Groupe » au-dessus des cases (LABEL_SPACE, Frames.lua)
 local PANEL_OUTSET = 3 -- débord du fond de groupe autour des cases (Frames.lua)
 local block, blockMore
@@ -450,8 +450,12 @@ local function Tile(index)
 	return tile
 end
 
+-- Icône d'une case du bloc : la moitié de la place qu'elle aurait (demande de l'auteur, 22 novembre 2026 : « bien
+-- trop grosse »), jamais sous ICON_MIN pour rester lisible sur les cases basses (Barre, Bandeau)
+local ICON_MIN = 14
+
 -- Habille une case du bloc comme une case des cadres, puis range son icône et ses textes selon « style » :
--- "LINE", "TWO", "ICON" (Z.shapes), "SMALL" (une suivante en ligne, plus basse), "DOT" (petite icône seule)
+-- "LINE", "TWO" ou "ICON" (Z.shapes)
 local function StyleTile(tile, w, h, style, entry)
 	local db, theme = Z.db, Z:Theme()
 	local rounded = db.corners == "ROUND"
@@ -475,15 +479,15 @@ local function StyleTile(tile, w, h, style, entry)
 	tile.icon:SetTexture(entry.icon or entry.check.icon)
 	tile.tip = text
 	local size = db.fontSize + (theme.fontBonus or 0)
-	tile.label:SetFont(theme.font, style == "SMALL" and size - 1 or size, theme.flags)
+	tile.label:SetFont(theme.font, size, theme.flags)
 	tile.sub:SetFont(theme.font, size - 1, theme.flags)
 	tile.icon:ClearAllPoints()
 	tile.label:ClearAllPoints()
 	tile.sub:ClearAllPoints()
 	tile.label:Show()
 	tile.sub:Hide()
-	if style == "ICON" then -- grande icône, le nom dessous
-		local icon = math.max(8, math.floor(math.min(w, h) * 0.55))
+	if style == "ICON" then -- icône, le nom dessous
+		local icon = math.max(ICON_MIN, math.floor(math.min(w, h) * 0.55 / 2))
 		tile.icon:SetSize(icon, icon)
 		tile.icon:SetPoint("TOP", 0, -inset - 3)
 		tile.label:SetPoint("BOTTOMLEFT", inset + 1, inset + 2)
@@ -491,12 +495,8 @@ local function StyleTile(tile, w, h, style, entry)
 		tile.label:SetJustifyH("CENTER")
 		tile.label:SetText(entry.count and Z.L["Groupe %d"]:format(entry.group) or entry.name)
 		tile.label:SetTextColor(r, g, b)
-	elseif style == "DOT" then -- petite icône seule (les suivantes du Carré)
-		tile.icon:SetPoint("TOPLEFT", inset + 1, -inset - 1)
-		tile.icon:SetPoint("BOTTOMRIGHT", -inset - 1, inset + 1)
-		tile.label:Hide()
 	else
-		local icon = math.max(8, h - 2 * inset - 4)
+		local icon = math.max(ICON_MIN, math.floor((h - 2 * inset - 4) / 2))
 		tile.icon:SetSize(icon, icon)
 		tile.icon:SetPoint("LEFT", inset + 2, 0)
 		tile.label:SetJustifyH("LEFT")
@@ -576,7 +576,7 @@ local function BuildBlock()
 	block = CreateFrame("Frame", "LyoruneBuffsBlock", UIParent)
 	block:SetFrameStrata("MEDIUM")
 	block:SetClampedToScreen(true)
-	blockMore = UI.Text(block, 10)
+	blockMore = UI.Text(Tile(1), 10) -- « + N » dans le coin de l'unique case
 	blockMore:SetTextColor(0.7, 0.7, 0.7)
 	local elapsed = 0
 	block:SetScript("OnUpdate", function(_, delta) -- portée seulement, et seulement bloc visible
@@ -602,46 +602,27 @@ local function ShowBlock(list)
 	if not block then BuildBlock() end
 	local db = Z.db
 	local w, h = Z.CellSize()
-	local style = Z:Shape().buffs or "LINE"
-	local gap = math.max(2, db.spacing)
-	local shown = math.min(#list, 1 + NEXT_TILES)
-	local y = 0
-	for i = 1, shown do
-		local entry, tile = list[i], Tile(i)
-		Arm(tile, entry)
-		tile:ClearAllPoints()
-		if i == 1 then
-			StyleTile(tile, w, h, style, entry)
-			tile:SetPoint("TOPLEFT", 0, 0)
-			y = h
-		elseif style == "ICON" then -- les suivantes en petites icônes, sur une rangée
-			local size = math.floor((w - (NEXT_TILES - 1) * gap) / NEXT_TILES)
-			StyleTile(tile, size, size, "DOT", entry)
-			tile:SetPoint("TOPLEFT", (i - 2) * (size + gap), -(h + gap))
-			y = h + gap + size
-		else -- les suivantes, plus basses, l'une sous l'autre
-			local small = math.max(16, math.floor(h * 0.6))
-			StyleTile(tile, w, small, "SMALL", entry)
-			tile:SetPoint("TOPLEFT", 0, -y - gap)
-			y = y + gap + small
-		end
-		tile:Show()
-	end
-	for i = shown + 1, #tiles do
-		tiles[i]:Hide()
-		tiles[i].unitToken = nil
-	end
+	local entry, tile = list[1], Tile(1)
+	Arm(tile, entry)
+	tile:ClearAllPoints()
+	StyleTile(tile, w, h, Z:Shape().buffs or "LINE", entry)
+	tile:SetPoint("TOPLEFT", 0, 0)
+	tile:Show()
 	blockMore:ClearAllPoints()
-	if #list > shown then
+	if #list > 1 then
 		local theme = Z:Theme()
+		local inset = UI.Inset(theme.borderSize, db.corners == "ROUND")
 		blockMore:SetFont(theme.font, math.max(8, db.fontSize - 1), theme.flags)
-		blockMore:SetText(Z.L["+ %d autres"]:format(#list - shown))
-		blockMore:SetPoint("TOPLEFT", 2, -y - 2)
+		blockMore:SetText(Z.L["+ %d"]:format(#list - 1))
+		blockMore:SetPoint("TOPRIGHT", -inset - 3, -inset - 2)
 		blockMore:Show()
-		y = y + 14
+		if (Z:Shape().buffs or "LINE") ~= "ICON" then -- le texte de la case s'arrête avant le compteur
+			tile.label:SetPoint("RIGHT", -inset - 6 - blockMore:GetStringWidth(), 0)
+		end
 	else
 		blockMore:Hide()
 	end
+	local y = h
 	block:SetScale(db.scale / 100)
 	block:SetSize(w, y)
 	PlaceBlock()
