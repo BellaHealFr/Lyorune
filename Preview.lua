@@ -59,7 +59,13 @@ local function Fill(cell, index, sample)
 	cell.incoming:SetMinMaxValues(0, 100)
 	cell.incoming:SetValue((not dead and health < 90 and index % 2 == 0) and 15 or 0)
 	cell.absorb:SetMinMaxValues(0, 100)
-	cell.absorb:SetValue((not dead and (sample or index % 5 == 2)) and (sample and 18 or 30) or 0)
+	local shield = (not dead and (sample or index % 5 == 2)) and (sample and 18 or 30) or 0
+	cell.absorb:SetValue(shield)
+	-- Chiffre du bouclier (absorbText) : même procédé que les vraies cases, la barre de 0 à 1 le montre ou le cache
+	if cell.absorbSwitch then
+		cell.absorbSwitch:SetValue(shield > 0 and 1 or 0)
+		cell.absorbText:SetText(shield > 0 and ("+" .. AbbreviateNumbers(shield * 40)) or "")
+	end
 	-- Absorption de soins : bornes données, sinon le jeu dessine la barre pleine et teinte toute la case en rouge
 	cell.healAbsorb:SetMinMaxValues(0, 100)
 	cell.healAbsorb:SetValue(0)

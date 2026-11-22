@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.40.0] - 2026-11-22
+
+### Ajouté
+
+- Chiffre du bouclier : ce qui reste à absorber (« +1,2k »), tous boucliers comptés, même en combat ; il s'efface quand le dernier bouclier est cassé ou fini (chapitre Vie et portée, éteint au départ).
+- Boucliers suivis sur les cases : Égide divine pour le prêtre, Veille de la Lumière et Serment de lumière pour le paladin.
+
 ## [1.39.1] - 2026-11-22
 
 ### Ajouté
@@ -772,6 +779,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.40.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.1...v1.40.0
 [1.39.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.0...v1.39.1
 [1.39.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.1...v1.39.0
 [1.38.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.0...v1.38.1

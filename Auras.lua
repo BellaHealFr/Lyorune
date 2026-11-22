@@ -124,6 +124,18 @@ local function GetIcon(b, list, index, point, x, y, direction, size)
 	return icon
 end
 
+-- Mon bouclier (chiffre du bouclier allumé) : ce qui lui reste, écrit par le jeu, quand l'aura se laisse lire.
+-- Sorts ou montants cachés (combat, donjon) : rien, l'icône garde son décompte et la case son chiffre total.
+local function ShieldLeft(aura)
+	local db = Z.db
+	if not (db.showAbsorb and db.absorbText and Z.absorbIds) then return end
+	local spell, points = aura.spellId, aura.points
+	if issecret(spell) or not Z.absorbIds[spell] or issecret(points) or type(points) ~= "table" then return end
+	local left = points[1]
+	if left == nil or (not issecret(left) and (type(left) ~= "number" or left <= 0)) then return end
+	return AbbreviateNumbers(left)
+end
+
 -- mine : icône d'un de mes soins, qui suit les réglages cercle, décompte, fondu et charges
 local function ShowAura(icon, unit, aura, mine)
 	local id = aura.auraInstanceID
@@ -148,7 +160,7 @@ local function ShowAura(icon, unit, aura, mine)
 			icon.cooldown:SetCountdownFont(font)
 		end
 	end
-	icon.count:SetText((not mine or db.hotCharges) and GetAuraCount(unit, id, 2, 99) or "")
+	icon.count:SetText(mine and ShieldLeft(aura) or (not mine or db.hotCharges) and GetAuraCount(unit, id, 2, 99) or "")
 	icon:SetAlpha(1)
 	if mine and db.hotFade then Z.FadeIcon(icon) end
 	icon:Show()

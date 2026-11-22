@@ -65,6 +65,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 |---|---|
 | Light green at the end of the bar | Heals are already on their way |
 | Light strip at the bottom of the bar | They have a shield (your choice, Health and range chapter, "Shield position": following the health, like the game's frames, with a bright line at the end when the shield exceeds the missing health) |
+| Small "+1.2k" number in the shield color | What is left to absorb, every shield counted, even in combat; it disappears when the last shield breaks or ends ("Shield amount", Health and range chapter, off at first) |
 | A drink at the bottom left | This healer is low on mana (threshold of your choice in the Health and range chapter, "Healers' low mana"): works in combat, even when the game hides mana |
 | A second drink just to the right, draining | This healer is drinking ("Healer drinking", same part): wait until they are done before moving on |
 | Dark red at the end of the health | A debuff "eats" that part of their health: your heals fill it first, before they count |
@@ -311,7 +312,7 @@ The macros, element placement, bug report, error log, news and performance windo
 
 Every element of the cell has its switch, filed according to what it shows. Nothing is mandatory. You can, for example, only show the debuffs you can dispel.
 
-- **Health and range**: incoming heals, shield, low health overlay (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
+- **Health and range**: incoming heals, shield and its amount (off at first), low health overlay (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
 - **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown.
 - **Debuffs**: dispelling, icons, important debuffs, crowd-controlled player, boss private auras.
 - **Players**: role icon, raid marker, group leader, big defensives, summon and phase, threat, missing buffs, my players (healer assignments), tooltip.
@@ -322,7 +323,7 @@ Every element of the cell has its switch, filed according to what it shows. Noth
 
 ### Your heals over time (My heals chapter)
 
-Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your heals over time and shields, plus the spells in your list.
+Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your heals over time and shields (priest: Power Word: Shield and Divine Aegis; paladin: Light's Vigil and Oath of Light, with its protection blessings), plus the spells in your list. With the shield amount on, the icon of your shield also tells what it has left when the game lets it be read; otherwise it keeps its countdown and the cell's number tells what is left.
 
 - **Heals shown**: from 1 to 6 per cell (4 at first). In the Debuffs chapter, **Debuffs shown** (fine settings of the Icons part) does the same for debuffs: from 2 to 5 (2 at first). The ones you can dispel always come first, the most important first: **Debuffs to dispel** (Icons part) shows 1 to 3 of them (2 at first), and the row grows to match. A change made in combat applies when the fight ends.
 - **Icons or thin bars**: pick the display. On icons, four fine settings combine as you like:

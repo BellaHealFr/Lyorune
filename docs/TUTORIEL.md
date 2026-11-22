@@ -64,6 +64,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 |---|---|
 | Vert clair au bout de la barre | Des soins sont déjà en route |
 | Bande claire en bas de la barre | Il a un bouclier (au choix, chapitre Vie et portée, « Place du bouclier » : à la suite de la vie, comme les cadres du jeu, avec un trait lumineux au bout quand le bouclier dépasse la vie manquante) |
+| Petit chiffre « +1,2k » à la couleur du bouclier | Ce qui reste à absorber, tous boucliers comptés, même en combat ; il s'efface quand le dernier bouclier est cassé ou fini (« Chiffre du bouclier », chapitre Vie et portée, éteint au départ) |
 | Une boisson en bas à gauche | Ce soigneur est à court de mana (seuil au choix dans le chapitre Vie et portée, « Mana basse des soigneurs ») : marche en combat, même quand le jeu cache la mana |
 | Une deuxième boisson juste à droite, qui se vide | Ce soigneur est en train de boire (« Soigneur qui boit », même partie) : attendez qu'il ait fini avant d'avancer |
 | Rouge sombre au bout de la vie | Un affaiblissement « mange » cette part de vie : vos soins la remplissent d'abord, avant de compter |
@@ -310,7 +311,7 @@ Les fenêtres des macros, du placement des éléments, du rapport de bug, du jou
 
 Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper.
 
-- **Vie et portée** : soins en route, bouclier, voile de vie basse (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
+- **Vie et portée** : soins en route, bouclier et son chiffre (éteint au départ), voile de vie basse (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale.
 - **Affaiblissements** : dissipation, icônes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
 - **Joueurs** : icône de rôle, marqueur de raid, chef de groupe, gros défensifs, invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
@@ -321,7 +322,7 @@ Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Ri
 
 ### Vos soins sur la durée (chapitre Mes soins)
 
-Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit vos soins sur la durée et vos boucliers, plus les sorts de votre liste. Ces icônes, comme celles des affaiblissements, des coins et la bordure de dissipation, sont dessinées par le jeu lui-même : elles restent visibles en plein combat, même quand le jeu cache les auras aux addons. Le nom et la vie restent toujours lisibles par-dessus. Un sort de la liste des affaiblissements à ignorer ou importants peut s'écrire par son nom ou par son numéro ; un nom est reconnu en combat dès que Lyorune a vu l'affaiblissement une fois hors combat.
+Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit vos soins sur la durée et vos boucliers (prêtre : Mot de pouvoir : Bouclier et Égide divine ; paladin : Veille de la Lumière et Serment de lumière, avec ses bénédictions de protection), plus les sorts de votre liste. Le chiffre du bouclier allumé, l'icône de votre bouclier dit aussi ce qui lui reste quand le jeu le laisse lire ; sinon, elle garde son décompte et le chiffre de la case dit ce qui reste. Ces icônes, comme celles des affaiblissements, des coins et la bordure de dissipation, sont dessinées par le jeu lui-même : elles restent visibles en plein combat, même quand le jeu cache les auras aux addons. Le nom et la vie restent toujours lisibles par-dessus. Un sort de la liste des affaiblissements à ignorer ou importants peut s'écrire par son nom ou par son numéro ; un nom est reconnu en combat dès que Lyorune a vu l'affaiblissement une fois hors combat.
 
 - **Nombre de soins affichés** : de 1 à 6 par case (4 au départ). Dans le chapitre Affaiblissements, **Nombre d'affaiblissements** (réglages fins de la partie Icônes) fait de même pour les affaiblissements : de 2 à 5 (2 au départ). Ceux que vous pouvez dissiper passent toujours en premier, le plus important d'abord : **Affaiblissements à dissiper** (partie Icônes) en montre de 1 à 3 (2 au départ), et la rangée s'allonge d'autant. Un changement fait en combat s'applique dès la fin du combat.
 - **Icônes ou barres fines** : choisissez l'affichage. Sur les icônes, quatre réglages fins se combinent comme vous voulez :

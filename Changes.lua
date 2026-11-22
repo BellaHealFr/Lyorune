@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.40.0", date = "2026-11-22",
+		added = {
+			"Chiffre du bouclier : ce qui reste à absorber (« +1,2k »), tous boucliers comptés, même en combat ; il s'efface quand le dernier bouclier est cassé ou fini (chapitre Vie et portée, éteint au départ).",
+			"Boucliers suivis sur les cases : Égide divine pour le prêtre, Veille de la Lumière et Serment de lumière pour le paladin.",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.39.1", date = "2026-11-22",
 		added = {
 			"Variante « Sur un tank » : le « + » d'une ligne donne au même clic un autre sort ou un autre rang sur un tank (par exemple le rang le plus haut sur lui, un rang économe sur les autres). Toujours juste dans le cadre « Tanks » et les cadres par rôle, même en combat ; ailleurs, posée hors combat selon le rôle de chacun et reposée à la fin du combat.",

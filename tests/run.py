@@ -8482,6 +8482,64 @@ step("1.39.1 : variante sur un tank (cadres tries par role surs en combat, autre
   assert(ok, err)
 end)
 
+step("1.40.0 : chiffre du bouclier (meme en combat, cache sans bouclier), boucliers du pretre et du paladin suivis", function()
+  local b = Z.buttons[1]
+  local old = { text = Z.db.absorbText, shape = Z.db.shape, absorb = Z.db.showAbsorb, class = Z.class }
+  local ok, err = pcall(function()
+    assert(Z.defaults.absorbText == false, "chiffre du bouclier eteint au depart")
+    Z:Refresh()
+    assert(not b.absorbSwitch:IsShown(), "chiffre affiche alors qu'il est eteint")
+    Z.db.absorbText = true Z:Refresh()
+    assert(b.absorbSwitch:IsShown(), "chiffre absent une fois allume")
+    -- total du jeu ecrit tel quel, la barre de 0 a 1 le montre
+    ABSORB_TOTAL = 1200
+    Z.cellUpdates.prediction(b)
+    assert(b.absorbText:GetText() == "+1200", "chiffre : " .. tostring(b.absorbText:GetText()))
+    assert(b.absorbSwitch:GetValue() == 1200, "barre du chiffre non remplie")
+    -- plus de bouclier : la barre se vide (le jeu coupe alors le texte)
+    ABSORB_TOTAL = 0
+    Z.cellUpdates.prediction(b)
+    assert(b.absorbSwitch:GetValue() == 0, "barre du chiffre restee pleine")
+    -- en combat : total secret, ecrit sans erreur ni comparaison
+    ABSORB_TOTAL = MakeSecret()
+    Z.cellUpdates.prediction(b)
+    ABSORB_TOTAL = nil
+    -- Barre : le texte de vie recule pour laisser la place au chiffre
+    Z.db.shape = "BAR" Z:Refresh()
+    assert(b.absorbSwitch:IsShown(), "chiffre absent en Barre")
+    -- sans bande de bouclier, pas de chiffre
+    Z.db.showAbsorb = false Z:Refresh()
+    assert(not b.absorbSwitch:IsShown(), "chiffre sans bouclier")
+    Z.db.showAbsorb, Z.db.shape = true, old.shape Z:Refresh()
+    -- options et recherche
+    local labels = table.concat(Z:OptionLabels(), "|")
+    assert(labels:find("Chiffre du bouclier", 1, true), "chiffre absent de la recherche")
+    -- ancien affichage : ce qui reste de mon bouclier sur son icone, quand l'aura se lit
+    Z.class = "PRIEST" Z:BuildData()
+    assert(Z.absorbIds[17] and Z.absorbIds[431622], "boucliers du pretre non reconnus")
+    AURAS["HELPFUL|PLAYER"] = { { name = "Mot de pouvoir : Bouclier", icon = 1, auraInstanceID = 51, spellId = 17, points = { 950 } } }
+    Z:Refresh() FireEvent("UNIT_AURA", "player") RunUpdates()
+    local icon = b.hots[1]
+    assert(icon and icon:IsShown() and icon.count:GetText() == "950", "reste du bouclier : " .. tostring(icon and icon.count:GetText()))
+    -- montant cache : l'icone garde son decompte, rien d'invente
+    AURAS["HELPFUL|PLAYER"][1].points = MakeSecret()
+    FireEvent("UNIT_AURA", "player") RunUpdates()
+    assert(icon.count:GetText() ~= "950", "ancien reste garde")
+    AURAS["HELPFUL|PLAYER"][1].spellId = MakeSecret()
+    FireEvent("UNIT_AURA", "player") RunUpdates()
+    AURAS = {}
+    -- sorts suivis : Egide divine, Veille de la Lumiere (et le buff qu'elle laisse), Serment de lumiere
+    local function has(list, id) for _, v in ipairs(list) do if v == id then return true end end end
+    assert(has(Z.trackedSpells.PRIEST, 431622), "Egide divine non suivie")
+    assert(has(Z.trackedSpells.PALADIN, 1310911) and has(Z.trackedSpells.PALADIN, 1328548), "sorts du paladin non suivis")
+    assert(has(Z.spellRanks[1310911], 1310909), "buff de Veille de la Lumiere absent des rangs")
+  end)
+  ABSORB_TOTAL, AURAS = nil, {}
+  Z.db.absorbText, Z.db.shape, Z.db.showAbsorb, Z.class = old.text, old.shape, old.absorb, old.class
+  Z:BuildData() Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

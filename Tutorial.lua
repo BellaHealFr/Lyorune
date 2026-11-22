@@ -109,6 +109,7 @@ local steps = {
 				local shield = db.absorbStyle == "FOLLOW" and "La |cff%spart claire|r qui prolonge la vie est un bouclier."
 					or "La |cff%sbande claire|r en bas de la case est un bouclier."
 				text = text .. (db.showIncoming and " " or "\n\n") .. L[shield]:format(Hex(theme.absorb))
+				if db.absorbText then text = text .. " " .. L["Son petit chiffre dit ce qui reste à absorber, même en combat."] end
 			end
 			-- Mana (étape 23) : seulement ce qui est allumé, et rien sur ma mana pour une classe sans mana
 			local mana = {}

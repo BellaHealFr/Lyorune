@@ -76,6 +76,7 @@ function Obj:GetText() return self._text or "" end
 function Obj:GetPoint() return "CENTER", nil, "CENTER", 0, 0 end
 function Obj:GetIncomingHeals() return 10, 5, 5, false end
 function Obj:GetDamageAbsorbs() return 3, false end
+function Obj:GetTotalDamageAbsorbs() if ABSORB_TOTAL == nil then return 4 end return ABSORB_TOTAL end
 function Obj:GetRGB() return 1, 1, 1 end
 function Obj:GetRGBA() return 1, 1, 1, 1 end
 function Obj:SetAlphaFromBoolean(b, x, y) assert(type(x) == "number" and type(y) == "number") end

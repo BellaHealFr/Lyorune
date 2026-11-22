@@ -39,11 +39,15 @@ Z.DISPEL_OTHERS = "HARMFUL|!RAID"
 
 -- Mes sorts à suivre sur les cadres (soins sur la durée, boucliers, protections)
 Z.trackedSpells = {
-	PRIEST  = { 139, 17, 401859, 6346, 552, 10060 },   -- Rénovation, Mot de pouvoir : Bouclier, Prière de guérison, Gardien de peur, Abolir maladie, Infusion de puissance
+	PRIEST  = { 139, 17, 431622, 401859, 6346, 552, 10060 }, -- Rénovation, Mot de pouvoir : Bouclier, Égide divine, Prière de guérison, Gardien de peur, Abolir maladie, Infusion de puissance
 	DRUID   = { 774, 8936, 408120, 2893, 29166 },      -- Récupération, Rétablissement, Croissance sauvage, Abolir le poison, Innervation
-	PALADIN = { 1022, 6940, 1044, 19752 },             -- Bénédictions de protection, de sacrifice, de liberté, Intervention divine
+	PALADIN = { 1022, 6940, 1044, 19752, 1310911, 1328548 }, -- Bénédictions de protection, de sacrifice, de liberté, Intervention divine, Veille de la Lumière, Serment de lumière (sorts de WoW Forever)
 	SHAMAN  = { 22419, 408514 },                       -- Remous, Bouclier de terre
 }
+
+-- Boucliers d'absorption parmi mes sorts suivis : avec le chiffre du bouclier (absorbText), l'ancien affichage
+-- des icônes (Auras.lua) écrit sur l'icône ce qui reste à absorber, quand le jeu laisse lire l'aura. Tous rangs.
+Z.absorbSpells = { 17, 431622 }                       -- Mot de pouvoir : Bouclier, Égide divine
 
 -- Autres rangs des sorts suivis : sur WoW Forever, chaque rang a son propre numéro, et les conteneurs d'auras
 -- du jeu (Containers.lua) ne montrent que les numéros donnés. Avec tous les rangs, un rang inférieur lancé
@@ -57,6 +61,7 @@ Z.spellRanks = {
 	[1022] = { 5599, 10278 },                                                  -- Bénédiction de protection
 	[6940] = { 20729 },                                                        -- Bénédiction de sacrifice
 	[29166] = { 456195 },                                                      -- Innervation (variante trouvée dans le jeu)
+	[1310911] = { 1310909, 1311593, 1311597 },                                 -- Veille de la Lumière : le buff laissé, rangs 1 à 3
 	-- Buffs de Z.raidBuffs et Z.uniqueBuffs : le jeu les dessine en combat sur les cases (Containers.lua, repères
 	-- des buffs), seulement aux numéros donnés. Vérifiés hors jeu (HealKit, PallyPower, VuhDo, WhatsTraining).
 	[1243]  = { 1244, 1245, 2791, 10937, 10938 },                              -- Mot de pouvoir : Robustesse
@@ -466,6 +471,11 @@ function Z:BuildData()
 			end
 			Z.rankIds[name] = set
 		end
+	end
+	Z.absorbIds = {}
+	for _, id in ipairs(Z.absorbSpells) do
+		Z.absorbIds[id] = true
+		for rank in pairs(Z.rankIds[Z.SpellName(id) or ""] or {}) do Z.absorbIds[rank] = true end
 	end
 	-- Numéros des gros défensifs de toutes les classes, vérifiés par leur nom : Z.defensiveIds[871] = true
 	Z.defensiveIds = {}

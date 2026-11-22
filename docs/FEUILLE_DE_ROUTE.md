@@ -50,7 +50,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | Publiée (v1.38.0) |
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, hors combat), aucun soin sur un ennemi | Publiée (v1.39.0) |
 | 27 b bis | 1.39.1 | Variante « sur un tank » (selon le rôle) | Publiée (v1.39.1) |
-| 27 c | 1.40.0 | Boucliers du prêtre et du paladin : ce qui reste à absorber, même en combat, et leur fin (priorité haute) | À faire |
+| 27 c | 1.40.0 | Boucliers du prêtre et du paladin : ce qui reste à absorber, même en combat, et leur fin (priorité haute) | Publiée (v1.40.0) |
 | 27 d | 1.41.0 | Mes recharges, Pénitence | À faire |
 | 28 | 1.42.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
 | 29 a | 1.43.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
@@ -855,8 +855,21 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   disposition et fin du combat. Ordre : ennemi, JcJ, tank (le sort hors combat ne compte plus), hors combat.
   Proposée seulement pour un raccourci qui lance un sort. Tests (1.39.1). **À essayer en jeu** : un tank dans le
   cadre « Tanks » et dans un groupe mélangé ; un tank qui rejoint en plein combat (essai n° 7 du plan).
-- [ ] 27 c (1.40.0), **priorité haute (demande de l'auteur, 22 novembre 2026)** : boucliers du prêtre et du
+- [x] 27 c (1.40.0), **priorité haute (demande de l'auteur, 22 novembre 2026)** : boucliers du prêtre et du
   paladin, ce qui reste à absorber (même en combat) et leur fin (voir `PLAN-CORRECTIF.md`, 1c-2, S4 et S5).
+  Choix de l'auteur (les quatre recommandés) : « Chiffre du bouclier » (`absorbText`, éteint au départ, chapitre
+  Vie et portée, sous « Place du bouclier ») : total du jeu (`GetTotalDamageAbsorbs`, secret) écrit par
+  `AbbreviateNumbers`, « +1,2k », à la couleur du bouclier éclaircie ; « 0 » caché sans comparaison : texte dans
+  un cadre qui coupe, accroché au remplissage d'une barre de 0 à 1 (`UpdateAbsorbText`, Frames.lua). Place : en
+  bas à droite (Tuile, Carré), au bout du texte de vie qui recule d'autant (Barre, Bandeau) ; suit le décalage du
+  texte de vie dans l'éditeur. Sorts suivis : Égide divine (431622) pour le prêtre, Veille de la Lumière (1310911,
+  buff 1310909, 1311593, 1311597) et Serment de lumière (1328548) pour le paladin. Mon bouclier : reste écrit sur
+  son icône dans l'ancien affichage quand `points` se lit (`ShieldLeft`, Auras.lua, `Z.absorbSpells`) ; les
+  icônes des conteneurs du jeu sont des objets protégés : décompte seul, le chiffre de la case dit ce qui reste.
+  Comparaison : HealKit (aucun chiffre ; barre de 0 à 1 pour ses avertissements), HealBot (chiffre seulement non
+  secret : absent en combat), VuhDo (total en mode secret, « 0 » compris ; reste par bouclier via le journal de
+  combat, fermé sur Forever). À essayer en jeu : chiffre en combat, « 0 » bien caché (essai n° 3), effet réel de
+  Veille de la Lumière et d'Égide divine sur Forever (essai n° 5).
 - [ ] 27 d (1.41.0) : rangée « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
 
 ## Étape 28 : affaiblissements (1.42.0)

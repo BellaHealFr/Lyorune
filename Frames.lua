@@ -109,6 +109,16 @@ local function ClassColor(unit, extra)
 	return Z.ClassColor(class)
 end
 
+-- Chiffre du bouclier (réglage absorbText) : le total de tous les boucliers posés, secret, écrit par le jeu.
+-- Pour ne pas afficher « +0 » sans rien comparer, le texte est rangé dans un cadre qui le coupe, accroché au
+-- remplissage d'une barre de 0 à 1 : le moindre bouclier la remplit, zéro la laisse vide et le texte disparaît.
+local function UpdateAbsorbText(b, absorbs)
+	local total = healCalculator.GetTotalDamageAbsorbs and healCalculator:GetTotalDamageAbsorbs() or absorbs
+	if total == nil then return end
+	b.absorbSwitch:SetValue(total)
+	b.absorbText:SetFormattedText("+%s", AbbreviateNumbers(total))
+end
+
 -- Soins en route, bouclier, et absorption de soins : trois montants calculés par le jeu, lisibles en combat
 local function UpdatePrediction(b)
 	if not (db.showIncoming or db.showAbsorb or db.showHealAbsorb) then return end
@@ -122,6 +132,7 @@ local function UpdatePrediction(b)
 	b.absorb:SetValue(absorbs)
 	-- Bouclier plus grand que la vie manquante : le jeu le dit par un booléen (secret), branché sur l'opacité
 	if b.overAbsorb:IsShown() and clamped ~= nil then b.overAbsorb:SetAlphaFromBoolean(clamped, 1, 0) end
+	if b.absorbSwitch:IsShown() then UpdateAbsorbText(b, absorbs) end
 	if healCalculator.GetHealAbsorbs then
 		b.healAbsorb:SetMinMaxValues(0, max)
 		b.healAbsorb:SetValue((healCalculator:GetHealAbsorbs()))
@@ -635,12 +646,34 @@ end
 -- Le marqueur et l'icône centrale suivent aussi l'éditeur de placement. Ces places d'origine sont aussi
 -- décrites dans Placement.lua (Origins), qui borne les décalages au bord de la case : à changer ensemble.
 -- Largeur du nom et du texte de vie : Z.TextWidth, qui les fait rétrécir quand ils sont poussés vers un bord.
+-- Chiffre du bouclier (absorbText) : sur la ligne du texte de vie, dont il suit le décalage de l'éditeur de
+-- placement. Barre et Bandeau : au bout du texte de vie, qui recule d'autant ; Tuile et Carré : en bas à droite.
+local function AbsorbSize()
+	local size = math.max(7, db.fontSize + (Z:Theme().fontBonus or 0) - 2)
+	return math.floor(size * 3.4), size + 4
+end
+
+local function PlaceAbsorbText(b, inline)
+	local switch = b.absorbSwitch
+	local width, height = AbsorbSize()
+	local dx, dy = Z.Offset("text")
+	switch:ClearAllPoints()
+	switch:SetSize(width, height)
+	if inline then
+		switch:SetPoint("RIGHT", b.hp, "RIGHT", b.rows.textX + dx, dy)
+	else
+		switch:SetPoint("BOTTOMRIGHT", b.hp, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT"), 2 + dy)
+	end
+end
+
 local function PlaceTexts(b, icon)
+	local shield = db.showAbsorb and db.absorbText
 	if Z:Shape().inline then
 		Place(b.role, "role", "LEFT", b.hp, "LEFT", 3, 0)
 		Place(b.name, "name", "LEFT", b.hp, "LEFT", b.rows.nameX, 0) -- après l'icône de rôle, à sa taille
 		b.name:SetJustifyH("LEFT")
-		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", b.rows.textX, 0) -- en Bandeau, à gauche du bloc d'icônes
+		-- en Bandeau, à gauche du bloc d'icônes (et du chiffre du bouclier)
+		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", b.rows.textX - (shield and AbsorbSize() + 2 or 0), 0)
 		b.text:SetJustifyH("RIGHT")
 		Place(b.leader, "leader", "CENTER", b.role, "TOPRIGHT", 0, 0) -- petit badge sur l'icône de rôle
 	else
@@ -657,6 +690,7 @@ local function PlaceTexts(b, icon)
 	Place(b.marker, "marker", "CENTER", b.over, "TOP", 0, -1)
 	Place(b.center, "center", "CENTER", b.over, "CENTER", 0, 0)
 	Place(b.lowMana, "lowMana", "BOTTOMLEFT", b.hp, "BOTTOMLEFT", 2, 2)
+	if shield then PlaceAbsorbText(b, Z:Shape().inline) end
 end
 
 local function Style(b)
@@ -690,6 +724,7 @@ local function Style(b)
 	end
 	b.overAbsorb:SetShown(db.showAbsorb and follow)
 	b.overAbsorb:SetAlpha(0)
+	b.absorbSwitch:SetShown(db.showAbsorb and db.absorbText)
 	b.healAbsorb:SetStatusBarTexture(texture)
 	b.healAbsorb:SetStatusBarColor(unpack(theme.healAbsorb or HEAL_ABSORB_COLOR))
 	b.healAbsorb:SetWidth(width - 2 * inset)
@@ -720,6 +755,12 @@ local function Style(b)
 	local size = db.fontSize + (theme.fontBonus or 0)
 	b.name:SetFont(theme.font, size, theme.flags)
 	b.text:SetFont(theme.font, size - 1, theme.flags)
+	if db.showAbsorb and db.absorbText then
+		-- Couleur du bouclier du thème, éclaircie pour rester lisible sur la vie
+		local shield = theme.absorb
+		b.absorbText:SetFont(theme.font, (select(2, AbsorbSize())) - 4, theme.flags)
+		b.absorbText:SetTextColor(shield[1] + (1 - shield[1]) * 0.4, shield[2] + (1 - shield[2]) * 0.4, shield[3] + (1 - shield[3]) * 0.4)
+	end
 
 	local icon = Z.IconSize()
 	b.iconSize = icon
@@ -886,6 +927,25 @@ function Z.BuildVisuals(b)
 	b.text = UI.Text(top, 10)
 	b.text:SetPoint("BOTTOM", hp, "BOTTOM", 0, 4)
 	b.text:SetWordWrap(false)
+
+	-- Chiffre du bouclier : barre de 0 à 1 invisible ; le cadre qui coupe le texte s'arrête au bout de son
+	-- remplissage (UpdateAbsorbText). Aucun bouclier : remplissage nul, texte coupé en entier.
+	local switch = CreateFrame("StatusBar", nil, top)
+	switch:SetSize(30, 14)
+	switch:SetStatusBarTexture(UI.WHITE)
+	switch:SetStatusBarColor(0, 0, 0, 0)
+	switch:SetMinMaxValues(0, 1)
+	switch:SetValue(0)
+	switch:Hide()
+	local clip = CreateFrame("Frame", nil, switch)
+	clip:SetPoint("TOPLEFT")
+	clip:SetPoint("BOTTOMRIGHT", switch:GetStatusBarTexture(), "BOTTOMRIGHT")
+	clip:SetClipsChildren(true)
+	b.absorbText = UI.Text(clip, 9)
+	b.absorbText:SetAllPoints(switch)
+	b.absorbText:SetJustifyH("RIGHT")
+	b.absorbText:SetWordWrap(false)
+	b.absorbSwitch = switch
 
 	b.role = top:CreateTexture(nil, "ARTWORK")
 	b.role:SetPoint("TOPRIGHT", -2, -2)
