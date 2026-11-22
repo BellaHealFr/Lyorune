@@ -649,18 +649,23 @@ local function BuffWatchList(page, width)
 			local name = Z.SpellName(ids[1]) or ("#" .. ids[1])
 			if entry.blessing then name = L["Bénédictions (une de vous par joueur)"]
 			elseif entry.weapon then name = L["Enchantement de l'arme"]
+			elseif entry.aura then name = L["Aura (la dernière lancée)"]
 			else
 				for _, id in ipairs(entry.any or {}) do name = name .. L[" ou "] .. (Z.SpellName(id) or "#" .. id) end
+				-- sa version de groupe sur la même ligne (Prière de robustesse...) : un seul réglage pour les deux
+				local group = entry[2] and Z.SpellName(entry[2])
+				if group then name = name .. "  |cffb3b3b3+ " .. group .. "|r" end
 				if entry.self then name = name .. "  |cffb3b3b3(" .. L["sur vous"] .. ")|r" end
 			end
-			if known or not entry.racial then -- sort de race d'une autre race : rien à régler
+			local passive = not (entry.blessing or entry.weapon or entry.aura) and Z.IsPassive(ids[1])
+			if (known or not entry.racial) and not passive then -- sort de race d'une autre race, sort passif : rien à régler
 				list[#list + 1] = { id = ids[1], pve = entry.pve, pvp = entry.pvp, name = name, known = known,
 					icon = icon or Z.SpellIcon(ids[1]) }
 			end
 		end
 		for _, entry in ipairs(Z.uniqueBuffs[Z.class] or {}) do
 			entry = type(entry) == "table" and entry or { entry }
-			list[#list + 1] = { id = entry[1], pve = entry.pve, pvp = entry.pvp, known = Z.Knows(entry[1]), icon = Z.SpellIcon(entry[1]),
+			list[#list + 1] = { id = entry[1], pve = entry.pve, pvp = entry.pvp, known = Z.Knows(entry[1]), icon = Z.SpellIcon(entry[1]), unique = true,
 				name = (Z.SpellName(entry[1]) or "#" .. entry[1]) .. "  |cffb3b3b3(" .. L["une personne"] .. ")|r" }
 		end
 		return list
@@ -675,8 +680,62 @@ local function BuffWatchList(page, width)
 			if AfterChange then AfterChange() end
 		end
 	end
+	-- Buff à une personne : une 2e ligne « Sur : Tank / Moi / Un joueur », le nom et « Ma cible » (Z.SetBuffBearer)
+	local MODES = { { "TANK", "Tank" }, { "ME", "Moi" }, { "NAME", "Un joueur" } }
+	local function Bearer(row)
+		row.on = UI.Label(row, 11, nil, "dim")
+		row.on:SetPoint("TOPLEFT", 28, -WATCH_ROW - 4)
+		row.on:SetText(L["Sur :"])
+		row.modes = {}
+		for m, mode in ipairs(MODES) do
+			local button = UI.Button(row, L[mode[2]], 70, 20, function()
+				local _, name = Z.BuffBearer(row.entry.id)
+				Z.SetBuffBearer(row.entry.id, mode[1], name)
+				box:Update()
+				if AfterChange then AfterChange() end
+			end)
+			button:SetPoint("TOPLEFT", 62 + (m - 1) * 74, -WATCH_ROW)
+			row.modes[m] = button
+		end
+		row.edit = UI.Edit(row, 120, function(text)
+			local name = Z.CleanPinName(text)
+			Z.SetBuffBearer(row.entry.id, name and "NAME" or "TANK", name)
+			box:Update()
+			if AfterChange then AfterChange() end
+		end)
+		row.edit:SetPoint("TOPLEFT", 62 + 3 * 74 + 4, -WATCH_ROW - 1)
+		Placeholder(row.edit, "Nom, puis Entrée")
+		row.pick = UI.Button(row, L["Ma cible"], 74, 20, function()
+			local name = Z.UnitPinName("target")
+			if not name then
+				Z:Print(L["ciblez d'abord le joueur qui doit recevoir ce buff."])
+				return
+			end
+			Z.SetBuffBearer(row.entry.id, "NAME", name)
+			box:Update()
+			if AfterChange then AfterChange() end
+		end)
+		row.pick:SetPoint("LEFT", row.edit, "RIGHT", 6, 0)
+		row.pick.tip = L["Le joueur que vous ciblez reçoit ce buff."]
+	end
+	local function ShowBearer(row)
+		local unique = row.entry.unique
+		if unique and not row.modes then Bearer(row) end
+		if not row.modes then return end
+		local mode, name = Z.BuffBearer(row.entry.id)
+		row.on:SetShown(unique)
+		for m, button in ipairs(row.modes) do
+			UI.SetTab(button, MODES[m][1] == mode)
+			button:SetShown(unique)
+		end
+		local named = unique and mode == "NAME"
+		row.edit:SetShown(named)
+		row.pick:SetShown(named)
+		if named and not row.edit.focused then row.edit:SetText(name or "") end
+	end
 	box.Update = function(self)
 		local entries = Entries()
+		local y = 28
 		for i, entry in ipairs(entries) do
 			local row = self.lines[i]
 			if not row then
@@ -684,11 +743,10 @@ local function BuffWatchList(page, width)
 				row:SetSize(width, WATCH_ROW)
 				row.icon = row:CreateTexture(nil, "ARTWORK")
 				row.icon:SetSize(18, 18)
-				row.icon:SetPoint("LEFT", 2, 0)
+				row.icon:SetPoint("TOPLEFT", 2, -(WATCH_ROW - 18) / 2) -- en haut : un buff à une personne a une 2e ligne
 				row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 				row.name = UI.Label(row, 12)
 				row.name:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
-				row.name:SetPoint("RIGHT", WATCH_RIGHT - WATCH_GAP - 32, 0)
 				row.name:SetJustifyH("LEFT")
 				row.name:SetWordWrap(false)
 				row.entry = entry -- avant les cases : elles lisent leur état dès leur création
@@ -696,14 +754,18 @@ local function BuffWatchList(page, width)
 				for c, context in ipairs({ "pve", "pvp" }) do
 					local check = UI.Check(row, "", Toggle(row, context))
 					check:SetSize(20, 20)
-					check:SetPoint("RIGHT", WATCH_RIGHT - (2 - c) * WATCH_GAP, 0)
+					check:SetPoint("TOPRIGHT", WATCH_RIGHT - (2 - c) * WATCH_GAP, -(WATCH_ROW - 20) / 2)
 					row.checks[c] = check
 				end
+				row.name:SetPoint("RIGHT", row.checks[1], "LEFT", -12, 0)
 				self.lines[i] = row
 			end
 			row.entry = entry
 			row:ClearAllPoints()
-			row:SetPoint("TOPLEFT", 0, -28 - (i - 1) * WATCH_ROW)
+			row:SetPoint("TOPLEFT", 0, -y)
+			row:SetHeight(entry.unique and WATCH_ROW * 2 + 2 or WATCH_ROW)
+			y = y + row:GetHeight()
+			ShowBearer(row)
 			row.icon:SetTexture(entry.icon)
 			row.name:SetText(entry.name)
 			row.name:SetAlpha(entry.known and 1 or DIMMED) -- pas encore appris : grisé, mais réglable
@@ -718,12 +780,13 @@ local function BuffWatchList(page, width)
 			if first then column:SetPoint("BOTTOM", first.checks[c].box, "TOP", 0, 6) end -- centré sur ses cases
 			column:SetShown(#entries > 0)
 		end
-		Fit(self, 28 + math.max(1, #entries) * WATCH_ROW)
+		Fit(self, math.max(y, 28 + WATCH_ROW))
 	end
 	box:SetScript("OnShow", box.Update)
 	box:Update()
 	Z.buffWatchBox = box
-	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."])
+	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."]
+		.. " " .. L["Un buff à poser sur une seule personne se règle juste en dessous : le tank, vous, ou un joueur choisi (son nom, ou votre cible)."])
 	return box
 end
 

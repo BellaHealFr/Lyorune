@@ -96,40 +96,71 @@ local function CooldownLeft(name)
 	return left > 0 and left or nil
 end
 
--- Buffs uniques (Bouclier de terre...) : une ligne pour le joueur choisi (/lyorune porteur), sinon pour le tank,
--- tant que le mien n'est posé sur personne, s'il est dans ma liste et s'il n'est pas en recharge (le panneau se
--- relit à la fin de la recharge). Lu sur les cases visibles (b.myUniques, Auras.lua).
+-- Une ligne de buff unique pour son porteur, si elle est à proposer
+local function UniqueRow(result, check, placed, target, why)
+	local wanted = not placed[check.name] and Z.BuffWatched(check)
+	local wait = wanted and CooldownLeft(check.spell)
+	if wait then
+		-- un seul rendez-vous à la fois : le panneau se relit souvent hors combat
+		local at = GetTime() + wait
+		if not (cooldownAt and cooldownAt > GetTime() and cooldownAt <= at) then
+			cooldownAt = at
+			C_Timer.After(wait + 0.2, function() Z:QueueBuffPanel() end)
+		end
+	elseif wanted then
+		result[#result + 1] = { check = check, spell = check.spell, icon = check.icon, unit = target.unit,
+			name = target.name, class = select(2, UnitClass(target.unit)), why = why }
+	end
+end
+
+-- Sur qui poser un buff unique : « TANK » (départ), « ME » (moi) ou « NAME » (un joueur choisi, name). Choix par
+-- buff dans « Mes buffs » (Z.char.buffTarget.byId), sinon le joueur de /lyorune porteur (buffTarget.name), sinon
+-- le tank. Gardé pour ce personnage.
+function Z.BuffBearer(id)
+	local target = Z.char.buffTarget
+	local chosen = target.byId and target.byId[id]
+	if chosen then return chosen.mode, chosen.name end
+	if target.name then return "NAME", target.name end
+	return "TANK"
+end
+
+function Z.SetBuffBearer(id, mode, name)
+	local target = Z.char.buffTarget
+	target.byId = target.byId or {}
+	target.byId[id] = { mode = mode, name = mode == "NAME" and name or nil }
+	Z:QueueBuffPanel()
+end
+
+-- Buffs uniques (Bouclier de terre...) : une ligne par buff pour son porteur (Z.BuffBearer) : le joueur choisi,
+-- moi, ou le tank ; joueur choisi absent : le tank ; pas de tank : moi. Seulement tant que le mien n'est posé sur
+-- personne, s'il est dans ma liste et s'il n'est pas en recharge (le panneau se relit à la fin de la recharge).
+-- Lu sur les cases visibles (b.myUniques, Auras.lua).
 local function UniqueRows(result)
 	if #Z.uniqueChecks == 0 then return end
-	local placed, chosen, tank = {}, nil, nil
-	local wanted = Z.char.buffTarget.name
+	local placed, members, tank, me = {}, {}, nil, nil
 	for _, b in ipairs(Z.buttons) do
 		local unit = b.unit
 		if unit and not b.extra and b:IsVisible() and not unit:find("pet", 1, true) then
 			for name in (b.myUniques or ""):gmatch("[^,]+") do placed[name] = true end
 			local name = Z.UnitPinName(unit)
-			if name and wanted and name == wanted then chosen = chosen or { unit = unit, name = name } end
-			local role = UnitGroupRolesAssigned(unit)
-			if name and not issecret(role) and role == "TANK" then tank = tank or { unit = unit, name = name } end
+			if name then
+				local player = { unit = unit, name = name }
+				members[name] = members[name] or player
+				local role = UnitGroupRolesAssigned(unit)
+				if not issecret(role) and role == "TANK" then tank = tank or player end
+				local isMe = UnitIsUnit(unit, "player")
+				if not issecret(isMe) and isMe then me = me or player end
+			end
 		end
 	end
-	local target, why = chosen, Z.L["choisi"]
-	if not target then target, why = tank, Z.L["tank"] end
-	if not target then return end
 	for _, check in ipairs(Z.uniqueChecks) do
-		local wanted = not placed[check.name] and Z.BuffWatched(check)
-		local wait = wanted and CooldownLeft(check.spell)
-		if wait then
-			-- un seul rendez-vous à la fois : le panneau se relit souvent hors combat
-			local at = GetTime() + wait
-			if not (cooldownAt and cooldownAt > GetTime() and cooldownAt <= at) then
-				cooldownAt = at
-				C_Timer.After(wait + 0.2, function() Z:QueueBuffPanel() end)
-			end
-		elseif wanted then
-			result[#result + 1] = { check = check, spell = check.spell, icon = check.icon, unit = target.unit,
-				name = target.name, class = select(2, UnitClass(target.unit)), why = why }
-		end
+		local mode, name = Z.BuffBearer(check.id)
+		local target, why
+		if mode == "NAME" and members[name] then target, why = members[name], Z.L["choisi"]
+		elseif mode == "ME" and me then target, why = me, Z.L["vous"] end
+		if not target and tank then target, why = tank, Z.L["tank"] end
+		if not target and me then target, why = me, Z.L["vous"] end
+		if target then UniqueRow(result, check, placed, target, why) end
 	end
 end
 
@@ -340,6 +371,7 @@ function Z:BuffTargetCommand(text)
 		local hovered = Z.hovered and Z.hovered:IsVisible() and Z.hovered.unit
 		name = Z.UnitPinName(hovered) or Z.UnitPinName("target")
 	end
+	target.byId = nil -- la commande vaut pour tous mes buffs uniques : les choix par buff s'effacent
 	if not name or name == target.name then
 		target.name = nil
 		Z:Print(L["buffs uniques : de retour sur le tank."])

@@ -606,7 +606,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   description du dépôt inchangés (corrections seulement). Publiée le 22 novembre 2026 (1.32.1), vérifiée hors jeu.
 
 ## Étape 26 : buffs (1.33.0 à 1.37.0)
-- [x] 26 a (1.33.0) : buffs complets du prêtre (Robustesse, Esprit divin, Protection contre l'ombre et leurs
+- [x] 26 a (1.33.0) : buffs complets du prêtre (Robustesse, Esprit divin, Protection contre l'Ombre et leurs
   prières, Feu intérieur sur soi seulement), du paladin, du chaman et du druide, toutes les absences d'un joueur ;
   ma liste de buffs, une pour le JcE et une pour le JcJ. Fait le 22 novembre 2026, vérifié hors jeu (numéros lus
   dans HealKit 1.15.0, PallyPower et VuhDo portés sur Forever ; un sort inconnu est ignoré). Décidé (carte

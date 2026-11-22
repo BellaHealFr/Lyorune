@@ -440,7 +440,12 @@ castWatcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 local function OnMyCast(spellID)
 	if not spellID or issecret(spellID) or not GetSpellName or not Z.db then return end
 	-- enchantement d'arme lancé (chaman) : c'est lui que le panneau des buffs proposera ensuite
-	if Z.weaponIds and Z.weaponIds[spellID] and Z.char then Z.char.weaponEnchant = spellID end
+	-- enchantement d'arme ou aura lancé : c'est lui que le panneau des buffs proposera ensuite
+	local line = Z.choiceIds and Z.choiceIds[spellID]
+	if line and Z.char then
+		Z.char.lastChoice = Z.char.lastChoice or {}
+		Z.char.lastChoice[line] = spellID
+	end
 	local name = GetSpellName(spellID)
 	if name and not issecret(name) and Wanted(name) then
 		lastCast, lastCastTime = name, GetTime()
@@ -457,7 +462,7 @@ weaponWatcher:SetScript("OnEvent", function()
 	if not (Z.weaponIds and next(Z.weaponIds) and Z.buttons) then return end
 	for _, b in ipairs(Z.buttons) do
 		local me = b.unit and UnitIsUnit(b.unit, "player")
-		if me and not issecret(me) then Z.QueueAuras(b) end
+		if not issecret(me) and me then Z.QueueAuras(b) end
 	end
 end)
 
@@ -689,10 +694,10 @@ local function FindMissingBuffs(b, unit)
 		if Concerns(check, unit, me) then
 			local left, choice = 0, nil
 			if check.weapon then
-				left, choice = WeaponLeft(), Z.WeaponFor(check)
+				left, choice = WeaponLeft(), Z.LastChoice(check)
 				if left > 0 then soonest = math.min(soonest, left) end -- l'arme ne prévient pas quand elle s'éteint
-			elseif check.blessing then
-				-- seule une bénédiction de moi compte : celle d'un autre paladin ne remplace pas la mienne
+			elseif check.blessing or check.aura then
+				-- seule une bénédiction ou une aura de moi compte : celle d'un autre paladin ne remplace pas la mienne
 				if not mine then
 					mine = {}
 					local own = Auras(unit, "HELPFUL|PLAYER", 16)
@@ -704,7 +709,7 @@ local function FindMissingBuffs(b, unit)
 					end
 				end
 				for name in pairs(check.names) do left = math.max(left, mine[name] or 0) end
-				choice = Z.BlessingFor(check, unit)
+				choice = check.blessing and Z.BlessingFor(check, unit) or Z.LastChoice(check)
 			else
 				for name in pairs(check.names) do left = math.max(left, present[name] or 0) end
 			end

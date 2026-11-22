@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.33.3"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.33.4"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -247,8 +247,9 @@ Z.charDefaults = {
 	extraPos = { "CENTER", 120, 200 }, -- cible, cible de la cible, focalisation
 	pinnedPos = { "CENTER", 120, 60 }, -- joueurs épinglés
 	buffPos = { "CENTER", 360, 0 },    -- panneau des buffs manquants
-	buffTarget = {},                   -- buffTarget.name : le joueur qui reçoit mes buffs uniques (sinon le tank)
-	-- weaponEnchant (sans valeur au départ) : numéro du dernier enchantement d'arme lancé (chaman, Data.lua)
+	buffTarget = {},                   -- buffTarget.name : le joueur de /lyorune porteur (tous mes buffs uniques) ;
+	                                   -- buffTarget.byId[numéro] = { mode = "TANK"/"ME"/"NAME", name } : choix par buff (Buffs.lua)
+	-- lastChoice (sans valeur au départ) : lastChoice[ligne de buff] = dernier enchantement d'arme ou aura lancé (Data.lua)
 }
 
 ----------------------------------------------------------------------------------------------------

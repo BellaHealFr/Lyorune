@@ -6854,7 +6854,7 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
   local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
   local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit, class = UnitClass,
     role = UnitGroupRolesAssigned, after = C_Timer.After, cd = C_Spell.GetSpellCooldown, zclass = Z.class,
-    instance = INSTANCE, itype = INSTANCE_TYPE, now = NOW, weapon = Z.char.weaponEnchant }
+    instance = INSTANCE, itype = INSTANCE_TYPE, now = NOW, lastChoice = Z.char.lastChoice, passive = C_Spell.IsSpellPassive }
   local ok, err = pcall(function()
     local extra = { [14752] = "Esprit divin", [27681] = "Prière d'esprit", [976] = "Protection contre l'ombre",
       [27683] = "Prière de protection contre l'ombre", [588] = "Feu intérieur",
@@ -6962,6 +6962,27 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     C_Spell.GetSpellCooldown = function() return { startTime = MakeSecret(), duration = MakeSecret(), isOnGCD = MakeSecret() } end
     assert(Fear(), "recharge secrete")
     C_Spell.GetSpellCooldown = old.cd
+    -- 1.33.4 : sur qui poser chaque buff a une personne (tank au depart, moi, un joueur choisi)
+    local third
+    for _, b in ipairs(Z.buttons) do
+      if b ~= me and b ~= other and b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then third = third or b end
+    end
+    assert(third, "faux groupe trop petit pour le porteur")
+    Z.char.buffTarget = {}
+    assert(Z.BuffBearer(6346) == "TANK" and Fear().unit == other.unit and Fear().why == "tank", "depart : le tank")
+    Z.SetBuffBearer(6346, "ME") assert(Fear().unit == me.unit and Fear().why == "vous", "sur moi")
+    GROUP_NAMES[third.unit] = "Thrall"
+    Z.SetBuffBearer(6346, "NAME", "Thrall") assert(Fear().unit == third.unit and Fear().why == "choisi", "joueur choisi")
+    Z.SetBuffBearer(6346, "NAME", "Absent") assert(Fear().unit == other.unit, "joueur choisi absent : le tank")
+    UnitGroupRolesAssigned = function() return "HEALER" end
+    assert(Fear().unit == me.unit, "ni tank ni joueur choisi : moi")
+    UnitGroupRolesAssigned = function(u) return u == other.unit and "TANK" or "HEALER" end
+    -- la commande vaut pour tous les buffs uniques et efface les choix par buff
+    Z.SetBuffBearer(6346, "ME")
+    SlashCmdList.LYORUNE("porteur thrall")
+    assert(Z.char.buffTarget.byId == nil and Z.BuffBearer(6346) == "NAME" and Fear().unit == third.unit, "commande porteur")
+    SlashCmdList.LYORUNE("porteur thrall")
+    assert(Z.BuffBearer(6346) == "TANK", "commande : retour au tank")
     Z.db.buffWatch = {}
 
     -- Paladin : une benediction de moi par joueur (Sagesse a mana, Puissance, Rois au tank et au chasseur) ;
@@ -6986,6 +7007,18 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     AURAS = {}
     Z.db.buffWatch[25780] = { pve = false } Update()
     assert(Ids(me) == "19740" and Ids(other) == "19740", "Fureur vertueuse decochee : " .. Ids(me))
+    -- auras du paladin : une des miennes suffit, la derniere lancee est proposee
+    extra[465], extra[19746] = "Aura de dévotion", "Aura de concentration"
+    Z:BuildData() Update()
+    assert(Ids(me) == "19740,465" and Ids(other) == "19740", "aura sur moi seulement : " .. Ids(me))
+    assert(Spell(me, 465) == "Aura de dévotion", "premiere aura connue")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 19746) Update()
+    assert(Spell(me, 465) == "Aura de concentration", "derniere aura lancee non proposee")
+    AURAS["HELPFUL"] = { { name = "Aura de dévotion", icon = 9, auraInstanceID = 61 } }
+    Update() assert(Ids(me) == "19740,465", "aura d'un autre paladin prise pour la mienne")
+    AURAS["HELPFUL|PLAYER"] = { { name = "Aura de concentration", icon = 9, auraInstanceID = 62 } }
+    Update() assert(not Ids(me):find("465", 1, true), "mon aura non reconnue : " .. Ids(me))
+    AURAS = {} extra[465], extra[19746] = nil, nil
     Z.db.buffWatch = {}
 
     -- Chaman : Bouclier d'eau ou de foudre sur moi, enchantement d'arme (le dernier lance)
@@ -6996,7 +7029,7 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     assert(Ids(me) == "408510,8024" and Ids(other) == "", "chaman : " .. Ids(me) .. " / " .. Ids(other))
     assert(Spell(me, 408510) == "Bouclier d'eau" and Spell(me, 8024) == "Arme Langue de feu", "sorts du chaman")
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 8017)
-    assert(Z.char.weaponEnchant == 8017, "enchantement lance non retenu")
+    assert(Z.char.lastChoice and Z.char.lastChoice[8024] == 8017, "enchantement lance non retenu")
     Update() assert(Spell(me, 8024) == "Arme Croque-roc", "dernier enchantement non propose")
     AURAS["HELPFUL"] = { { name = "Bouclier de foudre", icon = 9, auraInstanceID = 51 } }
     has, left = true, 1800000
@@ -7011,6 +7044,15 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     rawset(_G, "GetWeaponEnchantInfo", nil)
     AURAS = {}
 
+    -- Druide : Augure de clarte sur soi, jamais propose s'il est passif sur ce client
+    extra[1126], extra[16864] = "Marque du fauve", "Augure de clarté"
+    Z.class = "DRUID" Z:BuildData() Update()
+    assert(Ids(me) == "1126,16864" and Ids(other) == "1126", "druide : " .. Ids(me))
+    C_Spell.IsSpellPassive = function(id) return id == 16864 end
+    Z:BuildData() Update()
+    assert(Ids(me) == "1126", "sort passif propose : " .. Ids(me))
+    C_Spell.IsSpellPassive = old.passive extra[1126], extra[16864] = nil, nil
+
     -- Options : « Mes buffs », deux cases par buff, un choix egal au depart est efface
     Z.class = "PRIEST" Z:BuildData()
     Z:ToggleOptions("Joueurs")
@@ -7020,16 +7062,33 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     local row976
     for _, row in ipairs(box.lines) do if row:IsShown() and row.entry.id == 976 then row976 = row end end
     assert(row976 and row976.checks[1].on and row976.checks[2].on, "Protection contre l'ombre : active au depart")
+    assert(row976.name:GetText():find("Prière de protection contre l'ombre", 1, true), "version de groupe absente de la ligne : " .. row976.name:GetText())
     row976.checks[1]:Run("OnClick")
     assert(Z.db.buffWatch[976] and Z.db.buffWatch[976].pve == false, "case JcE non enregistree")
     row976.checks[1]:Run("OnClick")
     assert(Z.db.buffWatch[976] == nil, "retour au depart non efface")
+    -- buff a une personne : sa 2e ligne « Sur : Tank / Moi / Un joueur »
+    local fearRow
+    for _, row in ipairs(box.lines) do if row:IsShown() and row.entry.id == 6346 then fearRow = row end end
+    assert(fearRow and fearRow.modes and fearRow.modes[1]:IsShown() and not fearRow.edit:IsShown(), "choix du porteur absent")
+    assert(not row976.modes or not row976.modes[1]:IsShown(), "choix du porteur sur un buff de groupe")
+    fearRow.modes[2]:Run("OnClick") assert(Z.BuffBearer(6346) == "ME", "bouton Moi")
+    fearRow.modes[3]:Run("OnClick") assert(Z.BuffBearer(6346) == "NAME" and fearRow.edit:IsShown() and fearRow.pick:IsShown(), "bouton Un joueur")
+    fearRow.edit:SetText("thrall") fearRow.edit:Run("OnEnterPressed")
+    local mode, who = Z.BuffBearer(6346)
+    assert(mode == "NAME" and who == "Thrall", "nom tape : " .. tostring(who))
+    fearRow.edit:SetText("") fearRow.edit:Run("OnEnterPressed") assert(Z.BuffBearer(6346) == "TANK", "nom efface : retour au tank")
+    fearRow.modes[1]:Run("OnClick") assert(Z.BuffBearer(6346) == "TANK", "bouton Tank")
+    for _, text in ipairs({ "Sur :", "Moi", "Un joueur", "Nom, puis Entrée", "Ma cible", "vous", "ciblez d'abord le joueur qui doit recevoir ce buff." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+    Z.char.buffTarget = {} GROUP_NAMES[third.unit] = nil
     local shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
-    assert(shown == 5, "lignes du pretre : " .. shown) -- 4 buffs et Gardien de peur, sans les sorts de race que je n'ai pas
+    assert(shown == 6, "lignes du pretre : " .. shown) -- 5 buffs (Forme d'ombre grisee) et Gardien de peur, sans les sorts de race que je n'ai pas
     for _, row in ipairs(box.lines) do assert(not row:IsShown() or (row.entry.id ~= 2652 and row.entry.id ~= 18137), "sort de race d'une autre race") end
     extra[2652] = "Toucher de faiblesse" box:Update()
     shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
-    assert(shown == 6, "sort de race que j'ai : absent de Mes buffs")
+    assert(shown == 7, "sort de race que j'ai : absent de Mes buffs")
     extra[2652] = nil
     local labels = table.concat(Z:OptionLabels(), "|")
     for _, text in ipairs({ "Mes buffs", "Proposer à nouveau sous (minutes)", "Sort de groupe dès (joueurs sans le buff)" }) do
@@ -7043,7 +7102,7 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
   end)
   C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit, UnitClass = old.name, old.known, old.isUnit, old.class
   UnitGroupRolesAssigned, C_Timer.After, C_Spell.GetSpellCooldown = old.role, old.after, old.cd
-  INSTANCE, INSTANCE_TYPE, NOW, Z.char.weaponEnchant = old.instance, old.itype, old.now, old.weapon
+  INSTANCE, INSTANCE_TYPE, NOW, Z.char.lastChoice, C_Spell.IsSpellPassive = old.instance, old.itype, old.now, old.lastChoice, old.passive
   rawset(_G, "GetWeaponEnchantInfo", nil)
   for k, v in pairs(saved) do Z.db[k] = v end
   Z.class = old.zclass Z:BuildData() AURAS = {} Z:Refresh() RunUpdates()

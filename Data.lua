@@ -127,6 +127,8 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 --                        pas) ; tank : Rois, joueur à mana : Sagesse, les autres : Puissance (Z.BlessingFor)
 --   weapon = { id }      enchantement de mon arme principale (le jeu le dit à part, pas dans les auras) : le
 --                        dernier que j'ai lancé, sinon le premier connu de la liste
+--   aura = { id }        auras du paladin : une des miennes suffit ; la dernière lancée, sinon la première connue
+--   Un sort passif sur ce client (Augure de clarté, d'après HealKit) n'est jamais proposé (Z.IsPassive).
 --   racial = true       sort de race : absent de « Mes buffs » si mon personnage ne l'a pas
 --   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ. Aucun buff ne
 --                        l'est aujourd'hui : tous sont actifs au départ (demande de l'auteur, 22 novembre 2026)
@@ -135,21 +137,27 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 Z.raidBuffs = {
 	PRIEST = {
 		{ 1243, 21562 },                -- Mot de pouvoir : Robustesse, Prière de robustesse
-		{ 14752, 27681, mana = true },  -- Esprit divin, Prière d'esprit
-		{ 976, 27683 },                 -- Protection contre l'ombre, Prière de protection contre l'ombre
+		{ 14752, 27681, mana = true },  -- Esprit divin, Prière d'Esprit
+		{ 976, 27683 },                 -- Protection contre l'Ombre, Prière de protection contre l'Ombre
 		{ 588, self = true },           -- Feu intérieur
+		{ 15473, self = true },         -- Forme d'ombre (talent Ombre ; listée aussi par HealBot)
 		{ 2652, self = true, racial = true },  -- Toucher de faiblesse (sort de race)
 		{ 18137, self = true, racial = true }, -- Garde de l'ombre (sort de race)
 	},
 	PALADIN = {
 		{ blessing = { 19740, 19742, 20217, 20911 } }, -- Bénédictions de puissance, de sagesse, des rois, du sanctuaire
 		{ 25780, self = true },         -- Fureur vertueuse
+		{ aura = { 465, 19746, 7294, 20218, 19876, 19888, 19891 }, self = true }, -- Auras : dévotion, concentration,
+		                                -- châtiment, sainteté, résistance à l'ombre, au givre, au feu (listées par HealBot)
 	},
 	SHAMAN = {
 		{ 408510, any = { 324 }, self = true },        -- Bouclier d'eau, ou Bouclier de foudre
 		{ weapon = { 8024, 8017, 8232, 8033 }, self = true }, -- Arme Langue de feu, Croque-roc, Furie-des-vents, Arme de givre
 	},
-	DRUID  = { { 1126, 21849 } },               -- Marque du fauve, Don du fauve
+	DRUID  = {
+		{ 1126, 21849 },                -- Marque du fauve, Don du fauve
+		{ 16864, self = true },         -- Augure de clarté (ignoré s'il est passif sur ce client)
+	},
 	MAGE   = { { 1459, 23028, mana = true } },  -- Intelligence des arcanes, Illumination des arcanes
 }
 
@@ -241,10 +249,16 @@ function Z.SpellIcon(id)
 	return mine or C_Spell.GetSpellTexture(id)
 end
 
+-- Sort passif (il ne se lance pas) : jamais proposé comme buff. Réponse absente ou secrète : non.
+function Z.IsPassive(id)
+	local passive = C_Spell.IsSpellPassive and C_Spell.IsSpellPassive(id)
+	return passive == true
+end
+
 -- Tous les numéros d'une ligne de Z.raidBuffs ; le premier désigne la ligne (réglage « buffWatch »)
 function Z.BuffIds(entry)
 	local ids = {}
-	for _, list in ipairs({ entry.blessing or {}, entry.weapon or {}, entry, entry.any or {} }) do
+	for _, list in ipairs({ entry.blessing or {}, entry.weapon or {}, entry.aura or {}, entry, entry.any or {} }) do
 		for _, id in ipairs(list) do ids[#ids + 1] = id end
 	end
 	return ids
@@ -259,16 +273,17 @@ function Z.BuffCheck(entry)
 		local name = Z.SpellName(id)
 		if name then check.names[name] = true end
 	end
-	local choices = entry.blessing or entry.weapon
+	local choices = entry.blessing or entry.weapon or entry.aura
 	if choices then
 		check.choices = {}
 		for _, id in ipairs(choices) do
 			local name = Z.Knows(id) and Z.SpellName(id)
 			if name then check.choices[#check.choices + 1] = { id = id, name = name, icon = Z.SpellIcon(id) } end
 			if entry.weapon then Z.weaponIds[id] = true end
+			if not entry.blessing then Z.choiceIds[id] = check.id end -- le dernier lancé sera proposé (Z.LastChoice)
 		end
 		if #check.choices == 0 then return end
-		check.blessing, check.weapon = entry.blessing ~= nil, entry.weapon ~= nil
+		check.blessing, check.weapon, check.aura = entry.blessing ~= nil, entry.weapon ~= nil, entry.aura ~= nil
 		check.spell, check.icon = check.choices[1].name, check.choices[1].icon
 		return check
 	end
@@ -276,7 +291,7 @@ function Z.BuffCheck(entry)
 	local castable = { entry[1] }
 	for _, id in ipairs(entry.any or {}) do castable[#castable + 1] = id end
 	for _, id in ipairs(castable) do
-		if Z.Knows(id) then
+		if Z.Knows(id) and not Z.IsPassive(id) then
 			check.spell, check.icon = Z.SpellName(id), Z.SpellIcon(id)
 			break
 		end
@@ -323,9 +338,9 @@ function Z.BlessingFor(check, unit)
 	return check.choices[1]
 end
 
--- Enchantement d'arme à poser : le dernier que j'ai lancé (Z.char.weaponEnchant), sinon le premier connu
-function Z.WeaponFor(check)
-	local last = Z.char and Z.char.weaponEnchant
+-- Enchantement d'arme ou aura à poser : le dernier que j'ai lancé (Z.char.lastChoice), sinon le premier connu
+function Z.LastChoice(check)
+	local last = Z.char and Z.char.lastChoice and Z.char.lastChoice[check.id]
 	for _, choice in ipairs(check.choices) do
 		if choice.id == last then return choice end
 	end
@@ -347,7 +362,9 @@ function Z:BuildData()
 		if name then Z.resNames[name] = true end
 	end
 
-	Z.buffChecks, Z.weaponIds = {}, {}
+	Z.buffChecks = {}
+	Z.weaponIds = {} -- enchantements d'arme : ma case se relit quand l'arme change (Auras.lua)
+	Z.choiceIds = {} -- arme ou aura lancée -> sa ligne de buff (Z.char.lastChoice)
 	Z.buffGeneration = (Z.buffGeneration or 0) + 1 -- les cases savent que leurs buffs manquants sont à relire
 	for _, entry in ipairs(Z.raidBuffs[Z.class] or {}) do
 		local check = Z.BuffCheck(entry)

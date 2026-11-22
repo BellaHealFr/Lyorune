@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.4] - 2026-11-22
+
+### Added
+
+- Priest: Shadowform joins your buffs on you (Shadow priest), as in HealBot.
+- Paladin: your aura (Devotion, Concentration, Retribution, Sanctity, resistances) joins your buffs on you, the last one you cast. Druid: Omen of Clarity too, if it can be cast on this client (a passive spell is never offered).
+
+### Improved
+
+- Single-person buffs (Earth Shield, Thorns, Fear Ward, Oath of Light): choose their bearer in "My buffs", each its own, on the "On:" line under the buff: Tank (at first), Me, or A player (their name, or the "My target" button). The panel says who it goes to; chosen player absent: the tank, with no tank: you. /lyorune bearer stays as a shortcut for all of them at once.
+- My buffs: each buff's group version is written on its line (Power Word: Fortitude + Prayer of Fortitude, Divine Spirit + Prayer of Spirit, Shadow Protection + Prayer of Shadow Protection): one setting for both.
+
 ## [1.33.3] - 2026-11-22
 
 ### Improved
@@ -638,6 +650,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.3...v1.33.4
 [1.33.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.2...v1.33.3
 [1.33.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.0...v1.33.1

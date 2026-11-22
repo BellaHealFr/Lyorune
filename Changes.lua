@@ -8,11 +8,24 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.4", date = "2026-11-22",
+		added = {
+			"Prêtre : Forme d'ombre rejoint vos buffs sur vous (prêtre Ombre), comme dans HealBot.",
+			"Paladin : votre aura (Dévotion, Concentration, Châtiment, Sainteté, résistances) rejoint vos buffs sur vous, la dernière que vous avez lancée. Druide : Augure de clarté aussi, s'il se lance sur ce client (un sort passif n'est jamais proposé).",
+		},
+		improved = {
+			"Buffs à une personne (Bouclier de terre, Épines, Gardien de peur, Serment de lumière) : choisissez leur porteur dans « Mes buffs », chacun le sien, sur la ligne « Sur : » sous le buff : Tank (au départ), Moi, ou Un joueur (son nom, ou le bouton « Ma cible »). Le panneau dit à qui il va ; joueur choisi absent : le tank, sans tank : vous. /lyorune porteur reste comme raccourci pour tous à la fois.",
+			"Mes buffs : la version de groupe de chaque buff est écrite sur sa ligne (Mot de pouvoir : Robustesse + Prière de robustesse, Esprit divin + Prière d'Esprit, Protection contre l'Ombre + Prière de protection contre l'Ombre) : un seul réglage pour les deux.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.33.3", date = "2026-11-22",
 		added = {
 		},
 		improved = {
-			"Mes buffs : tous les buffs sont actifs au départ, en JcE comme en JcJ (Protection contre l'ombre, Fureur vertueuse et Gardien de peur compris). Décochez ce qui ne vous sert pas ; vos choix déjà faits restent les vôtres.",
+			"Mes buffs : tous les buffs sont actifs au départ, en JcE comme en JcJ (Protection contre l'Ombre, Fureur vertueuse et Gardien de peur compris). Décochez ce qui ne vous sert pas ; vos choix déjà faits restent les vôtres.",
 		},
 		fixed = {
 		},
@@ -41,8 +54,8 @@ Z.changes = {
 	{
 		version = "1.33.0", date = "2026-11-22",
 		added = {
-			"Buffs complets des soigneurs : prêtre (Robustesse, Esprit divin pour les joueurs à mana, Protection contre l'ombre, Feu intérieur et sorts de race sur vous), paladin (une bénédiction de vous par joueur : Rois pour le tank et le chasseur, Sagesse pour les joueurs à mana, Puissance pour les autres ; Fureur vertueuse au choix), chaman (Bouclier d'eau ou de foudre, enchantement de votre arme), druide (Marque du fauve). Gardien de peur et Serment de lumière rejoignent les buffs à poser sur une seule personne.",
-			"Mes buffs (chapitre Joueurs) : choisissez les buffs à surveiller, une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ). Au départ, Protection contre l'ombre ne compte qu'en JcJ ; Fureur vertueuse et Gardien de peur sont éteints.",
+			"Buffs complets des soigneurs : prêtre (Robustesse, Esprit divin pour les joueurs à mana, Protection contre l'Ombre, Feu intérieur et sorts de race sur vous), paladin (une bénédiction de vous par joueur : Rois pour le tank et le chasseur, Sagesse pour les joueurs à mana, Puissance pour les autres ; Fureur vertueuse au choix), chaman (Bouclier d'eau ou de foudre, enchantement de votre arme), druide (Marque du fauve). Gardien de peur et Serment de lumière rejoignent les buffs à poser sur une seule personne.",
+			"Mes buffs (chapitre Joueurs) : choisissez les buffs à surveiller, une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ). Au départ, Protection contre l'Ombre ne compte qu'en JcJ ; Fureur vertueuse et Gardien de peur sont éteints.",
 		},
 		improved = {
 			"Le panneau des buffs manquants montre tous les buffs qui manquent à chaque joueur, une ligne par buff, et plus seulement le premier. Nouveaux réglages : proposer à nouveau un buff qui finit dans moins de N minutes (pratique avant un boss), et le nombre de joueurs à partir duquel la version de groupe est proposée.",
