@@ -653,6 +653,15 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   au départ, avec une migration unique dans `Migrate` (Core.lua) pour les joueurs restés sur 0, l'ancienne valeur
   de départ ; un joueur qui avait choisi une autre valeur la garde. La case est déjà relue toute seule au passage du
   seuil (1.33.0), et un buff sans fin n'est jamais proposé. Textes, guide et test à mettre à jour.
+  **Bug signalé par l'auteur, priorité haute (22 novembre 2026)** : druide seul, Marque du fauve active, Épines
+  jamais proposée alors qu'elle n'est plus là ; peut toucher le raid, les instances, le JcJ et les autres classes
+  (Bouclier de terre, Gardien de peur, Serment de lumière). Constat hors jeu : jusqu'à la 1.33.3, un buff à une
+  personne n'était proposé qu'à un joueur au rôle de tank ; sans tank (seul, groupe ou raid sans rôles, JcJ), rien
+  du tout. La 1.33.4 le donne à moi s'il n'y a pas de tank, et le faux client de la 1.33.6 propose bien Épines
+  dans ce cas. À faire : vérifier en jeu avec l'auteur sur la version installée ; un test par classe et par
+  situation (seul, groupe sans tank, raid, donjon, champ de bataille, joueur choisi absent, buff fini sur un autre
+  joueur) ; vérifier que le panneau se relit à chaque fois que le buff disparaît (connexion, rechargement,
+  changement de zone, mort) ; et le cas d'un joueur seul dont la propre case serait masquée.
 - [ ] 26 b (1.35.0), **priorité haute** : champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
   2026)** : les buffs manquants ne fonctionnent pas en champ de bataille. Cause connue (analyse 1a, B2) : pendant
   un match JcJ, le jeu rend les noms des buffs secrets, même hors combat ; Lyorune s'arrête au premier nom secret,
