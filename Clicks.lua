@@ -942,8 +942,8 @@ local function Excluded()
 		local name = Z.SpellName(id)
 		if name then skip[name] = true end
 	end
-	for _, pair in ipairs(Z.raidBuffs[Z.class] or {}) do
-		for _, id in ipairs(pair) do
+	for _, entry in ipairs(Z.raidBuffs[Z.class] or {}) do
+		for _, id in ipairs(Z.BuffIds(entry)) do
 			local name = Z.SpellName(id)
 			if name then skip[name] = true end
 		end

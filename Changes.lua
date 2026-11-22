@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.0", date = "2026-11-22",
+		added = {
+			"Buffs complets des soigneurs : prêtre (Robustesse, Esprit divin pour les joueurs à mana, Protection contre l'ombre, Feu intérieur et sorts de race sur vous), paladin (une bénédiction de vous par joueur : Rois pour le tank et le chasseur, Sagesse pour les joueurs à mana, Puissance pour les autres ; Fureur vertueuse au choix), chaman (Bouclier d'eau ou de foudre, enchantement de votre arme), druide (Marque du fauve). Gardien de peur et Serment de lumière rejoignent les buffs à poser sur une seule personne.",
+			"Mes buffs (chapitre Joueurs) : choisissez les buffs à surveiller, une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ). Au départ, Protection contre l'ombre ne compte qu'en JcJ ; Fureur vertueuse et Gardien de peur sont éteints.",
+		},
+		improved = {
+			"Le panneau des buffs manquants montre tous les buffs qui manquent à chaque joueur, une ligne par buff, et plus seulement le premier. Nouveaux réglages : proposer à nouveau un buff qui finit dans moins de N minutes (pratique avant un boss), et le nombre de joueurs à partir duquel la version de groupe est proposée.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.32.1", date = "2026-11-22",
 		added = {
 		},

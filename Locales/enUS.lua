@@ -155,8 +155,8 @@ Z.translations.enUS = {
 	["Infobulle au survol (hors combat)"] = "Tooltip on hover (out of combat)",
 	["Mes soins"] = "My heals", ["Mes soins sur la durée"] = "My heals over time",
 	["Affichage des soins sur la durée"] = "Heal over time display", ["Icônes"] = "Icons", ["Barres fines"] = "Thin bars",
-	["Buff de groupe manquant (hors combat)"] = "Missing group buff (out of combat)",
-	["Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe."] = "Grey icon at the bottom left when a player lacks your group buff.",
+	["Buff manquant sur la case (hors combat)"] = "Missing buff on the cell (out of combat)",
+	["Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs."] = "Grey icon at the bottom left when a player lacks one of your buffs.",
 	["Affaiblissements"] = "Debuffs", ["Cadre coloré quand je peux dissiper"] = "Coloured frame when I can dispel",
 	["Icônes des affaiblissements"] = "Debuff icons", ["Affaiblissements affichés"] = "Debuffs shown",
 	["Dissipables par moi"] = "Dispellable by me", ["Affaiblissement important en grand"] = "Large icon for important debuffs",
@@ -492,10 +492,10 @@ Z.translations.enUS = {
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
-			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns.\n\n"
+			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs.\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur."] =
-		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click). A key can do it too, or hide the frames and cast the next missing buff: game key bindings, AddOns section.\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
+		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click). A key can do it too, or hide the frames and cast the next missing buff: game key bindings, AddOns section. Your buffs to watch, in PvE and in PvP: Players chapter.\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
 	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a cell to cast a spell on that player, without targeting them.",
 	["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."] = "No spell is assigned yet: you will choose them in the Spells and bindings chapter of the options.",
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
@@ -730,7 +730,7 @@ Z.translations.enUS = {
 	["mesure faite : %d joueurs, %s ms par seconde en combat chargé (%s %%), mémoire %s."] = "measured: %d players, %s ms per second in a busy fight (%s%%), memory %s.",
 	-- 1.16.0 : panneau des buffs manquants, assistant de départ
 	["Panneau des buffs manquants"] = "Missing buffs panel",
-	["Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune."] = "Out of combat, a small window lists the players without your group buff: one click casts it on them. A whole group without it: a single line for the group version. A buff meant for a single person (Earth Shield, Thorns) is offered for the tank, or for the player chosen with /lyorune bearer. It hides in combat. A key can cast the first line: game key bindings, AddOns, Lyorune.",
+	["Hors combat, une petite fenêtre liste chaque buff qui manque à chaque joueur : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune."] = "Out of combat, a small window lists every buff each player is missing: one click casts it on them. A whole group without it: a single line for the group version. A buff meant for a single person (Earth Shield, Thorns, Fear Ward) is offered for the tank, or for the player chosen with /lyorune bearer. It hides in combat. A key can cast the first line: game key bindings, AddOns, Lyorune.",
 	["Buffs manquants"] = "Missing buffs", ["Clic : %s"] = "Click: %s", ["Clic droit : %s (tout son groupe)"] = "Right-click: %s (their whole group)",
 	["et %d autres"] = "and %d more",
 	["Assistant de départ"] = "Setup assistant", ["assistant de départ"] = "setup assistant",
@@ -986,4 +986,22 @@ Z.translations.enUS = {
 	["Un message entre joueurs freiné par le jeu passait pour envoyé : Lyorune lit maintenant la réponse du jeu."] = "A message between players slowed down by the game was taken as sent: Lyorune now reads the game's answer.",
 	["Affaiblissements : ceux qu'aucun joueur ne peut retirer (souvent de type Magie chez un boss) n'apparaissaient nulle part chez un soigneur qui dissipe ce type ; et un affaiblissement qu'un autre joueur du raid pouvait retirer colorait votre case et sonnait comme si vous pouviez le dissiper. La rangée « à dissiper », le cadre coloré et le son ne montrent plus que ce que vous pouvez dissiper vous-même ; tous les autres affaiblissements vont dans la rangée suivante, sans trou ni doublon. Pour les quatre classes de soigneurs."] = "Debuffs: those no player can remove (often Magic ones from a boss) never showed for a healer who dispels that type; and a debuff another raid member could remove coloured your frame and played the sound as if you could dispel it. The \"to dispel\" row, the coloured frame and the sound now only show what you can dispel yourself; every other debuff goes to the next row, with no gap and no duplicate. For all four healing classes.",
 	["Le voile rouge de vie basse ne clignote plus sans fin : il bat quelques secondes quand la vie change, puis reste fixe. Il ne couvre plus la case d'un joueur que le jeu ne connaît pas encore (vie maximale à 0, en chargement de champ de bataille)."] = "The red low health overlay no longer flashes forever: it flashes for a few seconds when health changes, then stays still. It no longer covers the frame of a player the game does not know yet (maximum health 0, while loading a battleground).",
+	["Mes buffs"] = "My buffs",
+	["JcE"] = "PvE",
+	["JcJ"] = "PvP",
+	["Votre classe n'a aucun buff à surveiller."] = "Your class has no buff to watch.",
+	["une personne"] = "one person",
+	["sur vous"] = "on you",
+	[" ou "] = " or ",
+	["Bénédictions (une de vous par joueur)"] = "Blessings (one from you per player)",
+	["Enchantement de l'arme"] = "Weapon enchantment",
+	["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."] = "The buffs of your class to watch: one list for dungeons, raids and the world (PvE), another for battlegrounds and the arena (PvP).",
+	["Proposer à nouveau sous (minutes)"] = "Offer again below (minutes)",
+	["Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque."] = "A buff ending in fewer minutes than this number is offered as if it were missing: handy before a boss. 0: only when it is missing.",
+	["0 : seulement quand le buff manque."] = "0: only when the buff is missing.",
+	["Version de groupe dès (joueurs)"] = "Group version from (players)",
+	["Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...)."] = "Number of players in the same group without the buff from which the panel offers a single line for the group version (Prayer of Fortitude, Gift of the Wild...).",
+	["Buffs complets des soigneurs : prêtre (Robustesse, Esprit divin pour les joueurs à mana, Protection contre l'ombre, Feu intérieur et sorts de race sur vous), paladin (une bénédiction de vous par joueur : Rois pour le tank et le chasseur, Sagesse pour les joueurs à mana, Puissance pour les autres ; Fureur vertueuse au choix), chaman (Bouclier d'eau ou de foudre, enchantement de votre arme), druide (Marque du fauve). Gardien de peur et Serment de lumière rejoignent les buffs à poser sur une seule personne."] = "Complete healer buffs: priest (Fortitude, Divine Spirit for players who use mana, Shadow Protection, Inner Fire and racial spells on you), paladin (one blessing from you per player: Kings for the tank and the hunter, Wisdom for players who use mana, Might for the others; Righteous Fury if you want it), shaman (Water or Lightning Shield, your weapon enchantment), druid (Mark of the Wild). Fear Ward and Oath of Light join the buffs meant for a single person.",
+	["Mes buffs (chapitre Joueurs) : choisissez les buffs à surveiller, une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ). Au départ, Protection contre l'ombre ne compte qu'en JcJ ; Fureur vertueuse et Gardien de peur sont éteints."] = "My buffs (Players chapter): choose the buffs to watch, one list for dungeons, raids and the world (PvE), another for battlegrounds and the arena (PvP). At first, Shadow Protection only counts in PvP; Righteous Fury and Fear Ward are off.",
+	["Le panneau des buffs manquants montre tous les buffs qui manquent à chaque joueur, une ligne par buff, et plus seulement le premier. Nouveaux réglages : proposer à nouveau un buff qui finit dans moins de N minutes (pratique avant un boss), et le nombre de joueurs à partir duquel la version de groupe est proposée."] = "The missing buffs panel shows every buff each player is missing, one line per buff, not only the first one. New settings: offer a buff again when it ends in fewer than N minutes (handy before a boss), and the number of players from which the group version is offered.",
 }

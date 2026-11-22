@@ -41,7 +41,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 24 | 1.31.0 | Joueurs en bonne santé estompés, statistiques de mes clics | Publiée (v1.31.0) |
 | 25 | 1.32.0 | Répartition entre soigneurs, marquée sur les cases | Publiée (v1.32.0) |
 | 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
-| 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | À faire |
+| 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
 | 26 b | 1.34.0 | Buffs en champ de bataille et en arène (match JcJ) | À faire |
 | 26 c | 1.35.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
 | 27 a | 1.36.0 | Rang choisi sur chaque raccourci | À faire |
@@ -604,9 +604,17 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   description du dépôt inchangés (corrections seulement). Publiée le 22 novembre 2026 (1.32.1), vérifiée hors jeu.
 
 ## Étape 26 : buffs (1.33.0 à 1.35.0)
-- [ ] 26 a (1.33.0) : buffs complets du prêtre (Robustesse, Esprit divin, Protection contre l'ombre et leurs
+- [x] 26 a (1.33.0) : buffs complets du prêtre (Robustesse, Esprit divin, Protection contre l'ombre et leurs
   prières, Feu intérieur sur soi seulement), du paladin, du chaman et du druide, toutes les absences d'un joueur ;
-  ma liste de buffs, une pour le JcE et une pour le JcJ. Recherche des numéros dans le jeu avant le codage.
+  ma liste de buffs, une pour le JcE et une pour le JcJ. Fait le 22 novembre 2026, vérifié hors jeu (numéros lus
+  dans HealKit 1.15.0, PallyPower et VuhDo portés sur Forever ; un sort inconnu est ignoré). Décidé (carte
+  blanche) : repères `self`, `mana` (classes absentes de `Z.classPower` : le chasseur de Forever a de la
+  focalisation), `any`, `blessing` (une bénédiction de moi, filtre `HELPFUL|PLAYER` ; Rois au tank et au chasseur,
+  Sagesse aux joueurs à mana, Puissance aux autres, `Z.blessingFor`), `weapon` (`GetWeaponEnchantInfo`, le dernier
+  enchantement lancé) ; réglages `buffWatch` (« Mes buffs », deux cases JcE et JcJ par buff, `Z.PvPKind`),
+  `buffRefresh` (0 au départ : aucun changement pour les joueurs actuels), `buffGroupAt` (3) ; Gardien de peur
+  (éteint au départ, attend sa recharge) et Serment de lumière en buffs uniques. Pendant un match JcJ, le panneau
+  reste vide (auras secrètes) : suivi pendant le match à l'étape 26 b.
 - [ ] 26 b (1.34.0) : champ de bataille et arène : photo des buffs avant le match, mémoire de mes propres sorts,
   règle `Z.Restricted()`.
 - [ ] 26 c (1.35.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la

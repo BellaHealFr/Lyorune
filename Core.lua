@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.32.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.33.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -100,6 +100,9 @@ Z.defaults = {
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
 	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris
+	buffWatch = {},            -- « Mes buffs » : buffWatch[numéro du buff] = { pve = bool, pvp = bool } ; absent : le départ de Data.lua
+	buffRefresh = 0,           -- proposer à nouveau un buff qui finit dans moins de N minutes (0 : seulement s'il manque)
+	buffGroupAt = 3,           -- joueurs d'un même groupe sans le buff à partir desquels la version de groupe est proposée
 	castIndicator = "OFF",     -- temps de recharge global et incantation (Cast.lua) : aucun, barre sous les cadres, anneau au curseur
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
@@ -177,6 +180,7 @@ Z.limits = {
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
 	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 200, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
 	lowHealthAt = { 10, 60, 5 }, healthyFadeAt = { 50, 100, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, dispelCount = { 1, 3, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
+	buffRefresh = { 0, 15, 1 }, buffGroupAt = { 2, 5, 1 },
 }
 
 Z.choices = {
@@ -232,7 +236,7 @@ Z.notInProfile = {
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
-	buffPanel = true, castIndicator = true,
+	buffPanel = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
 }
 
 -- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.
@@ -244,6 +248,7 @@ Z.charDefaults = {
 	pinnedPos = { "CENTER", 120, 60 }, -- joueurs épinglés
 	buffPos = { "CENTER", 360, 0 },    -- panneau des buffs manquants
 	buffTarget = {},                   -- buffTarget.name : le joueur qui reçoit mes buffs uniques (sinon le tank)
+	-- weaponEnchant (sans valeur au départ) : numéro du dernier enchantement d'arme lancé (chaman, Data.lua)
 }
 
 ----------------------------------------------------------------------------------------------------

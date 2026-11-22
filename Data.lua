@@ -9,9 +9,10 @@
 --      Z.spellRanks[id] = { id, id, ... }             -- leurs autres rangs, s'ils en ont (voir plus bas)
 --   3. Z.clickDefaults.MACLASSE = { ["1"] = { id }, ["shift-1"] = { id }, ... }
 --   4. Z.resSpells et Z.classRes : son sort de résurrection, s'il en a un
---   5. Z.raidBuffs.MACLASSE : ses buffs de groupe, s'il en a
+--   5. Z.raidBuffs.MACLASSE : ses buffs à surveiller (de groupe, sur soi, bénédictions, arme), s'il en a
 --   6. Z.uniqueBuffs.MACLASSE : ses buffs à poser sur une seule personne (le tank), s'il en a
---   7. Z.classPower.MACLASSE : sa ressource si ce n'est pas la mana (rage, énergie...)
+--   7. Z.classPower.MACLASSE : sa ressource si ce n'est pas la mana (rage, énergie...) ; une classe absente de
+--      cette table compte comme classe à mana (buffs réservés aux joueurs à mana, comme Esprit divin)
 --   8. Z.defensives.MACLASSE : ses gros défensifs, montrés sur sa case à tous les soigneurs
 --   9. Z.lockouts.MACLASSE : les affaiblissements qui l'empêchent de relancer un de ses sorts, s'il en a
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
@@ -116,18 +117,57 @@ Z.classRes = {
 -- et sur les vraies cases quand le jeu garde la ressource secrète et qu'aucune n'est encore connue.
 Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2, "FOCUS" } }
 
--- Buffs de groupe à surveiller hors combat. Chaque ligne : la version simple puis la version de groupe.
+-- Buffs à surveiller hors combat (panneau des buffs manquants, icône grise sur la case). Une ligne par buff :
+--   { simple, groupe }   le sort simple, puis sa version de groupe s'il en a une (Prière de robustesse...)
+--   any = { id }         d'autres sorts qui comptent aussi : un joueur qui en porte un n'a besoin de rien
+--                        (le premier sort connu de la ligne est lancé)
+--   self = true          sur moi seulement (Feu intérieur, boucliers du chaman)
+--   mana = true          seulement les joueurs à mana : les classes absentes de Z.classPower
+--   blessing = { id }    bénédictions : chaque joueur en veut une de moi (celle d'un autre paladin ne compte
+--                        pas) ; tank : Rois, joueur à mana : Sagesse, les autres : Puissance (Z.BlessingFor)
+--   weapon = { id }      enchantement de mon arme principale (le jeu le dit à part, pas dans les auras) : le
+--                        dernier que j'ai lancé, sinon le premier connu de la liste
+--   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ
+-- Le premier numéro de la ligne la désigne dans le réglage « buffWatch ». Numéros vérifiés hors jeu (HealKit,
+-- PallyPower et VuhDo portés sur Forever) ; un sort que je ne connais pas est ignoré (Z.Knows).
 Z.raidBuffs = {
-	PRIEST = { { 1243, 21562 } },  -- Mot de pouvoir : Robustesse, Prière de robustesse
-	DRUID  = { { 1126, 21849 } },  -- Marque du fauve, Don du fauve
-	MAGE   = { { 1459, 23028 } },  -- Intelligence des arcanes, Illumination des arcanes
+	PRIEST = {
+		{ 1243, 21562 },                -- Mot de pouvoir : Robustesse, Prière de robustesse
+		{ 14752, 27681, mana = true },  -- Esprit divin, Prière d'esprit
+		{ 976, 27683, pve = false },    -- Protection contre l'ombre, Prière de protection contre l'ombre (JcJ)
+		{ 588, self = true },           -- Feu intérieur
+		{ 2652, self = true },          -- Toucher de faiblesse (sort de race)
+		{ 18137, self = true },         -- Garde de l'ombre (sort de race)
+	},
+	PALADIN = {
+		{ blessing = { 19740, 19742, 20217, 20911 } }, -- Bénédictions de puissance, de sagesse, des rois, du sanctuaire
+		{ 25780, self = true, pve = false, pvp = false }, -- Fureur vertueuse (tanks seulement)
+	},
+	SHAMAN = {
+		{ 408510, any = { 324 }, self = true },        -- Bouclier d'eau, ou Bouclier de foudre
+		{ weapon = { 8024, 8017, 8232, 8033 }, self = true }, -- Arme Langue de feu, Croque-roc, Furie-des-vents, Arme de givre
+	},
+	DRUID  = { { 1126, 21849 } },               -- Marque du fauve, Don du fauve
+	MAGE   = { { 1459, 23028, mana = true } },  -- Intelligence des arcanes, Illumination des arcanes
 }
 
 -- Buffs à poser sur une seule personne, hors combat : le panneau des buffs manquants les propose pour le
--- tank, ou pour le joueur choisi par /lyorune porteur. Rien n'est proposé tant que le mien est sur quelqu'un.
+-- tank, ou pour le joueur choisi par /lyorune porteur. Rien n'est proposé tant que le mien est sur quelqu'un,
+-- ni pendant son temps de recharge. Un numéro seul, ou { id, pve = false, pvp = false } comme plus haut.
 Z.uniqueBuffs = {
-	SHAMAN = { 408514 },  -- Bouclier de terre
-	DRUID  = { 467 },     -- Épines
+	SHAMAN  = { 408514 },                             -- Bouclier de terre
+	DRUID   = { 467 },                                -- Épines
+	PRIEST  = { { 6346, pve = false, pvp = false } }, -- Gardien de peur
+	PALADIN = { 1328548 },                            -- Serment de lumière (talent de WoW Forever)
+}
+
+-- Bénédiction proposée à chaque joueur (paladin) : la première que je connais de sa ligne. Ligne choisie dans
+-- cet ordre : TANK (rôle du joueur), le nom de sa classe, MANA (classe à mana), puis OTHER.
+Z.blessingFor = {
+	TANK   = { 20217, 20911, 19740 }, -- Rois, Sanctuaire, Puissance
+	HUNTER = { 20217, 19740 },        -- Rois (Puissance ne donne que de la puissance au corps à corps), Puissance
+	MANA   = { 19742, 20217 },        -- Sagesse, Rois
+	OTHER  = { 19740, 20217 },        -- Puissance, Rois
 }
 
 -- Gros défensifs, posés par n'importe quel joueur : leur icône va sur la case de celui qui les porte (réglage
@@ -191,6 +231,97 @@ function Z.Knows(id)
 		and C_SpellBook.FindSpellBookSlotForSpell(name) ~= nil
 end
 
+-- Tous les numéros d'une ligne de Z.raidBuffs ; le premier désigne la ligne (réglage « buffWatch »)
+function Z.BuffIds(entry)
+	local ids = {}
+	for _, list in ipairs({ entry.blessing or {}, entry.weapon or {}, entry, entry.any or {} }) do
+		for _, id in ipairs(list) do ids[#ids + 1] = id end
+	end
+	return ids
+end
+
+-- Une ligne de Z.raidBuffs lue dans le grimoire : nil si je ne connais aucun sort à lancer.
+-- spell : le sort lancé ; groupSpell : sa version de groupe ; choices : les bénédictions ou les armes connues.
+function Z.BuffCheck(entry)
+	local ids = Z.BuffIds(entry)
+	local check = { id = ids[1], names = {}, self = entry.self, mana = entry.mana, pve = entry.pve, pvp = entry.pvp }
+	for _, id in ipairs(ids) do
+		local name = Z.SpellName(id)
+		if name then check.names[name] = true end
+	end
+	local choices = entry.blessing or entry.weapon
+	if choices then
+		check.choices = {}
+		for _, id in ipairs(choices) do
+			local name = Z.Knows(id) and Z.SpellName(id)
+			if name then check.choices[#check.choices + 1] = { id = id, name = name, icon = C_Spell.GetSpellTexture(id) } end
+			if entry.weapon then Z.weaponIds[id] = true end
+		end
+		if #check.choices == 0 then return end
+		check.blessing, check.weapon = entry.blessing ~= nil, entry.weapon ~= nil
+		check.spell, check.icon = check.choices[1].name, check.choices[1].icon
+		return check
+	end
+	-- le premier sort connu : la version simple, sinon un des autres sorts qui comptent aussi
+	local castable = { entry[1] }
+	for _, id in ipairs(entry.any or {}) do castable[#castable + 1] = id end
+	for _, id in ipairs(castable) do
+		if Z.Knows(id) then
+			check.spell, check.icon = Z.SpellName(id), C_Spell.GetSpellTexture(id)
+			break
+		end
+	end
+	if not check.spell then return end
+	local group = entry[2] and Z.Knows(entry[2]) and Z.SpellName(entry[2])
+	if group and group ~= check.spell then check.groupSpell = group end
+	return check
+end
+
+-- La liste qui compte ici : « pvp » en champ de bataille et en arène, « pve » partout ailleurs
+function Z.BuffContext()
+	return Z.PvPKind and Z.PvPKind() and "pvp" or "pve"
+end
+
+-- Ce buff est-il dans ma liste (« Mes buffs », options) pour ce lieu ? Mon choix, sinon le départ de Data.lua
+function Z.BuffWatched(check, context)
+	context = context or Z.BuffContext()
+	local chosen = Z.db.buffWatch[check.id]
+	if type(chosen) == "table" and chosen[context] ~= nil then return chosen[context] end
+	return check[context] ~= false
+end
+
+-- Joueur à mana : sa classe n'est pas dans Z.classPower (un familier ne compte pas ; classe secrète : non)
+function Z.UsesMana(unit)
+	if unit:find("pet", 1, true) then return false end
+	local class = select(2, UnitClass(unit))
+	if not class or Z.IsSecret(class) then return false end
+	return not Z.classPower[class]
+end
+
+-- Bénédiction à poser sur ce joueur (Z.blessingFor) : le choix connu, son nom et son icône
+function Z.BlessingFor(check, unit)
+	local role = UnitGroupRolesAssigned(unit)
+	local class = select(2, UnitClass(unit))
+	local line = (not Z.IsSecret(role) and role == "TANK" and Z.blessingFor.TANK)
+		or (class and not Z.IsSecret(class) and Z.blessingFor[class])
+		or (Z.UsesMana(unit) and Z.blessingFor.MANA) or Z.blessingFor.OTHER
+	for _, id in ipairs(line) do
+		for _, choice in ipairs(check.choices) do
+			if choice.id == id then return choice end
+		end
+	end
+	return check.choices[1]
+end
+
+-- Enchantement d'arme à poser : le dernier que j'ai lancé (Z.char.weaponEnchant), sinon le premier connu
+function Z.WeaponFor(check)
+	local last = Z.char and Z.char.weaponEnchant
+	for _, choice in ipairs(check.choices) do
+		if choice.id == last then return choice end
+	end
+	return check.choices[1]
+end
+
 -- Reconstruit les tables rapides utilisées en combat. Appelé au démarrage et quand les sorts changent.
 function Z:BuildData()
 	Z.canDispel = {}
@@ -206,26 +337,21 @@ function Z:BuildData()
 		if name then Z.resNames[name] = true end
 	end
 
-	Z.buffChecks = {}
-	for _, ids in ipairs(Z.raidBuffs[Z.class] or {}) do
-		if Z.Knows(ids[1]) then
-			-- spell : le sort lancé par le panneau des buffs ; groupSpell : sa version de groupe, si je la connais
-			local check = { names = {}, icon = C_Spell.GetSpellTexture(ids[1]), spell = Z.SpellName(ids[1]) }
-			for _, id in ipairs(ids) do
-				local name = Z.SpellName(id)
-				if name then check.names[name] = true end
-			end
-			local group = ids[2] and Z.Knows(ids[2]) and Z.SpellName(ids[2])
-			if group and group ~= check.spell then check.groupSpell = group end
-			Z.buffChecks[#Z.buffChecks + 1] = check
-		end
+	Z.buffChecks, Z.weaponIds = {}, {}
+	Z.buffGeneration = (Z.buffGeneration or 0) + 1 -- les cases savent que leurs buffs manquants sont à relire
+	for _, entry in ipairs(Z.raidBuffs[Z.class] or {}) do
+		local check = Z.BuffCheck(entry)
+		if check then Z.buffChecks[#Z.buffChecks + 1] = check end
 	end
 
 	Z.uniqueChecks = {}
-	for _, id in ipairs(Z.uniqueBuffs[Z.class] or {}) do
+	for _, entry in ipairs(Z.uniqueBuffs[Z.class] or {}) do
+		entry = type(entry) == "table" and entry or { entry }
+		local id = entry[1]
 		local name = Z.Knows(id) and Z.SpellName(id)
 		if name then
-			Z.uniqueChecks[#Z.uniqueChecks + 1] = { name = name, spell = name, icon = C_Spell.GetSpellTexture(id), unique = true }
+			Z.uniqueChecks[#Z.uniqueChecks + 1] = { id = id, name = name, spell = name, icon = C_Spell.GetSpellTexture(id),
+				unique = true, pve = entry.pve, pvp = entry.pvp }
 		end
 	end
 

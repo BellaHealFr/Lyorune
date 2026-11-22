@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.0] - 2026-11-22
+
+### Ajouté
+
+- Buffs complets des soigneurs : prêtre (Robustesse, Esprit divin pour les joueurs à mana, Protection contre l'ombre, Feu intérieur et sorts de race sur vous), paladin (une bénédiction de vous par joueur : Rois pour le tank et le chasseur, Sagesse pour les joueurs à mana, Puissance pour les autres ; Fureur vertueuse au choix), chaman (Bouclier d'eau ou de foudre, enchantement de votre arme), druide (Marque du fauve). Gardien de peur et Serment de lumière rejoignent les buffs à poser sur une seule personne.
+- Mes buffs (chapitre Joueurs) : choisissez les buffs à surveiller, une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ). Au départ, Protection contre l'ombre ne compte qu'en JcJ ; Fureur vertueuse et Gardien de peur sont éteints.
+
+### Amélioré
+
+- Le panneau des buffs manquants montre tous les buffs qui manquent à chaque joueur, une ligne par buff, et plus seulement le premier. Nouveaux réglages : proposer à nouveau un buff qui finit dans moins de N minutes (pratique avant un boss), et le nombre de joueurs à partir duquel la version de groupe est proposée.
+
 ## [1.32.1] - 2026-11-22
 
 ### Corrigé
@@ -605,6 +616,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.33.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.31.0...v1.32.0
 [1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0

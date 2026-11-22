@@ -614,6 +614,103 @@ local function AssignGroups(page, width)
 	return box
 end
 
+-- « Mes buffs » : une ligne par buff de ma classe (Data.lua), deux cases : JcE (donjons, raids, monde) et JcJ
+-- (champ de bataille, arène). Écrit Z.db.buffWatch[numéro] ; un choix égal au départ de Data.lua est effacé.
+local WATCH_ROW = 24
+local function BuffWatchList(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 40)
+	box.label = UI.Label(box, 12)
+	box.label:SetPoint("TOPLEFT", 0, -5)
+	box.label:SetText(L["Mes buffs"])
+	box.columns = {}
+	for i, text in ipairs({ "JcE", "JcJ" }) do
+		local column = UI.Label(box, 11, nil, "dim")
+		column:SetPoint("TOPRIGHT", -(2 - i) * 60 - 18, -7)
+		column:SetText(L[text])
+		box.columns[i] = column
+	end
+	box.empty = Note(box, "Votre classe n'a aucun buff à surveiller.", 0, -28, width)
+	box.lines = {}
+	-- Nom affiché : le sort, « ou » ses autres sorts qui comptent aussi ; un mot pour les bénédictions et l'arme
+	local function Entries()
+		local list = {}
+		for _, entry in ipairs(Z.raidBuffs[Z.class] or {}) do
+			local ids, known = Z.BuffIds(entry), false
+			for _, id in ipairs(ids) do known = known or Z.Knows(id) end
+			local name = Z.SpellName(ids[1]) or ("#" .. ids[1])
+			if entry.blessing then name = L["Bénédictions (une de vous par joueur)"]
+			elseif entry.weapon then name = L["Enchantement de l'arme"]
+			else
+				for _, id in ipairs(entry.any or {}) do name = name .. L[" ou "] .. (Z.SpellName(id) or "#" .. id) end
+				if entry.self then name = name .. "  |cffb3b3b3(" .. L["sur vous"] .. ")|r" end
+			end
+			list[#list + 1] = { id = ids[1], pve = entry.pve, pvp = entry.pvp, name = name, known = known }
+		end
+		for _, entry in ipairs(Z.uniqueBuffs[Z.class] or {}) do
+			entry = type(entry) == "table" and entry or { entry }
+			list[#list + 1] = { id = entry[1], pve = entry.pve, pvp = entry.pvp, known = Z.Knows(entry[1]),
+				name = (Z.SpellName(entry[1]) or "#" .. entry[1]) .. "  |cffb3b3b3(" .. L["une personne"] .. ")|r" }
+		end
+		return list
+	end
+	local function Toggle(row, context)
+		return function() return Z.BuffWatched(row.entry, context) end, function(value)
+			local chosen = Z.db.buffWatch[row.entry.id] or {}
+			chosen[context] = value
+			if value == (row.entry[context] ~= false) then chosen[context] = nil end -- retour au départ
+			Z.db.buffWatch[row.entry.id] = next(chosen) and chosen or nil
+			Z:Refresh()
+			if AfterChange then AfterChange() end
+		end
+	end
+	box.Update = function(self)
+		local entries = Entries()
+		for i, entry in ipairs(entries) do
+			local row = self.lines[i]
+			if not row then
+				row = CreateFrame("Frame", nil, self)
+				row:SetSize(width, WATCH_ROW)
+				row.icon = row:CreateTexture(nil, "ARTWORK")
+				row.icon:SetSize(18, 18)
+				row.icon:SetPoint("LEFT", 2, 0)
+				row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+				row.name = UI.Label(row, 12)
+				row.name:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
+				row.name:SetPoint("RIGHT", -140, 0)
+				row.name:SetJustifyH("LEFT")
+				row.name:SetWordWrap(false)
+				row.entry = entry -- avant les cases : elles lisent leur état dès leur création
+				row.checks = {}
+				for c, context in ipairs({ "pve", "pvp" }) do
+					local check = UI.Check(row, "", Toggle(row, context))
+					check:SetSize(20, 20)
+					check:SetPoint("RIGHT", -(2 - c) * 60 - 22, 0)
+					row.checks[c] = check
+				end
+				self.lines[i] = row
+			end
+			row.entry = entry
+			row:ClearAllPoints()
+			row:SetPoint("TOPLEFT", 0, -28 - (i - 1) * WATCH_ROW)
+			row.icon:SetTexture(C_Spell.GetSpellTexture(entry.id))
+			row.name:SetText(entry.name)
+			row.name:SetAlpha(entry.known and 1 or DIMMED) -- pas encore appris : grisé, mais réglable
+			for _, check in ipairs(row.checks) do check:Update() end
+			row:Show()
+		end
+		for i = #entries + 1, #self.lines do self.lines[i]:Hide() end
+		self.empty:SetShown(#entries == 0)
+		for _, column in ipairs(self.columns) do column:SetShown(#entries > 0) end
+		Fit(self, 28 + math.max(1, #entries) * WATCH_ROW)
+	end
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Z.buffWatchBox = box
+	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."])
+	return box
+end
+
 -- La répartition reçue du chef, si elle compte : elle remplace mon choix
 local function AssignStatus(page, width)
 	local box = CreateFrame("Frame", nil, page)
@@ -1982,8 +2079,11 @@ local function Chapters()
 				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la barre de vie : jaune quand le joueur prend de la menace sur un monstre, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui.", fine = true },
 			} },
 			{ "Buffs", {
-				{ "check", "missingBuffs", "Buff de groupe manquant (hors combat)", desc = "Icône grise en bas à gauche quand un joueur n'a pas votre buff de groupe." },
-				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste les joueurs sans votre buff de groupe : un clic le leur lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune." },
+				{ "check", "missingBuffs", "Buff manquant sur la case (hors combat)", desc = "Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs." },
+				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste chaque buff qui manque à chaque joueur : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune." },
+				{ "custom", BuffWatchList },
+				{ "step", "buffRefresh", "Proposer à nouveau sous (minutes)", "Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque.", desc = "0 : seulement quand le buff manque." },
+				{ "step", "buffGroupAt", "Version de groupe dès (joueurs)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", fine = true },
 			} },
 			{ "Mes joueurs (répartition entre soigneurs)", {
 				{ "note", "Les joueurs dont vous vous occupez portent un trait doré au bord gauche de leur case. Utile même si vous êtes seul à avoir Lyorune.", 30 },

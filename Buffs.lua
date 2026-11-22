@@ -1,9 +1,10 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - Buffs.lua : panneau des buffs manquants, hors combat seulement.
--- Une ligne par joueur à qui manque un de mes buffs de groupe : un clic le lui lance, sans le cibler.
+-- Une ligne par buff qui manque à un joueur (tous ses buffs manquants, pas seulement le premier) : un clic le
+-- lui lance, sans le cibler. Seuls comptent les buffs de ma liste pour ce lieu (« Mes buffs », JcE ou JcJ).
 -- Un buff unique (Bouclier de terre...) a sa ligne pour le tank, ou pour le joueur choisi, s'il n'est sur personne.
--- Quand je connais la version de groupe du buff et que 3 joueurs d'un même groupe en manquent, une seule ligne
--- « Groupe N » lance la version de groupe : moins de clics, moins de mana.
+-- Quand je connais la version de groupe du buff et que N joueurs d'un même groupe en manquent (réglage
+-- « buffGroupAt »), une seule ligne « Groupe N » lance la version de groupe : moins de clics, moins de mana.
 -- Le panneau se cache à l'entrée en combat (avant que le jeu ne verrouille ses boutons) et revient après.
 -- Il lit ce que les cases ont déjà trouvé (b.missingBuff, Auras.lua) : aucune lecture d'aura en plus.
 
@@ -13,13 +14,13 @@ local issecret = Z.IsSecret
 
 local MAX_ROWS = 10    -- au-delà, une ligne « et N autres »
 local ROW_H = 22
-local GROUP_AT = 3     -- joueurs d'un même groupe sans le buff à partir desquels la version de groupe est proposée
 local WIDTH = 230
 
 local panel, more
 local rows = {}
 local queued = false
 local closed = false   -- fermé par la croix : revient à la fin du prochain combat
+local cooldownAt       -- fin de recharge d'un buff unique déjà attendue (UniqueRows)
 
 -- Raccourci « Poser le prochain buff manquant » (Bindings.xml : CLICK LyoruneNextBuff:LeftButton). Un bouton
 -- sécurisé caché, créé au chargement (hors combat), qui lance la première ligne du panneau. Il est vidé dès que
@@ -61,17 +62,21 @@ local function SubGroup(unit)
 	return 1
 end
 
--- Joueurs à qui manque un buff, lus sur les cases visibles (chacun une seule fois)
+-- Buffs qui manquent aux joueurs, lus sur les cases visibles (chaque joueur une seule fois) : une entrée par
+-- joueur et par buff
 local function Missing()
 	local list, seen = {}, {}
 	for _, b in ipairs(Z.buttons) do
-		local unit, check = b.unit, b.missingBuff
-		if unit and check and not b.extra and not seen[unit] and b:IsVisible() then
+		local unit = b.unit
+		if unit and b.missingBuff and not b.extra and not seen[unit] and b:IsVisible() then
 			local name = UnitName(unit)
 			if name and not issecret(name) then
 				seen[unit] = true
-				list[#list + 1] = { unit = unit, check = check, name = name, group = SubGroup(unit),
-					class = select(2, UnitClass(unit)) }
+				local group, class = SubGroup(unit), select(2, UnitClass(unit))
+				for _, missing in ipairs(b.missingBuffs or { b.missingBuff }) do
+					list[#list + 1] = { unit = unit, check = missing.check, spell = missing.spell, icon = missing.icon,
+						name = name, group = group, class = class }
+				end
 			end
 		end
 	end
@@ -82,8 +87,18 @@ local function Missing()
 	return list
 end
 
+-- Sort en recharge (hors temps de recharge global) : secondes restantes, sinon nil. Lisible hors combat.
+local function CooldownLeft(name)
+	local info = C_Spell.GetSpellCooldown and C_Spell.GetSpellCooldown(name)
+	if not info or issecret(info.startTime) or issecret(info.duration) or issecret(info.isOnGCD) then return end
+	if info.isOnGCD or not info.startTime or info.startTime == 0 or (info.duration or 0) <= 1.5 then return end
+	local left = info.startTime + info.duration - GetTime()
+	return left > 0 and left or nil
+end
+
 -- Buffs uniques (Bouclier de terre...) : une ligne pour le joueur choisi (/lyorune porteur), sinon pour le tank,
--- tant que le mien n'est posé sur personne. Lu sur les cases visibles (b.myUniques, Auras.lua).
+-- tant que le mien n'est posé sur personne, s'il est dans ma liste et s'il n'est pas en recharge (le panneau se
+-- relit à la fin de la recharge). Lu sur les cases visibles (b.myUniques, Auras.lua).
 local function UniqueRows(result)
 	if #Z.uniqueChecks == 0 then return end
 	local placed, chosen, tank = {}, nil, nil
@@ -102,9 +117,18 @@ local function UniqueRows(result)
 	if not target then target, why = tank, Z.L["tank"] end
 	if not target then return end
 	for _, check in ipairs(Z.uniqueChecks) do
-		if not placed[check.name] then
-			result[#result + 1] = { check = check, spell = check.spell, unit = target.unit, name = target.name,
-				class = select(2, UnitClass(target.unit)), why = why }
+		local wanted = not placed[check.name] and Z.BuffWatched(check)
+		local wait = wanted and CooldownLeft(check.spell)
+		if wait then
+			-- un seul rendez-vous à la fois : le panneau se relit souvent hors combat
+			local at = GetTime() + wait
+			if not (cooldownAt and cooldownAt > GetTime() and cooldownAt <= at) then
+				cooldownAt = at
+				C_Timer.After(wait + 0.2, function() Z:QueueBuffPanel() end)
+			end
+		elseif wanted then
+			result[#result + 1] = { check = check, spell = check.spell, icon = check.icon, unit = target.unit,
+				name = target.name, class = select(2, UnitClass(target.unit)), why = why }
 		end
 	end
 end
@@ -125,12 +149,12 @@ function Z.BuffRows()
 		end
 		for _, group in ipairs(order) do
 			local players = byGroup[group]
-			if check.groupSpell and group > 0 and #players >= GROUP_AT then
-				result[#result + 1] = { check = check, spell = check.groupSpell, unit = players[1].unit, group = group,
-					count = #players, players = players }
+			if check.groupSpell and group > 0 and #players >= Z.db.buffGroupAt then
+				result[#result + 1] = { check = check, spell = check.groupSpell, icon = check.icon, unit = players[1].unit,
+					group = group, count = #players, players = players }
 			else
 				for _, entry in ipairs(players) do
-					result[#result + 1] = { check = check, spell = check.spell, spell2 = check.groupSpell,
+					result[#result + 1] = { check = check, spell = entry.spell, spell2 = check.groupSpell, icon = entry.icon,
 						unit = entry.unit, name = entry.name, class = entry.class }
 				end
 			end
@@ -251,7 +275,7 @@ function Z:UpdateBuffPanel()
 		row:SetAttribute("type2", entry.spell2 and "spell" or nil)
 		row:SetAttribute("spell2", entry.spell2)
 		row.unitToken, row.spellName, row.spell2Name, row.why = entry.unit, entry.spell, entry.spell2, entry.why
-		row.icon:SetTexture(entry.check.icon)
+		row.icon:SetTexture(entry.icon or entry.check.icon)
 		if entry.count then
 			row.label:SetText(L["Groupe %d"]:format(entry.group) .. "  |cffb3b3b3(" .. entry.count .. ")|r")
 			row.label:SetTextColor(unpack(UI.accent))

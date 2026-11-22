@@ -439,12 +439,27 @@ local castWatcher = CreateFrame("Frame")
 castWatcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 local function OnMyCast(spellID)
 	if not spellID or issecret(spellID) or not GetSpellName or not Z.db then return end
+	-- enchantement d'arme lancé (chaman) : c'est lui que le panneau des buffs proposera ensuite
+	if Z.weaponIds and Z.weaponIds[spellID] and Z.char then Z.char.weaponEnchant = spellID end
 	local name = GetSpellName(spellID)
 	if name and not issecret(name) and Wanted(name) then
 		lastCast, lastCastTime = name, GetTime()
 	end
 end
 castWatcher:SetScript("OnEvent", function(_, _, _, _, spellID) Z:Try("mes sorts lancés", OnMyCast, spellID) end)
+
+-- Mon enchantement d'arme posé ou fini (chaman) : ma case relit ses buffs manquants. Événements absents d'un
+-- client : ignorés sans erreur.
+local weaponWatcher = CreateFrame("Frame")
+pcall(weaponWatcher.RegisterEvent, weaponWatcher, "WEAPON_ENCHANT_CHANGED")
+pcall(weaponWatcher.RegisterUnitEvent, weaponWatcher, "UNIT_INVENTORY_CHANGED", "player")
+weaponWatcher:SetScript("OnEvent", function()
+	if not (Z.weaponIds and next(Z.weaponIds) and Z.buttons) then return end
+	for _, b in ipairs(Z.buttons) do
+		local me = b.unit and UnitIsUnit(b.unit, "player")
+		if me and not issecret(me) then Z.QueueAuras(b) end
+	end
+end)
 
 -- Cache toutes les icônes d'une case (changement de style ou de taille)
 function Z.HideAuras(b)
@@ -613,24 +628,97 @@ local function DispelSound()
 	end
 end
 
--- Buff de groupe que je sais lancer et que ce joueur n'a pas. Lisible hors combat seulement.
-local function FindMissingBuff(b, unit)
+-- Secondes restantes d'un buff : sans fin (ou inconnues) = toujours là
+local function Remaining(aura, now)
+	local expires = aura.expirationTime
+	if issecret(expires) or not expires or expires == 0 then return math.huge end
+	return expires - now
+end
+
+-- Mon enchantement d'arme principale : secondes restantes (0 : aucun ; inconnu : toujours là)
+local function WeaponLeft()
+	if not GetWeaponEnchantInfo then return math.huge end
+	local has, expiration = GetWeaponEnchantInfo()
+	if issecret(has) or issecret(expiration) then return math.huge end
+	if not has then return 0 end
+	return (tonumber(expiration) or 0) / 1000
+end
+
+-- Relire la case quand un buff passe sous le seuil « buffRefresh » (aucun événement du jeu ne le dit) ; un seul
+-- rendez-vous par case, le plus proche
+local function Recheck(b, seconds)
+	if seconds == math.huge then return end
+	local now = GetTime()
+	local at = now + seconds + 0.5
+	if b.buffRecheckAt and b.buffRecheckAt > now and b.buffRecheckAt <= at then return end
+	b.buffRecheckAt = at
+	C_Timer.After(seconds + 0.5, function()
+		if b.buffRecheckAt == at then
+			b.buffRecheckAt = nil
+			Z.QueueAuras(b)
+		end
+	end)
+end
+
+-- Ce buff de ma liste concerne-t-il ce joueur ? (sur moi seulement, joueurs à mana, pas les familiers)
+local function Concerns(check, unit, me)
+	if check.self and not me then return false end
+	if check.mana and not Z.UsesMana(unit) then return false end
+	if check.blessing and unit:find("pet", 1, true) then return false end
+	return Z.BuffWatched(check)
+end
+
+-- Buffs de ma liste que ce joueur n'a pas, tous, dans l'ordre de Data.lua : { { check, spell, icon }, ... }, et
+-- une clé qui les résume. Lisible hors combat seulement. Un buff qui finit dans moins de « buffRefresh » minutes
+-- compte comme absent.
+local function FindMissingBuffs(b, unit)
 	if not (Z.db.missingBuffs or Z.db.buffPanel) or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL", 40)
 	if not list then return end
-	local present = {}
+	local now, margin = GetTime(), Z.db.buffRefresh * 60
+	local present, mine = {}, nil
 	for i = 1, #list do
 		local name = list[i].name
 		if issecret(name) then return end
-		present[name] = true
+		present[name] = math.max(present[name] or 0, Remaining(list[i], now))
 	end
+	local me = UnitIsUnit(unit, "player")
+	if issecret(me) then me = false end
+	local missing, key, soonest = {}, Z.buffGeneration .. "|", math.huge
 	for _, check in ipairs(Z.buffChecks) do
-		local found = false
-		for name in pairs(check.names) do
-			if present[name] then found = true break end
+		if Concerns(check, unit, me) then
+			local left, choice = 0, nil
+			if check.weapon then
+				left, choice = WeaponLeft(), Z.WeaponFor(check)
+				if left > 0 then soonest = math.min(soonest, left) end -- l'arme ne prévient pas quand elle s'éteint
+			elseif check.blessing then
+				-- seule une bénédiction de moi compte : celle d'un autre paladin ne remplace pas la mienne
+				if not mine then
+					mine = {}
+					local own = Auras(unit, "HELPFUL|PLAYER", 16)
+					if not own then return end
+					for i = 1, #own do
+						local name = own[i].name
+						if issecret(name) then return end
+						mine[name] = math.max(mine[name] or 0, Remaining(own[i], now))
+					end
+				end
+				for name in pairs(check.names) do left = math.max(left, mine[name] or 0) end
+				choice = Z.BlessingFor(check, unit)
+			else
+				for name in pairs(check.names) do left = math.max(left, present[name] or 0) end
+			end
+			if left <= margin then
+				local spell = choice and choice.name or check.spell
+				missing[#missing + 1] = { check = check, spell = spell, icon = choice and choice.icon or check.icon }
+				key = key .. check.id .. ":" .. spell .. ";"
+			elseif margin > 0 then
+				soonest = math.min(soonest, left - margin)
+			end
 		end
-		if not found then return check end
 	end
+	Recheck(b, soonest)
+	if #missing > 0 then return missing, key end
 end
 
 -- Mes buffs uniques (Bouclier de terre...) posés sur ce joueur : leur nom, ou nil. Lisible hors combat seulement.
@@ -865,16 +953,17 @@ UpdateAuras = function(b)
 	return UpdateWithReading(b)
 end
 
--- Buff de groupe manquant et mes buffs uniques, hors combat
--- (le panneau des buffs manquants, Buffs.lua, lit b.missingBuff)
+-- Buffs manquants et mes buffs uniques, hors combat. Le panneau des buffs manquants (Buffs.lua) lit
+-- b.missingBuffs (toutes les absences) ; b.missingBuff est la première, montrée sur la case.
 UpdateBuffs = function(b, unit, enemy)
 	local db = Z.db
-	local missing = not enemy and FindMissingBuff(b, unit) or nil
+	local list, key
+	if not enemy then list, key = FindMissingBuffs(b, unit) end
 	local uniques = not enemy and FindMyUniques(b, unit) or nil
-	if b.missingBuff ~= missing or b.myUniques ~= uniques then
-		b.missingBuff, b.myUniques = missing, uniques
-		Z:QueueBuffPanel()
-	end
+	local changed = b.missingKey ~= key or b.myUniques ~= uniques or (b.missingBuff ~= nil) ~= (list ~= nil)
+	b.missingBuffs, b.missingBuff, b.missingKey, b.myUniques = list, list and list[1], key, uniques
+	if changed then Z:QueueBuffPanel() end
+	local missing = b.missingBuff
 	if missing and db.missingBuffs then
 		Z.BuffIcon(b)
 		b.buffIcon.texture:SetTexture(missing.icon)

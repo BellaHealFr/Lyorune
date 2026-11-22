@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.0] - 2026-11-22
+
+### Added
+
+- Complete healer buffs: priest (Fortitude, Divine Spirit for players who use mana, Shadow Protection, Inner Fire and racial spells on you), paladin (one blessing from you per player: Kings for the tank and the hunter, Wisdom for players who use mana, Might for the others; Righteous Fury if you want it), shaman (Water or Lightning Shield, your weapon enchantment), druid (Mark of the Wild). Fear Ward and Oath of Light join the buffs meant for a single person.
+- My buffs (Players chapter): choose the buffs to watch, one list for dungeons, raids and the world (PvE), another for battlegrounds and the arena (PvP). At first, Shadow Protection only counts in PvP; Righteous Fury and Fear Ward are off.
+
+### Improved
+
+- The missing buffs panel shows every buff each player is missing, one line per buff, not only the first one. New settings: offer a buff again when it ends in fewer than N minutes (handy before a boss), and the number of players from which the group version is offered.
+
 ## [1.32.1] - 2026-11-22
 
 ### Fixed
@@ -605,6 +616,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.31.0...v1.32.0
 [1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0

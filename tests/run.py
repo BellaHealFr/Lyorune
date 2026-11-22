@@ -2325,7 +2325,8 @@ end)
 step("etape 16 : buffs uniques, temps de recharge global", function()
   local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
   local oldRole, oldAfter = UnitGroupRolesAssigned, C_Timer.After
-  -- un buff unique pour le pretre du faux client (Data.lua : Z.uniqueBuffs)
+  -- un buff unique pour le pretre du faux client (Data.lua : Z.uniqueBuffs), dans ma liste au depart
+  local dataUnique = Z.uniqueBuffs.PRIEST
   Z.uniqueBuffs.PRIEST = { 6346 } Z:BuildData()
   assert(#Z.uniqueChecks == 1 and Z.uniqueChecks[1].name == "Gardien de peur", "buff unique non lu")
   local units = {}
@@ -2366,6 +2367,7 @@ step("etape 16 : buffs uniques, temps de recharge global", function()
   UnitGroupRolesAssigned = oldRole GROUP_NAMES[units[1].unit] = nil
   Z.uniqueBuffs.PRIEST = nil Z:BuildData()
   assert(#Z.uniqueChecks == 0)
+  Z.uniqueBuffs.PRIEST = dataUnique Z:BuildData()
   -- temps de recharge global : rien n'est cree tant que le reglage reste sur « Aucun »
   local later = {}
   C_Timer.After = function(_, f) later[#later + 1] = f end
@@ -6845,6 +6847,200 @@ step("1.32.1 : voile de vie basse (quelques battements puis fixe, vie inconnue, 
   SECRET = false COMBAT = false
   for key, value in pairs(kept) do Z.db[key] = value end
   Z:Refresh()
+  assert(ok, err)
+end)
+
+step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absences, seuil, benedictions, arme, recharge, options)", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit, class = UnitClass,
+    role = UnitGroupRolesAssigned, after = C_Timer.After, cd = C_Spell.GetSpellCooldown, zclass = Z.class,
+    instance = INSTANCE, itype = INSTANCE_TYPE, now = NOW, weapon = Z.char.weaponEnchant }
+  local ok, err = pcall(function()
+    local extra = { [14752] = "Esprit divin", [27681] = "Prière d'esprit", [976] = "Protection contre l'ombre",
+      [27683] = "Prière de protection contre l'ombre", [588] = "Feu intérieur",
+      [19740] = "Bénédiction de puissance", [19742] = "Bénédiction de sagesse", [20217] = "Bénédiction des rois",
+      [25780] = "Fureur vertueuse", [408510] = "Bouclier d'eau", [324] = "Bouclier de foudre",
+      [8024] = "Arme Langue de feu", [8017] = "Arme Croque-roc" }
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
+    local me = Z.buttons[1]
+    local other
+    for _, b in ipairs(Z.buttons) do
+      if b ~= me and b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then other = other or b end
+    end
+    assert(other, "faux groupe trop petit")
+    UnitIsUnit = function(a, b) return a == b or (b == "player" and a == me.unit) end
+    local classes = {}
+    UnitClass = function(u) local c = classes[u] if c then return c, c end return old.class(u) end
+    local later = {}
+    C_Timer.After = function(s, f) if s >= 1 then later[#later + 1] = { s = s, f = f } else f() end end
+    local function Ids(b)
+      local t = {} for _, m in ipairs(b.missingBuffs or {}) do t[#t + 1] = m.check.id end
+      return table.concat(t, ",")
+    end
+    local function Spell(b, id) for _, m in ipairs(b.missingBuffs or {}) do if m.check.id == id then return m.spell end end end
+    local function Update() Z:Refresh() RunUpdates() end
+    INSTANCE, INSTANCE_TYPE = true, "party"
+    Z.db.buffWatch, Z.db.buffRefresh, Z.db.buffGroupAt = {}, 0, 3
+    Z.db.missingBuffs, Z.db.buffPanel = true, true
+
+    -- Pretre : Robustesse, Esprit divin (joueurs a mana), Feu interieur (sur moi) ; Protection contre l'ombre
+    -- seulement en JcJ au depart ; sorts de race inconnus ignores
+    Z.class = "PRIEST" Z:BuildData() AURAS = {} Update()
+    assert(#Z.buffChecks == 4, "buffs du pretre : " .. #Z.buffChecks)
+    assert(Ids(me) == "1243,14752,588", "pretre, sur moi : " .. Ids(me))
+    assert(Ids(other) == "1243,14752", "pretre, un autre joueur : " .. Ids(other))
+    assert(me.missingBuff == me.missingBuffs[1] and me.buffIcon:IsShown(), "icone de la case : le premier")
+    classes[other.unit] = "WARRIOR" Update()
+    assert(Ids(other) == "1243", "Esprit divin propose a un guerrier : " .. Ids(other))
+    classes[other.unit] = nil
+    -- toutes les absences d'un joueur : une ligne chacune dans le panneau
+    Z.db.buffGroupAt = 5 Update()
+    local mine = 0
+    for _, row in ipairs(Z.BuffRows()) do if row.unit == me.unit and not row.count then mine = mine + 1 end end
+    assert(mine >= 2, "une ligne par buff manquant : " .. mine)
+    local feu
+    for _, row in ipairs(Z.BuffRows()) do if row.spell == "Feu intérieur" then feu = row end end
+    assert(feu and feu.unit == me.unit and not feu.spell2, "Feu interieur sur moi seulement")
+    -- version de groupe des N joueurs (reglage)
+    local n = 0
+    for _, b in ipairs(Z.buttons) do
+      if b.unit and not b.extra and b:IsVisible() and Spell(b, 1243) and not b.unit:find("pet") then n = n + 1 end
+    end
+    local function GroupRow() for _, row in ipairs(Z.BuffRows()) do if row.count and row.check.id == 1243 then return row end end end
+    Z.db.buffGroupAt = 2 Update()
+    assert(n < 2 or GroupRow(), "version de groupe des 2 joueurs")
+    Z.db.buffGroupAt = math.min(5, n + 1) Update()
+    assert(n >= 5 or not GroupRow(), "version de groupe sous le seuil")
+    Z.db.buffGroupAt = 3
+    -- JcJ : la colonne JcJ compte en champ de bataille et en arene
+    INSTANCE_TYPE = "pvp" Update()
+    assert(Ids(me) == "1243,14752,976,588", "liste JcJ : " .. Ids(me))
+    INSTANCE_TYPE = "arena" Update() assert(Ids(other) == "1243,14752,976", "arene : " .. Ids(other))
+    INSTANCE_TYPE = "party"
+    Z.db.buffWatch[976] = { pve = true } Update()
+    assert(Ids(other) == "1243,14752,976", "buff coche en JcE : " .. Ids(other))
+    Z.db.buffWatch = { [1243] = { pve = false } } Update()
+    assert(Ids(other) == "14752", "buff decoche en JcE : " .. Ids(other))
+    INSTANCE_TYPE = "pvp" Update() assert(Ids(other):find("1243", 1, true), "decoche en JcE seulement")
+    INSTANCE_TYPE = "party" Z.db.buffWatch = {}
+    -- buff present, puis presque fini (reglage « buffRefresh ») : relu tout seul au passage du seuil
+    NOW = 1000
+    AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31, expirationTime = NOW + 120 } }
+    Update() assert(not Ids(other):find("1243", 1, true), "buff present compte absent")
+    Z.db.buffRefresh = 5 Update() assert(Ids(other):find("1243", 1, true), "buff presque fini non propose")
+    later = {}
+    Z.db.buffRefresh = 1 Update()
+    assert(not Ids(other):find("1243", 1, true), "buff encore long propose")
+    local rdv = {}
+    for _, l in ipairs(later) do if l.s > 55 and l.s < 65 then rdv[#rdv + 1] = l end end
+    assert(#rdv > 0, "aucun rendez-vous au passage du seuil")
+    NOW = NOW + 61 for _, l in ipairs(rdv) do l.f() end RunUpdates()
+    assert(Ids(other):find("1243", 1, true), "case non relue au passage du seuil")
+    AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31, expirationTime = 0 } }
+    Update() assert(not Ids(other):find("1243", 1, true), "buff sans fin compte presque fini")
+    Z.db.buffRefresh = 0
+    -- nom secret : rien de faux
+    AURAS["HELPFUL"] = { { name = MakeSecret(), icon = 9, auraInstanceID = 31 } }
+    Update() assert(not other.missingBuff and not other.missingBuffs, "nom secret")
+    AURAS = {}
+
+    -- Buffs uniques : Gardien de peur eteint au depart, attend la fin de sa recharge
+    UnitGroupRolesAssigned = function(u) return u == other.unit and "TANK" or "HEALER" end
+    local function Fear() for _, row in ipairs(Z.BuffRows()) do if row.spell == "Gardien de peur" then return row end end end
+    Update()
+    assert(#Z.uniqueChecks == 1 and not Fear(), "Gardien de peur propose alors qu'il est eteint")
+    Z.db.buffWatch[6346] = { pve = true } Update()
+    assert(Fear() and Fear().unit == other.unit, "Gardien de peur coche, pas propose au tank")
+    later = {}
+    C_Spell.GetSpellCooldown = function() return { startTime = NOW - 5, duration = 30, isOnGCD = false } end
+    assert(not Fear(), "Gardien de peur propose pendant sa recharge")
+    assert(#later >= 1 and later[#later].s > 24 and later[#later].s < 26, "panneau non relu a la fin de la recharge")
+    C_Spell.GetSpellCooldown = function() return { startTime = NOW, duration = 1.5, isOnGCD = true } end
+    assert(Fear(), "temps de recharge global pris pour une recharge")
+    C_Spell.GetSpellCooldown = function() return { startTime = MakeSecret(), duration = MakeSecret(), isOnGCD = MakeSecret() } end
+    assert(Fear(), "recharge secrete")
+    C_Spell.GetSpellCooldown = old.cd
+    Z.db.buffWatch = {}
+
+    -- Paladin : une benediction de moi par joueur (Sagesse a mana, Puissance, Rois au tank et au chasseur) ;
+    -- Fureur vertueuse eteinte au depart
+    Z.class = "PALADIN" Z:BuildData() UnitGroupRolesAssigned = function() return "HEALER" end Update()
+    assert(Ids(me) == "19740" and Spell(me, 19740) == "Bénédiction de sagesse", "paladin, joueur a mana : " .. tostring(Spell(me, 19740)))
+    classes[other.unit] = "WARRIOR" Update()
+    assert(Spell(other, 19740) == "Bénédiction de puissance", "guerrier : " .. tostring(Spell(other, 19740)))
+    classes[other.unit] = "HUNTER" Update()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "chasseur : " .. tostring(Spell(other, 19740)))
+    UnitGroupRolesAssigned = function(u) return u == other.unit and "TANK" or "HEALER" end
+    classes[other.unit] = "WARRIOR" Update()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "tank : " .. tostring(Spell(other, 19740)))
+    UnitGroupRolesAssigned = function() return MakeSecret() end Update()
+    assert(Spell(other, 19740) == "Bénédiction de puissance", "role secret")
+    classes[other.unit] = nil UnitGroupRolesAssigned = function() return "HEALER" end
+    -- la benediction d'un autre paladin ne compte pas, la mienne oui (n'importe laquelle)
+    AURAS["HELPFUL"] = { { name = "Bénédiction de sagesse", icon = 9, auraInstanceID = 41 } }
+    Update() assert(Ids(other) == "19740", "benediction d'un autre paladin prise pour la mienne")
+    AURAS["HELPFUL|PLAYER"] = { { name = "Bénédiction des rois", icon = 9, auraInstanceID = 42 } }
+    Update() assert(Ids(other) == "", "ma benediction non reconnue : " .. Ids(other))
+    AURAS = {}
+    Z.db.buffWatch[25780] = { pve = true } Update()
+    assert(Ids(me) == "19740,25780" and Ids(other) == "19740", "Fureur vertueuse cochee : " .. Ids(me))
+    Z.db.buffWatch = {}
+
+    -- Chaman : Bouclier d'eau ou de foudre sur moi, enchantement d'arme (le dernier lance)
+    Z.class = "SHAMAN" Z:BuildData()
+    local has, left = false, 0
+    rawset(_G, "GetWeaponEnchantInfo", function() return has, left end)
+    Update()
+    assert(Ids(me) == "408510,8024" and Ids(other) == "", "chaman : " .. Ids(me) .. " / " .. Ids(other))
+    assert(Spell(me, 408510) == "Bouclier d'eau" and Spell(me, 8024) == "Arme Langue de feu", "sorts du chaman")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 8017)
+    assert(Z.char.weaponEnchant == 8017, "enchantement lance non retenu")
+    Update() assert(Spell(me, 8024) == "Arme Croque-roc", "dernier enchantement non propose")
+    AURAS["HELPFUL"] = { { name = "Bouclier de foudre", icon = 9, auraInstanceID = 51 } }
+    has, left = true, 1800000
+    later = {}
+    FireEvent("WEAPON_ENCHANT_CHANGED") RunUpdates()
+    assert(Ids(me) == "", "bouclier de foudre ou arme enchantee non reconnus : " .. Ids(me))
+    local weaponRdv
+    for _, l in ipairs(later) do if l.s > 1799 and l.s < 1802 then weaponRdv = l end end
+    assert(weaponRdv, "fin de l'enchantement non attendue")
+    rawset(_G, "GetWeaponEnchantInfo", function() return MakeSecret(), MakeSecret() end)
+    Update() assert(Ids(me) == "", "enchantement secret")
+    rawset(_G, "GetWeaponEnchantInfo", nil)
+    AURAS = {}
+
+    -- Options : « Mes buffs », deux cases par buff, un choix egal au depart est efface
+    Z.class = "PRIEST" Z:BuildData()
+    Z:ToggleOptions("Joueurs")
+    local box = Z.buffWatchBox
+    assert(box, "liste Mes buffs absente")
+    box:Update()
+    local row976
+    for _, row in ipairs(box.lines) do if row:IsShown() and row.entry.id == 976 then row976 = row end end
+    assert(row976 and not row976.checks[1].on and row976.checks[2].on, "Protection contre l'ombre : JcJ seulement au depart")
+    row976.checks[1]:Run("OnClick")
+    assert(Z.db.buffWatch[976] and Z.db.buffWatch[976].pve == true, "case JcE non enregistree")
+    row976.checks[1]:Run("OnClick")
+    assert(Z.db.buffWatch[976] == nil, "retour au depart non efface")
+    local shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
+    assert(shown == 7, "lignes du pretre : " .. shown) -- 6 buffs et Gardien de peur
+    local labels = table.concat(Z:OptionLabels(), "|")
+    for _, text in ipairs({ "Mes buffs", "Proposer à nouveau sous (minutes)", "Version de groupe dès (joueurs)" }) do
+      assert(labels:find(text, 1, true), "absent de la recherche : " .. text)
+    end
+    for _, text in ipairs({ "Mes buffs", "JcE", "JcJ", "une personne", "sur vous", " ou ", "Bénédictions (une de vous par joueur)",
+      "Enchantement de l'arme", "Votre classe n'a aucun buff à surveiller." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+    Z:ToggleOptions()
+  end)
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit, UnitClass = old.name, old.known, old.isUnit, old.class
+  UnitGroupRolesAssigned, C_Timer.After, C_Spell.GetSpellCooldown = old.role, old.after, old.cd
+  INSTANCE, INSTANCE_TYPE, NOW, Z.char.weaponEnchant = old.instance, old.itype, old.now, old.weapon
+  rawset(_G, "GetWeaponEnchantInfo", nil)
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z.class = old.zclass Z:BuildData() AURAS = {} Z:Refresh() RunUpdates()
   assert(ok, err)
 end)
 
