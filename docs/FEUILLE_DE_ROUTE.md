@@ -50,10 +50,11 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | Publiée (v1.38.0) |
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, hors combat), aucun soin sur un ennemi | Publiée (v1.39.0) |
 | 27 b bis | 1.39.1 | Variante « sur un tank » (selon le rôle) | Publiée (v1.39.1) |
-| 27 c | 1.40.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
-| 28 | 1.41.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
-| 29 a | 1.42.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
-| 29 b | 1.43.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
+| 27 c | 1.40.0 | Boucliers du prêtre et du paladin : ce qui reste à absorber, même en combat, et leur fin (priorité haute) | À faire |
+| 27 d | 1.41.0 | Mes recharges, Pénitence | À faire |
+| 28 | 1.42.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
+| 29 a | 1.43.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
+| 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -801,7 +802,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
     `/lyorune buffs` dit qui buffe qui. Rôle soigneur sur une classe sans mana : suit sa classe. Tests (étape
     1.37.0, 107 étapes), guides, visite (une phrase sur la carte « C'est parti »), Notes, README. Installée.
 
-## Étape 27 : sorts (1.38.0 à 1.40.0)
+## Étape 27 : sorts (1.38.0 à 1.41.0)
 - [x] 27 a (1.38.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
   partage, macros des barres, statistiques).
   Recherche (22 novembre 2026) : HealKit (`Bindings.lua`, `Config.lua`) ne voit les rangs bas que si l'option du
@@ -854,15 +855,16 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   disposition et fin du combat. Ordre : ennemi, JcJ, tank (le sort hors combat ne compte plus), hors combat.
   Proposée seulement pour un raccourci qui lance un sort. Tests (1.39.1). **À essayer en jeu** : un tank dans le
   cadre « Tanks » et dans un groupe mélangé ; un tank qui rejoint en plein combat (essai n° 7 du plan).
-- [ ] 27 c (1.40.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;
-  Pénitence (trait de canalisation si le jeu ne la prédit pas).
+- [ ] 27 c (1.40.0), **priorité haute (demande de l'auteur, 22 novembre 2026)** : boucliers du prêtre et du
+  paladin, ce qui reste à absorber (même en combat) et leur fin (voir `PLAN-CORRECTIF.md`, 1c-2, S4 et S5).
+- [ ] 27 d (1.41.0) : rangée « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
 
-## Étape 28 : affaiblissements (1.41.0)
+## Étape 28 : affaiblissements (1.42.0)
 - [ ] Secondes restantes, Âme affaiblie et Longanimité avec leurs secondes, mode « Utiles » ; icône du type de
   dissipation ; liste suivie qui dit si elle marche en combat.
 
-## Étape 29 : éditeur de placement et JcJ (1.42.0 et 1.43.0)
-- [ ] 29 a (1.42.0) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,
+## Étape 29 : éditeur de placement et JcJ (1.43.0 et 1.44.0)
+- [ ] 29 a (1.43.0) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,
   22 novembre 2026 : « il faut aussi pouvoir les remettre »). Une case à cocher devant chaque élément de l'éditeur,
   liée au même réglage que les options (nom et icône centrale deviennent des réglages) : décochée, l'élément est
   masqué sur les vraies cases ; recochée, il revient **à sa place et à sa taille d'avant** (elles sont gardées
@@ -870,7 +872,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   transparence : on le voit toujours, on peut le réafficher ou le préparer. Bouton « Tout afficher » pour tout
   remettre d'un coup ; un élément masqué ne compte plus comme obstacle (les autres prennent sa place) et la
   reprend quand il revient ; plafond à 300 % et bouton « Remplir la place ».
-- [ ] 29 b (1.43.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
+- [ ] 29 b (1.44.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
   « Arène » seulement si Forever a des arènes.
 
 ## Fin d'une étape
