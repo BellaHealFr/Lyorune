@@ -43,13 +43,14 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
 | 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
 | 26 b | 1.34.0 | Buffs en champ de bataille et en arène (match JcJ) | À faire |
-| 26 c | 1.35.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
-| 27 a | 1.36.0 | Rang choisi sur chaque raccourci | À faire |
-| 27 b | 1.37.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
-| 27 c | 1.38.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
-| 28 | 1.39.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
-| 29 a | 1.40.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
-| 29 b | 1.41.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
+| 26 b bis | 1.35.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | À faire |
+| 26 c | 1.36.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
+| 27 a | 1.37.0 | Rang choisi sur chaque raccourci | À faire |
+| 27 b | 1.38.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
+| 27 c | 1.39.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
+| 28 | 1.40.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
+| 29 a | 1.41.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
+| 29 b | 1.42.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -603,7 +604,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   vie inconnue, vie secrète, relevé, mode test), option et aide, tutoriel et guide anglais. Notes, README et
   description du dépôt inchangés (corrections seulement). Publiée le 22 novembre 2026 (1.32.1), vérifiée hors jeu.
 
-## Étape 26 : buffs (1.33.0 à 1.35.0)
+## Étape 26 : buffs (1.33.0 à 1.36.0)
 - [x] 26 a (1.33.0) : buffs complets du prêtre (Robustesse, Esprit divin, Protection contre l'ombre et leurs
   prières, Feu intérieur sur soi seulement), du paladin, du chaman et du druide, toutes les absences d'un joueur ;
   ma liste de buffs, une pour le JcE et une pour le JcJ. Fait le 22 novembre 2026, vérifié hors jeu (numéros lus
@@ -617,26 +618,32 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   reste vide (auras secrètes) : suivi pendant le match à l'étape 26 b.
 - [ ] 26 b (1.34.0) : champ de bataille et arène : photo des buffs avant le match, mémoire de mes propres sorts,
   règle `Z.Restricted()`.
-- [ ] 26 c (1.35.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
+- [ ] 26 b bis (1.35.0) : buffs en combat (demande de l'auteur, 22 novembre 2026 : « on doit pouvoir rafraîchir
+  les buffs sur les joueurs s'ils disparaissent, même en combat »). Lancer marche déjà (clic ou touche au survol
+  sur la case). Savoir qu'il manque : un repère gris « manquant » par buff de ma liste, sous un conteneur d'auras
+  du jeu (`HELPFUL`, tous les rangs du buff) qui dessine le buff par-dessus quand il est là. Raccourci « mon buff
+  unique sur son porteur », préparé hors combat. À vérifier avec l'auteur avant codage : ordre de dessin et
+  opacité, conteneur vide invisible, numéros de tous les rangs, coût en raid de 40.
+- [ ] 26 c (1.36.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
   1.32.0), synchronisation des paladins, guide et visite.
 
-## Étape 27 : sorts (1.36.0 à 1.38.0)
-- [ ] 27 a (1.36.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
+## Étape 27 : sorts (1.37.0 à 1.39.0)
+- [ ] 27 a (1.37.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
   partage, macros des barres, statistiques).
-- [ ] 27 b (1.37.0) : variantes d'un raccourci (sur un ennemi, en JcJ, selon le rôle par le groupe « Tanks », hors
+- [ ] 27 b (1.38.0) : variantes d'un raccourci (sur un ennemi, en JcJ, selon le rôle par le groupe « Tanks », hors
   combat) ; garde « aucun soin sur un ennemi ».
-- [ ] 27 c (1.38.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;
+- [ ] 27 c (1.39.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;
   Pénitence (trait de canalisation si le jeu ne la prédit pas).
 
-## Étape 28 : affaiblissements (1.39.0)
+## Étape 28 : affaiblissements (1.40.0)
 - [ ] Secondes restantes, Âme affaiblie et Longanimité avec leurs secondes, mode « Utiles » ; icône du type de
   dissipation ; liste suivie qui dit si elle marche en combat.
 
-## Étape 29 : éditeur de placement et JcJ (1.40.0 et 1.41.0)
-- [ ] 29 a (1.40.0) : une case à cocher devant chaque élément de l'éditeur, liée au réglage des options (nom et
+## Étape 29 : éditeur de placement et JcJ (1.41.0 et 1.42.0)
+- [ ] 29 a (1.41.0) : une case à cocher devant chaque élément de l'éditeur, liée au réglage des options (nom et
   icône centrale deviennent des réglages) ; un élément éteint ne compte plus comme obstacle ; plafond à 300 % et
   bouton « Remplir la place ».
-- [ ] 29 b (1.41.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
+- [ ] 29 b (1.42.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
   « Arène » seulement si Forever a des arènes.
 
 ## Fin d'une étape
