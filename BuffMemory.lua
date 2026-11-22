@@ -1,6 +1,6 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - BuffMemory.lua : buffs manquants là où le jeu cache les buffs aux addons (champ de bataille, arène,
--- clé mythique, rencontre de boss), même hors combat.
+-- rencontre de boss), même hors combat.
 -- Trois sources, de la plus sûre à la moins sûre :
 --   1. un buff que le jeu laisse lisible (certains sorts ne sont jamais secrets) se lit directement, partout ;
 --   2. le dernier état lu de chaque joueur, mis à jour à chaque lecture et photographié juste avant qu'une
@@ -35,7 +35,7 @@ local function Duration(name)
 	return type(known) == "number" and known > 0 and known or DEFAULT_DURATION
 end
 
--- Le jeu cache-t-il les buffs maintenant ? (combat, boss, clé mythique, match JcJ)
+-- Le jeu cache-t-il les buffs maintenant ? (combat, boss, match JcJ)
 function Z.AurasHidden()
 	local secret = C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret()
 	if issecret(secret) then return true end
@@ -331,4 +331,5 @@ function Z:BuffsCommand()
 		end
 	end
 	Z:Print(L["mémoire : %d fiche(s) de joueur en cours."]:format(players))
+	for _, line in ipairs(Z.BuffAssignReport and Z.BuffAssignReport() or {}) do Z:Print(line) end -- qui buffe qui
 end

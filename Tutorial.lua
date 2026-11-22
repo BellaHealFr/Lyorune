@@ -231,7 +231,7 @@ local steps = {
 		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
-			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, les buffs qui manquent s'affichent sous vos cadres, à leur forme : un clic les pose. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs. En combat et en champ de bataille, le jeu les dessine sur les cases : en couleur s'ils sont posés, gris s'ils manquent.\n\n"
+			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, les buffs qui manquent s'affichent sous vos cadres, à leur forme : un clic les pose. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs. En combat et en champ de bataille, le jeu les dessine sur les cases : en couleur s'ils sont posés, gris s'ils manquent. Vos groupes à buffer et la bénédiction de chaque joueur s'y règlent aussi ; le chef peut les répartir.\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur.",
 	},

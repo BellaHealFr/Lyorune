@@ -339,7 +339,7 @@ local function NilIfEmpty(set) if set and next(set) then return set end end
 
 ----------------------------------------------------------------------------------------------------
 -- Repères des buffs (étape 26 b bis, choix de l'auteur le 22 novembre 2026). Quand le jeu cache les buffs (combat,
--- champ de bataille, arène, clé mythique), Lyorune ne peut plus lire qu'un buff manque. Chaque buff de ma liste qui
+-- champ de bataille, arène), Lyorune ne peut plus lire qu'un buff manque. Chaque buff de ma liste qui
 -- concerne ce joueur (décidé hors combat, mêmes règles que le panneau : Z.BuffConcerns) reçoit un repère gris à bord
 -- rouge (Z.BuffMark, Auras.lua) et une place du conteneur « buffs », juste au-dessus : le jeu y dessine le buff en
 -- couleur quand il est là. Gris = manquant, couleur = posé. Un seul conteneur par case (pas un par buff), tous les
@@ -377,8 +377,10 @@ local function Marks(b)
 		if check.auraIds and Z.BuffConcerns(check, unit, me) then
 			local own = check.blessing or check.aura
 			local choice = check.blessing and Z.BlessingFor(check, unit) or (check.aura and Z.LastChoice(check))
-			list[#list + 1] = { box = "buffs", key = "buff" .. check.id, filter = own and "HELPFUL|PLAYER" or "HELPFUL", ids = check.auraIds,
-				icon = choice and choice.icon or check.icon }
+			if choice or not check.blessing then -- (aucune bénédiction prévue pour lui : grille, autres paladins)
+				list[#list + 1] = { box = "buffs", key = "buff" .. check.id, filter = own and "HELPFUL|PLAYER" or "HELPFUL", ids = check.auraIds,
+					icon = choice and choice.icon or check.icon }
+			end
 		end
 	end
 	if not unit:find("pet", 1, true) then
@@ -786,7 +788,7 @@ Z:On("PLAYER_REGEN_ENABLED", function()
 	MarksChanged()
 end)
 
--- Restriction du jeu (match JcJ, clé mythique, boss) qui commence ou finit
+-- Restriction du jeu (match JcJ, boss) qui commence ou finit
 Z:On("ADDON_RESTRICTION_STATE_CHANGED", function() MarksChanged() end)
 
 -- Le groupe change en plein combat : un même nom d'unité peut désigner un autre joueur. Ses repères (mana, porteur)

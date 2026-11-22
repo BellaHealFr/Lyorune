@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.36.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.37.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -106,6 +106,8 @@ Z.defaults = {
 	buffWatch = {},            -- « Mes buffs » : buffWatch[numéro du buff] = { pve = bool, pvp = bool } ; absent : le départ de Data.lua
 	buffRefresh = 2,           -- proposer à nouveau un buff qui finit dans moins de N minutes (0 : seulement s'il manque)
 	buffGroupAt = 3,           -- joueurs d'un même groupe sans le buff à partir desquels la version de groupe est proposée
+	buffGroups = {},           -- groupes de raid que je buffe : buffGroups[3] = false écarte le groupe 3 ; vide : tous (BuffAssign.lua)
+	blessingPick = {},         -- bénédiction par type de joueur : blessingPick.TANK = numéro du sort, 0 = aucune ; absent : le départ
 	castIndicator = "OFF",     -- temps de recharge global et incantation (Cast.lua) : aucun, barre sous les cadres, anneau au curseur
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
@@ -167,7 +169,8 @@ Z.defaults = {
 	versionNotice = true,      -- prévenir si un membre du groupe a une version plus récente
 	acceptConfigs = true,      -- accepter qu'un joueur me propose sa configuration
 	resSync = true,            -- qui relève qui : le nom du soigneur qui relève s'affiche sur la case du mort
-	assignAccept = true,       -- appliquer la répartition envoyée par le chef ou un assistant (Assign.lua)
+	assignAccept = true,       -- appliquer la répartition envoyée par le chef ou un assistant (Assign.lua, BuffAssign.lua)
+	blessingSync = true,       -- entente entre paladins : chacun annonce ses bénédictions, aucun ne pose celle d'un autre
 	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
 	windowTheme = "MODERN",    -- thème des fenêtres de Lyorune (pas des cases) : Moderne, Classique, MMORPG
 	reduceMotion = false,      -- animations réduites : fondus courts seulement, rien en boucle
@@ -223,6 +226,7 @@ Z.private = { minimapAngle = true, tutorialDone = true, wizardDone = true, langu
 	macros = true, -- mes macros : jamais partagées, jamais effacées par la réinitialisation
 	pinned = true, -- mes joueurs épinglés : des noms, jamais partagés
 	assignGroups = true, assignPlayers = true, -- ma part de la répartition : propre à chaque raid, jamais partagée
+	buffGroups = true, -- mes groupes à buffer : idem
 	profiles = true } -- mes profils enregistrés : idem (la réinitialisation quitte seulement le profil en cours)
 
 -- Réglages qu'un profil ne change jamais : clics, listes, annonces, fenêtres de Lyorune, profils eux-mêmes.
@@ -241,6 +245,7 @@ Z.notInProfile = {
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
 	buffPanel = true, combatKey = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
+	buffGroups = true, blessingPick = true, blessingSync = true,
 }
 
 -- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.
@@ -534,6 +539,8 @@ function Z.Command(msg)
 		Z:AssignCommand(pinName) -- répartition entre soigneurs : ajoute ou retire un de mes joueurs
 	elseif msg == "repartir" or msg == "répartir" or msg == "assign" then
 		Z:OpenAssign()
+	elseif msg == "repartir buffs" or msg == "répartir buffs" or msg == "assign buffs" then
+		Z:OpenBuffAssign()
 	elseif msg == "porteur" or msg:match("^porteur ") or msg == "bearer" or msg:match("^bearer ") then
 		Z:BuffTargetCommand(pinName) -- le nom garde ses majuscules
 	elseif msg == "sorts" or msg == "spells" then

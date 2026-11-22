@@ -376,7 +376,7 @@ local function RowEnter(self)
 	if self.spell2Name then
 		GameTooltip:AddLine(L["Clic droit : %s (tout son groupe)"]:format(self.spell2Name), 0.8, 0.8, 0.8)
 	end
-	if Z.AurasHidden() then -- champ de bataille, arène, clé mythique : le jeu cache les buffs (BuffMemory.lua)
+	if Z.AurasHidden() then -- champ de bataille, arène : le jeu cache les buffs (BuffMemory.lua)
 		GameTooltip:AddLine(L["Buffs cachés par le jeu ici : Lyorune retient vos propres buffs, pas ceux des autres joueurs."], 1, 0.82, 0.3, true)
 	end
 	GameTooltip:Show()

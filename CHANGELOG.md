@@ -6,16 +6,29 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.37.0] - 2026-11-22
+
+### Ajouté
+
+- Qui buffe qui : vos groupes de raid à buffer (Mes buffs), avec un bouton « Comme mes soins ».
+- Paladin : grille « Bénédiction par joueur », une bénédiction par type de joueur (tanks, soigneurs, chaque classe), ou aucune.
+- Plusieurs paladins : une bénédiction déjà posée par un autre paladin n'est jamais reprise, la suivante est proposée ; entente entre les paladins qui ont Lyorune, annoncée avant le combat.
+- Répartir les buffs : le chef ou un assistant envoie à chacun ses groupes et la bénédiction qu'il pose en premier (/lyorune repartir buffs). /lyorune buffs dit qui buffe qui.
+
+### Corrigé
+
+- Les textes ne parlent plus de clé mythique : il n'y en a pas sur WoW Forever.
+
 ## [1.36.0] - 2026-11-22
 
 ### Ajouté
 
-- Buffs en combat : là où le jeu cache les buffs (combat, champ de bataille, arène, clé mythique), il dessine vos buffs en bas à gauche des cases, en couleur s'ils sont posés, gris à bord rouge s'ils manquent (tous les rangs, même posés par un autre joueur).
+- Buffs en combat : là où le jeu cache les buffs (combat, champ de bataille, arène), il dessine vos buffs en bas à gauche des cases, en couleur s'ils sont posés, gris à bord rouge s'ils manquent (tous les rangs, même posés par un autre joueur).
 - En combat, la touche « Poser le prochain buff manquant » relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, par son nom.
 
 ### Amélioré
 
-- Mes buffs : la description explique les buffs cachés par le jeu en champ de bataille, en arène et en clé mythique.
+- Mes buffs : la description explique les buffs cachés par le jeu en champ de bataille et en arène.
 
 ## [1.35.0] - 2026-11-22
 
@@ -25,7 +38,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ### Corrigé
 
-- Buffs manquants en champ de bataille, en arène et en clé mythique : le jeu y cache les buffs, même hors combat, et le panneau restait vide. Lyorune lit les buffs que le jeu laisse lisibles, note ceux de chacun juste avant le match, retient les buffs que vous lancez pendant leur durée et les oublie à la mort (au cimetière, ils sont proposés de nouveau).
+- Buffs manquants en champ de bataille et en arène : le jeu y cache les buffs, même hors combat, et le panneau restait vide. Lyorune lit les buffs que le jeu laisse lisibles, note ceux de chacun juste avant le match, retient les buffs que vous lancez pendant leur durée et les oublie à la mort (au cimetière, ils sont proposés de nouveau).
 
 ## [1.34.1] - 2026-11-22
 
@@ -722,6 +735,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.37.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.36.0...v1.37.0
 [1.36.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.35.0...v1.36.0
 [1.35.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.1...v1.35.0
 [1.34.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.0...v1.34.1

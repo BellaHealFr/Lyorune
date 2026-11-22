@@ -156,8 +156,9 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 --                        (le premier sort connu de la ligne est lancé)
 --   self = true          sur moi seulement (Feu intérieur, boucliers du chaman)
 --   mana = true          seulement les joueurs à mana : les classes absentes de Z.classPower
---   blessing = { id }    bénédictions : chaque joueur en veut une de moi (celle d'un autre paladin ne compte
---                        pas) ; tank : Rois, joueur à mana : Sagesse, les autres : Puissance (Z.BlessingFor)
+--   blessing = { id }    bénédictions : chaque joueur en veut une de moi ; laquelle : grille « Bénédiction par
+--                        joueur » (Z.blessingSlots), sans reprendre celle qu'un autre paladin a posée ou annoncée
+--                        (Z.BlessingFor, BuffAssign.lua)
 --   weapon = { id }      enchantement de mon arme principale (le jeu le dit à part, pas dans les auras) : le
 --                        dernier que j'ai lancé, sinon le premier connu de la liste
 --   aura = { id }        auras du paladin : une des miennes suffit ; la dernière lancée, sinon la première connue
@@ -214,6 +215,16 @@ Z.blessingFor = {
 	MANA   = { 19742, 20217 },        -- Sagesse, Rois
 	OTHER  = { 19740, 20217 },        -- Puissance, Rois
 }
+
+-- Grille « Bénédiction par joueur » (Mes buffs, paladin) : une ligne par type de joueur, dans cet ordre. Rôle du
+-- joueur d'abord (TANK, HEALER), sinon sa classe. Une classe ajoutée au jeu : une entrée de plus ici, et son nom
+-- dans Z.blessingSlotNames. Départ d'une ligne : Z.blessingFor[ligne], sinon MANA (soigneur, classe à mana) ou OTHER.
+Z.blessingSlots = { "TANK", "HEALER", "WARRIOR", "ROGUE", "HUNTER", "PALADIN", "SHAMAN", "DRUID", "PRIEST", "MAGE", "WARLOCK" }
+Z.blessingSlotNames = { TANK = "Tanks", HEALER = "Soigneurs", WARRIOR = "Guerrier", ROGUE = "Voleur", HUNTER = "Chasseur",
+	PALADIN = "Paladin", SHAMAN = "Chaman", DRUID = "Druide", PRIEST = "Prêtre", MAGE = "Mage", WARLOCK = "Démoniste" }
+-- Bénédictions utiles seulement aux joueurs à mana (Sagesse) : jamais proposées à un guerrier ou un voleur, même
+-- quand un autre paladin a déjà posé toutes les autres
+Z.manaBlessings = { [19742] = true }
 
 -- Gros défensifs, posés par n'importe quel joueur : leur icône va sur la case de celui qui les porte (réglage
 -- « showDefensives »), même en combat (Containers.lua). Une ligne par sort : le premier numéro, puis les autres
@@ -379,20 +390,7 @@ function Z.UsesMana(unit)
 	return not Z.classPower[class]
 end
 
--- Bénédiction à poser sur ce joueur (Z.blessingFor) : le choix connu, son nom et son icône
-function Z.BlessingFor(check, unit)
-	local role = UnitGroupRolesAssigned(unit)
-	local class = select(2, UnitClass(unit))
-	local line = (not Z.IsSecret(role) and role == "TANK" and Z.blessingFor.TANK)
-		or (class and not Z.IsSecret(class) and Z.blessingFor[class])
-		or (Z.UsesMana(unit) and Z.blessingFor.MANA) or Z.blessingFor.OTHER
-	for _, id in ipairs(line) do
-		for _, choice in ipairs(check.choices) do
-			if choice.id == id then return choice end
-		end
-	end
-	return check.choices[1]
-end
+-- Bénédiction à poser sur ce joueur : Z.BlessingFor, dans BuffAssign.lua (grille, entente entre paladins)
 
 -- Enchantement d'arme ou aura à poser : le dernier que j'ai lancé (Z.char.lastChoice), sinon le premier connu
 function Z.LastChoice(check)

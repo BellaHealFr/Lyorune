@@ -695,9 +695,11 @@ local function Recheck(b, seconds)
 	end)
 end
 
--- Ce buff de ma liste concerne-t-il ce joueur ? (sur moi seulement, joueurs à mana, pas les familiers)
+-- Ce buff de ma liste concerne-t-il ce joueur ? (sur moi seulement, joueurs à mana, pas les familiers, en raid
+-- seulement mes groupes à buffer : BuffAssign.lua)
 local function Concerns(check, unit, me)
 	if check.self and not me then return false end
+	if not me and not Z.BuffGroupOK(unit) then return false end
 	if check.mana and not Z.UsesMana(unit) then return false end
 	if check.blessing and unit:find("pet", 1, true) then return false end
 	-- version de groupe seulement : un familier n'a pas de ligne « Groupe N », rien à lui proposer
@@ -709,7 +711,7 @@ Z.BuffConcerns = Concerns -- aussi pour les repères des buffs dessinés par le 
 -- Buffs de ma liste que ce joueur n'a pas, tous, dans l'ordre de Data.lua : { { check, spell, icon }, ... }, et
 -- une clé qui les résume. Hors combat seulement. Un buff qui finit dans moins de « buffRefresh » minutes
 -- compte comme absent (au plus le quart de sa durée, Until).
--- Là où le jeu cache les buffs même hors combat (champ de bataille, arène, clé mythique) : un buff qui reste
+-- Là où le jeu cache les buffs même hors combat (champ de bataille, arène) : un buff qui reste
 -- lisible se lit, les autres viennent de la mémoire (BuffMemory.lua), et un buff inconnu compte comme absent.
 local function FindMissingBuffs(b, unit)
 	if not (Z.db.missingBuffs or Z.db.buffPanel) or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
@@ -758,7 +760,20 @@ local function FindMissingBuffs(b, unit)
 					if hidden2 then hidden = true else Z.NoteBuffs(unit, list2, Z.ownNames, true) end
 				end
 				for name in pairs(check.names) do left = math.max(left, mine[name] or -math.huge) end
-				choice = check.blessing and Z.BlessingFor(check, unit) or Z.LastChoice(check)
+				if check.blessing then
+					-- bénédictions qu'un autre paladin lui a posées : jamais reprises, la suivante de sa ligne est proposée
+					local taken
+					for name in pairs(check.names) do
+						if present[name] and not mine[name] then
+							taken = taken or {}
+							taken[name] = true
+						end
+					end
+					choice = Z.BlessingFor(check, unit, taken)
+					if not choice then left = math.huge end -- aucune choisie, ou toutes déjà posées par d'autres
+				else
+					choice = Z.LastChoice(check)
+				end
 			else
 				for name in pairs(check.names) do left = math.max(left, present[name] or -math.huge) end
 			end

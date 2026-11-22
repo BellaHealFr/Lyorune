@@ -43,7 +43,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
 | 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
 | 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | Fait : bloc sous les cadres (1.34.0), Sorts et raccourcis et `/lyorune sorts` (1.34.1) |
-| 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | Fait (1.35.0) : aussi en clé mythique et pendant un boss |
+| 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | Fait (1.35.0) : aussi pendant un boss |
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | Fait |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | À faire |
@@ -191,7 +191,7 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
   (tableau en 6 lignes et 2 colonnes ; sans choix, la règle de la taille du groupe s'applique)
 
 ## Étape 18 : demandes d'aide entre joueurs (1.24.0), abandonnée
-- [x] Vérifié (17 novembre 2026) : pendant un combat de boss, une clé mythique+ et le JcJ coté, le jeu bloque les
+- [x] Vérifié (17 novembre 2026) : pendant un combat de boss et le JcJ coté, le jeu bloque les
   messages entre addons et les messages du chat écrits par un addon (`C_ChatInfo.InChatMessagingLockdown()`).
   La demande ne partirait pas au moment où elle sert. Décision de l'auteur : étape écartée.
 
@@ -529,7 +529,7 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
 - [x] Lot 2, partage : le chef ou un assistant propose une répartition à tous les soigneurs qui ont Lyorune
   (Comm.lua, échanges de l'étape 3 bis). Chacun voit ses joueurs, et le nom du soigneur prévu au survol d'une case.
   - **À vérifier, à décider avec l'auteur avant tout codage (synchronisation)** : les messages entre addons sont
-    bloqués pendant un combat de boss, une clé mythique+ et le JcJ coté (étape 18 abandonnée pour cette raison).
+    bloqués pendant un combat de boss et le JcJ coté (étape 18 abandonnée pour cette raison).
     La répartition se partage donc avant le combat, jamais pendant : envoi refusé et message clair si
     `C_ChatInfo.InChatMessagingLockdown()` est vrai (déjà testé dans Comm.lua), rien n'est attendu en combat. Une
     fois reçue, elle reste valable tout le combat sans aucun message. À essayer en jeu : qui peut proposer (chef,
@@ -712,7 +712,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   marqué « jamais secret », prioritaire sur les restrictions. Option du jeu `addonPvPMatchRestrictionsForced`
   (vue dans Leatrix, VuhDo) : restrictions JcJ partout, pour essayer sans champ de bataille.
   **Fait (BuffMemory.lua)** : buff lisible lu partout (`Z.BuffReadable`, tous les numéros de la ligne) ; dernier
-  état lu de chaque joueur (`Z.NoteBuffs`) et photo à l'état `Activating` des restrictions JcJ, clé mythique et
+  état lu de chaque joueur (`Z.NoteBuffs`) et photo à l'état `Activating` des restrictions JcJ et
   boss ; mes sorts réussis retenus par identifiant (`UNIT_SPELLCAST_SENT` donne la cible : clic de case, panneau,
   macro, cible ; version de groupe = groupe vivant et à portée) ; durées apprises (`LyoruneDB.buffDurations`, par
   nom), sinon 10 min ; oubli à la mort (Frames.lua) ; mémoire gardée au /reload (`Z.char.buffMemory`, contrôle de
@@ -745,7 +745,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   **Fait (mieux que VuhDo)** : un seul conteneur de plus par case (`buffs`, Containers.lua), une place fixe par buff
   de « Mes buffs » qui concerne ce joueur (`Z.BuffConcerns`, décidé hors combat), repère gris à bord rouge dessous
   (`Z.BuffMark`, Auras.lua) : couleur = posé, gris = manquant. Montré quand le jeu cache les buffs (combat, champ de
-  bataille, arène, clé mythique : `Z.BuffMarksOn`), donc aussi la vérité en JcJ, même pour le buff d'un autre.
+  bataille, arène : `Z.BuffMarksOn`), donc aussi la vérité en JcJ, même pour le buff d'un autre.
   Tous les rangs écrits dans `Z.spellRanks` (Data.lua, vérifiés avec HealKit, PallyPower, VuhDo, WhatsTraining,
   revérifiés par leur nom au chargement : `check.auraIds`). Bénédictions, auras et buffs uniques : seulement les
   miens (`HELPFUL|PLAYER`) ; buff unique seulement sur la case de son porteur (`Z.UniqueBearer`, Buffs.lua). Joueur
@@ -762,6 +762,29 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   opacité, conteneur vide invisible, numéros de tous les rangs, coût en raid de 40.
 - [ ] 26 c (1.37.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
   1.32.0), synchronisation des paladins, guide et visite.
+  Comparaison (22 novembre 2026) : HealKit choisit une bénédiction par ligne (Tank, Soigneur, chaque classe, moi),
+  sans aucune entente entre paladins ; HealBot et VuhDo donnent une cible par buff (moi, groupe, raid, mêlée,
+  distance, soigneurs, tanks), sans synchronisation ; PallyPower a une grille paladins × classes, des exceptions
+  par joueur, une répartition automatique, envoyée par le chef ou les assistants (un paladin peut autoriser les
+  autres à le régler). Aucun ne s'adapte seul aux bénédictions déjà posées par un autre paladin.
+  **Décidé avec l'auteur (22 novembre 2026)**, les quatre choix recommandés :
+  - Mes groupes à buffer : réglage à part (8 boutons dans Mes buffs, tous allumés au départ, comptent en raid
+    seulement), bouton « Comme mes soins » qui recopie les groupes de soin de la 1.32.0.
+  - Bénédiction par type de joueur : grille dans Mes buffs (Tank, Soigneur, puis chaque classe de Data.lua),
+    choix parmi mes bénédictions ou « aucune » ; au départ, les choix d'aujourd'hui.
+  - Plusieurs paladins, sans message : hors combat, si un autre paladin a déjà posé ma bénédiction prévue, je pose
+    la suivante de la ligne du joueur. Marche aussi avec un paladin sans Lyorune.
+  - Synchronisation : les paladins qui ont Lyorune s'annoncent leurs bénédictions par type de joueur (avant le
+    combat, jamais pendant un blocage) ; le chef ou un assistant peut envoyer la répartition des buffs (groupes et
+    bénédictions) depuis la fenêtre « Répartir », mêmes règles que la 1.32.0 (appliquée d'office, interrupteur).
+  - **Fait (22 novembre 2026), pas encore publié** : nouveau fichier `BuffAssign.lua`. Réglages `buffGroups`
+    (Z.private), `blessingPick`, `blessingSync` ; `assignAccept` vaut pour les deux répartitions. Grille
+    `Z.blessingSlots`, `Z.blessingSlotNames`, `Z.manaBlessings` (Data.lua) ; `Z.BlessingFor(check, unit, taken)`
+    déplacé de Data.lua ; filtre de groupe dans `Concerns` (Auras.lua). Messages `P:` (annonces, priorité
+    f > p > d puis nom, `P:?` après un /reload, `P:-`) et `B:id:i:n:Nom=13/numéro` (répartition des buffs).
+    Fenêtre « Répartir les buffs » (`/lyorune repartir buffs`), bouton de passage entre les deux fenêtres,
+    `/lyorune buffs` dit qui buffe qui. Rôle soigneur sur une classe sans mana : suit sa classe. Tests (étape
+    1.37.0, 107 étapes), guides, visite (une phrase sur la carte « C'est parti »), Notes, README. Installée.
 
 ## Étape 27 : sorts (1.38.0 à 1.40.0)
 - [ ] 27 a (1.38.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
@@ -813,4 +836,4 @@ buffs manquants, appel « Prêt ? », résurrection en cours, alertes de mana, p
 - Conseil de rang de sort : les rangs existent bien sur ce client (reconnus depuis la 1.25.0) ; repris à
   l'étape 22 sous la forme du rang adapté au niveau du joueur soigné.
 - Demande d'Innervation ou d'Infusion de puissance : le jeu bloque les messages entre addons pendant un combat de
-  boss, une clé mythique+ et le JcJ coté (vérifié le 17 novembre 2026).
+  boss et le JcJ coté (vérifié le 17 novembre 2026).

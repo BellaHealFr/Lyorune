@@ -791,8 +791,139 @@ local function BuffWatchList(page, width)
 	Z.buffWatchBox = box
 	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."]
 		.. " " .. L["La version simple et la version de groupe se cochent séparément."]
-		.. " " .. L["En champ de bataille, en arène et en clé mythique, le jeu cache les buffs : Lyorune retient ceux que vous lancez (/lyorune buffs)."]
+		.. " " .. L["En champ de bataille et en arène, le jeu cache les buffs : Lyorune retient ceux que vous lancez (/lyorune buffs)."]
 		.. " " .. L["Un buff à poser sur une seule personne se règle juste en dessous : le tank, vous, ou un joueur choisi (son nom, ou votre cible)."])
+	return box
+end
+
+-- Qui buffe qui (BuffAssign.lua) : mes groupes de raid à buffer. Un bouton par groupe, tous allumés au départ ;
+-- « Comme mes soins » recopie mes groupes de soin. Une répartition du chef qui me donne des groupes les remplace.
+local function BuffGroups(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 54)
+	box.label = UI.Label(box, 12)
+	box.label:SetPoint("TOPLEFT", 0, -5)
+	box.label:SetText(L["Groupes de raid que je buffe"])
+	box.buttons = {}
+	for g = 1, 8 do
+		local button = UI.Button(box, tostring(g), 36, 22, function()
+			if Z.db.buffGroups[g] == false then Z.db.buffGroups[g] = nil else Z.db.buffGroups[g] = false end
+			Z.RecheckAllBuffs()
+			box:Update()
+			if AfterChange then AfterChange() end
+		end)
+		button:SetPoint("TOPLEFT", (g - 1) * 42, -28)
+		button.label:SetJustifyH("CENTER")
+		box.buttons[g] = button
+	end
+	box.like = UI.Button(box, L["Comme mes soins"], 130, 22, function()
+		if not Z.BuffGroupsLikeHealing() then Z:Print(L["choisissez d'abord vos groupes de soin (Mes joueurs)."]) end
+		box:Update()
+		if AfterChange then AfterChange() end
+	end)
+	box.like:SetPoint("TOPLEFT", 8 * 42 + 6, -28)
+	box.like.label:SetJustifyH("CENTER")
+	box.like.tip = L["Vos groupes de soin (Mes joueurs) deviennent vos groupes à buffer."]
+	box.chief = Note(box, "", 0, -56, width)
+	box.Update = function(self)
+		local groups, chief = Z.BuffGroupsChoice()
+		for g, button in ipairs(self.buttons) do UI.SetTab(button, groups[g] == true) end
+		self.chief:SetText(chief and L["La répartition des buffs du chef choisit vos groupes pour l'instant."] or "")
+		Fit(self, chief and 74 or 54)
+	end
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Z.buffGroupsBox = box -- (pour les tests)
+	Register(page, L["Groupes de raid que je buffe"], box, L["En raid, les buffs manquants ne sont proposés que pour ces groupes. Tous au départ. Vos propres buffs restent toujours proposés."])
+	return box
+end
+
+-- Grille « Bénédiction par joueur » (paladin) : une ligne par type de joueur (Z.blessingSlots), un bouton qui
+-- passe d'une bénédiction à l'autre (clic droit : en arrière). Départ, chaque bénédiction connue, puis Aucune.
+local function BlessingGrid(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 40)
+	box.label = UI.Label(box, 12)
+	box.label:SetPoint("TOPLEFT", 0, -5)
+	box.label:SetText(L["Bénédiction par joueur"])
+	box.empty = Note(box, "Réservé aux paladins.", 0, -28, width)
+	box.rows = {}
+	local half = math.floor((width - 12) / 2)
+	local function Blessings()
+		for _, check in ipairs(Z.buffChecks or {}) do
+			if check.blessing then return check end
+		end
+	end
+	local function Choices(check)
+		local list = { false } -- départ
+		for _, choice in ipairs(check.choices) do list[#list + 1] = choice.id end
+		list[#list + 1] = 0 -- aucune
+		return list
+	end
+	box.Update = function(self)
+		local check = Blessings()
+		self.empty:SetShown(not check)
+		for _, row in ipairs(self.rows) do row:Hide() end
+		if not check then return Fit(self, 48) end
+		for i, slot in ipairs(Z.blessingSlots) do
+			local row = self.rows[i]
+			if not row then
+				row = CreateFrame("Frame", nil, self)
+				row:SetSize(half, 24)
+				row.name = UI.Label(row, 12)
+				row.name:SetPoint("LEFT")
+				row.name:SetWidth(80)
+				row.name:SetJustifyH("LEFT")
+				row.name:SetWordWrap(false)
+				row.pick = UI.Button(row, "", half - 86, 22, function(_, mouse)
+					local list = Choices(Blessings())
+					local now = Z.BlessingPick(row.slot)
+					local at = 1
+					for k, id in ipairs(list) do if id == (now == nil and false or now) then at = k end end
+					at = mouse == "RightButton" and (at - 2) % #list + 1 or at % #list + 1
+					local value = list[at]
+					Z.db.blessingPick[row.slot] = value ~= false and value or nil
+					Z.BlessingsChanged()
+					self:Update()
+					if AfterChange then AfterChange() end
+				end)
+				row.pick:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+				row.pick:SetPoint("LEFT", 84, 0)
+				row.pick.label:SetJustifyH("CENTER")
+				row.pick.tip = L["Clic : la bénédiction suivante. Clic droit : la précédente."]
+				self.rows[i] = row
+			end
+			row.slot = slot
+			row:ClearAllPoints()
+			row:SetPoint("TOPLEFT", ((i - 1) % 2) * (half + 12), -28 - math.floor((i - 1) / 2) * 26)
+			row.name:SetText(L[Z.blessingSlotNames[slot]])
+			local pick = Z.BlessingPick(slot)
+			local text
+			if pick == 0 then
+				text = L["Aucune"]
+			elseif pick then
+				text = Z.SpellName(pick) or ("#" .. pick)
+			else
+				local mana = slot == "HEALER" or (slot ~= "TANK" and not Z.classPower[slot])
+				local first = (Z.blessingFor[slot] or (slot == "HEALER" or mana) and Z.blessingFor.MANA or Z.blessingFor.OTHER)
+				local name
+				for _, id in ipairs(first) do
+					for _, choice in ipairs(check.choices) do
+						if not name and choice.id == id then name = choice.name end
+					end
+				end
+				text = (name or check.choices[1].name) .. "  |cffb3b3b3(" .. L["départ"] .. ")|r"
+			end
+			row.pick.label:SetText(text)
+			row:Show()
+		end
+		Fit(self, 28 + math.ceil(#Z.blessingSlots / 2) * 26 + 4)
+	end
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Z.blessingGridBox = box -- (pour les tests)
+	Register(page, L["Bénédiction par joueur"], box, L["Paladin : la bénédiction à poser à chaque type de joueur (tanks, soigneurs, puis chaque classe)."]
+		.. " " .. L["Une bénédiction déjà posée par un autre paladin n'est jamais reprise : la suivante est proposée."])
 	return box
 end
 
@@ -2165,11 +2296,14 @@ local function Chapters()
 			} },
 			{ "Buffs", {
 				{ "check", "missingBuffs", "Buff manquant sur la case", desc = "Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs." },
-				{ "check", "combatBuffs", "Aussi en combat et en champ de bataille", "Quand le jeu cache les buffs (combat, champ de bataille, arène, clé mythique), il dessine lui-même vos buffs en bas à gauche des cases : en couleur quand le buff est posé, gris à bord rouge quand il manque. Un clic sur la case le relance.", desc = "Couleur : posé. Gris à bord rouge : il manque.", dep = { "missingBuffs", true } },
+				{ "check", "combatBuffs", "Aussi en combat et en champ de bataille", "Quand le jeu cache les buffs (combat, champ de bataille, arène), il dessine lui-même vos buffs en bas à gauche des cases : en couleur quand le buff est posé, gris à bord rouge quand il manque. Un clic sur la case le relance.", desc = "Couleur : posé. Gris à bord rouge : il manque.", dep = { "missingBuffs", true } },
 				{ "check", "buffPanel", "Buffs manquants à poser", "Hors combat, chaque buff qui manque à un joueur est proposé : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour son porteur. Tout disparaît en combat et quand tout est posé. Une touche peut lancer le premier : raccourcis du jeu, AddOns, Lyorune." },
 				{ "check", "combatKey", "En combat, la touche relance mon buff unique", "En combat, la touche du prochain buff manquant relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, choisi dans Mes buffs. Préparée juste avant le combat, par le nom du joueur : elle ne part jamais sur quelqu'un d'autre.", fine = true, dep = { "buffPanel", true } },
 				{ "seg", "buffPlace", "Emplacement des buffs manquants", nil, "Avec les cadres : une seule case sous le dernier groupe, à la forme de vos cases, qui passe au buff suivant après chaque sort. Où vous voulez : une petite fenêtre à déplacer." },
 				{ "custom", BuffWatchList },
+				{ "custom", BuffGroups },
+				{ "custom", BlessingGrid },
+				{ "button", "Répartir les buffs...", function() Z:OpenBuffAssign() end, "Chef ou assistant : cochez les groupes que chacun buffe et la bénédiction que chaque paladin pose en premier, puis envoyez avant le combat. Aussi : /lyorune repartir buffs." },
 				{ "step", "buffRefresh", "Proposer à nouveau sous (minutes)", "Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque.", desc = "Au départ : 2 minutes avant la fin. 0 : seulement quand le buff manque." },
 				{ "step", "buffGroupAt", "Sort de groupe dès (joueurs sans le buff)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", desc = "Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve.", fine = true },
 			} },
@@ -2263,7 +2397,8 @@ local function Chapters()
 				{ "check", "syncEnabled", "Synchronisation entre joueurs", "Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu." },
 				{ "check", "resSync", "Montrer qui relève qui", "Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss, le jeu bloque ces messages.", dep = { "syncEnabled", true } },
 				{ "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande.", fine = true, dep = { "syncEnabled", true } },
-				{ "check", "assignAccept", "Appliquer la répartition du chef", "Le chef ou un assistant envoie qui soigne quoi : vos repères suivent tout de suite, avec une ligne dans la discussion. Votre propre choix revient quand vous quittez le groupe. Décochée : les répartitions reçues sont ignorées.", dep = { "syncEnabled", true } },
+				{ "check", "assignAccept", "Appliquer la répartition du chef", "Le chef ou un assistant envoie qui soigne quoi et qui buffe quoi : vos repères et vos buffs suivent tout de suite, avec une ligne dans la discussion. Votre propre choix revient quand vous quittez le groupe. Décochée : les répartitions reçues sont ignorées.", dep = { "syncEnabled", true } },
+				{ "check", "blessingSync", "Entente entre paladins", "Les paladins qui ont Lyorune s'annoncent leurs bénédictions avant le combat : aucun ne pose celle d'un autre sur le même joueur. Sans cette case, une bénédiction déjà posée par un autre paladin est tout de même respectée.", dep = { "syncEnabled", true } },
 				{ "check", "versionNotice", "Me prévenir si une version plus récente existe", fine = true, dep = { "syncEnabled", true } },
 				{ "custom", SyncWho }, -- après les trois réglages qu'il grise
 			} },

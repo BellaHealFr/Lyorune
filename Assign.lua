@@ -7,7 +7,7 @@
 --      soigneurs »). Celui qui reçoit vérifie lui-même que l'expéditeur est chef ou assistant, puis l'applique
 --      d'office (réglage assignAccept) ; une ligne dans la discussion le dit. Au survol d'une case : le soigneur
 --      prévu. Ma part de la répartition remplace mon choix ; il revient quand je quitte le groupe.
--- Le jeu bloque les messages d'addon pendant un combat de boss, une clé mythique+ ou un match JcJ : la répartition
+-- Le jeu bloque les messages d'addon pendant un combat de boss ou un match JcJ : la répartition
 -- part avant le combat, jamais pendant (envoi refusé avec un message). Une fois reçue, elle reste valable sans
 -- aucun message : jusqu'au prochain envoi, son effacement ou la sortie du groupe, même après un /reload
 -- (LyoruneCharDB). Un soigneur qui part : ses joueurs restent sans soigneur, rien ne se réattribue tout seul, et
@@ -65,6 +65,7 @@ local function Members()
 	list[MyKey()] = list[MyKey()] or { unit = "player", name = UnitName("player") }
 	return list, unsure
 end
+Z.AssignMembers = Members -- aussi pour la répartition des buffs (BuffAssign.lua)
 
 -- Chef du groupe, ou assistant en raid. Réponse secrète : non (on ne devine jamais un droit).
 local function MayShare(unit)
@@ -88,6 +89,7 @@ local function UnitGroup(unit)
 	if issecret(group) then return nil end
 	return tonumber(group)
 end
+Z.UnitRaidGroup = UnitGroup
 
 local function InList(players, key)
 	for name in pairs(players) do
@@ -305,7 +307,7 @@ function Z:AssignSend(healers)
 	if not Z.db.syncEnabled then return false, L["La synchronisation entre joueurs est coupée (chapitre Profils et partage)."] end
 	if not IsInGroup() then return false, L["Vous n'êtes pas en groupe."] end
 	if not MayShare("player") then return false, L["Seuls le chef du groupe et les assistants peuvent envoyer une répartition."] end
-	if Z.CommLockdown() then return false, L["Le jeu bloque les messages entre addons pendant un combat de boss, une clé mythique+ ou un match JcJ : envoyez la répartition avant le combat."] end
+	if Z.CommLockdown() then return false, L["Le jeu bloque les messages entre addons pendant un combat de boss ou un match JcJ : envoyez la répartition avant le combat."] end
 	if GetTime() - lastSend < SEND_GAP then return false, L["Attendez quelques secondes avant de renvoyer."] end
 	local kept = {}
 	for key, healer in pairs(healers) do
@@ -328,7 +330,7 @@ function Z:AssignClear()
 	if not shared then return true, L["Aucune répartition en cours."] end
 	if shared.from == MyKey() and IsInGroup() then
 		if Z.CommLockdown() or not Z.CommSendGroup(("A:%s:0:0:"):format(shared.id)) then
-			return false, L["Le jeu bloque les messages entre addons pendant un combat de boss, une clé mythique+ ou un match JcJ : envoyez la répartition avant le combat."]
+			return false, L["Le jeu bloque les messages entre addons pendant un combat de boss ou un match JcJ : envoyez la répartition avant le combat."]
 		end
 	end
 	Z.char.assignShared = nil
@@ -448,9 +450,16 @@ local function BuildWindow()
 	w.help:SetText(L["Cochez ce que chaque soigneur soigne, puis envoyez avant le combat : pendant un combat de boss, le jeu bloque les messages. Les soigneurs qui ont Lyorune (en vert) la voient tout de suite ; elle reste valable tout le combat."])
 	w.heads, w.rows = {}, {}
 	w.status = UI.Label(w, 11, nil, "dim")
-	w.status:SetPoint("BOTTOMLEFT", 18, 20)
-	w.status:SetWidth(300)
+	w.status:SetPoint("BOTTOMLEFT", 18, 48)
+	w.status:SetWidth(560)
 	w.status:SetJustifyH("LEFT")
+	-- l'autre fenêtre de répartition, à un clic
+	w.other = UI.Button(w, L["Répartir les buffs..."], 160, 26, function()
+		w:Hide()
+		Z:OpenBuffAssign()
+	end)
+	w.other:SetPoint("BOTTOMLEFT", 14, 14)
+	w.other.label:SetJustifyH("CENTER")
 	w.send = UI.Button(w, L["Envoyer au groupe"], 150, 26, function()
 		local _, message = Z:AssignSend(w.draft)
 		w.status:SetText(message)
@@ -560,7 +569,7 @@ local function BuildWindow()
 		self.empty:ClearAllPoints()
 		self.empty:SetPoint("TOPLEFT", 18, top - 18)
 		self.empty:SetText(#healers == 0 and L["Aucun soigneur dans le groupe."] or (#columns == 0 and L["Aucun groupe de raid ni tank à répartir."] or ""))
-		self:SetHeight(-top + 18 + math.max(1, #healers) * ROW_H + 60)
+		self:SetHeight(-top + 18 + math.max(1, #healers) * ROW_H + 88)
 		local can = MayShare("player")
 		self.send:SetEnabled(can)
 		self.clear:SetEnabled(can)

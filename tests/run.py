@@ -7666,7 +7666,7 @@ step("1.34.1 : tous mes soins et buffs dans Sorts et raccourcis, /lyorune sorts,
   assert(ok, err)
 end)
 
-step("1.35.0 : buffs caches par le jeu (champ de bataille, arene, cle mythique) : photo, memoire de mes sorts, mort, buff lisible, version de groupe, /reload, /lyorune buffs", function()
+step("1.35.0 : buffs caches par le jeu (champ de bataille, arene) : photo, memoire de mes sorts, mort, buff lisible, version de groupe, /reload, /lyorune buffs", function()
   local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit, after = C_Timer.After,
     secrets = C_Secrets, guid = UnitGUID, instance = INSTANCE, kind = INSTANCE_TYPE, types = Enum.AddOnRestrictionType, states = Enum.AddOnRestrictionState, class = Z.class }
   local ok, err = pcall(function()
@@ -7869,6 +7869,224 @@ step("1.36.0 : buffs en combat : reperes dessines par le jeu (tous les rangs, co
   AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle, Z.boxWrap = nil, nil, nil, nil
   Z.db.combatBuffs, Z.db.combatKey, Z.char.buffTarget, COMBAT = true, true, {}, false
   for _, button in ipairs(made) do pcall(button.SetAttribute, button, "unit", nil) end
+  Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("1.37.0 : qui buffe qui : groupes a buffer, benediction par joueur, autre paladin, entente, repartition des buffs, fenetre, options", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit, class = UnitClass,
+    role = UnitGroupRolesAssigned, after = C_Timer.After, zclass = Z.class, now = NOW, auras = AURAS,
+    raid = RAID, grouped = GROUPED, leader = LEADER, assists = ASSISTS, names = GROUP_NAMES, members = MEMBERS }
+  local ok, err = pcall(function()
+    local extra = { [19740] = "Bénédiction de puissance", [19742] = "Bénédiction de sagesse", [20217] = "Bénédiction des rois",
+      [25780] = "Fureur vertueuse" }
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
+    C_Timer.After = function(s, f) if s < 1 then f() end end
+    local me = Z.buttons[1]
+    local other
+    for _, b in ipairs(Z.buttons) do
+      if b ~= me and b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then other = other or b end
+    end
+    assert(other, "faux groupe trop petit")
+    UnitIsUnit = function(a, b) return a == b or (b == "player" and a == me.unit) end
+    local classes, roles = { [me.unit] = "PALADIN", player = "PALADIN" }, {}
+    UnitClass = function(u) local c = classes[u] if c then return c, c end return old.class(u) end
+    UnitGroupRolesAssigned = function(u) return roles[u] or "DAMAGER" end
+    local function Spell(b, id) for _, m in ipairs(b.missingBuffs or {}) do if m.check.id == id then return m.spell end end return nil end
+    local function Update() Z:Refresh() RunUpdates() end
+    local function Msg(text, sender) FireEvent("CHAT_MSG_ADDON", "Lyorune", text, "PARTY", sender) end
+    GROUPED, RAID = true, false
+    Z.db.buffWatch, Z.db.buffRefresh, Z.db.missingBuffs, Z.db.buffPanel = {}, 0, true, true
+    Z.db.blessingPick, Z.db.buffGroups, Z.db.blessingSync, Z.db.syncEnabled, Z.db.assignAccept = {}, {}, true, true, true
+    Z.char.buffShared = nil
+    AURAS = {}
+    Z.class = "PALADIN" Z:BuildData()
+
+    -- 2. grille : au depart, les regles d'avant (Puissance au guerrier, Rois au tank, Sagesse au soigneur)
+    classes[other.unit] = "WARRIOR" Update()
+    assert(Spell(other, 19740) == "Bénédiction de puissance", "guerrier : " .. tostring(Spell(other, 19740)))
+    roles[other.unit] = "TANK" Update()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "tank : " .. tostring(Spell(other, 19740)))
+    roles[other.unit] = nil
+    roles[me.unit] = "HEALER" roles.player = "HEALER" Update()
+    assert(Spell(me, 19740) == "Bénédiction de sagesse", "soigneur : " .. tostring(Spell(me, 19740)))
+    -- choix dans la grille, puis « aucune »
+    Z.db.blessingPick.WARRIOR = 20217 Z.BlessingsChanged() RunUpdates()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "choix du guerrier : " .. tostring(Spell(other, 19740)))
+    Z.db.blessingPick.WARRIOR = 0 Z.BlessingsChanged() RunUpdates()
+    assert(Spell(other, 19740) == nil, "aucune benediction choisie : encore proposee")
+    -- Sagesse choisie a la main pour un guerrier : gardee (seulement ecartee du depart)
+    Z.db.blessingPick.WARRIOR = 19742 Z.BlessingsChanged() RunUpdates()
+    assert(Spell(other, 19740) == "Bénédiction de sagesse", "Sagesse choisie ecartee")
+    Z.db.blessingPick = {} Z.BlessingsChanged() RunUpdates()
+
+    -- 3. un autre paladin a deja pose Puissance : la suivante (Rois), jamais Sagesse a un guerrier
+    AURAS["HELPFUL"] = { { name = "Bénédiction de puissance", icon = 1, auraInstanceID = 41, spellId = 19740 } }
+    AURAS["HELPFUL|PLAYER"] = {}
+    Update()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "benediction d'un autre paladin reprise : " .. tostring(Spell(other, 19740)))
+    AURAS["HELPFUL"][2] = { name = "Bénédiction des rois", icon = 2, auraInstanceID = 42, spellId = 20217 }
+    Update()
+    assert(Spell(other, 19740) == nil, "guerrier : toutes prises, encore une proposee : " .. tostring(Spell(other, 19740)))
+    -- la mienne compte toujours comme posee
+    AURAS["HELPFUL|PLAYER"] = { AURAS["HELPFUL"][1] }
+    Update()
+    assert(Spell(other, 19740) == nil, "ma benediction prise pour celle d'un autre")
+    AURAS = {}
+
+    -- 4. entente : mon annonce part au groupe ; celle d'un autre paladin prioritaire ecarte la benediction
+    NOW = NOW + 10
+    local first = #ADDON_SENT + 1
+    Z.db.blessingPick.TANK = 20217 Z.BlessingsChanged() RunUpdates()
+    local sent = ADDON_SENT[#ADDON_SENT]
+    assert(#ADDON_SENT >= first and sent.text:match("^P:") and sent.text:find("TANK=20217p", 1, true) and sent.text:find("WARRIOR=19740d", 1, true),
+      "annonce : " .. tostring(sent and sent.text))
+    assert(#sent.text <= 255, "annonce trop longue")
+    roles[other.unit] = "TANK" Update()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "tank avant l'annonce")
+    -- un autre paladin annonce Rois aux tanks au depart : mon choix (p) passe avant
+    Msg("P:TANK=20217d,WARRIOR=19740d", "Joueur-party2") RunUpdates()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "annonce de depart passee devant mon choix")
+    -- choisi aussi : a egalite, le premier nom (party2 avant player) la garde
+    Msg("P:TANK=20217p", "Joueur-party2") RunUpdates()
+    assert(Spell(other, 19740) == "Bénédiction de puissance", "egalite : " .. tostring(Spell(other, 19740)))
+    -- un joueur hors du groupe, un message abime : rien
+    Msg("P:-", "Inconnu") Msg("P:TANK=abc", "Joueur-party2") RunUpdates()
+    assert(Spell(other, 19740) == "Bénédiction de puissance", "message abime ou etranger")
+    -- interrupteur : les annonces ne comptent plus
+    Z.db.blessingSync = false Z.BlessingsChanged() RunUpdates()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "entente coupee encore suivie")
+    Z.db.blessingSync = true Z.BlessingsChanged() RunUpdates()
+    Msg("P:-", "Joueur-party2") RunUpdates()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "annonce retiree encore suivie")
+    -- bloque par le jeu : rien ne part, l'annonce suit des que possible
+    local lockdown = C_ChatInfo.InChatMessagingLockdown
+    C_ChatInfo.InChatMessagingLockdown = function() return true end
+    NOW = NOW + 10 first = #ADDON_SENT + 1
+    Z.db.blessingPick.TANK = nil Z.BlessingsChanged()
+    assert(#ADDON_SENT == first - 1, "annonce pendant le blocage")
+    C_ChatInfo.InChatMessagingLockdown = lockdown
+    FireEvent("PLAYER_REGEN_ENABLED")
+    assert(ADDON_SENT[first] and ADDON_SENT[first].text:find("TANK=20217d", 1, true), "annonce en attente oubliee")
+    -- un paladin revenu (/reload) redemande les annonces
+    NOW = NOW + 10 first = #ADDON_SENT + 1
+    Msg("P:?", "Joueur-party2")
+    assert(ADDON_SENT[first] and ADDON_SENT[first].text:match("^P:TANK"), "demande d'annonce sans reponse")
+    roles[other.unit] = nil
+
+    -- 1. mes groupes a buffer (raid seulement), et « Comme mes soins »
+    local roster = { 1, 1, 2, 4, 3 }
+    rawset(_G, "GetRaidRosterInfo", function(i) return "x", 0, roster[i] or 1 end)
+    RAID, MEMBERS = true, 5
+    GROUP_NAMES = { raid1 = "Joueur-player", raid2 = "Chef", raid3 = "Soin", raid4 = "Tankou", raid5 = "Autre" }
+    assert(Z.BuffGroupOK("raid3"), "depart : tous les groupes")
+    Z.db.buffGroups[2] = false
+    assert(not Z.BuffGroupOK("raid3") and Z.BuffGroupOK("raid4") and not Z.BuffGroupOK("raidpet3"), "groupe 2 ecarte")
+    Z.db.assignGroups = { [4] = true }
+    assert(Z.BuffGroupsLikeHealing() and Z.db.buffGroups[4] == nil and Z.db.buffGroups[1] == false, "comme mes soins")
+    assert(Z.BuffGroupOK("raid4") and not Z.BuffGroupOK("raid2"), "groupes recopies")
+    Z.db.assignGroups = {}
+    assert(not Z.BuffGroupsLikeHealing(), "sans groupe de soin : rien a recopier")
+
+    -- 5. repartition des buffs du chef : mes groupes et ma benediction imposee
+    LEADER, ASSISTS = "raid2", {}
+    Msg("B:7:1:2:Joueur-player=12/20217", "Chef")
+    assert(Z.char.buffShared == nil, "appliquee avant la derniere part")
+    Msg("B:7:2:2:Soin-MonRoyaume=3/0", "Chef")
+    local shared = Z.char.buffShared
+    assert(shared and shared.buffers["Joueur-player"].blessing == 20217, "repartition des buffs recue")
+    assert(PRINTED[#PRINTED]:find("groupes 1 et 2", 1, true) and PRINTED[#PRINTED]:find("rois", 1, true), "ligne : " .. PRINTED[#PRINTED])
+    local groups, chief = Z.BuffGroupsChoice()
+    assert(chief and groups[1] and groups[2] and not groups[4] and Z.BuffGroupOK("raid3") and not Z.BuffGroupOK("raid4"), "groupes du chef")
+    assert(Z.BlessingAnnounceText():find("WARRIOR=20217f", 1, true), "benediction imposee non annoncee")
+    -- sans droit, abime : ignore ; effacee par son expediteur seulement
+    Msg("B:8:1:1:Joueur-player=5/0", "Autre")
+    for _, bad in ipairs({ "B:9:1:1:pasdenom=1/0", "B:9:1:1:Joueur-player=1/x", "B:9:1:99:Joueur-player=1/0" }) do Msg(bad, "Chef") end
+    assert(Z.char.buffShared.id == "7", "repartition sans droit ou abimee acceptee")
+    Msg("B:7:0:0:", "Autre")
+    assert(Z.char.buffShared, "effacee par un autre")
+    Msg("B:7:0:0:", "Chef")
+    assert(Z.char.buffShared == nil and not Z.BuffGroupOK("raid2"), "effacement : mon choix ne revient pas")
+    -- reglage coupe : ignoree
+    Z.db.assignAccept = false Msg("B:10:1:1:Joueur-player=1/0", "Chef") Z.db.assignAccept = true
+    assert(Z.char.buffShared == nil, "repartition recue reglage coupe")
+
+    -- fenetre du chef : une ligne par joueur qui buffe, cases de groupe, benediction du paladin
+    classes.raid2, classes.raid3, classes.raid1 = "PRIEST", "PALADIN", "PALADIN"
+    LEADER = "player"
+    Z:OpenBuffAssign()
+    local w = _G.LyoruneBuffAssign
+    assert(w and w:IsShown() and #w.rows >= 2, "fenetre de repartition des buffs")
+    local pala
+    for _, row in ipairs(w.rows) do if row:IsShown() and row.buffer.key == "Soin-MonRoyaume" then pala = row end end
+    assert(pala and pala.bless:IsShown() and pala.boxes[1], "ligne du paladin")
+    pala.boxes[1]:Run("OnClick")
+    pala.bless:Run("OnClick")
+    assert(w.draft["Soin-MonRoyaume"].blessing ~= 0, "benediction non choisie")
+    NOW = NOW + 10 first = #ADDON_SENT + 1
+    w.send:Run("OnClick")
+    assert(ADDON_SENT[first] and ADDON_SENT[first].text:match("^B:%d+:1:1:Soin%-MonRoyaume=%d+/%d+$"), "envoi : " .. tostring(w.status:GetText()))
+    -- un nouveau venu la recoit en chuchotement
+    first = #ADDON_SENT + 1
+    Z.BuffAssignNewMember("Nouveau")
+    local whisper = false
+    for i = first, #ADDON_SENT do if ADDON_SENT[i].channel == "WHISPER" and ADDON_SENT[i].text:match("^B:") then whisper = true end end
+    assert(whisper, "nouveau venu oublie")
+    -- un joueur part : je suis prevenu
+    GROUP_NAMES.raid3 = "Remplacant" FireEvent("GROUP_ROSTER_UPDATE")
+    assert(Z.char.buffShared.buffers["Soin-MonRoyaume"] == nil and PRINTED[#PRINTED]:find("Soin est parti", 1, true), "depart : " .. PRINTED[#PRINTED])
+    w.clear:Run("OnClick")
+    assert(Z.char.buffShared == nil and ADDON_SENT[#ADDON_SENT].text:match("^B:%d+:0:0:$"), "effacer pour tous")
+    w.other:Run("OnClick")
+    assert(not w:IsShown() and _G.LyoruneAssign and _G.LyoruneAssign:IsShown(), "passage a la fenetre des soigneurs")
+    _G.LyoruneAssign.other:Run("OnClick")
+    assert(w:IsShown(), "retour a la fenetre des buffs")
+    w:Hide()
+    -- /lyorune buffs dit qui buffe qui
+    local n = #PRINTED
+    SlashCmdList.LYORUNE("buffs")
+    local said = table.concat(PRINTED, "\n", n + 1)
+    assert(said:find("groupes buffés", 1, true) and said:find("bénédictions", 1, true), "rapport : " .. said)
+    -- sortie du groupe : annonces et repartition oubliees
+    Msg("P:TANK=20217f", "Chef")
+    GROUPED, RAID = false, false FireEvent("GROUP_ROSTER_UPDATE")
+    assert(not next(Z.BlessingClaims()) and Z.char.buffShared == nil, "sortie du groupe : annonces gardees")
+    GROUPED = true
+    GROUP_NAMES = old.names
+    rawset(_G, "GetRaidRosterInfo", nil)
+
+    -- Options : groupes a buffer et grille (paladin seulement)
+    Z:ToggleOptions("Joueurs")
+    local grid, gbox = Z.blessingGridBox, Z.buffGroupsBox
+    assert(grid and gbox, "options absentes")
+    grid:Update()
+    assert(grid.rows[1]:IsShown() and grid.rows[1].slot == "TANK" and #grid.rows == #Z.blessingSlots, "grille")
+    grid.rows[1].pick:Run("OnClick")
+    assert(Z.db.blessingPick.TANK == Z.buffChecks[1].choices[1].id, "clic sur la grille : " .. tostring(Z.db.blessingPick.TANK))
+    Z.db.buffGroups = {}
+    gbox.buttons[5]:Run("OnClick")
+    assert(Z.db.buffGroups[5] == false, "bouton de groupe")
+    gbox.buttons[5]:Run("OnClick")
+    assert(Z.db.buffGroups[5] == nil, "bouton de groupe rallume")
+    Z.class = "PRIEST" Z:BuildData() grid:Update()
+    assert(grid.empty:IsShown() and not grid.rows[1]:IsShown(), "grille montree a un pretre")
+    Z:ToggleOptions()
+    for _, text in ipairs({ "Groupes de raid que je buffe", "Bénédiction par joueur", "Entente entre paladins", "Répartir les buffs",
+      "Répartir les buffs...", "Comme mes soins", "répartition des buffs de %s : vous buffez %s.", "Tanks", "Démoniste" }) do
+      assert(Z.translations.enUS[text], "sans traduction anglaise : " .. text)
+    end
+  end)
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit, UnitClass = old.name, old.known, old.isUnit, old.class
+  UnitGroupRolesAssigned, C_Timer.After, Z.class, NOW, AURAS = old.role, old.after, old.zclass, old.now, old.auras
+  RAID, GROUPED, LEADER, ASSISTS, GROUP_NAMES, MEMBERS = old.raid, old.grouped, old.leader, old.assists, old.names, old.members
+  rawset(_G, "GetRaidRosterInfo", nil)
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z.char.buffShared = nil
+  if _G.LyoruneBuffAssign then _G.LyoruneBuffAssign:Hide() end
+  if _G.LyoruneAssign then _G.LyoruneAssign:Hide() end
+  FireEvent("GROUP_ROSTER_UPDATE")
   Z:BuildData() Z:Refresh() RunUpdates()
   assert(ok, err)
 end)
