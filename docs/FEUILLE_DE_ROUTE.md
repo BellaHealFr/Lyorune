@@ -668,9 +668,9 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   au quart de la durée du buff (`Until`, Auras.lua ; HealKit : même plafond, VuhDo : 3 min ou 25 %) ; buff à une
   personne jamais sur un mort ou un déconnecté, panneau relu au changement d'état (Frames.lua) ; test par classe et
   par situation (seul, sans tank, raid, donjon, champ de bataille, joueur choisi absent, buff fini, zone, mort).
-  **Reste** : le bloc sous les cadres (1.34.0), « Sorts et raccourcis » et `/lyorune sorts` ; question pour
-  l'auteur : seul avec « Mon cadre quand je suis seul » décoché, rien n'est proposé (le panneau lit les cases ;
-  HealKit lit les unités, « player » compris).
+  Aussi (accord de l'auteur) : seul avec « Mon cadre quand je suis seul » décoché, ma fiche (`Z.hiddenSelf`,
+  `Z.SelfHidden`, Auras.lua) remplace ma case cachée (VuhDo et HealKit me comptent toujours ; HealBot me perd).
+  **Reste** : le bloc sous les cadres (1.34.0), « Sorts et raccourcis » et `/lyorune sorts`.
 - [ ] 26 b (1.35.0), **priorité haute** : champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
   2026)** : les buffs manquants ne fonctionnent pas en champ de bataille. Cause connue (analyse 1a, B2) : pendant
   un match JcJ, le jeu rend les noms des buffs secrets, même hors combat ; Lyorune s'arrête au premier nom secret,

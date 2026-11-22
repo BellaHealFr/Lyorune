@@ -18,6 +18,7 @@ Z.changes = {
 		fixed = {
 			"Sans son composant, la version de groupe n'est plus proposée : le panneau propose la version simple.",
 			"Un buff à une personne (Épines, Bouclier de terre, Gardien de peur, Serment de lumière) n'est plus proposé à un joueur mort ou déconnecté : il va au suivant (tank, sinon vous), et revient quand le joueur est relevé.",
+			"Seul avec « Mon cadre quand je suis seul » décoché, le panneau des buffs manquants vous propose de nouveau vos propres buffs (il ne voyait plus votre case).",
 		},
 	},
 	{

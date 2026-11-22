@@ -1026,9 +1026,54 @@ driver:SetScript("OnUpdate", function(self, elapsed)
 end)
 
 function Z.QueueAuras(b)
+	if b.hiddenSelf then return Z.UpdateHiddenSelf() end -- mon personnage sans case (plus bas)
 	dirty[b] = true
 	driver:Show()
 end
+
+-- Mon personnage quand ma case est cachée (seul, « Mon cadre quand je suis seul » décoché) : le panneau des buffs lit
+-- les cases, il ne me verrait plus. Une petite fiche lue comme une case (mêmes règles, FindMissingBuffs et
+-- FindMyUniques), seulement dans ce cas, sur mes propres événements : rien de plus à lire en groupe ni en raid.
+-- (VuhDo et HealKit partent d'une liste d'unités qui me contient toujours ; HealBot lit ses cases et me perd.)
+local hiddenSelf = { unit = "player", hiddenSelf = true }
+Z.hiddenSelf = hiddenSelf
+
+-- Seul, sans ma case ? En groupe, ma case est toujours là (le jeu la montre dans le groupe et le raid) ; seul,
+-- elle porte l'unité « player ». Aucune valeur secrète lue (UnitIsUnit peut l'être en instance, d'après HealKit).
+function Z.SelfHidden()
+	if IsInGroup() then return false end
+	for _, b in ipairs(Z.buttons or {}) do
+		if b.unit == "player" and not b.extra and b:IsVisible() then return false end
+	end
+	return true
+end
+
+function Z.UpdateHiddenSelf()
+	local b = hiddenSelf
+	local list, key, uniques
+	if Z.db and Z.SelfHidden() then
+		local dead = UnitIsDeadOrGhost("player")
+		b.status = (not issecret(dead) and dead) and "dead" or nil
+		list, key = FindMissingBuffs(b, "player")
+		uniques = FindMyUniques(b, "player")
+	end
+	local changed = b.missingKey ~= key or b.myUniques ~= uniques or (b.missingBuff ~= nil) ~= (list ~= nil)
+	b.missingBuffs, b.missingBuff, b.missingKey, b.myUniques = list, list and list[1], key, uniques
+	if changed then Z:QueueBuffPanel() end
+end
+
+local selfEvents = CreateFrame("Frame")
+selfEvents:RegisterUnitEvent("UNIT_AURA", "player")
+selfEvents:RegisterEvent("WEAPON_ENCHANT_CHANGED")
+selfEvents:RegisterEvent("PLAYER_ENTERING_WORLD")
+selfEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
+selfEvents:RegisterEvent("PLAYER_DEAD")
+selfEvents:RegisterEvent("PLAYER_UNGHOST")
+selfEvents:RegisterEvent("PLAYER_ALIVE")
+selfEvents:SetScript("OnEvent", function()
+	-- ma case visible : elle fait déjà ce travail ; une fiche encore pleine est vidée une fois
+	if hiddenSelf.missingKey or hiddenSelf.myUniques or Z.SelfHidden() then Z:Try("auras", Z.UpdateHiddenSelf) end
+end)
 
 -- Mise à jour immédiate, hors file : pour la mesure des performances (Perf.lua)
 function Z.UpdateAurasNow(b)

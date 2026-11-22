@@ -17,6 +17,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - Without its reagent, the group version is no longer offered: the panel offers the single version.
 - A single-person buff (Thorns, Earth Shield, Fear Ward, Oath of Light) is no longer offered to a dead or disconnected player: it goes to the next one (tank, else you), and comes back once the player is up.
+- Solo with "My own frame when solo" unticked, the missing buffs panel offers your own buffs again (it no longer saw your cell).
 
 ## [1.33.6] - 2026-11-22
 

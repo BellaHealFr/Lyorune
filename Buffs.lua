@@ -80,6 +80,15 @@ local function Missing()
 			end
 		end
 	end
+	-- moi, case cachée (seul) : ma fiche (Auras.lua, Z.hiddenSelf)
+	local me = Z.hiddenSelf
+	local myName = me and me.missingBuffs and UnitName("player")
+	if myName and not issecret(myName) then
+		for _, missing in ipairs(me.missingBuffs) do
+			list[#list + 1] = { unit = "player", check = missing.check, spell = missing.spell, icon = missing.icon,
+				name = myName, group = 1, class = select(2, UnitClass("player")) }
+		end
+	end
 	table.sort(list, function(a, b)
 		if a.group ~= b.group then return a.group < b.group end
 		return a.name < b.name
@@ -151,6 +160,16 @@ local function UniqueRows(result)
 				local isMe = UnitIsUnit(unit, "player")
 				if not issecret(isMe) and isMe then me = me or player end
 			end
+		end
+	end
+	-- moi, case cachée (seul) : ma fiche (Auras.lua, Z.hiddenSelf)
+	local hidden = Z.hiddenSelf
+	if hidden and (hidden.missingKey or hidden.myUniques or hidden.status == nil) and Z.SelfHidden() then
+		for name in (hidden.myUniques or ""):gmatch("[^,]+") do placed[name] = true end
+		local name = Z.UnitPinName("player")
+		if name and not hidden.status and not me then
+			me = { unit = "player", name = name }
+			members[name] = members[name] or me
 		end
 	end
 	for _, check in ipairs(Z.uniqueChecks) do
@@ -292,6 +311,7 @@ end
 function Z:UpdateBuffPanel()
 	queued = false
 	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
+	Z.UpdateHiddenSelf() -- ma case cachée (seul) : ma fiche à jour avant la lecture (relit le panneau si elle change)
 	local list = (Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
 	SetNextBuff(list[1])
 	if closed then list = {} end

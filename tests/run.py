@@ -7364,6 +7364,39 @@ step("1.33.7 : version simple et de groupe cochees a part, Mes buffs aligne, buf
       DEAD = false FireEvent("UNIT_FLAGS", me.unit) RunUpdates()
       assert(Unique(spell), class .. " : apres la mort, panneau non relu")
     end
+    -- 5. Seul avec « Mon cadre quand je suis seul » decoche : aucune case, ma fiche prend le relais (comme VuhDo et
+    -- HealKit, qui me comptent toujours) ; en groupe, rien de plus
+    Z.class = "DRUID" Z:BuildData() Z.char.buffTarget = {}
+    local grouped = GROUPED
+    GROUPED = false
+    for _, b in ipairs(Z.buttons) do
+      hidden[b] = hidden[b] or b.IsVisible
+      b.IsVisible = function() return false end
+    end
+    assert(Z.SelfHidden(), "seul sans case : non reconnu")
+    AURAS["HELPFUL"] = { { name = "Marque du fauve", icon = 9, auraInstanceID = 81 } }
+    FireEvent("UNIT_AURA", "player", { isFullUpdate = true }) RunUpdates()
+    local row = Unique("Épines")
+    assert(row and row.unit == "player", "seul sans case : Epines non proposee")
+    local marque = false
+    for _, r in ipairs(Z.BuffRows()) do if r.spell == "Marque du fauve" then marque = true end end
+    assert(not marque, "seul sans case : Marque du fauve presente proposee")
+    AURAS["HELPFUL|PLAYER"] = { { name = "Épines", icon = 9, auraInstanceID = 82 } }
+    FireEvent("UNIT_AURA", "player", { isFullUpdate = true }) RunUpdates()
+    assert(not Unique("Épines"), "seul sans case : Epines posee encore proposee")
+    AURAS = {}
+    FireEvent("UNIT_AURA", "player", { isFullUpdate = true }) RunUpdates()
+    for _, r in ipairs(Z.BuffRows()) do if r.spell == "Marque du fauve" then marque = true end end
+    assert(marque and Unique("Épines"), "seul sans case : buffs finis non relus")
+    DEAD = true FireEvent("PLAYER_DEAD") RunUpdates()
+    assert(not Unique("Épines"), "seul sans case : propose sur moi mort")
+    DEAD = false FireEvent("PLAYER_ALIVE") RunUpdates()
+    assert(Unique("Épines"), "seul sans case : relevé, non propose")
+    -- ma case revient (option recochee, ou groupe) : la fiche se vide, aucune ligne en double
+    GROUPED = true FireEvent("UNIT_AURA", "player", { isFullUpdate = true }) RunUpdates()
+    assert(not Z.hiddenSelf.missingKey and not Z.hiddenSelf.myUniques, "en groupe : fiche encore pleine")
+    for _, r in ipairs(Z.BuffRows()) do assert(r.unit ~= "player", "en groupe : ligne de ma fiche") end
+    GROUPED = grouped
   end)
   for b, f in pairs(hidden) do b.IsVisible = f end
   C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit, UnitGroupRolesAssigned = old.name, old.known, old.isUnit, old.role
