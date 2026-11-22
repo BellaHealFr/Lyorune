@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.38.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.38.1"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -141,6 +141,8 @@ Z.defaults = {
 	clickConflictAlert = true, -- signaler un clic que le « clic pour lancer » du jeu prend aussi
 	clicksPerSpec = true,      -- des clics et des touches propres à chaque spécialisation (groupe de talents)
 	clickStats = false,        -- (éteint au départ) compter mes clics et mes touches au survol, par personnage (Clicks.lua)
+	rankChoice = false,        -- (éteint au départ) choisir le rang de chaque raccourci ; éteint : toujours le rang le plus haut
+	rankAdapt = true,          -- un rang choisi trop fort pour un joueur de bas niveau est baissé sur sa case (hors combat)
 	macros = {},               -- ma bibliothèque de macros, par classe : macros.PRIEST[1] = { name = "...", body = "..." }
 	macroAutoTarget = true,    -- une commande de macro sans cible vise la case
 
@@ -238,6 +240,7 @@ Z.notInProfile = {
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
 	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
+	rankChoice = true, rankAdapt = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	assignMark = true, assignGroups = true, assignPlayers = true, assignFade = true, assignAccept = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,

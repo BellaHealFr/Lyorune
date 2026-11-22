@@ -818,6 +818,13 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   rien à changer. Statistiques : comptées par valeur, comme un changement de sort. Tests (1.38.0, 108 étapes).
   **À vérifier en jeu** : un rang fixe part bien (clic, touche), « Soins(Rang 2) » dans une macro, la liste des
   rangs avec et sans l'option du grimoire.
+  **1.38.1 (demande de l'auteur, 22 novembre 2026)** : système activable, « Choisir le rang des sorts »
+  (`rankChoice`, éteint au départ : toujours le rang le plus haut, rangs choisis gardés de côté ; `Z.CastOf`,
+  `TakeCursor`, fenêtre de choix) ; s'adapter au niveau du joueur soigné, « Rang adapté au niveau du joueur
+  soigné » (`rankAdapt`, allumé, réglages fins) : hors combat, chaque case reçoit le meilleur de mes rangs que son
+  joueur peut recevoir (niveau d'apprentissage moins 10), jamais plus fort que le rang choisi (`fixedRanks`,
+  `Z.FitRank`, `Z:FitRanks`, `Z:FitAllRanks` ; changement de joueur dans la case, groupe, niveau, cible,
+  focalisation, fin du combat). Le rang le plus haut reste lancé par son nom (le jeu l'adapte). Tests (1.38.1).
 - [ ] 27 b (1.39.0) : variantes d'un raccourci (sur un ennemi, en JcJ, selon le rôle par le groupe « Tanks », hors
   combat) ; garde « aucun soin sur un ennemi ».
 - [ ] 27 c (1.40.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;

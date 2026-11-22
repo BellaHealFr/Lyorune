@@ -136,7 +136,7 @@ local steps = {
 				.. "\n\n" .. Z.L["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."]
 				.. "\n" .. Z.L["Combien de fois chaque clic a servi ? « Compter mes clics », même chapitre."]
 				.. "\n" .. Z.L["Tous vos soins et buffs y sont, même sans cible (Feu intérieur, totems). Un sort manque ? /lyorune sorts dit pourquoi."]
-				.. "\n" .. Z.L["Un rang plus bas pour garder de la mana ? Clic droit sur le sort, dans la fenêtre de choix."]
+				.. "\n" .. Z.L["Un rang plus bas pour garder de la mana ? « Choisir le rang des sorts », même chapitre."]
 		end,
 		target = Cell,
 		around = Block,

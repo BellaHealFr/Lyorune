@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.38.1] - 2026-11-22
+
+### Improved
+
+- Rank choice can be turned on or off: "Choose spell ranks" (Spells and bindings chapter, off at first). Off, all your bindings cast the highest rank; the ranks already chosen are kept and come back if you turn it on again.
+- Rank adapted to the healed player's level: a chosen rank too strong for a low-level player is replaced, on their cell, by the best of your ranks they can receive, never stronger than the chosen one (fine setting, on at first). Worked out out of combat.
+
 ## [1.38.0] - 2026-11-22
 
 ### Added
@@ -752,6 +759,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.38.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.1...v1.38.0
 [1.37.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.0...v1.37.1
 [1.37.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.36.0...v1.37.0

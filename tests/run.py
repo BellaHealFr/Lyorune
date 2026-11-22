@@ -8130,6 +8130,7 @@ step("1.38.0 : rang choisi sur chaque raccourci : rang fixe par numero, rang inc
   local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, sub = C_Spell.GetSpellSubtext, level = C_Spell.GetSpellLevelLearned,
     cost = C_Spell.GetSpellPowerCost, info = C_SpellBook.GetSpellBookItemInfo, lines = C_SpellBook.GetSpellBookSkillLineInfo,
     click = Z:GetClicks()["1"], res = Z.db.autoRes, class = Z.class }
+  Z.db.rankChoice = true
   local ok, err = pcall(function()
     -- Soins rapides : rangs 1 (2061), 2 (9472) et 3 (9473) ; Soins inferieurs (2050) : inconnu de ce personnage
     local ranks = { [2061] = 1, [9472] = 2, [9473] = 3 }
@@ -8206,6 +8207,71 @@ step("1.38.0 : rang choisi sur chaque raccourci : rang fixe par numero, rang inc
   C_Spell.GetSpellLevelLearned, C_Spell.GetSpellPowerCost = old.level, old.cost
   C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo = old.info, old.lines
   CURSOR_INFO, Z.db.autoRes, Z.class = nil, old.res, old.class
+  Z.db.rankChoice = false
+  Z:SetClick("1", old.click)
+  assert(ok, err)
+end)
+
+step("1.38.1 : choix du rang eteint au depart (toujours le plus haut), rang adapte au niveau du joueur soigne", function()
+  local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, sub = C_Spell.GetSpellSubtext, level = C_Spell.GetSpellLevelLearned,
+    info = C_SpellBook.GetSpellBookItemInfo, lines = C_SpellBook.GetSpellBookSkillLineInfo, unitLevel = UnitLevel,
+    click = Z:GetClicks()["1"], res = Z.db.autoRes, class = Z.class, choice = Z.db.rankChoice, adapt = Z.db.rankAdapt }
+  local ok, err = pcall(function()
+    assert(Z.defaults.rankChoice == false and Z.defaults.rankAdapt == true, "reglages de depart")
+    assert(Z.notInProfile.rankChoice and Z.notInProfile.rankAdapt, "reglages hors profil")
+    local ranks = { [2061] = 1, [9472] = 2, [9473] = 3 }
+    C_Spell.GetSpellName = function(id) return ranks[id] and "Soins rapides" or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return ranks[id] ~= nil or old.known(id) end
+    C_Spell.GetSpellSubtext = function(id) return ranks[id] and ("Rang " .. ranks[id]) or "" end
+    C_Spell.GetSpellLevelLearned = function(id) return ({ [2061] = 20, [9472] = 26, [9473] = 32 })[id] or 0 end
+    local items = { 9473, 2061, 139, 9472 }
+    C_SpellBook.GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = #items } end
+    C_SpellBook.GetSpellBookItemInfo = function(slot) return { itemType = 1, spellID = items[slot], subName = C_Spell.GetSpellSubtext(items[slot]) } end
+    Z.class, Z.db.autoRes = "PRIEST", false
+    local b = Z.buttons[1]
+    -- eteint : le rang choisi est garde, mais le plus haut part, par le nom ; un rang glisse devient le plus haut
+    Z.db.rankChoice = false
+    Z:SetClick("1", "#2061")
+    assert(Z:GetClicks()["1"] == "#2061" and b:GetAttribute("spell1") == "Soins rapides", tostring(b:GetAttribute("spell1")))
+    assert(Z:ActionText("#2061") == "Soins rapides", Z:ActionText("#2061"))
+    CURSOR_INFO = { "spell", 1, "spell", 2061 }
+    assert(Z:TakeCursor() == "Soins rapides", "rang glisse alors que le choix est eteint")
+    -- rallume : le rang revient
+    Z.db.rankChoice = true Z:ApplyClicks()
+    assert(b:GetAttribute("spell1") == 2061, "rang choisi perdu")
+    -- adapte au joueur soigne : rang 3 (appris au niveau 32) sur un joueur de niveau 18 : rang 2 (26 - 10 <= 18)
+    local levels = {}
+    UnitLevel = function(unit) return levels[unit] or 60 end
+    levels[b.unit] = 18
+    Z:SetClick("1", "#9473")
+    assert(b:GetAttribute("spell1") == 9472, "rang non adapte : " .. tostring(b:GetAttribute("spell1")))
+    assert(Z.buttons[2]:GetAttribute("spell1") == 9473, "un joueur de niveau 60 garde le rang choisi")
+    -- dans une macro aussi
+    Z.db.autoRes = true Z:ApplyClicks()
+    assert(b:GetAttribute("macrotext1"):find("Soins rapides(Rang 2)", 1, true), b:GetAttribute("macrotext1"))
+    Z.db.autoRes = false Z:ApplyClicks()
+    -- trop bas pour tous les rangs : le rang choisi ; niveau qui change : la case suit
+    levels[b.unit] = 5 Z:FitAllRanks()
+    assert(b:GetAttribute("spell1") == 9473, "aucun rang assez bas")
+    levels[b.unit] = 12 Z:FitAllRanks()
+    assert(b:GetAttribute("spell1") == 2061, "niveau 12 : rang 1")
+    -- en combat : rien ne change, revu a la fin du combat
+    levels[b.unit] = 60
+    COMBAT = true Z:FitAllRanks()
+    assert(b:GetAttribute("spell1") == 2061, "change en combat")
+    COMBAT = false
+    Z:FitAllRanks()
+    assert(b:GetAttribute("spell1") == 9473, "fin du combat : rang choisi")
+    -- reglage eteint : le rang choisi partout
+    Z.db.rankAdapt = false levels[b.unit] = 18 Z:ApplyClicks()
+    assert(b:GetAttribute("spell1") == 9473, "rankAdapt eteint")
+    for _, key in ipairs({ "Choisir le rang des sorts", "Rang adapté au niveau du joueur soigné", "Sinon, toujours le rang le plus haut." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, C_Spell.GetSpellSubtext, C_Spell.GetSpellLevelLearned = old.name, old.known, old.sub, old.level
+  C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo, UnitLevel = old.info, old.lines, old.unitLevel
+  CURSOR_INFO, COMBAT, Z.db.autoRes, Z.class, Z.db.rankChoice, Z.db.rankAdapt = nil, false, old.res, old.class, old.choice, old.adapt
   Z:SetClick("1", old.click)
   assert(ok, err)
 end)

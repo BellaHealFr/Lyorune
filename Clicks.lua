@@ -434,10 +434,12 @@ end
 
 -- Ce que lance vraiment un raccourci : le numéro d'un rang fixe appris, sinon le nom ; puis le nom du sort,
 -- et true si le rang fixe est inconnu de ce personnage
+-- (« Choisir le rang des sorts » éteint : le rang choisi est gardé de côté, le nom part, au rang le plus haut)
 function Z.CastOf(value)
 	local id = Z.RankId(value)
 	if not id then return value, value end
 	local name = C_Spell.GetSpellName(id)
+	if not Z.db.rankChoice then return name, name end
 	if Z.KnowsRank(id) then return id, name end
 	return name, name, true
 end
@@ -455,6 +457,7 @@ function Z.RankLabel(value)
 	local L = Z.L
 	local cast, name, unknown = Z.CastOf(value)
 	if not name then return "|cffff9933" .. value .. "|r" end
+	if type(cast) ~= "number" and not unknown then return name end -- choix du rang éteint : le plus haut
 	if unknown then return "|cffff9933" .. name .. ", " .. L["rang inconnu de ce personnage"] .. "|r" end
 	local rank = Z.RankText(cast)
 	return rank ~= "" and ("%s, %s"):format(name, rank:lower()) or name
@@ -483,6 +486,14 @@ function Z.TrinketLines(mask)
 	return lines
 end
 
+-- Rangs fixes posés par ApplyClicks, que chaque case peut baisser selon le niveau de son joueur (Z:FitRanks) :
+-- { { key = attribut, id = rang choisi, before = début de la macro ou nil (attribut « spell ») }, ... }
+local fixedRanks = {}
+local function NoteRank(key, value, before)
+	local cast = Z.CastOf(value)
+	if type(cast) == "number" then fixedRanks[#fixedRanks + 1] = { key = key, id = cast, before = before } end
+end
+
 -- Ajoute à « attributes » ce qu'il faut pour que le bouton « suffix » lance « value » (avec ses bijoux)
 local function AddAction(attributes, prefix, suffix, value, resPrefix, trinkets)
 	local use = Z.TakesTrinket(value) and Z.TrinketLines(trinkets) or ""
@@ -508,11 +519,14 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix, trinkets)
 		attributes[prefix .. "macrotext" .. suffix] = use .. text
 	elseif not Z.CastOf(value) then -- numéro de sort que le jeu ne connaît pas : rien
 	elseif resPrefix or use ~= "" then
+		local before = use .. "/cast " .. (resPrefix or "") .. "[@mouseover] "
 		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = use .. "/cast " .. (resPrefix or "") .. "[@mouseover] " .. Z.MacroSpell(value)
+		attributes[prefix .. "macrotext" .. suffix] = before .. Z.MacroSpell(value)
+		NoteRank(prefix .. "macrotext" .. suffix, value, before)
 	else
 		attributes[prefix .. "type" .. suffix] = "spell"
 		attributes[prefix .. "spell" .. suffix] = Z.CastOf(value) -- un numéro : le jeu lance ce rang (CastSpellByID)
+		NoteRank(prefix .. "spell" .. suffix, value)
 	end
 end
 
@@ -531,6 +545,7 @@ function Z:ApplyClicks()
 	end
 
 	local attributes = {}
+	fixedRanks = {}
 	local resPrefix = ResPrefix()
 	local trinkets = Z:GetTrinkets()
 	local onEnter = "self:ClearBindings()"
@@ -576,6 +591,7 @@ function Z:ApplyClicks()
 		h:SetAttribute("z-count", count)
 		h:SetAttribute("_initialAttribute-_onenter", onEnter)
 	end
+	Z:FitAllRanks(true)
 	Z:SyncBarMacros()
 	Z:WarnClickConflicts()
 	if Z.RefreshClicks then Z.RefreshClicks() end
@@ -700,7 +716,7 @@ function Z:BarMacros()
 		local ref = Z.MacroRef(value)
 		if type(value) ~= "string" or value == "" or (value:sub(1, 1) == "@" and not ref) then return end
 		local macro = Z.IsMacro(value)
-		local rank = Z.RankId(value) and Z.RankText(Z.RankId(value)):match("%d+")
+		local rank = Z.db.rankChoice and Z.RankId(value) and Z.RankText(Z.RankId(value)):match("%d+")
 		local shown = rank and ("%s %s"):format(rank, select(2, Z.CastOf(value)) or value) or value -- « 2 Soins » : jamais le nom du rang le plus haut
 		local name = ref and Copies()[ref] or MacroName(ref or (macro and label) or shown) -- copie déjà glissée : la même
 		local body = BarBody(value)
@@ -1083,6 +1099,61 @@ function Z.IsLowRank(id)
 	end
 	return false
 end
+
+----------------------------------------------------------------------------------------------------
+-- RANG ADAPTÉ AU JOUEUR SOIGNÉ (1.38.1, réglage « rankAdapt »). Le rang le plus haut, lancé par son nom, est déjà
+-- baissé par le jeu sur un joueur de bas niveau. Un rang choisi, lancé par son numéro, ne l'est pas : hors combat,
+-- chaque case reçoit le meilleur de mes rangs que son joueur peut recevoir (règle du jeu : niveau d'apprentissage
+-- du rang moins 10), jamais plus fort que le rang choisi. En combat, la case garde son rang ; tout est revu à la
+-- fin du combat. Rien ne tourne quand aucun raccourci n'a de rang choisi.
+----------------------------------------------------------------------------------------------------
+local ranksByName -- mes rangs par nom de sort, relus après chaque ApplyClicks (le grimoire a pu changer)
+
+-- Le rang à lancer sur un joueur de ce niveau, à partir du rang choisi « id »
+function Z.FitRank(id, level)
+	if type(level) ~= "number" or (Z.IsSecret and Z.IsSecret(level)) or level <= 0 then return id end -- niveau inconnu : le rang choisi
+	local learned = Z.RankFacts(id)
+	if not learned or level >= learned - 10 then return id end
+	if not ranksByName then
+		ranksByName = {}
+		for _, spell in ipairs(Z:KnownSpells()) do ranksByName[spell.name] = spell.ranks end
+	end
+	local chosen, best = RankNumber(Z.RankText(id), nil), nil
+	for _, rank in ipairs(ranksByName[C_Spell.GetSpellName(id)] or {}) do -- du plus bas au plus haut
+		local need = Z.RankFacts(rank.id)
+		if chosen and rank.n < chosen and need and level >= need - 10 then best = rank.id end
+	end
+	return best or id -- aucun rang assez bas : le rang choisi (le jeu dira « niveau trop bas »)
+end
+
+-- Pose sur une case le rang de chaque raccourci à rang choisi, selon le niveau de son joueur
+function Z:FitRanks(b)
+	if #fixedRanks == 0 or InCombatLockdown() then return end
+	local level = Z.db.rankAdapt and b.unit and UnitLevel(b.unit)
+	for _, entry in ipairs(fixedRanks) do
+		local id = Z.FitRank(entry.id, level)
+		b:SetAttribute(entry.key, entry.before and entry.before .. Z.MacroSpell("#" .. id) or id)
+	end
+end
+
+local fitAfterCombat
+function Z:FitAllRanks(fresh)
+	if fresh then ranksByName = nil end
+	if #fixedRanks == 0 then return end
+	if InCombatLockdown() then
+		fitAfterCombat = true -- sans message : rien n'a été demandé par le joueur
+		return
+	end
+	fitAfterCombat = false
+	for _, b in ipairs(Z.buttons) do Z:FitRanks(b) end
+end
+-- Un autre joueur dans la case, un niveau gagné, une autre cible ou focalisation : son rang suit, hors combat
+for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "UNIT_LEVEL", "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED" }) do
+	Z:On(event, function() Z:FitAllRanks() end)
+end
+Z:On("PLAYER_REGEN_ENABLED", function()
+	if fitAfterCombat then Z:FitAllRanks() end
+end)
 
 -- Ce que Lyorune voit (/lyorune sorts) : les sorts proposés, les sorts de ma classe absents avec leur raison
 -- (« pas appris », « autre spécialisation », « passif »), et les sorts du grimoire écartés (offensifs, ou sans

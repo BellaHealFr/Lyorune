@@ -564,6 +564,7 @@ local function OnAttributeChanged(b, name, value)
 	end
 	Z.AnchorPrivateAuras(b) -- les auras privées suivent le joueur de la case
 	Z.BindAuraBoxes(b) -- les conteneurs d'auras du jeu aussi (Containers.lua)
+	if InCombatLockdown() then Z:FitAllRanks() else Z:FitRanks(b) end -- rang choisi : au niveau du nouveau joueur
 end
 
 -- Infobulle hors combat : le joueur (infobulle du jeu), puis mes clics et touches (option)

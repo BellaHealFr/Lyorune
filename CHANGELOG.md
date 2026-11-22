@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.38.1] - 2026-11-22
+
+### Amélioré
+
+- Choix du rang activable : « Choisir le rang des sorts » (chapitre Sorts et raccourcis, éteint au départ). Éteint, tous vos raccourcis lancent le rang le plus haut ; les rangs déjà choisis sont gardés et reviennent si vous le rallumez.
+- Rang adapté au niveau du joueur soigné : un rang choisi trop fort pour un joueur de bas niveau est remplacé, sur sa case, par le meilleur de vos rangs qu'il peut recevoir, jamais plus fort que celui choisi (réglage fin, allumé au départ). Calculé hors combat.
+
 ## [1.38.0] - 2026-11-22
 
 ### Ajouté
@@ -752,6 +759,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.38.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.1...v1.38.0
 [1.37.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.0...v1.37.1
 [1.37.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.36.0...v1.37.0

@@ -40,7 +40,7 @@ local DIMMED = 0.42         -- transparence d'un réglage sans effet (son régla
 -- Lecture et écriture d'un réglage. Après chaque changement, les cadres sont rafraîchis.
 ----------------------------------------------------------------------------------------------------
 local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true, clicksPerSpec = true,
-	clickConflictAlert = true }
+	clickConflictAlert = true, rankChoice = true, rankAdapt = true }
 
 local function Option(key)
 	return function() return Z.db[key] end, function(value)
@@ -1218,7 +1218,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 				if self.spell then
 					GameTooltip:SetSpellByID(self.spell.id)
-					if (self.spell.top or 0) > 1 then
+					if Z.db.rankChoice and (self.spell.top or 0) > 1 then
 						GameTooltip:AddLine(" ")
 						GameTooltip:AddLine(L["Clic : le rang le plus haut. Clic droit : choisir un rang."], UI.accent[1], UI.accent[2], UI.accent[3], true)
 						GameTooltip:Show()
@@ -1236,7 +1236,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 			icon:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 			icon:SetScript("OnClick", function(self, mouse)
 				-- clic droit sur un sort à plusieurs rangs : la liste des rangs ; sinon le rang le plus haut
-				if mouse == "RightButton" and self.spell and (self.spell.top or 0) > 1 then return OpenRanks(self) end
+				if mouse == "RightButton" and Z.db.rankChoice and self.spell and (self.spell.top or 0) > 1 then return OpenRanks(self) end
 				picker.Choose(self.spell and self.spell.name or "@macro:" .. self.macro.name)
 			end)
 			-- chiffre du rang le plus haut, dans le coin : ce sort a plusieurs rangs (clic droit)
@@ -1255,7 +1255,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 		local icon = Place(i, i, top)
 		icon.spell, icon.macro = spell, nil
 		icon.texture:SetTexture(spell.icon)
-		icon.rank:SetText((spell.top or 0) > 1 and spell.top or "")
+		icon.rank:SetText(Z.db.rankChoice and (spell.top or 0) > 1 and spell.top or "")
 	end
 	top = top - math.ceil(#spells / perRow) * (size + 3)
 
@@ -2406,6 +2406,8 @@ local function Chapters()
 					Z:ResetClickStats()
 					RefreshClicks()
 				end, "Remet à zéro les comptes de la spécialisation affichée.", dep = { "clickStats", true } },
+				{ "check", "rankChoice", "Choisir le rang des sorts", "Pour garder de la mana : dans la fenêtre de choix d'un sort, un clic droit sur un sort à plusieurs rangs ouvre la liste de ses rangs (niveau, coût en mana). Décoché : tous vos raccourcis lancent le rang le plus haut ; les rangs déjà choisis sont gardés et reviennent si vous recochez.", desc = "Sinon, toujours le rang le plus haut." },
+				{ "check", "rankAdapt", "Rang adapté au niveau du joueur soigné", "Un rang choisi trop fort pour un joueur de bas niveau est remplacé, sur sa case, par le meilleur de vos rangs qu'il peut recevoir (jamais plus fort que celui choisi). Calculé hors combat ; en combat, la case garde son rang. Le rang le plus haut est déjà adapté par le jeu.", fine = true, dep = { "rankChoice", true } },
 				{ "check", "trinketButtons", "Bijoux avec les sorts", "Deux boutons au bout de chaque ligne : votre bijou du haut ou du bas, utilisé juste avant le sort, sur un joueur vivant. Une ligne qui a déjà un bijou garde ses boutons.", fine = true },
 				{ "check", "externalClicks", "Laisser Clique ou le jeu gérer les clics", "À cocher seulement si vous préférez Clique ou le clic-soin du jeu : les clics de Lyorune sont alors coupés.", fine = true },
 			} },

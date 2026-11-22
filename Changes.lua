@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.38.1", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+			"Choix du rang activable : « Choisir le rang des sorts » (chapitre Sorts et raccourcis, éteint au départ). Éteint, tous vos raccourcis lancent le rang le plus haut ; les rangs déjà choisis sont gardés et reviennent si vous le rallumez.",
+			"Rang adapté au niveau du joueur soigné : un rang choisi trop fort pour un joueur de bas niveau est remplacé, sur sa case, par le meilleur de vos rangs qu'il peut recevoir, jamais plus fort que celui choisi (réglage fin, allumé au départ). Calculé hors combat.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.38.0", date = "2026-11-22",
 		added = {
 			"Rang choisi sur chaque raccourci : dans la fenêtre de choix, un petit chiffre signale un sort à plusieurs rangs ; clic, le rang le plus haut (il suit vos nouveaux rangs) ; clic droit, la liste de ses rangs avec le niveau d'apprentissage, le coût en mana et la bulle du jeu. La ligne dit le rang (« Soins supérieurs, rang 1 »).",
