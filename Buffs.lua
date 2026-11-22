@@ -1,12 +1,13 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Lyorune - Buffs.lua : panneau des buffs manquants, hors combat seulement.
+-- Lyorune - Buffs.lua : buffs manquants, hors combat seulement : collés sous les cadres, à la forme des cases
+-- (départ), ou dans une petite fenêtre posée où l'on veut (réglage « buffPlace »).
 -- Une ligne par buff qui manque à un joueur (tous ses buffs manquants, pas seulement le premier) : un clic le
 -- lui lance, sans le cibler. Seuls comptent les buffs de ma liste pour ce lieu (« Mes buffs », JcE ou JcJ).
 -- Un buff unique (Bouclier de terre...) a sa ligne pour le tank, ou pour le joueur choisi, s'il n'est sur personne.
 -- Quand je connais la version de groupe du buff et que N joueurs d'un même groupe en manquent (réglage
 -- « buffGroupAt »), une seule ligne « Groupe N » lance la version de groupe : moins de clics, moins de mana.
 -- Le panneau se cache à l'entrée en combat (avant que le jeu ne verrouille ses boutons) et revient après.
--- Il lit ce que les cases ont déjà trouvé (b.missingBuff, Auras.lua) : aucune lecture d'aura en plus.
+-- Un joueur hors de portée passe en fin de liste. Il lit ce que les cases ont déjà trouvé (b.missingBuff, Auras.lua) : aucune lecture d'aura en plus.
 
 local _, Z = ...
 local UI = Z.UI
@@ -21,6 +22,40 @@ local rows = {}
 local queued = false
 local closed = false   -- fermé par la croix : revient à la fin du prochain combat
 local cooldownAt       -- fin de recharge d'un buff unique déjà attendue (UniqueRows)
+
+-- Buff que je viens de lancer : ce joueur n'est plus proposé pour ce buff pendant quelques secondes, le temps que
+-- le jeu pose l'aura et que sa case la relise (sinon la touche, pressée de nouveau, le relancerait sur lui). Le
+-- clic note le joueur et le sort ; seul le sort réussi (UNIT_SPELLCAST_SUCCEEDED) l'écarte : un sort raté, hors
+-- de portée ou interrompu n'écarte personne. Idée vue chez PallyPower, faite à notre façon.
+local RECENT = 4
+local recent = {} -- recent["unité|sort"] = fin de la mise de côté
+local tried       -- le dernier clic : { unit, spell, at }
+
+local function Recent(unit, spell)
+	local untilAt = unit and spell and recent[unit .. "|" .. spell]
+	return untilAt ~= nil and untilAt > GetTime()
+end
+
+-- Après un clic sur un bouton de buff (case du bloc, ligne de la fenêtre, touche) : le joueur et le sort visés
+local function NoteTry(button, mouse)
+	if button.sample then return end
+	local unit = button:GetAttribute("unit")
+	local spell = button:GetAttribute("spell")
+		or (mouse == "RightButton" and button:GetAttribute("spell2") or button:GetAttribute("spell1"))
+	tried = unit and spell and { unit = unit, spell = spell, at = GetTime() } or nil
+end
+
+local castWatch = CreateFrame("Frame")
+castWatch:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+castWatch:SetScript("OnEvent", function(_, _, _, _, spellID)
+	if not tried or GetTime() - tried.at > 3 or not spellID or issecret(spellID) then return end
+	local name = C_Spell.GetSpellName(spellID)
+	if not name or issecret(name) or name ~= tried.spell then return end
+	recent[tried.unit .. "|" .. tried.spell] = GetTime() + RECENT
+	tried = nil
+	Z:QueueBuffPanel()
+	C_Timer.After(RECENT + 0.1, function() Z:QueueBuffPanel() end) -- l'aura n'est pas venue : de nouveau proposé
+end)
 
 -- Raccourci « Poser le prochain buff manquant » (Bindings.xml : CLICK LyoruneNextBuff:LeftButton). Un bouton
 -- sécurisé caché, créé au chargement (hors combat), qui lance la première ligne du panneau. Il est vidé dès que
@@ -43,13 +78,41 @@ end
 
 -- Après l'appui : un mot quand rien n'est parti (combat, ou aucun buff à poser), pour que la touche ne semble
 -- pas cassée
-nextBuff:SetScript("PostClick", function(self)
+nextBuff:SetScript("PostClick", function(self, mouse)
+	NoteTry(self, mouse)
 	if InCombatLockdown() then
 		Z:Print(Z.L["le prochain buff manquant se pose hors combat seulement."])
 	elseif not self.entry then
 		Z:Print(Z.L["aucun buff manquant à poser."])
 	end
 end)
+
+-- Joueur hors de vue ou hors de portée de ce sort, lisible hors combat. Sur Forever, UnitInRange reste secret même hors combat :
+-- la portée du sort lui-même d'abord (C_Spell.IsSpellInRange, souvent 30 m), puis UnitInRange s'il répond.
+-- Une valeur secrète ou inconnue compte comme « à portée » (rien n'est écarté à tort).
+local function Away(unit, spell)
+	if not unit then return false end
+	local me = UnitIsUnit(unit, "player")
+	if not issecret(me) and me then return false end
+	-- hors de vue (une centaine de mètres) : le jeu ne peut pas le cibler, le sort partirait sur moi
+	local visible = UnitIsVisible and UnitIsVisible(unit)
+	if visible == false then return true end
+	if spell and C_Spell.IsSpellInRange then
+		local ok, inRange = pcall(C_Spell.IsSpellInRange, spell, unit)
+		if ok and not issecret(inRange) and inRange == false then return true end
+	end
+	local inRange, checked = UnitInRange(unit)
+	return not issecret(inRange) and not issecret(checked) and checked and not inRange or false
+end
+
+-- Un autre joueur déjà en combat : le jeu cache alors ses buffs aux addons, ils sembleraient tous manquer (au
+-- début d'un combat, le tank y entre un instant avant moi). Il est laissé de côté jusqu'à la relecture.
+local function Fighting(unit)
+	local me = UnitIsUnit(unit, "player")
+	if not issecret(me) and me then return false end
+	local fighting = UnitAffectingCombat and UnitAffectingCombat(unit)
+	return not issecret(fighting) and fighting or false
+end
 
 -- Groupe de raid d'une unité (1 en groupe de 5 ; 0 pour un familier, toujours sur sa propre ligne)
 local function SubGroup(unit)
@@ -68,7 +131,7 @@ local function Missing()
 	local list, seen = {}, {}
 	for _, b in ipairs(Z.buttons) do
 		local unit = b.unit
-		if unit and b.missingBuff and not b.extra and not seen[unit] and b:IsVisible() then
+		if unit and b.missingBuff and not b.extra and not seen[unit] and b:IsVisible() and not Fighting(unit) then
 			local name = UnitName(unit)
 			if name and not issecret(name) then
 				seen[unit] = true
@@ -152,7 +215,8 @@ local function UniqueRows(result)
 		if unit and not b.extra and b:IsVisible() and not unit:find("pet", 1, true) then
 			for name in (b.myUniques or ""):gmatch("[^,]+") do placed[name] = true end
 			local name = Z.UnitPinName(unit)
-			if name and not b.status then -- mort, fantôme ou déconnecté : ne peut pas recevoir le buff
+			-- mort, fantôme ou déconnecté : ne peut pas recevoir le buff ; en combat : ses buffs sont cachés
+			if name and not b.status and not Fighting(unit) then
 				local player = { unit = unit, name = name }
 				members[name] = members[name] or player
 				local role = UnitGroupRolesAssigned(unit)
@@ -217,27 +281,39 @@ function Z.BuffRows()
 		end
 	end
 	UniqueRows(result)
-	return result
+	-- hors de portée : en fin de liste (lisible hors combat), l'ordre reste le même dans chaque partie
+	local near, far = {}, {}
+	for _, entry in ipairs(result) do
+		if Recent(entry.unit, entry.spell) then -- je viens de le lui lancer : l'aura arrive
+		elseif Away(entry.unit, entry.spell) then far[#far + 1] = entry else near[#near + 1] = entry end
+	end
+	for _, entry in ipairs(far) do near[#near + 1] = entry end
+	return near
 end
 
 -- Portée : une ligne hors de portée est estompée, comme sa case (le jeu ne dit rien en combat, le panneau
 -- n'existe pas en combat)
+local tiles = {} -- cases du bloc collé aux cadres
+
 local function UpdateRange()
-	for _, row in ipairs(rows) do
+	for _, list in ipairs({ rows, tiles }) do for _, row in ipairs(list) do
 		if row:IsShown() and row.unitToken then
-			local inRange, checked = UnitInRange(row.unitToken)
-			local far = not issecret(inRange) and checked and not inRange
-			if UnitIsUnit(row.unitToken, "player") then far = false end
-			row:SetAlpha(far and 0.4 or 1)
+			row:SetAlpha(Away(row.unitToken, row.spellName) and 0.4 or 1)
 		end
-	end
+	end end
 end
 
 local function RowEnter(self)
 	self.hover:Show()
 	local L = Z.L
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	GameTooltip:SetText(self.label:GetText() or "", 1, 1, 1)
+	if self.sample then
+		GameTooltip:SetText(L["Exemple"], 1, 1, 1)
+		GameTooltip:AddLine(L["Hors combat, vos buffs manquants s'afficheront ici, à la forme de vos cases : un clic les pose."], 0.8, 0.8, 0.8, true)
+		GameTooltip:Show()
+		return
+	end
+	GameTooltip:SetText(self.tip or self.label:GetText() or "", 1, 1, 1)
 	GameTooltip:AddLine(L["Clic : %s"]:format(self.spellName or ""), UI.accent[1], UI.accent[2], UI.accent[3])
 	if self.why then
 		GameTooltip:AddLine(Z.L["Un autre joueur : /lyorune porteur en survolant sa case."], 0.8, 0.8, 0.8, true)
@@ -275,6 +351,7 @@ local function Row(index)
 	row.label:SetWordWrap(false)
 	row:SetScript("OnEnter", RowEnter)
 	row:SetScript("OnLeave", RowLeave)
+	row:SetScript("PostClick", NoteTry)
 	rows[index] = row
 	return row
 end
@@ -308,12 +385,272 @@ local function Build()
 	panel:SetPoint(pos[1], UIParent, pos[4] or pos[1], pos[2], pos[3])
 end
 
-function Z:UpdateBuffPanel()
-	queued = false
-	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
-	Z.UpdateHiddenSelf() -- ma case cachée (seul) : ma fiche à jour avant la lecture (relit le panneau si elle change)
-	local list = (Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
-	SetNextBuff(list[1])
+-- Texte d'une entrée : « Groupe N (nombre) », « Nom (tank) » ou le nom ; et sa couleur
+local function EntryText(entry)
+	local L = Z.L
+	if entry.count then
+		return L["Groupe %d"]:format(entry.group) .. "  |cffb3b3b3(" .. entry.count .. ")|r", unpack(UI.accent)
+	elseif entry.why then
+		return entry.name .. "  |cffb3b3b3(" .. entry.why .. ")|r", Z.ClassColor(entry.class)
+	end
+	return entry.name, Z.ClassColor(entry.class)
+end
+
+-- Réglages communs d'un bouton du jeu qui lance le buff d'une entrée (ligne de la fenêtre ou case du bloc)
+local function Arm(button, entry)
+	button:RegisterForClicks(Z.db.castOnDown and "AnyDown" or "AnyUp")
+	button.sample = entry.sample
+	button:SetAttribute("unit", not entry.sample and entry.unit or nil) -- l'exemple ne lance rien
+	button:SetAttribute("type1", not entry.sample and "spell" or nil)
+	button:SetAttribute("spell1", not entry.sample and entry.spell or nil)
+	button:SetAttribute("type2", not entry.sample and entry.spell2 and "spell" or nil)
+	button:SetAttribute("spell2", not entry.sample and entry.spell2 or nil)
+	button.unitToken, button.spellName, button.spell2Name, button.why = entry.unit, entry.spell, entry.spell2, entry.why
+end
+
+----------------------------------------------------------------------------------------------------
+-- Bloc collé aux cadres (« Emplacement : avec les cadres », le départ). Sous la case la plus basse des cadres
+-- du groupe, aligné sur la première colonne, à l'échelle et à l'écart des cases ; au-dessus quand la place
+-- manque en bas de l'écran. Il prend la forme des cases (Z.shapes[...].buffs, Themes.lua), leur taille, leur
+-- thème, leur texture et leurs angles. Première case = ce que lance la touche « prochain buff », puis jusqu'à
+-- 3 suivantes, cliquables, puis « + N autres ». Replacé seulement quand les cadres changent (groupe, taille,
+-- déplacement, réglages) : aucune boucle, sauf la portée deux fois par seconde quand il est visible.
+----------------------------------------------------------------------------------------------------
+local NEXT_TILES = 3
+local LABEL_GAP = 14 -- place de l'étiquette « Groupe » au-dessus des cases (LABEL_SPACE, Frames.lua)
+local PANEL_OUTSET = 3 -- débord du fond de groupe autour des cases (Frames.lua)
+local block, blockMore
+
+-- Nom court d'un sort : « Mot de pouvoir : Robustesse » devient « Robustesse »
+local function ShortSpell(name)
+	return name and (name:match(".* : (.+)$") or name) or ""
+end
+
+local function Tile(index)
+	if tiles[index] then return tiles[index] end
+	local tile = CreateFrame("Button", "LyoruneBuffsTile" .. index, block, "SecureActionButtonTemplate")
+	tile.bg = UI.Tex(tile, "BACKGROUND")
+	tile.bg:SetAllPoints()
+	tile.bgRound = UI.RoundTex(tile, "BACKGROUND")
+	tile.bgRound:SetAllPoints()
+	tile.fill = tile:CreateTexture(nil, "BORDER")
+	tile.hover = UI.Tex(tile, "ARTWORK", 1, 1, 1, 0.12)
+	tile.hover:Hide()
+	tile.icon = tile:CreateTexture(nil, "OVERLAY")
+	tile.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	tile.label = UI.Text(tile, 11)
+	tile.label:SetWordWrap(false)
+	tile.sub = UI.Text(tile, 11)
+	tile.sub:SetWordWrap(false)
+	tile.border = UI.Border(tile, 1)
+	tile:SetScript("OnEnter", RowEnter)
+	tile:SetScript("OnLeave", RowLeave)
+	tile:SetScript("PostClick", NoteTry)
+	tiles[index] = tile
+	return tile
+end
+
+-- Habille une case du bloc comme une case des cadres, puis range son icône et ses textes selon « style » :
+-- "LINE", "TWO", "ICON" (Z.shapes), "SMALL" (une suivante en ligne, plus basse), "DOT" (petite icône seule)
+local function StyleTile(tile, w, h, style, entry)
+	local db, theme = Z.db, Z:Theme()
+	local rounded = db.corners == "ROUND"
+	local inset = UI.Inset(theme.borderSize, rounded)
+	tile:SetSize(w, h)
+	tile.bg:SetVertexColor(unpack(theme.bg))
+	tile.bgRound:SetVertexColor(unpack(theme.bg))
+	tile.bg:SetShown(not rounded)
+	tile.bgRound:SetShown(rounded)
+	tile.border:SetThickness(theme.borderSize)
+	tile.border:SetColor(theme.border[1], theme.border[2], theme.border[3], 1)
+	tile.border:SetRounded(rounded)
+	for _, region in ipairs({ tile.fill, tile.hover }) do
+		region:ClearAllPoints()
+		region:SetPoint("TOPLEFT", inset, -inset)
+		region:SetPoint("BOTTOMRIGHT", -inset, inset)
+	end
+	local text, r, g, b = EntryText(entry)
+	tile.fill:SetTexture(UI.BarTexture())
+	tile.fill:SetVertexColor(r, g, b, 0.35) -- la couleur de la classe en fond léger : le texte reste lisible
+	tile.icon:SetTexture(entry.icon or entry.check.icon)
+	tile.tip = text
+	local size = db.fontSize + (theme.fontBonus or 0)
+	tile.label:SetFont(theme.font, style == "SMALL" and size - 1 or size, theme.flags)
+	tile.sub:SetFont(theme.font, size - 1, theme.flags)
+	tile.icon:ClearAllPoints()
+	tile.label:ClearAllPoints()
+	tile.sub:ClearAllPoints()
+	tile.label:Show()
+	tile.sub:Hide()
+	if style == "ICON" then -- grande icône, le nom dessous
+		local icon = math.max(8, math.floor(math.min(w, h) * 0.55))
+		tile.icon:SetSize(icon, icon)
+		tile.icon:SetPoint("TOP", 0, -inset - 3)
+		tile.label:SetPoint("BOTTOMLEFT", inset + 1, inset + 2)
+		tile.label:SetPoint("BOTTOMRIGHT", -inset - 1, inset + 2)
+		tile.label:SetJustifyH("CENTER")
+		tile.label:SetText(entry.count and Z.L["Groupe %d"]:format(entry.group) or entry.name)
+		tile.label:SetTextColor(r, g, b)
+	elseif style == "DOT" then -- petite icône seule (les suivantes du Carré)
+		tile.icon:SetPoint("TOPLEFT", inset + 1, -inset - 1)
+		tile.icon:SetPoint("BOTTOMRIGHT", -inset - 1, inset + 1)
+		tile.label:Hide()
+	else
+		local icon = math.max(8, h - 2 * inset - 4)
+		tile.icon:SetSize(icon, icon)
+		tile.icon:SetPoint("LEFT", inset + 2, 0)
+		tile.label:SetJustifyH("LEFT")
+		tile.sub:SetJustifyH("LEFT")
+		if style == "TWO" then -- le sort, puis le joueur
+			tile.label:SetPoint("BOTTOMLEFT", tile.icon, "RIGHT", 4, 1)
+			tile.label:SetPoint("RIGHT", -inset - 3, 0)
+			tile.label:SetText(ShortSpell(entry.spell))
+			tile.label:SetTextColor(unpack(UI.accent))
+			tile.sub:SetPoint("TOPLEFT", tile.icon, "RIGHT", 4, -1)
+			tile.sub:SetPoint("RIGHT", -inset - 3, 0)
+			tile.sub:SetText(text)
+			tile.sub:SetTextColor(r, g, b)
+			tile.sub:Show()
+		else -- une ligne : le joueur, puis le sort en gris
+			tile.label:SetPoint("LEFT", tile.icon, "RIGHT", 4, 0)
+			tile.label:SetPoint("RIGHT", -inset - 3, 0)
+			tile.label:SetText(text .. "  |cff9a9a9a" .. ShortSpell(entry.spell) .. "|r")
+			tile.label:SetTextColor(r, g, b)
+		end
+	end
+end
+
+-- Bord des cases des cadres du groupe (pas les tanks, familiers, épinglés ni la cible), en pixels de l'écran
+local function MainCells()
+	local left, bottom, top, scale
+	for _, b in ipairs(Z.buttons) do
+		local header = b:GetParent()
+		if b.unit and not b.extra and b:IsVisible() and header and header.def and header.def.pos == "pos" then
+			local l, bt, t = b:GetLeft(), b:GetBottom(), b:GetTop()
+			if l and bt and t then
+				local s = b:GetEffectiveScale()
+				l, bt, t = l * s, bt * s, t * s
+				left = left and math.min(left, l) or l
+				bottom = bottom and math.min(bottom, bt) or bt
+				top = top and math.max(top, t) or t
+				scale = s
+			end
+		end
+	end
+	return left, bottom, top, scale
+end
+
+-- Place le bloc : sous les cadres, au-dessus si la place manque, sous leur point de départ s'ils sont cachés.
+-- block.where : « BELOW », « ABOVE » ou « ANCHOR ».
+local function PlaceBlock()
+	local db = Z.db
+	local gap = db.spacing + (db.groupPanel and 2 * PANEL_OUTSET or 0) -- le bloc ne touche pas un fond de groupe
+	local left, bottom, top, scale = MainCells()
+	block:ClearAllPoints()
+	if not left then -- aucune case visible (seul, ma case cachée) : là où les cadres commencent
+		block:SetPoint("TOPLEFT", Z.anchor or UIParent, "BOTTOMLEFT", 0, -LABEL_GAP)
+		block.where = "ANCHOR"
+		return
+	end
+	local eff = block:GetEffectiveScale()
+	local below = bottom - gap * scale
+	local point, y = "TOPLEFT", below
+	block.where = "BELOW"
+	if below - block:GetHeight() * eff < 0 then
+		point, y = "BOTTOMLEFT", top + (gap + LABEL_GAP) * scale
+		block.where = "ABOVE"
+	end
+	-- accroché au point de départ des cadres (comme leurs groupes) : il les suit pendant qu'on les déplace.
+	-- Point de départ pas encore mesuré : posé sur l'écran, il sera replacé au prochain changement.
+	local anchor = Z.anchor
+	local ax, ay = anchor and anchor:GetLeft(), anchor and anchor:GetTop()
+	if ax and ay then
+		local aEff = anchor:GetEffectiveScale()
+		block:SetPoint(point, anchor, "TOPLEFT", (left - ax * aEff) / eff, (y - ay * aEff) / eff)
+	else
+		block:SetPoint(point, UIParent, "BOTTOMLEFT", left / eff, y / eff)
+	end
+end
+
+local function BuildBlock()
+	block = CreateFrame("Frame", "LyoruneBuffsBlock", UIParent)
+	block:SetFrameStrata("MEDIUM")
+	block:SetClampedToScreen(true)
+	blockMore = UI.Text(block, 10)
+	blockMore:SetTextColor(0.7, 0.7, 0.7)
+	local elapsed = 0
+	block:SetScript("OnUpdate", function(_, delta) -- portée seulement, et seulement bloc visible
+		elapsed = elapsed + delta
+		if elapsed >= 0.5 then
+			elapsed = 0
+			UpdateRange()
+		end
+	end)
+	-- les cadres du groupe changent de taille, apparaissent ou disparaissent : le bloc se replace, une fois
+	local function Moved() Z:QueueBuffPanel() end
+	for _, h in ipairs(Z.headers or {}) do
+		if h.def and h.def.pos == "pos" then
+			h:HookScript("OnSizeChanged", Moved)
+			h:HookScript("OnShow", Moved)
+			h:HookScript("OnHide", Moved)
+		end
+	end
+	block:Hide()
+end
+
+local function ShowBlock(list)
+	if not block then BuildBlock() end
+	local db = Z.db
+	local w, h = Z.CellSize()
+	local style = Z:Shape().buffs or "LINE"
+	local gap = math.max(2, db.spacing)
+	local shown = math.min(#list, 1 + NEXT_TILES)
+	local y = 0
+	for i = 1, shown do
+		local entry, tile = list[i], Tile(i)
+		Arm(tile, entry)
+		tile:ClearAllPoints()
+		if i == 1 then
+			StyleTile(tile, w, h, style, entry)
+			tile:SetPoint("TOPLEFT", 0, 0)
+			y = h
+		elseif style == "ICON" then -- les suivantes en petites icônes, sur une rangée
+			local size = math.floor((w - (NEXT_TILES - 1) * gap) / NEXT_TILES)
+			StyleTile(tile, size, size, "DOT", entry)
+			tile:SetPoint("TOPLEFT", (i - 2) * (size + gap), -(h + gap))
+			y = h + gap + size
+		else -- les suivantes, plus basses, l'une sous l'autre
+			local small = math.max(16, math.floor(h * 0.6))
+			StyleTile(tile, w, small, "SMALL", entry)
+			tile:SetPoint("TOPLEFT", 0, -y - gap)
+			y = y + gap + small
+		end
+		tile:Show()
+	end
+	for i = shown + 1, #tiles do
+		tiles[i]:Hide()
+		tiles[i].unitToken = nil
+	end
+	blockMore:ClearAllPoints()
+	if #list > shown then
+		local theme = Z:Theme()
+		blockMore:SetFont(theme.font, math.max(8, db.fontSize - 1), theme.flags)
+		blockMore:SetText(Z.L["+ %d autres"]:format(#list - shown))
+		blockMore:SetPoint("TOPLEFT", 2, -y - 2)
+		blockMore:Show()
+		y = y + 14
+	else
+		blockMore:Hide()
+	end
+	block:SetScale(db.scale / 100)
+	block:SetSize(w, y)
+	PlaceBlock()
+	UpdateRange()
+	if not block:IsShown() then block:Show() end
+end
+
+-- Fenêtre « où vous voulez » : une ligne par entrée (10 au plus), « et N autres »
+local function ShowWindow(list)
 	if closed then list = {} end
 	if #list == 0 then
 		if panel then panel:Hide() end
@@ -321,28 +658,14 @@ function Z:UpdateBuffPanel()
 	end
 	if not panel then Build() end
 	local L = Z.L
-	local castOnDown = Z.db.castOnDown
 	local shown = math.min(#list, MAX_ROWS)
 	for i = 1, shown do
 		local entry, row = list[i], Row(i)
-		row:RegisterForClicks(castOnDown and "AnyDown" or "AnyUp")
-		row:SetAttribute("unit", entry.unit)
-		row:SetAttribute("type1", "spell")
-		row:SetAttribute("spell1", entry.spell)
-		row:SetAttribute("type2", entry.spell2 and "spell" or nil)
-		row:SetAttribute("spell2", entry.spell2)
-		row.unitToken, row.spellName, row.spell2Name, row.why = entry.unit, entry.spell, entry.spell2, entry.why
+		Arm(row, entry)
 		row.icon:SetTexture(entry.icon or entry.check.icon)
-		if entry.count then
-			row.label:SetText(L["Groupe %d"]:format(entry.group) .. "  |cffb3b3b3(" .. entry.count .. ")|r")
-			row.label:SetTextColor(unpack(UI.accent))
-		elseif entry.why then
-			row.label:SetText(entry.name .. "  |cffb3b3b3(" .. entry.why .. ")|r")
-			row.label:SetTextColor(Z.ClassColor(entry.class))
-		else
-			row.label:SetText(entry.name)
-			row.label:SetTextColor(Z.ClassColor(entry.class))
-		end
+		local text, r, g, b = EntryText(entry)
+		row.label:SetText(text)
+		row.label:SetTextColor(r, g, b)
 		row:Show()
 	end
 	for i = shown + 1, #rows do
@@ -364,6 +687,38 @@ function Z:UpdateBuffPanel()
 	if not panel:IsShown() then panel:Show() end
 end
 
+-- Exemple (idée vue chez HealKit) : options ouvertes sur le chapitre Joueurs, où se règlent les buffs, et rien à
+-- poser : une case d'exemple montre où et à quoi ressembleront les buffs manquants. Elle ne lance rien.
+local function SampleList()
+	local window = Z.OptionsWindow and Z:OptionsWindow()
+	if not (window and window:IsShown() and Z:OptionChapter() == "Joueurs") then return {} end
+	local check = Z.buffChecks[1] or Z.uniqueChecks[1]
+	local name = UnitName("player")
+	if not check or not name or issecret(name) then return {} end
+	return { { check = check, spell = check.spell, icon = check.icon, unit = "player", name = name,
+		class = select(2, UnitClass("player")), sample = true } }
+end
+
+function Z:UpdateBuffPanel()
+	queued = false
+	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
+	Z.UpdateHiddenSelf() -- ma case cachée (seul) : ma fiche à jour avant la lecture (relit le panneau si elle change)
+	local list = (Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
+	SetNextBuff(list[1])
+	if #list == 0 and Z.db.buffPanel then list = SampleList() end
+	if Z.db.buffPlace == "FREE" then
+		if block then block:Hide() end
+		ShowWindow(list)
+	else
+		if panel then panel:Hide() end
+		if #list == 0 then
+			if block then block:Hide() end
+		else
+			ShowBlock(list)
+		end
+	end
+end
+
 -- Plusieurs cases qui changent dans la même seconde : une seule mise à jour du panneau
 function Z:QueueBuffPanel()
 	if queued then return end
@@ -375,10 +730,16 @@ function Z:BuffPanel()
 	return panel
 end
 
+function Z:BuffBlock()
+	return block
+end
+
 -- Entrée en combat : le jeu verrouille les boutons juste après cet événement, on cache le panneau avant
 Z:On("PLAYER_REGEN_DISABLED", function()
 	SetNextBuff(nil)
-	if panel and not InCombatLockdown() then panel:Hide() end
+	if InCombatLockdown() then return end
+	if panel then panel:Hide() end
+	if block then block:Hide() end
 end)
 Z:On("PLAYER_REGEN_ENABLED", function()
 	closed = false

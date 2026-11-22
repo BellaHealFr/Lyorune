@@ -1201,6 +1201,7 @@ function Z.MakeDragHandle(handle, pos, title)
 		anchor:StopMovingOrSizing()
 		local point, _, _, x, y = anchor:GetPoint(1)
 		Z.char[pos] = { point, x, y }
+		if Z.QueueBuffPanel then Z:QueueBuffPanel() end -- les buffs manquants collés aux cadres suivent
 	end)
 	handle:SetScript("OnMouseUp", function(_, button)
 		if button == "RightButton" then Z:ToggleOptions() end

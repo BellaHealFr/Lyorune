@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.33.7"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.34.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -100,6 +100,7 @@ Z.defaults = {
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
 	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris
+	buffPlace = "FRAMES",      -- où : collé sous les cadres, à la forme des cases (départ), ou fenêtre posée où l'on veut
 	buffWatch = {},            -- « Mes buffs » : buffWatch[numéro du buff] = { pve = bool, pvp = bool } ; absent : le départ de Data.lua
 	buffRefresh = 2,           -- proposer à nouveau un buff qui finit dans moins de N minutes (0 : seulement s'il manque)
 	buffGroupAt = 3,           -- joueurs d'un même groupe sans le buff à partir desquels la version de groupe est proposée
@@ -203,6 +204,7 @@ Z.choices = {
 	color = { { "CLASS", "Classe" }, { "HEALTH", "Vie restante" } },
 	text = { { "DEFICIT", "Vie manquante" }, { "PERCENT", "Pourcentage" }, { "NONE", "Aucun" } },
 	hotStyle = { { "ICONS", "Icônes" }, { "BARS", "Barres fines" } },
+	buffPlace = { { "FRAMES", "Avec les cadres" }, { "FREE", "Où vous voulez" } },
 	castIndicator = { { "OFF", "Aucun" }, { "BAR", "Barre sous les cadres" }, { "RING", "Anneau au curseur" } },
 	debuffMode = { { "ALL", "Tous" }, { "DISPEL", "Dissipables par moi" } },
 	manaBars = { { "OFF", "Personne" }, { "HEALERS", "Soigneurs" }, { "ALL", "Tous" } },
@@ -236,7 +238,7 @@ Z.notInProfile = {
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
-	buffPanel = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
+	buffPanel = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
 }
 
 -- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.

@@ -42,7 +42,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 25 | 1.32.0 | Répartition entre soigneurs, marquée sur les cases | Publiée (v1.32.0) |
 | 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
 | 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
-| 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | À faire |
+| 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | Bloc sous les cadres codé (1.34.0) ; Sorts et raccourcis en 1.34.1 |
 | 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | À faire |
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | À faire |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
@@ -671,6 +671,24 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   Aussi (accord de l'auteur) : seul avec « Mon cadre quand je suis seul » décoché, ma fiche (`Z.hiddenSelf`,
   `Z.SelfHidden`, Auras.lua) remplace ma case cachée (VuhDo et HealKit me comptent toujours ; HealBot me perd).
   **Reste** : le bloc sous les cadres (1.34.0), « Sorts et raccourcis » et `/lyorune sorts`.
+  **Fait en 1.34.0 (bloc sous les cadres)** : `buffPlace` (« Avec les cadres » au départ / « Où vous voulez » =
+  l'ancienne fenêtre), allure par forme dans `Z.shapes[...].buffs` (`LINE`, `TWO`, `ICON`), première case = la
+  touche « prochain buff », 3 suivantes, « + N autres », accroché au point de départ des cadres (suit un
+  déplacement), au-dessus si la place manque. Analyse des trois addons : HealKit (un bouton d'une case, replacé
+  deux fois par seconde, un seul buff, portée du sort lue par `UnitDistanceSquared` et `C_Spell.IsSpellInRange`
+  car `UnitInRange` est secret sur Forever même hors combat, joueurs en combat et hors de vue écartés, cible
+  ratée mise de côté un moment), VuhDo (fenêtre libre de pastilles par buff, couleur selon l'état, compteur et
+  temps restant le plus court), HealBot (pas de fenêtre : couleur de barre, message et son). Repris à notre
+  façon : portée du sort et hors de vue (en fin de liste, estompés), joueurs en combat laissés de côté.
+  **Faits aussi en 1.34.0 (accord de l'auteur)** : buff que je viens de lancer écarté 4 s, confirmé par
+  `UNIT_SPELLCAST_SUCCEEDED` (idée de PallyPower) ; case d'exemple quand le chapitre Joueurs est ouvert et que
+  rien n'est à poser, sans sort (idée de HealKit). **Idées notées pour plus tard** : joueur sur qui le sort vient
+  d'échouer mis de côté (HealKit) ; temps restant du buff le plus court et compteur par buff (VuhDo).
+  Recherche élargie à tout le dossier d'addons (demande de l'auteur) : PallyPower (garde quelques secondes en
+  mémoire le joueur qu'il vient de buffer, pour ne pas le reproposer avant que le jeu ait posé l'aura ; temps
+  restant coloré du vert au rouge), ArcAuras (`UI/AD_MissingBuffs.lua` : icônes des buffs manquants dessinées par
+  le jeu, **visibles en combat** : piste directe pour la 26 b bis), Details_RaidCheck (liste de contrôle du raid :
+  flacons, nourriture, rien de cliquable).
 - [ ] 26 b (1.35.0), **priorité haute** : champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
   2026)** : les buffs manquants ne fonctionnent pas en champ de bataille. Cause connue (analyse 1a, B2) : pendant
   un match JcJ, le jeu rend les noms des buffs secrets, même hors combat ; Lyorune s'arrête au premier nom secret,

@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.34.0", date = "2026-11-22",
+		added = {
+			"Buffs manquants collés sous vos cadres, à la forme de vos cases (Barre, Tuile, Carré, Bandeau), avec leur taille, leur thème, leur texture et leurs angles : le premier est celui que lance votre touche, puis jusqu'à 3 suivants cliquables. Ils suivent vos cadres, passent au-dessus s'ils sont trop bas, disparaissent en combat et quand tout est posé. Réglage « Emplacement des buffs manquants » : avec les cadres, ou où vous voulez (l'ancienne fenêtre).",
+			"Options ouvertes sur le chapitre Joueurs et rien à poser : une case d'exemple montre où apparaîtront vos buffs manquants.",
+		},
+		improved = {
+			"Un buff que vous venez de lancer n'est plus proposé pendant quelques secondes, le temps que le jeu le pose : la touche ne le relance pas sur le même joueur.",
+		},
+		fixed = {
+			"Un joueur hors de portée de votre sort ou hors de vue passe en fin de liste (la portée habituelle est cachée aux addons sur WoW Forever), et un joueur déjà en combat, dont le jeu cache les buffs, n'est plus proposé à tort.",
+		},
+	},
+	{
 		version = "1.33.7", date = "2026-11-22",
 		added = {
 		},

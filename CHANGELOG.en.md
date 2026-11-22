@@ -6,6 +6,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.34.0] - 2026-11-22
+
+### Added
+
+- Missing buffs right under your frames, in the shape of your cells (Bar, Tile, Square, Banner), with their size, theme, texture and corners: the first one is what your key casts, then up to 3 more you can click. They follow your frames, move above them when they sit too low, and disappear in combat and once everything is cast. "Missing buffs placement" setting: with the frames, or anywhere (the former window).
+- Options open on the Players chapter and nothing to cast: an example cell shows where your missing buffs will appear.
+
+### Improved
+
+- A buff you have just cast is not offered again for a few seconds, while the game applies it: the key does not cast it again on the same player.
+
+### Fixed
+
+- A player out of range of your spell or out of sight moves to the end of the list (the usual range is hidden from addons on WoW Forever), and a player already in combat, whose buffs the game hides, is no longer offered by mistake.
+
 ## [1.33.7] - 2026-11-22
 
 ### Improved
@@ -675,6 +690,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.34.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.7...v1.34.0
 [1.33.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.6...v1.33.7
 [1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5

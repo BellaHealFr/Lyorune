@@ -6,6 +6,21 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.34.0] - 2026-11-22
+
+### Ajouté
+
+- Buffs manquants collés sous vos cadres, à la forme de vos cases (Barre, Tuile, Carré, Bandeau), avec leur taille, leur thème, leur texture et leurs angles : le premier est celui que lance votre touche, puis jusqu'à 3 suivants cliquables. Ils suivent vos cadres, passent au-dessus s'ils sont trop bas, disparaissent en combat et quand tout est posé. Réglage « Emplacement des buffs manquants » : avec les cadres, ou où vous voulez (l'ancienne fenêtre).
+- Options ouvertes sur le chapitre Joueurs et rien à poser : une case d'exemple montre où apparaîtront vos buffs manquants.
+
+### Amélioré
+
+- Un buff que vous venez de lancer n'est plus proposé pendant quelques secondes, le temps que le jeu le pose : la touche ne le relance pas sur le même joueur.
+
+### Corrigé
+
+- Un joueur hors de portée de votre sort ou hors de vue passe en fin de liste (la portée habituelle est cachée aux addons sur WoW Forever), et un joueur déjà en combat, dont le jeu cache les buffs, n'est plus proposé à tort.
+
 ## [1.33.7] - 2026-11-22
 
 ### Amélioré
@@ -675,6 +690,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.34.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.7...v1.34.0
 [1.33.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.6...v1.33.7
 [1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5

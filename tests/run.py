@@ -1833,6 +1833,7 @@ end)
 
 step("etape 10 : panneau des buffs manquants, assistant de depart", function()
   local saved = {} for k, v in pairs(Z.db) do saved[k] = v end
+  Z.db.buffPlace = "FREE" -- 1.34.0 : la fenetre (ou vous voulez) ; le bloc colle aux cadres a son etape
   -- #27 : le buff et sa version de groupe, lus dans le grimoire
   local check = Z.buffChecks[1]
   assert(check.spell == "Mot de pouvoir : Robustesse" and check.groupSpell == "Prière de robustesse", "sorts du buff")
@@ -1919,7 +1920,7 @@ step("etape 10 : panneau des buffs manquants, assistant de depart", function()
   -- commande et options
   SlashCmdList.LYORUNE("assistant") assert(w:IsShown()) w.close:Run("OnClick")
   local labels = table.concat(Z:OptionLabels(), "|")
-  assert(labels:find("Panneau des buffs manquants", 1, true), "absent de la recherche")
+  assert(labels:find("Buffs manquants à poser", 1, true) and labels:find("Emplacement des buffs manquants", 1, true), "absent de la recherche")
   for k, v in pairs(saved) do Z.db[k] = v end
   Z:Refresh() RunUpdates()
 end)
@@ -2324,6 +2325,7 @@ end)
 
 step("etape 16 : buffs uniques, temps de recharge global", function()
   local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  Z.db.buffPlace = "FREE"
   local oldRole, oldAfter = UnitGroupRolesAssigned, C_Timer.After
   -- un buff unique pour le pretre du faux client (Data.lua : Z.uniqueBuffs), dans ma liste au depart
   local dataUnique = Z.uniqueBuffs.PRIEST
@@ -5926,9 +5928,9 @@ step("etape 22, lot 4 : raccourcis du jeu (Bindings.xml, cadres masques, prochai
   assert(not Z.framesHidden and main:IsShown(), "/lyorune cadres ne ramene pas les cadres")
 
   -- 4. Prochain buff manquant : la première ligne du panneau, vidée quand plus rien ne manque et en combat
-  local saved = { buffPanel = Z.db.buffPanel, castOnDown = Z.db.castOnDown }
+  local saved = { buffPanel = Z.db.buffPanel, castOnDown = Z.db.castOnDown, buffPlace = Z.db.buffPlace }
   local nextBuff = LyoruneNextBuff
-  Z.db.buffPanel = true
+  Z.db.buffPanel, Z.db.buffPlace = true, "FREE"
   AURAS = {} Z:Refresh() RunUpdates() Z:UpdateBuffPanel()
   local list = Z.BuffRows()
   assert(#list >= 1, "aucun buff manquant pour l'essai")
@@ -7404,6 +7406,192 @@ step("1.33.7 : version simple et de groupe cochees a part, Mes buffs aligne, buf
   Z.char.buffTarget, C_Spell.IsSpellUsable = old.target, old.usable
   for k, v in pairs(saved) do Z.db[k] = v end
   Z.class = old.zclass Z:BuildData() AURAS = {} Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("1.34.0 : buffs manquants colles sous les cadres, a la forme des cases (Barre, Tuile, Carre, Bandeau)", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  local oldRange, realRows, realName, realNow = UnitInRange, Z.BuffRows, C_Spell.GetSpellName, NOW
+  local patched = {}
+  local ok, err = pcall(function()
+    assert(Z.defaults.buffPlace == "FRAMES", "depart : avec les cadres")
+    Z.db.buffPanel, Z.db.buffPlace = true, "FRAMES"
+    AURAS = {} Z:Refresh() RunUpdates() Z:UpdateBuffPanel()
+    local block, panel = Z:BuffBlock(), Z:BuffPanel()
+    local list = Z.BuffRows()
+    assert(#list >= 1, "aucun buff manquant pour l'essai")
+    assert(block and block:IsShown(), "bloc absent alors que des buffs manquent")
+    assert(not (panel and panel:IsShown()), "fenetre ouverte en plus du bloc")
+    -- premiere case = ce que lance la touche ; jusqu'a 3 suivantes ; « + N autres »
+    local tile = LyoruneBuffsTile1
+    assert(tile:GetAttribute("type1") == "spell" and tile:GetAttribute("spell1") == list[1].spell
+      and tile:GetAttribute("unit") == list[1].unit, "premiere case mal reglee")
+    assert(LyoruneNextBuff:GetAttribute("spell") == tile:GetAttribute("spell1"), "la touche ne lance pas la premiere case")
+    local function Shown()
+      local n = 0
+      for i = 1, 8 do local t = rawget(_G, "LyoruneBuffsTile" .. i) if t and t:IsShown() then n = n + 1 end end
+      return n
+    end
+    assert(Shown() == math.min(#list, 4), "nombre de cases : " .. Shown())
+    tile:Run("OnEnter") tile:Run("OnLeave")
+    -- forme des cases : taille d'une case, allure decidee par Z.shapes
+    for _, id in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+      assert(Z.shapes[id].buffs, "forme sans allure des buffs : " .. id)
+      Z:ApplyShape(id) RunUpdates() Z:UpdateBuffPanel()
+      local w, h = Z.CellSize()
+      assert(tile:GetWidth() == w and tile:GetHeight() == h, id .. " : premiere case a la taille d'une case")
+      local second = rawget(_G, "LyoruneBuffsTile2")
+      if id == "TILE" then
+        assert(tile.sub:IsShown() and tile.label:GetText() ~= "", "Tuile : le sort puis le joueur")
+      elseif id == "SQUARE" then
+        assert(not tile.sub:IsShown() and tile.label:IsShown(), "Carre : grande icone et nom")
+        if second and second:IsShown() then
+          assert(second:GetWidth() == second:GetHeight() and second:GetWidth() < w and not second.label:IsShown(),
+            "Carre : les suivantes en petites icones")
+        end
+      else
+        assert(not tile.sub:IsShown() and tile.label:GetText():find("|cff9a9a9a", 1, true), id .. " : une ligne, joueur et sort")
+        if second and second:IsShown() then
+          assert(second:GetWidth() == w and second:GetHeight() < h, id .. " : les suivantes plus basses")
+        end
+      end
+    end
+    Z:UndoShape() RunUpdates()
+    -- theme, texture et angles des cases
+    Z.db.corners = "ROUND" Z:UpdateBuffPanel()
+    assert(tile.bgRound:IsShown() and not tile.bg:IsShown(), "angles arrondis non suivis")
+    Z.db.corners = "SHARP" Z:UpdateBuffPanel()
+    assert(tile.bg:IsShown() and not tile.bgRound:IsShown(), "angles droits non suivis")
+    assert(tile.fill._tex == Z.UI.BarTexture(), "texture des barres non suivie")
+    Z.db.scale = 120 Z:UpdateBuffPanel()
+    assert(block:GetScale() == 1.2, "echelle des cadres non suivie")
+    Z.db.scale = saved.scale
+    -- place : sous la case la plus basse, au-dessus si la place manque, au point de depart sans case visible
+    Z:UpdateBuffPanel()
+    assert(block.where == "ANCHOR" and block._points.TOPLEFT[2] == Z.anchor, "sans mesure : sous le point de depart")
+    local low, left = 400, 1000
+    for i, b in ipairs(Z.buttons) do
+      local header = b:GetParent()
+      if b.unit and not b.extra and b:IsVisible() and header and header.def and header.def.pos == "pos" then
+        local bottom = 500 - i * 40
+        low, left = math.min(low, bottom), math.min(left, 100 + i)
+        patched[b] = true
+        b.GetLeft, b.GetBottom, b.GetTop = function() return 100 + i end, function() return bottom end, function() return bottom + 36 end
+      end
+    end
+    assert(next(patched), "aucune case des cadres du groupe")
+    Z:UpdateBuffPanel()
+    local point = block._points.TOPLEFT
+    assert(block.where == "BELOW" and point and point[2] == UIParent and point[4] == left, "bloc pas sous la premiere colonne")
+    assert(point[5] == low - Z.db.spacing, "bloc pas colle sous la case la plus basse : " .. tostring(point[5]))
+    for b in pairs(patched) do b.GetBottom = function() return 5 end end
+    Z:UpdateBuffPanel()
+    assert(block.where == "ABOVE" and block._points.BOTTOMLEFT, "pas de place en bas : au-dessus des cadres")
+    -- comme HealKit, mais par ses cases : accroche au point de depart des cadres, il les suit pendant un deplacement
+    for b in pairs(patched) do b.GetBottom = function() return 300 end end
+    Z.anchor.GetLeft, Z.anchor.GetTop = function() return 90 end, function() return 480 end
+    Z:UpdateBuffPanel()
+    point = block._points.TOPLEFT
+    assert(point[2] == Z.anchor and point[3] == "TOPLEFT" and point[4] == left - 90 and point[5] == 300 - Z.db.spacing - 480,
+      "pas accroche au point de depart des cadres")
+    Z.anchor.GetLeft, Z.anchor.GetTop = nil, nil
+    for b in pairs(patched) do b.GetLeft, b.GetBottom, b.GetTop = nil, nil, nil end
+    patched = {}
+    -- les cadres changent de taille : le bloc se replace, sans boucle
+    for _, h in ipairs(Z.headers) do if h.def.pos == "pos" then h:Run("OnSizeChanged") h:Run("OnShow") end end
+    RunUpdates()
+    -- un joueur hors de portee passe en fin de liste
+    local first = list[1]
+    if #list > 1 and not first.count and first.unit ~= "player" then
+      UnitInRange = function(unit) if unit == first.unit then return false, true end return true, true end
+      local again = Z.BuffRows()
+      assert(again[#again].unit == first.unit and again[1].unit ~= first.unit, "hors de portee pas en fin de liste")
+      UnitInRange = oldRange
+    end
+    -- portee du sort (UnitInRange secret sur Forever, meme hors combat) : en fin de liste
+    if #list > 1 and not first.count and first.unit ~= "player" then
+      C_Spell.IsSpellInRange = function(spell, unit) return unit ~= first.unit end
+      local again = Z.BuffRows()
+      assert(again[#again].unit == first.unit, "hors de portee du sort pas en fin de liste")
+      C_Spell.IsSpellInRange = nil
+      UnitIsVisible = function(unit) return unit ~= first.unit end
+      again = Z.BuffRows()
+      assert(again[#again].unit == first.unit, "hors de vue pas en fin de liste")
+      UnitIsVisible = nil
+      -- un joueur deja en combat : ses buffs sont caches, il n'est pas propose
+      UnitAffectingCombat = function(unit) return unit == first.unit end
+      for _, r in ipairs(Z.BuffRows()) do assert(r.unit ~= first.unit or r.count, "joueur en combat propose") end
+      UnitAffectingCombat = nil
+    end
+    -- combat : cache avant le verrouillage ; revient apres
+    FireEvent("PLAYER_REGEN_DISABLED")
+    assert(not block:IsShown(), "bloc visible en combat")
+    COMBAT = true Z:UpdateBuffPanel() assert(not block:IsShown()) COMBAT = false
+    FireEvent("PLAYER_REGEN_ENABLED") RunUpdates() Z:UpdateBuffPanel()
+    assert(block:IsShown(), "bloc pas revenu apres le combat")
+    -- ou vous voulez : la fenetre, plus le bloc
+    Z.db.buffPlace = "FREE" Z:UpdateBuffPanel()
+    assert(not block:IsShown() and Z:BuffPanel():IsShown(), "ou vous voulez : la fenetre")
+    Z.db.buffPlace = "FRAMES" Z:UpdateBuffPanel()
+    assert(block:IsShown() and not Z:BuffPanel():IsShown(), "retour avec les cadres")
+    -- buff que je viens de lancer : plus propose quelques secondes, le temps que l'aura arrive (vu chez PallyPower)
+    local oldName, now = C_Spell.GetSpellName, NOW
+    local e = Z.BuffRows()[1]
+    local function Proposed()
+      for _, r in ipairs(Z.BuffRows()) do if r.unit == e.unit and r.spell == e.spell then return true end end
+    end
+    C_Spell.GetSpellName = function(id) if id == 999999 then return e.spell end return oldName(id) end
+    tile:Run("PostClick", "LeftButton")
+    assert(Proposed(), "clic seul (sort pas encore parti) : deja ecarte")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 1)
+    assert(Proposed(), "un autre sort reussi : ecarte a tort")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 999999)
+    assert(not Proposed(), "sort reussi : encore propose avant que l'aura arrive")
+    NOW = now + 5
+    assert(Proposed(), "aura jamais venue : pas propose de nouveau")
+    -- la touche aussi ; un clic trop ancien n'ecarte rien
+    Z:UpdateBuffPanel()
+    LyoruneNextBuff:Run("PostClick", "LeftButton")
+    NOW = NOW + 10
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 999999)
+    assert(Proposed(), "clic trop ancien : ecarte a tort")
+    C_Spell.GetSpellName, NOW = oldName, now
+    -- exemple (vu chez HealKit) : rien a poser, options ouvertes sur le chapitre Joueurs
+    local oldRows = Z.BuffRows
+    Z.BuffRows = function() return {} end
+    Z:UpdateBuffPanel()
+    assert(not block:IsShown(), "rien a poser : bloc visible")
+    Z:ToggleOptions("Joueurs") Z:UpdateBuffPanel()
+    assert(block:IsShown() and tile.sample and tile:GetAttribute("type1") == nil and tile:GetAttribute("unit") == nil,
+      "exemple absent, ou il lance un sort")
+    assert(LyoruneNextBuff:GetAttribute("spell") == nil, "la touche lancerait l'exemple")
+    tile:Run("OnEnter") tile:Run("OnLeave")
+    tile:Run("PostClick", "LeftButton")
+    Z:ToggleOptions("Clics") Z:UpdateBuffPanel()
+    assert(not block:IsShown(), "exemple hors du chapitre Joueurs")
+    Z:ToggleOptions("Joueurs") Z:OptionsWindow():Hide() Z:UpdateBuffPanel()
+    assert(not block:IsShown(), "exemple encore la, options fermees")
+    Z.BuffRows = oldRows
+    for _, key in ipairs({ "Exemple", "Hors combat, vos buffs manquants s'afficheront ici, à la forme de vos cases : un clic les pose." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+    -- tout pose, ou interrupteur coupe : rien
+    Z.db.buffPanel = false Z:UpdateBuffPanel()
+    assert(not block:IsShown() and LyoruneNextBuff:GetAttribute("spell") == nil, "interrupteur coupe : bloc visible")
+    -- options : un seul reglage, dans la recherche, traduit
+    local labels = table.concat(Z:OptionLabels(), "|")
+    assert(labels:find("Emplacement des buffs manquants", 1, true), "reglage absent des options")
+    for _, key in ipairs({ "Avec les cadres", "Où vous voulez", "+ %d autres", "Emplacement des buffs manquants" }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  for b in pairs(patched) do b.GetLeft, b.GetBottom, b.GetTop = nil, nil, nil end
+  UnitInRange, C_Spell.IsSpellInRange, UnitAffectingCombat, UnitIsVisible = oldRange, nil, nil, nil
+  Z.anchor.GetLeft, Z.anchor.GetTop = nil, nil
+  COMBAT = false
+  Z.BuffRows, C_Spell.GetSpellName, NOW = realRows, realName, realNow
+  for k, v in pairs(saved) do Z.db[k] = v end
+  AURAS = {} Z:Refresh() RunUpdates()
   assert(ok, err)
 end)
 

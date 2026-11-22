@@ -2164,7 +2164,8 @@ local function Chapters()
 			} },
 			{ "Buffs", {
 				{ "check", "missingBuffs", "Buff manquant sur la case (hors combat)", desc = "Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs." },
-				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste chaque buff qui manque à chaque joueur : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune." },
+				{ "check", "buffPanel", "Buffs manquants à poser", "Hors combat, chaque buff qui manque à un joueur est proposé : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour son porteur. Tout disparaît en combat et quand tout est posé. Une touche peut lancer le premier : raccourcis du jeu, AddOns, Lyorune." },
+				{ "seg", "buffPlace", "Emplacement des buffs manquants", nil, "Avec les cadres : collés sous le dernier groupe, à la forme de vos cases (le premier, puis 3 suivants). Où vous voulez : une petite fenêtre à déplacer." },
 				{ "custom", BuffWatchList },
 				{ "step", "buffRefresh", "Proposer à nouveau sous (minutes)", "Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque.", desc = "Au départ : 2 minutes avant la fin. 0 : seulement quand le buff manque." },
 				{ "step", "buffGroupAt", "Sort de groupe dès (joueurs sans le buff)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", desc = "Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve.", fine = true },
@@ -2502,6 +2503,7 @@ local function Select(index, quiet)
 	page.scroll:Show()
 	RefreshPage(page) -- chaque ligne suit les changements faits ailleurs (profil, partage, liste)
 	AfterChange()
+	if Z.QueueBuffPanel then Z:QueueBuffPanel() end -- chapitre Joueurs : l'exemple des buffs manquants (Buffs.lua)
 	if changed and not quiet then Enter(page.scroll) end
 	if picker then picker:Hide() end
 	return page
@@ -2989,7 +2991,11 @@ local function Build()
 		if not UI.Calm() then window.breath:Play() end
 		AfterChange() -- réglages changés pendant que la fenêtre était fermée (commande, assistant, profil)
 	end)
-	window:HookScript("OnHide", function() window.breath:Stop() end)
+	window:HookScript("OnHide", function()
+		window.breath:Stop()
+		if Z.QueueBuffPanel then Z:QueueBuffPanel() end -- l'exemple des buffs manquants s'en va
+	end)
+	window:HookScript("OnShow", function() if Z.QueueBuffPanel then Z:QueueBuffPanel() end end)
 
 	-- Bas de la fenêtre : un trait sur toute la largeur, puis l'inscription runique au milieu (Runes.lua)
 	window.foot = UI.Paint(UI.Tex(window, "ARTWORK"), "line")
