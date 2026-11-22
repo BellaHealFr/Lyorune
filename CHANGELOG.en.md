@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.5] - 2026-11-22
+
+### Fixed
+
+- Priest: Shadowform is no longer offered in your buffs. It is a Shadow (damage) priest spell, and you cannot heal in that form: a healing addon should not offer it.
+
 ## [1.33.4] - 2026-11-22
 
 ### Added
@@ -650,6 +656,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.3...v1.33.4
 [1.33.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.2...v1.33.3
 [1.33.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.1...v1.33.2

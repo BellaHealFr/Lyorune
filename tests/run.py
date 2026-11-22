@@ -7084,11 +7084,12 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     end
     Z.char.buffTarget = {} GROUP_NAMES[third.unit] = nil
     local shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
-    assert(shown == 6, "lignes du pretre : " .. shown) -- 5 buffs (Forme d'ombre grisee) et Gardien de peur, sans les sorts de race que je n'ai pas
+    assert(shown == 5, "lignes du pretre : " .. shown) -- 4 buffs et Gardien de peur, sans les sorts de race que je n'ai pas
+    for _, row in ipairs(box.lines) do assert(not row:IsShown() or row.entry.id ~= 15473, "Forme d'ombre proposee a un soigneur") end
     for _, row in ipairs(box.lines) do assert(not row:IsShown() or (row.entry.id ~= 2652 and row.entry.id ~= 18137), "sort de race d'une autre race") end
     extra[2652] = "Toucher de faiblesse" box:Update()
     shown = 0 for _, row in ipairs(box.lines) do if row:IsShown() then shown = shown + 1 end end
-    assert(shown == 7, "sort de race que j'ai : absent de Mes buffs")
+    assert(shown == 6, "sort de race que j'ai : absent de Mes buffs")
     extra[2652] = nil
     local labels = table.concat(Z:OptionLabels(), "|")
     for _, text in ipairs({ "Mes buffs", "Proposer à nouveau sous (minutes)", "Sort de groupe dès (joueurs sans le buff)" }) do

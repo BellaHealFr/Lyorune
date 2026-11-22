@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.5] - 2026-11-22
+
+### Corrigé
+
+- Prêtre : Forme d'ombre n'est plus proposée dans vos buffs. C'est un sort de prêtre Ombre (dégâts), et on ne peut plus soigner sous cette forme : un addon de soin n'a pas à la proposer.
+
 ## [1.33.4] - 2026-11-22
 
 ### Ajouté
@@ -650,6 +656,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.3...v1.33.4
 [1.33.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.2...v1.33.3
 [1.33.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.1...v1.33.2

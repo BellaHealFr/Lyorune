@@ -140,7 +140,6 @@ Z.raidBuffs = {
 		{ 14752, 27681, mana = true },  -- Esprit divin, Prière d'Esprit
 		{ 976, 27683 },                 -- Protection contre l'Ombre, Prière de protection contre l'Ombre
 		{ 588, self = true },           -- Feu intérieur
-		{ 15473, self = true },         -- Forme d'ombre (talent Ombre ; listée aussi par HealBot)
 		{ 2652, self = true, racial = true },  -- Toucher de faiblesse (sort de race)
 		{ 18137, self = true, racial = true }, -- Garde de l'ombre (sort de race)
 	},

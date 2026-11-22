@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.5", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Prêtre : Forme d'ombre n'est plus proposée dans vos buffs. C'est un sort de prêtre Ombre (dégâts), et on ne peut plus soigner sous cette forme : un addon de soin n'a pas à la proposer.",
+		},
+	},
+	{
 		version = "1.33.4", date = "2026-11-22",
 		added = {
 			"Prêtre : Forme d'ombre rejoint vos buffs sur vous (prêtre Ombre), comme dans HealBot.",
