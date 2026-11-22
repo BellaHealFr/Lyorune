@@ -43,7 +43,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
 | 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
 | 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | À faire |
-| 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ) | À faire |
+| 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | À faire |
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | À faire |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | À faire |
@@ -653,8 +653,15 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   au départ, avec une migration unique dans `Migrate` (Core.lua) pour les joueurs restés sur 0, l'ancienne valeur
   de départ ; un joueur qui avait choisi une autre valeur la garde. La case est déjà relue toute seule au passage du
   seuil (1.33.0), et un buff sans fin n'est jamais proposé. Textes, guide et test à mettre à jour.
-- [ ] 26 b (1.35.0) : champ de bataille et arène : photo des buffs avant le match, mémoire de mes propres sorts,
-  règle `Z.Restricted()`.
+- [ ] 26 b (1.35.0), **priorité haute** : champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
+  2026)** : les buffs manquants ne fonctionnent pas en champ de bataille. Cause connue (analyse 1a, B2) : pendant
+  un match JcJ, le jeu rend les noms des buffs secrets, même hors combat ; Lyorune s'arrête au premier nom secret,
+  le panneau reste vide et l'icône grise ne s'affiche plus, sans rien dire. Correction : photo des buffs juste
+  avant le match (état `Activating` de la restriction `PvPMatch`, auras encore lisibles), mémoire de mes propres
+  sorts (`UNIT_SPELLCAST_SUCCEEDED`, durées apprises hors JcJ), oubli à la mort (au cimetière, le panneau repropose
+  les buffs), règle `Z.Restricted()`. Quand rien ne peut être su, le dire (ligne « Match JcJ : buffs cachés par le
+  jeu » dans le panneau et l'infobulle) au lieu d'un panneau vide. Tests : match qui commence, mort, retour au
+  cimetière, buff posé pendant le match.
 - [ ] 26 b bis (1.36.0) : buffs en combat (demande de l'auteur, 22 novembre 2026 : « on doit pouvoir rafraîchir
   les buffs sur les joueurs s'ils disparaissent, même en combat »). Lancer marche déjà (clic ou touche au survol
   sur la case). Savoir qu'il manque : un repère gris « manquant » par buff de ma liste, sous un conteneur d'auras
