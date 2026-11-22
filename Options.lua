@@ -617,6 +617,10 @@ end
 -- « Mes buffs » : une ligne par buff de ma classe (Data.lua), deux cases : JcE (donjons, raids, monde) et JcJ
 -- (champ de bataille, arène). Écrit Z.db.buffWatch[numéro] ; un choix égal au départ de Data.lua est effacé.
 local WATCH_ROW = 24
+local WATCH_GAP = 60 -- écart entre les colonnes JcE et JcJ
+-- Bord droit d'une case à cocher dans sa ligne : +4 met le bord droit de la case contre celui de la ligne, comme
+-- la case des interrupteurs au-dessus (même résultat dans les trois thèmes : la case est collée à gauche du bouton)
+local WATCH_RIGHT = 4
 local function BuffWatchList(page, width)
 	local box = CreateFrame("Frame", nil, page)
 	box:SetSize(width, 40)
@@ -626,8 +630,7 @@ local function BuffWatchList(page, width)
 	box.columns = {}
 	for i, text in ipairs({ "JcE", "JcJ" }) do
 		local column = UI.Label(box, 11, nil, "dim")
-		column:SetPoint("TOPRIGHT", -(2 - i) * 60 - 18, -7)
-		column:SetText(L[text])
+		column:SetText(L[text]) -- accroché au centre de sa colonne de cases (Update)
 		box.columns[i] = column
 	end
 	box.empty = Note(box, "Votre classe n'a aucun buff à surveiller.", 0, -28, width)
@@ -677,7 +680,7 @@ local function BuffWatchList(page, width)
 				row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 				row.name = UI.Label(row, 12)
 				row.name:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
-				row.name:SetPoint("RIGHT", -140, 0)
+				row.name:SetPoint("RIGHT", WATCH_RIGHT - WATCH_GAP - 32, 0)
 				row.name:SetJustifyH("LEFT")
 				row.name:SetWordWrap(false)
 				row.entry = entry -- avant les cases : elles lisent leur état dès leur création
@@ -685,7 +688,7 @@ local function BuffWatchList(page, width)
 				for c, context in ipairs({ "pve", "pvp" }) do
 					local check = UI.Check(row, "", Toggle(row, context))
 					check:SetSize(20, 20)
-					check:SetPoint("RIGHT", -(2 - c) * 60 - 22, 0)
+					check:SetPoint("RIGHT", WATCH_RIGHT - (2 - c) * WATCH_GAP, 0)
 					row.checks[c] = check
 				end
 				self.lines[i] = row
@@ -701,7 +704,12 @@ local function BuffWatchList(page, width)
 		end
 		for i = #entries + 1, #self.lines do self.lines[i]:Hide() end
 		self.empty:SetShown(#entries == 0)
-		for _, column in ipairs(self.columns) do column:SetShown(#entries > 0) end
+		for c, column in ipairs(self.columns) do
+			local first = self.lines[1]
+			column:ClearAllPoints()
+			if first then column:SetPoint("BOTTOM", first.checks[c].box, "TOP", 0, 6) end -- centré sur ses cases
+			column:SetShown(#entries > 0)
+		end
 		Fit(self, 28 + math.max(1, #entries) * WATCH_ROW)
 	end
 	box:SetScript("OnShow", box.Update)
