@@ -7409,7 +7409,7 @@ step("1.33.7 : version simple et de groupe cochees a part, Mes buffs aligne, buf
   assert(ok, err)
 end)
 
-step("1.34.0 / 1.37.1 : buffs manquants colles sous les cadres, en bandeau fin pour les quatre formes", function()
+step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en bandeau fin de la largeur d'une case", function()
   local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
   local oldRange, realRows, realName, realNow = UnitInRange, Z.BuffRows, C_Spell.GetSpellName, NOW
   local patched = {}
@@ -7444,17 +7444,36 @@ step("1.34.0 / 1.37.1 : buffs manquants colles sous les cadres, en bandeau fin p
       local w = Z.CellSize()
       local size = Z.db.fontSize + (Z:Theme().fontBonus or 0)
       local h = tile:GetHeight()
-      assert(tile:GetWidth() == math.max(110, w), id .. " : largeur d'une case, au moins 110 : " .. tile:GetWidth())
+      assert(tile:GetWidth() == w, id .. " : largeur exacte d'une case (C13) : " .. tile:GetWidth() .. " au lieu de " .. w)
       assert(h >= 2 * size + 4 and h <= 2 * size + 10, id .. " : hauteur tiree du texte : " .. h)
       assert(block:GetWidth() == tile:GetWidth() and block:GetHeight() == h, id .. " : bloc a la taille du bandeau")
       assert(tile.icon:GetWidth() == tile.icon:GetHeight() and tile.icon:GetHeight() >= h - 6, id .. " : icone de toute la hauteur")
-      assert(tile.line._points and tile.line._points.TOPLEFT, id .. " : trait entre l'icone et le texte")
-      assert(tile.label:IsShown() and tile.sub:IsShown(), id .. " : deux lignes")
-      assert(not tile.label:GetText():find("|c", 1, true), id .. " : ligne 1, le joueur seul")
+      if id == "SQUARE" then -- 1.40.1 (C13) : trop etroit pour le texte, icone seule centree et « +N » dans son coin
+        assert(tile.icon._points.CENTER and not tile.line:IsShown() and not tile.label:IsShown(), id .. " : icone seule attendue")
+        assert(#list == 1 or tile.sub:GetText() == "+" .. (#list - 1), id .. " : +N dans le coin de l'icone : " .. tile.sub:GetText())
+      else
+        assert(tile.line:IsShown() and tile.line._points and tile.line._points.TOPLEFT, id .. " : trait entre l'icone et le texte")
+        assert(tile.label:IsShown() and tile.sub:IsShown(), id .. " : deux lignes")
+        assert(not tile.label:GetText():find("|c", 1, true), id .. " : ligne 1, le joueur seul")
+      end
       local second = rawget(_G, "LyoruneBuffsTile2")
       assert(not (second and second:IsShown()), id .. " : une case suivante montree")
     end
-    Z:UndoShape() RunUpdates()
+    Z:UndoShape() Z:ApplyShape("BAR") RunUpdates() -- la suite lit le texte : une forme assez large
+    -- 1.40.1 (C13) : la largeur suit la case quand le joueur la change, et reste juste si les echelles different
+    local width = Z.db.width
+    Z.db.width = width + 23 Z:Refresh() RunUpdates() Z:UpdateBuffPanel()
+    assert(tile:GetWidth() == Z.CellSize(), "largeur changee non suivie : " .. tile:GetWidth())
+    local cell
+    for _, b in ipairs(Z.buttons) do if b.unit and not b.extra and b:IsVisible() and b:GetWidth() then cell = b break end end
+    assert(cell, "aucune case visible pour mesurer")
+    local realEff = cell.GetEffectiveScale
+    cell.GetEffectiveScale = function() return 1.5 end
+    Z:UpdateBuffPanel()
+    cell.GetEffectiveScale = realEff
+    assert(tile:GetWidth() == math.floor(cell:GetWidth() * 1.5 + 0.5), "echelle des cases non suivie : " .. tile:GetWidth())
+    Z.db.width = width Z:Refresh() RunUpdates() Z:UpdateBuffPanel()
+    assert(tile:GetWidth() == Z.CellSize(), "largeur d'origine non retrouvee")
     -- ligne 1 : « Vous » sur ma case, « Groupe N » pour un groupe ; ligne 2 : « +N autres » ou le nom court du sort
     local fakeCheck = list[1].check
     local realIsUnit = UnitIsUnit

@@ -472,14 +472,15 @@ end
 -- manque en bas de l'écran. Une seule case (demande de l'auteur, 22 novembre 2026, idée vue chez HealKit) : le
 -- prochain buff, celui que lance aussi la touche « prochain buff » ; après chaque sort, la case passe au suivant.
 -- Bandeau fin (1.37.1, choix de l'auteur) : même disposition pour Barre, Tuile, Carré et Bandeau. Hauteur tirée
--- de la taille du texte (deux lignes), largeur d'une case mais jamais sous BLOCK_MIN_W ; icône carrée de toute la
--- hauteur, un trait, puis le joueur et, dessous, « +N autres » ou le nom court du sort. Thème, texture, angles et
--- échelle des cases. Replacé seulement quand les cadres changent (groupe, taille, déplacement, réglages) : aucune
+-- de la taille du texte (deux lignes), largeur exacte d'une case (1.40.1, C13 : mesurée sur une vraie case, donc
+-- juste à toute échelle et en grand raid réduit) ; icône carrée de toute la hauteur, un trait, puis le joueur et,
+-- dessous, « +N autres » ou le nom court du sort. Case trop étroite pour le texte (Carré) : icône seule, centrée,
+-- « +N » dans son coin (choix de l'auteur), le reste dans l'infobulle. Thème, texture, angles et échelle des cases. Replacé seulement quand les cadres changent (groupe, taille, déplacement, réglages) : aucune
 -- boucle, sauf la portée deux fois par seconde quand il est visible.
 ----------------------------------------------------------------------------------------------------
 local LABEL_GAP = 14 -- place de l'étiquette « Groupe » au-dessus des cases (LABEL_SPACE, Frames.lua)
 local PANEL_OUTSET = 3 -- débord du fond de groupe autour des cases (Frames.lua)
-local BLOCK_MIN_W = 110 -- largeur minimale du bandeau : un Carré (54) le rendrait illisible
+local TEXT_MIN_W = 40 -- place du texte en dessous de laquelle le bandeau montre l'icône seule et « +N »
 local block
 
 -- Nom court d'un sort : « Mot de pouvoir : Robustesse » devient « Robustesse »
@@ -512,11 +513,27 @@ local function Tile(index)
 	return tile
 end
 
+-- Case des cadres du groupe (pas les tanks, familiers, épinglés ni la cible)
+local function MainCell(b)
+	local header = b:GetParent()
+	return b.unit and not b.extra and b:IsVisible() and header and header.def and header.def.pos == "pos"
+end
+
+-- Largeur d'une case en unités du bandeau : mesurée sur une case visible (échelles des cadres et du bandeau,
+-- grand raid réduit, forme), sinon calculée (seul avec ma case cachée, cadres pas encore placés).
+local function CellWidth()
+	local eff = block:GetEffectiveScale()
+	for _, b in ipairs(Z.buttons) do
+		local w = MainCell(b) and b:GetWidth()
+		if w and w > 0 and eff > 0 then return math.floor(w * b:GetEffectiveScale() / eff + 0.5) end
+	end
+	return (Z.CellSize())
+end
+
 -- Taille du bandeau : deux lignes de texte et leurs marges (environ 28 à la taille 11), largeur d'une case
 local function BlockSize(theme, inset)
 	local size = Z.db.fontSize + (theme.fontBonus or 0)
-	local w = Z.CellSize()
-	return math.max(BLOCK_MIN_W, w), 2 * size + 4 + 2 * inset, size
+	return CellWidth(), 2 * size + 4 + 2 * inset, size
 end
 
 -- Habille la case du bloc comme une case des cadres (thème, texture, angles), en bandeau fin : icône à gauche,
@@ -545,20 +562,33 @@ local function StyleTile(tile, entry, others)
 	tile.fill:SetTexture(UI.BarTexture())
 	tile.fill:SetVertexColor(r, g, b, 0.25) -- la couleur de la classe en fond léger : le texte reste lisible
 	tile.tip = text
-	local icon = h - 2 * inset
+	local icon = math.min(h, w) - 2 * inset
+	local narrow = w - 2 * inset - icon - 9 < TEXT_MIN_W -- la place du texte (trait et marges ôtés)
 	tile.icon:SetTexture(entry.icon or entry.check.icon)
 	tile.icon:ClearAllPoints()
 	tile.icon:SetSize(icon, icon)
+	tile.label:SetFont(theme.font, size, theme.flags)
+	tile.sub:SetFont(theme.font, size - 1, theme.flags)
+	tile.label:ClearAllPoints()
+	tile.sub:ClearAllPoints()
+	if narrow then -- icône seule, centrée ; « +N » dans son coin s'il reste d'autres buffs
+		tile.icon:SetPoint("CENTER")
+		tile.line:Hide()
+		tile.label:Hide()
+		tile.sub:SetJustifyH("RIGHT")
+		tile.sub:SetPoint("BOTTOMRIGHT", tile.icon, "BOTTOMRIGHT", 0, 1)
+		tile.sub:SetText(others and others > 0 and ("+" .. others) or "")
+		tile.sub:SetTextColor(1, 1, 1)
+		tile.sub:SetShown(others and others > 0 or false)
+		return w, h
+	end
 	tile.icon:SetPoint("TOPLEFT", inset, -inset)
+	tile.line:Show()
 	tile.line:ClearAllPoints()
 	tile.line:SetColorTexture(theme.border[1], theme.border[2], theme.border[3], 0.8)
 	tile.line:SetWidth(1)
 	tile.line:SetPoint("TOPLEFT", tile.icon, "TOPRIGHT", 0, 0)
 	tile.line:SetPoint("BOTTOMLEFT", tile.icon, "BOTTOMRIGHT", 0, 0)
-	tile.label:SetFont(theme.font, size, theme.flags)
-	tile.sub:SetFont(theme.font, size - 1, theme.flags)
-	tile.label:ClearAllPoints()
-	tile.sub:ClearAllPoints()
 	tile.label:SetJustifyH("LEFT")
 	tile.sub:SetJustifyH("LEFT")
 	tile.label:SetPoint("BOTTOMLEFT", tile.line, "RIGHT", 5, 1)
@@ -590,8 +620,7 @@ end
 local function MainCells()
 	local left, bottom, top, scale
 	for _, b in ipairs(Z.buttons) do
-		local header = b:GetParent()
-		if b.unit and not b.extra and b:IsVisible() and header and header.def and header.def.pos == "pos" then
+		if MainCell(b) then
 			local l, bt, t = b:GetLeft(), b:GetBottom(), b:GetTop()
 			if l and bt and t then
 				local s = b:GetEffectiveScale()
@@ -667,10 +696,10 @@ local function ShowBlock(list)
 	local entry, tile = list[1], Tile(1)
 	Arm(tile, entry)
 	tile:ClearAllPoints()
+	block:SetScale(Z.db.scale / 100) -- avant la mesure de la largeur, qui en dépend
 	local w, h = StyleTile(tile, entry, #list - 1)
 	tile:SetPoint("TOPLEFT", 0, 0)
 	tile:Show()
-	block:SetScale(Z.db.scale / 100)
 	block:SetSize(w, h)
 	PlaceBlock()
 	UpdateRange()

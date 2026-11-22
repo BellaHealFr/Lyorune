@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.40.1] - 2026-11-22
+
+### Fixed
+
+- Missing buffs under the frames: the strip is exactly as wide as a cell, with Tile and Square too, and follows your size and scale changes. Cell too narrow for the text (Square): the icon alone, with "+N" in its corner; the player and spell stay in the tooltip.
+
 ## [1.40.0] - 2026-11-22
 
 ### Added
@@ -779,6 +785,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.40.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.0...v1.40.1
 [1.40.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.1...v1.40.0
 [1.39.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.0...v1.39.1
 [1.39.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.1...v1.39.0

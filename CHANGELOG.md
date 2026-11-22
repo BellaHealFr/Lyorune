@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.40.1] - 2026-11-22
+
+### Corrigé
+
+- Buffs manquants sous les cadres : le bandeau fait exactement la largeur d'une case, en Tuile et en Carré aussi, et suit vos changements de taille et d'échelle. Case trop étroite pour le texte (Carré) : l'icône seule, avec « +N » dans son coin ; le joueur et le sort restent dans l'infobulle.
+
 ## [1.40.0] - 2026-11-22
 
 ### Ajouté
@@ -779,6 +785,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.40.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.0...v1.40.1
 [1.40.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.1...v1.40.0
 [1.39.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.0...v1.39.1
 [1.39.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.1...v1.39.0

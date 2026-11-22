@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.40.1", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Buffs manquants sous les cadres : le bandeau fait exactement la largeur d'une case, en Tuile et en Carré aussi, et suit vos changements de taille et d'échelle. Case trop étroite pour le texte (Carré) : l'icône seule, avec « +N » dans son coin ; le joueur et le sort restent dans l'infobulle.",
+		},
+	},
+	{
 		version = "1.40.0", date = "2026-11-22",
 		added = {
 			"Chiffre du bouclier : ce qui reste à absorber (« +1,2k »), tous boucliers comptés, même en combat ; il s'efface quand le dernier bouclier est cassé ou fini (chapitre Vie et portée, éteint au départ).",
