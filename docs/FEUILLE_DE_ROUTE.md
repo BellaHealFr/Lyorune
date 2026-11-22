@@ -644,6 +644,10 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   seulement la version de groupe = uniquement des lignes « Groupe N », dès qu'un joueur du groupe en manque ;
   seulement la version simple = ligne par joueur, jamais de Prière ; aucune = buff non surveillé. Jamais les deux
   pour le même joueur (déjà vrai). Un test par cas.
+  **Alignement de « Mes buffs », priorité haute (capture de l'auteur, 22 novembre 2026)** : pas de décalage entre
+  les lignes. Toutes les icônes dans une même colonne au bord gauche, tous les noms alignés juste après ; la version
+  de groupe se reconnaît à sa mention « (groupe) », plus à un retrait ; la ligne « Sur : » d'un buff à une
+  personne commence au même bord que les noms. Vérifié dans les trois thèmes et les deux langues.
 - [ ] 26 b (1.35.0) : champ de bataille et arène : photo des buffs avant le match, mémoire de mes propres sorts,
   règle `Z.Restricted()`.
 - [ ] 26 b bis (1.36.0) : buffs en combat (demande de l'auteur, 22 novembre 2026 : « on doit pouvoir rafraîchir
