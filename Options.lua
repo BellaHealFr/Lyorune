@@ -1100,6 +1100,57 @@ local function BarIcons(page, width)
 	return barBox
 end
 
+-- Liste des rangs d'un sort (clic droit sur son icône dans la fenêtre de choix) : « le plus haut », puis chaque
+-- rang appris avec son niveau d'apprentissage et son coût en mana ; la bulle du jeu au survol donne ses chiffres.
+local ranks
+local function OpenRanks(icon)
+	if not ranks then
+		ranks = UI.Window("LyoruneRanks", "", 280, 120)
+		ranks:SetFrameStrata("FULLSCREEN_DIALOG")
+		tinsert(UISpecialFrames, "LyoruneRanks")
+		UI.OnTop(ranks)
+		ranks.rows = {}
+		ranks.hint = UI.Label(ranks, 11, nil, "dim")
+		ranks.hint:SetWidth(252)
+		ranks.hint:SetJustifyH("LEFT")
+		picker:HookScript("OnHide", function() ranks:Hide() end)
+	end
+	local spell = icon.spell
+	local list, hidden = Z.RankChoices(spell)
+	ranks.title:SetText(spell.name)
+	for i, choice in ipairs(list) do
+		local row = ranks.rows[i]
+		if not row then
+			row = UI.Button(ranks, "", 252, 22, function(self) picker.Choose(self.value) end)
+			row:SetPoint("TOPLEFT", 14, -42 - (i - 1) * 25)
+			row:HookScript("OnEnter", function(self)
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+				GameTooltip:SetSpellByID(self.id)
+				GameTooltip:Show()
+			end)
+			ranks.rows[i] = row
+		end
+		row.value, row.id = choice.value, choice.id
+		row.label:SetText(i == 1 and "|cff" .. UI.Hex("accent") .. choice.text .. "|r" or choice.text)
+		row:Show()
+	end
+	for i = #list + 1, #ranks.rows do ranks.rows[i]:Hide() end
+	local height = 42 + #list * 25
+	-- rangs cachés par le grimoire du jeu : on dit comment les voir
+	ranks.hint:SetShown(hidden)
+	if hidden then
+		ranks.hint:ClearAllPoints()
+		ranks.hint:SetPoint("TOPLEFT", 14, -height - 4)
+		ranks.hint:SetText(L["Les autres rangs sont cachés par le grimoire du jeu : dans le menu des réglages du grimoire, cochez l'option qui montre tous les rangs, puis rouvrez cette liste."])
+		height = height + 8 + ranks.hint:GetStringHeight()
+	end
+	ranks:SetHeight(height + 16)
+	ranks:ClearAllPoints()
+	ranks:SetPoint("TOPLEFT", picker, "TOPRIGHT", 4, 0)
+	ranks:Show()
+	UI.Lift(ranks)
+end
+
 -- Fenêtre de choix d'un sort : une icône par sort connu. onChoose(valeur) reçoit le choix.
 -- spellsOnly : seulement les sorts (pour l'assistant de macro), sans « Cibler », « Menu » ni macros.
 local function OpenPicker(title, onChoose, spellsOnly)
@@ -1167,6 +1218,11 @@ local function OpenPicker(title, onChoose, spellsOnly)
 				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 				if self.spell then
 					GameTooltip:SetSpellByID(self.spell.id)
+					if (self.spell.top or 0) > 1 then
+						GameTooltip:AddLine(" ")
+						GameTooltip:AddLine(L["Clic : le rang le plus haut. Clic droit : choisir un rang."], UI.accent[1], UI.accent[2], UI.accent[3], true)
+						GameTooltip:Show()
+					end
 				else
 					GameTooltip:SetText(self.macro.name, UI.accent[1], UI.accent[2], UI.accent[3])
 					GameTooltip:AddLine(self.macro.body, 1, 1, 1)
@@ -1177,9 +1233,15 @@ local function OpenPicker(title, onChoose, spellsOnly)
 				self.border:SetColor(0, 0, 0)
 				GameTooltip:Hide()
 			end)
-			icon:SetScript("OnClick", function(self)
+			icon:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			icon:SetScript("OnClick", function(self, mouse)
+				-- clic droit sur un sort à plusieurs rangs : la liste des rangs ; sinon le rang le plus haut
+				if mouse == "RightButton" and self.spell and (self.spell.top or 0) > 1 then return OpenRanks(self) end
 				picker.Choose(self.spell and self.spell.name or "@macro:" .. self.macro.name)
 			end)
+			-- chiffre du rang le plus haut, dans le coin : ce sort a plusieurs rangs (clic droit)
+			icon.rank = UI.Text(icon, 10, "OUTLINE")
+			icon.rank:SetPoint("BOTTOMRIGHT", -1, 2)
 			picker.icons[index] = icon
 		end
 		icon:ClearAllPoints()
@@ -1193,6 +1255,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 		local icon = Place(i, i, top)
 		icon.spell, icon.macro = spell, nil
 		icon.texture:SetTexture(spell.icon)
+		icon.rank:SetText((spell.top or 0) > 1 and spell.top or "")
 	end
 	top = top - math.ceil(#spells / perRow) * (size + 3)
 
@@ -1211,6 +1274,7 @@ local function OpenPicker(title, onChoose, spellsOnly)
 			local icon = Place(#spells + i, i, top)
 			icon.spell, icon.macro = nil, macros[i]
 			icon.texture:SetTexture(Z:MacroIcon(macros[i].body))
+			icon.rank:SetText("")
 		end
 		top = top - math.ceil(shown / perRow) * (size + 3)
 	end

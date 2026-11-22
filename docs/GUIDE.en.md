@@ -114,7 +114,9 @@ To choose your spells: `/lyorune`, **Spells and bindings** chapter. All your sho
 
 **Which spells are offered?** All your heals, dispels, resurrections and buffs, even those without a target: Inner Fire, shaman shields and weapons, paladin auras and Righteous Fury, Holy Nova, Tranquility, healing totems. An offensive spell is never offered. A spell missing? Type `/lyorune spells`: Lyorune writes in the chat the spells it offers, the spells of your class that are missing and why (not learned, other specialization, passive), and the ones it leaves out.
 
-**A low-level player?** Nothing to set: for a buff or a heal over time, the game itself casts the strongest rank that player can receive.
+**Choosing a spell's rank** (to save mana, or a small quick heal in a battleground): in the choice window, a small number in the corner of an icon means the spell has several ranks. A click takes the highest rank, which follows your new ranks as you level up. A **right-click** opens the list of its ranks, with the level each one is learned at and its mana cost; the game's tooltip, on hover, gives its exact figures. The binding's line then shows the rank ("Greater Heal, rank 1"). You can also drag a rank from your spellbook: a low rank stays that rank, the highest rank becomes "highest". The game's spellbook sometimes hides low ranks: the list says so, and an option in the spellbook's settings shows them. A rank this character does not know (another player's sharing code, another character) is written in orange and casts the highest rank. The "Lyo:" macros on action bars and sharing codes keep the rank.
+
+**A low-level player?** Nothing to set: for a buff or a heal over time cast at the highest rank, the game itself casts the strongest rank that player can receive. A rank you chose is cast as it is: on a player whose level is too low, the game may refuse it. To heal low-level players, keep "highest".
 
 There is no limit: add as many lines as you like. All lines stay visible; when the list is long, scroll the page with the mouse wheel.
 

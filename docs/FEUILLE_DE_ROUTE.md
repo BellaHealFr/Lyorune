@@ -47,7 +47,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | Fait |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | Publiée (v1.37.0) |
 | 26 c bis | 1.37.1 | Bloc des buffs manquants en bandeau fin ; interrupteurs « En combat » et « En champ de bataille et en arène » (priorité haute) | Publiée (v1.37.1) |
-| 27 a | 1.38.0 | Rang choisi sur chaque raccourci | À faire |
+| 27 a | 1.38.0 | Rang choisi sur chaque raccourci | Publiée (v1.38.0) |
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
 | 27 c | 1.40.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
 | 28 | 1.41.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
@@ -801,8 +801,23 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
     1.37.0, 107 étapes), guides, visite (une phrase sur la carte « C'est parti »), Notes, README. Installée.
 
 ## Étape 27 : sorts (1.38.0 à 1.40.0)
-- [ ] 27 a (1.38.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
+- [x] 27 a (1.38.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
   partage, macros des barres, statistiques).
+  Recherche (22 novembre 2026) : HealKit (`Bindings.lua`, `Config.lua`) ne voit les rangs bas que si l'option du
+  grimoire qui montre tous les rangs est cochée (menu des réglages du grimoire de Forever,
+  `SetupAllRanksCheckbox`), et baisse lui-même un rang fixe trop fort pour un joueur de bas niveau, case par case.
+  Choix de l'auteur (les trois recommandés) : clic = le plus haut, **clic droit** = liste des rangs ; rangs cachés
+  par le grimoire : la liste le dit (rien à écrire par classe) ; rang fixe sur un joueur de trop bas niveau :
+  accepté, le guide conseille « le plus haut ».
+  Fait : valeur `#numéro` (Clicks.lua : `Z.RankId`, `Z.SpellOf`, `Z.KnowsRank`, `Z.RankText`, `Z.CastOf`,
+  `Z.MacroSpell`, `Z.RankLabel`, `Z.RankFacts`, `Z.RankChoices`, `Z.IsLowRank`), lancée par numéro
+  (`CastSpellByID` du bouton sécurisé), par le nom si ce personnage ne la connaît pas (ligne en orange), « Nom(Rang N) »
+  dans une macro (résurrection automatique, bijoux, macros « Lyo: » des barres, nommées « Lyo:2 Nom »). Rangs lus
+  dans le grimoire (`KnownSpells` : `ranks`, `top`, chiffre lu sur le texte du rang), fenêtre « LyoruneRanks »
+  (Options.lua : `OpenRanks`), chiffre dans le coin des icônes, rang glissé gardé (`TakeCursor`). Codes de partage :
+  rien à changer. Statistiques : comptées par valeur, comme un changement de sort. Tests (1.38.0, 108 étapes).
+  **À vérifier en jeu** : un rang fixe part bien (clic, touche), « Soins(Rang 2) » dans une macro, la liste des
+  rangs avec et sans l'option du grimoire.
 - [ ] 27 b (1.39.0) : variantes d'un raccourci (sur un ennemi, en JcJ, selon le rôle par le groupe « Tanks », hors
   combat) ; garde « aucun soin sur un ennemi ».
 - [ ] 27 c (1.40.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;

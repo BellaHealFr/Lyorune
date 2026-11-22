@@ -450,6 +450,7 @@ function Z:TakeCursor()
 	local value
 	if kind == "spell" then
 		value = spellID and C_Spell.GetSpellName(spellID)
+		if value and Z.IsLowRank(spellID) then value = "#" .. spellID end -- un rang inférieur glissé reste ce rang
 	elseif kind == "macro" then
 		local macro = Z:ImportGameMacro(a)
 		value = macro and "@macro:" .. macro.name

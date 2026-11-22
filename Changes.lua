@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.38.0", date = "2026-11-22",
+		added = {
+			"Rang choisi sur chaque raccourci : dans la fenêtre de choix, un petit chiffre signale un sort à plusieurs rangs ; clic, le rang le plus haut (il suit vos nouveaux rangs) ; clic droit, la liste de ses rangs avec le niveau d'apprentissage, le coût en mana et la bulle du jeu. La ligne dit le rang (« Soins supérieurs, rang 1 »).",
+		},
+		improved = {
+			"Un rang glissé depuis le grimoire reste ce rang ; le rang le plus haut devient « le plus haut ». Les macros « Lyo: » des barres et les codes de partage gardent le rang ; un rang inconnu de ce personnage est écrit en orange et lance le rang le plus haut.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.37.1", date = "2026-11-22",
 		added = {
 		},

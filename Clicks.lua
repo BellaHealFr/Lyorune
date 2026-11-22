@@ -363,6 +363,7 @@ function Z:ActionText(value)
 		return (Z:FindMacro(ref) and "|cffffd060" or "|cffff6060") .. L["Macro"] .. "|r " .. ref
 	end
 	if Z.IsMacro(value) then return "|cffffd060" .. L["Macro"] .. "|r " .. (value:match("[^\n]*$") or "") end -- dernière ligne : le sort
+	if Z.RankId(value) then return Z.RankLabel(value) end
 	return value
 end
 
@@ -397,6 +398,66 @@ end
 
 function Z.IsMacro(value)
 	return type(value) == "string" and value:sub(1, 1) == "/"
+end
+
+----------------------------------------------------------------------------------------------------
+-- RANG CHOISI (1.38.0). Un raccourci lance « le plus haut » ou un rang fixe :
+--   « Soins »  : le nom du sort, toujours le rang le plus haut appris (le jeu le baisse lui-même sur un joueur de
+--                trop bas niveau) ; rien ne change pour les raccourcis d'avant ;
+--   « #2054 »  : ce rang précis, lancé par son numéro. Un numéro que ce personnage ne connaît pas (code de
+--                partage, autre personnage) part par le nom du sort, au rang le plus haut, et la ligne le dit.
+-- Tout se lit dans le grimoire : rien à écrire par classe.
+----------------------------------------------------------------------------------------------------
+-- Numéro du rang fixe d'un raccourci, ou nil
+function Z.RankId(value)
+	local id = type(value) == "string" and value:match("^#(%d+)$")
+	return id and tonumber(id) or nil
+end
+
+-- Ce que les fonctions du jeu (icône, bulle) acceptent pour ce raccourci : le numéro d'un rang fixe, sinon la valeur
+function Z.SpellOf(value)
+	return Z.RankId(value) or value
+end
+
+-- Ce rang précis est-il appris par ce personnage ?
+function Z.KnowsRank(id)
+	if C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(id) then return true end
+	return IsPlayerSpell ~= nil and IsPlayerSpell(id) == true
+end
+
+-- Texte du rang donné par le jeu (« Rang 2 »), ou "" (sort sans rang, texte pas encore chargé)
+function Z.RankText(id)
+	if not (C_Spell.GetSpellSubtext and id) then return "" end
+	local ok, text = pcall(C_Spell.GetSpellSubtext, id)
+	return ok and type(text) == "string" and text or ""
+end
+
+-- Ce que lance vraiment un raccourci : le numéro d'un rang fixe appris, sinon le nom ; puis le nom du sort,
+-- et true si le rang fixe est inconnu de ce personnage
+function Z.CastOf(value)
+	local id = Z.RankId(value)
+	if not id then return value, value end
+	local name = C_Spell.GetSpellName(id)
+	if Z.KnowsRank(id) then return id, name end
+	return name, name, true
+end
+
+-- Le sort écrit dans une macro : « Soins(Rang 2) » pour un rang fixe (texte du rang du jeu), le nom sinon
+function Z.MacroSpell(value)
+	local cast, name = Z.CastOf(value)
+	if type(cast) ~= "number" then return cast end
+	local rank = Z.RankText(cast)
+	return rank ~= "" and ("%s(%s)"):format(name, rank) or name
+end
+
+-- Le rang d'un raccourci lisible sur sa ligne : « Soins supérieurs, rang 1 » ; en orange s'il est inconnu
+function Z.RankLabel(value)
+	local L = Z.L
+	local cast, name, unknown = Z.CastOf(value)
+	if not name then return "|cffff9933" .. value .. "|r" end
+	if unknown then return "|cffff9933" .. name .. ", " .. L["rang inconnu de ce personnage"] .. "|r" end
+	local rank = Z.RankText(cast)
+	return rank ~= "" and ("%s, %s"):format(name, rank:lower()) or name
 end
 
 -- Début de macro qui relève un joueur mort avec le même clic (option « résurrection automatique »)
@@ -445,12 +506,13 @@ local function AddAction(attributes, prefix, suffix, value, resPrefix, trinkets)
 		if #(use .. text) > Z.MACRO_MAX then use = "" end
 		attributes[prefix .. "type" .. suffix] = "macro"
 		attributes[prefix .. "macrotext" .. suffix] = use .. text
+	elseif not Z.CastOf(value) then -- numéro de sort que le jeu ne connaît pas : rien
 	elseif resPrefix or use ~= "" then
 		attributes[prefix .. "type" .. suffix] = "macro"
-		attributes[prefix .. "macrotext" .. suffix] = use .. "/cast " .. (resPrefix or "") .. "[@mouseover] " .. value
+		attributes[prefix .. "macrotext" .. suffix] = use .. "/cast " .. (resPrefix or "") .. "[@mouseover] " .. Z.MacroSpell(value)
 	else
 		attributes[prefix .. "type" .. suffix] = "spell"
-		attributes[prefix .. "spell" .. suffix] = value
+		attributes[prefix .. "spell" .. suffix] = Z.CastOf(value) -- un numéro : le jeu lance ce rang (CastSpellByID)
 	end
 end
 
@@ -621,11 +683,14 @@ local function BarBody(value)
 		local macro = Z:FindMacro(ref)
 		return macro and Z:BarText(macro.body) or ""
 	end
+	local _, name = Z.CastOf(value)
+	local spell = Z.MacroSpell(value) -- rang fixe : « Soins(Rang 2) »
+	if not spell then return "" end
 	local state, fallback = "nodead", "[@player] "
 	for _, id in pairs(Z.classRes[Z.class] or {}) do
-		if Z.SpellName(id) == value then state, fallback = "dead", "" end -- une résurrection vise un mort, jamais moi
+		if Z.SpellName(id) == name then state, fallback = "dead", "" end -- une résurrection vise un mort, jamais moi
 	end
-	return ("#showtooltip %s\n/cast [@mouseover,help,%s][help,%s] %s%s"):format(value, state, state, fallback, value)
+	return ("#showtooltip %s\n/cast [@mouseover,help,%s][help,%s] %s%s"):format(spell, state, state, fallback, spell)
 end
 
 -- Les macros que Lyorune tient à jour : une par sort de mes clics et de mes touches au survol
@@ -635,13 +700,15 @@ function Z:BarMacros()
 		local ref = Z.MacroRef(value)
 		if type(value) ~= "string" or value == "" or (value:sub(1, 1) == "@" and not ref) then return end
 		local macro = Z.IsMacro(value)
-		local name = ref and Copies()[ref] or MacroName(ref or (macro and label) or value) -- copie déjà glissée : la même
+		local rank = Z.RankId(value) and Z.RankText(Z.RankId(value)):match("%d+")
+		local shown = rank and ("%s %s"):format(rank, select(2, Z.CastOf(value)) or value) or value -- « 2 Soins » : jamais le nom du rang le plus haut
+		local name = ref and Copies()[ref] or MacroName(ref or (macro and label) or shown) -- copie déjà glissée : la même
 		local body = BarBody(value)
 		if seen[name] or body == "" or #body > 255 then return end
 		seen[name] = true
 		local plain = not (macro or ref)
 		list[#list + 1] = { name = name, body = body, spell = plain and value or nil, ref = ref,
-			icon = plain and C_Spell.GetSpellTexture(value) or Z:MacroIcon(body) }
+			icon = plain and C_Spell.GetSpellTexture(Z.SpellOf(value)) or Z:MacroIcon(body) }
 	end
 	local clicks, keys = Z:GetClicks(), {}
 	for key in pairs(clicks) do keys[#keys + 1] = key end
@@ -915,7 +982,8 @@ local function Grimoire()
 				local id = item and item.itemType == Enum.SpellBookItemType.Spell and (item.spellID or item.actionID)
 				local name = id and C_Spell.GetSpellName(id)
 				if name then
-					items[#items + 1] = { id = id, name = name, passive = item.isPassive, offSpec = item.isOffSpec }
+					items[#items + 1] = { id = id, name = name, passive = item.isPassive, offSpec = item.isOffSpec,
+						sub = item.subName }
 				end
 			end
 		end
@@ -932,19 +1000,37 @@ end
 
 -- Sorts que « Sorts et raccourcis » propose : ceux de ma spécialisation active, ni passifs, que le jeu dit
 -- utilisables sur un allié ou que Data.lua connaît pour ma classe. Un sort offensif n'est jamais proposé.
+-- Chaque sort porte ses rangs lus dans le grimoire : ranks = { { id, n, sub }, ... } du plus bas au plus haut
+-- (n : le chiffre du texte « Rang 2 »), et top : le numéro de son rang le plus haut, même si le grimoire ne
+-- montre pas les autres (option du jeu « Tous les rangs » décochée).
+local function RankNumber(sub, fallback)
+	return tonumber(type(sub) == "string" and sub:match("%d+") or nil) or fallback
+end
+
 function Z:KnownSpells()
 	local spells, seen = {}, {}
-	local function add(id)
+	local function add(id, sub)
 		local name = id and C_Spell.GetSpellName(id)
-		if name and not seen[name] then
-			seen[name] = true
-			spells[#spells + 1] = { name = name, icon = C_Spell.GetSpellTexture(id), id = id }
+		if not name then return end
+		local spell = seen[name]
+		if not spell then
+			spell = { name = name, icon = C_Spell.GetSpellTexture(id), id = id, ranks = {} }
+			seen[name] = spell
+			spells[#spells + 1] = spell
 		end
+		sub = sub or Z.RankText(id)
+		local rank = { id = id, n = RankNumber(sub, #spell.ranks + 1), sub = sub }
+		spell.ranks[#spell.ranks + 1] = rank
+		if rank.n >= (spell.top or 0) then spell.top, spell.id = rank.n, id end -- la bulle montre le rang le plus haut
 	end
 
 	local mine = Z:ClassSpellNames()
 	for _, item in ipairs(Grimoire()) do
-		if not item.passive and not item.offSpec and (mine[item.name] or Helpful(item.id)) then add(item.id) end
+		if not item.passive and not item.offSpec and (mine[item.name] or Helpful(item.id)) then add(item.id, item.sub) end
+	end
+	for _, spell in ipairs(spells) do
+		table.sort(spell.ranks, function(a, b) return a.n < b.n end)
+		if #spell.ranks == 1 and not (spell.ranks[1].sub or ""):find("%d") then spell.top = nil end -- sort sans rang
 	end
 
 	-- Grimoire illisible : on propose au moins les sorts connus de la classe
@@ -955,6 +1041,47 @@ function Z:KnownSpells()
 	end
 	table.sort(spells, function(a, b) return a.name < b.name end)
 	return spells
+end
+
+-- Niveau d'apprentissage et coût en mana d'un rang (nil quand le jeu ne répond pas)
+function Z.RankFacts(id)
+	local level, cost
+	if C_Spell.GetSpellLevelLearned then
+		local ok, value = pcall(C_Spell.GetSpellLevelLearned, id)
+		if ok and type(value) == "number" and value > 0 then level = value end
+	end
+	if C_Spell.GetSpellPowerCost then
+		local ok, costs = pcall(C_Spell.GetSpellPowerCost, id)
+		local first = ok and type(costs) == "table" and costs[1]
+		if first and type(first.cost) == "number" and first.cost > 0 then cost = first.cost end
+	end
+	return level, cost
+end
+
+-- Les choix de rang d'un sort de KnownSpells : « le plus haut » (son nom), puis chaque rang du grimoire
+-- (« #numéro »), avec son texte : { { value, text, id }, ... } ; hidden : vrai si le grimoire cache des rangs
+function Z.RankChoices(spell)
+	local L, list = Z.L, {}
+	list[1] = { value = spell.name, text = L["Le plus haut (suit vos nouveaux rangs)"], id = spell.id }
+	for _, rank in ipairs(spell.ranks or {}) do
+		local level, cost = Z.RankFacts(rank.id)
+		local text = (rank.sub and rank.sub ~= "") and rank.sub or L["Rang %d"]:format(rank.n)
+		if level then text = text .. " · " .. L["niveau %d"]:format(level) end
+		if cost then text = text .. " · " .. L["%d mana"]:format(cost) end
+		list[#list + 1] = { value = "#" .. rank.id, text = text, id = rank.id }
+	end
+	return list, (spell.top or 0) > #(spell.ranks or {})
+end
+
+-- Un rang plus bas que mon rang le plus haut ? (lu sur le chiffre du texte du rang, pas sur la chaîne des rangs
+-- du jeu, fausse pour quelques sorts de Forever). Sert au sort glissé depuis le grimoire.
+function Z.IsLowRank(id)
+	local name, n = C_Spell.GetSpellName(id), RankNumber(Z.RankText(id), nil)
+	if not (name and n) then return false end
+	for _, spell in ipairs(Z:KnownSpells()) do
+		if spell.name == name then return n < (spell.top or 0) end
+	end
+	return false
 end
 
 -- Ce que Lyorune voit (/lyorune sorts) : les sorts proposés, les sorts de ma classe absents avec leur raison
@@ -1006,7 +1133,7 @@ end
 function Z:SpellIsBound(name)
 	for _, binding in ipairs(Z:Bindings()) do
 		local value = binding.value
-		if value == name then return true end
+		if value == name or (Z.RankId(value) and C_Spell.GetSpellName(Z.RankId(value)) == name) then return true end
 		local ref = Z.MacroRef(value)
 		local macro = ref and Z:FindMacro(ref)
 		local body = macro and macro.body or (Z.IsMacro(value) and value)

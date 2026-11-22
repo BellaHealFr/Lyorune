@@ -8126,6 +8126,90 @@ step("1.37.0 : qui buffe qui : groupes a buffer, benediction par joueur, autre p
   assert(ok, err)
 end)
 
+step("1.38.0 : rang choisi sur chaque raccourci : rang fixe par numero, rang inconnu par le nom, liste des rangs, rang glisse garde, macros des barres, partage", function()
+  local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, sub = C_Spell.GetSpellSubtext, level = C_Spell.GetSpellLevelLearned,
+    cost = C_Spell.GetSpellPowerCost, info = C_SpellBook.GetSpellBookItemInfo, lines = C_SpellBook.GetSpellBookSkillLineInfo,
+    click = Z:GetClicks()["1"], res = Z.db.autoRes, class = Z.class }
+  local ok, err = pcall(function()
+    -- Soins rapides : rangs 1 (2061), 2 (9472) et 3 (9473) ; Soins inferieurs (2050) : inconnu de ce personnage
+    local ranks = { [2061] = 1, [9472] = 2, [9473] = 3 }
+    C_Spell.GetSpellName = function(id) return ranks[id] and "Soins rapides" or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return ranks[id] ~= nil or old.known(id) end
+    C_Spell.GetSpellSubtext = function(id) return ranks[id] and ("Rang " .. ranks[id]) or "" end
+    C_Spell.GetSpellLevelLearned = function(id) return ({ [2061] = 20, [9472] = 26, [9473] = 32 })[id] or 0 end
+    C_Spell.GetSpellPowerCost = function(id) return { { cost = ({ [2061] = 125, [9472] = 155, [9473] = 185 })[id] or 0 } } end
+    local function Book(items)
+      C_SpellBook.GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = #items } end
+      C_SpellBook.GetSpellBookItemInfo = function(slot)
+        local id = items[slot]
+        return { itemType = 1, spellID = id, isPassive = false, subName = C_Spell.GetSpellSubtext(id) }
+      end
+    end
+    Z.class = "PRIEST"
+    Book({ 9473, 2061, 139, 9472 })
+    -- liste des rangs : le plus haut en premier, puis chaque rang du plus bas au plus haut, niveau et mana
+    local spell
+    for _, s in ipairs(Z:KnownSpells()) do if s.name == "Soins rapides" then spell = s end end
+    assert(spell and spell.top == 3 and #spell.ranks == 3 and spell.id == 9473, "rangs du grimoire")
+    local list, hidden = Z.RankChoices(spell)
+    assert(#list == 4 and list[1].value == "Soins rapides" and list[2].value == "#2061" and list[4].value == "#9473" and not hidden, "liste des rangs")
+    assert(list[2].text:find("Rang 1", 1, true) and list[2].text:find("niveau 20", 1, true) and list[2].text:find("125 mana", 1, true), list[2].text)
+    -- grimoire sans l'option des rangs : seul le rang 3, la liste le dit
+    Book({ 9473, 139 })
+    for _, s in ipairs(Z:KnownSpells()) do if s.name == "Soins rapides" then spell = s end end
+    assert(select(2, Z.RankChoices(spell)) == true, "rangs caches non signales")
+    -- sort sans rang : aucun chiffre
+    for _, s in ipairs(Z:KnownSpells()) do if s.name == "Rénovation" then assert(not s.top, "Renovation sans rang") end end
+    Book({ 9473, 2061, 139, 9472 })
+    -- rang fixe : lance par son numero, ligne avec le rang
+    local b = Z.buttons[1]
+    Z.db.autoRes = false
+    Z:SetClick("1", "#2061")
+    assert(b:GetAttribute("type1") == "spell" and b:GetAttribute("spell1") == 2061, "rang fixe : " .. tostring(b:GetAttribute("spell1")))
+    assert(Z:ActionText("#2061") == "Soins rapides, rang 1", Z:ActionText("#2061"))
+    assert(Z:SpellIsBound("Soins rapides"), "rang fixe non reconnu comme attribue")
+    -- dans une macro (resurrection automatique) : le texte du rang du jeu
+    Z.db.autoRes = true Z:ApplyClicks()
+    assert(b:GetAttribute("macrotext1"):find("[@mouseover] Soins rapides(Rang 1)", 1, true), b:GetAttribute("macrotext1"))
+    -- rang inconnu de ce personnage : lance par le nom, ligne en orange
+    Z.db.autoRes = false
+    Z:SetClick("1", "#2050")
+    assert(b:GetAttribute("spell1") == "Soins inférieurs", tostring(b:GetAttribute("spell1")))
+    assert(Z:ActionText("#2050"):find("rang inconnu de ce personnage", 1, true), Z:ActionText("#2050"))
+    -- numero que le jeu ne connait pas du tout : rien, sans erreur
+    Z:SetClick("1", "#999999")
+    assert(b:GetAttribute("type1") == nil, "numero inconnu du jeu")
+    -- glisse depuis le grimoire : un rang bas reste ce rang, le rang le plus haut devient « le plus haut »
+    CURSOR_INFO = { "spell", 1, "spell", 2061 }
+    assert(Z:TakeCursor() == "#2061", "rang bas glisse perdu")
+    CURSOR_INFO = { "spell", 1, "spell", 9473 }
+    assert(Z:TakeCursor() == "Soins rapides", "rang le plus haut glisse")
+    CURSOR_INFO = nil
+    -- macros des barres : un nom a part, le rang dans le texte
+    Z:GetClicks()["1"] = "#2061"
+    Z:GetClicks()["2"] = Z:GetClicks()["2"] or "Soins rapides"
+    local fixed
+    for _, macro in ipairs(Z:BarMacros()) do
+      if macro.body:find("Soins rapides(Rang 1)", 1, true) then fixed = macro end
+    end
+    assert(fixed and fixed.name == "Lyo:1 Soins rapi", "macro de barre : " .. tostring(fixed and fixed.name))
+    -- code de partage : le rang fixe passe tel quel
+    local code = Z:Export()
+    Z:GetClicks()["1"] = "Rénovation"
+    assert(Z:Import(code) and Z:GetClicks()["1"] == "#2061", "partage du rang : " .. tostring(Z:GetClicks()["1"]))
+    for _, key in ipairs({ "rang inconnu de ce personnage", "Le plus haut (suit vos nouveaux rangs)", "Rang %d", "niveau %d", "%d mana",
+      "Clic : le rang le plus haut. Clic droit : choisir un rang." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, C_Spell.GetSpellSubtext = old.name, old.known, old.sub
+  C_Spell.GetSpellLevelLearned, C_Spell.GetSpellPowerCost = old.level, old.cost
+  C_SpellBook.GetSpellBookItemInfo, C_SpellBook.GetSpellBookSkillLineInfo = old.info, old.lines
+  CURSOR_INFO, Z.db.autoRes, Z.class = nil, old.res, old.class
+  Z:SetClick("1", old.click)
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

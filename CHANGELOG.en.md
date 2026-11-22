@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.38.0] - 2026-11-22
+
+### Added
+
+- Rank chosen on each binding: in the choice window, a small number marks a spell with several ranks; click, the highest rank (it follows your new ranks); right-click, the list of its ranks with the level learned, the mana cost and the game's tooltip. The line shows the rank ("Greater Heal, rank 1").
+
+### Improved
+
+- A rank dragged from the spellbook stays that rank; the highest rank becomes "highest". The "Lyo:" macros on action bars and sharing codes keep the rank; a rank this character does not know is written in orange and casts the highest rank.
+
 ## [1.37.1] - 2026-11-22
 
 ### Improved
@@ -742,6 +752,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.38.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.1...v1.38.0
 [1.37.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.0...v1.37.1
 [1.37.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.36.0...v1.37.0
 [1.36.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.35.0...v1.36.0

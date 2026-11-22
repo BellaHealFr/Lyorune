@@ -73,7 +73,8 @@ local function ClickSummary()
 	local lines = {}
 	for _, binding in ipairs(Z:Bindings()) do
 		local value = binding.value
-		local shown = Z.MacroRef(value) and Z.L["macro"] .. " " .. Z.MacroRef(value) or value
+		local shown = Z.MacroRef(value) and Z.L["macro"] .. " " .. Z.MacroRef(value)
+			or Z.RankId(value) and Z.RankLabel(value) or value
 		if value ~= "" and (value:sub(1, 1) ~= "@" or Z.MacroRef(value)) and #lines < 5 then
 			lines[#lines + 1] = "|cff33dd88" .. Z:TriggerLabel(binding) .. "|r : " .. shown
 		end
@@ -135,6 +136,7 @@ local steps = {
 				.. "\n\n" .. Z.L["Un bijou avec un sort ? Chapitre Sorts et raccourcis, réglages fins : « Bijoux avec les sorts »."]
 				.. "\n" .. Z.L["Combien de fois chaque clic a servi ? « Compter mes clics », même chapitre."]
 				.. "\n" .. Z.L["Tous vos soins et buffs y sont, même sans cible (Feu intérieur, totems). Un sort manque ? /lyorune sorts dit pourquoi."]
+				.. "\n" .. Z.L["Un rang plus bas pour garder de la mana ? Clic droit sur le sort, dans la fenêtre de choix."]
 		end,
 		target = Cell,
 		around = Block,
