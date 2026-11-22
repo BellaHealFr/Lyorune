@@ -73,15 +73,38 @@ local function SetNextBuff(entry)
 	nextBuff:SetAttribute("unit", entry and entry.unit)
 	nextBuff:SetAttribute("type", entry and "spell")
 	nextBuff:SetAttribute("spell", entry and entry.spell)
-	nextBuff.entry = entry
+	nextBuff:SetAttribute("macrotext", nil)
+	nextBuff.entry, nextBuff.combat = entry, nil
 end
+
+-- En combat (choix de l'auteur, 22 novembre 2026), la même touche relance mon premier buff unique suivi sur son
+-- porteur (Z.UniqueBearer). Préparée juste avant le verrouillage des boutons, par le nom du porteur (macro
+-- « /cast [@Nom] Sort ») : si le raid se réorganise en plein combat, le sort ne part jamais sur un autre joueur.
+-- Réglage « combatKey » ; sans buff unique ni porteur, la touche est vidée comme avant.
+local function CombatKey()
+	if InCombatLockdown() then return end
+	SetNextBuff(nil)
+	if not (Z.db.combatKey and Z.db.buffPanel) then return end
+	for _, check in ipairs(Z.uniqueChecks or {}) do
+		if Z.BuffWatched(check) then
+			local _, name = Z.UniqueBearer(check)
+			if name then
+				nextBuff:SetAttribute("type", "macro")
+				nextBuff:SetAttribute("macrotext", "/cast [@" .. name .. "] " .. check.spell)
+				nextBuff.combat = { name = name, spell = check.spell }
+				return
+			end
+		end
+	end
+end
+Z.CombatBuffKey = CombatKey -- pour les tests et /lyorune buffs
 
 -- Après l'appui : un mot quand rien n'est parti (combat, ou aucun buff à poser), pour que la touche ne semble
 -- pas cassée
 nextBuff:SetScript("PostClick", function(self, mouse)
 	NoteTry(self, mouse)
 	if InCombatLockdown() then
-		Z:Print(Z.L["le prochain buff manquant se pose hors combat seulement."])
+		if not self.combat then Z:Print(Z.L["le prochain buff manquant se pose hors combat seulement."]) end
 	elseif not self.entry then
 		Z:Print(Z.L["aucun buff manquant à poser."])
 	end
@@ -208,6 +231,31 @@ function Z.SetBuffBearer(id, mode, name)
 	target.byId = target.byId or {}
 	target.byId[id] = { mode = mode, name = mode == "NAME" and name or nil }
 	Z:QueueBuffPanel()
+end
+
+-- Le porteur de ce buff unique, sur les cases du groupe, hors combat : son unité et son nom, ou nil. Même choix
+-- que le panneau (joueur choisi, moi, sinon le tank, sinon moi), mais qu'il soit en combat ou que mon buff soit
+-- déjà posé : sert aux repères dessinés par le jeu (Containers.lua) et au raccourci en combat (CombatKey).
+function Z.UniqueBearer(check)
+	local mode, chosen = Z.BuffBearer(check.id)
+	local found, tank, me
+	for _, b in ipairs(Z.buttons or {}) do
+		local unit = b.unit
+		if unit and not b.extra and not unit:find("pet", 1, true) and not b.status then
+			local name = Z.UnitPinName(unit)
+			if name then
+				local isMe = UnitIsUnit(unit, "player")
+				if issecret(isMe) then isMe = false end
+				local role = UnitGroupRolesAssigned(unit)
+				if mode == "NAME" and name == chosen then found = found or unit end
+				if isMe then me = me or unit end
+				if not issecret(role) and role == "TANK" then tank = tank or unit end
+			end
+		end
+	end
+	if mode == "ME" then found = me end
+	local unit = found or tank or me or (Z.SelfHidden() and "player") or nil
+	if unit then return unit, Z.UnitPinName(unit) end
 end
 
 -- Buffs uniques (Bouclier de terre...) : une ligne par buff pour son porteur (Z.BuffBearer) : le joueur choisi,
@@ -694,6 +742,7 @@ function Z:UpdateBuffPanel()
 	queued = false
 	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
 	Z.UpdateHiddenSelf() -- ma case cachée (seul) : ma fiche à jour avant la lecture (relit le panneau si elle change)
+	if Z.RecheckBuffMarks then Z.RecheckBuffMarks() end -- repères des buffs (Containers.lua) : porteur, réglages
 	local list = (Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
 	SetNextBuff(list[1])
 	if #list == 0 and Z.db.buffPanel then list = SampleList() end
@@ -727,7 +776,7 @@ end
 
 -- Entrée en combat : le jeu verrouille les boutons juste après cet événement, on cache le panneau avant
 Z:On("PLAYER_REGEN_DISABLED", function()
-	SetNextBuff(nil)
+	CombatKey()
 	if InCombatLockdown() then return end
 	if panel then panel:Hide() end
 	if block then block:Hide() end

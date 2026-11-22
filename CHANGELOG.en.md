@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.36.0] - 2026-11-22
+
+### Added
+
+- Buffs in combat: where the game hides buffs (combat, battleground, arena, mythic keystone), it draws your buffs at the bottom left of the cells, in colour when up, grey with a red edge when missing (every rank, even when cast by another player).
+- In combat, the "Cast the next missing buff" key recasts your single-target buff (Earth Shield, Fear Ward...) on its holder, by name.
+
+### Improved
+
+- My buffs: the description explains the buffs hidden by the game in battlegrounds, arenas and mythic keystones.
+
 ## [1.35.0] - 2026-11-22
 
 ### Added
@@ -711,6 +722,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.36.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.35.0...v1.36.0
 [1.35.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.1...v1.35.0
 [1.34.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.0...v1.34.1
 [1.34.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.7...v1.34.0

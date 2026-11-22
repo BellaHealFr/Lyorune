@@ -346,13 +346,31 @@ function Z.BigIcon(b)
 	return b.bigIcon
 end
 
-function Z.BuffIcon(b)
+-- Place du buff manquant : coin bas gauche, après le carré de coin (x, y, taille). Les repères dessinés par le jeu
+-- (Containers.lua) partent du même point, vers la droite.
+function Z.BuffMarkPlace(b)
 	local dx, dy = Z.Offset("buff")
-	b.buffList = b.buffList or {}
-	b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, 1,
-		Z.ElementSize("buff", Z.IconSize()))
+	return 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, Z.ElementSize("buff", Z.IconSize())
+end
 
+function Z.BuffIcon(b)
+	local x, y, size = Z.BuffMarkPlace(b)
+	b.buffList = b.buffList or {}
+	b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", x, y, 1, size)
 	return b.buffIcon
+end
+
+-- Repère numéro « index » d'un buff de ma liste quand le jeu cache les buffs : gris à bord rouge, sous le conteneur
+-- du jeu qui dessine le buff par-dessus quand il est là (Containers.lua)
+function Z.BuffMark(b, index, texture)
+	local x, y, size = Z.BuffMarkPlace(b)
+	b.markIcons = b.markIcons or {}
+	local icon = GetIcon(b, b.markIcons, index, "BOTTOMLEFT", x, y, 1, size)
+	icon:SetFrameLevel(b.over:GetFrameLevel() + 1)
+	icon.texture:SetTexture(texture)
+	icon.texture:SetDesaturated(true)
+	icon.border:SetColor(1, 0.2, 0.2, 1)
+	return icon
 end
 
 local function ShowCorner(square, unit, aura)
@@ -686,6 +704,7 @@ local function Concerns(check, unit, me)
 	if unit:find("pet", 1, true) and not Z.BuffWatched(check) and Z.GroupSpell(check) then return false end
 	return Z.BuffFollowed(check) -- version simple ou version de groupe cochée
 end
+Z.BuffConcerns = Concerns -- aussi pour les repères des buffs dessinés par le jeu (Containers.lua)
 
 -- Buffs de ma liste que ce joueur n'a pas, tous, dans l'ordre de Data.lua : { { check, spell, icon }, ... }, et
 -- une clé qui les résume. Hors combat seulement. Un buff qui finit dans moins de « buffRefresh » minutes
@@ -1015,7 +1034,8 @@ UpdateBuffs = function(b, unit, enemy)
 	b.missingBuffs, b.missingBuff, b.missingKey, b.myUniques = list, list and list[1], key, uniques
 	if changed then Z:QueueBuffPanel() end
 	local missing = b.missingBuff
-	if missing and db.missingBuffs then
+	-- le jeu cache les buffs et dessine lui-même ceux de ma liste (Containers.lua) : ses repères remplacent celui-ci
+	if missing and db.missingBuffs and not Z.BuffMarksShown(b) then
 		Z.BuffIcon(b)
 		b.buffIcon.texture:SetTexture(missing.icon)
 		b.buffIcon.texture:SetDesaturated(true)

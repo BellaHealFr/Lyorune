@@ -44,7 +44,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | Publiée (v1.33.0) |
 | 26 a bis | 1.34.0 | Buffs manquants collés sous les cadres, à la forme des cases (Barre, Tuile, Carré, Bandeau), disparus quand tout est posé ; tous mes soins et buffs posables à la main dans Sorts et raccourcis (priorité haute) | Fait : bloc sous les cadres (1.34.0), Sorts et raccourcis et `/lyorune sorts` (1.34.1) |
 | 26 b | 1.35.0 | Buffs en champ de bataille et en arène (match JcJ), bug signalé par des joueurs (priorité haute) | Fait (1.35.0) : aussi en clé mythique et pendant un boss |
-| 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | À faire |
+| 26 b bis | 1.36.0 | Buffs en combat : repère « manquant » dessiné par le jeu, buff unique relancé sur son porteur | Fait |
 | 26 c | 1.37.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | À faire |
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
@@ -734,7 +734,27 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   les buffs), règle `Z.Restricted()`. Quand rien ne peut être su, le dire (ligne « Match JcJ : buffs cachés par le
   jeu » dans le panneau et l'infobulle) au lieu d'un panneau vide. Tests : match qui commence, mort, retour au
   cimetière, buff posé pendant le match.
-- [ ] 26 b bis (1.36.0) : buffs en combat (demande de l'auteur, 22 novembre 2026 : « on doit pouvoir rafraîchir
+- [x] 26 b bis (1.36.0), **faite le 22 novembre 2026** (choix de l'auteur : aspect « couleur / gris » ; touche du buff
+  unique et repères aussi en champ de bataille : options recommandées retenues).
+  **Comparaison** : HealKit (`BuffHelper.lua`) : rien en combat, repères cachés et bouton retiré au début du
+  combat. HealBot (`HealBot_CombatAuras.lua`) : conteneurs du jeu pour ses soins sur la durée et les
+  affaiblissements, aucun buff manquant. VuhDo (`VuhDoBuffWatchContainers.lua`, `VuhDoAuraContainerOverlays.lua`) :
+  un conteneur par buff et par case (`HELPFUL`, tous les numéros, 1 bouton) sur une couleur « manquant », option
+  « en combat ». ArcAuras (`AD_MissingBuffs.lua`) : icône grise sous le bouton du jeu ; rangs trouvés en parcourant
+  tous les sorts du client (lourd).
+  **Fait (mieux que VuhDo)** : un seul conteneur de plus par case (`buffs`, Containers.lua), une place fixe par buff
+  de « Mes buffs » qui concerne ce joueur (`Z.BuffConcerns`, décidé hors combat), repère gris à bord rouge dessous
+  (`Z.BuffMark`, Auras.lua) : couleur = posé, gris = manquant. Montré quand le jeu cache les buffs (combat, champ de
+  bataille, arène, clé mythique : `Z.BuffMarksOn`), donc aussi la vérité en JcJ, même pour le buff d'un autre.
+  Tous les rangs écrits dans `Z.spellRanks` (Data.lua, vérifiés avec HealKit, PallyPower, VuhDo, WhatsTraining,
+  revérifiés par leur nom au chargement : `check.auraIds`). Bénédictions, auras et buffs uniques : seulement les
+  miens (`HELPFUL|PLAYER`) ; buff unique seulement sur la case de son porteur (`Z.UniqueBearer`, Buffs.lua). Joueur
+  changé en combat (unité ou `GROUP_ROSTER_UPDATE`) : repères cachés jusqu'à la fin du combat. Touche « prochain
+  buff » en combat : macro `/cast [@Nom] Sort` de mon premier buff unique, préparée à `PLAYER_REGEN_DISABLED`
+  (`combatKey`). Réglages `combatBuffs` et `combatKey`. 106 étapes de test.
+  **À vérifier en jeu** : le bouton du jeu couvre bien le repère gris ; filtre `includeSpellIDs` sur `HELPFUL` d'un
+  allié en combat (déjà utilisé pour les défensifs et la boisson) ; macro de la touche en combat.
+  Texte d'origine : buffs en combat (demande de l'auteur, 22 novembre 2026 : « on doit pouvoir rafraîchir
   les buffs sur les joueurs s'ils disparaissent, même en combat »). Lancer marche déjà (clic ou touche au survol
   sur la case). Savoir qu'il manque : un repère gris « manquant » par buff de ma liste, sous un conteneur d'auras
   du jeu (`HELPFUL`, tous les rangs du buff) qui dessine le buff par-dessus quand il est là. Raccourci « mon buff

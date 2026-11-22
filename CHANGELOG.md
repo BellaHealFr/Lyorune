@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.36.0] - 2026-11-22
+
+### Ajouté
+
+- Buffs en combat : là où le jeu cache les buffs (combat, champ de bataille, arène, clé mythique), il dessine vos buffs en bas à gauche des cases, en couleur s'ils sont posés, gris à bord rouge s'ils manquent (tous les rangs, même posés par un autre joueur).
+- En combat, la touche « Poser le prochain buff manquant » relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, par son nom.
+
+### Amélioré
+
+- Mes buffs : la description explique les buffs cachés par le jeu en champ de bataille, en arène et en clé mythique.
+
 ## [1.35.0] - 2026-11-22
 
 ### Ajouté
@@ -711,6 +722,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.36.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.35.0...v1.36.0
 [1.35.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.1...v1.35.0
 [1.34.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.34.0...v1.34.1
 [1.34.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.7...v1.34.0

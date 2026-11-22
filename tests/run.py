@@ -7773,6 +7773,106 @@ step("1.35.0 : buffs caches par le jeu (champ de bataille, arene, cle mythique) 
   assert(ok, err)
 end)
 
+step("1.36.0 : buffs en combat : reperes dessines par le jeu (tous les rangs, couleur / gris), champ de bataille, joueur change en combat, touche du buff unique", function()
+  local old = { create = CreateFrame, name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit,
+    secrets = C_Secrets, class = Z.class, after = C_Timer.After }
+  local made = {}
+  local ok, err = pcall(function()
+    local extra = { [1244] = "Mot de pouvoir : Robustesse", [10938] = "Mot de pouvoir : Robustesse", [21562] = "Prière de robustesse",
+      [21564] = "Prière de robustesse", [588] = "Feu intérieur", [10952] = "Feu intérieur", [6346] = "Gardien de peur",
+      [10937] = "Autre sort" } -- un numero dont le nom n'est pas celui du buff est ecarte
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
+    C_Timer.After = function(s, f) if s < 1 then f() end end
+    local hidden = false
+    C_Secrets = { ShouldAurasBeSecret = function() return hidden end }
+    -- faux conteneurs : places fixes notees avec leur filtre
+    CreateFrame = function(kind, name, parent, template)
+      if kind == "AuraContainer" then assert(not COMBAT, "conteneur cree en combat") end
+      local f = old.create(kind, name, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      f.groups, f.slots = {}, {}
+      function f:AddAuraGroup(key, filter, options) options.initializeFrame(old.create("Button", nil, self)) end
+      function f:AddAuraSlot(key, filter, options)
+        assert(self.unit and not self.enabled, "place ajoutee dans le mauvais ordre")
+        local button = old.create("Button", nil, self)
+        button.Icon = old.create("Frame", nil, button):CreateTexture()
+        self.slots[key] = { filter = filter, ids = (options.candidateFilters or {}).includeSpellIDs, button = button }
+        options.initializeFrame(button)
+        return button
+      end
+      function f:SetEnabled(on) assert(not COMBAT, "SetEnabled en combat") self.enabled = on end
+      function f:SetUnit(unit) self.unit = unit end
+      function f:UpdateAllAuras() self.updates = (self.updates or 0) + 1 end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
+    Z.db.buffWatch, Z.db.missingBuffs, Z.db.combatBuffs, Z.db.buffPanel, Z.db.combatKey = {}, true, true, true, true
+    Z.char.buffTarget = { byId = { [6346] = { mode = "ME" } } }
+    Z.class = "PRIEST" Z:BuildData()
+    -- tous les rangs, simple et groupe, sans le numero d'un autre sort
+    local fort = Z.buffChecks[1]
+    assert(fort.auraIds[1243] and fort.auraIds[1244] and fort.auraIds[10938] and fort.auraIds[21562] and fort.auraIds[21564],
+      "rangs de Robustesse absents")
+    assert(not fort.auraIds[10937], "numero d'un autre sort garde")
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton35", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    UnitIsUnit = function(a, b) return a == b or (a == "player" and b == Z.buttons[1].unit) or (b == "player" and a == Z.buttons[1].unit) end
+    c:SetAttribute("unit", "player")
+    Z:Refresh() RunUpdates()
+    local slots = c.boxes.buffs.slots
+    assert(slots.buff1243 and slots.buff1243.filter == "HELPFUL" and slots.buff1243.ids[10938], "place de Robustesse")
+    assert(slots.buff588 and slots.buff588.ids[10952], "Feu interieur absent de ma case")
+    assert(slots.buff6346 and slots.buff6346.filter == "HELPFUL|PLAYER", "buff unique absent chez son porteur")
+    -- hors combat, buffs lisibles : rien de plus (l'icone grise lue suffit)
+    assert(not c.marksShown and not c.boxes.buffs:IsShown(), "reperes montres hors combat")
+    -- combat : reperes gris montres, conteneur du jeu redessine, ancienne icone effacee
+    local before = c.boxes.buffs.updates or 0
+    FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true
+    assert(c.marksShown and c.boxes.buffs:IsShown() and (c.boxes.buffs.updates or 0) > before, "reperes absents en combat")
+    assert(c.markIcons[1]:IsShown() and c.markIcons[1].texture._tex == fort.icon, "repere gris absent")
+    assert(not (c.buffIcon and c.buffIcon:IsShown()), "icone lue encore montree en combat")
+    -- touche du prochain buff : mon buff unique sur son porteur, par son nom
+    local key = _G.LyoruneNextBuff
+    assert(key:GetAttribute("type") == "macro" and key:GetAttribute("macrotext"):find("^/cast %[@.+%] Gardien de peur$"),
+      "touche du buff unique : " .. tostring(key:GetAttribute("macrotext")))
+    -- le groupe change en combat : reperes caches jusqu'a la fin du combat (le joueur n'est plus sur)
+    FireEvent("GROUP_ROSTER_UPDATE")
+    assert(not c.marksShown and c.marksStale, "reperes gardes apres un changement de groupe en combat")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+    assert(not c.marksShown and not c.marksStale, "fin du combat : reperes non revus")
+    assert(key:GetAttribute("type") ~= "macro", "touche du buff unique gardee hors combat")
+    -- champ de bataille hors combat : le jeu cache les buffs, ses reperes reviennent
+    hidden = true FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 2)
+    assert(c.marksShown, "reperes absents en champ de bataille")
+    hidden = false FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 0)
+    assert(not c.marksShown, "reperes gardes apres le match")
+    -- interrupteurs
+    Z.db.combatBuffs = false Z:Refresh() RunUpdates()
+    FireEvent("PLAYER_REGEN_DISABLED")
+    assert(not c.marksShown and not c.boxes.buffs.slots.buff1243, "interrupteur des reperes")
+    FireEvent("PLAYER_REGEN_ENABLED")
+    Z.db.combatBuffs, Z.db.combatKey = true, false
+    FireEvent("PLAYER_REGEN_DISABLED")
+    assert(key:GetAttribute("type") == nil, "interrupteur de la touche")
+    FireEvent("PLAYER_REGEN_ENABLED")
+    for _, text in ipairs({ "Aussi en combat et en champ de bataille", "En combat, la touche relance mon buff unique",
+      "Couleur : posé. Gris à bord rouge : il manque.", "Buff manquant sur la case" }) do
+      assert(Z.translations.enUS[text], "sans traduction anglaise : " .. text)
+    end
+  end)
+  CreateFrame, C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit = old.create, old.name, old.known, old.isUnit
+  C_Secrets, Z.class, C_Timer.After = old.secrets, old.class, old.after
+  AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle, Z.boxWrap = nil, nil, nil, nil
+  Z.db.combatBuffs, Z.db.combatKey, Z.char.buffTarget, COMBAT = true, true, {}, false
+  for _, button in ipairs(made) do pcall(button.SetAttribute, button, "unit", nil) end
+  Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

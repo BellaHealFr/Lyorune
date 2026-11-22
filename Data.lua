@@ -57,6 +57,28 @@ Z.spellRanks = {
 	[1022] = { 5599, 10278 },                                                  -- Bénédiction de protection
 	[6940] = { 20729 },                                                        -- Bénédiction de sacrifice
 	[29166] = { 456195 },                                                      -- Innervation (variante trouvée dans le jeu)
+	-- Buffs de Z.raidBuffs et Z.uniqueBuffs : le jeu les dessine en combat sur les cases (Containers.lua, repères
+	-- des buffs), seulement aux numéros donnés. Vérifiés hors jeu (HealKit, PallyPower, VuhDo, WhatsTraining).
+	[1243]  = { 1244, 1245, 2791, 10937, 10938 },                              -- Mot de pouvoir : Robustesse
+	[21562] = { 21564 },                                                       -- Prière de robustesse
+	[14752] = { 14818, 14819, 27841 },                                         -- Esprit divin
+	[976]   = { 10957, 10958 },                                                -- Protection contre l'Ombre
+	[588]   = { 7128, 602, 1006, 10951, 10952 },                               -- Feu intérieur
+	[2652]  = { 19261, 19262, 19264, 19265, 19266 },                           -- Toucher de faiblesse
+	[18137] = { 19308, 19309, 19310, 19311, 19312 },                           -- Garde de l'ombre
+	[19740] = { 19834, 19835, 19836, 19837, 19838, 25291 },                    -- Bénédiction de puissance
+	[19742] = { 19850, 19852, 19853, 19854, 25290 },                           -- Bénédiction de sagesse
+	[20911] = { 20912, 20913, 20914 },                                         -- Bénédiction du sanctuaire
+	[465]   = { 10290, 643, 10291, 1032, 10292, 10293 },                       -- Aura de dévotion
+	[7294]  = { 10298, 10299, 10300, 10301 },                                  -- Aura de vindicte
+	[19876] = { 19895, 19896 },                                                -- Aura de résistance à l'Ombre
+	[19888] = { 19897, 19898 },                                                -- Aura de résistance au Givre
+	[19891] = { 19899, 19900 },                                                -- Aura de résistance au Feu
+	[324]   = { 325, 905, 945, 8134, 10431, 10432 },                           -- Bouclier de foudre
+	[1126]  = { 5232, 6756, 5234, 8907, 9884, 9885 },                          -- Marque du fauve
+	[21849] = { 21850 },                                                       -- Don du fauve
+	[467]   = { 782, 1075, 8914, 9756, 9910 },                                 -- Épines
+	[1459]  = { 1460, 1461, 10156, 10157 },                                    -- Intelligence des arcanes
 }
 
 -- Clics proposés au premier lancement. Pour chaque case, le premier sort connu de la liste est retenu.
@@ -475,6 +497,26 @@ function Z:BuildData()
 		for _, id in ipairs(Z.drinkSpells) do
 			if Z.SpellName(id) == drink then Z.drinkIds[id] = true end
 		end
+	end
+	-- Numéros que le jeu dessine pour chaque buff de ma liste, quand il cache les buffs (repères des buffs,
+	-- Containers.lua) : tous ses numéros connus du jeu et tous leurs rangs. L'arme n'est pas une aura : aucun.
+	for _, check in ipairs(Z.buffChecks) do
+		check.auraIds = nil
+		if not check.weapon then
+			local set = {}
+			for _, id in ipairs(check.ids) do
+				if Z.SpellName(id) then set[id] = true end
+			end
+			for name in pairs(check.names) do
+				for id in pairs(Z.rankIds[name] or {}) do set[id] = true end
+			end
+			check.auraIds = next(set) and set or nil
+		end
+	end
+	for _, check in ipairs(Z.uniqueChecks) do
+		local set = { [check.id] = true }
+		for id in pairs(Z.rankIds[check.name] or {}) do set[id] = true end
+		check.auraIds = set
 	end
 	-- Les conteneurs d'auras du jeu filtrent par numéro de sort : ils suivent les sorts de la classe
 	if Z.RefreshAuraBoxes then Z.RefreshAuraBoxes() end

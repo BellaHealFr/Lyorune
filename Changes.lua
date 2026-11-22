@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.36.0", date = "2026-11-22",
+		added = {
+			"Buffs en combat : là où le jeu cache les buffs (combat, champ de bataille, arène, clé mythique), il dessine vos buffs en bas à gauche des cases, en couleur s'ils sont posés, gris à bord rouge s'ils manquent (tous les rangs, même posés par un autre joueur).",
+			"En combat, la touche « Poser le prochain buff manquant » relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, par son nom.",
+		},
+		improved = {
+			"Mes buffs : la description explique les buffs cachés par le jeu en champ de bataille, en arène et en clé mythique.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.35.0", date = "2026-11-22",
 		added = {
 			"/lyorune buffs : pour chacun de vos buffs, lisible ici ou caché par le jeu, et la durée connue. Un message au début du match et une ligne dans l'infobulle disent ce que Lyorune sait.",
