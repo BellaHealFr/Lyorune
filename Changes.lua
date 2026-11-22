@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.39.1", date = "2026-11-22",
+		added = {
+			"Variante « Sur un tank » : le « + » d'une ligne donne au même clic un autre sort ou un autre rang sur un tank (par exemple le rang le plus haut sur lui, un rang économe sur les autres). Toujours juste dans le cadre « Tanks » et les cadres par rôle, même en combat ; ailleurs, posée hors combat selon le rôle de chacun et reposée à la fin du combat.",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.39.0", date = "2026-11-22",
 		added = {
 			"Variantes d'un raccourci : le « + » au bout d'une ligne (chapitre Sorts et raccourcis) lui donne un autre sort sur un ennemi (case Cible, Focalisation, allié sous Contrôle mental), en champ de bataille et en arène, ou hors combat. Chaque variante est une sous-ligne, réglable et retirable ; elles suivent le raccourci, l'infobulle « Mes clics » et les codes de partage.",

@@ -1460,6 +1460,7 @@ local function ApplyLayout()
 		h:SetScale(db.scale / 100) -- échelle générale : cases, icônes et étiquette grandissent ensemble
 	end
 	UpdateHandles()
+	if Z.FitAllRanks then Z:FitAllRanks() end -- variante « Sur un tank » : un cadre a pu changer de rôle (Clicks.lua)
 end
 
 local function BuildCurves()

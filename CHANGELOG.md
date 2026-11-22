@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.39.1] - 2026-11-22
+
+### Ajouté
+
+- Variante « Sur un tank » : le « + » d'une ligne donne au même clic un autre sort ou un autre rang sur un tank (par exemple le rang le plus haut sur lui, un rang économe sur les autres). Toujours juste dans le cadre « Tanks » et les cadres par rôle, même en combat ; ailleurs, posée hors combat selon le rôle de chacun et reposée à la fin du combat.
+
 ## [1.39.0] - 2026-11-22
 
 ### Ajouté
@@ -766,6 +772,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.39.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.0...v1.39.1
 [1.39.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.1...v1.39.0
 [1.38.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.1...v1.38.0

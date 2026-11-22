@@ -976,6 +976,7 @@ local NewRow        -- une ligne de raccourci de plus (définie plus bas)
 local VARIANT_TIPS = {
 	enemy = "Sur une case qui montre un ennemi (Cible, Focalisation, allié sous Contrôle mental), ce raccourci lance ceci. Le jeu choisit au moment du clic, en combat aussi.",
 	pvp = "En champ de bataille et en arène, ce raccourci lance ceci. Posé à l'entrée du lieu, retiré à la sortie.",
+	tank = "Sur un tank, ce raccourci lance ceci (par exemple le rang le plus haut, et un rang économe sur les autres). Toujours juste dans le cadre « Tanks » et les cadres par rôle, même en combat ; ailleurs, posé hors combat selon le rôle de chacun.",
 	ooc = "Hors combat, ce raccourci lance ce sort ; en combat, le sort de la ligne du dessus. Le jeu choisit au moment du clic.",
 }
 
@@ -993,7 +994,7 @@ function RefreshClicks()
 		local top = spell and 66 or 36
 		clickList.list:ClearAllPoints()
 		clickList.list:SetPoint("TOPLEFT", 0, -top)
-		-- Une ligne par clic ou par touche, suivie d'une sous-ligne par variante (sur un ennemi, en JcJ, hors combat)
+		-- Une ligne par clic ou par touche, suivie d'une sous-ligne par variante (sur un ennemi, en JcJ, sur un tank, hors combat)
 		local bindings = Z:Bindings()
 		local conflicts = Z.db.clickConflictAlert and Z:GameClickConflicts() or {}
 		local lines = {}
@@ -1416,7 +1417,8 @@ local function AddVariant(row)
 	local trigger, have = Trigger(row), row.binding.variants or {}
 	local missing = {}
 	for _, kind in ipairs(Z.variantKinds) do
-		if not have[kind[1]] and (kind[1] ~= "ooc" or Z.TakesTrinket(row.binding.value)) then missing[#missing + 1] = kind end
+		local onPlayer = kind[1] == "ooc" or kind[1] == "tank" -- hors combat, sur un tank : un raccourci qui lance un sort
+		if not have[kind[1]] and (not onPlayer or Z.TakesTrinket(row.binding.value)) then missing[#missing + 1] = kind end
 	end
 	if #missing == 0 then return end
 	if not (MenuUtil and MenuUtil.CreateContextMenu) or #missing == 1 then return ChooseVariant(trigger, missing[1]) end
@@ -1483,7 +1485,7 @@ function NewRow(i)
 		RefreshClicks()
 	end)
 	row.clear:SetPoint("RIGHT")
-	-- « + » : ajouter une variante (sur un ennemi, en JcJ, hors combat)
+	-- « + » : ajouter une variante (sur un ennemi, en JcJ, sur un tank, hors combat)
 	row.add = UI.Button(row, "+", 22, 24, function()
 		if row.binding and not row.variant then AddVariant(row) end
 	end)
@@ -2466,7 +2468,7 @@ local function Chapters()
 				{ "note", "Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée.", 30 },
 				{ "custom", SpecLine },
 				{ "custom", ClickList },
-				{ "note", "Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser. Le « + » d'une ligne ajoute une variante : sur un ennemi, en JcJ, hors combat.", 44 },
+				{ "note", "Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser. Le « + » d'une ligne ajoute une variante : sur un ennemi, en JcJ, sur un tank, hors combat.", 44 },
 				{ "button", "Mes macros...", function() Z:OpenMacros() end, "Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic ou dans une barre de sorts." },
 			} },
 			{ "Comportement", {

@@ -108,9 +108,15 @@ Z.TRINKET_SLOTS = { 13, 14 } -- bijou 1 (masque 1) et bijou 2 (masque 2)
 --           en combat aussi ;
 --   pvp   : en champ de bataille et en arène. Lyorune pose ce sort à l'entrée du lieu (hors combat : on y entre
 --           toujours hors combat ; sinon à la fin du combat) et remet l'autre à la sortie ;
+--   tank  : sur un tank (1.39.1). Le code sécurisé ne connaît pas le rôle en combat : chaque case reçoit sa
+--           propre version des raccourcis. Les cases d'un cadre que le jeu trie sur le rôle (cadre « Tanks », un
+--           cadre par rôle en raid) la gardent toujours, en combat aussi : l'en-tête la recopie sur ses nouvelles
+--           cases. Les autres cases la reçoivent hors combat selon le rôle de leur joueur, reposée à chaque
+--           changement (rôle, groupe, joueur de la case) et à la fin du combat. Rôle inconnu ou secret : la base ;
 --   ooc   : hors combat, un sort seulement. Le jeu choisit au clic : macro « /cast [nocombat] A; B ».
+-- Ordre : ennemi, puis JcJ, puis tank, puis hors combat (sur un tank, la variante tank part aussi hors combat).
 -- Rangement, par jeu de clics comme les bijoux : clickVariants.PRIEST["shift-1"] = { enemy = "...", pvp = "...",
--- ooc = "..." } (identifiant Z.TriggerId : « key:F » pour une touche). Rien de propre à une classe.
+-- tank = "...", ooc = "..." } (identifiant Z.TriggerId : « key:F » pour une touche). Rien de propre à une classe.
 -- GARDE « AUCUN SOIN SUR UN ENNEMI » (réglage enemyGuard, allumé au départ) : un raccourci sans variante ennemie
 -- ne fait rien sur un ennemi (le jeu peut sinon renvoyer le soin sur vous) ; Cibler, Menu et Arrêter l'incantation
 -- marchent partout.
@@ -118,6 +124,7 @@ Z.TRINKET_SLOTS = { 13, 14 } -- bijou 1 (masque 1) et bijou 2 (masque 2)
 Z.variantKinds = {
 	{ "enemy", "Sur un ennemi" },
 	{ "pvp", "En JcJ" },
+	{ "tank", "Sur un tank" },
 	{ "ooc", "Hors combat" },
 }
 
@@ -137,7 +144,7 @@ end
 function Z.ValidVariant(kind, value)
 	if type(value) ~= "string" or value == "" then return false end
 	if kind == "ooc" then return Z.TakesTrinket(value) and not Z.IsMacro(value) and not Z.MacroRef(value) end
-	return kind == "enemy" or kind == "pvp"
+	return kind == "enemy" or kind == "pvp" or kind == "tank"
 end
 
 -- Pose (ou retire, value nil) la variante « kind » d'un raccourci
@@ -553,8 +560,10 @@ end
 
 -- Rangs fixes posés par ApplyClicks, que chaque case peut baisser selon le niveau de son joueur (Z:FitRanks) :
 -- { { key = attribut, id = rang choisi }, ... } pour un attribut « spell » ; { key = attribut, parts = morceaux } pour
--- une macro : ses morceaux sont du texte ou le numéro d'un rang choisi (une macro hors combat en a deux)
-local fixedRanks = {}
+-- une macro : ses morceaux sont du texte ou le numéro d'un rang choisi (une macro hors combat en a deux).
+-- Une liste par version des raccourcis (rankLists.base, rankLists.tank) ; fixedRanks : celle qu'on remplit.
+local rankLists = { base = {}, tank = {} }
+local fixedRanks = rankLists.base
 
 -- Le sort d'un raccourci dans une macro, en morceau : le numéro d'un rang choisi et appris, sinon son texte
 local function Piece(value)
@@ -656,7 +665,51 @@ function Z:RegisterExternalClicks(b)
 	ClickCastFrames[b] = Z.db.externalClicks and true or nil
 end
 
-local applied = {} -- attributs posés la dernière fois, à effacer avant d'en poser de nouveaux
+local applied = {} -- noms des attributs posés la dernière fois (des deux versions), à effacer avant d'en poser d'autres
+local sets = {}    -- versions des raccourcis : sets.base, et sets.tank si un raccourci a une variante « Sur un tank »
+
+-- La version qu'il faut à une case : « tank » dans un cadre que le jeu trie sur le rôle « TANK » (juste en combat
+-- aussi), « base » dans le cadre d'un autre rôle ; ailleurs, selon le rôle de son joueur (lu hors combat seulement).
+local function SetOf(b)
+	if not sets.tank then return "base" end
+	local header = b:GetParent()
+	local filter = header and header.GetAttribute and header:GetAttribute("roleFilter")
+	if filter then return filter == "TANK" and "tank" or "base" end
+	local role = b.unit and UnitGroupRolesAssigned(b.unit)
+	if role == nil or Z.IsSecret(role) then return "base" end -- rôle secret (match JcJ) : la base
+	return role == "TANK" and "tank" or "base"
+end
+Z.ClickSetOf = SetOf -- pour les tests
+
+-- Pose sur une case la version qu'il lui faut, si elle a changé (hors combat seulement)
+local function PutSet(b)
+	local name = SetOf(b)
+	if b.zClickSet == name then return end
+	for key in pairs(applied) do b:SetAttribute(key, nil) end
+	for key, value in pairs(sets[name]) do b:SetAttribute(key, value) end
+	b.zClickSet = name
+end
+
+-- Chaque en-tête recopie sur ses nouvelles cases, même en combat, la version de son rôle (la base hors des cadres
+-- triés sur le rôle). Hors combat seulement.
+local function PushHeaders()
+	if not sets.base then return end
+	for _, h in ipairs(Z.headers) do
+		local name = sets.tank and h:GetAttribute("roleFilter") == "TANK" and "tank" or "base"
+		if h.zClickSet ~= name then
+			local count = 0
+			for key, value in pairs(sets[name]) do
+				if key:sub(1, 1) ~= "_" then -- les attributs « _ » passent par _initialAttribute (voir Frames.lua)
+					count = count + 1
+					h:SetAttribute("z-key" .. count, key)
+					h:SetAttribute("z-value" .. count, value)
+				end
+			end
+			h:SetAttribute("z-count", count)
+			h.zClickSet = name
+		end
+	end
+end
 
 function Z:ApplyClicks()
 	if InCombatLockdown() then
@@ -664,62 +717,70 @@ function Z:ApplyClicks()
 		return
 	end
 
-	local attributes = {}
-	fixedRanks = {}
 	local resPrefix = ResPrefix()
 	local trinkets, variants = Z:GetTrinkets(), Z:GetVariants()
 	local onEnter = "self:ClearBindings()"
 	appliedPvP = InPvP()
-
-	-- Ce que lance un raccourci ici : sa variante JcJ en champ de bataille ou en arène, sinon lui-même
-	local function Wanted(value, id)
-		return appliedPvP and (variants[id] or {}).pvp or value
-	end
-
+	local anyTank = false
 	if not Z.db.externalClicks then
-		-- Clics de souris ; sur un ennemi, « shift-harmbutton1 » passe Maj + Clic gauche sur le bouton « zxshift1 »
-		for key, value in pairs(Z:GetClicks()) do
-			local modifier, button = Z.ParseClickKey(key)
-			if modifier and value and value ~= "" then
-				local v, wanted = variants[key] or {}, Wanted(value, key)
-				AddAction(attributes, modifier, button, wanted, { res = resPrefix, trinkets = trinkets[key], ooc = v.ooc })
-				AddEnemy(attributes, modifier .. "harmbutton" .. button, "zx" .. modifier:gsub("%-", "") .. button, v.enemy, wanted)
-			end
-		end
-		-- Touches au survol : à l'entrée de la souris, la touche « clique » un bouton virtuel de la case
-		for i, entry in ipairs(Z:GetHoverKeys()) do
-			local key = Z.ValidKey(entry.key) and entry.key -- jamais de guillemet ni d'antislash dans le code sécurisé
-			if key and entry.spell and entry.spell ~= "" then
-				local id = "key:" .. key
-				local v, wanted = variants[id] or {}, Wanted(entry.spell, id)
-				AddAction(attributes, "*", "-zh" .. i, wanted, { res = resPrefix, trinkets = trinkets[id], ooc = v.ooc })
-				AddEnemy(attributes, "*harmbutton-zh" .. i, "zxh" .. i, v.enemy, wanted)
-				onEnter = onEnter .. (' self:SetBindingClick(true, "%s", self, "zh%d")'):format(key, i)
-			end
-		end
+		for _, entry in pairs(variants) do anyTank = anyTank or entry.tank ~= nil end
 	end
-	attributes["_onenter"] = onEnter
-	attributes["_onleave"] = "self:ClearBindings()"
 
-	-- Cases existantes
+	-- Une version des raccourcis ; « tank » prend la variante « Sur un tank » de chaque raccourci qui en a une
+	local function MakeSet(set)
+		local attributes = {}
+		fixedRanks = {}
+		rankLists[set] = fixedRanks
+		-- Ce que lance un raccourci ici : sa variante JcJ en champ de bataille ou en arène, puis sa variante tank
+		-- (le sort hors combat ne compte plus), sinon lui-même avec son sort hors combat
+		local function Add(prefix, suffix, value, id, harmKey, vbutton)
+			local v = variants[id] or {}
+			local wanted, ooc = value, v.ooc
+			if appliedPvP and v.pvp then wanted = v.pvp
+			elseif set == "tank" and v.tank then wanted, ooc = v.tank, nil end
+			AddAction(attributes, prefix, suffix, wanted, { res = resPrefix, trinkets = trinkets[id], ooc = ooc })
+			AddEnemy(attributes, harmKey, vbutton, v.enemy, wanted)
+		end
+		if not Z.db.externalClicks then
+			-- Clics de souris ; sur un ennemi, « shift-harmbutton1 » passe Maj + Clic gauche sur le bouton « zxshift1 »
+			for key, value in pairs(Z:GetClicks()) do
+				local modifier, button = Z.ParseClickKey(key)
+				if modifier and value and value ~= "" then
+					Add(modifier, button, value, key, modifier .. "harmbutton" .. button, "zx" .. modifier:gsub("%-", "") .. button)
+				end
+			end
+			-- Touches au survol : à l'entrée de la souris, la touche « clique » un bouton virtuel de la case
+			for i, entry in ipairs(Z:GetHoverKeys()) do
+				local key = Z.ValidKey(entry.key) and entry.key -- jamais de guillemet ni d'antislash dans le code sécurisé
+				if key and entry.spell and entry.spell ~= "" then
+					Add("*", "-zh" .. i, entry.spell, "key:" .. key, "*harmbutton-zh" .. i, "zxh" .. i)
+					if set == "base" then onEnter = onEnter .. (' self:SetBindingClick(true, "%s", self, "zh%d")'):format(key, i) end
+				end
+			end
+		end
+		return attributes
+	end
+	sets = { base = MakeSet("base") }
+	if anyTank then sets.tank = MakeSet("tank") else rankLists.tank = {} end
+	for _, attributes in pairs(sets) do
+		attributes["_onenter"] = onEnter
+		attributes["_onleave"] = "self:ClearBindings()"
+	end
+
+	-- Cases existantes : tout est effacé, puis chacune reçoit sa version (Z:FitAllRanks, plus bas)
 	for _, b in ipairs(Z.buttons) do
 		for name in pairs(applied) do b:SetAttribute(name, nil) end
-		for name, value in pairs(attributes) do b:SetAttribute(name, value) end
+		b.zClickSet = nil
 		Z:RegisterExternalClicks(b)
 	end
-	applied = attributes
+	applied = {}
+	for _, attributes in pairs(sets) do
+		for name in pairs(attributes) do applied[name] = true end
+	end
 
-	-- Cases à venir : chaque en-tête recopie cette liste sur ses nouvelles cases, même en combat
+	-- Cases à venir : chaque en-tête recopie sa version sur ses nouvelles cases, même en combat
 	for _, h in ipairs(Z.headers) do
-		local count = 0
-		for name, value in pairs(attributes) do
-			if name:sub(1, 1) ~= "_" then -- les attributs « _ » passent par _initialAttribute (voir Frames.lua)
-				count = count + 1
-				h:SetAttribute("z-key" .. count, name)
-				h:SetAttribute("z-value" .. count, value)
-			end
-		end
-		h:SetAttribute("z-count", count)
+		h.zClickSet = nil
 		h:SetAttribute("_initialAttribute-_onenter", onEnter)
 	end
 	Z:FitAllRanks(true)
@@ -1291,11 +1352,15 @@ function Z.FitRank(id, level)
 	return best or id -- aucun rang assez bas : le rang choisi (le jeu dira « niveau trop bas »)
 end
 
--- Pose sur une case le rang de chaque raccourci à rang choisi, selon le niveau de son joueur
+-- Pose sur une case la version de ses raccourcis (tank ou base, selon son rôle), puis le rang de chaque raccourci
+-- à rang choisi, selon le niveau de son joueur
 function Z:FitRanks(b)
-	if #fixedRanks == 0 or InCombatLockdown() then return end
+	if InCombatLockdown() or not sets.base then return end
+	PutSet(b)
+	local list = rankLists[b.zClickSet] or rankLists.base
+	if #list == 0 then return end
 	local level = Z.db.rankAdapt and b.unit and UnitLevel(b.unit)
-	for _, entry in ipairs(fixedRanks) do
+	for _, entry in ipairs(list) do
 		b:SetAttribute(entry.key, entry.parts and Build(entry.parts, level) or Z.FitRank(entry.id, level))
 	end
 end
@@ -1303,16 +1368,18 @@ end
 local fitAfterCombat
 function Z:FitAllRanks(fresh)
 	if fresh then ranksByName = nil end
-	if #fixedRanks == 0 then return end
+	if not fresh and not sets.tank and #rankLists.base == 0 then return end
 	if InCombatLockdown() then
 		fitAfterCombat = true -- sans message : rien n'a été demandé par le joueur
 		return
 	end
 	fitAfterCombat = false
+	PushHeaders() -- un cadre devenu « Tanks » ou par rôle (disposition changée)
 	for _, b in ipairs(Z.buttons) do Z:FitRanks(b) end
 end
--- Un autre joueur dans la case, un niveau gagné, une autre cible ou focalisation : son rang suit, hors combat
-for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "UNIT_LEVEL", "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED" }) do
+-- Un autre joueur dans la case, un niveau gagné, un rôle changé, une autre cible ou focalisation : sa version des
+-- raccourcis et son rang suivent, hors combat (sinon à la fin du combat)
+for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "UNIT_LEVEL", "PLAYER_ROLES_ASSIGNED", "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED" }) do
 	Z:On(event, function() Z:FitAllRanks() end)
 end
 Z:On("PLAYER_REGEN_ENABLED", function()

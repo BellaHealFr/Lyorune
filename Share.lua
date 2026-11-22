@@ -90,7 +90,7 @@ function Z:Export()
 			end
 		end
 	end
-	-- variantes d'un raccourci (sur un ennemi, en JcJ, hors combat) : jamais une macro, comme les clics
+	-- variantes d'un raccourci (sur un ennemi, en JcJ, sur un tank, hors combat) : jamais une macro, comme les clics
 	for class, marks in pairs(Z.db.clickVariants or {}) do
 		for id, entry in pairs(marks) do
 			for kind, value in pairs(entry) do

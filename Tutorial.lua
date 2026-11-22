@@ -137,7 +137,7 @@ local steps = {
 				.. "\n" .. Z.L["Combien de fois chaque clic a servi ? « Compter mes clics », même chapitre."]
 				.. "\n" .. Z.L["Tous vos soins et buffs y sont, même sans cible (Feu intérieur, totems). Un sort manque ? /lyorune sorts dit pourquoi."]
 				.. "\n" .. Z.L["Un rang plus bas pour garder de la mana ? « Choisir le rang des sorts », même chapitre."]
-				.. "\n" .. Z.L["Un autre sort sur un ennemi, en JcJ ou hors combat ? Le « + » au bout d'une ligne."]
+				.. "\n" .. Z.L["Un autre sort sur un ennemi, en JcJ, sur un tank ou hors combat ? Le « + » au bout d'une ligne."]
 		end,
 		target = Cell,
 		around = Block,

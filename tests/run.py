@@ -8399,6 +8399,89 @@ step("1.39.0 : variantes d'un raccourci (sur un ennemi, en JcJ, hors combat) et 
   assert(ok, err)
 end)
 
+step("1.39.1 : variante sur un tank (cadres tries par role surs en combat, autres cases posees hors combat)", function()
+  local old = { clicks = CopyTable(Z:GetClicks()), keys = CopyTable(Z:GetHoverKeys()), res = Z.db.autoRes, class = Z.class,
+    role = UnitGroupRolesAssigned, guard = Z.db.enemyGuard }
+  local b, other = Z.buttons[1], Z.buttons[2]
+  local parent, otherParent = b._parent, other._parent
+  local ok, err = pcall(function()
+    Z.class, Z.db.autoRes, Z.db.enemyGuard = "PRIEST", false, true
+    local one = { kind = "click", key = "1" }
+    local tankUnit = b.unit or "player"
+    b.unit = tankUnit
+    other.unit = other.unit or "party1"
+    UnitGroupRolesAssigned = function(u) return u == tankUnit and "TANK" or "DAMAGER" end
+    Z:SetClick("1", "Soins")
+    assert(b:GetAttribute("spell1") == "Soins", "sans variante, rien ne change")
+    Z:SetVariant(one, "tank", "Soins supérieurs")
+    assert(Z:VariantsOf(one).tank == "Soins supérieurs", "variante tank refusee")
+    -- groupe melange : la case du tank recoit la variante hors combat, les autres la base
+    assert(b:GetAttribute("spell1") == "Soins supérieurs", "case du tank : " .. tostring(b:GetAttribute("spell1")))
+    assert(other:GetAttribute("spell1") == "Soins", "case d'un autre : " .. tostring(other:GetAttribute("spell1")))
+    -- l'en-tete « Tanks » recopie la variante sur ses nouvelles cases, les autres la base
+    local function HeaderValue(h, key)
+      for i = 1, h:GetAttribute("z-count") or 0 do
+        if h:GetAttribute("z-key" .. i) == key then return h:GetAttribute("z-value" .. i) end
+      end
+    end
+    assert(HeaderValue(LyoruneTanks, "spell1") == "Soins supérieurs", "en-tete Tanks")
+    for _, h in ipairs(Z.headers) do
+      if h ~= LyoruneTanks and h:GetAttribute("roleFilter") ~= "TANK" and h:GetAttribute("z-count") then
+        assert(HeaderValue(h, "spell1") ~= "Soins supérieurs", "en-tete melange avec la variante : " .. tostring(h:GetName()))
+      end
+    end
+    -- une case du cadre Tanks : la variante, quel que soit le role lu
+    other._parent = LyoruneTanks
+    Z:FitAllRanks()
+    assert(other:GetAttribute("spell1") == "Soins supérieurs", "case du cadre Tanks")
+    other._parent = otherParent
+    Z:FitAllRanks()
+    assert(other:GetAttribute("spell1") == "Soins", "case revenue dans un groupe melange")
+    -- role change en combat : attendu jusqu'a la fin du combat
+    COMBAT = true
+    UnitGroupRolesAssigned = function(u) return u == other.unit and "TANK" or "DAMAGER" end
+    FireEvent("PLAYER_ROLES_ASSIGNED")
+    assert(b:GetAttribute("spell1") == "Soins supérieurs" and other:GetAttribute("spell1") == "Soins", "change en combat")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+    assert(b:GetAttribute("spell1") == "Soins" and other:GetAttribute("spell1") == "Soins supérieurs", "pas repose apres le combat")
+    -- role secret : la base
+    UnitGroupRolesAssigned = function() return MakeSecret() end
+    FireEvent("PLAYER_ROLES_ASSIGNED")
+    assert(other:GetAttribute("spell1") == "Soins", "role secret")
+    -- hors combat : la base garde son sort hors combat, le tank prend sa variante meme hors combat
+    UnitGroupRolesAssigned = function(u) return u == tankUnit and "TANK" or "DAMAGER" end
+    Z:SetVariant(one, "ooc", "Rénovation")
+    assert(b:GetAttribute("type1") == "spell" and b:GetAttribute("spell1") == "Soins supérieurs", "tank hors combat")
+    assert(other:GetAttribute("macrotext1"):find("[nocombat,@mouseover] Rénovation", 1, true), "base sans son sort hors combat")
+    -- garde ennemie et variante ennemie : pareilles sur les deux versions
+    assert(b:GetAttribute("harmbutton1") == "zxnone" and other:GetAttribute("harmbutton1") == "zxnone", "garde perdue")
+    -- en JcJ, la variante JcJ passe avant le tank
+    Z:SetVariant(one, "pvp", "Soins rapides")
+    INSTANCE_TYPE = "pvp" FireEvent("ZONE_CHANGED_NEW_AREA")
+    assert((b:GetAttribute("macrotext1") or ""):find("[@mouseover] Soins rapides", 1, true), "JcJ avant tank : " .. tostring(b:GetAttribute("macrotext1")))
+    INSTANCE_TYPE = "none" FireEvent("ZONE_CHANGED_NEW_AREA")
+    assert(b:GetAttribute("spell1") == "Soins supérieurs", "tank apres JcJ")
+    -- partage et ecran
+    assert(Z:Export():find("v.PRIEST.1.tank=s", 1, true), "variante tank absente du code")
+    Z:ToggleOptions("Clics")
+    local _, sub = Z:ClickCell("1", "click", "tank")
+    assert(sub and sub:IsShown() and sub.spell.label:GetText() == "Soins supérieurs", "sous-ligne tank")
+    Z:ToggleOptions()
+    -- variante retiree : plus de version tank, toutes les cases reviennent a la base
+    Z:SetVariant(one, "tank", nil)
+    assert(b:GetAttribute("type1") == "macro" and HeaderValue(LyoruneTanks, "spell1") == nil, "version tank restee")
+    assert(Z.translations.enUS["Sur un tank"], "sans traduction anglaise")
+  end)
+  b._parent, other._parent = parent, otherParent
+  INSTANCE_TYPE, COMBAT = "none", false
+  UnitGroupRolesAssigned = old.role
+  Z.db.clickVariants = {}
+  Z.db.clicks[Z:ClickSet()], Z.db.hoverKeys[Z:ClickSet()] = old.clicks, old.keys
+  Z.db.autoRes, Z.class, Z.db.enemyGuard = old.res, old.class, old.guard
+  Z:ApplyClicks()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

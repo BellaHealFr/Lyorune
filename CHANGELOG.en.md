@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.39.1] - 2026-11-22
+
+### Added
+
+- "On a tank" variant: a line's "+" gives the same click another spell or another rank on a tank (for example the highest rank on them, a cheaper rank on the others). Always right in the "Tanks" frame and the per-role frames, even in combat; elsewhere, set out of combat from each player's role and set again at the end of the fight.
+
 ## [1.39.0] - 2026-11-22
 
 ### Added
@@ -766,6 +772,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.39.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.0...v1.39.1
 [1.39.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.1...v1.39.0
 [1.38.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.37.1...v1.38.0

@@ -49,7 +49,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 26 c bis | 1.37.1 | Bloc des buffs manquants en bandeau fin ; interrupteurs « En combat » et « En champ de bataille et en arène » (priorité haute) | Publiée (v1.37.1) |
 | 27 a | 1.38.0 | Rang choisi sur chaque raccourci | Publiée (v1.38.0) |
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, hors combat), aucun soin sur un ennemi | Publiée (v1.39.0) |
-| 27 b bis | 1.39.1 | Variante « sur un tank » (selon le rôle) | À faire |
+| 27 b bis | 1.39.1 | Variante « sur un tank » (selon le rôle) | Publiée (v1.39.1) |
 | 27 c | 1.40.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
 | 28 | 1.41.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
 | 29 a | 1.42.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
@@ -842,8 +842,18 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   Écran : sous-lignes en retrait, « + » par `MenuUtil.CreateContextMenu` (sinon la première variante libre).
   Tests (1.39.0). **À essayer en jeu** : variante ennemie et garde sur la case Cible (clic et touche au survol,
   avec Maj) ; variante JcJ à l'entrée d'un champ de bataille ; variante hors combat avec un rang choisi.
-- [ ] 27 b bis (1.39.1) : variante « sur un tank » (selon le rôle : groupe « Tanks » et paquets par rôle sûrs en
-  combat, autres cases reposées hors combat ; voir `PLAN-CORRECTIF.md`, 1c-1, « Ajout décidé »).
+- [x] 27 b bis (1.39.1) : variante « sur un tank ». Choix de l'auteur (22 novembre 2026, les deux recommandés) :
+  tank seulement (pas de variante soigneur) ; dans les groupes mélangés, variante posée aussi hors combat selon le
+  rôle. Comparaison : HealKit adapte le rang au niveau, jamais au rôle (deux raccourcis pour « gros » et
+  « économe ») ; HealBot a un cadre des tanks mais aucun sort selon le rôle ; VuhDo n'a qu'une garde. Lyorune :
+  sorte `tank` dans `Z.variantKinds` (Clicks.lua), deux versions des raccourcis (`sets.base`, `sets.tank`) et une
+  liste de rangs par version (`rankLists`) ; `SetOf` : cadre trié sur le rôle par le jeu (`roleFilter`, cadre
+  « Tanks », cadres par rôle en raid) = version de son rôle, juste en combat (`PushHeaders` : chaque en-tête recopie
+  la sienne sur ses nouvelles cases) ; ailleurs `UnitGroupRolesAssigned` hors combat (secret = base), reposée par
+  `Z:FitRanks` (`PutSet`) à `GROUP_ROSTER_UPDATE`, `PLAYER_ROLES_ASSIGNED`, changement de joueur de la case, nouvelle
+  disposition et fin du combat. Ordre : ennemi, JcJ, tank (le sort hors combat ne compte plus), hors combat.
+  Proposée seulement pour un raccourci qui lance un sort. Tests (1.39.1). **À essayer en jeu** : un tank dans le
+  cadre « Tanks » et dans un groupe mélangé ; un tank qui rejoint en plein combat (essai n° 7 du plan).
 - [ ] 27 c (1.40.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;
   Pénitence (trait de canalisation si le jeu ne la prédit pas).
 
