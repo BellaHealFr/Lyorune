@@ -132,7 +132,7 @@ function Z.SetBuffBearer(id, mode, name)
 end
 
 -- Buffs uniques (Bouclier de terre...) : une ligne par buff pour son porteur (Z.BuffBearer) : le joueur choisi,
--- moi, ou le tank ; joueur choisi absent : le tank ; pas de tank : moi. Seulement tant que le mien n'est posé sur
+-- moi, ou le tank ; joueur choisi absent (ou mort, ou déconnecté) : le tank ; pas de tank : moi. Seulement tant que le mien n'est posé sur
 -- personne, s'il est dans ma liste et s'il n'est pas en recharge (le panneau se relit à la fin de la recharge).
 -- Lu sur les cases visibles (b.myUniques, Auras.lua).
 local function UniqueRows(result)
@@ -143,7 +143,7 @@ local function UniqueRows(result)
 		if unit and not b.extra and b:IsVisible() and not unit:find("pet", 1, true) then
 			for name in (b.myUniques or ""):gmatch("[^,]+") do placed[name] = true end
 			local name = Z.UnitPinName(unit)
-			if name then
+			if name and not b.status then -- mort, fantôme ou déconnecté : ne peut pas recevoir le buff
 				local player = { unit = unit, name = name }
 				members[name] = members[name] or player
 				local role = UnitGroupRolesAssigned(unit)
@@ -178,13 +178,18 @@ function Z.BuffRows()
 				table.insert(byGroup[entry.group], entry)
 			end
 		end
+		-- « Mes buffs » : version de groupe décochée = la version simple seulement ; version simple décochée = la
+		-- version de groupe seulement, dès un joueur du groupe sans le buff (un familier seul, groupe 0 : rien).
+		-- Sans le composant de la version de groupe : la version simple, comme si elle était seule cochée.
+		local groupSpell = Z.GroupSpell(check)
+		local simple = Z.BuffWatched(check) or not groupSpell
+		local groupAt = simple and Z.db.buffGroupAt or 1
 		for _, group in ipairs(order) do
 			local players = byGroup[group]
-			local groupSpell = Z.GroupSpell(check) -- décochée dans « Mes buffs » : la version simple seulement
-			if groupSpell and group > 0 and #players >= Z.db.buffGroupAt then
+			if groupSpell and group > 0 and #players >= groupAt then
 				result[#result + 1] = { check = check, spell = groupSpell, icon = check.icon, unit = players[1].unit,
 					group = group, count = #players, players = players }
-			else
+			elseif simple then
 				for _, entry in ipairs(players) do
 					result[#result + 1] = { check = check, spell = entry.spell, spell2 = groupSpell, icon = entry.icon,
 						unit = entry.unit, name = entry.name, class = entry.class }

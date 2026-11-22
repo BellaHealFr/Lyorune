@@ -147,6 +147,8 @@ local function UpdateState(b)
 		rezzer = Z.ResBy(unit) -- qui relève qui (Comm.lua) : le nom du soigneur remplace « Mort »
 		if rezzer then status = rezzer end
 	end
+	-- mort, relevé, déconnecté : le panneau des buffs se relit (un buff à une personne change de porteur)
+	if status ~= b.status and Z.QueueBuffPanel then Z:QueueBuffPanel() end
 	b.status = status
 
 	local r, g, bl = ClassColor(unit, b.extra)

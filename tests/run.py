@@ -6920,7 +6920,7 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     INSTANCE_TYPE = "party"
     Z.db.buffWatch[976] = { pvp = false } Update()
     assert(Ids(other) == "1243,14752,976", "decoche en JcJ seulement : " .. Ids(other))
-    Z.db.buffWatch = { [1243] = { pve = false } } Update()
+    Z.db.buffWatch = { [1243] = { pve = false }, [21562] = { pve = false } } Update()
     assert(Ids(other) == "14752,976", "buff decoche en JcE : " .. Ids(other))
     INSTANCE_TYPE = "pvp" Update() assert(Ids(other):find("1243", 1, true), "decoche en JcE seulement")
     INSTANCE_TYPE = "party" Z.db.buffWatch = {}
@@ -7121,6 +7121,254 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
   UnitGroupRolesAssigned, C_Timer.After, C_Spell.GetSpellCooldown = old.role, old.after, old.cd
   INSTANCE, INSTANCE_TYPE, NOW, Z.char.lastChoice, C_Spell.IsSpellPassive = old.instance, old.itype, old.now, old.lastChoice, old.passive
   rawset(_G, "GetWeaponEnchantInfo", nil)
+  for k, v in pairs(saved) do Z.db[k] = v end
+  Z.class = old.zclass Z:BuildData() AURAS = {} Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("1.33.7 : version simple et de groupe cochees a part, Mes buffs aligne, buffs 2 minutes avant leur fin, buffs a une personne par classe et par situation", function()
+  local saved = {} for k, v in pairs(Z.db) do saved[k] = type(v) == "table" and CopyTable(v) or v end
+  local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit, role = UnitGroupRolesAssigned,
+    dead = DEAD, usable = C_Spell.IsSpellUsable, zclass = Z.class, instance = INSTANCE, itype = INSTANCE_TYPE, raid = RAID, now = NOW,
+    target = CopyTable(Z.char.buffTarget or {}) }
+  local hidden = {}
+  local ok, err = pcall(function()
+    local extra = { [1126] = "Marque du fauve", [21849] = "Don du fauve", [467] = "Épines", [408514] = "Bouclier de terre",
+      [408510] = "Bouclier d'eau", [1328548] = "Serment de lumière" }
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
+    local me = Z.buttons[1]
+    local others = {}
+    for _, b in ipairs(Z.buttons) do
+      if b ~= me and b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then others[#others + 1] = b end
+    end
+    assert(#others >= 2, "faux groupe trop petit")
+    local other, third = others[1], others[2]
+    UnitIsUnit = function(a, b) return a == b or (b == "player" and a == me.unit) end
+    UnitGroupRolesAssigned = function() return "HEALER" end
+    local function Update() Z:Refresh() RunUpdates() end
+    local function Ids(b)
+      local t = {} for _, m in ipairs(b.missingBuffs or {}) do t[#t + 1] = m.check.id end
+      return table.concat(t, ",")
+    end
+    INSTANCE, INSTANCE_TYPE, RAID = true, "party", false
+    Z.db.buffWatch, Z.db.buffRefresh, Z.db.buffGroupAt = {}, 0, 3
+    Z.db.missingBuffs, Z.db.buffPanel = true, true
+    AURAS = {}
+
+    -- 1. Version simple et version de groupe cochees a part (pretre, Robustesse et Priere de robustesse)
+    Z.class = "PRIEST" Z:BuildData()
+    local function Rows(id)
+      local simple, group = {}, {}
+      for _, row in ipairs(Z.BuffRows()) do
+        if row.check.id == id then
+          if row.count then group[#group + 1] = row else simple[#simple + 1] = row end
+        end
+      end
+      return simple, group
+    end
+    -- les deux cochees : selon le seuil
+    Z.db.buffGroupAt = 5 Update()
+    local simple, group = Rows(1243)
+    assert(#simple > 0 and #group == 0 and simple[1].spell2 == "Prière de robustesse", "les deux cochees, sous le seuil")
+    Z.db.buffGroupAt = 2 Update()
+    simple, group = Rows(1243)
+    assert(#group > 0 and group[1].spell == "Prière de robustesse", "les deux cochees, au seuil")
+    -- seulement la version de groupe : des lignes « Groupe N » seulement, des le premier joueur, jamais de familier
+    Z.db.buffGroupAt = 5
+    Z.db.buffWatch[1243] = { pve = false } Update()
+    simple, group = Rows(1243)
+    assert(#simple == 0, "groupe seulement : ligne d'un joueur")
+    assert(#group > 0 and group[1].spell == "Prière de robustesse", "groupe seulement : aucune ligne Groupe N")
+    assert(Ids(other):find("1243", 1, true), "groupe seulement : buff plus surveille sur la case")
+    for _, b in ipairs(Z.buttons) do
+      if b.unit and b.unit:find("pet") then assert(not Ids(b):find("1243", 1, true), "groupe seulement : familier propose") end
+    end
+    -- un seul joueur du groupe sans le buff suffit (seuil ignore)
+    AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31 } }
+    Update()
+    for _, b in ipairs(others) do b.missingBuffs = nil b.missingBuff = nil end
+    other.missingBuffs = { { check = Z.buffChecks[1], spell = "Mot de pouvoir : Robustesse", icon = 9 } }
+    other.missingBuff = other.missingBuffs[1]
+    simple, group = Rows(1243)
+    assert(#group == 1 and group[1].count == 1 and #simple == 0, "groupe seulement : un joueur sans le buff ne suffit pas")
+    AURAS = {}
+    -- seulement la version simple : une ligne par joueur, jamais de Priere (ni ligne, ni clic droit)
+    Z.db.buffWatch = { [21562] = { pve = false } } Z.db.buffGroupAt = 2 Update()
+    simple, group = Rows(1243)
+    assert(#group == 0 and #simple > 0, "simple seulement : ligne Groupe N")
+    for _, row in ipairs(simple) do assert(not row.spell2, "simple seulement : Priere au clic droit") end
+    -- sans composant (le jeu dit la Priere inutilisable) : un par un, meme si seule la Priere est cochee
+    C_Spell.IsSpellUsable = function(name) return name ~= "Prière de robustesse" end
+    Z.db.buffWatch = {} Update()
+    simple, group = Rows(1243)
+    assert(#group == 0 and #simple > 0 and not simple[1].spell2, "sans composant : Priere proposee")
+    Z.db.buffWatch = { [1243] = { pve = false } } Update()
+    simple, group = Rows(1243)
+    assert(#group == 0 and #simple > 0, "sans composant, Priere seule cochee : rien a lancer")
+    C_Spell.IsSpellUsable = function() return MakeSecret() end Update()
+    simple, group = Rows(1243)
+    assert(#group > 0, "reponse secrete : Priere ecartee")
+    C_Spell.IsSpellUsable = old.usable
+    -- aucune : buff non surveille
+    Z.db.buffWatch = { [1243] = { pve = false }, [21562] = { pve = false } } Update()
+    simple, group = Rows(1243)
+    assert(#simple == 0 and #group == 0 and not Ids(other):find("1243", 1, true), "aucune cochee : buff encore propose")
+    -- chaque lieu garde son choix : groupe seulement en JcJ, les deux en JcE
+    -- (un seul joueur sans le buff : la version simple quand les deux sont cochees)
+    local function OnlyOther()
+      AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31 } }
+      Update()
+      other.missingBuffs = { { check = Z.buffChecks[1], spell = "Mot de pouvoir : Robustesse", icon = 9 } }
+      other.missingBuff = other.missingBuffs[1]
+      AURAS = {}
+    end
+    Z.db.buffWatch = { [1243] = { pvp = false } }
+    INSTANCE_TYPE = "pvp" OnlyOther()
+    simple, group = Rows(1243)
+    assert(#simple == 0 and #group == 1, "JcJ : groupe seulement")
+    INSTANCE_TYPE = "party" OnlyOther()
+    simple, group = Rows(1243)
+    assert(#simple == 1 and #group == 0 and simple[1].spell2 == "Prière de robustesse", "JcE : les deux versions perdues")
+    Z.db.buffWatch, Z.db.buffGroupAt = {}, 3
+
+    -- 2. « Mes buffs » aligne : icones dans une meme colonne, version de groupe reconnue a sa mention
+    Z:ToggleOptions("Joueurs")
+    local box = Z.buffWatchBox
+    box:Update()
+    local x, groupRows, fearRow = nil, 0, nil
+    for _, row in ipairs(box.lines) do
+      if row:IsShown() then
+        local point = row.icon._points and row.icon._points.TOPLEFT
+        assert(point, "icone sans place")
+        x = x or point[2]
+        assert(point[2] == x, "icone decalee : " .. tostring(point[2]) .. " au lieu de " .. tostring(x))
+        if row.entry.group then
+          groupRows = groupRows + 1
+          assert(row.entry.name:find("(" .. Z.L["groupe"] .. ")", 1, true), "version de groupe sans sa mention")
+        end
+        if row.entry.unique then fearRow = row end
+      end
+    end
+    assert(groupRows >= 1, "lignes de groupe du pretre : " .. groupRows) -- seule la Priere de robustesse a un nom ici
+    -- la ligne « Sur : » commence au bord des noms (apres l'icone de 18 et son ecart de 8)
+    assert(fearRow and fearRow.on._points.TOPLEFT[2] == x + 18 + 8, "ligne Sur : decalee")
+    Z:ToggleOptions()
+    assert(Z.translations.enUS["La version simple et la version de groupe se cochent séparément."], "sans traduction : aide de Mes buffs")
+    assert(Z.translations.enUS["Au départ : 2 minutes avant la fin. 0 : seulement quand le buff manque."], "sans traduction : seuil")
+
+    -- 3. Buffs proposes 2 minutes avant leur fin : nouveau depart, migration unique des joueurs restes sur 0
+    assert(Z.defaults.buffRefresh == 2, "depart du seuil : " .. tostring(Z.defaults.buffRefresh))
+    Z.db.buffRefresh = 2 NOW = 1000
+    AURAS["HELPFUL"] = { { name = "Mot de pouvoir : Robustesse", icon = 9, auraInstanceID = 31, expirationTime = NOW + 100 } }
+    Update() assert(Ids(other):find("1243", 1, true), "buff a 100 s de sa fin non propose")
+    AURAS["HELPFUL"][1].expirationTime = NOW + 300
+    Update() assert(not Ids(other):find("1243", 1, true), "buff a 5 minutes de sa fin propose")
+    -- jamais avant le dernier quart d'un buff court : 5 minutes, propose sous 75 s seulement (fait mieux qu'un seuil fixe)
+    AURAS["HELPFUL"][1].expirationTime, AURAS["HELPFUL"][1].duration = NOW + 100, 300
+    Update() assert(not Ids(other):find("1243", 1, true), "buff de 5 minutes propose a 100 s de sa fin")
+    AURAS["HELPFUL"][1].expirationTime = NOW + 70
+    Update() assert(Ids(other):find("1243", 1, true), "buff de 5 minutes non propose a 70 s de sa fin")
+    AURAS["HELPFUL"][1].expirationTime, AURAS["HELPFUL"][1].duration = NOW + 100, MakeSecret()
+    Update() assert(Ids(other):find("1243", 1, true), "duree secrete : seuil entier perdu")
+    AURAS["HELPFUL"][1].duration = nil
+    AURAS["HELPFUL"][1].expirationTime = 0
+    Update() assert(not Ids(other):find("1243", 1, true), "buff sans fin propose")
+    AURAS = {} Z.db.buffRefresh = 0
+    local savedDB, savedChar, version = LyoruneDB, LyoruneCharDB, Z.version
+    local fine, why = pcall(function()
+      local db = { lastVersion = "1.33.6", buffRefresh = 0 }
+      LyoruneDB = db
+      Z.version = "1.33.6" FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.buffRefresh == 0, "seuil change avant la 1.33.7")
+      Z.version = "1.33.7" FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.buffRefresh == 2, "joueur reste sur 0 : pas passe a 2")
+      db.lastVersion, db.buffRefresh = "1.33.7", 0 FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.buffRefresh == 0, "0 choisi apres la 1.33.7 ecrase")
+      db = { lastVersion = "1.33.6", buffRefresh = 5 } LyoruneDB = db FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.buffRefresh == 5, "autre choix ecrase")
+      db = {} LyoruneDB = db FireEvent("ADDON_LOADED", "Lyorune")
+      assert(db.buffRefresh == 2, "nouveau joueur : " .. tostring(db.buffRefresh))
+    end)
+    Z.version = version
+    LyoruneDB, LyoruneCharDB = savedDB, savedChar
+    FireEvent("ADDON_LOADED", "Lyorune")
+    assert(fine, why)
+    Z.db.buffWatch, Z.db.buffRefresh, Z.db.buffGroupAt, Z.db.missingBuffs, Z.db.buffPanel = {}, 0, 3, true, true
+
+    -- 4. Buffs a une personne (bug signale : druide seul, Marque du fauve active, Epines jamais proposee) : chaque
+    -- classe, chaque situation
+    local function Unique(spell)
+      for _, row in ipairs(Z.BuffRows()) do if row.spell == spell then return row end end
+    end
+    local function Solo(on)
+      for _, b in ipairs(Z.buttons) do
+        if b ~= me and b.unit and not b.extra then
+          if on then
+            hidden[b] = hidden[b] or b.IsVisible
+            b.IsVisible = function() return false end
+          elseif hidden[b] then
+            b.IsVisible = hidden[b] hidden[b] = nil
+          end
+        end
+      end
+    end
+    for _, case in ipairs({ { "DRUID", "Épines", "Marque du fauve" }, { "SHAMAN", "Bouclier de terre", "Bouclier d'eau" },
+      { "PRIEST", "Gardien de peur", "Mot de pouvoir : Robustesse" }, { "PALADIN", "Serment de lumière" } }) do
+      local class, spell, mine = case[1], case[2], case[3]
+      Z.class = class Z:BuildData() Z.char.buffTarget = {}
+      assert(#Z.uniqueChecks == 1 and Z.uniqueChecks[1].name == spell, class .. " : buff a une personne absent")
+      UnitGroupRolesAssigned = function() return "HEALER" end
+      -- seul, mes autres buffs poses (Marque du fauve active) : sur moi
+      Solo(true)
+      if mine then AURAS["HELPFUL"] = { { name = mine, icon = 9, auraInstanceID = 71 } } end
+      Update()
+      local row = Unique(spell)
+      assert(row and row.unit == me.unit and row.why == Z.L["vous"], class .. " seul : " .. spell .. " non propose")
+      Solo(false) AURAS = {}
+      -- groupe sans tank : sur moi ; donjon, raid, champ de bataille, monde : pareil
+      for _, place in ipairs({ { "party", false }, { "raid", true }, { "pvp", false }, { "none", false } }) do
+        INSTANCE_TYPE, RAID = place[1], place[2] Update()
+        row = Unique(spell)
+        assert(row and row.unit == me.unit, class .. " sans tank (" .. place[1] .. ") : non propose sur moi")
+      end
+      INSTANCE_TYPE, RAID = "party", false
+      -- un tank : sur lui ; mort : sur moi
+      UnitGroupRolesAssigned = function(u) return u == other.unit and "TANK" or "HEALER" end
+      Update() row = Unique(spell)
+      assert(row and row.unit == other.unit and row.why == Z.L["tank"], class .. " : tank oublie")
+      DEAD = { [other.unit] = true }
+      FireEvent("UNIT_FLAGS", other.unit) RunUpdates() row = Unique(spell)
+      assert(row and row.unit == me.unit, class .. " : propose a un tank mort")
+      DEAD = false FireEvent("UNIT_FLAGS", other.unit) RunUpdates()
+      -- joueur choisi ; absent : le tank
+      GROUP_NAMES[third.unit] = "Thrall"
+      Z.SetBuffBearer(Z.uniqueChecks[1].id, "NAME", "Thrall") Update()
+      assert(Unique(spell).unit == third.unit, class .. " : joueur choisi")
+      Z.SetBuffBearer(Z.uniqueChecks[1].id, "NAME", "Absent") Update()
+      assert(Unique(spell).unit == other.unit, class .. " : joueur choisi absent, pas le tank")
+      GROUP_NAMES[third.unit] = nil Z.char.buffTarget = {}
+      -- mon buff sur un joueur : rien ; il disparait : relu tout seul (aura, zone ou connexion)
+      AURAS["HELPFUL|PLAYER"] = { { name = spell, icon = 9, auraInstanceID = 72 } }
+      Update() assert(not Unique(spell), class .. " : propose alors qu'il est pose")
+      AURAS = {}
+      FireEvent("UNIT_AURA", other.unit, { isFullUpdate = true }) RunUpdates()
+      assert(Unique(spell), class .. " : buff fini, panneau non relu")
+      AURAS["HELPFUL|PLAYER"] = { { name = spell, icon = 9, auraInstanceID = 72 } } Update() AURAS = {}
+      FireEvent("PLAYER_ENTERING_WORLD") RunUpdates()
+      assert(Unique(spell), class .. " : changement de zone, panneau non relu")
+      -- moi mort et sans tank : rien a lancer ; relevé : proposé de nouveau
+      UnitGroupRolesAssigned = function() return "HEALER" end
+      DEAD = { [me.unit] = true }
+      FireEvent("UNIT_FLAGS", me.unit) RunUpdates() assert(not Unique(spell), class .. " : propose sur moi mort")
+      DEAD = false FireEvent("UNIT_FLAGS", me.unit) RunUpdates()
+      assert(Unique(spell), class .. " : apres la mort, panneau non relu")
+    end
+  end)
+  for b, f in pairs(hidden) do b.IsVisible = f end
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit, UnitGroupRolesAssigned = old.name, old.known, old.isUnit, old.role
+  DEAD, INSTANCE, INSTANCE_TYPE, RAID, NOW = old.dead, old.instance, old.itype, old.raid, old.now
+  Z.char.buffTarget, C_Spell.IsSpellUsable = old.target, old.usable
   for k, v in pairs(saved) do Z.db[k] = v end
   Z.class = old.zclass Z:BuildData() AURAS = {} Z:Refresh() RunUpdates()
   assert(ok, err)

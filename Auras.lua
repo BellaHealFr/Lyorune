@@ -640,6 +640,18 @@ local function Remaining(aura, now)
 	return expires - now
 end
 
+-- Secondes avant de proposer ce buff à nouveau : ce qui lui reste, moins le seuil « buffRefresh », plafonné au quart
+-- de sa durée (un buff de 5 minutes n'est jamais proposé avant ses 75 dernières secondes : pas de mana perdue).
+-- Durée secrète ou inconnue : le seuil entier.
+local function Until(aura, now, margin)
+	local left = Remaining(aura, now)
+	local duration = aura.duration
+	if margin > 0 and not issecret(duration) and type(duration) == "number" and duration > 0 then
+		margin = math.min(margin, duration * 0.25)
+	end
+	return left - margin
+end
+
 -- Mon enchantement d'arme principale : secondes restantes (0 : aucun ; inconnu : toujours là)
 local function WeaponLeft()
 	if not GetWeaponEnchantInfo then return math.huge end
@@ -670,12 +682,14 @@ local function Concerns(check, unit, me)
 	if check.self and not me then return false end
 	if check.mana and not Z.UsesMana(unit) then return false end
 	if check.blessing and unit:find("pet", 1, true) then return false end
-	return Z.BuffWatched(check)
+	-- version de groupe seulement : un familier n'a pas de ligne « Groupe N », rien à lui proposer
+	if unit:find("pet", 1, true) and not Z.BuffWatched(check) and Z.GroupSpell(check) then return false end
+	return Z.BuffFollowed(check) -- version simple ou version de groupe cochée
 end
 
 -- Buffs de ma liste que ce joueur n'a pas, tous, dans l'ordre de Data.lua : { { check, spell, icon }, ... }, et
 -- une clé qui les résume. Lisible hors combat seulement. Un buff qui finit dans moins de « buffRefresh » minutes
--- compte comme absent.
+-- compte comme absent (au plus le quart de sa durée, Until).
 local function FindMissingBuffs(b, unit)
 	if not (Z.db.missingBuffs or Z.db.buffPanel) or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL", 40)
@@ -685,17 +699,21 @@ local function FindMissingBuffs(b, unit)
 	for i = 1, #list do
 		local name = list[i].name
 		if issecret(name) then return end
-		present[name] = math.max(present[name] or 0, Remaining(list[i], now))
+		present[name] = math.max(present[name] or -math.huge, Until(list[i], now, margin))
 	end
 	local me = UnitIsUnit(unit, "player")
 	if issecret(me) then me = false end
 	local missing, key, soonest = {}, Z.buffGeneration .. "|", math.huge
 	for _, check in ipairs(Z.buffChecks) do
 		if Concerns(check, unit, me) then
-			local left, choice = 0, nil
+			local left, choice = -math.huge, nil -- secondes avant de le proposer à nouveau (absent : jamais assez)
 			if check.weapon then
-				left, choice = WeaponLeft(), Z.LastChoice(check)
-				if left > 0 then soonest = math.min(soonest, left) end -- l'arme ne prévient pas quand elle s'éteint
+				local weapon = WeaponLeft()
+				choice = Z.LastChoice(check)
+				if weapon > 0 then
+					left = weapon - margin
+					soonest = math.min(soonest, weapon) -- l'arme ne prévient pas quand elle s'éteint
+				end
 			elseif check.blessing or check.aura then
 				-- seule une bénédiction ou une aura de moi compte : celle d'un autre paladin ne remplace pas la mienne
 				if not mine then
@@ -705,20 +723,20 @@ local function FindMissingBuffs(b, unit)
 					for i = 1, #own do
 						local name = own[i].name
 						if issecret(name) then return end
-						mine[name] = math.max(mine[name] or 0, Remaining(own[i], now))
+						mine[name] = math.max(mine[name] or -math.huge, Until(own[i], now, margin))
 					end
 				end
-				for name in pairs(check.names) do left = math.max(left, mine[name] or 0) end
+				for name in pairs(check.names) do left = math.max(left, mine[name] or -math.huge) end
 				choice = check.blessing and Z.BlessingFor(check, unit) or Z.LastChoice(check)
 			else
-				for name in pairs(check.names) do left = math.max(left, present[name] or 0) end
+				for name in pairs(check.names) do left = math.max(left, present[name] or -math.huge) end
 			end
-			if left <= margin then
+			if left <= 0 then
 				local spell = choice and choice.name or check.spell
 				missing[#missing + 1] = { check = check, spell = spell, icon = choice and choice.icon or check.icon }
 				key = key .. check.id .. ":" .. spell .. ";"
 			elseif margin > 0 then
-				soonest = math.min(soonest, left - margin)
+				soonest = math.min(soonest, left)
 			end
 		end
 	end

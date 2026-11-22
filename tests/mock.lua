@@ -218,7 +218,7 @@ function UnitHealthPercent(u, p, curve) if curve == CurveConstants.ScaleTo100 th
 function AbbreviateNumbers(n) return tostring(n) end
 rawset(_G, "OFFLINE", false)
 function UnitIsConnected() return not OFFLINE end
-function UnitIsDeadOrGhost() return DEAD or false end
+function UnitIsDeadOrGhost(u) if type(DEAD) == "table" then return DEAD[u] or false end return DEAD or false end -- DEAD : tous, ou { [unité] = true }
 function UnitIsGhost() return false end
 function UnitInRange() return true, true end
 function UnitThreatSituation() return 3 end
@@ -354,7 +354,7 @@ function UnitHealthPercent(u, p, curve)
 	return c
 end
 function AbbreviateNumbers(n) return issecretvalue(n) and n or tostring(n) end
-function UnitIsDeadOrGhost() return S(DEAD or false) end
+function UnitIsDeadOrGhost(u) if type(DEAD) == "table" then return S(DEAD[u] or false) end return S(DEAD or false) end
 function UnitInRange() return S(true), S(true) end
 function UnitThreatSituation() return S(3) end
 function UnitGroupRolesAssigned() return S("HEALER") end

@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.7] - 2026-11-22
+
+### Amélioré
+
+- Mes buffs : la version simple et la version de groupe se cochent séparément. Seulement la version de groupe : des lignes « Groupe N » dès qu'un joueur du groupe n'a pas le buff ; seulement la version simple : un joueur à la fois, jamais de Prière. Toutes les lignes sont alignées, la version de groupe porte la mention « (groupe) ».
+- Un buff est proposé à nouveau 2 minutes avant sa fin (réglage « Proposer à nouveau sous », qui passe de 0 à 2 pour ceux qui ne l'avaient pas changé), jamais avant le dernier quart d'un buff court.
+
+### Corrigé
+
+- Sans son composant, la version de groupe n'est plus proposée : le panneau propose la version simple.
+- Un buff à une personne (Épines, Bouclier de terre, Gardien de peur, Serment de lumière) n'est plus proposé à un joueur mort ou déconnecté : il va au suivant (tank, sinon vous), et revient quand le joueur est relevé.
+
 ## [1.33.6] - 2026-11-22
 
 ### Amélioré
@@ -662,6 +674,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.33.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.6...v1.33.7
 [1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.3...v1.33.4

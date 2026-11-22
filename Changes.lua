@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.33.7", date = "2026-11-22",
+		added = {
+		},
+		improved = {
+			"Mes buffs : la version simple et la version de groupe se cochent séparément. Seulement la version de groupe : des lignes « Groupe N » dès qu'un joueur du groupe n'a pas le buff ; seulement la version simple : un joueur à la fois, jamais de Prière. Toutes les lignes sont alignées, la version de groupe porte la mention « (groupe) ».",
+			"Un buff est proposé à nouveau 2 minutes avant sa fin (réglage « Proposer à nouveau sous », qui passe de 0 à 2 pour ceux qui ne l'avaient pas changé), jamais avant le dernier quart d'un buff court.",
+		},
+		fixed = {
+			"Sans son composant, la version de groupe n'est plus proposée : le panneau propose la version simple.",
+			"Un buff à une personne (Épines, Bouclier de terre, Gardien de peur, Serment de lumière) n'est plus proposé à un joueur mort ou déconnecté : il va au suivant (tank, sinon vous), et revient quand le joueur est relevé.",
+		},
+	},
+	{
 		version = "1.33.6", date = "2026-11-22",
 		added = {
 		},

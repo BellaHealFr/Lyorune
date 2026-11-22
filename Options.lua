@@ -658,7 +658,8 @@ local function BuffWatchList(page, width)
 			if (known or not entry.racial) and not passive then -- sort de race d'une autre race, sort passif : rien à régler
 				list[#list + 1] = { id = ids[1], pve = entry.pve, pvp = entry.pvp, name = name, known = known,
 					icon = icon or Z.SpellIcon(ids[1]) }
-				-- sa version de groupe (Prière de robustesse...) : sa propre ligne, juste en dessous, en retrait
+				-- sa version de groupe (Prière de robustesse...) : sa propre ligne, juste en dessous, reconnue à sa
+				-- mention « (groupe) » (icônes et noms alignés sur les autres lignes)
 				local group = entry[2] and Z.SpellName(entry[2])
 				if group then
 					list[#list + 1] = { id = entry[2], group = true, known = Z.Knows(entry[2]), icon = Z.SpellIcon(entry[2]),
@@ -770,8 +771,6 @@ local function BuffWatchList(page, width)
 			y = y + row:GetHeight()
 			ShowBearer(row)
 			row.icon:SetTexture(entry.icon)
-			row.icon:ClearAllPoints()
-			row.icon:SetPoint("TOPLEFT", entry.group and 20 or 2, -(WATCH_ROW - 18) / 2) -- version de groupe : en retrait
 			row.name:SetText(entry.name)
 			row.name:SetAlpha(entry.known and 1 or DIMMED) -- pas encore appris : grisé, mais réglable
 			for _, check in ipairs(row.checks) do check:Update() end
@@ -791,6 +790,7 @@ local function BuffWatchList(page, width)
 	box:Update()
 	Z.buffWatchBox = box
 	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."]
+		.. " " .. L["La version simple et la version de groupe se cochent séparément."]
 		.. " " .. L["Un buff à poser sur une seule personne se règle juste en dessous : le tank, vous, ou un joueur choisi (son nom, ou votre cible)."])
 	return box
 end
@@ -2166,7 +2166,7 @@ local function Chapters()
 				{ "check", "missingBuffs", "Buff manquant sur la case (hors combat)", desc = "Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs." },
 				{ "check", "buffPanel", "Panneau des buffs manquants", "Hors combat, une petite fenêtre liste chaque buff qui manque à chaque joueur : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour le tank, ou pour le joueur choisi avec /lyorune porteur. Elle se cache en combat. Une touche peut lancer la première ligne : raccourcis du jeu, AddOns, Lyorune." },
 				{ "custom", BuffWatchList },
-				{ "step", "buffRefresh", "Proposer à nouveau sous (minutes)", "Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque.", desc = "0 : seulement quand le buff manque." },
+				{ "step", "buffRefresh", "Proposer à nouveau sous (minutes)", "Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque.", desc = "Au départ : 2 minutes avant la fin. 0 : seulement quand le buff manque." },
 				{ "step", "buffGroupAt", "Sort de groupe dès (joueurs sans le buff)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", desc = "Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve.", fine = true },
 			} },
 			{ "Mes joueurs (répartition entre soigneurs)", {

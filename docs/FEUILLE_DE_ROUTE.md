@@ -662,6 +662,15 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   situation (seul, groupe sans tank, raid, donjon, champ de bataille, joueur choisi absent, buff fini sur un autre
   joueur) ; vérifier que le panneau se relit à chaque fois que le buff disparaît (connexion, rechargement,
   changement de zone, mort) ; et le cas d'un joueur seul dont la propre case serait masquée.
+  **Lot 1 fait le 22 novembre 2026 (1.33.7, vérifié hors jeu, comparé à HealKit, HealBot et VuhDo)** : version
+  simple et de groupe cochées à part (`Z.GroupWanted`, `Z.BuffFollowed`) ; sans composant, version de groupe
+  écartée (`C_Spell.IsSpellUsable`, comme HealKit) ; « Mes buffs » aligné ; `buffRefresh` à 2 avec migration, plafonné
+  au quart de la durée du buff (`Until`, Auras.lua ; HealKit : même plafond, VuhDo : 3 min ou 25 %) ; buff à une
+  personne jamais sur un mort ou un déconnecté, panneau relu au changement d'état (Frames.lua) ; test par classe et
+  par situation (seul, sans tank, raid, donjon, champ de bataille, joueur choisi absent, buff fini, zone, mort).
+  **Reste** : le bloc sous les cadres (1.34.0), « Sorts et raccourcis » et `/lyorune sorts` ; question pour
+  l'auteur : seul avec « Mon cadre quand je suis seul » décoché, rien n'est proposé (le panneau lit les cases ;
+  HealKit lit les unités, « player » compris).
 - [ ] 26 b (1.35.0), **priorité haute** : champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
   2026)** : les buffs manquants ne fonctionnent pas en champ de bataille. Cause connue (analyse 1a, B2) : pendant
   un match JcJ, le jeu rend les noms des buffs secrets, même hors combat ; Lyorune s'arrête au premier nom secret,

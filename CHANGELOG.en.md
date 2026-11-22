@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.33.7] - 2026-11-22
+
+### Improved
+
+- My buffs: the single version and the group version are ticked separately. Only the group version: "Group N" lines as soon as one player of the group lacks the buff; only the single version: one player at a time, never a Prayer. All lines are aligned, the group version is marked "(group)".
+- A buff is offered again 2 minutes before it ends ("Offer again below" setting, moved from 0 to 2 for those who had not changed it), never before the last quarter of a short buff.
+
+### Fixed
+
+- Without its reagent, the group version is no longer offered: the panel offers the single version.
+- A single-person buff (Thorns, Earth Shield, Fear Ward, Oath of Light) is no longer offered to a dead or disconnected player: it goes to the next one (tank, else you), and comes back once the player is up.
+
 ## [1.33.6] - 2026-11-22
 
 ### Improved
@@ -662,6 +674,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.33.7]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.6...v1.33.7
 [1.33.6]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.33.3...v1.33.4

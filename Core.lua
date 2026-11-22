@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.33.6"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.33.7"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -101,7 +101,7 @@ Z.defaults = {
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
 	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris
 	buffWatch = {},            -- « Mes buffs » : buffWatch[numéro du buff] = { pve = bool, pvp = bool } ; absent : le départ de Data.lua
-	buffRefresh = 0,           -- proposer à nouveau un buff qui finit dans moins de N minutes (0 : seulement s'il manque)
+	buffRefresh = 2,           -- proposer à nouveau un buff qui finit dans moins de N minutes (0 : seulement s'il manque)
 	buffGroupAt = 3,           -- joueurs d'un même groupe sans le buff à partir desquels la version de groupe est proposée
 	castIndicator = "OFF",     -- temps de recharge global et incantation (Cast.lua) : aucun, barre sous les cadres, anneau au curseur
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
@@ -394,6 +394,12 @@ local function Migrate(db)
 	-- pour tous sans que le joueur la choisisse : elle repart du nouveau défaut, une seule fois.
 	if db.lastVersion and Z.VersionNumber(db.lastVersion) == 12900 and Z.VersionNumber(Z.version) >= 12901 then
 		db.fiveSecondRule = nil
+	end
+	-- 1.33.7 : un buff est proposé 2 minutes avant sa fin (demande de l'auteur). Le départ était 0 de la 1.33.0 à la
+	-- 1.33.6 : un joueur resté sur 0 passe au nouveau départ, une seule fois ; un autre choix est gardé.
+	if db.lastVersion and Z.VersionNumber(db.lastVersion) < 13307 and Z.VersionNumber(Z.version) >= 13307
+		and db.buffRefresh == 0 then
+		db.buffRefresh = nil
 	end
 end
 

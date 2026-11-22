@@ -131,7 +131,8 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 --   Un sort passif sur ce client (Augure de clarté, d'après HealKit) n'est jamais proposé (Z.IsPassive).
 --   racial = true       sort de race : absent de « Mes buffs » si mon personnage ne l'a pas
 --   La version de groupe a sa propre ligne dans « Mes buffs » (réglage buffWatch[son numéro]) : décochée, le
---   panneau ne propose que la version simple, joueur par joueur (aucun composant dépensé).
+--   panneau ne propose que la version simple, joueur par joueur (aucun composant dépensé) ; seule cochée, des
+--   lignes « Groupe N » seulement (sans composant : la version simple, sinon rien ne pourrait être lancé).
 --   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ. Aucun buff ne
 --                        l'est aujourd'hui : tous sont actifs au départ (demande de l'auteur, 22 novembre 2026)
 -- Le premier numéro de la ligne la désigne dans le réglage « buffWatch ». Numéros vérifiés hors jeu (HealKit,
@@ -308,10 +309,17 @@ function Z.BuffContext()
 	return Z.PvPKind and Z.PvPKind() and "pvp" or "pve"
 end
 
--- La version de groupe de ce buff (Prière de robustesse...), si je la connais et si je veux l'utiliser ici
+-- Je connais la version de groupe de ce buff (Prière de robustesse...) et elle est cochée ici
+function Z.GroupWanted(check)
+	return check.groupSpell ~= nil and Z.BuffWatched({ id = check.groupId })
+end
+
+-- La version de groupe à proposer : voulue, et lançable maintenant. Sans son composant (Chandelle sacrée...), le
+-- jeu la dit inutilisable : les buffs se posent un par un (réponse secrète ou fonction absente : on la propose).
 function Z.GroupSpell(check)
-	if not check.groupSpell then return end
-	if not Z.BuffWatched({ id = check.groupId }) then return end
+	if not Z.GroupWanted(check) then return end
+	local usable = C_Spell.IsSpellUsable and C_Spell.IsSpellUsable(check.groupSpell)
+	if not Z.IsSecret(usable) and usable == false then return end
 	return check.groupSpell
 end
 
@@ -321,6 +329,12 @@ function Z.BuffWatched(check, context)
 	local chosen = Z.db.buffWatch[check.id]
 	if type(chosen) == "table" and chosen[context] ~= nil then return chosen[context] end
 	return check[context] ~= false
+end
+
+-- Ce buff est-il suivi d'une façon ou d'une autre : sa version simple ou sa version de groupe cochée. Les deux se
+-- cochent séparément : simple seule = une ligne par joueur ; groupe seule = des lignes « Groupe N » seulement.
+function Z.BuffFollowed(check)
+	return Z.BuffWatched(check) or Z.GroupWanted(check)
 end
 
 -- Joueur à mana : sa classe n'est pas dans Z.classPower (un familier ne compte pas ; classe secrète : non)
