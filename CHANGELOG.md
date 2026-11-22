@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.41.1] - 2026-11-23
+
+### Amélioré
+
+- Placement des éléments : la place d'un élément masqué profite aux autres (sans icône de rôle, vos soins sur la durée vont jusqu'au bord et le nom commence tout à gauche ; sans buff manquant, les affaiblissements aussi ; en Barre et Bandeau, une rangée seule prend toute la hauteur de la barre de vie) et revient quand il est recoché. Taille de 50 à 300 %, bouton « Remplir la place » (la plus grande taille qui tient), et un message qui nomme le voisin qui bloque.
+
 ## [1.41.0] - 2026-11-23
 
 ### Ajouté
@@ -796,6 +802,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.41.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.0...v1.41.1
 [1.41.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.1...v1.41.0
 [1.40.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.0...v1.40.1
 [1.40.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.1...v1.40.0

@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.41.1", date = "2026-11-23",
+		added = {
+		},
+		improved = {
+			"Placement des éléments : la place d'un élément masqué profite aux autres (sans icône de rôle, vos soins sur la durée vont jusqu'au bord et le nom commence tout à gauche ; sans buff manquant, les affaiblissements aussi ; en Barre et Bandeau, une rangée seule prend toute la hauteur de la barre de vie) et revient quand il est recoché. Taille de 50 à 300 %, bouton « Remplir la place » (la plus grande taille qui tient), et un message qui nomme le voisin qui bloque.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.41.0", date = "2026-11-23",
 		added = {
 			"Placement des éléments : une case à cocher devant chaque élément l'affiche ou le masque sur vos cases, avec le même réglage que dans les options. Un élément masqué reste sur la case d'exemple, en transparence, et retrouve sa place et sa taille quand il revient. Bouton « Tout afficher », et « Aussi sur la case » pour la barre de mana, le bouclier, les soins en route, la vie basse, la menace et la dissipation.",

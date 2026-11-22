@@ -5523,7 +5523,7 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   assert(Z.db.placement.TILE.role and Z.db.placement.TILE.role[3] == 150, "place d'origine : la taille reste")
   Z.SetElementSize("role", 100)
   assert(Z.db.placement.TILE == nil, "place et taille d'origine : entree effacee")
-  Z.SetElementSize("marker", 500) assert(Z.GetElementSize("marker") == 200, "200 % au plus")
+  Z.SetElementSize("marker", 500) assert(Z.GetElementSize("marker") == 300, "300 % au plus")
   Z.SetElementSize("marker", 10) assert(Z.GetElementSize("marker") == 50, "50 % au moins")
   Z:Refresh()
   assert(b.marker._w == math.floor(icon * 0.5 + 0.5), "marqueur rapetisse")
@@ -5618,7 +5618,7 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   Pick("center")
   for _ = 1, 12 do w.bigger:Run("OnClick") end
   local most = Z.GetElementSize("center")
-  assert(most <= 200 and w.size:GetText():find(L["Au plus grand pour cette case : %d %%"]:format(most), 1, true), "case pleine : " .. w.size:GetText())
+  assert(most <= 300 and w.size:GetText():find(L["Au plus grand pour cette case : %d %%"]:format(most), 1, true), "case pleine : " .. w.size:GetText())
   local _, cellH = Z.CellSize()
   assert(Z.ElementSize("center", Z.IconSize() + 8) <= cellH, "icone centrale hors de la case")
   for _ = 1, 20 do w.smaller:Run("OnClick") end
@@ -5638,7 +5638,7 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   Z.db.placement = {}
   assert(Z:Import("Lyorune2;p.TILE.role=s3%2C1;p.TILE.name=s0%2C0%2C150;p.TILE.marker=s0%2C0%2C999"), "ancien code")
   assert(Z.db.placement.TILE.role[1] == 3 and Z.GetElementSize("role") == 100, "ancien code : decalage seul")
-  assert(Z.db.placement.TILE.name[3] == nil and Z.GetElementSize("marker") == 200, "taille d'un texte, ou hors limites")
+  assert(Z.db.placement.TILE.name[3] == nil and Z.GetElementSize("marker") == 300, "taille d'un texte, ou hors limites")
 
   Z.db.placement = saved.placement
   Z.db.cornerSpells[Z.class] = saved.cornerSpells
@@ -8683,6 +8683,89 @@ step("1.41.0 : afficher ou masquer chaque element dans l'editeur de placement, m
     assert(refreshes == 1, "tout afficher : " .. refreshes .. " mises a jour au lieu d'une")
     for _, e in ipairs(Z.placeElements) do assert(Z.ElementShown(e[1]), "tout afficher : " .. e[1] .. " encore masque") end
     for _, check in ipairs(w.checks) do assert(check.on, "tout afficher : case non cochee") end
+  end)
+  for key, value in pairs(old) do Z.db[key] = value end
+  Z:Refresh()
+  local w = Z:PlacementWindow() if w then w:Hide() w:Run("OnHide") end
+  assert(ok, err)
+end)
+
+step("1.41.1 : la place d'un element masque profite aux autres, plafond a 300 %, Remplir la place", function()
+  local keys = { "shape", "showRole", "missingBuffs", "showHots", "showDebuffs", "hotStyle", "manaBars", "width", "height" }
+  local old = { placement = CopyTable(Z.db.placement) }
+  for _, key in ipairs(keys) do old[key] = Z.db[key] end
+  local ok, err = pcall(function()
+    assert(Z.limits.placement.size[2] == 300, "plafond pas a 300 %")
+    Z.db.placement = {} Z.db.hotStyle = "ICONS"
+    Z.db.showRole, Z.db.missingBuffs, Z.db.showHots, Z.db.showDebuffs = true, true, true, true
+    Z:ApplyShape("TILE")
+
+    -- Tuile : la rangee de mes soins s'arrete a l'icone de role ; masquee, elle va jusqu'au bord
+    Z.SetElementSize("hots", 300)
+    local rows = Z.AuraRows()
+    assert(rows.hots.blocker == "ROLE", "obstacle de mes soins : " .. tostring(rows.hots.blocker))
+    local before = rows.hots.size
+    Z.db.showRole = false Z:Refresh()
+    rows = Z.AuraRows()
+    assert(rows.hots.size > before and rows.hots.blocker == nil, "role masque : mes soins n'ont pas grandi " .. before .. " -> " .. rows.hots.size)
+    assert(Z.buttons[1].rows.hots.size == rows.hots.size, "vraie case qui ne suit pas")
+    Z.db.showRole = true Z:Refresh()
+    assert(Z.AuraRows().hots.size == before, "role revenu : la place n'est pas rendue")
+    -- affaiblissements et buff manquant
+    Z.SetElementSize("debuffs", 300)
+    rows = Z.AuraRows()
+    if rows.debuffs.blocker == "BUFF" then
+      before = rows.debuffs.size
+      Z.db.missingBuffs = false Z:Refresh()
+      assert(Z.AuraRows().debuffs.size > before, "buff masque : les affaiblissements n'ont pas grandi")
+      Z.db.missingBuffs = true Z:Refresh()
+    end
+
+    -- Bandeau : les deux rangees se partagent la hauteur ; seule, une rangee la prend toute (au-dela de 110 %)
+    Z.db.placement = {} Z:ApplyShape("BANNER")
+    Z.SetElementSize("hots", 300)
+    rows = Z.AuraRows()
+    assert(rows.hots.blocker == "DEBUFFS", "obstacle en Bandeau : " .. tostring(rows.hots.blocker))
+    before = rows.hots.size
+    local shared = Z.FillSize("hots")
+    Z.db.showDebuffs = false Z:Refresh()
+    rows = Z.AuraRows()
+    assert(rows.hots.size > before and rows.hots.blocker == nil, "rangee seule : pas toute la hauteur")
+    assert(Z.FillSize("hots") > math.max(110, shared), "rangee seule bloquee a " .. Z.FillSize("hots") .. " %")
+    -- le nom prend la place de l'icone de role masquee
+    local nameX, nameW = rows.nameX, rows.nameW
+    Z.db.showRole = false Z:Refresh()
+    rows = Z.AuraRows()
+    assert(rows.nameX < nameX and rows.nameW > nameW, "nom qui ne prend pas la place de l'icone de role")
+    Z.db.showRole, Z.db.showDebuffs = true, true Z:Refresh()
+
+    -- 300 % toujours borne par la case
+    Z.SetElementSize("center", 300)
+    local W, H = Z.CellSize()
+    assert(Z.ElementSize("center", Z.IconSize() + 8) <= math.min(W, H), "300 % hors de la case")
+
+    -- Remplir la place : plus petite taille qui atteint le plus grand, et le message de l'obstacle
+    Z.db.placement = {} Z:ApplyShape("TILE")
+    local L = Z.L
+    Z:OpenPlacement()
+    local w = Z:PlacementWindow()
+    local function Pick(key) for _, button in ipairs(w.list) do if button.key == key then button:Run("OnClick") end end end
+    Pick("name")
+    assert(w.fill:GetAlpha() < 1, "remplir la place permis pour le nom")
+    Pick("hots")
+    assert(w.fill:GetAlpha() == 1, "remplir la place grise pour mes soins")
+    local fill = Z.FillSize("hots")
+    w.fill:Run("OnClick", "LeftButton")
+    assert(Z.GetElementSize("hots") == fill, "remplir la place : " .. Z.GetElementSize("hots") .. " au lieu de " .. fill)
+    local most = Z.AuraRows().hots.size
+    Z.SetElementSize("hots", fill - 10) assert(Z.AuraRows().hots.size < most, "pas la plus petite taille utile")
+    Z.SetElementSize("hots", fill)
+    assert(w.size:GetText() == Z.PlacementFullText("hots", fill), "message de remplir la place")
+    assert(w.size:GetText():find(L["Au plus grand : %d %%. L'icône de rôle bloque : décochez-la pour lui laisser sa place."]:format(fill), 1, true),
+      "obstacle non nomme : " .. w.size:GetText())
+    Pick("marker")
+    w.fill:Run("OnClick", "LeftButton")
+    assert(w.size:GetText():find(L["Au plus grand pour cette case : %d %%"]:format(Z.GetElementSize("marker")), 1, true), "marqueur : la case bloque")
   end)
   for key, value in pairs(old) do Z.db[key] = value end
   Z:Refresh()

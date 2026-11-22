@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.41.1] - 2026-11-23
+
+### Improved
+
+- Element placement: a hidden element's room goes to the others (without the role icon, your heals over time reach the edge and the name starts at the far left; without the missing buff, debuffs do too; in Bar and Strip, a row on its own takes the full height of the health bar) and comes back when it is ticked again. Size from 50 to 300 %, "Fill the room" button (the largest size that fits), and a message naming the neighbour in the way.
+
 ## [1.41.0] - 2026-11-23
 
 ### Added
@@ -796,6 +802,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.41.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.0...v1.41.1
 [1.41.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.1...v1.41.0
 [1.40.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.0...v1.40.1
 [1.40.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.1...v1.40.0

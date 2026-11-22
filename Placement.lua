@@ -4,7 +4,7 @@
 -- agrandie : on le glisse à la souris, ou on le pousse avec les flèches. Le décalage est gardé pour chaque
 -- forme de case (Barre, Tuile, Carré, Bandeau), car chaque forme a sa propre disposition d'origine.
 -- Chaque élément s'affiche ou se masque par sa case à cocher, liée au réglage des options (1.41.0).
--- Les icônes se grandissent ou se rapetissent aussi (molette, « - » et « + »), de 50 à 200 % de leur taille
+-- Les icônes se grandissent ou se rapetissent aussi (molette, « - » et « + »), de 50 à 300 % de leur taille
 -- d'origine, gardée par forme avec le décalage. Le nom et le texte de vie suivent la taille de la police, les auras
 -- privées leur propre réglage en pixels (un seul réglage pour chaque taille).
 -- Un seul réglage : Z.db.placement (Core.lua). Frames.lua, Auras.lua et Themes.lua lisent Z.Offset et
@@ -624,7 +624,7 @@ local function Draw()
 	win.coords:SetText(L["Décalage : %d, %d"]:format(x, y))
 	-- Taille : les icônes seulement ; le nom, le texte de vie et les auras privées renvoient à leur réglage
 	local sized = Z.CanSize(selected)
-	for _, button in ipairs({ win.smaller, win.bigger }) do
+	for _, button in ipairs({ win.smaller, win.bigger, win.fill }) do
 		button:SetEnabled(sized)
 		button:SetAlpha(sized and 1 or 0.4)
 	end
@@ -679,6 +679,46 @@ local function Measure(key)
 end
 
 
+-- Ce qui empêche l'élément de grandir encore (1.41.1) : un voisin à décocher, sinon la case elle-même
+local BLOCKED = {
+	ROLE = "Au plus grand : %d %%. L'icône de rôle bloque : décochez-la pour lui laisser sa place.",
+	BUFF = "Au plus grand : %d %%. Le buff manquant bloque : décochez-le pour lui laisser sa place.",
+	HOTS = "Au plus grand : %d %%. Mes soins prennent l'autre moitié : décochez-les pour lui laisser la place.",
+	DEBUFFS = "Au plus grand : %d %%. Les affaiblissements prennent l'autre moitié : décochez-les.",
+}
+local function FullText(key, size)
+	local row = Z.AuraRows()[key]
+	local blocker = row and row.blocker
+	if blocker and BLOCKED[blocker] then return L[BLOCKED[blocker]]:format(size) end
+	return L["Au plus grand pour cette case : %d %%"]:format(size)
+end
+Z.PlacementFullText = FullText -- pour les tests
+
+-- Plus grande taille utile d'un élément : la plus petite en % qui atteint la plus grande mesure possible sur la
+-- case. Au-delà, rien ne grandirait : la taille enregistrée ne dépasse jamais ce que la case montre.
+function Z.FillSize(key)
+	if not Z.CanSize(key) then return nil end
+	local limit = Z.limits.placement.size
+	local old = Z.GetElementSize(key)
+	local best, bestSize
+	for size = limit[1], limit[2], limit[3] do
+		Z.SetElementSize(key, size)
+		local measure = Measure(key)
+		if not best or measure > best then best, bestSize = measure, size end
+	end
+	Z.SetElementSize(key, old)
+	return bestSize
+end
+
+-- « Remplir la place » : l'élément choisi prend sa plus grande taille utile et le message dit ce qui l'arrête
+local function Fill()
+	local size = Z.FillSize(selected)
+	if not size then return end
+	Z.SetElementSize(selected, size)
+	Changed()
+	win.size:SetText(FullText(selected, size))
+end
+
 -- Grandit (+1) ou rapetisse (-1) l'élément choisi de 10 %. Il s'arrête quand la case est pleine et le dit (une
 -- taille qui ne gagne pas un pixel, par arrondi, n'arrête rien : on regarde si la plus grande taille gagnerait).
 local function Resize(delta)
@@ -696,7 +736,7 @@ local function Resize(delta)
 	Changed()
 	local size = Z.GetElementSize(selected)
 	if full or (delta > 0 and size == old) then
-		win.size:SetText(L["Au plus grand pour cette case : %d %%"]:format(size))
+		win.size:SetText(FullText(selected, size))
 	elseif delta < 0 and size == old then
 		win.size:SetText(L["Au plus petit : %d %%"]:format(size))
 	end
@@ -836,7 +876,7 @@ local function BuildWindow()
 
 	-- Taille : 10 % par clic, ou la molette sur la case
 	local function SizeButton(label, delta, tip)
-		local button = UI.Button(win, label, 64, 22, function() Resize(delta) end)
+		local button = UI.Button(win, label, 44, 22, function() Resize(delta) end)
 		button.label:SetJustifyH("CENTER")
 		button.tip = L[tip]
 		return button
@@ -845,10 +885,12 @@ local function BuildWindow()
 	win.smaller:SetPoint("TOPLEFT", win.left, "BOTTOMLEFT", 0, -8)
 	win.bigger = SizeButton("+", 1, "Plus grand : 10 % par clic, ou la molette sur la case.")
 	win.bigger:SetPoint("LEFT", win.smaller, "RIGHT", 6, 0)
-	win.size = UI.Label(win, 12, nil, "accent")
+	-- Taille, ou sur deux lignes ce qui empêche l'élément de grandir
+	win.size = UI.Label(win, 11, nil, "accent")
 	win.size:SetPoint("LEFT", win.bigger, "RIGHT", 10, 0)
 	win.size:SetPoint("RIGHT", stage, "RIGHT", 0, 0)
 	win.size:SetJustifyH("LEFT")
+	win.size:SetMaxLines(2)
 
 	win.reset = UI.Button(win, L["Remettre à sa place"], 172, 22, function()
 		Z.SetOffset(selected, 0, 0)
@@ -872,6 +914,10 @@ local function BuildWindow()
 	win.showAll:SetPoint("TOPLEFT", win.reset, "BOTTOMLEFT", 0, -8)
 	win.showAll.label:SetJustifyH("CENTER")
 	win.showAll.tip = L["Chaque élément masqué de la liste revient sur vos cases, à sa place et à sa taille d'avant."]
+	win.fill = UI.Button(win, L["Remplir la place"], 172, 22, Fill)
+	win.fill:SetPoint("LEFT", win.showAll, "RIGHT", 8, 0)
+	win.fill.label:SetJustifyH("CENTER")
+	win.fill.tip = L["L'élément choisi prend la plus grande taille qui tient sur la case. Un élément masqué laisse sa place aux autres."]
 
 	-- Aussi sur la case : ce qui n'a pas de place à régler mais change la case, trois par ligne
 	local also = UI.Label(win, 12, nil, "accent")
@@ -891,7 +937,7 @@ local function BuildWindow()
 	note:SetPoint("RIGHT", -16, 0)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)
-	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque forme de case garde ses propres placements. Un élément décoché est masqué sur vos cases : il reste ici en transparence, prêt à revenir à sa place."])
+	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque forme de case garde ses propres placements. Un élément décoché est masqué sur vos cases et laisse sa place aux autres : il reste ici en transparence, prêt à revenir."])
 
 
 	win:HookScript("OnShow", Draw)

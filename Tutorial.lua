@@ -150,7 +150,7 @@ local steps = {
 			.. "une magie, une malédiction, une maladie ou un poison que VOUS pouvez dissiper.\n\n"
 			.. "|cffff2626Bordure rouge|r : le joueur est attaqué. Case estompée : il est hors de portée (des empreintes : très loin ; un œil : hors de vue). Vie et nom pâles : il est en bonne santé (à allumer, chapitre Vie et portée). |cffffcc4dTrait doré|r à gauche : un de vos joueurs (chapitre Joueurs, partie Mes joueurs).\n\n"
 			.. "Vos soins sur la durée et ses affaiblissements se rangent selon la forme des cases ; "
-			.. "« Placer les éléments de la case... » (chapitre Disposition) les déplace, règle leur taille, et les affiche ou les masque d'une case à cocher. "
+			.. "« Placer les éléments de la case... » (chapitre Disposition) les déplace, règle leur taille, et les affiche ou les masque d'une case à cocher (un élément masqué laisse sa place aux autres). "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
 			.. "Une icône grise au bout de vos soins : un sort que vous ne pouvez pas encore relancer sur lui (Âme affaiblie). "
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"

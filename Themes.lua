@@ -164,7 +164,9 @@ function Z.AuraRows()
 	local canWrap = rules.wrap and not inline and Z.CanWrapAuras()
 
 	-- Ce qui borne une rangée : l'icône de rôle (en haut à droite, ou à gauche sur une ligne) et le buff manquant,
-	-- à leur taille choisie dans l'éditeur
+	-- à leur taille choisie dans l'éditeur. Masqués (1.41.1), ils ne bornent plus rien : la rangée va jusqu'au bord,
+	-- et rend la place dès qu'ils reviennent.
+	local roleOn, buffOn = db.showRole and true or false, db.missingBuffs and true or false
 	local roleW, buffW = Z.ElementSize("role", icon - 2), Z.ElementSize("buff", icon)
 	local role = shape.inline and { inset + 3, inset + 3 + roleW }
 		or { W - 2 - Shift("TOPRIGHT") - roleW, W - 2 - Shift("TOPRIGHT") }
@@ -172,40 +174,60 @@ function Z.AuraRows()
 	local function Start(point)
 		return point:find("LEFT") and 2 + Shift(point) or W - 2 - Shift(point)
 	end
+	-- Largeur permise à une rangée, et ce qui l'arrête ("ROLE", "BUFF", sinon nil : la case)
 	local function Line(spec, point)
-		if type(spec) == "number" then return math.floor(W * spec) end
+		if type(spec) == "number" then return math.floor(W * spec), nil end
+		local on = buffOn
+		if spec == "ROLE" then on = roleOn end
+		if not on then return point:find("LEFT") and W - 2 - Start(point) or Start(point) - 2, nil end
 		local obstacle = spec == "ROLE" and role or buff
-		if point:find("LEFT") then return obstacle[1] - GAP - Start(point) end
-		return Start(point) - obstacle[2] - GAP
+		if point:find("LEFT") then return obstacle[1] - GAP - Start(point), spec end
+		return Start(point) - obstacle[2] - GAP, spec
 	end
 
+	-- Rangées montrées : en Barre et Bandeau, une rangée seule prend toute la hauteur de la barre de vie (1.41.1)
+	local hotsOn = db.showHots and true or false
+	local debuffsOn = db.showDebuffs and true or false
 	local size, maxH = want, math.floor((H - 4) / (canWrap and 2 or 1)) - (canWrap and 1 or 0)
+	local maxAlone
 	if inline then
 		-- La barre de vie la plus basse : celle d'une case avec sa barre de mana. Plus grandes que prévu (éditeur),
 		-- les deux rangées se partagent la hauteur de la barre sans se recouvrir.
 		local hpH = H - 2 * inset - (db.manaBars ~= "OFF" and Z.PowerHeight() + 1 or 0)
-		local room = inline == "EDGES" and math.floor((hpH - math.ceil(font * 0.72)) / 2) or math.floor((hpH - 1) / 2)
+		local both = hotsOn and debuffsOn
+		local room = inline == "EDGES" and math.floor((hpH - math.ceil(font * 0.72)) / (both and 2 or 1))
+			or (both and math.floor((hpH - 1) / 2) or hpH)
 		size = math.max(MIN_ICON, math.min(want, room))
 		maxH = math.max(MIN_ICON, math.floor((hpH - 1) / 2))
+		maxAlone = math.max(MIN_ICON, hpH)
 	end
 	local rows = {}
-	local function Row(key, point, spec, n)
+	local function Row(key, point, spec, n, alone)
 		local wanted = math.max(MIN_ICON, math.floor(size * Z.ElementScale(key) + 0.5))
-		local s, perLine, lines = Fit(n, wanted, Line(spec, point), maxH, canWrap)
+		local line, obstacle = Line(spec, point)
+		local high = (alone and maxAlone) or maxH
+		local s, perLine, lines = Fit(n, wanted, line, high, canWrap)
+		-- Ce qui l'empêcherait de grandir encore (message de l'éditeur), vu à la plus grande taille permise : un
+		-- obstacle qui raccourcit sa ligne, l'autre rangée qui partage la hauteur, sinon la case
+		local most = Fit(n, high, line, high, canWrap)
+		local blocker
+		if obstacle and most < high then blocker = obstacle
+		elseif inline and not alone and most >= high then blocker = key == "hots" and "DEBUFFS" or "HOTS" end
 		local sign = SIGN[point]
 		local x, y = sign[1] * (2 + Shift(point)), sign[2] * 2
 		if inline then x, y = sign[1] * (2 + Shift(point) - inset), 0 end -- au bord de la barre de vie
 		rows[key] = { point = point, relative = inline and "HP" or "CELL", x = x, y = y, size = s,
-			perLine = perLine, lines = lines, dirX = sign[1], dirY = sign[2],
+			perLine = perLine, lines = lines, dirX = sign[1], dirY = sign[2], blocker = blocker,
 			width = perLine * (s + GAP) - GAP, height = lines * (s + GAP) - GAP }
 	end
-	Row("hots", rules.hots, rules.hotLine, Z.HotSlots())
-	Row("debuffs", rules.debuffs, rules.debuffLine, Z.DebuffSlots())
+	Row("hots", rules.hots, rules.hotLine, Z.HotSlots(), inline and not debuffsOn)
+	Row("debuffs", rules.debuffs, rules.debuffLine, Z.DebuffSlots(), inline and not hotsOn)
 
 	-- Nom et chiffre de vie sur une ligne (Barre, Bandeau) : places d'origine, sauf en bloc (ci-dessous). Le nom
-	-- part après l'icône de rôle, à sa taille choisie.
-	rows.nameX = roleW + 5
-	rows.textX, rows.textW, rows.nameW = -4, W - 2 * inset - 8, math.max(20, W - roleW - 48)
+	-- part après l'icône de rôle, à sa taille choisie ; l'icône masquée, il prend sa place (1.41.1).
+	local nameAfter = roleOn and roleW + 5 or 3
+	rows.nameX = nameAfter
+	rows.textX, rows.textW, rows.nameW = -4, W - 2 * inset - 8, math.max(20, W - nameAfter - 43)
 	if inline == "BLOCK" then
 		-- Le bloc fait la largeur de la plus longue rangée réglée (et montrée) ; le chiffre de vie se range à sa
 		-- gauche, le nom s'arrête avant lui

@@ -52,7 +52,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 b bis | 1.39.1 | Variante « sur un tank » (selon le rôle) | Publiée (v1.39.1) |
 | 27 c | 1.40.0 | Boucliers du prêtre et du paladin : ce qui reste à absorber, même en combat, et leur fin (priorité haute) | Publiée (v1.40.0) |
 | 29 a | 1.41.0 | Éditeur de placement : afficher ou masquer chaque élément d'une case à cocher, « Aussi sur la case » (avancée en priorité par l'auteur, 22 novembre 2026), avec la correction C14 | Publiée (v1.41.0) |
-| 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | À faire |
+| 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | Fait |
 | 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | À faire |
 | 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | À faire |
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
@@ -943,10 +943,19 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   et `showCenter` (`UpdateCenter`), chapitre Joueurs ; `showSummonPhase` et `losHint` grisés sans lui. Élément
   masqué à 25 % sur la case d'exemple, nom grisé dans la liste. Faux client : `Stretch` n'est plus pris pour une
   méthode (la hauteur des fenêtres secondaires est enfin vérifiée sur un écran de 600). Tests : étape 1.41.0.
-- [ ] 29 a bis (1.41.1) : un élément masqué ne compte plus comme obstacle (les autres prennent sa place) et la
+- [x] 29 a bis (1.41.1) : un élément masqué ne compte plus comme obstacle (les autres prennent sa place) et la
   reprend quand il revient ; une rangée seule prend toute la hauteur en Barre et Bandeau ; plafond à 300 % et
   bouton « Remplir la place » (à côté de « Tout afficher »), message qui dit ce qui bloque (P2 de
   `PLAN-CORRECTIF.md`).
+  Fait (23 novembre 2026), choix de l'auteur (les trois recommandés) : « Remplir la place » donne la plus petite
+  taille qui atteint le plus grand (`Z.FillSize`, Placement.lua : jamais de réserve qui ferait grandir l'élément
+  tout seul plus tard) ; il sert à toute icône dont la taille se règle (grisé pour le nom, le texte de vie, les
+  auras privées et les barres fines) ; en Barre et Bandeau, le nom prend la place de l'icône de rôle masquée
+  (`rows.nameX`, `rows.nameW`). `Z.AuraRows` (Themes.lua) : `showRole` et `missingBuffs` éteints ne bornent plus
+  la ligne ; `showHots` ou `showDebuffs` éteint, l'autre rangée prend toute la barre de vie (base et plafond) ;
+  chaque rangée dit ce qui l'arrêterait à sa plus grande taille (`blocker` : `ROLE`, `BUFF`, `HOTS`, `DEBUFFS`),
+  lu par le message de l'éditeur (`FullText`) sur deux lignes. Les barres fines comptent comme rangée (posées
+  à part, rien ne les recouvre). Tests : étape 1.41.1.
 - [ ] 29 b (1.44.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
   « Arène » seulement si Forever a des arènes.
 
