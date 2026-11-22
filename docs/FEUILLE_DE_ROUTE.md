@@ -638,6 +638,12 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   soins de l'autre spécialisation ; même filtre dans la bibliothèque de macros (Macros.lua). Revue complète pour
   le prêtre, le paladin, le chaman et le druide : chaque soin, dissipation, résurrection et buff de la classe
   (Data.lua) comparé à la liste proposée, un test par classe. Les rangs inférieurs restent à l'étape 27 a.
+  **Correction aussi en priorité haute (demande de l'auteur, 22 novembre 2026)** : version simple et version de
+  groupe cochées ou non séparément dans « Mes buffs ». Aujourd'hui, la version simple décochée coupe tout le buff,
+  même la Prière cochée. À faire : les deux cochées = simple ou groupe selon le seuil (comme aujourd'hui) ;
+  seulement la version de groupe = uniquement des lignes « Groupe N », dès qu'un joueur du groupe en manque ;
+  seulement la version simple = ligne par joueur, jamais de Prière ; aucune = buff non surveillé. Jamais les deux
+  pour le même joueur (déjà vrai). Un test par cas.
 - [ ] 26 b (1.35.0) : champ de bataille et arène : photo des buffs avant le match, mémoire de mes propres sorts,
   règle `Z.Restricted()`.
 - [ ] 26 b bis (1.36.0) : buffs en combat (demande de l'auteur, 22 novembre 2026 : « on doit pouvoir rafraîchir
