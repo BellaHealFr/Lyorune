@@ -53,7 +53,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 c | 1.40.0 | Boucliers du prêtre et du paladin : ce qui reste à absorber, même en combat, et leur fin (priorité haute) | Publiée (v1.40.0) |
 | 29 a | 1.41.0 | Éditeur de placement : afficher ou masquer chaque élément d'une case à cocher, « Aussi sur la case » (avancée en priorité par l'auteur, 22 novembre 2026), avec la correction C14 | Publiée (v1.41.0) |
 | 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | À faire |
-| 27 d | 1.42.0 | Mes recharges, Pénitence | À faire |
+| 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | À faire |
+| 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | À faire |
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
@@ -803,7 +804,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
     `/lyorune buffs` dit qui buffe qui. Rôle soigneur sur une classe sans mana : suit sa classe. Tests (étape
     1.37.0, 107 étapes), guides, visite (une phrase sur la carte « C'est parti »), Notes, README. Installée.
 
-## Étape 27 : sorts (1.38.0 à 1.42.0)
+## Étape 27 : sorts (1.38.0 à 1.42.1)
 - [x] 27 a (1.38.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
   partage, macros des barres, statistiques).
   Recherche (22 novembre 2026) : HealKit (`Bindings.lua`, `Config.lua`) ne voit les rangs bas que si l'option du
@@ -871,7 +872,54 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   secret : absent en combat), VuhDo (total en mode secret, « 0 » compris ; reste par bouclier via le journal de
   combat, fermé sur Forever). À essayer en jeu : chiffre en combat, « 0 » bien caché (essai n° 3), effet réel de
   Veille de la Lumière et d'Égide divine sur Forever (essai n° 5).
-- [ ] 27 d (1.42.0) : rangée « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
+- [ ] 27 d (1.42.0) : « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
+- [ ] 27 d bis (1.42.1) : recharges des autres joueurs du groupe.
+  **Demande de l'auteur (23 novembre 2026)** : suivre ses propres temps de recharge et ceux des joueurs groupés,
+  activable, propre, mieux que les autres addons. Recherche faite le 23 novembre 2026 dans tous les addons du jeu
+  et ceux téléchargés pour étude (`Desktop\Adone heal\Forever`), et dans le code du jeu (branche `forever`).
+  **Ce que permet le jeu**
+  - Mes recharges : `C_Spell.GetSpellCooldown` donne un début et une durée **secrets en combat** (rencontre, match
+    JcJ aussi), mais `isActive`, `isEnabled` et `isOnGCD` ne sont **jamais secrets**. `C_Spell.GetSpellCooldownDuration`
+    rend un objet durée que le jeu dessine lui-même (`SetCooldownFromDurationObject` : balayage et secondes), même en
+    combat. `SPELL_UPDATE_COOLDOWN` suffit : aucune boucle. Mes propres sorts lancés (`UNIT_SPELLCAST_SUCCEEDED` sur
+    « player ») restent lisibles.
+  - Les autres joueurs : `UNIT_SPELLCAST_SUCCEEDED` est **secret dès que l'unité n'est ni moi ni mon familier, en
+    combat ou non** (`SecretWhenUnitSpellCastRestricted`), sauf les sorts que le jeu marque « jamais secrets »
+    (`C_Secrets.GetSpellCastSecrecy`, liste inconnue : essai en jeu). Journal de combat fermé. **Sans Lyorune chez
+    l'autre, ses recharges ne se suivent pas.**
+  - Messages entre addons : bloqués pendant la restriction « Chat » (combat de boss, match JcJ) ;
+    `C_ChatInfo.InChatMessagingLockdown`, déjà géré par Comm.lua (messages gardés jusqu'à la fin). Un message ne
+    peut contenir aucune valeur secrète.
+  **Ce que font les autres**
+  - Details (bibliothèque LibOpenRaid, fournie avec) : chaque joueur relit ses recharges toutes les 3 secondes et
+    les envoie au groupe ; il lit des chiffres secrets en combat sur Forever, ne tient pas compte du blocage des
+    messages, et sa liste Forever reprend des sorts du jeu moderne absents de Forever (Bombe psychique,
+    Maléfice...).
+  - VuhPlus (WotLK) : recharges du raid par le journal de combat, fermé sur Forever.
+  - ArcAuras, Decursive, Aptechka : seulement les miennes, par l'objet durée du jeu (balayage, jamais de chiffres
+    en combat). HealBot : les miennes dans l'infobulle, dernière valeur gardée en combat (fausse pour une recharge
+    lancée en combat), une partie coupée sur Midnight. HealKit : seulement Gardien de peur prêt ou non. VuhDo :
+    Prompte guérison prête ou non. Grid2 : un indicateur masqué pendant une recharge, hors restriction.
+  **Plan décidé (choix de l'auteur, les quatre recommandés)**
+  1. **Un panneau sous les cadres**, collé comme le bandeau des buffs : « Mes recharges » en haut, « Groupe »
+     dessous, rangé par sort (« Renaissance : Lyra prête, Tom 4:10 »). Trois interrupteurs : « Mes recharges » et
+     « Recharges du groupe » éteints au départ, « Partager mes recharges » allumé (vos alliés qui suivent voient vos
+     sorts sans rien faire).
+  2. **Mes recharges (1.42.0)** : mes sorts de raccourcis dont la recharge dépasse la recharge globale, et mes gros
+     sorts de `Data.lua` ; balayage et secondes du jeu, icône nette quand le sort est prêt (`isActive`), en combat
+     aussi. Rien d'écrit par classe hors de la liste de `Data.lua`.
+  3. **Recharges du groupe (1.42.1)** : chaque joueur qui a Lyorune annonce ses gros sorts (« lancé », puis
+     « prêt » quand `isActive` repasse à faux), plus son état complet en rejoignant un groupe et à la fin d'un
+     blocage des messages. Durée de recharge réelle lue chez lui hors combat (talents compris), retenue comme les
+     durées des buffs ; le décompte se fait chez celui qui regarde, sans message de plus. Aucun envoi régulier.
+  4. **Sorts suivis** : une liste par classe dans `Data.lua` (résurrections en combat, sorts de mana, protections
+     posées sur un autre, gros soins de groupe), chaque sort vérifié sur Forever et décochable.
+  5. **Le dire franchement** : pendant un boss ou un match JcJ, les messages sont bloqués : le panneau garde le
+     dernier état connu, marqué « avant le boss », et se remet à jour à la fin. Un joueur sans Lyorune n'apparaît
+     pas (la ligne d'aide le dit). Essai en jeu : `C_Secrets.GetSpellCastSecrecy` sur les sorts de la liste ; un
+     sort « jamais secret » serait suivi même sans Lyorune.
+  6. **Mieux que les autres** : marche en combat pour mes sorts, aucune lecture toutes les 3 secondes, aucun chiffre
+     secret envoyé, blocage des messages pris en compte, liste vérifiée sur Forever.
 
 ## Étape 28 : affaiblissements (1.43.0)
 - [ ] Secondes restantes, Âme affaiblie et Longanimité avec leurs secondes, mode « Utiles » ; icône du type de
