@@ -791,6 +791,7 @@ local function BuffWatchList(page, width)
 	Z.buffWatchBox = box
 	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."]
 		.. " " .. L["La version simple et la version de groupe se cochent séparément."]
+		.. " " .. L["En champ de bataille, en arène et en clé mythique, le jeu cache les buffs : Lyorune retient ceux que vous lancez (/lyorune buffs)."]
 		.. " " .. L["Un buff à poser sur une seule personne se règle juste en dessous : le tank, vous, ou un joueur choisi (son nom, ou votre cible)."])
 	return box
 end

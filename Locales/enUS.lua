@@ -820,6 +820,7 @@ Z.translations.enUS = {
 	["buffs : lisibles ici."] = "buffs: readable here.",
 	["aucun buff de votre classe à surveiller."] = "no buff of your class to watch.",
 	["%d min"] = "%d min",
+	["En champ de bataille, en arène et en clé mythique, le jeu cache les buffs : Lyorune retient ceux que vous lancez (/lyorune buffs)."] = "In battlegrounds, arenas and mythic keystones, the game hides buffs: Lyorune remembers the ones you cast (/lyorune buffs).",
 	["buffs lisibles ici, ou cachés par le jeu"] = "buffs readable here, or hidden by the game",
 	["durée inconnue (10 min)"] = "unknown duration (10 min)",
 	["lisible"] = "readable",
