@@ -648,6 +648,11 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   les lignes. Toutes les icônes dans une même colonne au bord gauche, tous les noms alignés juste après ; la version
   de groupe se reconnaît à sa mention « (groupe) », plus à un retrait ; la ligne « Sur : » d'un buff à une
   personne commence au même bord que les noms. Vérifié dans les trois thèmes et les deux langues.
+  **Buffs presque finis, priorité haute (demande de l'auteur, 22 novembre 2026)** : l'addon propose de rafraîchir
+  un buff **2 minutes avant sa fin**. Réglage `buffRefresh` (« Proposer à nouveau sous (minutes) ») passé de 0 à 2
+  au départ, avec une migration unique dans `Migrate` (Core.lua) pour les joueurs restés sur 0, l'ancienne valeur
+  de départ ; un joueur qui avait choisi une autre valeur la garde. La case est déjà relue toute seule au passage du
+  seuil (1.33.0), et un buff sans fin n'est jamais proposé. Textes, guide et test à mettre à jour.
 - [ ] 26 b (1.35.0) : champ de bataille et arène : photo des buffs avant le match, mémoire de mes propres sorts,
   règle `Z.Restricted()`.
 - [ ] 26 b bis (1.36.0) : buffs en combat (demande de l'auteur, 22 novembre 2026 : « on doit pouvoir rafraîchir
