@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.40.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.41.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -78,6 +78,7 @@ Z.defaults = {
 	absorbStyle = "BAND",      -- place du bouclier : bande en bas de la case, ou à la suite de la vie (comme les cadres du jeu)
 	absorbText = false,        -- chiffre du bouclier : ce qui reste à absorber (« +1,2k »), même en combat
 	showThreat = true,         -- bordure rouge de menace
+	showName = true,           -- nom du joueur sur la case
 	showRole = true,           -- icône de rôle
 	showMarker = true,         -- marqueur de raid
 	showLeader = true,         -- couronne du chef de groupe, drapeau des assistants en raid
@@ -122,6 +123,7 @@ Z.defaults = {
 	showTooltip = true,
 	clickTooltip = true,       -- mes clics et touches dans l'infobulle d'une case (hors combat)
 	showHealAbsorb = true,     -- part de vie « mangée » par un affaiblissement avant que les soins comptent
+	showCenter = true,         -- icône centrale (appel, résurrection, hors de vue, invocation, autre phase, très loin)
 	showSummonPhase = true,    -- icône d'invocation en cours, ou de joueur dans une autre phase
 	privateAuras = true,       -- auras privées des boss, dessinées par le jeu sur la case
 	privateAuraSize = 20,      -- leur taille, en pixels

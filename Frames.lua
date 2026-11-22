@@ -465,6 +465,7 @@ local LOS_ICON = "Interface\\Icons\\Ability_EyeOfTheOwl"
 local FAR_ICON = "Interface\\Icons\\Ability_Tracking"
 
 function UpdateCenter(b)
+	if not db.showCenter then return b.center:Hide() end -- réglage « Icône au centre de la case »
 	local unit = b.unit
 	local ready = b.readyCheck and GetReadyCheckStatus(unit)
 	local res = UnitHasIncomingResurrection(unit)
@@ -754,6 +755,7 @@ local function Style(b)
 
 	local size = db.fontSize + (theme.fontBonus or 0)
 	b.name:SetFont(theme.font, size, theme.flags)
+	b.name:SetShown(db.showName) -- réglage « Nom du joueur » (vraies cases, mode test, case témoin)
 	b.text:SetFont(theme.font, size - 1, theme.flags)
 	if db.showAbsorb and db.absorbText then
 		-- Couleur du bouclier du thème, éclaircie pour rester lisible sur la vie

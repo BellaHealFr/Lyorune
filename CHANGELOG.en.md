@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.41.0] - 2026-11-23
+
+### Added
+
+- Element placement: a tick box in front of each element shows or hides it on your cells, with the same setting as in the options. A hidden element stays on the sample cell, see-through, and gets its place and size back when it returns. "Show all" button, and "Also on the cell" for the mana bar, shield, incoming heals, low health, threat and dispel.
+- Two new switches, Players chapter: "Player name" and "Icon in the middle of the cell" (ready check, resurrection, out of sight, summon, player very far away).
+
+### Fixed
+
+- Element placement: the sample cell fills the whole area right of the list, with a one pixel outline around the chosen element.
+
 ## [1.40.1] - 2026-11-22
 
 ### Fixed
@@ -785,6 +796,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.41.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.1...v1.41.0
 [1.40.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.0...v1.40.1
 [1.40.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.1...v1.40.0
 [1.39.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.0...v1.39.1

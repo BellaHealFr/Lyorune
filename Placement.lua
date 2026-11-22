@@ -3,6 +3,7 @@
 -- Chaque élément de la case (nom, texte de vie, icônes...) se décale au pixel près sur une case d'exemple
 -- agrandie : on le glisse à la souris, ou on le pousse avec les flèches. Le décalage est gardé pour chaque
 -- forme de case (Barre, Tuile, Carré, Bandeau), car chaque forme a sa propre disposition d'origine.
+-- Chaque élément s'affiche ou se masque par sa case à cocher, liée au réglage des options (1.41.0).
 -- Les icônes se grandissent ou se rapetissent aussi (molette, « - » et « + »), de 50 à 200 % de leur taille
 -- d'origine, gardée par forme avec le décalage. Le nom et le texte de vie suivent la taille de la police, les auras
 -- privées leur propre réglage en pixels (un seul réglage pour chaque taille).
@@ -38,6 +39,79 @@ local SIZED = { role = true, marker = true, leader = true, center = true, lowMan
 
 function Z.IsPlaceElement(key)
 	return KNOWN[key] == true
+end
+
+----------------------------------------------------------------------------------------------------
+-- Afficher ou masquer (1.41.0) : la case à cocher de chaque élément lit et écrit LE réglage des options qui le
+-- montre ; l'éditeur n'a aucun réglage à lui. Un interrupteur : sa clé. Un réglage à choix : { clé, valeur qui
+-- ne montre rien } ; recoché, il reprend le choix d'avant (gardé le temps de la session), sinon sa valeur de départ.
+-- Masquer ne touche jamais au placement : l'élément revient à sa place et à sa taille d'avant.
+----------------------------------------------------------------------------------------------------
+local SHOWN_BY = {
+	name = "showName", text = { "text", "NONE" }, role = "showRole", marker = "showMarker", leader = "showLeader",
+	center = "showCenter", lowMana = { "lowManaHealers", 0 }, hots = "showHots", debuffs = "showDebuffs",
+	big = "bossDebuffs", controls = "showControls", defensives = "showDefensives", buff = "missingBuffs",
+	private = "privateAuras",
+}
+-- « Aussi sur la case » : ce qui change la case sans place à régler
+Z.alsoOnCell = {
+	{ { "manaBars", "OFF" }, "Barre de mana" },
+	{ "showAbsorb", "Bouclier" },
+	{ "showIncoming", "Soins en route" },
+	{ "lowHealth", "Voile de vie basse" },
+	{ "showThreat", "Bordure de menace" },
+	{ "showDispel", "Cadre de dissipation" },
+}
+local before = {} -- choix d'avant d'un réglage à choix masqué, le temps de la session
+
+local function Spec(spec)
+	if type(spec) == "table" then return spec[1], spec[2] end
+	return spec, nil
+end
+
+-- Ce réglage montre-t-il quelque chose ?
+function Z.SettingShown(spec)
+	local key, off = Spec(spec)
+	if off == nil then return Z.db[key] and true or false end
+	return Z.db[key] ~= off
+end
+
+-- Valeur qui montre (shown) ou masque ce réglage, ou nil s'il est déjà ainsi
+local function ShownValue(spec, shown)
+	local key, off = Spec(spec)
+	if Z.SettingShown(spec) == (shown and true or false) then return key, nil end
+	if off == nil then return key, shown and true or false end
+	if not shown then
+		before[key] = Z.db[key]
+		return key, off
+	end
+	local value = before[key]
+	if value == nil or value == off then value = Z.defaults[key] end
+	return key, value
+end
+
+-- Montre ou masque : même suite qu'un changement fait dans les options (Z.SetOptions, Options.lua)
+function Z.ShowSetting(spec, shown)
+	local key, value = ShownValue(spec, shown)
+	if value ~= nil then Z.SetOptions({ [key] = value }) end
+end
+
+function Z.ElementShown(key)
+	return SHOWN_BY[key] ~= nil and Z.SettingShown(SHOWN_BY[key])
+end
+
+function Z.ShowElement(key, shown)
+	if SHOWN_BY[key] then Z.ShowSetting(SHOWN_BY[key], shown) end
+end
+
+-- « Tout afficher » : chaque élément de la liste revient, d'un seul changement
+function Z.ShowAllElements()
+	local values = {}
+	for _, element in ipairs(Z.placeElements) do
+		local key, value = ShownValue(SHOWN_BY[element[1]], true)
+		if value ~= nil then values[key] = value end
+	end
+	Z.SetOptions(values)
 end
 
 -- Un décalage entier, borné par Z.limits.placement
@@ -248,9 +322,20 @@ local function Ranges()
 	-- Une case a sa barre de mana ou non selon le joueur : les bornes valent pour les deux
 	local powers = db.manaBars ~= "OFF" and { false, true } or { false }
 	local ranges, specs = {}, nil
+	-- Tour de tous les éléments : la case, agrandie de ce qui dépasse à sa place d'origine (le marqueur de raid,
+	-- à cheval sur le haut). Aucun décalage ne mène plus loin (Range) : la case d'exemple le montre en entier.
+	local outer = { 0, W, 0, H }
+	local function Reach(spec)
+		local rect = Box(spec[1], spec[2], spec[3], spec[4], spec[5])
+		outer[1], outer[2] = math.min(outer[1], rect[1]), math.max(outer[2], rect[2])
+		outer[3], outer[4] = math.min(outer[3], rect[3]), math.max(outer[4], rect[4])
+	end
 	for _, power in ipairs(powers) do
 		specs = Origins(power)
-		for key, spec in pairs(specs) do ranges[key] = Common(ranges[key], Range(spec, W, H)) end
+		for key, spec in pairs(specs) do
+			ranges[key] = Common(ranges[key], Range(spec, W, H))
+			Reach(spec)
+		end
 	end
 	-- Le chef de groupe s'accroche à l'icône de rôle, là où son propre décalage l'a posée
 	local roleX, roleY = Clamp(ranges.role, Saved("role"))
@@ -258,10 +343,17 @@ local function Ranges()
 		local role = Origins(power).role
 		local home = Box(role[1], role[2], role[3], role[4], role[5])
 		local moved = Box(role[1], role[2] + roleX, role[3] + roleY, role[4], role[5])
-		ranges.leader = Common(ranges.leader, Range(Origins(power, moved).leader, W, H, Origins(power, home).leader))
+		local leader = Origins(power, home).leader
+		ranges.leader = Common(ranges.leader, Range(Origins(power, moved).leader, W, H, leader))
+		Reach(leader)
 	end
-	cache = { db = db, shape = db.shape, W = W, H = H, ranges = ranges, specs = specs }
+	cache = { db = db, shape = db.shape, W = W, H = H, ranges = ranges, specs = specs, outer = outer }
 	return cache
+end
+
+-- Tour de tous les éléments { gauche, droite, bas, haut }, en pixels de la case (0, 0 en bas à gauche)
+function Z.PlacementOuter()
+	return Ranges().outer
 end
 
 -- À appeler quand un réglage change (Z:Refresh le fait)
@@ -335,10 +427,13 @@ function Z.ResetPlacement()
 end
 
 ----------------------------------------------------------------------------------------------------
--- La fenêtre : la liste des éléments à gauche, la case d'exemple à droite, les flèches dessous
+-- La fenêtre : la liste des éléments à gauche (une case à cocher devant chacun), la case d'exemple à droite, les
+-- flèches dessous, puis « Aussi sur la case »
 ----------------------------------------------------------------------------------------------------
-local WIDTH, HEIGHT = 580, 512
+local WIDTH, HEIGHT = 580, 588
+local HIDDEN_ALPHA = 0.25 -- élément masqué, sur la case d'exemple
 local STAGE_W, STAGE_H = 352, 232
+local STAGE_MARGIN = 8
 local win, stage, cell, highlight
 local selected = "name"
 local drag
@@ -402,14 +497,15 @@ local function Bounds(key)
 	return left, right, top, bottom
 end
 
--- Contour d'accent autour de l'élément choisi
+-- Contour d'accent autour de l'élément choisi : un pixel d'écran, quel que soit l'agrandissement de la case
 local function ShowHighlight()
 	local left, right, top, bottom = Bounds(selected)
 	local cellLeft, cellTop = cell:GetLeft(), cell:GetTop()
 	if not (left and cellLeft and cellTop) then return highlight:Hide() end
+	local pixel = highlight.border.size -- posé par FitCell
 	highlight:ClearAllPoints()
-	highlight:SetPoint("TOPLEFT", cell, "TOPLEFT", left - cellLeft - 1, top - cellTop + 1)
-	highlight:SetSize(right - left + 2, top - bottom + 2)
+	highlight:SetPoint("TOPLEFT", cell, "TOPLEFT", left - cellLeft - pixel, top - cellTop + pixel)
+	highlight:SetSize(right - left + 2 * pixel, top - bottom + 2 * pixel)
 	highlight.border:SetColor(UI.accent[1], UI.accent[2], UI.accent[3], 1)
 	highlight:Show()
 end
@@ -421,21 +517,31 @@ local function ShapeName(id)
 	return id
 end
 
--- Agrandissement de la case d'exemple : la case et le décalage le plus grand de chaque côté tiennent dans la
--- scène (un élément poussé au bout reste visible), jamais plus de 3 fois, jamais sous la taille réelle
+-- Agrandissement de la case d'exemple : la plus grande qui tient dans la scène, proportions gardées, à
+-- STAGE_MARGIN du bord le plus proche. width × height : le tour de tous les éléments (Z.PlacementOuter), pas
+-- plus, car rien ne va plus loin.
 local function StageScale(width, height)
-	local limit = Z.limits.placement
-	local room = 2 * math.max(-limit[1], limit[2])
-	return math.max(1, math.min(3, (STAGE_W - 24) / (width + room), (STAGE_H - 24) / (height + room)))
+	return math.min((STAGE_W - 2 * STAGE_MARGIN) / width, (STAGE_H - 2 * STAGE_MARGIN) / height)
 end
 
--- Dessine la case d'exemple avec TOUS les éléments, même ceux coupés dans les options : on peut les placer
+-- La case, agrandie et posée pour que le tour de ses éléments soit au centre de la scène
+local function FitCell(width, height)
+	local outer = Z.PlacementOuter()
+	local scale = StageScale(outer[2] - outer[1], outer[4] - outer[3])
+	cell:SetScale(scale)
+	highlight.border:SetThickness(1 / scale) -- le contour d'accent garde un pixel d'écran
+	-- Décalage en pixels de la case (ceux de son échelle) : le centre du tour vient sur le centre de la scène
+	cell:ClearAllPoints()
+	cell:SetPoint("CENTER", stage, "CENTER", (width - outer[1] - outer[2]) / 2, (height - outer[3] - outer[4]) / 2)
+end
+
+-- Dessine la case d'exemple avec TOUS les éléments, même ceux masqués (en transparence) : on peut les placer
 -- d'avance. Les vraies cases, le mode test et cette case passent par les mêmes fonctions de placement.
 local function Draw()
 	local db = Z.db
 	local width, height = Z.CellSize()
 	cell:SetSize(width, height)
-	cell:SetScale(StageScale(width, height))
+	FitCell(width, height)
 	cell.powerShown = db.manaBars ~= "OFF"
 	cell.power:SetShown(cell.powerShown)
 	Z.StyleButton(cell)
@@ -457,6 +563,7 @@ local function Draw()
 	cell.leader:Show()
 	cell.center:SetTexture(READY_CHECK_READY_TEXTURE)
 	cell.center:Show()
+	cell.name:Show() -- masqué sur les vraies cases (Style), toujours là sur la case d'exemple
 	cell.lowMana:SetAlpha(1)
 	cell.lowMana:Show()
 
@@ -530,7 +637,15 @@ local function Draw()
 		win.size:SetText(L["Taille : réglage « %s »"]:format(L[setting]))
 	end
 	win.shape:SetText(L["Forme : %s"]:format(ShapeName(db.shape)))
-	for _, button in ipairs(win.list) do UI.SetTab(button, button.key == selected) end
+	-- Élément masqué : en transparence sur la case, grisé dans la liste, toujours plaçable
+	for index, button in ipairs(win.list) do
+		local shown = Z.ElementShown(button.key)
+		for _, region in ipairs(Regions(button.key)) do region:SetAlpha(shown and 1 or HIDDEN_ALPHA) end
+		UI.SetTab(button, button.key == selected)
+		button.label:SetAlpha(shown and 1 or 0.45)
+		win.checks[index]:Update()
+	end
+	for _, check in ipairs(win.also) do check:Update() end
 	ShowHighlight()
 end
 
@@ -641,18 +756,37 @@ local function Arrow(label, dx, dy)
 	return button
 end
 
+-- Case à cocher d'un élément ou de « Aussi sur la case » ; label : son nom (aucun devant la liste, le bouton suit)
+local function Shown(get, set, tip, label)
+	local check = UI.Check(win, label or "", get, set)
+	check:SetSize(label and 180 or 22, label and 22 or 24)
+	check.tip = L[tip]
+	check:HookScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	check:HookScript("OnLeave", function() GameTooltip:Hide() end)
+	return check
+end
+
 local function BuildWindow()
 	win = UI.Window("LyorunePlacement", L["Placement des éléments"], WIDTH, HEIGHT)
 	win:SetFrameStrata("FULLSCREEN_DIALOG")
 	win.beside = true -- à côté des options, sans les recouvrir
 	tinsert(UISpecialFrames, "LyorunePlacement")
 
-	-- Liste des éléments
-	win.list = {}
+	-- Liste des éléments, chacun avec sa case à cocher : le réglage des options qui le montre
+	win.list, win.checks = {}, {}
 	for index, element in ipairs(Z.placeElements) do
-		local button = UI.Button(win, L[element[2]], 186, 24, function(self) Select(self.key) end)
-		button.key = element[1]
-		button:SetPoint("TOPLEFT", 16, -48 - (index - 1) * 27)
+		local key = element[1]
+		local check = Shown(function() return Z.ElementShown(key) end, function(on) Z.ShowElement(key, on) end,
+			"Coché : affiché sur vos cases. Décoché : masqué, il garde sa place et sa taille pour son retour. Même réglage que dans les options.")
+		check:SetPoint("TOPLEFT", 16, -48 - (index - 1) * 27)
+		win.checks[index] = check
+		local button = UI.Button(win, L[element[2]], 162, 24, function(self) Select(self.key) end)
+		button.key = key
+		button:SetPoint("TOPLEFT", 40, -48 - (index - 1) * 27)
 		win.list[index] = button
 	end
 
@@ -677,14 +811,13 @@ local function BuildWindow()
 		Resize(delta > 0 and 1 or -1)
 	end)
 
-	cell = CreateFrame("Frame", nil, stage)
-	cell:SetPoint("CENTER")
+	cell = CreateFrame("Frame", nil, stage) -- posée par FitCell
 	Z.BuildVisuals(cell)
 	highlight = CreateFrame("Frame", nil, cell)
 	highlight:SetFrameLevel(cell.over:GetFrameLevel() + 10)
 	highlight.border = UI.Border(highlight, 1)
 	highlight:Hide()
-	win.cell, win.stage = cell, stage
+	win.cell, win.stage, win.highlight = cell, stage, highlight
 
 	win.shape = UI.Label(win, 11, nil, "dim")
 	win.shape:SetPoint("TOPLEFT", stage, "BOTTOMLEFT", 0, -8)
@@ -735,16 +868,34 @@ local function BuildWindow()
 	win:HookScript("OnHide", win.resetAll.Disarm)
 	win.resetAll.tip = L["Tous les éléments de cette forme de case reviennent à leur place et à leur taille d'origine."]
 
+	win.showAll = UI.Button(win, L["Tout afficher"], 172, 22, Z.ShowAllElements)
+	win.showAll:SetPoint("TOPLEFT", win.reset, "BOTTOMLEFT", 0, -8)
+	win.showAll.label:SetJustifyH("CENTER")
+	win.showAll.tip = L["Chaque élément masqué de la liste revient sur vos cases, à sa place et à sa taille d'avant."]
+
+	-- Aussi sur la case : ce qui n'a pas de place à régler mais change la case, trois par ligne
+	local also = UI.Label(win, 12, nil, "accent")
+	also:SetPoint("TOPLEFT", 16, -436)
+	also:SetText(L["Aussi sur la case"])
+	win.also = {}
+	for index, item in ipairs(Z.alsoOnCell) do
+		local spec = item[1]
+		local check = Shown(function() return Z.SettingShown(spec) end, function(on) Z.ShowSetting(spec, on) end,
+			"Même réglage que dans les options.", L[item[2]])
+		check:SetPoint("TOPLEFT", 16 + ((index - 1) % 3) * 184, -456 - math.floor((index - 1) / 3) * 22)
+		win.also[index] = check
+	end
+
 	local note = UI.Label(win, 11, nil, "dim")
-	note:SetPoint("TOPLEFT", 16, -436)
+	note:SetPoint("TOPLEFT", 16, -508)
 	note:SetPoint("RIGHT", -16, 0)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)
-	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque forme de case garde ses propres placements. Tous les éléments sont montrés ici, même ceux coupés dans les options."])
+	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque forme de case garde ses propres placements. Un élément décoché est masqué sur vos cases : il reste ici en transparence, prêt à revenir à sa place."])
 
 
 	win:HookScript("OnShow", Draw)
-	win.StageScale = StageScale -- pour les tests
+	win.StageScale, win.STAGE_MARGIN = StageScale, STAGE_MARGIN -- pour les tests
 end
 
 -- Rappelée alors qu'elle est ouverte, la fenêtre passe devant sans se fermer (OnShow la dessine)

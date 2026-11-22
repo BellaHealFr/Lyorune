@@ -42,14 +42,21 @@ local DIMMED = 0.42         -- transparence d'un réglage sans effet (son régla
 local CLICK_OPTIONS = { castOnDown = true, autoRes = true, externalClicks = true, actionBarMacros = true, clicksPerSpec = true,
 	clickConflictAlert = true, rankChoice = true, rankAdapt = true, enemyGuard = true }
 
+-- Après un ou plusieurs réglages changés (keys : leurs clés) : cadres, alertes, clics, pastilles
+local function Applied(keys)
+	Z:Refresh()
+	Z:RefreshAlerts()
+	local clicks = false
+	for _, key in ipairs(keys) do clicks = clicks or CLICK_OPTIONS[key] == true end
+	if clicks then Z:ApplyClicks() elseif Z.RefreshClicks then Z.RefreshClicks() end -- liste des clics à l'écran
+	if AfterChange then AfterChange() end
+	if witness then witness.Spark() end -- éclat de soin sur la case témoin (effets magiques)
+end
+
 local function Option(key)
 	return function() return Z.db[key] end, function(value)
 		Z.db[key] = value
-		Z:Refresh()
-		Z:RefreshAlerts()
-		if CLICK_OPTIONS[key] then Z:ApplyClicks() elseif Z.RefreshClicks then Z.RefreshClicks() end -- liste des clics à l'écran
-		if AfterChange then AfterChange() end
-		if witness then witness.Spark() end -- éclat de soin sur la case témoin (effets magiques)
+		Applied({ key })
 	end
 end
 
@@ -270,6 +277,19 @@ local function RefreshShownPages()
 		if page and page.scroll:IsShown() then RefreshPage(page) end
 	end
 	if AfterChange then AfterChange() end -- profil chargé, configuration reçue : pastilles et grisage suivent
+end
+
+-- Réglages changés hors de la fenêtre d'options, par une autre fenêtre (l'éditeur de placement) : même suite
+-- qu'un changement fait ici, et les interrupteurs des pages ouvertes suivent. values : { clé = valeur }.
+function Z.SetOptions(values)
+	local keys = {}
+	for key, value in pairs(values) do
+		Z.db[key] = value
+		keys[#keys + 1] = key
+	end
+	if #keys == 0 then return end
+	Applied(keys)
+	RefreshShownPages()
 end
 
 -- Un élément dessiné à part change de hauteur (liste qui s'allonge) : la page se range de nouveau
@@ -2370,7 +2390,7 @@ local function Chapters()
 			} },
 			{ "Portée", {
 				{ "check", "farHint", "Joueur très loin : empreintes", "Trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (plus de 100 mètres environ : case encore plus estompée, empreintes au centre).", desc = "Au-delà de 100 mètres environ, la case s'estompe encore et montre des empreintes." },
-				{ "check", "losHint", "Soin refusé, hors de vue : un œil", "Quand le jeu refuse votre soin parce que le joueur est derrière un pilier ou un mur, un œil apparaît 3 secondes au centre de sa case." },
+				{ "check", "losHint", "Soin refusé, hors de vue : un œil", "Quand le jeu refuse votre soin parce que le joueur est derrière un pilier ou un mur, un œil apparaît 3 secondes au centre de sa case.", dep = { "showCenter", true } },
 			} },
 		} },
 		{ name = "Mes soins", rune = 23, old = { "Soins" }, intro = "Ce que vous voyez de vos soins posés sur les joueurs.", sections = {
@@ -2425,11 +2445,13 @@ local function Chapters()
 		} },
 		{ name = "Joueurs", rune = 18, intro = "Qui est qui dans le groupe, et ce qui leur manque.", sections = {
 			{ "Sur la case", {
+				{ "check", "showName", "Nom du joueur" },
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
 				{ "check", "showMarker", "Marqueur de raid" },
 				{ "check", "showLeader", "Chef de groupe et assistants", desc = "Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid." },
 				{ "check", "showDefensives", "Gros défensifs des joueurs", "Mur protecteur, Bouclier divin, Bénédiction de protection, Écorce, Évasion, Bloc de glace... : posés par n'importe qui, avec un liseré bleu, même en combat. Deux au plus, au bord droit de la case (juste avant le chiffre de vie en Barre et en Bandeau). Un de vos sorts de la liste quitte alors la rangée de vos soins.", desc = "Mur protecteur, Bouclier divin, Écorce... : posés par n'importe qui." },
-				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte).", fine = true },
+				{ "check", "showCenter", "Icône au centre de la case", "Réponse à l'appel, résurrection en cours, soin refusé car hors de vue, invocation, autre phase, joueur très loin. Éteinte : aucune de ces icônes (un joueur très loin reste estompé).", desc = "Appel, résurrection, hors de vue, invocation, joueur très loin." },
+				{ "check", "showSummonPhase", "Invocation en cours, autre phase", "Icône au centre de la case : invocation proposée, acceptée ou refusée, ou joueur dans une autre phase (proche en apparence, mais hors d'atteinte).", fine = true, dep = { "showCenter", true } },
 			} },
 			{ "Menace", {
 				{ "check", "showThreat", "Bordure rouge quand il est attaqué" },

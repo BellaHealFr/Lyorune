@@ -7,6 +7,7 @@ local Obj = {}
 Obj.__index = function(t, k)
 	local v = Obj[k]
 	if v then return v end
+	if k == "Stretch" then return nil end -- champ posé par l'addon sur la seule fenêtre d'options (UI.Fit), pas une méthode
 	if type(k) == "string" and k:match("^%u") then return function() end end -- méthode inconnue : sans effet
 end
 

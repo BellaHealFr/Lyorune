@@ -51,9 +51,10 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 b | 1.39.0 | Variantes d'un raccourci (ennemi, JcJ, hors combat), aucun soin sur un ennemi | Publiée (v1.39.0) |
 | 27 b bis | 1.39.1 | Variante « sur un tank » (selon le rôle) | Publiée (v1.39.1) |
 | 27 c | 1.40.0 | Boucliers du prêtre et du paladin : ce qui reste à absorber, même en combat, et leur fin (priorité haute) | Publiée (v1.40.0) |
-| 27 d | 1.41.0 | Mes recharges, Pénitence | À faire |
-| 28 | 1.42.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
-| 29 a | 1.43.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
+| 29 a | 1.41.0 | Éditeur de placement : afficher ou masquer chaque élément d'une case à cocher, « Aussi sur la case » (avancée en priorité par l'auteur, 22 novembre 2026), avec la correction C14 | Publiée (v1.41.0) |
+| 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | À faire |
+| 27 d | 1.42.0 | Mes recharges, Pénitence | À faire |
+| 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -802,7 +803,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
     `/lyorune buffs` dit qui buffe qui. Rôle soigneur sur une classe sans mana : suit sa classe. Tests (étape
     1.37.0, 107 étapes), guides, visite (une phrase sur la carte « C'est parti »), Notes, README. Installée.
 
-## Étape 27 : sorts (1.38.0 à 1.41.0)
+## Étape 27 : sorts (1.38.0 à 1.42.0)
 - [x] 27 a (1.38.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
   partage, macros des barres, statistiques).
   Recherche (22 novembre 2026) : HealKit (`Bindings.lua`, `Config.lua`) ne voit les rangs bas que si l'option du
@@ -870,21 +871,34 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   secret : absent en combat), VuhDo (total en mode secret, « 0 » compris ; reste par bouclier via le journal de
   combat, fermé sur Forever). À essayer en jeu : chiffre en combat, « 0 » bien caché (essai n° 3), effet réel de
   Veille de la Lumière et d'Égide divine sur Forever (essai n° 5).
-- [ ] 27 d (1.41.0) : rangée « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
+- [ ] 27 d (1.42.0) : rangée « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
 
-## Étape 28 : affaiblissements (1.42.0)
+## Étape 28 : affaiblissements (1.43.0)
 - [ ] Secondes restantes, Âme affaiblie et Longanimité avec leurs secondes, mode « Utiles » ; icône du type de
   dissipation ; liste suivie qui dit si elle marche en combat.
 
-## Étape 29 : éditeur de placement et JcJ (1.43.0 et 1.44.0)
-- [ ] 29 a (1.43.0) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,
+## Étape 29 : éditeur de placement et JcJ (1.41.0 et 1.44.0)
+- [x] 29 a (1.41.0, avancée en priorité par l'auteur le 22 novembre 2026) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,
   22 novembre 2026 : « il faut aussi pouvoir les remettre »). Une case à cocher devant chaque élément de l'éditeur,
   liée au même réglage que les options (nom et icône centrale deviennent des réglages) : décochée, l'élément est
   masqué sur les vraies cases ; recochée, il revient **à sa place et à sa taille d'avant** (elles sont gardées
   pendant qu'il est masqué). Un élément masqué reste dans la liste de l'éditeur, grisé, et sur la case d'exemple en
   transparence : on le voit toujours, on peut le réafficher ou le préparer. Bouton « Tout afficher » pour tout
-  remettre d'un coup ; un élément masqué ne compte plus comme obstacle (les autres prennent sa place) et la
-  reprend quand il revient ; plafond à 300 % et bouton « Remplir la place ».
+  remettre d'un coup.
+  Fait (23 novembre 2026), choix de l'auteur : la partie « place libérée » passe en 1.41.1 (29 a bis), la
+  grille « Aussi sur la case » va sous la liste (fenêtre de 512 à 588 de haut, case de C14 gardée entière), C14
+  part avec la 1.41.0. Table élément vers réglage `SHOWN_BY` (Placement.lua), `Z.SettingShown`, `Z.ShowSetting`,
+  `Z.ElementShown`, `Z.ShowElement`, `Z.ShowAllElements` (un seul rafraîchissement) ; réglage à choix masqué par
+  sa valeur « rien » (`text` « NONE », `lowManaHealers` 0, `manaBars` « OFF ») et rendu au choix d'avant, gardé le
+  temps de la session ; `Z.SetOptions` (Options.lua) : même suite qu'un changement fait dans les options, pages
+  ouvertes rafraîchies. Nouveaux réglages `showName` (Style, Frames.lua : vraies cases, mode test, case témoin)
+  et `showCenter` (`UpdateCenter`), chapitre Joueurs ; `showSummonPhase` et `losHint` grisés sans lui. Élément
+  masqué à 25 % sur la case d'exemple, nom grisé dans la liste. Faux client : `Stretch` n'est plus pris pour une
+  méthode (la hauteur des fenêtres secondaires est enfin vérifiée sur un écran de 600). Tests : étape 1.41.0.
+- [ ] 29 a bis (1.41.1) : un élément masqué ne compte plus comme obstacle (les autres prennent sa place) et la
+  reprend quand il revient ; une rangée seule prend toute la hauteur en Barre et Bandeau ; plafond à 300 % et
+  bouton « Remplir la place » (à côté de « Tout afficher »), message qui dit ce qui bloque (P2 de
+  `PLAN-CORRECTIF.md`).
 - [ ] 29 b (1.44.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
   « Arène » seulement si Forever a des arènes.
 

@@ -4736,16 +4736,16 @@ step("refonte 1.26.0, lot 6c septies e : corrections de Placement, Bug, Changes,
   local after = C_Timer.After
   Z.db.reduceMotion = true Z:Refresh()
 
-  -- P1 : la plus petite et la plus grande case, poussées de 40 de chaque côté, restent dans la scène
+  -- P1 (revu en 1.40.2, C14) : la plus petite et la plus grande case tiennent dans la scène et la remplissent
   Z:OpenPlacement()
   local w = Z:PlacementWindow()
-  local stage, limit = w.stage, Z.limits.placement
-  local room = math.max(-limit[1], limit[2])
+  local stage, margin = w.stage, w.STAGE_MARGIN
   for _, size in ipairs({ { Z.limits.width[1], Z.limits.height[1] }, { Z.limits.width[2], Z.limits.height[2] } }) do
     local scale = w.StageScale(size[1], size[2])
-    assert(scale >= 1 and scale <= 3, "P1 : echelle " .. scale)
-    assert(scale * (size[1] / 2 + room) <= stage:GetWidth() / 2 and scale * (size[2] / 2 + room) <= stage:GetHeight() / 2,
-      "P1 : case " .. size[1] .. "x" .. size[2] .. " poussee hors de la scene")
+    local fitW, fitH = scale * size[1] <= stage:GetWidth() - 2 * margin + 0.001, scale * size[2] <= stage:GetHeight() - 2 * margin + 0.001
+    assert(fitW and fitH, "P1 : case " .. size[1] .. "x" .. size[2] .. " hors de la scene")
+    assert(math.abs(scale * size[1] - (stage:GetWidth() - 2 * margin)) < 0.001
+      or math.abs(scale * size[2] - (stage:GetHeight() - 2 * margin)) < 0.001, "P1 : case " .. size[1] .. "x" .. size[2] .. " trop petite")
   end
   -- P3 : une seule mise en place à l'ouverture
   w:Hide() w:Run("OnHide")
@@ -8556,6 +8556,137 @@ step("1.40.0 : chiffre du bouclier (meme en combat, cache sans bouclier), boucli
   ABSORB_TOTAL, AURAS = nil, {}
   Z.db.absorbText, Z.db.shape, Z.db.showAbsorb, Z.class = old.text, old.shape, old.absorb, old.class
   Z:BuildData() Z:Refresh()
+  assert(ok, err)
+end)
+
+step("1.41.0 (C14) : case du placement des elements agrandie a toute la scene, contour d'un pixel", function()
+  local old = { shape = Z.db.shape, width = Z.db.width, height = Z.db.height, placement = CopyTable(Z.db.placement) }
+  local ok, err = pcall(function()
+    Z.db.placement = {}
+    Z:OpenPlacement()
+    local w = Z:PlacementWindow()
+    local cell, stage, margin = w.cell, w.stage, w.STAGE_MARGIN
+    for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+      Z.db.shape = shape Z:Refresh() Z:RefreshPlacement()
+      local W, H = Z.CellSize()
+      local outer = Z.PlacementOuter()
+      -- le tour couvre la case, et le marqueur de raid à cheval sur le haut
+      assert(outer[1] <= 0 and outer[2] >= W and outer[3] <= 0 and outer[4] > H, shape .. " : marqueur hors du tour")
+      local scale, ow, oh = cell:GetScale(), outer[2] - outer[1], outer[4] - outer[3]
+      assert(scale * ow <= stage:GetWidth() - 2 * margin + 0.001 and scale * oh <= stage:GetHeight() - 2 * margin + 0.001,
+        shape .. " : depasse de la scene")
+      assert(math.abs(scale * ow - (stage:GetWidth() - 2 * margin)) < 0.001
+        or math.abs(scale * oh - (stage:GetHeight() - 2 * margin)) < 0.001, shape .. " : ne remplit pas la scene")
+      -- le tour est au centre de la scène
+      local p = cell._points.CENTER
+      assert(p[2] == stage and math.abs(p[4] - (W - outer[1] - outer[2]) / 2) < 0.001
+        and math.abs(p[5] - (H - outer[3] - outer[4]) / 2) < 0.001, shape .. " : tour pas centre")
+      if shape == "TILE" then assert(scale > 3, "Tuile agrandie seulement " .. scale .. " fois") end
+    end
+    -- contour : un pixel d'écran, quel que soit l'agrandissement
+    Z.db.shape = "TILE" Z:Refresh() Z:RefreshPlacement()
+    local border = w.highlight.border
+    assert(math.abs(border.size * cell:GetScale() - 1) < 0.001, "contour plus epais qu'un pixel")
+    -- largeur changée : la case suit
+    local before = cell:GetScale()
+    Z.db.width = Z.limits.width[2] Z:Refresh() Z:RefreshPlacement()
+    assert(cell:GetScale() < before, "largeur changee non suivie")
+  end)
+  Z.db.shape, Z.db.width, Z.db.height, Z.db.placement = old.shape, old.width, old.height, old.placement
+  Z:Refresh()
+  local w = Z:PlacementWindow() if w then w:Hide() w:Run("OnHide") end
+  assert(ok, err)
+end)
+
+step("1.41.0 : afficher ou masquer chaque element dans l'editeur de placement, meme reglage que les options", function()
+  local keys = { "showName", "text", "showRole", "showMarker", "showLeader", "showCenter", "lowManaHealers", "showHots",
+    "showDebuffs", "bossDebuffs", "showControls", "showDefensives", "missingBuffs", "privateAuras", "manaBars",
+    "showAbsorb", "showIncoming", "lowHealth", "showThreat", "showDispel", "showSummonPhase", "readyCheck" }
+  local old = { placement = CopyTable(Z.db.placement), shape = Z.db.shape }
+  for _, key in ipairs(keys) do old[key] = Z.db[key] end
+  local ok, err = pcall(function()
+    -- deux nouveaux reglages, allumes au depart, une ligne chacun dans les options
+    assert(Z.defaults.showName == true and Z.defaults.showCenter == true, "showName ou showCenter absents")
+    Z.db.placement = {} Z.db.shape = "TILE" Z:Refresh()
+    Z:OpenPlacement()
+    local w = Z:PlacementWindow()
+    assert(#w.checks == #Z.placeElements and #w.list == #Z.placeElements, "une case a cocher par element")
+    assert(#w.also == 6, "aussi sur la case : six reglages")
+    assert(w:GetHeight() <= 600, "fenetre trop haute")
+    local function Index(key) for i, e in ipairs(Z.placeElements) do if e[1] == key then return i end end end
+    local function Click(check) check:Run("OnClick", "LeftButton") end
+
+    -- masquer : le reglage des options s'eteint, la place et la taille restent, l'element passe en transparence
+    Z.SetOffset("role", -3, -2) Z.SetElementSize("role", 130)
+    local role = w.checks[Index("role")]
+    assert(role.on, "icone de role cochee au depart")
+    Click(role)
+    assert(Z.db.showRole == false and not role.on, "decocher n'eteint pas showRole")
+    assert(w.cell.role:GetAlpha() == 0.25 and w.cell.role:IsShown(), "element masque pas en transparence")
+    assert(w.list[Index("role")].label:GetAlpha() < 1, "element masque pas grise dans la liste")
+    local x, y = Z.Offset("role")
+    assert(x == -3 and y == -2 and Z.GetElementSize("role") == 130, "place ou taille perdues en masquant ")
+    Click(role)
+    assert(Z.db.showRole == true and w.cell.role:GetAlpha() == 1, "recocher ne rend pas l'element")
+    x, y = Z.Offset("role")
+    assert(x == -3 and y == -2 and Z.GetElementSize("role") == 130, "place ou taille perdues au retour")
+
+    -- reglages a choix : valeur sans rien, puis le choix d'avant
+    Z.db.text = "PERCENT" Z:Refresh()
+    Click(w.checks[Index("text")]) assert(Z.db.text == "NONE", "texte de vie pas a Aucun")
+    Click(w.checks[Index("text")]) assert(Z.db.text == "PERCENT", "choix d'avant du texte perdu")
+    Z.db.lowManaHealers = 30 Z:Refresh()
+    Click(w.checks[Index("lowMana")]) assert(Z.db.lowManaHealers == 0, "mana basse pas a Non")
+    Click(w.checks[Index("lowMana")]) assert(Z.db.lowManaHealers == 30, "choix d'avant de la mana basse perdu")
+    -- masque depuis les options : recoche, la valeur de depart revient
+    Z.db.text = "NONE" Z:Refresh()
+    assert(not w.checks[Index("text")].on, "case non suivie apres un changement dans les options")
+    Click(w.checks[Index("text")]) assert(Z.db.text == "PERCENT" or Z.db.text == Z.defaults.text, "texte de vie non rendu")
+
+    -- options -> editeur : la case suit, dans les deux sens
+    Z.db.showMarker = false Z:Refresh()
+    assert(not w.checks[Index("marker")].on and w.cell.marker:GetAlpha() == 0.25, "editeur ne suit pas les options")
+    Z.db.showMarker = true Z:Refresh()
+    assert(w.checks[Index("marker")].on and w.cell.marker:GetAlpha() == 1, "editeur ne suit pas les options (retour)")
+
+    -- nom : masque sur les vraies cases, toujours visible (transparent) sur la case d'exemple
+    local b = Z.buttons[1]
+    Click(w.checks[Index("name")])
+    assert(Z.db.showName == false and not b.name:IsShown(), "nom encore affiche sur la vraie case")
+    assert(w.cell.name:IsShown() and w.cell.name:GetAlpha() == 0.25, "nom absent de la case d'exemple")
+    local fake = Z.FakeCell(UIParent) Z.DrawFakeCell(fake, 1, true)
+    assert(not fake.name:IsShown(), "nom encore affiche en mode test")
+    Click(w.checks[Index("name")]) assert(b.name:IsShown(), "nom pas revenu")
+
+    -- icone centrale : plus rien au centre, l'appel compris
+    local wasReady = b.readyCheck
+    b.readyCheck = true FireEvent("UNIT_PHASE", "player")
+    assert(b.center:IsShown(), "appel absent avec l'icone centrale allumee")
+    Z.db.showCenter = false Z:Refresh() FireEvent("UNIT_PHASE", "player")
+    assert(not b.center:IsShown(), "icone centrale encore affichee")
+    Z.db.showCenter = true Z:Refresh() b.readyCheck = wasReady FireEvent("UNIT_PHASE", "player")
+
+    -- aussi sur la case : barre de mana a Personne, puis le choix d'avant
+    Z.db.manaBars = "HEALERS" Z:Refresh()
+    Click(w.also[1]) assert(Z.db.manaBars == "OFF", "barre de mana pas a Personne")
+    Click(w.also[1]) assert(Z.db.manaBars == "HEALERS", "choix d'avant de la barre de mana perdu")
+    Click(w.also[5]) assert(Z.db.showThreat == false, "bordure de menace")
+    Click(w.also[5]) assert(Z.db.showThreat == true, "bordure de menace (retour)")
+
+    -- tout afficher : chaque element revient, d'un seul changement
+    Z.db.showRole, Z.db.showHots, Z.db.privateAuras, Z.db.text, Z.db.showName = false, false, false, "NONE", false
+    Z:Refresh()
+    local refreshes, refresh = 0, Z.Refresh
+    Z.Refresh = function(...) refreshes = refreshes + 1 return refresh(...) end
+    w.showAll:Run("OnClick", "LeftButton")
+    Z.Refresh = refresh
+    assert(refreshes == 1, "tout afficher : " .. refreshes .. " mises a jour au lieu d'une")
+    for _, e in ipairs(Z.placeElements) do assert(Z.ElementShown(e[1]), "tout afficher : " .. e[1] .. " encore masque") end
+    for _, check in ipairs(w.checks) do assert(check.on, "tout afficher : case non cochee") end
+  end)
+  for key, value in pairs(old) do Z.db[key] = value end
+  Z:Refresh()
+  local w = Z:PlacementWindow() if w then w:Hide() w:Run("OnHide") end
   assert(ok, err)
 end)
 

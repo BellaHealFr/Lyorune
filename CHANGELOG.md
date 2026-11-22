@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.41.0] - 2026-11-23
+
+### Ajouté
+
+- Placement des éléments : une case à cocher devant chaque élément l'affiche ou le masque sur vos cases, avec le même réglage que dans les options. Un élément masqué reste sur la case d'exemple, en transparence, et retrouve sa place et sa taille quand il revient. Bouton « Tout afficher », et « Aussi sur la case » pour la barre de mana, le bouclier, les soins en route, la vie basse, la menace et la dissipation.
+- Deux nouveaux interrupteurs, chapitre Joueurs : « Nom du joueur » et « Icône au centre de la case » (appel, résurrection, hors de vue, invocation, joueur très loin).
+
+### Corrigé
+
+- Placement des éléments : la case d'exemple remplit toute la zone à droite de la liste, avec un contour d'un pixel autour de l'élément choisi.
+
 ## [1.40.1] - 2026-11-22
 
 ### Corrigé
@@ -785,6 +796,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.41.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.1...v1.41.0
 [1.40.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.0...v1.40.1
 [1.40.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.1...v1.40.0
 [1.39.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.39.0...v1.39.1

@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.41.0", date = "2026-11-23",
+		added = {
+			"Placement des éléments : une case à cocher devant chaque élément l'affiche ou le masque sur vos cases, avec le même réglage que dans les options. Un élément masqué reste sur la case d'exemple, en transparence, et retrouve sa place et sa taille quand il revient. Bouton « Tout afficher », et « Aussi sur la case » pour la barre de mana, le bouclier, les soins en route, la vie basse, la menace et la dissipation.",
+			"Deux nouveaux interrupteurs, chapitre Joueurs : « Nom du joueur » et « Icône au centre de la case » (appel, résurrection, hors de vue, invocation, joueur très loin).",
+		},
+		improved = {
+		},
+		fixed = {
+			"Placement des éléments : la case d'exemple remplit toute la zone à droite de la liste, avec un contour d'un pixel autour de l'élément choisi.",
+		},
+	},
+	{
 		version = "1.40.1", date = "2026-11-22",
 		added = {
 		},
