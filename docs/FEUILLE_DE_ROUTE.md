@@ -677,9 +677,14 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   dissipation ; liste suivie qui dit si elle marche en combat.
 
 ## Étape 29 : éditeur de placement et JcJ (1.42.0 et 1.43.0)
-- [ ] 29 a (1.42.0) : une case à cocher devant chaque élément de l'éditeur, liée au réglage des options (nom et
-  icône centrale deviennent des réglages) ; un élément éteint ne compte plus comme obstacle ; plafond à 300 % et
-  bouton « Remplir la place ».
+- [ ] 29 a (1.42.0) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,
+  22 novembre 2026 : « il faut aussi pouvoir les remettre »). Une case à cocher devant chaque élément de l'éditeur,
+  liée au même réglage que les options (nom et icône centrale deviennent des réglages) : décochée, l'élément est
+  masqué sur les vraies cases ; recochée, il revient **à sa place et à sa taille d'avant** (elles sont gardées
+  pendant qu'il est masqué). Un élément masqué reste dans la liste de l'éditeur, grisé, et sur la case d'exemple en
+  transparence : on le voit toujours, on peut le réafficher ou le préparer. Bouton « Tout afficher » pour tout
+  remettre d'un coup ; un élément masqué ne compte plus comme obstacle (les autres prennent sa place) et la
+  reprend quand il revient ; plafond à 300 % et bouton « Remplir la place ».
 - [ ] 29 b (1.43.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
   « Arène » seulement si Forever a des arènes.
 
