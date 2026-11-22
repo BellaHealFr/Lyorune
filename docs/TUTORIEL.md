@@ -68,7 +68,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Une deuxième boisson juste à droite, qui se vide | Ce soigneur est en train de boire (« Soigneur qui boit », même partie) : attendez qu'il ait fini avant d'avancer |
 | Rouge sombre au bout de la vie | Un affaiblissement « mange » cette part de vie : vos soins la remplissent d'abord, avant de compter |
 | Barre sous la vie | Sa ressource, à la couleur du jeu : mana en bleu, rage en rouge, énergie en jaune, focalisation en orange ; elle suit la forme du druide (pour tous, par défaut ; « Soigneurs » ne montre que leur mana ; hauteur de 2 à 60 pixels et couleur réglables dans le chapitre Vie et portée, réglages fins de la partie Mana ; la vie garde toujours au moins 10 pixels de la case ; couleur de la mana : bleu, bleu ciel, violet, turquoise ou blanc). Avec « Pourcentage de mana dans la barre », le % s'y écrit, même en combat |
-| Voile rouge qui clignote | Sa vie est basse |
+| Voile rouge (il clignote quelques secondes quand la vie change) | Sa vie est basse |
 | Bordure rouge | Il est attaqué |
 | Trait de couleur en haut de la vie (si vous l'allumez) | Sa menace : jaune, il prend de la menace sur un monstre ; orange, le monstre va se tourner vers lui ; rouge, le monstre s'en prend à lui |
 | Petit carré de couleur dans un coin | Un sort que vous avez placé dans ce coin (chapitre Mes soins) : il se vide avec le temps |

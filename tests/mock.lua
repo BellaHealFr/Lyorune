@@ -342,7 +342,7 @@ local function S(value)
 end
 
 function UnitHealth() return S(800) end
-function UnitHealthMax() return S(1000) end
+function UnitHealthMax() return S(HEALTH_MAX or 1000) end -- HEALTH_MAX : vie inconnue (0) pour un test
 function UnitHealthMissing() return S(200) end
 function UnitHealthPercent(u, p, curve)
 	-- HEALTH_PCT (0 à 1) : un test qui veut une vraie courbe l'évalue lui-même (curve.Evaluate posé par le test)

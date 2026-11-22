@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.32.1] - 2026-11-22
+
+### Corrigé
+
+- Affaiblissements : ceux qu'aucun joueur ne peut retirer (souvent de type Magie chez un boss) n'apparaissaient nulle part chez un soigneur qui dissipe ce type ; et un affaiblissement qu'un autre joueur du raid pouvait retirer colorait votre case et sonnait comme si vous pouviez le dissiper. La rangée « à dissiper », le cadre coloré et le son ne montrent plus que ce que vous pouvez dissiper vous-même ; tous les autres affaiblissements vont dans la rangée suivante, sans trou ni doublon. Pour les quatre classes de soigneurs.
+- Le voile rouge de vie basse ne clignote plus sans fin : il bat quelques secondes quand la vie change, puis reste fixe. Il ne couvre plus la case d'un joueur que le jeu ne connaît pas encore (vie maximale à 0, en chargement de champ de bataille).
+
 ## [1.32.0] - 2026-11-21
 
 ### Ajouté
@@ -598,6 +605,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.32.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.31.0...v1.32.0
 [1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0

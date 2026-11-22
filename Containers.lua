@@ -357,17 +357,16 @@ local function Plan(b)
 		end
 	end
 
-	-- Ceux que je peux dissiper d'abord (réglage « dispelCount », le jeu met ses affaiblissements prioritaires en
-	-- tête), puis les autres (réglage « debuffCount » : une place pour le premier à dissiper, le reste aux autres)
+	-- Ceux que je peux dissiper moi-même d'abord (filtre RAID du jeu, réglage « dispelCount »), puis tous les
+	-- autres (!RAID : le contraire exact, ni trou ni doublon ; réglage « debuffCount » : une place pour le premier à
+	-- dissiper, le reste aux autres). Le jeu sait ce que je peux dissiper, même un sort appris en montant de niveau.
 	local excluded = NilIfEmpty(ignored)
 	if db.showDebuffs then
-		Group("debuffs", "dispellable", "HARMFUL|RAID_PLAYER_DISPELLABLE", { excludeSpellIDs = excluded }, Z.DispelCount(), 1,
+		Group("debuffs", "dispellable", Z.DISPEL_MINE, { excludeSpellIDs = excluded }, Z.DispelCount(), 1,
 			"LyoruneAuraIcon", "other")
 		if db.debuffMode == "ALL" then
-			local canDispel = {}
-			for kind in pairs(Z.canDispel or {}) do canDispel[kind] = true end
-			Group("debuffs", "others", "HARMFUL", { excludeSpellIDs = excluded, excludeDispelTypes = NilIfEmpty(canDispel) },
-				db.debuffCount - 1, 2, "LyoruneAuraIcon", "other")
+			Group("debuffs", "others", Z.DISPEL_OTHERS, { excludeSpellIDs = excluded }, db.debuffCount - 1, 2,
+				"LyoruneAuraIcon", "other")
 		end
 	end
 	-- Gros défensifs de tout lanceur, et contrôle subi : le jeu les reconnaît lui-même, même en combat
@@ -379,7 +378,7 @@ local function Plan(b)
 		Group("controls", "controls", "HARMFUL|CROWD_CONTROL", { excludeSpellIDs = excluded }, 1, 1, "LyoruneAuraIcon",
 			"control")
 	end
-	if db.showDispel then Slot("dispel", "HARMFUL|RAID_PLAYER_DISPELLABLE", nil, "LyoruneAuraCover", "dispel") end
+	if db.showDispel then Slot("dispel", Z.DISPEL_MINE, nil, "LyoruneAuraCover", "dispel") end
 	if db.bossDebuffs or db.importantGlow then
 		Slot("boss", "HARMFUL", { isBossAura = true }, "LyoruneAuraBig", "big")
 		if not Empty(important) then

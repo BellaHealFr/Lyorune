@@ -98,6 +98,7 @@ end)
 step("auras", function()
   AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 11, spellId = 139 }, { name = "Autre", icon = 2, auraInstanceID = 12, spellId = 5 } }
   AURAS["HARMFUL"] = { { name = "Poison", icon = 3, auraInstanceID = 21, spellId = 99, dispelName = "Poison" }, { name = "Mal", icon = 4, auraInstanceID = 22, spellId = 98, dispelName = "Magic" }, { name = "X", icon = 5, auraInstanceID = 23, spellId = 97 } }
+  AURAS["HARMFUL|RAID"] = { AURAS["HARMFUL"][2] } -- le jeu : ce que moi (pretre) je peux dissiper
   FireEvent("UNIT_AURA", "player") RunUpdates()
   local b = Z.buttons[1]
   assert(#b.hots == 1 and b.hots[1]:IsShown(), "hots " .. #b.hots)
@@ -110,6 +111,7 @@ step("auras", function()
   Z.db.debuffMode = "ALL" Z.db.showDispel = false Z:Refresh() RunUpdates()
   assert(not b.dispel:IsShown(), "cadre de dissipation coupe")
   Z.db.showDispel = true
+  AURAS["HARMFUL|RAID"] = nil
   Z.db.importantNames["X"] = true Z:Refresh() RunUpdates()
   assert(b.bigIcon and b.bigIcon:IsShown(), "affaiblissement important")
   Z.db.importantNames = {} Z.db.ignoredNames["X"] = true Z.db.extraTracked["Autre"] = true Z:Refresh() RunUpdates()
@@ -183,7 +185,7 @@ step("combat avec valeurs secretes", function()
   SECRET = true COMBAT = true
   AURAS["HELPFUL|PLAYER"] = { { name = MakeSecret(), icon = 1, auraInstanceID = 11, spellId = MakeSecret() } }
   AURAS["HARMFUL"] = { { name = MakeSecret(), icon = 3, auraInstanceID = 21, spellId = MakeSecret(), dispelName = MakeSecret(), isBossAura = MakeSecret() } }
-  AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = { AURAS["HARMFUL"][1] }
+  AURAS["HARMFUL|RAID"] = { AURAS["HARMFUL"][1] }
   for _, mode in ipairs({ { "CLASS", "DEFICIT", "ICONS" }, { "HEALTH", "PERCENT", "BARS" }, { "HEALTH", "NONE", "ICONS" } }) do
     Z.db.color, Z.db.text, Z.db.hotStyle = mode[1], mode[2], mode[3]
     Z:Refresh()
@@ -2645,9 +2647,12 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     -- mes soins suivis, par numero de sort
     local g = hots.groups.hots
     assert(g.filter == "HELPFUL|PLAYER" and g.candidates.includeSpellIDs[139], "Renovation absente du filtre des soins")
-    assert(slots.slots.dispel.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "bordure de dissipation")
+    assert(slots.slots.dispel.filter == "HARMFUL|RAID", "bordure de dissipation")
     assert(slots.slots.boss.candidates.isBossAura == true, "grande icone : auras de boss")
-    assert(debuffs.groups.dispellable.filter == "HARMFUL|RAID_PLAYER_DISPELLABLE", "affaiblissement a dissiper en premier")
+    assert(debuffs.groups.dispellable.filter == "HARMFUL|RAID", "affaiblissement a dissiper en premier")
+    -- 1.32.1 : les autres = le contraire exact (!RAID), sans exclusion par type (ni trou, ni doublon)
+    assert(debuffs.groups.others.filter == "HARMFUL|!RAID", "rangee des autres : " .. tostring(debuffs.groups.others.filter))
+    assert(not (debuffs.groups.others.candidates or {}).excludeDispelTypes, "exclusion par type restee")
     -- tous les rangs d'un sort suivi, verifies par leur nom dans le jeu
     local oldName = C_Spell.GetSpellName
     C_Spell.GetSpellName = function(id)
@@ -2689,7 +2694,7 @@ step("1.24.1 : icones d'auras dessinees par le jeu (conteneurs), en combat, hors
     local sounds = 0
     PlaySound = function() sounds = sounds + 1 end
     Z.db.soundDispel = true
-    AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = { { name = "Mal", icon = 4, auraInstanceID = 22, spellId = 98 } }
+    AURAS["HARMFUL|RAID"] = { { name = "Mal", icon = 4, auraInstanceID = 22, spellId = 98 } }
     Z.UpdateAurasNow(b) Z.UpdateAurasNow(b)
     assert(sounds == 1, "son de dissipation : " .. sounds)
 
@@ -5995,7 +6000,7 @@ step("etape 23, lot 1 : jusqu'a 3 affaiblissements a dissiper par case (conteneu
     local d3 = { name = "C", icon = 3, auraInstanceID = 73, spellId = 1003, dispelName = "Disease" }
     local d4 = { name = "D", icon = 4, auraInstanceID = 74, spellId = 1004, dispelName = "Magic" }
     local other = { name = "E", icon = 5, auraInstanceID = 75, spellId = 1005 }
-    AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = { d1, d2, d3, d4 }
+    AURAS["HARMFUL|RAID"] = { d1, d2, d3, d4 }
     AURAS["HARMFUL"] = { d1, other, d2, d3, d4 }
     Z:Refresh() Z.UpdateAurasNow(b)
     local function shown()
@@ -6011,11 +6016,23 @@ step("etape 23, lot 1 : jusqu'a 3 affaiblissements a dissiper par case (conteneu
     Z.db.dispelCount, Z.db.debuffMode = 2, "DISPEL" Z:Refresh() Z.UpdateAurasNow(b)
     assert(shown() == 2 and b.debuffs[2].texture._tex == 2, "Dissipables par moi : deux, sans les autres")
     Z.db.debuffMode = "ALL"
-    -- le filtre du jeu ne dit rien : mes propres sorts reconnaissent le type (pretre : magie et maladie)
-    AURAS["HARMFUL|RAID_PLAYER_DISPELLABLE"] = nil
+    -- 1.32.1 : le filtre du jeu rend une liste vide = rien a dissiper pour moi. Un affaiblissement Magie que
+    -- personne ne retire n'est ni colore ni sonne (fausse alerte d'avant), mais il reste dans la rangee des autres
+    -- (le trou d'avant : il n'apparaissait nulle part)
+    AURAS["HARMFUL|RAID"] = nil
     local canDispel = Z.canDispel
     Z.canDispel = { Magic = true }
     Z:Refresh() Z.UpdateAurasNow(b)
+    assert(not b.dispel:IsShown(), "liste vide du jeu : aucune couleur de dissipation")
+    assert(shown() == 1 and b.debuffs[1].texture._tex == 1, "Magie non dissipable montree avec les autres : " .. shown())
+    -- le jeu refuse le filtre : mes propres sorts reconnaissent le type (pretre : magie et maladie)
+    local getAuras = C_UnitAuras.GetUnitAuras
+    C_UnitAuras.GetUnitAuras = function(unit, filter, ...)
+      if filter == Z.DISPEL_MINE then error("filtre refuse") end
+      return getAuras(unit, filter, ...)
+    end
+    Z:Refresh() Z.UpdateAurasNow(b)
+    C_UnitAuras.GetUnitAuras = getAuras
     assert(b.debuffs[1].texture._tex == 1 and b.debuffs[2].texture._tex == 2, "repli sur mes sorts")
     Z.canDispel = canDispel
     AURAS = {}
@@ -6772,6 +6789,60 @@ step("etape 25, lot 2 : repartition du chef (droits, reception, envoi, blocage, 
   rawset(_G, "SECRET_LEADER", nil)
   rawset(_G, "GetRaidRosterInfo", nil)
   Z.char.assignShared = nil
+  for key, value in pairs(kept) do Z.db[key] = value end
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("1.32.1 : voile de vie basse (quelques battements puis fixe, vie inconnue, releve, mode test)", function()
+  local kept = { lowHealth = Z.db.lowHealth, lowHealthAt = Z.db.lowHealthAt }
+  local ok, err = pcall(function()
+    Z.db.lowHealth = true Z:Refresh()
+    local b = Z.buttons[1]
+    local pulse = b.low.pulse
+    -- un changement de vie relance les battements
+    pulse:Stop()
+    FireEvent("UNIT_HEALTH", b.unit) RunUpdates()
+    assert(pulse:IsPlaying(), "le voile ne bat pas quand la vie change")
+    -- au bout de Z.LOW_BEATS battements, il s'arrete et reste fixe (plus de boucle sans fin)
+    for _ = 1, Z.LOW_BEATS - 1 do pulse:Run("OnLoop") end
+    assert(pulse:IsPlaying(), "arret trop tot")
+    pulse:Run("OnLoop")
+    assert(not pulse:IsPlaying(), "le voile clignote sans fin")
+    -- la vie change encore : il repart, compte remis a zero
+    FireEvent("UNIT_HEALTH", b.unit) RunUpdates()
+    assert(pulse:IsPlaying() and pulse.beats == 0, "battements non relances")
+    -- vie maximale lisible a 0 (joueur en chargement) : voile eteint, pas de rouge plein
+    b.low.fill:SetAlpha(1)
+    HEALTH_MAX = 0
+    FireEvent("UNIT_MAXHEALTH", b.unit) RunUpdates()
+    assert(b.low.fill:GetAlpha() == 0, "voile plein pour une vie inconnue")
+    -- vie maximale secrete (en combat) : aucune comparaison, aucune erreur
+    HEALTH_MAX = nil
+    SECRET = true COMBAT = true
+    FireEvent("UNIT_MAXHEALTH", b.unit) RunUpdates()
+    SECRET = false COMBAT = false
+    -- releve des cadres : vie max et voile de chaque case
+    Z.header:SetAttribute("child1", b)
+    local state = table.concat(Z:FrameState(), "\n")
+    Z.header:SetAttribute("child1", nil)
+    assert(state:find("vie basse : vie max=1000", 1, true), state)
+    -- mode test : meme regle, le voile bat a l'affichage
+    Z.db.lowHealthAt = 100 Z:Refresh()
+    for _, cell in ipairs(Z:PreviewCells(10)) do cell.low.pulse:Stop() end
+    Z:TogglePreview(10)
+    local low, beating = 0, 0
+    for index, cell in ipairs(Z:PreviewCells(10)) do
+      if index <= 10 and cell.low.fill:GetAlpha() == 1 then
+        low = low + 1
+        if cell.low.pulse:IsPlaying() then beating = beating + 1 end
+      end
+    end
+    Z:TogglePreview()
+    assert(low > 0 and beating == low, "mode test : " .. beating .. " voiles battent sur " .. low)
+  end)
+  HEALTH_MAX = nil
+  SECRET = false COMBAT = false
   for key, value in pairs(kept) do Z.db[key] = value end
   Z:Refresh()
   assert(ok, err)

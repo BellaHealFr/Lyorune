@@ -1898,7 +1898,7 @@ local function Chapters()
 				{ "check", "showIncoming", "Soins en route", desc = "La part de vie que les soins en cours vont rendre." },
 				{ "check", "showAbsorb", "Bouclier d'absorption" },
 				{ "seg", "absorbStyle", "Place du bouclier", nil, "Bande en bas : un trait fin sous la vie. À la suite de la vie : comme les cadres du jeu, le bouclier prolonge la vie, et un trait lumineux s'allume au bout quand il dépasse la vie manquante.", dep = { "showAbsorb", true } },
-				{ "check", "lowHealth", "Voile rouge clignotant quand la vie est basse" },
+				{ "check", "lowHealth", "Voile rouge quand la vie est basse", "Sous le seuil, la case se couvre d'un voile rouge. Il clignote quelques secondes quand la vie change, puis reste fixe : un joueur qui perd encore de la vie clignote encore, un joueur resté bas garde son voile sans clignoter. Le jeu le calcule lui-même : ça marche en combat." },
 				{ "step", "lowHealthAt", "Seuil de vie basse (%)", fine = true, dep = { "lowHealth", true } },
 				{ "check", "healthyFade", "Estomper les joueurs en bonne santé", "Au-dessus du seuil, la vie, la mana et le nom d'un joueur s'estompent : ceux qui ont besoin de soins ressortent. Ses icônes, la dissipation et la menace restent nettes. La case survolée reste nette. Le jeu le calcule lui-même : ça marche en combat.", desc = "Ceux qui ont besoin de soins ressortent." },
 				{ "step", "healthyFadeAt", "Seuil de bonne santé (%)", fine = true, dep = { "healthyFade", true } },

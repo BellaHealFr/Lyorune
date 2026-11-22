@@ -40,6 +40,16 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 23 bis | 1.30.0 | Animation du logo au choix ; règle des 5 secondes éteinte au départ, trait au-dessus de la barre de mana, pêche corrigée | Publiée (v1.30.0) |
 | 24 | 1.31.0 | Joueurs en bonne santé estompés, statistiques de mes clics | Publiée (v1.31.0) |
 | 25 | 1.32.0 | Répartition entre soigneurs, marquée sur les cases | Publiée (v1.32.0) |
+| 25 bis | 1.32.1 | Correction : affaiblissements manquants ou en double (filtres de dissipation), case qui clignote en rouge sans fin | Publiée (v1.32.1) |
+| 26 a | 1.33.0 | Buffs complets du prêtre, du paladin, du chaman et du druide ; ma liste de buffs, en JcE et en JcJ | À faire |
+| 26 b | 1.34.0 | Buffs en champ de bataille et en arène (match JcJ) | À faire |
+| 26 c | 1.35.0 | Qui buff qui, bénédictions par classe, synchronisation des paladins | À faire |
+| 27 a | 1.36.0 | Rang choisi sur chaque raccourci | À faire |
+| 27 b | 1.37.0 | Variantes d'un raccourci (ennemi, JcJ, rôle, hors combat), aucun soin sur un ennemi | À faire |
+| 27 c | 1.38.0 | Boucliers (reste et fin), mes recharges, Pénitence | À faire |
+| 28 | 1.39.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
+| 29 a | 1.40.0 | Éditeur de placement : cocher les éléments affichés, icônes qui prennent la place libre | À faire |
+| 29 b | 1.41.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -569,6 +579,57 @@ Idée : avant une grosse technique de boss, les cases s'éclairent ou affichent 
   donne une chronologie. À essayer en jeu avant d'en reparler : pendant un combat de boss,
   `/dump C_EncounterTimeline.IsFeatureAvailable()` puis `/dump C_EncounterTimeline.HasActiveEvents()`.
   Si les deux sont vrais, on en reparle ; sinon l'idée passe dans « Écarté ».
+
+## Étapes 25 bis à 29 : plan correctif (validé par l'auteur le 22 novembre 2026)
+Retour d'un joueur prêtre (1.31.0), JcJ délaissé, buffs manquants qui ne se jouent pas pareil en JcJ et en JcE.
+Analyse faite pour les quatre classes de soigneurs (prêtre, paladin, druide, chaman), en regardant d'abord HealKit
+et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, jamais leur code.
+- **Ordre** : les bugs d'abord, puis buffs, sorts, affaiblissements, éditeur et JcJ.
+- **Petites mises à jour (demande de l'auteur)** : une version par lot ou par paire de petits lots, publiée dès
+  qu'elle est codée et vérifiée hors jeu (tests, code du jeu, voie de repli sûre si une valeur est secrète).
+- Le JcJ n'attend pas l'étape 29 : chaque étape traite sa part. La règle `Z.Restricted()` (restriction « match
+  JcJ » du jeu : auras, recharges et messages des addons cachés tout le match) est posée en 26 b, puis reprise.
+
+## Étape 25 bis : correction des affaiblissements et du voile rouge (1.32.1)
+- [x] Filtres de dissipation : la rangée « à dissiper », le contour coloré, le son et le mode « Dissipables par
+  moi » lisent `HARMFUL|RAID` (ce que **je** peux dissiper) ; la rangée des autres lit `HARMFUL|!RAID`, sans
+  exclusion par type. Avant : `RAID_PLAYER_DISPELLABLE` (dissipable par quelqu'un du raid) et exclusion des types
+  que je sais dissiper, d'où un trou (un affaiblissement Magie que personne ne retire n'apparaissait nulle part) et
+  des doublons (une malédiction sonnait chez le prêtre à cause d'un druide).
+- [x] Voile de vie basse : chaque changement de vie relance quelques battements, puis le voile reste fixe (plus de
+  boucle sans fin) ; vie maximale à 0 lisible : voile éteint ; relevé `frameState` complété ; textes et guides.
+- [x] Tests, guides fr et en, Notes, README, publication. Fait le 22 novembre 2026 : tests (filtres des
+  conteneurs et de l'ancien affichage, liste vide du jeu, filtre refusé ; voile : battements arrêtés et relancés,
+  vie inconnue, vie secrète, relevé, mode test), option et aide, tutoriel et guide anglais. Notes, README et
+  description du dépôt inchangés (corrections seulement). Publiée le 22 novembre 2026 (1.32.1), vérifiée hors jeu.
+
+## Étape 26 : buffs (1.33.0 à 1.35.0)
+- [ ] 26 a (1.33.0) : buffs complets du prêtre (Robustesse, Esprit divin, Protection contre l'ombre et leurs
+  prières, Feu intérieur sur soi seulement), du paladin, du chaman et du druide, toutes les absences d'un joueur ;
+  ma liste de buffs, une pour le JcE et une pour le JcJ. Recherche des numéros dans le jeu avant le codage.
+- [ ] 26 b (1.34.0) : champ de bataille et arène : photo des buffs avant le match, mémoire de mes propres sorts,
+  règle `Z.Restricted()`.
+- [ ] 26 c (1.35.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
+  1.32.0), synchronisation des paladins, guide et visite.
+
+## Étape 27 : sorts (1.36.0 à 1.38.0)
+- [ ] 27 a (1.36.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
+  partage, macros des barres, statistiques).
+- [ ] 27 b (1.37.0) : variantes d'un raccourci (sur un ennemi, en JcJ, selon le rôle par le groupe « Tanks », hors
+  combat) ; garde « aucun soin sur un ennemi ».
+- [ ] 27 c (1.38.0) : boucliers (ce qui reste à absorber, même en combat, et leur fin) ; rangée « Mes recharges » ;
+  Pénitence (trait de canalisation si le jeu ne la prédit pas).
+
+## Étape 28 : affaiblissements (1.39.0)
+- [ ] Secondes restantes, Âme affaiblie et Longanimité avec leurs secondes, mode « Utiles » ; icône du type de
+  dissipation ; liste suivie qui dit si elle marche en combat.
+
+## Étape 29 : éditeur de placement et JcJ (1.40.0 et 1.41.0)
+- [ ] 29 a (1.40.0) : une case à cocher devant chaque élément de l'éditeur, liée au réglage des options (nom et
+  icône centrale deviennent des réglages) ; un élément éteint ne compte plus comme obstacle ; plafond à 300 % et
+  bouton « Remplir la place ».
+- [ ] 29 b (1.41.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
+  « Arène » seulement si Forever a des arènes.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.

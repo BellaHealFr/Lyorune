@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.32.1] - 2026-11-22
+
+### Fixed
+
+- Debuffs: those no player can remove (often Magic ones from a boss) never showed for a healer who dispels that type; and a debuff another raid member could remove coloured your frame and played the sound as if you could dispel it. The "to dispel" row, the coloured frame and the sound now only show what you can dispel yourself; every other debuff goes to the next row, with no gap and no duplicate. For all four healing classes.
+- The red low health overlay no longer flashes forever: it flashes for a few seconds when health changes, then stays still. It no longer covers the frame of a player the game does not know yet (maximum health 0, while loading a battleground).
+
 ## [1.32.0] - 2026-11-21
 
 ### Added
@@ -598,6 +605,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.32.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.31.0...v1.32.0
 [1.31.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.29.0...v1.30.0

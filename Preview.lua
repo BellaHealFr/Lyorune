@@ -102,7 +102,9 @@ local function Fill(cell, index, sample)
 	if sample and db.showMarker then SetRaidTargetIconTexture(cell.marker, 1) end
 	cell.marker:SetShown(sample and db.showMarker and true or false)
 	cell.threat:SetShown(db.showThreat and (sample or slot == 0) and not dead)
-	cell.low.fill:SetAlpha((db.lowHealth and not dead and health <= db.lowHealthAt) and 1 or 0)
+	local low = db.lowHealth and not dead and health <= db.lowHealthAt
+	cell.low.fill:SetAlpha(low and 1 or 0)
+	if low then Z.PulseLow(cell.low) end -- quelques battements, puis fixe, comme sur les vraies cases
 	cell.selected:SetAlpha((index == 2 and not sample) and 1 or 0)
 	-- Répartition entre soigneurs : mes groupes (en raid) portent le repère, un joueur choisi est montré par le
 	-- premier tank ; la case témoin le porte dès qu'un choix existe. Les autres s'estompent (réglage assignFade).

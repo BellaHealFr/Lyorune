@@ -29,6 +29,12 @@ Z.dispelSpells = {
 	MAGE    = { Curse = { 475 } },                                      -- Délivrance de la malédiction mineure
 }
 
+-- Filtres du jeu : RAID = les affaiblissements que JE peux dissiper (le jeu le sait pour toute classe, même un sort
+-- appris en montant de niveau) ; !RAID = tous les autres. Les deux se complètent : ni trou, ni doublon.
+-- (RAID_PLAYER_DISPELLABLE voudrait dire « dissipable par quelqu'un du raid » : pas ce qu'on cherche.)
+Z.DISPEL_MINE = "HARMFUL|RAID"
+Z.DISPEL_OTHERS = "HARMFUL|!RAID"
+
 -- Mes sorts à suivre sur les cadres (soins sur la durée, boucliers, protections)
 Z.trackedSpells = {
 	PRIEST  = { 139, 17, 401859, 6346, 552, 10060 },   -- Rénovation, Mot de pouvoir : Bouclier, Prière de guérison, Gardien de peur, Abolir maladie, Infusion de puissance

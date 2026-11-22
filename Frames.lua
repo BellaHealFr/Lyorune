@@ -168,14 +168,22 @@ local function UpdateState(b)
 	end
 end
 
+-- Voile de vie basse : quelques battements (environ 3 secondes), relancés à chaque changement de vie. Rien n'est
+-- comparé : au-dessus du seuil, le voile est invisible et ses battements ne se voient pas.
+Z.LOW_BEATS = 6
+function Z.PulseLow(low)
+	low.pulse.beats = 0
+	if not low.pulse:IsPlaying() then low.pulse:Play() end
+end
+
 local function UpdateHealth(b)
 	local unit = b.unit
 	local dead = UnitIsDeadOrGhost(unit)
 	if issecret(dead) then dead = false end
 	if dead ~= b.dead then UpdateState(b) end
 
-	local hp = b.hp
-	hp:SetMinMaxValues(0, UnitHealthMax(unit))
+	local hp, max = b.hp, UnitHealthMax(unit)
+	hp:SetMinMaxValues(0, max)
 	hp:SetValue(UnitHealth(unit), smoothing)
 
 	if not b.status then
@@ -183,7 +191,13 @@ local function UpdateHealth(b)
 			hp:SetStatusBarColor(UnitHealthPercent(unit, true, healthCurve):GetRGB())
 		end
 		if db.lowHealth then
-			b.low.fill:SetAlpha(UnitHealthPercent(unit, true, lowHealthCurve).a) -- visible sous le seuil seulement
+			-- vie maximale lisible à 0 (joueur que le jeu ne connaît pas encore, en chargement) : pas de voile plein
+			if not issecret(max) and (tonumber(max) or 0) <= 0 then
+				b.low.fill:SetAlpha(0)
+			else
+				b.low.fill:SetAlpha(UnitHealthPercent(unit, true, lowHealthCurve).a) -- visible sous le seuil seulement
+				Z.PulseLow(b.low)
+			end
 		end
 		local fade = db.healthyFade and not b.hovered
 		if db.text == "DEFICIT" then
@@ -833,7 +847,8 @@ function Z.BuildVisuals(b)
 	b.hover:SetAllPoints()
 	b.hover:Hide()
 
-	-- Vie basse : voile rouge qui pulse (son opacité est calculée par le jeu à partir de la vie)
+	-- Vie basse : voile rouge (son opacité est calculée par le jeu à partir de la vie). Il bat quelques fois quand
+	-- la vie change (Z.PulseLow), puis reste fixe : plus de clignotement sans fin sur un joueur resté bas.
 	local low = CreateFrame("Frame", nil, over)
 	low:SetAllPoints()
 	low.fill = UI.Tex(low, "ARTWORK", 1, 0.05, 0.05, 0.45)
@@ -845,7 +860,11 @@ function Z.BuildVisuals(b)
 	fade:SetFromAlpha(1)
 	fade:SetToAlpha(0.2)
 	fade:SetDuration(0.45)
-	low:SetScript("OnShow", function(self) self.pulse:Play() end)
+	low.pulse:SetScript("OnLoop", function(self)
+		self.beats = (self.beats or 0) + 1
+		if self.beats >= Z.LOW_BEATS then self:Stop() end -- Stop remet le voile à pleine opacité
+	end)
+	low:SetScript("OnShow", function(self) Z.PulseLow(self) end)
 	low:Hide()
 	b.low = low
 
@@ -1532,6 +1551,15 @@ function Z:FrameState()
 			lines[#lines + 1] = ("  case %d : %s | unit=%s habillee=%s"):format(index, Describe(b),
 				tostring(b:GetAttribute("unit")), tostring(b.hp ~= nil))
 			if b.hp then lines[#lines + 1] = "    barre de vie : " .. Describe(b.hp) end
+			-- voile de vie basse (C12) : dit si la vie était inconnue (maximum 0) ou vraiment basse
+			if b.low then
+				local unit = b:GetAttribute("unit")
+				local max = unit and UnitHealthMax(unit)
+				local veil = b.low.fill:GetAlpha()
+				lines[#lines + 1] = ("    vie basse : vie max=%s voile=%s bat=%s"):format(
+					issecret(max) and "secret" or tostring(max), issecret(veil) and "secret" or tostring(veil),
+					tostring(b.low.pulse:IsPlaying()))
+			end
 			index = index + 1
 		end
 		if index == 1 then lines[#lines + 1] = "  aucune case creee par le jeu" end

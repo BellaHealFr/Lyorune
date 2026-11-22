@@ -725,14 +725,16 @@ local function UpdateWithReading(b)
 	for i = (bars and 1 or shown + 1), #b.hots do b.hots[i]:Hide() end
 	for i = (bars and shown + 1 or 1), #b.hotBars do b.hotBars[i]:Hide() end
 
-	-- 2. Affaiblissements que je peux dissiper (réglage « dispelCount ») : d'abord le filtre du jeu, sinon mes
-	-- propres sorts
+	-- 2. Affaiblissements que je peux dissiper moi-même (réglage « dispelCount ») : le filtre RAID du jeu ; mes
+	-- propres sorts seulement si le jeu refuse le filtre (une liste vide veut dire « rien à dissiper » : un
+	-- affaiblissement Magie que personne ne retire ne doit pas sonner)
 	local dispelMax = Z.DispelCount()
 	local dispellable = {}
-	for _, aura in ipairs(not enemy and Auras(unit, "HARMFUL|RAID_PLAYER_DISPELLABLE", dispelMax) or {}) do
+	local mine = not enemy and Auras(unit, Z.DISPEL_MINE, dispelMax)
+	for _, aura in ipairs(mine or {}) do
 		if #dispellable < dispelMax then dispellable[#dispellable + 1] = aura end
 	end
-	if #dispellable == 0 and harmful then
+	if mine == nil and not enemy and harmful then
 		for i = 1, #harmful do
 			local kind = harmful[i].dispelName
 			if #dispellable < dispelMax and kind and not issecret(kind) and Z.canDispel[kind] then
@@ -846,7 +848,7 @@ local function UpdateWithBoxes(b)
 		Learn(Auras(unit, "HELPFUL|PLAYER", 16))
 		local harmful = Auras(unit, "HARMFUL", 8)
 		Learn(harmful)
-		local dispellable = db.showDispel and Auras(unit, "HARMFUL|RAID_PLAYER_DISPELLABLE", 1)
+		local dispellable = db.showDispel and Auras(unit, Z.DISPEL_MINE, 1)
 		local hasDispel = dispellable and dispellable[1] ~= nil or false
 		if hasDispel and not b.dispelHeard then DispelSound() end
 		b.dispelHeard = hasDispel
