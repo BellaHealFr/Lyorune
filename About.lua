@@ -17,5 +17,6 @@ Z.about = {
 	curseforge = 0,
 	discord = 10,
 	names = {
+		"Elesyio",
 	},
 }

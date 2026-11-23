@@ -2,3 +2,4 @@
 # Un nom par ligne, tel qu'il doit s'afficher. Seulement des joueurs qui ont donné leur accord.
 # Les lignes vides et celles qui commencent par # sont ignorées.
 # outils/publier.py recopie cette liste dans About.lua à chaque publication.
+Elesyio
