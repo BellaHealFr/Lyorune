@@ -7,6 +7,7 @@
 --      la case du mort, chez tous ceux qui ont Lyorune : deux soigneurs ne relèvent plus le même joueur.
 --   4. Répartition entre soigneurs : le chef ou un assistant l'envoie avant le combat (Assign.lua).
 --   5. Qui buffe qui : les paladins s'annoncent leurs bénédictions, le chef répartit les buffs (BuffAssign.lua).
+--   6. Recharges du groupe : chacun annonce ses gros sorts, lancés puis prêts (GroupCooldowns.lua).
 -- Un interrupteur général coupe tout ; chaque fonction a aussi sa case (onglet Profils). Rien n'est appliqué
 -- sans accord. Pendant un combat de boss, le jeu bloque ces messages : la synchronisation attend la fin.
 --
@@ -15,6 +16,7 @@
 --   R:Nom-Royaume     je relève ce joueur      R:-  j'arrête          R:+  sort réussi, il doit accepter
 --   A:...             une part de la répartition entre soigneurs (format dans Assign.lua)
 --   P:... et B:...    bénédictions annoncées, répartition des buffs (formats dans BuffAssign.lua)
+--   K:...             recharges des gros sorts (format dans GroupCooldowns.lua)
 
 local _, Z = ...
 local issecret = Z.IsSecret
@@ -337,6 +339,7 @@ local function OnVersion(version, sender)
 		if not known and Z.RefreshSyncWho then Z.RefreshSyncWho() end -- « Entre joueurs », si la page est ouverte
 		if not known and Z.AssignNewMember then Z.AssignNewMember(sender) end -- il reçoit la répartition en cours
 		if not known and Z.BuffAssignNewMember then Z.BuffAssignNewMember(sender) end -- mes bénédictions, la répartition des buffs
+		if not known and Z.CooldownNewMember then Z.CooldownNewMember() end -- mes recharges
 		if not known and GetTime() - lastReply >= REPLY_DELAY then
 			lastReply = GetTime()
 			SendGroup("V:" .. Z.version)
@@ -417,6 +420,9 @@ local function OnMessage(prefix, text, _, sender)
 
 	local buffs = text:match("^B:(.+)$")
 	if buffs then return Z.BuffAssignReceive(buffs, sender) end -- BuffAssign.lua
+
+	local cooldowns = text:match("^K:(.+)$")
+	if cooldowns then return Z.GroupCooldownReceive(cooldowns, sender) end -- GroupCooldowns.lua
 
 	local id, index, total, chunk = text:match("^C:(%d+):(%d+):(%d+):(.*)$")
 	if id and Z.db.acceptConfigs then OnConfig(id, index, total, chunk, sender, now) end

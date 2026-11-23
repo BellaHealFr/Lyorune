@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.42.1] - 2026-11-23
+
+### Ajouté
+
+- Recharges du groupe : sous vos recharges, une ligne par gros sort de vos alliés qui ont Lyorune (Renaissance, Innervation, Infusion de puissance, Imposition des mains, Bénédictions de protection et de sacrifice, Gardien de peur, Totem de vague de mana, Tranquillité...) : le nom de chacun à la couleur de sa classe, net quand le sort est prêt, avec ses secondes sinon. Pendant un combat de boss ou un match JcJ, le jeu bloque les messages : la ligne garde le dernier état connu et se met à jour à la fin (chapitre Mes soins, éteint au départ).
+- Partager mes recharges : vos gros sorts sont annoncés au groupe quand vous les lancez et quand ils sont prêts, sans aucun message régulier (chapitre Profils et partage, allumé au départ).
+
 ## [1.42.0] - 2026-11-23
 
 ### Ajouté
@@ -813,6 +820,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.42.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.0...v1.42.1
 [1.42.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.1...v1.42.0
 [1.41.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.0...v1.41.1
 [1.41.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.1...v1.41.0

@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.42.1", date = "2026-11-23",
+		added = {
+			"Recharges du groupe : sous vos recharges, une ligne par gros sort de vos alliés qui ont Lyorune (Renaissance, Innervation, Infusion de puissance, Imposition des mains, Bénédictions de protection et de sacrifice, Gardien de peur, Totem de vague de mana, Tranquillité...) : le nom de chacun à la couleur de sa classe, net quand le sort est prêt, avec ses secondes sinon. Pendant un combat de boss ou un match JcJ, le jeu bloque les messages : la ligne garde le dernier état connu et se met à jour à la fin (chapitre Mes soins, éteint au départ).",
+			"Partager mes recharges : vos gros sorts sont annoncés au groupe quand vous les lancez et quand ils sont prêts, sans aucun message régulier (chapitre Profils et partage, allumé au départ).",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.42.0", date = "2026-11-23",
 		added = {
 			"Mes recharges : une rangée d'icônes sous les cadres (sous les buffs manquants s'ils sont là) avec vos sorts de raccourcis dont la recharge dépasse la recharge globale et vos gros sorts (Pénitence, Innervation, Imposition des mains, Rapidité de la nature...). Le jeu y dessine le balayage et les secondes, même en combat ; grisée en recharge, nette quand le sort est prêt. Tous vos sorts ou seulement ceux en recharge, et une liste des sorts à ne pas montrer (chapitre Mes soins, éteint au départ).",

@@ -1757,6 +1757,7 @@ function Z:Refresh()
 	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
 	if Z.RefreshCastIndicator then Z:RefreshCastIndicator() end
 	if Z.RefreshCooldowns then Z:RefreshCooldowns() end
+	if Z.RefreshGroupCooldowns then Z:RefreshGroupCooldowns() end
 	if Z.RefreshManaEdge then Z:RefreshManaEdge() end
 	if Z.RefreshFiveSecondRule then Z:RefreshFiveSecondRule() end
 end

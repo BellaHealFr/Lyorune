@@ -8910,6 +8910,180 @@ step("1.42.0 : mes recharges sous les cadres, trait de canalisation sur la case 
   assert(ok, err)
 end)
 
+step("1.42.1 : recharges du groupe, partage de mes recharges, messages bloques", function()
+  local old = { name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, class = Z.class, after = C_Timer.After,
+    lockdown = C_ChatInfo.InChatMessagingLockdown, grouped = GROUPED, raid = RAID, now = NOW,
+    group = Z.db.groupCooldowns, share = Z.db.cooldownShare, sync = Z.db.syncEnabled, ignored = Z.db.cooldownIgnored,
+    durations = Z.db.cooldownDurations, panel = Z.db.cooldownPanel }
+  local extra = { [29166] = "Innervation", [20484] = "Renaissance", [740] = "Tranquillité", [10060] = "Infusion de puissance",
+    [6346] = "Gardien de peur", [633] = "Imposition des mains" }
+  local BASE = { [29166] = 360000, [20484] = 1800000, [740] = 600000 }
+  local COOL = {}
+  local LOCKED = false
+  local ok, err = pcall(function()
+    assert(Z.defaults.groupCooldowns == false and Z.defaults.cooldownShare == true, "departs")
+    assert(Z.notInProfile.groupCooldowns and Z.notInProfile.cooldownShare, "hors profil")
+    for class, list in pairs(Z.groupCooldowns) do
+      for _, id in ipairs(list) do
+        local found = false
+        for _, big in ipairs(Z.cooldownSpells[class] or {}) do if big == id then found = true end end
+        assert(found, "sort du groupe absent de Z.cooldownSpells : " .. id)
+      end
+    end
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return id == 29166 or id == 20484 or old.known(id) end
+    rawset(_G, "GetSpellBaseCooldown", function(id) return BASE[id] or 0 end)
+    C_Spell.GetSpellCooldown = function(id)
+      local c = COOL[id]
+      if c == "secret" then return { isActive = MakeSecret(), isOnGCD = MakeSecret(), startTime = MakeSecret(), duration = MakeSecret() } end
+      if c then return { isActive = true, isOnGCD = false, startTime = NOW - 10, duration = c } end
+      return { isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+    end
+    C_ChatInfo.InChatMessagingLockdown = function() return LOCKED end
+    local queued = {}
+    C_Timer.After = function(s, f) if s <= 1 then f() else queued[#queued + 1] = f end end
+    local function Msg(text, sender) FireEvent("CHAT_MSG_ADDON", "Lyorune", text, "PARTY", sender) end
+    local function Last() local m = ADDON_SENT[#ADDON_SENT] return m and m.text end
+    Z.class = "DRUID"
+    Z.db.syncEnabled, Z.db.cooldownShare, Z.db.groupCooldowns, Z.db.cooldownIgnored, Z.db.cooldownDurations = true, true, false, {}, nil
+    Z.db.cooldownPanel = false
+    GROUPED, RAID = true, false
+    NOW = NOW + 100
+
+    -- 1. partage : mon etat complet part (sorts connus seulement, Tranquillite inconnue)
+    local first = #ADDON_SENT + 1
+    Z:Refresh()
+    NOW = NOW + 20
+    Z.GroupCooldownSendFull()
+    assert(Last() == "K:+20484=0/1800,29166=0/360", "etat complet : " .. tostring(Last()))
+    -- au plus une fois toutes les 10 secondes : reporte, puis part
+    local n = #ADDON_SENT
+    Z.GroupCooldownSendFull() Z.GroupCooldownSendFull()
+    assert(#ADDON_SENT == n and #queued == 1, "etat complet repete sans attendre")
+    queued[1]() queued = {}
+    assert(#ADDON_SENT == n + 1, "etat reporte jamais parti")
+
+    -- 2. un sort lance : « lance » avec sa duree, puis « pret » quand la recharge finit (pas juste apres le sort)
+    COOL[29166] = 300
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 29166)
+    assert(Last() == "K:29166=360/360", "sort lance : " .. tostring(Last()))
+    FireEvent("SPELL_UPDATE_COOLDOWN")
+    assert(Z.db.cooldownDurations[29166] == 300, "duree reelle pas apprise")
+    COOL[29166] = nil
+    n = #ADDON_SENT
+    FireEvent("SPELL_UPDATE_COOLDOWN")
+    assert(#ADDON_SENT == n, "pret annonce juste apres le sort")
+    NOW = NOW + 5
+    FireEvent("SPELL_UPDATE_COOLDOWN")
+    assert(Last() == "K:29166=0/300", "pret : " .. tostring(Last()))
+    -- en combat, recharge cachee : le reste se deduit de mon sort
+    COOL[20484] = "secret"
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 20484)
+    NOW = NOW + 30
+    assert(Z.GroupCooldownEntry(20484) == "20484=1770/1800", "reste deduit : " .. tostring(Z.GroupCooldownEntry(20484)))
+    COOL[20484] = nil
+
+    -- 3. messages bloques : rien ne part, l'etat complet part a la fin
+    LOCKED = true
+    n = #ADDON_SENT
+    COOL[29166] = 300
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 29166)
+    assert(#ADDON_SENT == n, "message envoye pendant le blocage")
+    LOCKED = false
+    NOW = NOW + 20
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED")
+    assert(Last() and Last():match("^K:%+20484=%d+/1800,29166=%d+/300$"), "etat apres le blocage : " .. tostring(Last()))
+    COOL[29166] = nil
+
+    -- 4. le panneau : eteint, rien n'est garde ; allume, il redemande les recharges
+    Msg("K:+29166=0/360", "Joueur-party2")
+    local panel, lines, players = Z:GroupCooldownPanel()
+    assert(not next(players), "garde sans le panneau")
+    n = #ADDON_SENT
+    Z.db.groupCooldowns = true Z:Refresh()
+    assert(ADDON_SENT[n + 1] and ADDON_SENT[n + 1].text == "K:?", "pas de demande en allumant")
+    -- une demande d'un autre : mon etat part
+    NOW = NOW + 20 n = #ADDON_SENT
+    Msg("K:?", "Joueur-party2")
+    assert(#ADDON_SENT == n + 1 and Last():match("^K:%+"), "demande sans reponse")
+
+    -- 5. reception : une ligne par sort, pret net, en recharge pale avec ses secondes
+    Msg("K:+29166=0/360,20484=600/1800", "Joueur-party2")
+    Msg("K:29166=120/360", "Joueur-party3")
+    panel, lines, players = Z:GroupCooldownPanel()
+    assert(panel and panel:IsShown(), "panneau cache")
+    local shown = 0
+    for _, line in ipairs(lines) do if line:IsShown() then shown = shown + 1 end end
+    assert(shown == 2, "lignes : " .. shown)
+    -- ordre des classes puis de Data.lua : Renaissance puis Innervation (druide), joueurs par nom
+    local inner = lines[2]
+    assert(inner.entries[1].who == "Joueur" and inner.entries[2].who == "Joueur", "noms")
+    local readyCount, coolingCount = 0, 0
+    for _, line in ipairs(lines) do
+      for _, e in ipairs(line.entries) do
+        if e:IsShown() then
+          if e.clock:IsShown() then coolingCount = coolingCount + 1 else readyCount = readyCount + 1 end
+        end
+      end
+    end
+    assert(readyCount == 1 and coolingCount == 2, "pret " .. readyCount .. ", en recharge " .. coolingCount)
+    -- etat complet : remplace ; mise a jour : complete
+    Msg("K:+29166=0/360", "Joueur-party2")
+    assert(players[Z.CommKey("Joueur-party2")].spells[20484] == nil, "etat complet sans remplacer")
+    Msg("K:20484=0/1800", "Joueur-party2")
+    assert(players[Z.CommKey("Joueur-party2")].spells[20484], "mise a jour perdue")
+    -- messages abimes, sort hors liste, etranger, moi-meme : rien
+    Msg("K:+99999=0/10", "Joueur-party2") Msg("K:+29166=900/360", "Joueur-party2") Msg("K:+abc", "Joueur-party2")
+    Msg("K:+29166=0/360", "Inconnu") Msg("K:+29166=0/360", UnitName("player"))
+    assert(players[Z.CommKey("Joueur-party2")].spells[20484], "message abime pris")
+    assert(not players[Z.CommKey("Inconnu")] and not players[Z.CommKey(UnitName("player"))], "etranger ou moi pris")
+    -- sort ecarte par son nom : sa ligne part
+    Z.db.cooldownIgnored = { ["Renaissance"] = true }
+    Z.DrawGroupCooldowns()
+    shown = 0
+    for _, line in ipairs(lines) do if line:IsShown() then shown = shown + 1 end end
+    assert(shown == 1, "sort ecarte encore montre")
+    Z.db.cooldownIgnored = {}
+    -- blocage : le titre le dit
+    LOCKED = true
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED")
+    local title = select(4, Z:GroupCooldownPanel()):GetText()
+    assert(title and title:find(Z.L["(avant le boss)"], 1, true), "titre pendant le blocage : " .. tostring(title))
+    LOCKED = false
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED")
+    -- « K:- » : le joueur part du panneau ; groupe quitte : tout s'efface
+    Msg("K:-", "Joueur-party3")
+    assert(not players[Z.CommKey("Joueur-party3")], "K:- ignore")
+    GROUPED = false
+    FireEvent("GROUP_ROSTER_UPDATE")
+    assert(not next(players) and not panel:IsShown(), "groupe quitte : panneau reste")
+    -- groupe rejoint : mon etat part
+    GROUPED = true NOW = NOW + 20 n = #ADDON_SENT
+    FireEvent("GROUP_ROSTER_UPDATE")
+    local joined = false
+    for i = n + 1, #ADDON_SENT do if ADDON_SENT[i].text:match("^K:%+") then joined = true end end
+    assert(joined, "groupe rejoint sans annonce")
+
+    -- 6. partage coupe : « K:- » part une fois, plus rien ensuite
+    n = #ADDON_SENT
+    Z.db.cooldownShare = false Z:Refresh()
+    assert(Last() == "K:-", "arret du partage pas annonce")
+    n = #ADDON_SENT
+    COOL[29166] = 300
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 29166)
+    assert(#ADDON_SENT == n, "partage coupe : message parti")
+  end)
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, Z.class, C_Timer.After = old.name, old.known, old.class, old.after
+  C_ChatInfo.InChatMessagingLockdown, GROUPED, RAID, NOW = old.lockdown, old.grouped, old.raid, old.now
+  Z.db.groupCooldowns, Z.db.cooldownShare, Z.db.syncEnabled, Z.db.cooldownIgnored = old.group, old.share, old.sync, old.ignored
+  Z.db.cooldownDurations, Z.db.cooldownPanel = old.durations, old.panel
+  C_Spell.GetSpellCooldown = nil
+  rawset(_G, "GetSpellBaseCooldown", nil)
+  FireEvent("GROUP_ROSTER_UPDATE")
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

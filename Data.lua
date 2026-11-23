@@ -17,6 +17,7 @@
 --   9. Z.lockouts.MACLASSE : les affaiblissements qui l'empêchent de relancer un de ses sorts, s'il en a
 --  10. Z.groupHeals.MACLASSE : ses soins sans cible (de zone, sur soi, totems), pour « Sorts et raccourcis »
 --  11. Z.cooldownSpells.MACLASSE : ses gros sorts à recharge, montrés dans « Mes recharges » même sans raccourci
+--  12. Z.groupCooldowns.MACLASSE : ceux que ses alliés voient dans « Recharges du groupe » (s'il a Lyorune)
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -152,6 +153,16 @@ Z.cooldownSpells = {
 	DRUID   = { 18562, 408120, 29166, 17116, 20484, 740 },   -- Prompte guérison, Croissance sauvage, Innervation, Rapidité de la nature, Renaissance, Tranquillité
 	PALADIN = { 20473, 633, 1022, 6940, 1044, 20216, 642, 19752 }, -- Choc sacré, Imposition des mains, Bénédictions de protection, de sacrifice, de liberté, Faveur divine, Bouclier divin, Intervention divine
 	SHAMAN  = { 408521, 16188, 16190 },                      -- Remous, Rapidité de la nature, Totem de vague de mana
+}
+
+-- Recharges du groupe : les sorts qui comptent pour les autres (résurrection en combat, mana, protection posée
+-- sur un allié, gros soin de groupe). Chacun annonce les siens à ses alliés qui ont Lyorune ; un numéro absent
+-- de cette liste n'est jamais accepté d'un autre joueur. Tous sont aussi dans Z.cooldownSpells.
+Z.groupCooldowns = {
+	PRIEST  = { 10060, 6346 },               -- Infusion de puissance, Gardien de peur
+	DRUID   = { 20484, 29166, 740 },         -- Renaissance, Innervation, Tranquillité
+	PALADIN = { 633, 1022, 6940, 19752 },    -- Imposition des mains, Bénédictions de protection et de sacrifice, Intervention divine
+	SHAMAN  = { 16190 },                     -- Totem de vague de mana
 }
 
 -- Sorts de résurrection (toutes classes), pour l'annonce « je ressuscite untel »

@@ -142,7 +142,7 @@ local steps = {
 				.. "\n" .. Z.L["Tous vos soins et buffs y sont, même sans cible (Feu intérieur, totems). Un sort manque ? /lyorune sorts dit pourquoi."]
 				.. "\n" .. Z.L["Un rang plus bas pour garder de la mana ? « Choisir le rang des sorts », même chapitre."]
 				.. "\n" .. Z.L["Un autre sort sur un ennemi, en JcJ, sur un tank ou hors combat ? Le « + » au bout d'une ligne."]
-				.. "\n" .. Z.L["Vos sorts à recharge sous les cadres, même en combat ? « Mes recharges », chapitre Mes soins."]
+				.. "\n" .. Z.L["Vos sorts à recharge sous les cadres, même en combat, et ceux de vos alliés ? « Mes recharges » et « Recharges du groupe », chapitre Mes soins."]
 		end,
 		target = Cell,
 		around = Block,

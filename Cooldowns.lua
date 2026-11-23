@@ -184,9 +184,15 @@ end
 ----------------------------------------------------------------------------------------------------
 -- La rangée
 ----------------------------------------------------------------------------------------------------
+local PlaceRow -- plus bas
+
 -- Sous les cadres, ou collée au bandeau des buffs manquants quand il est du même côté
 function Z.PlaceCooldowns()
-	if not (row and row:IsShown()) then return end
+	if row and row:IsShown() then PlaceRow() end
+	if Z.PlaceGroupCooldowns then Z.PlaceGroupCooldowns() end -- les recharges du groupe suivent (GroupCooldowns.lua)
+end
+
+function PlaceRow()
 	Z.PlaceUnderCells(row)
 	local block = Z.BuffBlock and Z:BuffBlock()
 	if block and block:IsShown() and block.where == row.where then
@@ -214,6 +220,7 @@ function Layout()
 	end
 	if not On() or #shown == 0 then
 		row:Hide()
+		Z.PlaceCooldowns() -- les recharges du groupe prennent sa place
 		return
 	end
 	row:SetScale(Z.db.scale / 100)
@@ -307,6 +314,7 @@ function Z:RefreshCooldowns()
 	if not On() then
 		if events then events:UnregisterAllEvents() end
 		if row then row:Hide() end
+		Z.PlaceCooldowns()
 		spells = {}
 		return
 	end

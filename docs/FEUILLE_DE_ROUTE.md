@@ -54,7 +54,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 29 a | 1.41.0 | Éditeur de placement : afficher ou masquer chaque élément d'une case à cocher, « Aussi sur la case » (avancée en priorité par l'auteur, 22 novembre 2026), avec la correction C14 | Publiée (v1.41.0) |
 | 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | Fait |
 | 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | Fait |
-| 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | À faire |
+| 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | Publiée (v1.42.1) |
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
@@ -893,7 +893,26 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   Tests : étape 1.42.0. **À essayer en jeu** : balayage et grisé en combat (Pénitence, Prompte guérison), fin de
   recharge (icône nette), rangée sous le bandeau des buffs, trait de Pénitence sur la case (et la bande des soins
   en route : si le jeu la montre aussi, le trait reste utile pour la fin de la canalisation).
-- [ ] 27 d bis (1.42.1) : recharges des autres joueurs du groupe.
+- [x] 27 d bis (1.42.1) : recharges des autres joueurs du groupe.
+  Fait (23 novembre 2026), d'après le plan décidé ci-dessous (points 1, 3, 4, 5). Nouveau fichier
+  `GroupCooldowns.lua` ; réglages `groupCooldowns` (« Recharges du groupe », éteint, chapitre Mes soins, partie
+  Recharges et canalisation, grisé sans la synchronisation) et `cooldownShare` (« Partager mes recharges »,
+  allumé, chapitre Profils et partage) ; `cooldownIgnored` vaut aussi pour le groupe. Liste `Z.groupCooldowns`
+  (Data.lua, tous aussi dans `Z.cooldownSpells`) : prêtre Infusion de puissance, Gardien de peur ; druide
+  Renaissance, Innervation, Tranquillité ; paladin Imposition des mains, Bénédictions de protection et de
+  sacrifice, Intervention divine ; chaman Totem de vague de mana. Messages `K:` (Comm.lua) : `K:+id=reste/durée,...`
+  état complet (rejoindre un groupe, nouveau venu qui a Lyorune, `K:?` après un /reload ou en allumant le
+  panneau, fin d'un blocage, fin du combat si un envoi a raté), `K:id=durée/durée` sort lancé
+  (`UNIT_SPELLCAST_SUCCEEDED` sur moi), `K:id=0/durée` prêt (`SPELL_UPDATE_COOLDOWN`, `Z.SpellCooling` faux, pas
+  dans les 2 s après le sort), `K:-` partage coupé. État complet au plus une fois par 10 s. Durée réelle apprise
+  hors combat (`Z.db.cooldownDurations`), sinon `GetSpellBaseCooldown` ; en combat, le reste se déduit de mon
+  sort. Reçu : seulement d'un membre du groupe, numéros de la liste, reste au plus la durée, 2 h au plus.
+  Panneau `LyoruneGroupCooldowns` collé sous « Mes recharges » (sinon sous le bandeau des buffs, sinon sous les
+  cadres, `Z.PlaceGroupCooldowns`, appelé par `Z.PlaceCooldowns`) : titre, une ligne par sort, nom de chacun à la
+  couleur de sa classe, net si prêt, pâle avec les secondes du jeu sinon (cadre de recharge sans balayage, fin
+  par `OnCooldownDone` : aucune boucle) ; titre « (avant le boss) » ou « (avant le match) » pendant le blocage.
+  Tests : étape 1.42.1. **À essayer en jeu** (deux joueurs avec Lyorune) : état reçu en rejoignant le groupe,
+  sort lancé et prêt, /reload, combat de boss (titre, mise à jour à la fin), secondes du jeu sur les noms.
   **Demande de l'auteur (23 novembre 2026)** : suivre ses propres temps de recharge et ceux des joueurs groupés,
   activable, propre, mieux que les autres addons. Recherche faite le 23 novembre 2026 dans tous les addons du jeu
   et ceux téléchargés pour étude (`Desktop\Adone heal\Forever`), et dans le code du jeu (branche `forever`).

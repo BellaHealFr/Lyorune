@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.42.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.42.1"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -114,7 +114,8 @@ Z.defaults = {
 	castIndicator = "OFF",     -- temps de recharge global et incantation (Cast.lua) : aucun, barre sous les cadres, anneau au curseur
 	cooldownPanel = false,     -- « Mes recharges » : rangée d'icônes de mes sorts à recharge sous les cadres, même en combat (Cooldowns.lua)
 	cooldownShow = "ALL",      -- icônes montrées : tous mes sorts (prêts nets, en recharge grisés) ou seulement ceux qui rechargent
-	cooldownIgnored = {},      -- sorts à ne pas montrer dans « Mes recharges », par leur nom
+	cooldownIgnored = {},      -- sorts à ne pas montrer dans « Mes recharges » et les recharges du groupe, par leur nom
+	groupCooldowns = false,    -- recharges du groupe : les gros sorts des alliés qui ont Lyorune, sous les cadres (GroupCooldowns.lua)
 	channelMark = true,        -- soin canalisé sur un joueur (Pénitence) : un trait se vide sur sa case au rythme de la canalisation (Frames.lua)
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
@@ -182,6 +183,7 @@ Z.defaults = {
 	acceptConfigs = true,      -- accepter qu'un joueur me propose sa configuration
 	resSync = true,            -- qui relève qui : le nom du soigneur qui relève s'affiche sur la case du mort
 	assignAccept = true,       -- appliquer la répartition envoyée par le chef ou un assistant (Assign.lua, BuffAssign.lua)
+	cooldownShare = true,      -- partager mes recharges : mes gros sorts annoncés au groupe, pour ceux qui les suivent
 	blessingSync = true,       -- entente entre paladins : chacun annonce ses bénédictions, aucun ne pose celle d'un autre
 	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
 	windowTheme = "MODERN",    -- thème des fenêtres de Lyorune (pas des cases) : Moderne, Classique, MMORPG
@@ -259,7 +261,7 @@ Z.notInProfile = {
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
 	buffPanel = true, combatKey = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
-	cooldownPanel = true, cooldownShow = true, cooldownIgnored = true,
+	cooldownPanel = true, cooldownShow = true, cooldownIgnored = true, groupCooldowns = true, cooldownShare = true,
 	buffGroups = true, blessingPick = true, blessingSync = true,
 }
 
