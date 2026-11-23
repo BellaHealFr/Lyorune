@@ -819,20 +819,34 @@ Z.BuffConcerns = Concerns -- aussi pour les repères des buffs dessinés par le 
 -- compte comme absent (au plus le quart de sa durée, Until).
 -- Là où le jeu cache les buffs même hors combat (champ de bataille, arène) : un buff qui reste
 -- lisible se lit, les autres viennent de la mémoire (BuffMemory.lua), et un buff inconnu compte comme absent.
+-- Une lecture refusée par le jeu (match JcJ) compte comme une liste cachée, pas comme « rien ne manque ».
 local function FindMissingBuffs(b, unit)
+	b.buffRead = nil -- pour /lyorune buffs : seulement la dernière lecture faite
 	if not (Z.db.missingBuffs or Z.db.buffPanel) or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL", 40)
-	if not list then return end
+	local refused = not list
+	if refused then
+		-- lecture refusée : là où le jeu cache les buffs (match JcJ), la mémoire décide (C15) ; ailleurs, rien de sûr
+		b.buffRead = "refused"
+		if not Z.AurasHidden() then return end
+		list = {}
+	end
 	local now, margin = GetTime(), Z.db.buffRefresh * 60
-	local present, mine, hidden = {}, nil, false
+	-- restriction en place : même une liste lisible ne dit pas ce qui manque, seulement ce qui est là
+	local restricted = refused or Z.AurasRestricted()
+	local present, mine, secret = {}, nil, false
 	for i = 1, #list do
 		local name = list[i].name
 		if issecret(name) then
-			hidden = true
+			secret = true
 		else
 			present[name] = math.max(present[name] or -math.huge, Until(list[i], now, margin))
 		end
 	end
+	local hidden = restricted or secret
+	-- l'absence d'un buff toujours lisible n'est sûre que dans une vraie liste (ni refusée, ni vide sous restriction)
+	local trusted = not refused and #list > 0
+	if not refused then b.buffRead = secret and "secret" or restricted and "restricted" or "ok" end -- pour /lyorune buffs
 	if not hidden then Z.NoteBuffs(unit, list, Z.buffNames, false) end
 	local me = UnitIsUnit(unit, "player")
 	if issecret(me) then me = false end
@@ -853,8 +867,11 @@ local function FindMissingBuffs(b, unit)
 				if not mine then
 					mine = {}
 					local list2 = Auras(unit, "HELPFUL|PLAYER", 16)
-					if not list2 then return end
-					local hidden2 = false
+					local hidden2 = not list2
+					if hidden2 then
+						if not Z.AurasHidden() then return end
+						list2 = {}
+					end
 					for i = 1, #list2 do
 						local name = list2[i].name
 						if issecret(name) then
@@ -863,7 +880,7 @@ local function FindMissingBuffs(b, unit)
 							mine[name] = math.max(mine[name] or -math.huge, Until(list2[i], now, margin))
 						end
 					end
-					if hidden2 then hidden = true else Z.NoteBuffs(unit, list2, Z.ownNames, true) end
+					if hidden2 or restricted then hidden = true else Z.NoteBuffs(unit, list2, Z.ownNames, true) end
 				end
 				for name in pairs(check.names) do left = math.max(left, mine[name] or -math.huge) end
 				if check.blessing then
@@ -885,7 +902,7 @@ local function FindMissingBuffs(b, unit)
 			end
 			-- caché par le jeu : la mémoire (photo d'avant la restriction, mes sorts), relue à la fin du buff retenu
 			local remembered = false
-			if hidden and left <= 0 and not check.weapon and not Z.BuffReadable(check) then
+			if hidden and left <= 0 and not check.weapon and not (trusted and Z.BuffReadable(check)) then
 				for name in pairs(check.names) do
 					local memory = Z.BuffMemoryLeft(unit, name, own, now, margin)
 					if memory then left, remembered = math.max(left, memory), true end
@@ -909,7 +926,7 @@ end
 local function FindMyUniques(b, unit)
 	if not Z.db.buffPanel or #Z.uniqueChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL|PLAYER", 16)
-	if not list then return end
+	if not list then return Z.AurasHidden() and Z.UniquesInMemory(unit) or nil end -- lecture refusée en match (C15)
 	local mine, hidden
 	for i = 1, #list do
 		local name = list[i].name
@@ -921,7 +938,7 @@ local function FindMyUniques(b, unit)
 			end
 		end
 	end
-	if not hidden then
+	if not hidden and not Z.AurasRestricted() then
 		Z.NoteBuffs(unit, list, Z.ownNames, true)
 		return mine
 	end

@@ -1045,10 +1045,27 @@ Demande de l'auteur (23 novembre 2026) : **prochaine étape, avant toute autre**
 mesures dans la fiche C15 de `CORRECTIONS.md`. Résumé : aucun addon ne montre les buffs manquants des autres en
 match JcJ ; sur Forever tous les buffs de groupe sont secrets selon le contexte (mesures publiées par
 BuffReminders) ; la 1.35.0 ne marche pas en jeu.
-- [ ] 30 a : **mesurer** (avec l'auteur, en champ de bataille, en préparation puis en match) :
+- Décidé avec l'auteur (23 novembre 2026, les deux recommandés) : mesure et correction dans la même 1.44.1, un
+  seul essai en champ de bataille ; en match, un joueur dont Lyorune ne sait rien a le buff proposé (inconnu = absent).
+- [x] 30 a : commande de mesure faite : `/lyorune buffs` ajoute l'état du jeu (buffs cachés, match JcJ, état de la
+  partie, combat) et, pour les cases, combien sont au panneau et pourquoi les autres n'y sont pas (morts, en
+  combat, case cachée, lecture refusée, noms secrets) : `Z.BuffDiagnostic` (BuffMemory.lua), `b.buffRead`
+  (Auras.lua). Reste l'essai en champ de bataille avec l'auteur.
+- [ ] 30 a (suite) : **mesurer** (avec l'auteur, en champ de bataille, en préparation puis en match) :
   `C_Secrets.ShouldAurasBeSecret()`, `C_PvP.GetActiveMatchState()`, nom des joueurs (`UnitName("raid2")`),
   restriction `PvPMatch` (`Z.InPvPMatch`), et `/lyorune buffs` détaillé : par joueur, pourquoi il est écarté
   (nom secret, en combat `Fighting`, hors de portée `Away`, mémoire vide) et ce que retient la mémoire.
+- [x] 30 b (1re partie) : causes corrigées sans attendre la mesure. Lecture des auras refusée par le jeu là où
+  il cache les buffs : la case passe en mode mémoire au lieu d'abandonner (`FindMissingBuffs`, `FindMyUniques`,
+  Auras.lua), une lecture refusée ailleurs ne propose rien comme avant. Pendant une restriction (match JcJ, boss,
+  `Z.AurasRestricted`, BuffMemory.lua), même une liste vide ou lisible passe en mode mémoire : selon la version, le
+  jeu rend des noms secrets, une erreur ou une liste vide (recherche du 23 novembre 2026 : BuffReminders, Dyre's
+  Buff Reminders, Tylesser Buff Tracker, JustAC, forever-addon-kit, téléchargés dans `essais/addons-c15`, rien
+  repris ; tous figent leur affichage en match, aucun ne suit les buffs des autres). Nom secret : le joueur reste au panneau,
+  nommé par la liste du raid ou « Groupe N » (`ShownName`, Buffs.lua). Joueurs en combat gardés quand le jeu
+  cache les buffs (`Fighting`). Toutes les cases relues quand la restriction devient active. Le panneau reste
+  caché quand je suis en combat (boutons du jeu verrouillés) : les repères dessinés par le jeu (`pvpBuffs`)
+  prennent le relais. Tests : étape 1.44.1.
 - [ ] 30 b : **corriger** selon les mesures, d'abord comparer HealKit, HealBot, VuhDo puis le reste du dossier
   (règle de l'auteur). Pistes : en match, le panneau s'appuie sur la mémoire seule et présume le buff absent à
   l'entrée et après une mort jusqu'à ce que je le pose (« inconnu = absent ») ; photo prise au bon moment

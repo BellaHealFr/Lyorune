@@ -9385,6 +9385,97 @@ step("1.44.0 : JcJ (ligne Match JcJ, pas d'arene) et partage des recharges etein
   assert(ok, err)
 end)
 
+step("1.44.1 : C15, buffs manquants en champ de bataille (lecture refusee, nom secret, joueur en combat, /lyorune buffs detaille)", function()
+  local old = { isUnit = UnitIsUnit, after = C_Timer.After, secrets = C_Secrets, name = UnitName,
+    fight = UnitAffectingCombat, instance = INSTANCE, kind = INSTANCE_TYPE, class = Z.class,
+    restricted = C_RestrictedActions, types = Enum.AddOnRestrictionType }
+  local ok, err = pcall(function()
+    C_Timer.After = function(s, f) if s < 1 then f() end end
+    local me = Z.buttons[1]
+    local other
+    for _, b in ipairs(Z.buttons) do
+      if b ~= me and b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then other = other or b end
+    end
+    UnitIsUnit = function(a, b) return a == b or (b == "player" and a == me.unit) end
+    local hidden = true
+    C_Secrets = { ShouldAurasBeSecret = function() return hidden end, ShouldSpellAuraBeSecret = function() return true end }
+    -- le jeu refuse la lecture des auras (mesure publiee pour Forever en match JcJ) : le faux client leve une erreur
+    AURAS = setmetatable({}, { __index = function() error("auras secretes") end })
+    local function Update() Z:Refresh() RunUpdates() end
+    INSTANCE, INSTANCE_TYPE, NOW = true, "pvp", 9000
+    Z.db.buffWatch, Z.db.buffRefresh, Z.db.buffGroupAt = {}, 0, 99
+    Z.db.missingBuffs, Z.db.buffPanel = true, true
+    Z.class = "PRIEST" Z:BuildData()
+    Update()
+    assert(other.buffRead == "refused" and other.missingBuff, "lecture refusee en match : rien ne manque plus")
+    assert(#Z.BuffRows() > 0, "panneau vide en match (lecture refusee)")
+    -- liste vide mais lisible pendant une restriction (vu par d'autres addons pendant un boss) : elle ne prouve
+    -- rien, la memoire de mes sorts tient ; sans restriction, la meme liste vide efface la memoire
+    local function Has(b, id) for _, m in ipairs(b.missingBuffs or {}) do if m.check.id == id then return true end end end
+    local restricted = true
+    Enum.AddOnRestrictionType = Enum.AddOnRestrictionType or { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3 }
+    C_RestrictedActions = { IsAddOnRestrictionActive = function(kind) return restricted and kind == Enum.AddOnRestrictionType.PvPMatch end }
+    AURAS = {}
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit), "cast-c15", 1243)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-c15", 1243)
+    Update()
+    assert(other.buffRead == "restricted" and not Has(other, 1243), "liste vide sous restriction : memoire effacee")
+    assert(Z.AurasRestricted(), "restriction non vue")
+    restricted = false NOW = NOW + 1 Update() -- (la reponse du jeu est gardee le temps d'une image)
+    assert(Has(other, 1243), "liste vide hors restriction : buff non propose")
+    C_RestrictedActions = nil
+    AURAS = setmetatable({}, { __index = function() error("auras secretes") end })
+    -- buff que le jeu laisse lisible, mais lecture refusee : son absence n'est pas sure, la memoire decide
+    C_Secrets.ShouldSpellAuraBeSecret = function() return false end
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 0, 2)
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit), "cast-c15b", 1243)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-c15b", 1243)
+    Update()
+    assert(not Has(other, 1243), "buff lisible, lecture refusee : memoire ignoree")
+    C_Secrets.ShouldSpellAuraBeSecret = function() return true end
+    FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 0, 2)
+    Z.ForgetBuffs(other.unit) -- (comme une mort : la suite repart d'un joueur inconnu)
+    Update()
+    -- nom secret : le joueur reste au panneau, sous son groupe
+    UnitName = function(u) if u == other.unit then return MakeSecret() end return old.name(u) end
+    local found
+    for _, row in ipairs(Z.BuffRows()) do if row.unit == other.unit then found = row end end
+    assert(found and found.name == "Prêtre (Groupe 1)", "nom secret : joueur absent du panneau " .. tostring(found and found.name))
+    UnitName = old.name
+    -- en combat pendant le match : gardé (la memoire decide) ; hors match, ecarte comme avant
+    UnitAffectingCombat = function(u) return u == other.unit end
+    found = nil
+    for _, row in ipairs(Z.BuffRows()) do if row.unit == other.unit then found = row end end
+    assert(found, "joueur en combat ecarte en match")
+    -- /lyorune buffs : etat du jeu et raisons, lisibles
+    local printed = #PRINTED
+    Z.Command("buffs")
+    local text = table.concat(PRINTED, "|", printed + 1)
+    assert(text:find("état : buffs cachés oui", 1, true) and text:find("refusée", 1, true), "commande detaillee : " .. text)
+    -- hors match : une lecture refusee ne propose rien (comme avant)
+    hidden = false
+    INSTANCE, INSTANCE_TYPE = false, "none"
+    Update()
+    assert(not other.missingBuff, "lecture refusee hors match : buff propose a tort")
+    AURAS = {}
+    Update()
+    found = nil
+    for _, row in ipairs(Z.BuffRows()) do if row.unit == other.unit then found = row end end
+    assert(not found, "joueur en combat hors match : plus ecarte")
+    for _, key in ipairs({ "oui", "non", "secret", "état : buffs cachés %s, restriction %s, match JcJ %s, partie %s, en combat %s.",
+      "cases : %d joueur(s), %d au panneau (dont %d hors de portée), %d mort(s), %d en combat, %d case(s) cachée(s).",
+      "lecture : %d refusée(s), %d avec des noms secrets, %d lisible(s) mais sous restriction ; %d nom(s) de joueur secret(s)." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  UnitIsUnit, C_Timer.After, C_Secrets, UnitName = old.isUnit, old.after, old.secrets, old.name
+  UnitAffectingCombat, INSTANCE, INSTANCE_TYPE, Z.class = old.fight, old.instance, old.kind, old.class
+  C_RestrictedActions, Enum.AddOnRestrictionType = old.restricted, old.types
+  AURAS = {}
+  Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

@@ -462,13 +462,18 @@ end
 
 -- Match JcJ en cours (restriction « PvPMatch » du jeu) : buffs cachés et messages entre addons bloqués tout le
 -- match, même hors combat. Réponse secrète : on la prend pour un match (le jeu cache quelque chose).
-function Z.InPvPMatch()
+function Z.RestrictionActive(name)
 	local R, types = C_RestrictedActions, Enum and Enum.AddOnRestrictionType
-	if not (R and R.IsAddOnRestrictionActive and types and types.PvPMatch) then return false end
-	local ok, active = pcall(R.IsAddOnRestrictionActive, types.PvPMatch)
+	local kind = types and types[name]
+	if not (R and R.IsAddOnRestrictionActive and kind ~= nil) then return false end
+	local ok, active = pcall(R.IsAddOnRestrictionActive, kind)
 	if not ok then return false end
 	if Z.IsSecret(active) then return true end
 	return active == true
+end
+
+function Z.InPvPMatch()
+	return Z.RestrictionActive("PvPMatch")
 end
 
 -- Où l'on est, pour les profils automatiques : le champ de bataille, sinon la taille du groupe

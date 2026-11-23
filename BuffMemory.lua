@@ -42,6 +42,23 @@ function Z.AurasHidden()
 	return secret == true
 end
 
+-- Une restriction qui cache les buffs même hors combat est-elle en place (match JcJ, boss, clé) ? Là, une liste
+-- d'auras vide ou sans secret ne prouve rien : selon la version, le jeu rend des noms secrets, une erreur ou une
+-- liste vide (C15). Réponse secrète : on la prend pour une restriction.
+-- Réponse gardée le temps d'une image : en champ de bataille, beaucoup de cases se relisent ensemble.
+local RESTRICTING = { "Encounter", "ChallengeMode", "PvPMatch" }
+local restrictedAt, restricted
+function Z.AurasRestricted()
+	local now = GetTime()
+	if restrictedAt ~= now then
+		restrictedAt, restricted = now, false
+		for _, name in ipairs(RESTRICTING) do
+			if Z.RestrictionActive(name) then restricted = true break end
+		end
+	end
+	return restricted
+end
+
 -- Ce buff de ma liste reste-t-il lisible malgré la restriction ? Tous ses numéros doivent l'être : alors son
 -- absence est sûre (il serait dans la liste du jeu, nom lisible).
 function Z.BuffReadable(check)
@@ -257,7 +274,7 @@ Z:On("ADDON_RESTRICTION_STATE_CHANGED", function(kind, state)
 	local types, states = Enum.AddOnRestrictionType, Enum.AddOnRestrictionState
 	if not (types and states) then return end
 	if not next(HIDING) then
-		for _, name in ipairs({ "Encounter", "ChallengeMode", "PvPMatch" }) do
+		for _, name in ipairs(RESTRICTING) do
 			if types[name] then HIDING[types[name]] = name end
 		end
 	end
@@ -270,9 +287,12 @@ Z:On("ADDON_RESTRICTION_STATE_CHANGED", function(kind, state)
 			told[kind] = true
 			Z:Print(Z.L["buffs cachés par le jeu ici : Lyorune retient vos propres buffs, pas ceux des autres joueurs."])
 		end
-	elseif state == states.Inactive then
-		told[kind] = nil
-		for _, b in ipairs(Z.buttons or {}) do Z.QueueAuras(b) end -- tout se relit de nouveau
+	elseif state == states.Active or state == states.Inactive then
+		-- en place : chaque case passe en mode mémoire (photo, mes sorts, inconnu = absent) ; finie : tout se relit
+		if state == states.Inactive then told[kind] = nil end
+		restrictedAt = nil
+		for _, b in ipairs(Z.buttons or {}) do Z.QueueAuras(b) end
+		if Z.hiddenSelf then Z.QueueAuras(Z.hiddenSelf) end
 	end
 end)
 
@@ -331,5 +351,48 @@ function Z:BuffsCommand()
 		end
 	end
 	Z:Print(L["mémoire : %d fiche(s) de joueur en cours."]:format(players))
+	for _, line in ipairs(Z.BuffDiagnostic()) do Z:Print(line) end
 	for _, line in ipairs(Z.BuffAssignReport and Z.BuffAssignReport() or {}) do Z:Print(line) end -- qui buffe qui
+end
+
+-- Détail pour un essai en champ de bataille (C15) : ce que dit le jeu, puis pourquoi un joueur manque au panneau
+local function YesNo(value)
+	if issecret(value) then return Z.L["secret"] end
+	return value and Z.L["oui"] or Z.L["non"]
+end
+
+function Z.BuffDiagnostic()
+	local L = Z.L
+	local secret = C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret()
+	local match = "?"
+	if C_PvP and C_PvP.GetActiveMatchState then
+		local ok, value = pcall(C_PvP.GetActiveMatchState)
+		if ok and value ~= nil then match = issecret(value) and L["secret"] or tostring(value) end
+	end
+	local lines = { L["état : buffs cachés %s, restriction %s, match JcJ %s, partie %s, en combat %s."]:format(YesNo(secret),
+		YesNo(Z.AurasRestricted()), YesNo(Z.InPvPMatch and Z.InPvPMatch()), match, YesNo(InCombatLockdown())) }
+	local n = { players = 0, missing = 0, dead = 0, fighting = 0, away = 0, refused = 0, secret = 0, restricted = 0, name = 0, hidden = 0 }
+	local done = {}
+	for _, b in ipairs(Z.buttons or {}) do
+		local unit = b.unit
+		if unit and not b.extra and not done[unit] and UnitExists(unit) then
+			done[unit] = true
+			n.players = n.players + 1
+			local name = UnitName(unit)
+			if not name or issecret(name) then n.name = n.name + 1 end
+			if n[b.buffRead or ""] then n[b.buffRead] = n[b.buffRead] + 1 end -- refused, secret, restricted
+			if b.status then n.dead = n.dead + 1
+			elseif not b:IsVisible() then n.hidden = n.hidden + 1
+			elseif Z.BuffFighting and Z.BuffFighting(unit) then n.fighting = n.fighting + 1
+			elseif b.missingBuff then
+				n.missing = n.missing + 1
+				if Z.BuffAway and Z.BuffAway(unit, b.missingBuff.spell) then n.away = n.away + 1 end
+			end
+		end
+	end
+	lines[#lines + 1] = L["cases : %d joueur(s), %d au panneau (dont %d hors de portée), %d mort(s), %d en combat, %d case(s) cachée(s)."]
+		:format(n.players, n.missing, n.away, n.dead, n.fighting, n.hidden)
+	lines[#lines + 1] = L["lecture : %d refusée(s), %d avec des noms secrets, %d lisible(s) mais sous restriction ; %d nom(s) de joueur secret(s)."]
+		:format(n.refused, n.secret, n.restricted, n.name)
+	return lines
 end

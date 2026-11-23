@@ -130,7 +130,9 @@ end
 
 -- Un autre joueur déjà en combat : le jeu cache alors ses buffs aux addons, ils sembleraient tous manquer (au
 -- début d'un combat, le tank y entre un instant avant moi). Il est laissé de côté jusqu'à la relecture.
+-- Là où le jeu cache les buffs de tous (match JcJ), la mémoire décide, combat ou non : personne n'est écarté (C15).
 local function Fighting(unit)
+	if Z.AurasHidden() then return false end
 	local me = UnitIsUnit(unit, "player")
 	if not issecret(me) and me then return false end
 	local fighting = UnitAffectingCombat and UnitAffectingCombat(unit)
@@ -148,9 +150,27 @@ local function SubGroup(unit)
 	return 1
 end
 
--- Pour la mémoire des buffs (BuffMemory.lua) : groupe, portée, et le joueur du dernier clic sur ce buff
+-- Nom à montrer : celui du jeu, sinon (nom secret, match JcJ) celui de la liste du raid, sinon sa classe et son
+-- groupe, « Prêtre (Groupe 2) », pour ne pas le confondre avec une ligne de version de groupe (C15)
+local function ShownName(unit)
+	local name = UnitName(unit)
+	if name and not issecret(name) then return name end
+	local index = unit:match("^raid(%d+)$")
+	if index and GetRaidRosterInfo then
+		local roster = GetRaidRosterInfo(tonumber(index))
+		if roster and not issecret(roster) then return (roster:match("^[^-]+")) end
+	end
+	local class = UnitClass(unit)
+	if not class or issecret(class) then class = Z.L["Joueur"] end
+	local group = SubGroup(unit)
+	if group == 0 then return class end -- un familier n'a pas de ligne « Groupe N »
+	return class .. " (" .. Z.L["Groupe %d"]:format(group) .. ")"
+end
+
+-- Pour la mémoire des buffs (BuffMemory.lua) : groupe, portée, combat, et le joueur du dernier clic sur ce buff
 Z.BuffSubGroup = SubGroup
 Z.BuffAway = Away
+Z.BuffFighting = Fighting
 function Z.LastBuffTry(spell)
 	if tried and tried.spell == spell and GetTime() - tried.at <= 3 then return tried.unit end
 end
@@ -162,14 +182,12 @@ local function Missing()
 	for _, b in ipairs(Z.buttons) do
 		local unit = b.unit
 		if unit and b.missingBuff and not b.extra and not seen[unit] and b:IsVisible() and not Fighting(unit) then
-			local name = UnitName(unit)
-			if name and not issecret(name) then
-				seen[unit] = true
-				local group, class = SubGroup(unit), select(2, UnitClass(unit))
-				for _, missing in ipairs(b.missingBuffs or { b.missingBuff }) do
-					list[#list + 1] = { unit = unit, check = missing.check, spell = missing.spell, icon = missing.icon,
-						name = name, group = group, class = class }
-				end
+			seen[unit] = true
+			local name, group, class = ShownName(unit), SubGroup(unit), select(2, UnitClass(unit))
+			if issecret(class) then class = nil end
+			for _, missing in ipairs(b.missingBuffs or { b.missingBuff }) do
+				list[#list + 1] = { unit = unit, check = missing.check, spell = missing.spell, icon = missing.icon,
+					name = name, group = group, class = class }
 			end
 		end
 	end
