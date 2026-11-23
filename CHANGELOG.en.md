@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.0] - 2026-11-23
+
+### Added
+
+- My totems (shaman): your active totems under the frames, one slot per element, with their timer, even in combat (off by default).
+- Class icon on the cell, placed and sized in the placement editor (off by default).
+
 ## [1.45.0] - 2026-11-23
 
 ### Added
@@ -871,6 +878,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.46.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.1...v1.45.0
 [1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0

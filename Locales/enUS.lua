@@ -1284,4 +1284,6 @@ Z.translations.enUS = {
 	["Feu"] = "Fire", ["Terre"] = "Earth", ["Eau"] = "Water", ["Air"] = "Air",
 	["La petite image près du nom : la classe du joueur."] = "The small picture by the name: the player's class.",
 	["La classe de chacun en image ? « Icône de classe », chapitre Joueurs."] = "Everyone's class as a picture? \"Class icon\", Players chapter.",
+	["Mes totems (chaman) : vos totems posés sous les cadres, un emplacement par élément, avec leur temps, même en combat (éteint au départ)."] = "My totems (shaman): your active totems under the frames, one slot per element, with their timer, even in combat (off by default).",
+	["Icône de classe sur la case, placée et réglée dans l'éditeur de placement (éteinte au départ)."] = "Class icon on the cell, placed and sized in the placement editor (off by default).",
 }

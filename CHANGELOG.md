@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.0] - 2026-11-23
+
+### Ajouté
+
+- Mes totems (chaman) : vos totems posés sous les cadres, un emplacement par élément, avec leur temps, même en combat (éteint au départ).
+- Icône de classe sur la case, placée et réglée dans l'éditeur de placement (éteinte au départ).
+
 ## [1.45.0] - 2026-11-23
 
 ### Ajouté
@@ -871,6 +878,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.46.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.1...v1.45.0
 [1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0

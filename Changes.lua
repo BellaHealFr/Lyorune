@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.46.0", date = "2026-11-23",
+		added = {
+			"Mes totems (chaman) : vos totems posés sous les cadres, un emplacement par élément, avec leur temps, même en combat (éteint au départ).",
+			"Icône de classe sur la case, placée et réglée dans l'éditeur de placement (éteinte au départ).",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.45.0", date = "2026-11-23",
 		added = {
 			"Les amis de Lyorune : un nouveau chapitre des options avec Lyorune en chiffres (mises à jour, téléchargements, Discord), votre carnet de soigneur (soins, résurrections et buffs réussis, par personnage, avec son interrupteur), un mot de l'auteur et un mur de remerciements.",
