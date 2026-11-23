@@ -55,7 +55,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | Fait |
 | 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | Fait |
 | 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | Publiée (v1.42.1) |
-| 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Codée, à publier |
+| 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Publiée (v1.43.0) |
 | 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | À faire |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
