@@ -57,7 +57,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | Publiée (v1.42.1) |
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Publiée (v1.43.0) |
 | 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | Publiée (v1.43.1) |
-| 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | Fait (pas d'arène sur Forever : profil retiré) |
+| 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | Publiée (v1.44.0) : pas d'arène sur Forever, profil retiré |
+| **30** | **1.44.1** | **Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort). Priorité très haute (auteur, 23 novembre 2026) : prochaine étape, avant tout le reste** | **À faire** |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -1038,6 +1039,22 @@ expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche e
   Aides de « Synchronisation entre joueurs », « Qui relève qui » et « Répartition du chef » : messages bloqués
   pendant un boss ou un match JcJ. Aussi (demande de l'auteur) : « Partager mes recharges » éteint au départ.
   Tests : étape 1.44.0.
+
+## Étape 30 : buffs manquants en champ de bataille, correction C15 (1.44.1), PRIORITÉ TRÈS HAUTE
+Demande de l'auteur (23 novembre 2026) : **prochaine étape, avant toute autre**. Détail du bug, recherche et
+mesures dans la fiche C15 de `CORRECTIONS.md`. Résumé : aucun addon ne montre les buffs manquants des autres en
+match JcJ ; sur Forever tous les buffs de groupe sont secrets selon le contexte (mesures publiées par
+BuffReminders) ; la 1.35.0 ne marche pas en jeu.
+- [ ] 30 a : **mesurer** (avec l'auteur, en champ de bataille, en préparation puis en match) :
+  `C_Secrets.ShouldAurasBeSecret()`, `C_PvP.GetActiveMatchState()`, nom des joueurs (`UnitName("raid2")`),
+  restriction `PvPMatch` (`Z.InPvPMatch`), et `/lyorune buffs` détaillé : par joueur, pourquoi il est écarté
+  (nom secret, en combat `Fighting`, hors de portée `Away`, mémoire vide) et ce que retient la mémoire.
+- [ ] 30 b : **corriger** selon les mesures, d'abord comparer HealKit, HealBot, VuhDo puis le reste du dossier
+  (règle de l'auteur). Pistes : en match, le panneau s'appuie sur la mémoire seule et présume le buff absent à
+  l'entrée et après une mort jusqu'à ce que je le pose (« inconnu = absent ») ; photo prise au bon moment
+  (préparation, `PVP_MATCH_STATE_CHANGED`) si les auras y sont encore lisibles ; joueurs en combat ou au nom
+  secret plus écartés à tort en JcJ ; repères dessinés par le jeu sur les cases (seule vérité pour les buffs
+  posés par les autres). Tests : entrée en préparation, début du match, mort et réapparition, buff posé.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
