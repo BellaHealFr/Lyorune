@@ -450,7 +450,7 @@ Le dernier chapitre de la fenêtre d'options, en bas de la barre de gauche. Vous
 
 - **Lyorune en chiffres** : le nombre de mises à jour, de téléchargements (GitHub et CurseForge) et de membres du Discord. Un addon n'a pas accès à internet : ces chiffres sont ceux du jour où votre version a été publiée, et la date est écrite dessous. Le lien du Discord se copie avec Ctrl+C.
 - **Votre carnet** : vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent (cases, barres, macros, touches). Les dissipations ne comptent pas. Le carnet reste sur votre ordinateur : rien n'est envoyé. « Tenir mon carnet » l'arrête (vos chiffres sont gardés) ; « Remettre mon carnet à zéro » demande un second clic.
-- **Un mot de l'auteur**, et le **mur de remerciements** : les joueurs qui aident Lyorune, seulement avec leur accord. Pour y figurer, demandez-le sur le Discord ou sur GitHub.
+- **Un mot de l'auteur**, et le **mur de remerciements** : les joueurs qui font grandir Lyorune, en proposant des améliorations, en signalant des bugs régulièrement pour le rendre le plus parfait possible, ou en le faisant connaître autour d'eux. Vous en êtes ? Dites-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur.
 
 ## 16. Un problème ?
 

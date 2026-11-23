@@ -449,7 +449,7 @@ The last chapter of the options window, at the bottom of the left sidebar. You w
 
 - **Lyorune in numbers**: the number of updates, downloads (GitHub and CurseForge) and Discord members. An addon has no internet access: these numbers are those of the day your version was published, and the date is written below. The Discord link can be copied with Ctrl+C.
 - **Your notebook**: your successful heals, resurrections and buffs, for each character, wherever they come from (cells, bars, macros, keys). Dispels do not count. The notebook stays on your computer: nothing is sent. "Keep my notebook" stops it (your numbers are kept); "Reset my notebook" asks for a second click.
-- **A word from the author**, and the **thank you wall**: players who help Lyorune, only with their consent. To be on it, ask on Discord or GitHub.
+- **A word from the author**, and the **thank you wall**: players who help Lyorune grow, by suggesting improvements, by reporting bugs regularly to make it as polished as possible, or by telling others about it. Is that you? Say so on Discord or GitHub: a name only appears with its player's consent.
 
 ## 16. A problem?
 

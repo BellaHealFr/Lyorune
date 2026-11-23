@@ -1,5 +1,7 @@
 # Mur de remerciements de la page « Les amis de Lyorune » (en jeu).
 # Un nom par ligne, tel qu'il doit s'afficher. Seulement des joueurs qui ont donné leur accord.
+# Qui y figure (règle de l'auteur, 23 novembre 2026) : un joueur qui propose des améliorations, ou qui signale
+# des bugs régulièrement pour rendre l'addon le plus parfait possible, ou qui partage et fait connaître Lyorune.
 # Les lignes vides et celles qui commencent par # sont ignorées.
 # outils/publier.py recopie cette liste dans About.lua à chaque publication.
 Elesyio

@@ -2490,7 +2490,7 @@ local function ThanksWall(page, width)
 	box.how:SetWidth(width - 8)
 	box.how:SetJustifyH("LEFT")
 	box.how:SetSpacing(3)
-	box.how:SetText(L["Vous aimez Lyorune et voulez y laisser votre nom ? Demandez-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur."])
+	box.how:SetText(L["Ce mur remercie les joueurs qui font grandir Lyorune : en proposant des améliorations, en signalant des bugs régulièrement pour le rendre le plus parfait possible, ou en le faisant connaître autour d'eux. Vous en êtes ? Dites-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur."])
 	box.Update = function(self)
 		local names = Z.about and Z.about.names or {}
 		self.thanks:SetText(#names > 0 and table.concat(names, "   ·   ") or L["Votre nom ici ?"])
