@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.44.1] - 2026-11-23
+
+### Amélioré
+
+- C:/Program Files/Git/lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée).
+
+### Corrigé
+
+- Buffs manquants en champ de bataille : le panneau ne restait plus vide. Quand le jeu refuse de lire les buffs pendant un match ou un boss, Lyorune s'appuie sur ce qu'il a retenu (avant le match, vos sorts) et propose un buff dont il ne sait rien ; joueurs en combat et noms cachés gardés.
+
 ## [1.44.0] - 2026-11-23
 
 ### Ajouté
@@ -851,6 +861,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0
 [1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1
 [1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0

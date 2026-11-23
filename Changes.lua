@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.44.1", date = "2026-11-23",
+		added = {
+		},
+		improved = {
+			"C:/Program Files/Git/lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée).",
+		},
+		fixed = {
+			"Buffs manquants en champ de bataille : le panneau ne restait plus vide. Quand le jeu refuse de lire les buffs pendant un match ou un boss, Lyorune s'appuie sur ce qu'il a retenu (avant le match, vos sorts) et propose un buff dont il ne sait rien ; joueurs en combat et noms cachés gardés.",
+		},
+	},
+	{
 		version = "1.44.0", date = "2026-11-23",
 		added = {
 			"Match JcJ : hors combat pendant un match, l'infobulle d'une case dit en une ligne que le jeu cache les buffs et bloque les messages entre addons.",

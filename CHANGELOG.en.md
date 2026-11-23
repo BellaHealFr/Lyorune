@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.44.1] - 2026-11-23
+
+### Improved
+
+- C:/Program Files/Git/lyorune buffs also tells what the game hides here and why a player is missing from the panel (dead, in combat, hidden frame, reading refused).
+
+### Fixed
+
+- Missing buffs in battlegrounds: the panel no longer stays empty. When the game refuses to read buffs during a match or a boss, Lyorune relies on what it remembered (before the match, your casts) and offers a buff it knows nothing about; players in combat and hidden names are kept.
+
 ## [1.44.0] - 2026-11-23
 
 ### Added
@@ -851,6 +861,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0
 [1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1
 [1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0
