@@ -1275,6 +1275,9 @@ Z.translations.enUS = {
 
 	-- Mes totems et icône de classe (1.46.0)
 	["Icône de classe"] = "Class icon",
+	["Icône des DPS aussi"] = "DPS icon too",
+	["L'épée des DPS sur leur case, à la place de l'icône de rôle. Éteinte : seuls les tanks et les soigneurs ont une icône, les cases restent plus lisibles."] = "The DPS sword on their frame, in the role icon's place. Off: only tanks and healers get an icon, frames stay easier to read.",
+	["L'épée des DPS, à côté des tanks et des soigneurs."] = "The DPS sword, alongside tanks and healers.",
 	["Une petite icône de la classe du joueur sur sa case : après l'icône de rôle en Barre et en Bandeau, au bord gauche de la ligne du nom en Tuile et en Carré. Sa place et sa taille se règlent dans l'éditeur de placement."] = "A small icon of the player's class on their cell: after the role icon in Bar and Banner, at the left edge of the name line in Tile and Square. Its position and size are set in the placement editor.",
 	["La classe de chaque joueur, en image."] = "Each player's class, as a picture.",
 	["Mes totems (chaman)"] = "My totems (shaman)", ["Mes totems"] = "My totems",

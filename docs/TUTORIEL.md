@@ -93,7 +93,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Icône de résurrection au centre | Quelqu'un est en train de le relever |
 | Icône d'invocation au centre | Une invocation lui est proposée, ou il l'a acceptée ou refusée |
 | Icône de phase au centre | Il est dans une autre phase : il semble proche, mais vos sorts ne l'atteignent pas |
-| Couronne près de l'icône de rôle | C'est le chef du groupe (un petit drapeau : un assistant du raid) |
+| Couronne près de l'icône de rôle | C'est le chef du groupe (un petit drapeau : un assistant du raid). Elle ne se pose jamais sur l'icône de rôle : si vous l'avez poussée dessus dans l'éditeur de placement, elle revient juste à côté chez un tank ou un soigneur |
 
 Les couleurs principales sont rappelées en jeu : chapitre Fenêtre et aide, « Lire une case ».
 
@@ -315,7 +315,7 @@ Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Ri
 - **Vie et portée** : soins en route, bouclier et son chiffre (éteint au départ), voile de vie basse (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale, vos recharges et celles du groupe, vos totems, le trait de canalisation.
 - **Affaiblissements** : dissipation et image du type, icônes et leurs secondes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
-- **Joueurs** : nom du joueur, icône de rôle, icône de classe (éteinte au départ), marqueur de raid, chef de groupe, gros défensifs, icône au centre de la case (appel, résurrection, hors de vue, invocation, très loin), invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
+- **Joueurs** : nom du joueur, icône de rôle, icône des DPS (épée, éteinte au départ), icône de classe (éteinte au départ), marqueur de raid, chef de groupe, gros défensifs, icône au centre de la case (appel, résurrection, hors de vue, invocation, très loin), invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
 
 ### La portée (chapitre Vie et portée)
 

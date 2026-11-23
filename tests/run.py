@@ -9752,6 +9752,46 @@ step("C23 : journal qui s'ouvre malgre une valeur secrete", function()
   assert(ok, err)
 end)
 
+step("C24 et C25 : chef jamais sur l'icone de role, icone des DPS", function()
+  local b = Z.buttons[1]
+  local old = { shape = Z.db.shape, offset = Z.Offset, roles = UnitGroupRolesAssigned, dps = Z.db.showDpsRole }
+  local ok, err = pcall(function()
+    Z.db.shape = "TILE"
+    Z.Offset = function(key) if key == "leader" then return 18, 2 end return 0, 0 end
+    b.role:SetSize(12, 12) b.leader:SetSize(12, 12)
+    b.role:Show()
+    Z.PlaceLeader(b)
+    local p = b.leader._point
+    assert(p[1] == "TOPRIGHT" and p[2] == b.role and p[4] == -1 and p[5] == 2, "chef pose sur l'icone de role : " .. tostring(p[4]))
+    b.role:Hide()
+    Z.PlaceLeader(b)
+    assert(b.leader._point[4] == 17, "sans icone de role, le chef reste ou le joueur l'a mis")
+    -- icone des DPS : seulement avec son interrupteur (eteint au depart)
+    assert(Z.defaults.showDpsRole == false, "allumee au depart")
+    rawset(_G, "UnitGroupRolesAssigned", function() return "DAMAGER" end)
+    b.role.SetAtlas = function(self, atlas) self._atlas = atlas end
+    Z.db.showDpsRole = false
+    Z:Refresh()
+    assert(not b.role:IsShown(), "icone DPS affichee sans l'interrupteur")
+    Z.db.showDpsRole = true
+    Z:Refresh()
+    assert(b.role:IsShown() and b.role._atlas == "roleicon-tiny-dps", "icone DPS absente")
+    -- mode test : le faux DPS (troisieme case d'un groupe) montre aussi l'epee, seulement avec l'interrupteur
+    local fake = Z.FakeCell(UIParent)
+    Z.DrawFakeCell(fake, 3, false)
+    assert(fake.role:IsShown(), "mode test : icone DPS absente")
+    Z.db.showDpsRole = false
+    Z.DrawFakeCell(fake, 3, false)
+    assert(not fake.role:IsShown(), "mode test : icone DPS sans l'interrupteur")
+    assert(Z.translations.enUS["Icône des DPS aussi"], "sans traduction anglaise")
+  end)
+  Z.db.shape, Z.Offset, Z.db.showDpsRole = old.shape, old.offset, old.dps
+  rawset(_G, "UnitGroupRolesAssigned", old.roles)
+  b.role.SetAtlas = nil
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

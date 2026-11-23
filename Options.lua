@@ -2695,6 +2695,7 @@ local function Chapters()
 			{ "Sur la case", {
 				{ "check", "showName", "Nom du joueur" },
 				{ "check", "showRole", "Icône de rôle (tank, soigneur)" },
+				{ "check", "showDpsRole", "Icône des DPS aussi", "L'épée des DPS sur leur case, à la place de l'icône de rôle. Éteinte : seuls les tanks et les soigneurs ont une icône, les cases restent plus lisibles.", desc = "L'épée des DPS, à côté des tanks et des soigneurs.", dep = { "showRole", true } },
 				{ "check", "showClassIcon", "Icône de classe", "Une petite icône de la classe du joueur sur sa case : après l'icône de rôle en Barre et en Bandeau, au bord gauche de la ligne du nom en Tuile et en Carré. Sa place et sa taille se règlent dans l'éditeur de placement.", desc = "La classe de chaque joueur, en image." },
 				{ "check", "showMarker", "Marqueur de raid" },
 				{ "check", "showLeader", "Chef de groupe et assistants", desc = "Une couronne sur la case du chef, un petit drapeau sur celles des assistants en raid." },

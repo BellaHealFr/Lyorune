@@ -80,6 +80,7 @@ Z.defaults = {
 	showThreat = true,         -- bordure rouge de menace
 	showName = true,           -- nom du joueur sur la case
 	showRole = true,           -- icône de rôle
+	showDpsRole = false,       -- icône de rôle aussi pour les DPS (C25, éteinte au départ)
 	showClassIcon = false,     -- icône de classe sur la case (éteinte au départ), placée par l'éditeur de placement
 	showMarker = true,         -- marqueur de raid
 	showLeader = true,         -- couronne du chef de groupe, drapeau des assistants en raid

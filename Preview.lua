@@ -73,9 +73,12 @@ local function Fill(cell, index, sample)
 
 	-- Rôles : un tank et un soigneur par groupe de cinq
 	local slot = (index - 1) % 5
-	local role = slot == 0 and "TANK" or slot == 1 and "HEALER" or nil
-	cell.role:SetShown(db.showRole and role ~= nil)
-	if role then cell.role:SetAtlas(role == "TANK" and "roleicon-tiny-tank" or "roleicon-tiny-healer") end
+	local role = slot == 0 and "TANK" or slot == 1 and "HEALER" or nil -- nil : un DPS
+	local icon = role == "TANK" and "roleicon-tiny-tank" or role == "HEALER" and "roleicon-tiny-healer"
+		or db.showDpsRole and "roleicon-tiny-dps" -- (C25, comme les vraies cases)
+	cell.role:SetShown(db.showRole and icon and true or false)
+	if icon then cell.role:SetAtlas(icon) end
+	Z.PlaceLeader(cell) -- l'icône de rôle vient d'apparaître ou de disparaître (C24)
 	if db.showClassIcon then Z.SetClassIcon(cell.class, class) else cell.class:Hide() end
 	-- Chef de groupe sur la première case, un assistant par groupe de cinq en raid
 	local leader = db.showLeader and ((sample or index == 1) and "LeaderIcon" or size > 5 and slot == 0 and "AssistantIcon")

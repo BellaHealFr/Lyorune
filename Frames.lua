@@ -345,15 +345,20 @@ local function UpdateRole(b)
 	local unit = b.unit
 	local role = UnitGroupRolesAssigned(unit)
 	if issecret(role) then role = nil end
+	local had = b.role:IsShown()
 	if db.showRole and role == "TANK" then
 		b.role:SetAtlas("roleicon-tiny-tank")
 		b.role:Show()
 	elseif db.showRole and role == "HEALER" then
 		b.role:SetAtlas("roleicon-tiny-healer")
 		b.role:Show()
+	elseif db.showRole and db.showDpsRole and role == "DAMAGER" then -- (C25, éteint au départ)
+		b.role:SetAtlas("roleicon-tiny-dps")
+		b.role:Show()
 	else
 		b.role:Hide()
 	end
+	if b.role:IsShown() ~= had then Z.PlaceLeader(b) end -- l'icône de rôle est apparue ou partie (défini plus bas)
 
 	-- La ressource montrée par le jeu pour ce joueur. Réponse secrète ou inconnue : celle déjà connue, sinon
 	-- celle de sa classe (Data.lua), sinon la mana. Relue à la sortie de combat.
@@ -684,6 +689,26 @@ local function PlaceAbsorbText(b, inline)
 	end
 end
 
+-- Chef de groupe (C24). Barre et Bandeau : petit badge sur le coin de l'icône de rôle. Tuile et Carré : à gauche de
+-- l'icône de rôle, plus le décalage de l'éditeur de placement ; si ce décalage le pose sur une icône de rôle
+-- affichée (tank, soigneur, DPS), il revient à gauche d'elle, à la même hauteur. Revu quand le rôle change.
+local function PlaceLeader(b)
+	if Z:Shape().inline then
+		return Place(b.leader, "leader", "CENTER", b.role, "TOPRIGHT", 0, 0)
+	end
+	local dx, dy = Z.Offset("leader")
+	if b.role:IsShown() then
+		local badge, width, height = b.leader:GetWidth(), b.role:GetWidth(), b.role:GetHeight()
+		if dx > 1 and dx < width + badge + 1 and dy < badge and dy > -height then -- l'un sur l'autre
+			local minX, maxX = Z.OffsetRange("leader") -- jamais hors de la case : à droite si la gauche en sort
+			if minX <= 0 then dx = 0 elseif width + badge + 2 <= maxX then dx = width + badge + 2 end
+		end
+	end
+	b.leader:ClearAllPoints()
+	b.leader:SetPoint("TOPRIGHT", b.role, "TOPLEFT", -1 + dx, dy)
+end
+Z.PlaceLeader = PlaceLeader -- case d'exemple de l'éditeur de placement
+
 local function PlaceTexts(b, icon)
 	local shield = db.showAbsorb and db.absorbText
 	if Z:Shape().inline then
@@ -694,7 +719,6 @@ local function PlaceTexts(b, icon)
 		-- en Bandeau, à gauche du bloc d'icônes (et du chiffre du bouclier)
 		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", b.rows.textX - (shield and AbsorbSize() + 2 or 0), 0)
 		b.text:SetJustifyH("RIGHT")
-		Place(b.leader, "leader", "CENTER", b.role, "TOPRIGHT", 0, 0) -- petit badge sur l'icône de rôle
 	else
 		Place(b.role, "role", "TOPRIGHT", b, "TOPRIGHT", -2 - Z.CornerShift(b, "TOPRIGHT"), -2)
 		-- Accrochés à la barre de vie : ils remontent avec elle quand la barre de mana s'affiche
@@ -703,7 +727,6 @@ local function PlaceTexts(b, icon)
 		Place(b.class, "class", "LEFT", b.hp, "LEFT", 3, 3) -- au bord gauche, sur la ligne du nom (raccourci d'autant)
 		Place(b.text, "text", "BOTTOM", b.hp, "BOTTOM", 0, 4)
 		b.text:SetJustifyH("CENTER")
-		Place(b.leader, "leader", "TOPRIGHT", b.role, "TOPLEFT", -1, 0) -- à gauche de l'icône de rôle
 	end
 	b.name:SetWidth(Z.TextWidth("name"))
 	b.text:SetWidth(Z.TextWidth("text"))
@@ -795,6 +818,7 @@ local function Style(b)
 	Size(b.role, "role", icon - 2)
 	Size(b.class, "class", icon - 2)
 	Size(b.leader, "leader", Z.BadgeSize(icon))
+	PlaceLeader(b) -- après les tailles : il mesure les deux icônes
 	Size(b.marker, "marker", icon)
 	Size(b.center, "center", icon + 8)
 	Size(b.lowMana, "lowMana", icon - 1)
