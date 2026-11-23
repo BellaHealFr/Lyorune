@@ -1045,6 +1045,7 @@ Demande de l'auteur (23 novembre 2026) : **prochaine étape, avant toute autre**
 mesures dans la fiche C15 de `CORRECTIONS.md`. Résumé : aucun addon ne montre les buffs manquants des autres en
 match JcJ ; sur Forever tous les buffs de groupe sont secrets selon le contexte (mesures publiées par
 BuffReminders) ; la 1.35.0 ne marche pas en jeu.
+- **Publiée : 1.44.1 (23 novembre 2026)**, pas encore essayée en champ de bataille.
 - Décidé avec l'auteur (23 novembre 2026, les deux recommandés) : mesure et correction dans la même 1.44.1, un
   seul essai en champ de bataille ; en match, un joueur dont Lyorune ne sait rien a le buff proposé (inconnu = absent).
 - [x] 30 a : commande de mesure faite : `/lyorune buffs` ajoute l'état du jeu (buffs cachés, match JcJ, état de la
