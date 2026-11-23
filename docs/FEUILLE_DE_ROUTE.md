@@ -1045,7 +1045,9 @@ Demande de l'auteur (23 novembre 2026) : **prochaine étape, avant toute autre**
 mesures dans la fiche C15 de `CORRECTIONS.md`. Résumé : aucun addon ne montre les buffs manquants des autres en
 match JcJ ; sur Forever tous les buffs de groupe sont secrets selon le contexte (mesures publiées par
 BuffReminders) ; la 1.35.0 ne marche pas en jeu.
-- **Publiée : 1.44.1 (23 novembre 2026)**, pas encore essayée en champ de bataille.
+- **Publiée : 1.44.1 (23 novembre 2026)**, pas encore essayée en champ de bataille. **RAPPEL : essai à faire par
+  l'auteur** au prochain champ de bataille (commandes dans la fiche C15 de `CORRECTIONS.md`) ; à redemander au début
+  de chaque session tant que le résultat n'est pas collé dans la conversation.
 - Décidé avec l'auteur (23 novembre 2026, les deux recommandés) : mesure et correction dans la même 1.44.1, un
   seul essai en champ de bataille ; en match, un joueur dont Lyorune ne sait rien a le buff proposé (inconnu = absent).
 - [x] 30 a : commande de mesure faite : `/lyorune buffs` ajoute l'état du jeu (buffs cachés, match JcJ, état de la
@@ -1073,6 +1075,34 @@ BuffReminders) ; la 1.35.0 ne marche pas en jeu.
   (préparation, `PVP_MATCH_STATE_CHANGED`) si les auras y sont encore lisibles ; joueurs en combat ou au nom
   secret plus écartés à tort en JcJ ; repères dessinés par le jeu sur les cases (seule vérité pour les buffs
   posés par les autres). Tests : entrée en préparation, début du match, mort et réapparition, buff posé.
+
+## Étape 31 : Les amis de Lyorune (1.45.0)
+Demande de l'auteur (22 novembre 2026), placée après le plan correctif (détail et décisions dans `REPRISE.md`,
+« Demande notée »). Choix de l'auteur (23 novembre 2026, les trois recommandés) : **12e chapitre** à part ; carnet
+avec **soins, résurrections et buffs** (nouveau compte, allumé au départ) ; **brouillon** du mot de l'auteur et
+mur vide avec une invitation, à relire par l'auteur avant la publication.
+- Comparaison : HealKit (onglet « À propos », page « Merci », `AboutData.lua` écrit à chaque publication, carnet
+  `Ledger.lua` qui ne compte que les sorts lancés depuis ses propres cases) ; HealBot et VuhDo : aucune page de
+  remerciements ni carnet. Lyorune fait mieux : le carnet compte tous mes sorts réussis, d'où qu'ils partent
+  (cases, barres, macros, touches), rangés par nom (tous les rangs) ; le nombre de mises à jour vient de
+  `Changes.lua` (rien à écrire) ; aucun texte ni icône repris, runes de Lyorune.
+- [x] `About.lua` (nouveau, écrit par `outils/publier.py`) : date, téléchargements GitHub (même lecture que
+  `outils/telechargements.py`, fonction `total`), total CurseForge (demandé à la publication ou `--curseforge N`,
+  Entrée garde l'ancien), membres du Discord (invitation publique, sans clé), noms de `outils/amis.txt`. Sans
+  réponse d'internet, les anciens chiffres restent.
+- [x] `Tally.lua` (nouveau) : réglage `notebook` (Core.lua, allumé, hors profils), `LyoruneCharDB.tally`, un
+  seul événement (`UNIT_SPELLCAST_SUCCEEDED` sur moi) écouté seulement carnet allumé (`Z:RefreshTally`, appelé
+  avec `Z:RefreshAlerts`) ; résurrection (`Z.resNames`), buff (`Z.buffNames`, `Z.ownNames`), sinon soin (sort
+  d'aide selon le jeu, ou soin sans cible de `Z.groupHeals`) ; dissipations écartées ; numéro secret ignoré.
+- [x] Chapitre « Les amis de Lyorune » (Options.lua, rune 7) : trois plaques (mises à jour, téléchargements,
+  Discord) avec la date des chiffres et le lien du Discord à copier ; « Tenir mon carnet » et ses trois chiffres
+  (suivent en direct, remise à zéro à confirmer) ; « Un mot de BellaDroode » ; mur « Merci ».
+- [x] Garde-fou de `outils/publier.py` : une note transformée en chemin par Git Bash est refusée (la 1.44.1
+  avait publié « C:/Program Files/Git/lyorune buffs », corrigé dans les fichiers ; la page GitHub de la 1.44.1
+  reste à corriger avec l'accord de l'auteur). L'archive refuse aussi un chemin `X:/`.
+- [x] Tests : étape « 1.45.0 », douze chapitres. Visite guidée : une phrase sur la carte « Recherche et Accueil ».
+  Guides (partie 15), README (ligne « Les amis de Lyorune »), `## Notes`, site (douze chapitres).
+- [ ] Relecture, accord de l'auteur sur le mot et les textes, total CurseForge, publication.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.

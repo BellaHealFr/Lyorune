@@ -10,7 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Improved
 
-- C:/Program Files/Git/lyorune buffs also tells what the game hides here and why a player is missing from the panel (dead, in combat, hidden frame, reading refused).
+- /lyorune buffs also tells what the game hides here and why a player is missing from the panel (dead, in combat, hidden frame, reading refused).
 
 ### Fixed
 

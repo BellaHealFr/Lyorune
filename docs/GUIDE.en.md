@@ -12,7 +12,7 @@ On the very first launch, a **setup assistant** asks three questions before the 
 
 Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The window has three columns.
 
-**On the left, the sidebar**: eleven chapters, each with its own rune. One click opens a chapter. At each login, the window opens on Home; during the session, it reopens the chapter you used last. A small golden badge counts, in each chapter, the settings you chose yourself that differ from the default: Lyorune never changes anything by itself.
+**On the left, the sidebar**: twelve chapters, each with its own rune. One click opens a chapter. At each login, the window opens on Home; during the session, it reopens the chapter you used last. A small golden badge counts, in each chapter, the settings you chose yourself that differ from the default: Lyorune never changes anything by itself.
 
 | Chapter | What you set there |
 |---|---|
@@ -443,7 +443,15 @@ At the bottom of the options window, under a thin line, a line of runes writes i
 
 It is there for the pleasure of the eyes only. To remove it, turn off "Runic inscription at the bottom of this window" (Window and help chapter).
 
-## 15. A problem?
+## 15. Friends of Lyorune
+
+The last chapter of the options window, at the bottom of the left sidebar. You will find:
+
+- **Lyorune in numbers**: the number of updates, downloads (GitHub and CurseForge) and Discord members. An addon has no internet access: these numbers are those of the day your version was published, and the date is written below. The Discord link can be copied with Ctrl+C.
+- **Your notebook**: your successful heals, resurrections and buffs, for each character, wherever they come from (cells, bars, macros, keys). Dispels do not count. The notebook stays on your computer: nothing is sent. "Keep my notebook" stops it (your numbers are kept); "Reset my notebook" asks for a second click.
+- **A word from the author**, and the **thank you wall**: players who help Lyorune, only with their consent. To be on it, ask on Discord or GitHub.
+
+## 16. A problem?
 
 Type `/lyorune bug` (or "Report a bug", Window and help chapter, Help part). Answer the three questions, click "Select all", copy with Ctrl+C, then paste the report into the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml). Your character's name, your realm and your group members' names are replaced with "(joueur)" and "(royaume)": the report is public. For a display problem, attach a screenshot. The step by step guide is in [SIGNALER_UN_BUG.md](SIGNALER_UN_BUG.md#reporting-a-bug-english).
 

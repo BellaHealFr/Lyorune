@@ -11,7 +11,7 @@ Au tout premier lancement, un **assistant** pose trois questions avant la visite
 
 Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte). La fenêtre a trois colonnes.
 
-**À gauche, la barre latérale** : onze chapitres, chacun avec sa rune. Un clic ouvre un chapitre. À chaque connexion, la fenêtre s'ouvre sur l'Accueil ; pendant la partie, elle rouvre le dernier chapitre utilisé. Une petite pastille d'or compte, dans chaque chapitre, les réglages que vous avez choisis vous-même et qui diffèrent de l'installation : Lyorune ne change rien tout seul.
+**À gauche, la barre latérale** : douze chapitres, chacun avec sa rune. Un clic ouvre un chapitre. À chaque connexion, la fenêtre s'ouvre sur l'Accueil ; pendant la partie, elle rouvre le dernier chapitre utilisé. Une petite pastille d'or compte, dans chaque chapitre, les réglages que vous avez choisis vous-même et qui diffèrent de l'installation : Lyorune ne change rien tout seul.
 
 | Chapitre | Ce que vous y réglez |
 |---|---|
@@ -444,7 +444,15 @@ Au bas de la fenêtre d'options, sous un trait fin, une ligne de runes s'écrit 
 
 Elle ne sert à rien d'autre qu'au plaisir des yeux. Pour la retirer, coupez « Inscription runique au bas de cette fenêtre » (chapitre Fenêtre et aide).
 
-## 15. Un problème ?
+## 15. Les amis de Lyorune
+
+Le dernier chapitre de la fenêtre d'options, en bas de la barre de gauche. Vous y trouvez :
+
+- **Lyorune en chiffres** : le nombre de mises à jour, de téléchargements (GitHub et CurseForge) et de membres du Discord. Un addon n'a pas accès à internet : ces chiffres sont ceux du jour où votre version a été publiée, et la date est écrite dessous. Le lien du Discord se copie avec Ctrl+C.
+- **Votre carnet** : vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent (cases, barres, macros, touches). Les dissipations ne comptent pas. Le carnet reste sur votre ordinateur : rien n'est envoyé. « Tenir mon carnet » l'arrête (vos chiffres sont gardés) ; « Remettre mon carnet à zéro » demande un second clic.
+- **Un mot de l'auteur**, et le **mur de remerciements** : les joueurs qui aident Lyorune, seulement avec leur accord. Pour y figurer, demandez-le sur le Discord ou sur GitHub.
+
+## 16. Un problème ?
 
 Tapez `/lyorune bug` (ou « Signaler un bug », chapitre Fenêtre et aide, partie Aide). Répondez aux trois questions, cliquez sur « Tout sélectionner », copiez avec Ctrl+C, puis collez le rapport à l'adresse affichée dans la fenêtre. Le nom de votre personnage, de votre royaume et des membres de votre groupe y est remplacé par « (joueur) » et « (royaume) » : le rapport est public. Pour un défaut d'affichage, joignez une capture d'écran.
 

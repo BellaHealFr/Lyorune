@@ -295,4 +295,5 @@ function Z:RefreshAlerts()
 		watcher:RegisterUnitEvent("UNIT_SPELLCAST_SENT", "player")
 	end
 	if Z.RefreshComm then Z:RefreshComm() end -- synchronisation (Comm.lua) : même moment, mêmes réglages
+	if Z.RefreshTally then Z:RefreshTally() end -- « Votre carnet » (Tally.lua) : idem
 end

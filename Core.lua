@@ -159,6 +159,9 @@ Z.defaults = {
 	macros = {},               -- ma bibliothèque de macros, par classe : macros.PRIEST[1] = { name = "...", body = "..." }
 	macroAutoTarget = true,    -- une commande de macro sans cible vise la case
 
+	-- Les amis de Lyorune
+	notebook = true,           -- tenir « Votre carnet » : mes soins, résurrections et buffs réussis, par personnage (Tally.lua)
+
 	-- Listes personnelles (noms de sorts)
 	extraTracked = {},         -- mes sorts à suivre en plus
 	ignoredNames = {},         -- affaiblissements à ne jamais afficher
@@ -255,7 +258,7 @@ Z.notInProfile = {
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
 	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
-	rankChoice = true, rankAdapt = true, clickVariants = true, enemyGuard = true,
+	rankChoice = true, rankAdapt = true, clickVariants = true, enemyGuard = true, notebook = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	assignMark = true, assignGroups = true, assignPlayers = true, assignFade = true, assignAccept = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,

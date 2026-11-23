@@ -1,6 +1,6 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - Options.lua : la fenêtre /lyorune.
--- Une barre latérale de onze chapitres, un sujet par chapitre, chaque réglage à un seul endroit :
+-- Une barre latérale de douze chapitres, un sujet par chapitre, chaque réglage à un seul endroit :
 --   Accueil             de quoi bien commencer
 --   Disposition         où et comment les cases sont rangées
 --   Apparence           à quoi elles ressemblent
@@ -2341,6 +2341,167 @@ local function ChangedList(page, width)
 end
 
 ----------------------------------------------------------------------------------------------------
+-- Les amis de Lyorune : chiffres du projet (About.lua, écrits à chaque publication), mon carnet (Tally.lua),
+-- un mot de l'auteur et le mur de remerciements (noms donnés par l'auteur, joueurs d'accord seulement)
+----------------------------------------------------------------------------------------------------
+local DISCORD = "discord.gg/uRaEPTGePu"
+
+-- 12345 -> "12 345"
+local function Grouped(n)
+	local text = tostring(math.floor(tonumber(n) or 0))
+	repeat
+		local done
+		text, done = text:gsub("^(%d+)(%d%d%d)", "%1 %2")
+	until done == 0
+	return text
+end
+
+-- "2026-11-23" -> "23/11/2026"
+local function Day(iso)
+	local y, m, d = tostring(iso or ""):match("^(%d+)-(%d+)-(%d+)$")
+	return y and (d .. "/" .. m .. "/" .. y) or tostring(iso or "")
+end
+
+-- Une plaque : rune dorée, chiffre, mot
+local PLAQUE_H = 74
+local function Plaque(box, rune, label, width)
+	local p = CreateFrame("Frame", nil, box)
+	p:SetSize(width, PLAQUE_H)
+	p.bg = UI.Paint(UI.Tex(p, "BACKGROUND"), "panel")
+	p.bg:SetAllPoints()
+	p.border = UI.Paint(UI.Border(p, 1), "line")
+	p.rune = UI.Paint(UI.Rune(p, "ARTWORK", rune, 22), "gold")
+	p.rune:SetPoint("TOP", 0, -8)
+	p.value = UI.Label(p, 18, nil, "accent")
+	p.value:SetPoint("TOP", 0, -32)
+	p.label = UI.Label(p, 11, nil, "dim")
+	p.label:SetPoint("TOP", 0, -55)
+	p.label:SetText(L[label])
+	return p
+end
+
+local function FriendsNumbers(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, PLAQUE_H + 62)
+	local each = math.floor((width - 20) / 3)
+	box.updates = Plaque(box, 12, "mises à jour", each)
+	box.updates:SetPoint("TOPLEFT")
+	box.downloads = Plaque(box, 6, "téléchargements", each)
+	box.downloads:SetPoint("TOPLEFT", each + 10, 0)
+	box.discord = Plaque(box, 8, "sur le Discord", each)
+	box.discord:SetPoint("TOPLEFT", 2 * (each + 10), 0)
+	box.when = UI.Label(box, 11, nil, "dim")
+	box.when:SetPoint("TOPLEFT", 0, -PLAQUE_H - 8)
+	box.when:SetWidth(width)
+	box.when:SetJustifyH("LEFT")
+	-- Lien du Discord à copier (un addon ne peut pas ouvrir de page)
+	box.linkLabel = UI.Label(box, 12)
+	box.linkLabel:SetPoint("TOPLEFT", 0, -PLAQUE_H - 34)
+	box.linkLabel:SetText(L["Discord de Lyorune (Ctrl+C) :"])
+	box.link = UI.Edit(box, 220)
+	box.link:SetPoint("LEFT", box.linkLabel, "RIGHT", 8, 0)
+	box.link:SetText(DISCORD)
+	box.link:SetScript("OnTextChanged", function(self)
+		if self:GetText() ~= DISCORD then self:SetText(DISCORD) self:HighlightText() end
+	end)
+	box.Update = function(self)
+		local about = Z.about or {}
+		self.updates.value:SetText(Grouped(#(Z.changes or {})))
+		self.downloads.value:SetText(Grouped((about.github or 0) + (about.curseforge or 0)))
+		self.discord.value:SetText(Grouped(about.discord or 0))
+		self.when:SetText(L["Chiffres du %s (GitHub et CurseForge), mis à jour à chaque version de Lyorune."]:format(Day(about.date)))
+	end
+	box:SetScript("OnShow", box.Update)
+	box:Update()
+	Register(page, L["Lyorune en chiffres"], box)
+	return box
+end
+
+-- Votre carnet : trois chiffres, depuis quand, et la remise à zéro
+local TALLY_LINES = { { "heals", "Soins lancés" }, { "res", "Résurrections" }, { "buffs", "Buffs posés" } }
+local TALLY_H = 22
+
+local function NotebookBox(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, #TALLY_LINES * TALLY_H + 52)
+	box.tallyRows = {}
+	for i, line in ipairs(TALLY_LINES) do
+		local name = UI.Label(box, 12)
+		name:SetPoint("TOPLEFT", 4, -(i - 1) * TALLY_H)
+		name:SetText(L[line[2]])
+		local value = UI.Label(box, 13, nil, "accent")
+		value:SetPoint("TOPLEFT", 200, -(i - 1) * TALLY_H)
+		box.tallyRows[line[1]] = value
+	end
+	box.since = UI.Label(box, 11, nil, "dim")
+	box.since:SetPoint("TOPLEFT", 4, -#TALLY_LINES * TALLY_H - 2)
+	box.since:SetWidth(width - 4)
+	box.since:SetJustifyH("LEFT")
+	box.reset = ArmedButton(box, "Remettre mon carnet à zéro", "Cliquez encore pour confirmer", 240, function()
+		Z.ResetTally()
+		box:Update()
+	end)
+	box.reset:SetPoint("TOPLEFT", 0, -#TALLY_LINES * TALLY_H - 24)
+	Register(page, L["Remettre mon carnet à zéro"], box.reset)
+	box.Update = function(self)
+		local tally = Z.Tally()
+		for key, value in pairs(self.tallyRows) do value:SetText(Grouped(tally[key])) end
+		self.since:SetText(Z.db.notebook
+			and L["Depuis le %s, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."]:format(Day(tally.since))
+			or L["Carnet éteint : plus rien n'est compté, vos chiffres sont gardés."])
+		self:SetAlpha(Z.db.notebook and 1 or 0.6)
+	end
+	box:SetScript("OnShow", box.Update)
+	Z.TallyChanged = function() if box:IsVisible() then box:Update() end end
+	box:Update()
+	Register(page, L["Votre carnet"], box)
+	return box
+end
+
+-- Un mot de l'auteur, signé
+local function AuthorWord(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 20)
+	box.text = UI.Label(box, 12)
+	box.text:SetPoint("TOPLEFT", 4, 0)
+	box.text:SetWidth(width - 8)
+	box.text:SetJustifyH("LEFT")
+	box.text:SetSpacing(4)
+	box.text:SetText(L["Lyorune est né d'une envie simple : soigner sans se battre avec ses cadres. Merci à vous qui l'utilisez, qui signalez un bug ou proposez une idée : chaque version vous doit un peu. Bons soins, et à bientôt en jeu."])
+	box.sign = UI.Label(box, 12, nil, "gold")
+	box.sign:SetPoint("TOPRIGHT", box.text, "BOTTOMRIGHT", 0, -6)
+	box.sign:SetText("BellaDroode")
+	box.Update = function(self) Fit(self, math.ceil(self.text:GetStringHeight()) + 26) end
+	box:Update()
+	return box
+end
+
+-- Mur de remerciements : les noms donnés par l'auteur (About.lua), sinon une invitation
+local function ThanksWall(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 20)
+	box.thanks = UI.Label(box, 13, nil, "gold")
+	box.thanks:SetPoint("TOPLEFT", 4, 0)
+	box.thanks:SetWidth(width - 8)
+	box.thanks:SetJustifyH("CENTER")
+	box.thanks:SetSpacing(6)
+	box.how = UI.Label(box, 11, nil, "dim")
+	box.how:SetPoint("TOPLEFT", box.thanks, "BOTTOMLEFT", 0, -10)
+	box.how:SetWidth(width - 8)
+	box.how:SetJustifyH("LEFT")
+	box.how:SetSpacing(3)
+	box.how:SetText(L["Vous aimez Lyorune et voulez y laisser votre nom ? Demandez-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur."])
+	box.Update = function(self)
+		local names = Z.about and Z.about.names or {}
+		self.thanks:SetText(#names > 0 and table.concat(names, "   ·   ") or L["Votre nom ici ?"])
+		Fit(self, math.ceil(self.thanks:GetStringHeight() + self.how:GetStringHeight()) + 14)
+	end
+	box:Update()
+	Register(page, L["Merci"], box)
+	return box
+end
+
+----------------------------------------------------------------------------------------------------
 -- Les chapitres : nom, rune de l'atlas (1 à 24, ordre de outils/runes.py), phrase sous le titre, anciens noms
 -- d'onglet encore acceptés (Z:ToggleOptions("Clics") du tutoriel), parties { titre, lignes }.
 -- Tout est en une colonne ; les outils (listes, clics, profils, légende) sont des lignes « custom ».
@@ -2666,6 +2827,21 @@ local function Chapters()
 			} },
 			{ "Commandes", {
 				{ "custom", CommandList },
+			} },
+		} },
+		{ name = "Les amis de Lyorune", rune = 7, intro = "Lyorune en chiffres, votre carnet de soigneur et un grand merci.", sections = {
+			{ "Lyorune en chiffres", {
+				{ "custom", FriendsNumbers },
+			} },
+			{ "Votre carnet", {
+				{ "check", "notebook", "Tenir mon carnet", "Compte vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent : cases, barres, macros, touches. Les dissipations ne comptent pas. Rien n'est envoyé : le carnet reste sur votre ordinateur.", desc = "Vos soins, résurrections et buffs réussis, par personnage." },
+				{ "custom", NotebookBox },
+			} },
+			{ "Un mot de BellaDroode", {
+				{ "custom", AuthorWord },
+			} },
+			{ "Merci", {
+				{ "custom", ThanksWall },
 			} },
 		} },
 	}

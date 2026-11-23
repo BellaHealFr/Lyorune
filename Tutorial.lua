@@ -230,7 +230,8 @@ local steps = {
 	{
 		title = "Recherche et Accueil",
 		text = "Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
-			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel.",
+			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel. "
+			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur.",
 		window = "Accueil",
 		target = function() return Z:OptionsWindow().search end,
 	},

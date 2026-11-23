@@ -12,7 +12,7 @@ Z.changes = {
 		added = {
 		},
 		improved = {
-			"C:/Program Files/Git/lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée).",
+			"/lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée).",
 		},
 		fixed = {
 			"Buffs manquants en champ de bataille : le panneau ne restait plus vide. Quand le jeu refuse de lire les buffs pendant un match ou un boss, Lyorune s'appuie sur ce qu'il a retenu (avant le match, vos sorts) et propose un buff dont il ne sait rien ; joueurs en combat et noms cachés gardés.",

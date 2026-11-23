@@ -201,12 +201,12 @@ step("combat avec valeurs secretes", function()
   FireEvent("PLAYER_REGEN_ENABLED") Z:Refresh() RunUpdates()
 end)
 
-step("options : onze chapitres, recherche, libelles traduits", function()
+step("options : douze chapitres, recherche, libelles traduits", function()
   SlashCmdList.LYORUNE("")
   local w = Z:OptionsWindow()
-  assert(w and w:IsShown() and #w.chapters == 11, "onze chapitres")
+  assert(w and w:IsShown() and #w.chapters == 12, "douze chapitres")
   assert(Z:OptionChapter() == "Accueil", "premiere ouverture de la partie : l'Accueil")
-  for i = 1, 11 do w.Select(i) end
+  for i = 1, 12 do w.Select(i) end
   w.Select("Clics") w.Select("Inconnu")
   local labels = Z:OptionLabels()
   assert(#labels >= 45, "reglages recenses : " .. #labels)
@@ -3130,9 +3130,9 @@ step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", funct
   Z:ToggleOptions("Accueil")
   local w = Z:OptionsWindow()
   local chapters = w.chapters
-  -- Onze chapitres dans la barre latérale, dans l'ordre de la maquette, textes traduits
+  -- Douze chapitres dans la barre latérale, dans l'ordre de la maquette, textes traduits
   local names = { "Accueil", "Disposition", "Apparence", "Vie et portée", "Mes soins", "Affaiblissements", "Joueurs",
-    "Sorts et raccourcis", "Alertes", "Profils et partage", "Fenêtre et aide" }
+    "Sorts et raccourcis", "Alertes", "Profils et partage", "Fenêtre et aide", "Les amis de Lyorune" }
   local missing, inChapters = {}, {}
   local function Need(text) if text and not Z.translations.enUS[text] then missing[#missing + 1] = text end end
   for i, chapter in ipairs(chapters) do
@@ -3912,7 +3912,7 @@ step("refonte 1.26.0, lot 6c ter : fenetres a la mesure de l'ecran, jamais l'une
   Screen(1024, 768) UI.Fit(w)
   assert(math.abs(w:GetScale() - 984 / 1080) < 0.001 and w:GetHeight() == 708, "options reduites d'un bloc : " .. w:GetScale())
   Screen(1365, 600) UI.Fit(w)
-  local step = math.floor((540 - 58 - 34 - 16) / 11)
+  local step = math.floor((540 - 58 - 34 - 16) / 12)
   assert(w:GetScale() == 1 and w:GetHeight() == 540 and w.chapters[1].button:GetHeight() == step - 2, "options moins hautes")
   -- l'échelle de l'interface change, fenêtre ouverte : elle reprend sa taille
   w:Show() Screen(1365, 768) FireEvent("UI_SCALE_CHANGED")
@@ -9473,6 +9473,71 @@ step("1.44.1 : C15, buffs manquants en champ de bataille (lecture refusee, nom s
   C_RestrictedActions, Enum.AddOnRestrictionType = old.restricted, old.types
   AURAS = {}
   Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("1.45.0 : Les amis de Lyorune (chiffres, carnet, mot de l'auteur, mur de remerciements)", function()
+  local old = { helpful = C_Spell.IsSpellHelpful, class = Z.class, notebook = Z.db.notebook, about = Z.about }
+  local ok, err = pcall(function()
+    Z.class = "PRIEST" Z:BuildData()
+    Z.db.notebook = true Z:RefreshAlerts()
+    Z.ResetTally()
+    -- un sort offensif (le jeu le dit pas utilisable sur un allie) ne compte pas
+    C_Spell.IsSpellHelpful = function(id) return id ~= 139 end -- (Renovation tenue pour offensive)
+    for _, id in ipairs({ 2061, 2061, 596, 2006, 1243, 21562, 527, 139 }) do
+      FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-" .. id, id)
+    end
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-secret", MakeSecret(2061)) -- numero secret : ignore
+    local t = Z.Tally()
+    assert(t.heals == 3 and t.res == 1 and t.buffs == 2, ("carnet : %d soins, %d res, %d buffs"):format(t.heals, t.res, t.buffs))
+    assert(Z.char.tally == t and t.since:match("^%d+%-%d+%-%d+"), "carnet par personnage, avec sa date")
+    -- carnet eteint : plus rien n'est compte, les chiffres restent
+    Z.db.notebook = false Z:RefreshAlerts()
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-off", 2061)
+    assert(Z.Tally().heals == 3, "carnet eteint : soin compte")
+    Z.db.notebook = true Z:RefreshAlerts()
+    -- la page : douzieme chapitre, chiffres du projet, carnet, mur de remerciements
+    Z.about = { date = "2026-11-23", github = 1200, curseforge = 345, discord = 40, names = {} }
+    SlashCmdList.LYORUNE("")
+    local w = Z:OptionsWindow()
+    local page = w.Select("Les amis de Lyorune")
+    local numbers, notebook, wall = OptionPart("updates"), OptionPart("tallyRows"), OptionPart("thanks")
+    assert(numbers and notebook and wall, "page des amis incomplete")
+    numbers:Update()
+    assert(numbers.updates.value:GetText() == tostring(#Z.changes), "mises a jour : " .. numbers.updates.value:GetText())
+    assert(numbers.downloads.value:GetText() == "1 545" and numbers.discord.value:GetText() == "40", "chiffres : " .. numbers.downloads.value:GetText())
+    assert(numbers.when:GetText():find("23/11/2026", 1, true), "date des chiffres")
+    assert(numbers.link:GetText() == "discord.gg/uRaEPTGePu", "lien du Discord")
+    numbers.link:SetText("efface") numbers.link:Run("OnTextChanged")
+    assert(numbers.link:GetText() == "discord.gg/uRaEPTGePu", "lien du Discord modifiable")
+    notebook:Update()
+    assert(notebook.tallyRows.heals:GetText() == "3" and notebook.tallyRows.buffs:GetText() == "2", "carnet affiche")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-live", 2061)
+    assert(notebook.tallyRows.heals:GetText() == "4", "carnet ouvert : le chiffre ne suit pas")
+    notebook.reset:Run("OnClick", "LeftButton")
+    assert(Z.Tally().heals == 4, "carnet efface au premier clic")
+    notebook.reset.armed = true notebook.reset:Run("OnClick", "LeftButton")
+    assert(Z.Tally().heals == 0 and notebook.tallyRows.heals:GetText() == "0", "carnet remis a zero")
+    wall:Update()
+    assert(wall.thanks:GetText() == "Votre nom ici ?", "mur vide")
+    Z.about.names = { "Joueur 1", "Joueur 2" } -- (noms factices du test, jamais dans l'addon)
+    wall:Update()
+    assert(wall.thanks:GetText():find("Joueur 1", 1, true) and wall.thanks:GetText():find("Joueur 2", 1, true), "mur des noms")
+    -- interrupteur du carnet : la page ouverte le dit aussitot
+    Z.db.notebook = false Z:RefreshAlerts()
+    assert(notebook.since:GetText():find("Carnet éteint", 1, true), "carnet eteint : page pas a jour")
+    Z.db.notebook = true Z:RefreshAlerts()
+    assert(notebook.since:GetText():find("Depuis le", 1, true), "carnet rallume : page pas a jour")
+    for _, key in ipairs({ "mises à jour", "téléchargements", "sur le Discord", "Soins lancés", "Buffs posés",
+      "Discord de Lyorune (Ctrl+C) :", "Chiffres du %s (GitHub et CurseForge), mis à jour à chaque version de Lyorune.",
+      "Depuis le %s, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches.",
+      "Carnet éteint : plus rien n'est compté, vos chiffres sont gardés.", "Votre nom ici ?" }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+    w:Hide()
+  end)
+  C_Spell.IsSpellHelpful, Z.class, Z.db.notebook, Z.about = old.helpful, old.class, old.notebook, old.about
+  Z:BuildData() Z:RefreshAlerts()
   assert(ok, err)
 end)
 

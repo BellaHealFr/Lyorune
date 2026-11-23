@@ -10,7 +10,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 ### Amélioré
 
-- C:/Program Files/Git/lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée).
+- /lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée).
 
 ### Corrigé
 

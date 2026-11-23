@@ -11,21 +11,31 @@ import json, sys, urllib.request
 DEPOT = 'BellaHealFr/Lyorune'
 
 
-def main():
+def releases():
+    """Versions publiées sur GitHub, avec le nombre de téléchargements de leurs archives (erreur si GitHub ne répond pas)."""
     url = 'https://api.github.com/repos/%s/releases?per_page=100' % DEPOT
     request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'lyorune-stats'})
+    return json.load(urllib.request.urlopen(request, timeout=20))
+
+
+def total():
+    """Tous les téléchargements GitHub (sert aussi à outils/publier.py pour la page « Les amis de Lyorune »)."""
+    return sum(asset['download_count'] for release in releases() for asset in release['assets'])
+
+
+def main():
     try:
-        releases = json.load(urllib.request.urlopen(request, timeout=20))
+        liste = releases()
     except Exception as error:
         sys.exit('Impossible de lire les versions publiées de %s : %s' % (DEPOT, error))
 
-    total = 0
+    somme = 0
     print('%-12s %-12s %s' % ('Version', 'Date', 'Téléchargements'))
-    for release in releases:
+    for release in liste:
         count = sum(asset['download_count'] for asset in release['assets'])
-        total += count
+        somme += count
         print('%-12s %-12s %d' % (release['tag_name'], release['published_at'][:10], count))
-    print('\nTotal : %d téléchargement(s) sur %d version(s).' % (total, len(releases)))
+    print('\nTotal : %d téléchargement(s) sur %d version(s).' % (somme, len(liste)))
 
 
 if __name__ == '__main__':

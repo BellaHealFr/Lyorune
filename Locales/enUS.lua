@@ -519,8 +519,9 @@ Z.translations.enUS = {
 			.. "Les boutons « 5 », « 10 », « 25 » et « 40 » ouvrent le mode test."] =
 		"The |cff33dd88preview cell|r follows every setting live, with a fake group below it.\n\nThe \"5\", \"10\", \"25\" and \"40\" buttons open test mode.",
 	["Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
-			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel."] =
-		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial.",
+			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel. "
+			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur."] =
+		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial. At the very bottom, |cff33dd88Friends of Lyorune|r: Lyorune in numbers and your healer's notebook.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
@@ -1242,5 +1243,30 @@ Z.translations.enUS = {
 	["Plus de profil « Arène » ni de mention de l'arène : WoW Forever n'a pas d'arène JcJ. Les profils automatiques gardent la taille du groupe et le champ de bataille."] = "No more \"Arena\" profile or mention of arenas: WoW Forever has no PvP arena. Automatic profiles keep group size and battleground.",
 	["Aides de la synchronisation, de « Qui relève qui » et de la répartition : le jeu bloque les messages entre addons pendant un combat de boss ou un match JcJ."] = "Help for sync, \"Who resurrects whom\" and assignments: the game blocks messages between addons during a boss fight or a PvP match.",
 	["Buffs manquants en champ de bataille : le panneau ne restait plus vide. Quand le jeu refuse de lire les buffs pendant un match ou un boss, Lyorune s'appuie sur ce qu'il a retenu (avant le match, vos sorts) et propose un buff dont il ne sait rien ; joueurs en combat et noms cachés gardés."] = "Missing buffs in battlegrounds: the panel no longer stays empty. When the game refuses to read buffs during a match or a boss, Lyorune relies on what it remembered (before the match, your casts) and offers a buff it knows nothing about; players in combat and hidden names are kept.",
-	["C:/Program Files/Git/lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée)."] = "C:/Program Files/Git/lyorune buffs also tells what the game hides here and why a player is missing from the panel (dead, in combat, hidden frame, reading refused).",
+	["/lyorune buffs dit aussi ce que le jeu cache ici et pourquoi un joueur manque au panneau (mort, en combat, case cachée, lecture refusée)."] = "/lyorune buffs also tells what the game hides here and why a player is missing from the panel (dead, in combat, hidden frame, reading refused).",
+
+	-- Les amis de Lyorune (1.45.0)
+	["Les amis de Lyorune"] = "Friends of Lyorune",
+	["Lyorune en chiffres, votre carnet de soigneur et un grand merci."] = "Lyorune in numbers, your healer's notebook and a big thank you.",
+	["Lyorune en chiffres"] = "Lyorune in numbers",
+	["mises à jour"] = "updates",
+	["téléchargements"] = "downloads",
+	["sur le Discord"] = "on Discord",
+	["Discord de Lyorune (Ctrl+C) :"] = "Lyorune's Discord (Ctrl+C):",
+	["Chiffres du %s (GitHub et CurseForge), mis à jour à chaque version de Lyorune."] = "Numbers as of %s (GitHub and CurseForge), updated with each Lyorune version.",
+	["Votre carnet"] = "Your notebook",
+	["Tenir mon carnet"] = "Keep my notebook",
+	["Compte vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent : cases, barres, macros, touches. Les dissipations ne comptent pas. Rien n'est envoyé : le carnet reste sur votre ordinateur."] = "Counts your successful heals, resurrections and buffs, for each character, wherever they come from: cells, bars, macros, keys. Dispels do not count. Nothing is sent: the notebook stays on your computer.",
+	["Vos soins, résurrections et buffs réussis, par personnage."] = "Your successful heals, resurrections and buffs, per character.",
+	["Soins lancés"] = "Heals cast",
+	["Résurrections"] = "Resurrections",
+	["Buffs posés"] = "Buffs cast",
+	["Remettre mon carnet à zéro"] = "Reset my notebook",
+	["Depuis le %s, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."] = "Since %s, for this character. All your successful casts count: cells, bars, macros and keys.",
+	["Carnet éteint : plus rien n'est compté, vos chiffres sont gardés."] = "Notebook off: nothing is counted any more, your numbers are kept.",
+	["Un mot de BellaDroode"] = "A word from BellaDroode",
+	["Lyorune est né d'une envie simple : soigner sans se battre avec ses cadres. Merci à vous qui l'utilisez, qui signalez un bug ou proposez une idée : chaque version vous doit un peu. Bons soins, et à bientôt en jeu."] = "Lyorune was born from a simple wish: to heal without fighting your frames. Thank you for using it, reporting a bug or sharing an idea: every version owes you a little. Happy healing, and see you in game.",
+	["Merci"] = "Thank you",
+	["Votre nom ici ?"] = "Your name here?",
+	["Vous aimez Lyorune et voulez y laisser votre nom ? Demandez-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur."] = "You like Lyorune and want your name here? Ask on Discord or GitHub: a name only appears with its player's consent.",
 }

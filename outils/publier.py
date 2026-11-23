@@ -10,6 +10,12 @@
 #     Chaque rubrique est facultative, mais il en faut au moins une. « (#12) » renvoie à la demande GitHub n° 12.
 #     Pour les joueurs anglophones, faites suivre chaque changement de sa traduction : "Un réglage." --en "A setting."
 #     Elle est rangée dans Locales/enUS.lua (nouveautés en jeu) et sert au journal anglais CHANGELOG.en.md.
+#     Avant les tests, About.lua est réécrit pour la page « Les amis de Lyorune » : téléchargements GitHub et
+#     membres du Discord lus sur internet, total CurseForge demandé (ou donné par --curseforge 1234 ; Entrée
+#     garde l'ancien), noms du mur de remerciements lus dans outils/amis.txt. Sans réponse d'internet, les
+#     anciens chiffres restent.
+#     Depuis Git Bash, une note qui commence par « /lyorune » devient un chemin de fichier (C:/Program Files/Git/...) :
+#     la publication est alors refusée. Lancer depuis PowerShell, ou préfixer la commande par MSYS_NO_PATHCONV=1.
 #
 #   python outils/publier.py
 #       sans argument : refait seulement CHANGELOG.md et le zip de la version actuelle
@@ -109,6 +115,72 @@ def set_version(version, notes):
     if marker not in text:
         sys.exit('Changes.lua : la ligne « Z.changes = { » est introuvable.')
     write('Changes.lua', text.replace(marker, marker + block, 1))
+
+
+DISCORD_INVITE = 'uRaEPTGePu'
+ABOUT_HEAD = """-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
+-- Lyorune - About.lua : les chiffres et les noms de la page « Les amis de Lyorune » (Options.lua).
+-- Fichier écrit par outils/publier.py à chaque publication : un addon n'a pas accès à internet, ces chiffres
+-- sont donc ceux du jour où la version installée a été publiée. Ne pas le modifier à la main : les noms du mur
+-- de remerciements se rangent dans outils/amis.txt (un par ligne, seulement des joueurs d'accord).
+--   date       : jour où les chiffres ont été lus
+--   github     : téléchargements des archives publiées sur GitHub
+--   curseforge : total CurseForge, tapé par l'auteur au moment de publier
+--   discord    : membres du serveur Discord de Lyorune
+-- Le nombre de mises à jour n'est pas écrit ici : c'est le nombre de versions de Changes.lua.
+
+local _, Z = ...
+"""
+
+
+def old_about(key):
+    found = re.search(r'\b%s = (\d+)' % key, read('About.lua'))
+    return int(found.group(1)) if found else 0
+
+
+def discord_members():
+    import json, urllib.request
+    url = 'https://discord.com/api/v9/invites/%s?with_counts=true' % DISCORD_INVITE
+    request = urllib.request.Request(url, headers={'User-Agent': 'lyorune-stats'})
+    return int(json.load(urllib.request.urlopen(request, timeout=20))['approximate_member_count'])
+
+
+def thank_names():
+    path = os.path.join(ROOT, 'outils', 'amis.txt')
+    if not os.path.exists(path):
+        return []
+    names = [line.strip() for line in io.open(path, encoding='utf-8')]
+    return [name for name in names if name and not name.startswith('#')]
+
+
+def write_about(curseforge=None):
+    """Réécrit About.lua : chiffres du jour (ou les anciens si internet ne répond pas) et noms de remerciements."""
+    if os.path.join(ROOT, 'outils') not in sys.path:
+        sys.path.insert(0, os.path.join(ROOT, 'outils'))
+    import telechargements
+    numbers = {}
+    for key, fetch in (('github', telechargements.total), ('discord', discord_members)):
+        try:
+            numbers[key] = fetch()
+        except Exception as error:
+            numbers[key] = old_about(key)
+            print('%s illisible (%s) : ancien chiffre gardé (%d).' % (key, error, numbers[key]))
+    if curseforge is None and sys.stdin.isatty():
+        try:
+            typed = input('Total des téléchargements CurseForge (Entrée : garder %d) : ' % old_about('curseforge')).strip()
+        except EOFError:  # aucune réponse possible (commande lancée sans clavier)
+            typed = ''
+        typed = typed.replace(' ', '').replace('.', '')
+        if typed and not typed.isdigit():
+            print('Nombre illisible (%r) : ancien chiffre CurseForge gardé.' % typed)
+        curseforge = int(typed) if typed.isdigit() else None
+    numbers['curseforge'] = old_about('curseforge') if curseforge is None else curseforge
+    noms = thank_names()
+    names = ''.join('\t\t%s,\n' % lua_string(name) for name in noms)
+    write('About.lua', ABOUT_HEAD + '\nZ.about = {\n\tdate = "%s",\n\tgithub = %d,\n\tcurseforge = %d,\n\tdiscord = %d,\n\tnames = {\n%s\t},\n}\n'
+          % (datetime.date.today().isoformat(), numbers['github'], numbers['curseforge'], numbers['discord'], names))
+    print('About.lua : %d téléchargements GitHub, %d CurseForge, %d sur le Discord, %d nom(s) de remerciement.'
+          % (numbers['github'], numbers['curseforge'], numbers['discord'], len(noms)))
 
 
 def with_links(note):
@@ -220,7 +292,7 @@ def check_zip(path):
             if archive.read(name) != io.open(os.path.join(ROOT, name[len('Lyorune/'):]), 'rb').read():
                 problemes.append('contenu différent du dépôt : ' + name)
             # un chemin de mon ordinateur, ou un tiret cadratin
-            for motif in (r'[A-Za-z]:\\Users\\', chr(0x2014)):
+            for motif in (r'[A-Za-z]:\\Users\\', r'(?<![A-Za-z])[A-Za-z]:/', chr(0x2014)):
                 if re.search(motif, texte):
                     problemes.append('%s contient %r' % (name, motif))
     if problemes:
@@ -248,6 +320,10 @@ def parse(args):
         else:
             notes[current].append(arg)
             last = arg
+    for note in [n for rubrique in notes.values() for n in rubrique] + list(english.values()):
+        if re.search(r'(?<![A-Za-z])[A-Za-z]:/', note):
+            sys.exit('Note transformée en chemin de fichier (Git Bash) : %r\n'
+                     'Relancez depuis PowerShell, ou avec MSYS_NO_PATHCONV=1 devant la commande.' % note)
     if not any(notes.values()):
         sys.exit('Indiquez au moins un changement : python outils/publier.py 1.4.0 --corrige "Ce qui est corrigé."')
     return version, notes, english
@@ -257,11 +333,21 @@ def main():
     args = sys.argv[1:]
     if args and args[0] == '--notes':
         return write_release_notes(args[1] if len(args) > 1 else current_version())
+    curseforge = None
+    if '--curseforge' in args:
+        at = args.index('--curseforge')
+        if at + 1 >= len(args) or not args[at + 1].isdigit():
+            sys.exit('--curseforge attend un nombre : --curseforge 1234')
+        curseforge = int(args[at + 1])
+        del args[at:at + 2]
+        if not args:
+            sys.exit('--curseforge ne sert qu\'avec une nouvelle version : python outils/publier.py 1.4.0 --curseforge 1234 --nouveau "..."')
     if args:
         version, notes, english = parse(args)
         run_tests()
         set_version(version, notes)
         add_translations(english)
+        write_about(curseforge)
     run_tests()
     write_changelog()
     write_changelog(traductions())
