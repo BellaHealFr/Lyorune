@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.45.0] - 2026-11-23
+
+### Added
+
+- Friends of Lyorune: a new options chapter with Lyorune in numbers (updates, downloads, Discord), your healer's notebook (successful heals, resurrections and buffs, per character, with its own switch), a word from the author and a thank you wall.
+
+### Fixed
+
+- 1.44.1 news: the line about /lyorune buffs now shows correctly.
+
 ## [1.44.1] - 2026-11-23
 
 ### Improved
@@ -861,6 +871,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.45.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.1...v1.45.0
 [1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0
 [1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1

@@ -1270,4 +1270,6 @@ Z.translations.enUS = {
 	["Votre nom ici ?"] = "Your name here?",
 	["Ce mur remercie les joueurs qui font grandir Lyorune : en proposant des améliorations, en signalant des bugs régulièrement pour le rendre le plus parfait possible, ou en le faisant connaître autour d'eux. Vous en êtes ? Dites-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur."] = "This wall thanks the players who help Lyorune grow: by suggesting improvements, by reporting bugs regularly to make it as polished as possible, or by telling others about it. Is that you? Say so on Discord or GitHub: a name only appears with its player's consent.",
 	["Donjons"] = "Dungeons",
+	["Les amis de Lyorune : un nouveau chapitre des options avec Lyorune en chiffres (mises à jour, téléchargements, Discord), votre carnet de soigneur (soins, résurrections et buffs réussis, par personnage, avec son interrupteur), un mot de l'auteur et un mur de remerciements."] = "Friends of Lyorune: a new options chapter with Lyorune in numbers (updates, downloads, Discord), your healer's notebook (successful heals, resurrections and buffs, per character, with its own switch), a word from the author and a thank you wall.",
+	["Nouveautés de la 1.44.1 : la ligne sur /lyorune buffs s'affiche correctement."] = "1.44.1 news: the line about /lyorune buffs now shows correctly.",
 }

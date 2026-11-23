@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.45.0", date = "2026-11-23",
+		added = {
+			"Les amis de Lyorune : un nouveau chapitre des options avec Lyorune en chiffres (mises à jour, téléchargements, Discord), votre carnet de soigneur (soins, résurrections et buffs réussis, par personnage, avec son interrupteur), un mot de l'auteur et un mur de remerciements.",
+		},
+		improved = {
+		},
+		fixed = {
+			"Nouveautés de la 1.44.1 : la ligne sur /lyorune buffs s'affiche correctement.",
+		},
+	},
+	{
 		version = "1.44.1", date = "2026-11-23",
 		added = {
 		},

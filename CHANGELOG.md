@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.45.0] - 2026-11-23
+
+### Ajouté
+
+- Les amis de Lyorune : un nouveau chapitre des options avec Lyorune en chiffres (mises à jour, téléchargements, Discord), votre carnet de soigneur (soins, résurrections et buffs réussis, par personnage, avec son interrupteur), un mot de l'auteur et un mur de remerciements.
+
+### Corrigé
+
+- Nouveautés de la 1.44.1 : la ligne sur /lyorune buffs s'affiche correctement.
+
 ## [1.44.1] - 2026-11-23
 
 ### Amélioré
@@ -861,6 +871,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.45.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.1...v1.45.0
 [1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0
 [1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1
