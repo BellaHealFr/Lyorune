@@ -61,7 +61,11 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 30 | 1.44.1 | Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort) | Publiée (v1.44.1), confirmée en jeu |
 | 31 | 1.45.0 | Les amis de Lyorune : chiffres du projet, carnet de soigneur, mot de l'auteur, mur de remerciements | Publiée (v1.45.0) |
 | 32 | 1.46.0 | Totems du chaman sous les cadres, icône de classe (idées en réserve d'avant le plan correctif) | Publiée (v1.46.0) |
-| **33** | **1.47.0** | **« Me montrer » dans les nouveautés, bilan de la soirée** | **À faire (prochaine)** |
+| **32 a** | **1.46.1** | **Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid** | **À faire (prochaine)** |
+| 32 b | à fixer | Correction C18 : cibler un joueur ou soi-même | À faire |
+| 32 c | à fixer | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | À faire |
+| 32 d | à fixer | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | À faire |
+| 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
@@ -1147,6 +1151,22 @@ Décision de l'auteur (23 novembre 2026) : mes totems sous les cadres ; icône d
 - [x] Relecture (5 bugs, 3 optimisations, tout appliqué : présence d'un totem par `GetTotemDuration`, jamais
   secret ; type à dissiper après l'icône de classe en Tuile et Carré ; liste de l'éditeur de placement calculée),
   essai en jeu (« tout est ok »), publication. **Publiée : 1.46.0 (23 novembre 2026).**
+
+## Étapes 32 a à 32 d : plan correctif, retour d'un joueur (C17 à C22)
+Retour d'un joueur transmis par l'auteur le 23 novembre 2026 (fiches C17 à C22 de `CORRECTIONS.md`, local).
+Décision de l'auteur : ces corrections passent avant l'étape 33 ; on revient au plan ensuite. Une étape par
+session. Méthode demandée par le joueur, pour chaque étape : chercher les addons qui font la même chose et
+marchent sur WoW Forever (HealBot, VuhDo, Grid2, Clique, Cell, oUF d'ElvUI, PallyPower, etc.), les télécharger si
+besoin dans `essais/`, comparer avec Lyorune, présenter à l'auteur la cause et la correction proposée, puis
+corriger à notre façon, sans rien copier, et nommer les addons de référence dans la fiche.
+- [ ] 32 a (1.46.1), C17, **critique** : interface qui gèle et cases perdues quand le groupe change (JcJ, raid de
+  20 à 40, donjon). Regrouper les mises à jour de groupe, rien sur les cadres sécurisés en combat (attente jusqu'à
+  la fin du combat), cases qui retrouvent leur place, essai hors jeu à 40 joueurs avec mesure du temps.
+- [ ] 32 b, C18 : cibler un joueur ou soi-même avec le raccourci de l'addon.
+- [ ] 32 c, C20, C21, C22 : buff presque fini reproposé (seuil en secondes, 75 s voulues, un seul réglage), même
+  affichage des buffs en JcE et en JcJ, buff perdu qui revient en gris (forme à décider avec l'auteur, interrupteur).
+- [ ] 32 d, C19 : version de groupe en priorité à partir du seuil de joueurs (`buffGroupAt` existe déjà : trouver
+  pourquoi le joueur ne le voit pas, ne compter que les joueurs touchés par le sort de groupe).
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
 - [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
