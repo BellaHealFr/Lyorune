@@ -9627,6 +9627,131 @@ step("1.46.0 : mes totems sous les cadres, icone de classe", function()
   assert(ok, err)
 end)
 
+step("C17 : raid de 40 qui change, cadres replaces une fois, cases toujours placees", function()
+  -- Cadres de groupe du jeu simules comme le vrai code (SecureGroupHeaders.lua) : replacement complet a chaque
+  -- reglage change tant que le cadre est visible, sauf pendant _ignore ; replacement aussi quand il apparait.
+  local old = { raid = RAID, members = MEMBERS, layout = Z.db.layout, shrink = Z.db.autoShrink, after = C_Timer.After,
+    refresh = Z.Refresh }
+  local updates, whole = 0, {}
+  local function Update(h)
+    updates = updates + 1
+    if h.def.raid and RAID and not h:GetAttribute("groupFilter") and not h:GetAttribute("roleFilter")
+      and not h:GetAttribute("nameList") then whole[h.def.raid] = true end -- tout le raid dans un seul cadre
+    local i = 1
+    while h:GetAttribute("child" .. i) do h:GetAttribute("child" .. i):SetPoint("TOP", h, "TOP") i = i + 1 end
+  end
+  local raidHeaders = {}
+  for _, h in ipairs(Z.headers) do
+    if h.def.raid then
+      raidHeaders[#raidHeaders + 1] = h
+      h:SetScript("OnAttributeChanged", function(self, name)
+        if name == "_ignore" or self:GetAttribute("_ignore") then return end
+        if self:IsVisible() then Update(self) end
+      end)
+      h:HookScript("OnShow", Update)
+      for i = 1, 5 do -- cinq cases par groupe, comme le jeu les cree
+        if not h:GetAttribute("child" .. i) then
+          local b = CreateFrame("Button", h:GetName() .. "UnitButton" .. i, h)
+          h:SetAttribute("child" .. i, b)
+          h:InitButton(b:GetName())
+          b:SetAttribute("unit", "raid" .. ((h.def.raid - 1) * 5 + i))
+        end
+      end
+    end
+  end
+  RAID, MEMBERS = true, 40
+  local ok, err = pcall(function()
+    local function Placed(label)
+      for _, h in ipairs(raidHeaders) do
+        if h:IsVisible() then
+          for i = 1, 5 do assert(h:GetAttribute("child" .. i)._points, label .. " : case sans place, groupe " .. h.def.raid) end
+        end
+      end
+    end
+    -- chaque disposition : un seul replacement par cadre visible, jamais tout le raid dans un cadre de groupe
+    for _, layout in ipairs({ "GROUP", "ROLE", "GRID", "GROUP" }) do
+      Z.db.layout = layout
+      Z:Refresh()
+      updates, whole = 0, {}
+      Z:Refresh()
+      local shown = 0
+      for _, h in ipairs(raidHeaders) do if h:IsVisible() then shown = shown + 1 end end
+      assert(updates <= shown, layout .. " : " .. updates .. " replacements pour " .. shown .. " cadres")
+      assert(not next(whole), layout .. " : un cadre a montre tout le raid")
+      Placed(layout)
+    end
+    -- un cadre qui apparait se replace en s'affichant, sans replacement en plus
+    raidHeaders[2]:Hide()
+    updates = 0
+    Z:Refresh()
+    assert(raidHeaders[2]:IsVisible() and updates <= #raidHeaders, "cadre reapparu : " .. updates)
+    -- un reglage qui echoue ne laisse ni le cadre en attente ni des cases sans place
+    local pinned = Z.PinnedList
+    Z.PinnedList = function() error("essai") end
+    Z:Refresh()
+    Z.PinnedList = pinned
+    for _, h in ipairs(Z.headers) do assert(not h:GetAttribute("_ignore"), "cadre reste en attente : " .. h.def.key) end
+    Placed("reglage en erreur")
+    -- rafale de 20 changements : une mise a jour visible a l'image suivante, le travail lourd une seule fois a la fin
+    local timers = {}
+    C_Timer.After = function(delay, fn) timers[#timers + 1] = { delay, fn } end
+    local quick, calm, refreshes = 0, 0, 0
+    Z:OnRoster(function() quick = quick + 1 end)
+    Z:OnRosterSettled(function() calm = calm + 1 end)
+    Z.db.autoShrink = true
+    Z.Refresh = function(...) refreshes = refreshes + 1 return old.refresh(...) end
+    local start = os.clock()
+    for n = 1, 20 do
+      MEMBERS = 40 - n -- le raid fond : la taille des cases change deux fois (paliers 25 et 10)
+      FireEvent("GROUP_ROSTER_UPDATE")
+    end
+    for _, delay in ipairs({ 0, 1 }) do -- l'image suivante, puis le calme
+      for _, t in ipairs(timers) do if (t[1] == 0) == (delay == 0) then t[2]() end end
+    end
+    local spent = os.clock() - start
+    assert(quick == 1, "mises a jour visibles : " .. quick)
+    assert(calm == 1, "travail lourd : " .. calm)
+    assert(refreshes == 1, "cases reduites " .. refreshes .. " fois")
+    Placed("apres la rafale")
+    -- groupe qui ne cesse de bouger (un changement toutes les 0,3 s pendant 3 s) : le travail lourd part quand meme
+    local start, nowWas = NOW, NOW
+    timers, calm = {}, 0
+    C_Timer.After = function(delay, fn) timers[#timers + 1] = { NOW + delay, fn } end
+    for k = 1, 10 do
+      NOW = start + 0.3 * k
+      for _, t in ipairs(timers) do if t[2] and t[1] <= NOW then local fn = t[2] t[2] = nil fn() end end
+      FireEvent("GROUP_ROSTER_UPDATE")
+    end
+    assert(calm >= 1, "travail lourd jamais lance pendant une rafale sans fin")
+    NOW = nowWas
+    print("      (rafale de 20 changements : " .. ("%.3f"):format(spent) .. " s hors jeu)")
+  end)
+  C_Timer.After, Z.Refresh = old.after, old.refresh
+  RAID, MEMBERS, Z.db.layout, Z.db.autoShrink = old.raid, old.members, old.layout, old.shrink
+  for _, h in ipairs(raidHeaders) do h:SetScript("OnAttributeChanged", nil) end
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("C23 : journal qui s'ouvre malgre une valeur secrete", function()
+  -- transparence d'une case reglee par la vie (secrete) : ecrite « secret » dans l'etat des cadres
+  local b = Z.buttons[1]
+  local oldAlpha, oldState = b.GetAlpha, Z.FrameState
+  Z.header:SetAttribute("child1", b)
+  b.GetAlpha = function() return MakeSecret(0.5) end
+  local ok, err = pcall(function()
+    local state = table.concat(Z:FrameState(), "\n")
+    assert(state:find("alpha=secret", 1, true), "valeur secrete non remplacee")
+    -- filet : une ligne secrete venue d'ailleurs ne bloque pas le journal
+    Z.FrameState = function() return { "ligne lisible", MakeSecret("x") } end
+    local text = Z:LogText()
+    assert(text:find("ligne lisible", 1, true) and text:find("valeur secrète", 1, true), "journal bloque")
+  end)
+  b.GetAlpha, Z.FrameState = oldAlpha, oldState
+  Z.header:SetAttribute("child1", nil)
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

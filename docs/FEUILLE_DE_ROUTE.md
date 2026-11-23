@@ -61,7 +61,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 30 | 1.44.1 | Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort) | Publiée (v1.44.1), confirmée en jeu |
 | 31 | 1.45.0 | Les amis de Lyorune : chiffres du projet, carnet de soigneur, mot de l'auteur, mur de remerciements | Publiée (v1.45.0) |
 | 32 | 1.46.0 | Totems du chaman sous les cadres, icône de classe (idées en réserve d'avant le plan correctif) | Publiée (v1.46.0) |
-| **32 a** | **1.46.1** | **Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid** | **À faire (prochaine)** |
+| **32 a** | **1.46.1** | **Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid** | **Corrigée, essai en jeu attendu** |
 | 32 b | à fixer | Correction C18 : cibler un joueur ou soi-même | À faire |
 | 32 c | à fixer | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | À faire |
 | 32 d | à fixer | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | À faire |
@@ -1165,16 +1165,16 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
   dizaines d'affilée sans `_ignore` (ElvUI le pose) ; `ApplyLayout` vide d'abord la position de toutes les cases,
   qui restent perdues si la suite s'arrête ; changement de profil automatique et réduction des cases relancent tout
   quand le palier du groupe change ; une dizaine d'écouteurs de `GROUP_ROSTER_UPDATE` sans regroupement.
-  - [ ] Recherche : changement de groupe dans ElvUI et oUF (installés), VuhDo, HealBot (installés), Grid2 et Cell
-    (à télécharger dans `essais/`, vérifier qu'ils marchent sur Forever).
-  - [ ] Présenter à l'auteur la cause et la correction (fiche C17), accord avant de coder.
-  - [ ] `_ignore` pendant toute configuration d'un en-tête, un seul replacement à la fin ; plus de position vidée
+  - [x] Recherche : code du jeu (`SecureGroupHeaders.lua`, dépôt public de l'interface), ElvUI, HealKit, VuhDo,
+    HealBot (installés). Grid2 et Cell pas nécessaires : le code du jeu tranche.
+  - [x] Présenter à l'auteur la cause et la correction (fiche C17), accord avant de coder (24 novembre 2026).
+  - [x] `_ignore` pendant toute configuration d'un en-tête, un seul replacement à la fin ; plus de position vidée
     à la main ; `ApplyLayout` sous `Z:Try`.
-  - [ ] Un seul écouteur de `GROUP_ROSTER_UPDATE`, rafale regroupée, les autres fichiers prévenus une fois.
-  - [ ] Rien de sécurisé en combat (attente jusqu'à la fin du combat, déjà `Z:Safe`), profil et réduction des cases
+  - [x] Un seul écouteur de `GROUP_ROSTER_UPDATE`, rafale regroupée, les autres fichiers prévenus une fois.
+  - [x] Rien de sécurisé en combat (attente jusqu'à la fin du combat, déjà `Z:Safe`), profil et réduction des cases
     une seule fois par rafale.
   - [ ] Test hors jeu : raid de 40 qui change 20 fois de composition (replacements comptés, cases toujours
-    placées, temps mesuré) ; essai en jeu en champ de bataille et en raid.
+    placées, temps mesuré), fait ; essai en jeu en champ de bataille et en raid, à faire par l'auteur.
 - [ ] **32 b, C18** : cibler un joueur ou soi-même. Le clic « Cibler » pose bien l'action du jeu ; attendre les
   réponses du joueur (touche ou clic, quelle case, combat ou non, autre addon de clic), comparer avec Clique et
   VuhDo, revérifier « Lancer le sort dès l'appui » (C11). Si le joueur veut des touches sans souris, le jeu les a

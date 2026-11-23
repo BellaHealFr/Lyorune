@@ -141,6 +141,7 @@ function Z:SpecName()
 end
 
 -- Rapport complet, lisible par un humain
+local HIDDEN_LINE = "(ligne cachée par le jeu : valeur secrète)"
 function Z:LogText()
 	local lines = {
 		"=== Journal Lyorune ===",
@@ -152,7 +153,7 @@ function Z:LogText()
 	lines[#lines + 1] = "Fonctions du jeu manquantes : " .. (#missing > 0 and table.concat(missing, ", ") or "aucune")
 	if Z.header then
 		lines[#lines + 1] = "État des cadres :"
-		for _, line in ipairs(Z:FrameState()) do lines[#lines + 1] = "  " .. line end
+		for _, line in ipairs(Z:FrameState()) do lines[#lines + 1] = Z.IsSecret(line) and HIDDEN_LINE or "  " .. line end
 	end
 	local errors = Z.db.errors or {}
 	lines[#lines + 1] = "Erreurs enregistrées : " .. #errors
@@ -165,6 +166,10 @@ function Z:LogText()
 			tostring(e.class), tostring(e.level), tostring(e.spec), e.combat and "en combat" or "hors combat", tostring(e.group), tostring(e.zone),
 			tostring(e.instance or "?"))
 		if e.stack and e.stack ~= "" then lines[#lines + 1] = "Pile d'appels :\n" .. e.stack end
+	end
+	-- Filet (C23) : une ligne devenue secrète (valeur du jeu glissée dans un message) ne bloque plus tout le journal
+	for i, line in ipairs(lines) do
+		if Z.IsSecret(line) then lines[i] = HIDDEN_LINE end
 	end
 	return Z:Anonymize(table.concat(lines, "\n")) -- Bug.lua : sans nom de joueur ni de royaume
 end

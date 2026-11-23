@@ -1497,10 +1497,85 @@ local function ApplySort(h, groupBy, groupingOrder)
 	h:SetAttribute("sortMethod", sort == "INDEX" and "INDEX" or "NAME")
 end
 
+-- Réglages d'un cadre (taille, tri, filtres, sens) : appelée pendant que le cadre du jeu attend (_ignore).
+-- Renvoie true si le cadre doit être affiché.
+local function HeaderAttributes(h, width, height, grid, perColumn, roles)
+	local def = h.def
+	local enabled = not def.option or db[def.option]
+	if def.extra then enabled = LayoutExtra(h, width, height) end
+	if def.label then h.labelText = L[def.label] end -- suit le changement de langue
+	h:SetAttribute("z-width", width)
+	h:SetAttribute("z-height", height)
+	h:SetAttribute("maxColumns", math.ceil(40 / perColumn))
+	if def.key == "main" then
+		if db.layout == "ROLE" then -- le rôle d'abord ; « par classe » devient alors « par nom » dans chaque rôle
+			ApplySort(h, "ASSIGNEDROLE", db.roleOrder .. ",NONE")
+		elseif db.sortOrder == "INDEX" then
+			ApplySort(h, "GROUP", "1,2,3,4,5,6,7,8")
+		else
+			ApplySort(h)
+		end
+		h:SetAttribute("showSolo", db.showSolo)
+	elseif def.raid then
+		if grid then -- une seule grille pour tout le raid : le premier cadre prend tout le monde
+			enabled = def.raid == 1
+			h:SetAttribute("roleFilter", nil)
+			h:SetAttribute("groupFilter", "1,2,3,4,5,6,7,8")
+			if db.sortOrder == "INDEX" then ApplySort(h, "GROUP", "1,2,3,4,5,6,7,8") else ApplySort(h) end
+			h.labelText = L["Raid"]
+		elseif roles then -- un cadre par rôle, dans l'ordre choisi
+			local role = roles[def.raid]
+			enabled = role ~= nil
+			h:SetAttribute("groupFilter", nil)
+			h:SetAttribute("roleFilter", role)
+			ApplySort(h)
+			h.labelText = role and L[ROLE_LABELS[role]]
+		else
+			h:SetAttribute("roleFilter", nil)
+			h:SetAttribute("groupFilter", tostring(def.raid))
+			h:SetAttribute("maxColumns", 1)
+			ApplySort(h)
+			h.labelText = L["Groupe %d"]:format(def.raid)
+		end
+	elseif def.key == "pets" then -- un familier n'a pas de classe de joueur : seulement le nom
+		h:SetAttribute("groupBy", nil)
+		h:SetAttribute("sortMethod", db.sortOrder == "INDEX" and "INDEX" or "NAME")
+	elseif def.key == "tanks" then
+		ApplySort(h)
+	elseif def.key == "pinned" then
+		local names = Z:PinnedList()
+		enabled = db.showPinned and #names > 0
+		h:SetAttribute("groupFilter", nil)
+		h:SetAttribute("roleFilter", nil)
+		h:SetAttribute("nameList", table.concat(names, ","))
+		ApplySort(h)
+	end
+	h:SetAttribute("z-ping", db.pingCells or nil) -- cases créées plus tard, même en combat (CONFIG_SNIPPET)
+	if db.horizontal then
+		h:SetAttribute("point", "LEFT")
+		h:SetAttribute("xOffset", db.spacing)
+		h:SetAttribute("yOffset", 0)
+		h:SetAttribute("columnAnchorPoint", "TOP")
+	else
+		h:SetAttribute("point", "TOP")
+		h:SetAttribute("xOffset", 0)
+		h:SetAttribute("yOffset", -db.spacing)
+		h:SetAttribute("columnAnchorPoint", "LEFT")
+	end
+	h:SetAttribute("columnSpacing", db.spacing)
+	h:SetAttribute("unitsPerColumn", perColumn) -- 5 par groupe, ou la taille choisie en grille
+	return enabled
+end
+
+-- Disposition de tous les cadres (C17). Un cadre de groupe du jeu replace toutes ses cases à chaque réglage
+-- changé tant qu'il est visible : avec une vingtaine de réglages par cadre et 40 joueurs, l'interface gelait, et un
+-- cadre de raid sans filtre le temps d'un réglage montrait tout le raid. Chaque cadre attend donc la fin de ses
+-- réglages (_ignore), puis se replace une seule fois. Les cases ne perdent jamais leur place : elles ne sont
+-- détachées que pendant cette attente, et le replacement a lieu même si un réglage échoue.
+local layoutWave = 0
 local function ApplyLayout()
 	local width, height = Z.CellSize()
 	for _, b in ipairs(buttons) do
-		b:ClearAllPoints()
 		b:SetSize(width, height)
 		if PING_TEMPLATE ~= "" then b:SetAttribute("ping-receiver", db.pingCells or nil) end
 	end
@@ -1519,71 +1594,24 @@ local function ApplyLayout()
 		anchor:SetPoint(pos[1], UIParent, pos[1], pos[2], pos[3])
 	end
 
+	layoutWave = layoutWave + 1
 	for _, h in ipairs(Z.headers) do
 		local def = h.def
-		local enabled = not def.option or db[def.option]
-		if def.extra then enabled = LayoutExtra(h, width, height) end
-		if def.label then h.labelText = L[def.label] end -- suit le changement de langue
-		h:SetAttribute("z-width", width)
-		h:SetAttribute("z-height", height)
-		h:SetAttribute("maxColumns", math.ceil(40 / perColumn))
-		if def.key == "main" then
-			if db.layout == "ROLE" then -- le rôle d'abord ; « par classe » devient alors « par nom » dans chaque rôle
-				ApplySort(h, "ASSIGNEDROLE", db.roleOrder .. ",NONE")
-			elseif db.sortOrder == "INDEX" then
-				ApplySort(h, "GROUP", "1,2,3,4,5,6,7,8")
-			else
-				ApplySort(h)
-			end
-			h:SetAttribute("showSolo", db.showSolo)
-		elseif def.raid then
-			if grid then -- une seule grille pour tout le raid : le premier cadre prend tout le monde
-				enabled = def.raid == 1
-				h:SetAttribute("roleFilter", nil)
-				h:SetAttribute("groupFilter", "1,2,3,4,5,6,7,8")
-				if db.sortOrder == "INDEX" then ApplySort(h, "GROUP", "1,2,3,4,5,6,7,8") else ApplySort(h) end
-				h.labelText = L["Raid"]
-			elseif roles then -- un cadre par rôle, dans l'ordre choisi
-				local role = roles[def.raid]
-				enabled = role ~= nil
-				h:SetAttribute("groupFilter", nil)
-				h:SetAttribute("roleFilter", role)
-				ApplySort(h)
-				h.labelText = role and L[ROLE_LABELS[role]]
-			else
-				h:SetAttribute("roleFilter", nil)
-				h:SetAttribute("groupFilter", tostring(def.raid))
-				h:SetAttribute("maxColumns", 1)
-				ApplySort(h)
-				h.labelText = L["Groupe %d"]:format(def.raid)
-			end
-		elseif def.key == "pets" then -- un familier n'a pas de classe de joueur : seulement le nom
-			h:SetAttribute("groupBy", nil)
-			h:SetAttribute("sortMethod", db.sortOrder == "INDEX" and "INDEX" or "NAME")
-		elseif def.key == "tanks" then
-			ApplySort(h)
-		elseif def.key == "pinned" then
-			local names = Z:PinnedList()
-			enabled = db.showPinned and #names > 0
-			h:SetAttribute("groupFilter", nil)
-			h:SetAttribute("roleFilter", nil)
-			h:SetAttribute("nameList", table.concat(names, ","))
-			ApplySort(h)
+		local wasShown = h:IsVisible()
+		h:SetAttribute("_ignore", true)
+		-- Le jeu repose ses cases sans retirer leurs anciennes ancres : détachées ici, pendant l'attente, pour qu'un
+		-- changement de sens (lignes ou colonnes) ne laisse pas deux ancres contraires
+		local i, child = 1, h:GetAttribute("child1")
+		while child do
+			child:ClearAllPoints()
+			i = i + 1
+			child = h:GetAttribute("child" .. i)
 		end
-		h:SetAttribute("z-ping", db.pingCells or nil) -- cases créées plus tard, même en combat (CONFIG_SNIPPET)
-		if db.horizontal then
-			h:SetAttribute("point", "LEFT")
-			h:SetAttribute("xOffset", db.spacing)
-			h:SetAttribute("yOffset", 0)
-			h:SetAttribute("columnAnchorPoint", "TOP")
-		else
-			h:SetAttribute("point", "TOP")
-			h:SetAttribute("xOffset", 0)
-			h:SetAttribute("yOffset", -db.spacing)
-			h:SetAttribute("columnAnchorPoint", "LEFT")
-		end
-		h:SetAttribute("columnSpacing", db.spacing)
-		h:SetAttribute("unitsPerColumn", perColumn) -- 5 par groupe, ou la taille choisie en grille
+		local enabled = false
+		Z:Try("disposition du cadre " .. tostring(def.key), function()
+			enabled = HeaderAttributes(h, width, height, grid, perColumn, roles)
+		end)
+		h:SetAttribute("_ignore", nil)
 
 		-- Placement : les cadres de raid se suivent ; un groupe vide ne laisse pas de trou, sauf si chaque groupe
 		-- garde sa place : il est alors posé à son rang, que les groupes d'avant soient remplis ou non.
@@ -1615,6 +1643,9 @@ local function ApplyLayout()
 			UnregisterStateDriver(h, "visibility")
 			h:Hide()
 		end
+		-- Le seul replacement : un cadre qui vient d'apparaître s'est déjà replacé en s'affichant (le jeu le fait seul),
+		-- un cadre caché se replacera quand il apparaîtra
+		if wasShown and h:IsVisible() then h:SetAttribute("z-layout", layoutWave) end
 		h:SetAlpha(db.frameAlpha / 100)
 		h:SetScale(db.scale / 100) -- échelle générale : cases, icônes et étiquette grandissent ensemble
 	end
@@ -1684,16 +1715,19 @@ end
 
 -- Relevé détaillé, rangé dans LyoruneDB.frameState à la connexion et à la déconnexion : il se lit dans le
 -- fichier SavedVariables, sans que le joueur ait quoi que ce soit à recopier.
+-- Une valeur secrète (transparence réglée par la vie ou la mana) est écrite « secret » : un texte qui la
+-- contiendrait deviendrait secret lui aussi, et le journal ne pourrait plus s'afficher (C23).
 local function Describe(frame)
 	local function call(method, ...)
 		local ok, a, b = pcall(frame[method], frame, ...)
 		return ok and a, ok and b
 	end
+	local function text(value) return issecret(value) and "secret" or tostring(value) end
 	local width, height = call("GetSize")
 	return ("shown=%s visible=%s taille=%sx%s gauche=%s haut=%s alpha=%s echelle=%s points=%s"):format(
-		tostring(call("IsShown")), tostring(call("IsVisible")), tostring(width), tostring(height),
-		tostring(call("GetLeft")), tostring(call("GetTop")), tostring(call("GetAlpha")),
-		tostring(call("GetEffectiveScale")), tostring(call("GetNumPoints")))
+		text(call("IsShown")), text(call("IsVisible")), text(width), text(height),
+		text(call("GetLeft")), text(call("GetTop")), text(call("GetAlpha")),
+		text(call("GetEffectiveScale")), text(call("GetNumPoints")))
 end
 
 function Z:FrameState()
@@ -1825,13 +1859,14 @@ function Z:CreateFrames()
 	end
 	local updateAll = ForVisible(UpdateAll)
 	local lastFactor = ShrinkFactor()
-	Z:On("GROUP_ROSTER_UPDATE", function()
+	-- Le groupe change (C17) : les cases visibles sont redessinées une fois par image ; la taille des cases (option)
+	-- n'est revue qu'une fois le groupe stable, pour ne pas tout refaire à chaque joueur qui entre.
+	Z:OnRoster(updateAll)
+	Z:OnRosterSettled(function()
 		local factor = ShrinkFactor()
-		if factor ~= lastFactor then -- le raid a changé de taille : on adapte les cases (option)
+		if factor ~= lastFactor then
 			lastFactor = factor
 			Z:Refresh()
-		else
-			updateAll()
 		end
 	end)
 	Z:On("PLAYER_ENTERING_WORLD", updateAll)

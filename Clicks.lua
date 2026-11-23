@@ -699,12 +699,14 @@ local function PutSet(b)
 end
 
 -- Chaque en-tête recopie sur ses nouvelles cases, même en combat, la version de son rôle (la base hors des cadres
--- triés sur le rôle). Hors combat seulement.
+-- triés sur le rôle). Hors combat seulement. Ces réglages ne servent qu'aux cases à venir : le cadre du jeu attend
+-- (_ignore) et ne se replace pas des dizaines de fois pour rien (C17).
 local function PushHeaders()
 	if not sets.base then return end
 	for _, h in ipairs(Z.headers) do
 		local name = sets.tank and h:GetAttribute("roleFilter") == "TANK" and "tank" or "base"
 		if h.zClickSet ~= name then
+			h:SetAttribute("_ignore", true)
 			local count = 0
 			for key, value in pairs(sets[name]) do
 				if key:sub(1, 1) ~= "_" then -- les attributs « _ » passent par _initialAttribute (voir Frames.lua)
@@ -714,6 +716,8 @@ local function PushHeaders()
 				end
 			end
 			h:SetAttribute("z-count", count)
+			h:SetAttribute("_initialAttribute-_onenter", sets[name]._onenter) -- touches au survol des cases à venir
+			h:SetAttribute("_ignore", nil)
 			h.zClickSet = name
 		end
 	end
@@ -786,11 +790,9 @@ function Z:ApplyClicks()
 		for name in pairs(attributes) do applied[name] = true end
 	end
 
-	-- Cases à venir : chaque en-tête recopie sa version sur ses nouvelles cases, même en combat
-	for _, h in ipairs(Z.headers) do
-		h.zClickSet = nil
-		h:SetAttribute("_initialAttribute-_onenter", onEnter)
-	end
+	-- Cases à venir : chaque en-tête recopie sa version sur ses nouvelles cases, même en combat (PushHeaders, appelé
+	-- par Z:FitAllRanks juste après)
+	for _, h in ipairs(Z.headers) do h.zClickSet = nil end
 	Z:FitAllRanks(true)
 	Z:SyncBarMacros()
 	Z:WarnClickConflicts()
@@ -1388,7 +1390,8 @@ function Z:FitAllRanks(fresh)
 end
 -- Un autre joueur dans la case, un niveau gagné, un rôle changé, une autre cible ou focalisation : sa version des
 -- raccourcis et son rang suivent, hors combat (sinon à la fin du combat)
-for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "UNIT_LEVEL", "PLAYER_ROLES_ASSIGNED", "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED" }) do
+Z:OnRosterSettled(function() Z:FitAllRanks() end) -- une fois la rafale du groupe finie (C17)
+for _, event in ipairs({ "UNIT_LEVEL", "PLAYER_ROLES_ASSIGNED", "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED" }) do
 	Z:On(event, function() Z:FitAllRanks() end)
 end
 Z:On("PLAYER_REGEN_ENABLED", function()

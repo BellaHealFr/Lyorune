@@ -433,6 +433,6 @@ function Z:StartComm()
 	if not (C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix and C_ChatInfo.SendAddonMessage) then return end
 	C_ChatInfo.RegisterAddonMessagePrefix(PREFIX)
 	Z:On("CHAT_MSG_ADDON", OnMessage)
-	Z:On("GROUP_ROSTER_UPDATE", AnnounceVersion)
+	Z:OnRosterSettled(AnnounceVersion)
 	AnnounceVersion()
 end

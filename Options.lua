@@ -2099,7 +2099,7 @@ local function SyncWho(page, width)
 	-- Le groupe change, ou un joueur annonce sa version (Comm.lua), page ouverte : le nombre suit.
 	-- Rien n'est fait quand la ligne n'est pas à l'écran.
 	Z.RefreshSyncWho = function() if who:IsVisible() then who:Update() end end
-	Z:On("GROUP_ROSTER_UPDATE", Z.RefreshSyncWho)
+	Z:OnRosterSettled(Z.RefreshSyncWho)
 	who:Update()
 	return who
 end

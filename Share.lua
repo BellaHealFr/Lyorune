@@ -533,7 +533,7 @@ do
 		lastSize = size
 		Z:CheckAutoProfile()
 	end
-	Z:On("GROUP_ROSTER_UPDATE", Changed)
+	Z:OnRosterSettled(Changed) -- palier lu une fois le groupe stable : un seul changement de profil par rafale (C17)
 	Z:On("PLAYER_ENTERING_WORLD", Changed)
 	Z:On("ZONE_CHANGED_NEW_AREA", Changed)
 	Z:On("PLAYER_LOGIN", function()

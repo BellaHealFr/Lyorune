@@ -917,7 +917,7 @@ Z:On("ADDON_RESTRICTION_STATE_CHANGED", function() MarksChanged() end)
 
 -- Le groupe change en plein combat : un même nom d'unité peut désigner un autre joueur. Ses repères (mana, porteur)
 -- ne sont plus sûrs : cachés jusqu'à la fin du combat, puis revus.
-Z:On("GROUP_ROSTER_UPDATE", function()
+Z:On("GROUP_ROSTER_UPDATE", function() -- tout de suite : le combat se lit au moment du changement (rien hors combat)
 	if not InCombatLockdown() then return end
 	for _, b in ipairs(Z.buttons or {}) do
 		if b.markList and #b.markList > 0 then

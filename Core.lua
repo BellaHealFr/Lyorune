@@ -365,7 +365,7 @@ function Z:Safe(key, fn)
 		if not next(pending) then Z:Print(Z.L["modification appliquée à la fin du combat."]) end
 		pending[key] = fn
 	else
-		fn()
+		Z:Try(tostring(key), fn) -- un arrêt est écrit au journal (C17), même si un autre addon tient les erreurs
 	end
 end
 
@@ -374,6 +374,44 @@ Z:On("PLAYER_REGEN_ENABLED", function()
 		pending[key] = nil
 		Z:Try("fin du combat : " .. tostring(key), fn) -- une action en erreur n'empêche pas les suivantes
 	end
+end)
+
+----------------------------------------------------------------------------------------------------
+-- Le groupe change (C17) : le jeu envoie GROUP_ROSTER_UPDATE en rafale (un raid qui se forme, un champ de bataille
+-- qui se remplit). Lyorune l'écoute une seule fois et prévient chaque fichier en deux temps :
+--   Z:OnRoster(fn)        : à l'image suivante, une fois pour toute la rafale de cette image (ce qui se voit) ;
+--   Z:OnRosterSettled(fn) : quand le groupe ne bouge plus depuis un court instant (profil, réglages, listes),
+--                           et toutes les 2 secondes au plus si le groupe ne cesse de bouger (grand champ de bataille).
+----------------------------------------------------------------------------------------------------
+local ROSTER_CALM, ROSTER_MAX = 0.4, 2 -- secondes sans changement avant le travail lourd ; attente la plus longue
+local onRoster, onSettled = {}, {}
+local rosterNext, rosterWave, burstStart = false, 0, nil
+
+function Z:OnRoster(fn) onRoster[#onRoster + 1] = fn end
+function Z:OnRosterSettled(fn) onSettled[#onSettled + 1] = fn end
+
+local function RunAll(list, label)
+	for i = 1, #list do Z:Try(label, list[i]) end
+end
+
+Z:On("GROUP_ROSTER_UPDATE", function()
+	rosterWave = rosterWave + 1
+	local wave = rosterWave
+	burstStart = burstStart or GetTime()
+	if not rosterNext then
+		rosterNext = true
+		C_Timer.After(0, function()
+			rosterNext = false
+			RunAll(onRoster, "groupe changé")
+		end)
+	end
+	C_Timer.After(ROSTER_CALM, function()
+		-- un autre changement est venu : il attend, sauf si la rafale dure depuis trop longtemps
+		if wave == rosterWave or (burstStart and GetTime() - burstStart >= ROSTER_MAX) then
+			burstStart = nil
+			RunAll(onSettled, "groupe stable")
+		end
+	end)
 end)
 
 ----------------------------------------------------------------------------------------------------

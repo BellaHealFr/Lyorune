@@ -370,7 +370,7 @@ local function RosterChanged()
 	if gone then Changed() end
 end
 
-Z:On("GROUP_ROSTER_UPDATE", RosterChanged)
+Z:OnRosterSettled(RosterChanged) -- une fois la rafale du groupe finie (Core.lua)
 Z:On("PLAYER_ENTERING_WORLD", RosterChanged)
 -- Messages de nouveau permis : les nouveaux venus en attente reçoivent la répartition
 Z:On("ADDON_RESTRICTION_STATE_CHANGED", function() C_Timer.After(1, SendPending) end)

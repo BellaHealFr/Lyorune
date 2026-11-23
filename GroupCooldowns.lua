@@ -475,7 +475,7 @@ function Z.AskGroupCooldowns()
 end
 
 Z:On("PLAYER_LOGIN", function() Z:RefreshGroupCooldowns() end)
-Z:On("GROUP_ROSTER_UPDATE", RosterChanged)
+Z:OnRosterSettled(RosterChanged) -- une fois la rafale du groupe finie (Core.lua)
 Z:On("PLAYER_ENTERING_WORLD", function()
 	RosterChanged()
 	Z.AskGroupCooldowns() -- après un /reload, ce que je savais est perdu

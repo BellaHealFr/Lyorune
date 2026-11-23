@@ -873,7 +873,7 @@ Z:On("PLAYER_REGEN_ENABLED", function()
 	closed = false
 	Z:QueueBuffPanel()
 end)
-Z:On("GROUP_ROSTER_UPDATE", function() Z:QueueBuffPanel() end)
+Z:OnRosterSettled(function() Z:QueueBuffPanel() end)
 
 -- /lyorune porteur [nom] : le joueur qui reçoit mes buffs uniques à la place du tank (le joueur survolé, ou ma
 -- cible). Le même joueur une 2e fois, ou sans joueur : retour au tank. Gardé pour ce personnage.

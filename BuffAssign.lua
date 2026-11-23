@@ -472,7 +472,7 @@ local function RosterChanged()
 	Announce() -- (rien ne part si l'annonce n'a pas changé)
 end
 
-Z:On("GROUP_ROSTER_UPDATE", RosterChanged)
+Z:OnRosterSettled(RosterChanged) -- une fois la rafale du groupe finie (Core.lua)
 Z:On("PLAYER_ENTERING_WORLD", function()
 	RosterChanged()
 	-- après un /reload, les annonces des autres sont perdues : je les redemande (une fois, si le jeu le permet)
