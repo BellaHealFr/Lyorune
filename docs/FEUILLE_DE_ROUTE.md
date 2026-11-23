@@ -58,7 +58,10 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Publiée (v1.43.0) |
 | 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | Publiée (v1.43.1) |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | Publiée (v1.44.0) : pas d'arène sur Forever, profil retiré |
-| **30** | **1.44.1** | **Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort). Priorité très haute (auteur, 23 novembre 2026) : prochaine étape, avant tout le reste** | **À faire** |
+| 30 | 1.44.1 | Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort) | Publiée (v1.44.1), essai en champ de bataille attendu |
+| 31 | 1.45.0 | Les amis de Lyorune : chiffres du projet, carnet de soigneur, mot de l'auteur, mur de remerciements | Publiée (v1.45.0) |
+| **32** | **1.46.0** | **Totems du chaman sur les cases, icône de classe (idées en réserve d'avant le plan correctif)** | **À faire (prochaine)** |
+| 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -485,6 +488,14 @@ combat ; totems du chaman sur les cases ; cases estompées hors combat ; moi en 
 groupe ; infobulle des icônes d'auras ; préréglages « Épuré, Standard, Complet » ; texte « Vie » et « Vie et % » ;
 priorité de dissipation ; icône de classe ; « Me montrer » dans les nouveautés ; bilan de la soirée ; vérifier en
 jeu si « Incantation sur soi automatique » gêne les clics.
+**Tri du 23 novembre 2026 (après le plan correctif, choix de l'auteur)** :
+- Déjà fait : clics différents en combat et hors combat (variante « hors combat », 1.39.0).
+- Retenus : totems du chaman sur les cases et icône de classe (étape 32) ; « Me montrer » dans les nouveautés et
+  bilan de la soirée, qui complète le carnet de la 1.45.0 (étape 33).
+- Non retenus pour l'instant : clics « Assister » et « Focaliser », moi en premier ou en dernier, texte « Vie » et
+  « Vie et % », infobulle des icônes d'auras, préréglages (l'assistant de départ en tient lieu), priorité de
+  dissipation par type (le jeu met déjà le plus important d'abord), cases estompées hors combat (« seulement en
+  combat » et « joueurs en bonne santé estompés » existent), vérification de « Incantation sur soi automatique ».
 
 ## Étapes 24 et 25 : idées retenues par l'auteur (21 novembre 2026)
 Choisies après une recherche des demandes des joueurs (forums Blizzard, demandes de Cell, Grid2 et FrameSort,
@@ -1108,6 +1119,19 @@ mur vide avec une invitation, à relire par l'auteur avant la publication.
   Guides (partie 15), README (ligne « Les amis de Lyorune »), `## Notes`, site (douze chapitres).
 - [x] Relecture (4 bugs, 3 optimisations, tout appliqué), mot de l'auteur réécrit à sa demande (passion du jeu
   et du soin) puis accepté, publication. **Publiée : 1.45.0 (23 novembre 2026).**
+
+## Étape 32 : totems du chaman, icône de classe (1.46.0)
+Idées en réserve d'avant le plan correctif, retenues par l'auteur le 23 novembre 2026. Avant tout codage :
+regarder HealKit, HealBot, VuhDo puis tout le dossier d'addons (règle de l'auteur), et décider avec l'auteur les
+points techniques (totems : ce que le jeu dit des totems d'un chaman sur Forever, `GetTotemInfo` pour les miens,
+auras laissées par les totems sur les joueurs, secret ou non en combat).
+- [ ] Totems du chaman : sur les cases des joueurs touchés (ou mes totems sous les cadres), à décider.
+- [ ] Icône de classe : petite icône sur la case, élément de l'éditeur de placement (taille, place, case à cocher).
+
+## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
+- [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
+- [ ] Bilan de la soirée : carnet de la session ou du donjon (soins, résurrections, buffs), à côté du carnet total
+  de la 1.45.0 (Tally.lua) ; moment et forme à décider avec l'auteur.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
