@@ -5,7 +5,7 @@
 -- de remerciements se rangent dans outils/amis.txt (un par ligne, seulement des joueurs d'accord).
 --   date       : jour où les chiffres ont été lus
 --   github     : téléchargements des archives publiées sur GitHub
---   curseforge : total CurseForge, tapé par l'auteur au moment de publier
+--   curseforge : total CurseForge (lu par cfwidget, sinon demandé à l'auteur)
 --   discord    : membres du serveur Discord de Lyorune
 -- Le nombre de mises à jour n'est pas écrit ici : c'est le nombre de versions de Changes.lua.
 
@@ -13,8 +13,8 @@ local _, Z = ...
 
 Z.about = {
 	date = "2026-11-23",
-	github = 842,
-	curseforge = 0,
+	github = 843,
+	curseforge = 255,
 	discord = 10,
 	names = {
 		"Elesyio",

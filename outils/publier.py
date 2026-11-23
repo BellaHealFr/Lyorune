@@ -11,9 +11,9 @@
 #     Pour les joueurs anglophones, faites suivre chaque changement de sa traduction : "Un réglage." --en "A setting."
 #     Elle est rangée dans Locales/enUS.lua (nouveautés en jeu) et sert au journal anglais CHANGELOG.en.md.
 #     Avant les tests, About.lua est réécrit pour la page « Les amis de Lyorune » : téléchargements GitHub et
-#     membres du Discord lus sur internet, total CurseForge demandé (ou donné par --curseforge 1234 ; Entrée
-#     garde l'ancien), noms du mur de remerciements lus dans outils/amis.txt. Sans réponse d'internet, les
-#     anciens chiffres restent.
+#     membres du Discord et total CurseForge lus sur internet (CurseForge par cfwidget, sans clé ; --curseforge 1234
+#     impose un chiffre ; s'il est illisible, il est demandé, Entrée garde l'ancien), noms du mur de remerciements
+#     lus dans outils/amis.txt. Sans réponse d'internet, les anciens chiffres restent.
 #     Depuis Git Bash, une note qui commence par « /lyorune » devient un chemin de fichier (C:/Program Files/Git/...) :
 #     la publication est alors refusée. Lancer depuis PowerShell, ou préfixer la commande par MSYS_NO_PATHCONV=1.
 #
@@ -125,7 +125,7 @@ ABOUT_HEAD = """-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LI
 -- de remerciements se rangent dans outils/amis.txt (un par ligne, seulement des joueurs d'accord).
 --   date       : jour où les chiffres ont été lus
 --   github     : téléchargements des archives publiées sur GitHub
---   curseforge : total CurseForge, tapé par l'auteur au moment de publier
+--   curseforge : total CurseForge (lu par cfwidget, sinon demandé à l'auteur)
 --   discord    : membres du serveur Discord de Lyorune
 -- Le nombre de mises à jour n'est pas écrit ici : c'est le nombre de versions de Changes.lua.
 
@@ -143,6 +143,14 @@ def discord_members():
     url = 'https://discord.com/api/v9/invites/%s?with_counts=true' % DISCORD_INVITE
     request = urllib.request.Request(url, headers={'User-Agent': 'lyorune-stats'})
     return int(json.load(urllib.request.urlopen(request, timeout=20))['approximate_member_count'])
+
+
+def curseforge_downloads():
+    """Total CurseForge du projet (numéro X-Curse-Project-ID du .toc), lu par le service public cfwidget, sans clé."""
+    import json, urllib.request
+    project = re.search(r'## X-Curse-Project-ID: (\d+)', read('Lyorune.toc')).group(1)
+    request = urllib.request.Request('https://api.cfwidget.com/%s' % project, headers={'User-Agent': 'lyorune-stats'})
+    return int(json.load(urllib.request.urlopen(request, timeout=20))['downloads']['total'])
 
 
 def thank_names():
@@ -165,6 +173,11 @@ def write_about(curseforge=None):
         except Exception as error:
             numbers[key] = old_about(key)
             print('%s illisible (%s) : ancien chiffre gardé (%d).' % (key, error, numbers[key]))
+    if curseforge is None:
+        try:
+            curseforge = curseforge_downloads()
+        except Exception as error:
+            print('curseforge illisible (%s).' % error)
     if curseforge is None and sys.stdin.isatty():
         try:
             typed = input('Total des téléchargements CurseForge (Entrée : garder %d) : ' % old_about('curseforge')).strip()

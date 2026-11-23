@@ -1081,6 +1081,8 @@ Demande de l'auteur (22 novembre 2026), placée après le plan correctif (détai
 « Demande notée »). Choix de l'auteur (23 novembre 2026, les trois recommandés) : **12e chapitre** à part ; carnet
 avec **soins, résurrections et buffs** (nouveau compte, allumé au départ) ; **brouillon** du mot de l'auteur et
 mur vide avec une invitation, à relire par l'auteur avant la publication.
+  Puis (même jour) : mur avec **Elesyio** (prêtre soigneur, aide sur le JcJ) ; total CurseForge **lu tout seul** à
+  chaque publication (service public cfwidget, numéro du .toc) au lieu d'être tapé, demande de l'auteur.
 - Comparaison : HealKit (onglet « À propos », page « Merci », `AboutData.lua` écrit à chaque publication, carnet
   `Ledger.lua` qui ne compte que les sorts lancés depuis ses propres cases) ; HealBot et VuhDo : aucune page de
   remerciements ni carnet. Lyorune fait mieux : le carnet compte tous mes sorts réussis, d'où qu'ils partent
@@ -1114,6 +1116,9 @@ mur vide avec une invitation, à relire par l'auteur avant la publication.
 4. Cases cochées et état de l'étape mis à jour ci-dessus.
 5. Publication : `python outils/publier.py X.Y.Z --nouveau "..." --en "..."`, avec le numéro de chaque demande
    (`(#12)`) dans le texte du changement.
+   Depuis PowerShell (Git Bash change « /lyorune » en chemin). La commande réécrit `About.lua` (page « Les amis de
+   Lyorune ») : vérifier la ligne qu'elle affiche (téléchargements GitHub et CurseForge, Discord, noms) ; un
+   chiffre « illisible » garde l'ancien, à signaler à l'auteur. Demande de l'auteur (23 novembre 2026).
 6. Essai en jeu : `outils\installer.bat`, puis `/reload`.
 7. Commit, étiquette `vX.Y.Z`, envoi sur GitHub : la version est publiée avec son archive.
 8. Demandes de l'étape fermées, jalon fermé.
