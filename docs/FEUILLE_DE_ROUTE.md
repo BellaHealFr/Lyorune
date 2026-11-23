@@ -58,10 +58,10 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Publiée (v1.43.0) |
 | 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | Publiée (v1.43.1) |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | Publiée (v1.44.0) : pas d'arène sur Forever, profil retiré |
-| 30 | 1.44.1 | Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort) | Publiée (v1.44.1), essai en champ de bataille attendu |
+| 30 | 1.44.1 | Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort) | Publiée (v1.44.1), confirmée en jeu |
 | 31 | 1.45.0 | Les amis de Lyorune : chiffres du projet, carnet de soigneur, mot de l'auteur, mur de remerciements | Publiée (v1.45.0) |
-| **32** | **1.46.0** | **Totems du chaman sur les cases, icône de classe (idées en réserve d'avant le plan correctif)** | **À faire (prochaine)** |
-| 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire |
+| 32 | 1.46.0 | Totems du chaman sous les cadres, icône de classe (idées en réserve d'avant le plan correctif) | Publiée (v1.46.0) |
+| **33** | **1.47.0** | **« Me montrer » dans les nouveautés, bilan de la soirée** | **À faire (prochaine)** |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
@@ -1144,7 +1144,9 @@ Décision de l'auteur (23 novembre 2026) : mes totems sous les cadres ; icône d
   placement (taille, place, case à cocher).
 - [x] Codé (Totems.lua, `Z.PlaceInStack`, `Z.SetClassIcon`, élément « class » de l'éditeur), test « 1.46.0 »
   (123 étapes), guides, README, `## Notes`, visite guidée (cartes « Une case par joueur » et « Soigner d'un clic »).
-- [ ] Relecture, commit, essai en jeu et publication (accord de l'auteur).
+- [x] Relecture (5 bugs, 3 optimisations, tout appliqué : présence d'un totem par `GetTotemDuration`, jamais
+  secret ; type à dissiper après l'icône de classe en Tuile et Carré ; liste de l'éditeur de placement calculée),
+  essai en jeu (« tout est ok »), publication. **Publiée : 1.46.0 (23 novembre 2026).**
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
 - [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
