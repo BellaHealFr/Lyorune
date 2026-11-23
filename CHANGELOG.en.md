@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.1] - 2026-11-24
+
+### Added
+
+- Optional DPS icon: the DPS sword on their frame, alongside tanks and healers (Players chapter, off at first).
+
+### Fixed
+
+- Changing group (battleground, 40-player raid): the interface no longer freezes and frames no longer lose their place. Each frame is set up in one go then placed once, and bursts of changes are grouped.
+- The error log opens again in dungeons and in combat, even when the game hides some values.
+- The leader's crown no longer sits on a tank's or healer's role icon, even when moved in the element editor.
+
 ## [1.46.0] - 2026-11-23
 
 ### Added
@@ -878,6 +890,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.46.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.0...v1.46.1
 [1.46.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.1...v1.45.0
 [1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1

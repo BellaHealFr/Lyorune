@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.1] - 2026-11-24
+
+### Ajouté
+
+- Icône des DPS au choix : l'épée des DPS sur leur case, à côté des tanks et des soigneurs (chapitre Joueurs, éteinte au départ).
+
+### Corrigé
+
+- Groupe qui change (champ de bataille, raid de 40) : l'interface ne gèle plus et les cases ne perdent plus leur place. Chaque cadre est réglé d'un coup puis replacé une seule fois, et les changements en rafale sont regroupés.
+- Le journal d'erreurs s'ouvre de nouveau en donjon et en combat, même quand le jeu cache certaines valeurs.
+- La couronne du chef ne se pose plus sur l'icône de rôle d'un tank ou d'un soigneur, même déplacée dans l'éditeur de placement.
+
 ## [1.46.0] - 2026-11-23
 
 ### Ajouté
@@ -878,6 +890,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.46.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.0...v1.46.1
 [1.46.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.1...v1.45.0
 [1.44.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.0...v1.44.1

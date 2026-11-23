@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.46.1", date = "2026-11-24",
+		added = {
+			"Icône des DPS au choix : l'épée des DPS sur leur case, à côté des tanks et des soigneurs (chapitre Joueurs, éteinte au départ).",
+		},
+		improved = {
+		},
+		fixed = {
+			"Groupe qui change (champ de bataille, raid de 40) : l'interface ne gèle plus et les cases ne perdent plus leur place. Chaque cadre est réglé d'un coup puis replacé une seule fois, et les changements en rafale sont regroupés.",
+			"Le journal d'erreurs s'ouvre de nouveau en donjon et en combat, même quand le jeu cache certaines valeurs.",
+			"La couronne du chef ne se pose plus sur l'icône de rôle d'un tank ou d'un soigneur, même déplacée dans l'éditeur de placement.",
+		},
+	},
+	{
 		version = "1.46.0", date = "2026-11-23",
 		added = {
 			"Mes totems (chaman) : vos totems posés sous les cadres, un emplacement par élément, avec leur temps, même en combat (éteint au départ).",
