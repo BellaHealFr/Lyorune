@@ -94,7 +94,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Resurrection icon in the centre | Someone is resurrecting them |
 | Summon icon in the centre | A summon is offered to them, or they accepted or declined it |
 | Phase icon in the centre | They are in another phase: they seem close, but your spells cannot reach them |
-| Crown next to the role icon | They lead the group (a small flag: a raid assistant) |
+| Crown next to the role icon | They lead the group (a small flag: a raid assistant). It never sits on the role icon: if you pushed it there in the element editor, it comes back right beside it on a tank or a healer |
 
 The main colours are recalled in game: Window and help chapter, "Reading a cell".
 
@@ -316,7 +316,7 @@ Every element of the cell has its switch, filed according to what it shows. Noth
 - **Health and range**: incoming heals, shield and its amount (off at first), low health overlay (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
 - **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown, your cooldowns and the group's, your totems, the channel line.
 - **Debuffs**: dispelling and type picture, icons and their seconds, important debuffs, crowd-controlled player, boss private auras.
-- **Players**: player name, role icon, class icon (off at first), raid marker, group leader, big defensives, icon in the middle of the cell (ready check, resurrection, out of sight, summon, very far away), summon and phase, threat, missing buffs, my players (healer assignments), tooltip.
+- **Players**: player name, role icon, DPS icon (sword, off at first), class icon (off at first), raid marker, group leader, big defensives, icon in the middle of the cell (ready check, resurrection, out of sight, summon, very far away), summon and phase, threat, missing buffs, my players (healer assignments), tooltip.
 
 ### Range (Health and range chapter)
 
