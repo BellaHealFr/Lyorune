@@ -329,23 +329,7 @@ end
 -- Au-dessous de « Mes recharges », sinon du bandeau des buffs manquants, sinon des cadres (même côté)
 function Z.PlaceGroupCooldowns()
 	if not (panel and panel:IsShown()) then return end
-	Z.PlaceUnderCells(panel)
-	local row = Z.CooldownRow and Z:CooldownRow()
-	local block = Z.BuffBlock and Z:BuffBlock()
-	local above
-	if row and row:IsShown() and row.where == panel.where then
-		above = row
-	elseif block and block:IsShown() and block.where == panel.where then
-		above = block
-	end
-	if not above then return end
-	local gap = Z.db.spacing
-	panel:ClearAllPoints()
-	if panel.where == "ABOVE" then
-		panel:SetPoint("BOTTOMLEFT", above, "TOPLEFT", 0, gap)
-	else
-		panel:SetPoint("TOPLEFT", above, "BOTTOMLEFT", 0, -gap)
-	end
+	Z.PlaceInStack(panel, (Z:TotemRow()), (Z:CooldownRow()), Z:BuffBlock())
 end
 
 -- Le panneau entier : une ligne par sort (« Renaissance : Lyra, Tom 4:10 »), les joueurs par ordre alphabétique
@@ -360,14 +344,7 @@ function Draw()
 	end
 	if not hooked and Z.headers and #Z.headers > 0 then
 		hooked = true
-		local function Moved() Z:Try("recharges du groupe", Z.PlaceGroupCooldowns) end
-		for _, h in ipairs(Z.headers) do
-			if h.def and h.def.pos == "pos" then
-				h:HookScript("OnSizeChanged", Moved)
-				h:HookScript("OnShow", Moved)
-				h:HookScript("OnHide", Moved)
-			end
-		end
+		Z.FollowCells(function() Z:Try("recharges du groupe", Z.PlaceGroupCooldowns) end)
 	end
 	local L, now = Z.L, GetTime()
 	local ignored = Z.db.cooldownIgnored or {}

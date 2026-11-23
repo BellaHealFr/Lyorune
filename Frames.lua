@@ -426,6 +426,14 @@ end
 local LEADER_ICON = "Interface\\GroupFrame\\UI-Group-LeaderIcon"
 local ASSIST_ICON = "Interface\\GroupFrame\\UI-Group-AssistantIcon"
 
+-- Icône de classe : seulement pour un joueur, classe lisible (jamais secrète d'ordinaire)
+local function UpdateClass(b)
+	if not db.showClassIcon then return b.class:Hide() end
+	local player = UnitIsPlayer(b.unit)
+	if issecret(player) or not player then return b.class:Hide() end
+	Z.SetClassIcon(b.class, (select(2, UnitClass(b.unit))))
+end
+
 local function UpdateLeader(b)
 	if not db.showLeader then return b.leader:Hide() end
 	local unit = b.unit
@@ -507,6 +515,7 @@ local function UpdateAll(b)
 	UpdateRange(b)
 	UpdateThreat(b)
 	UpdateRole(b)
+	UpdateClass(b)
 	UpdateLeader(b)
 	UpdateMarker(b)
 	UpdateCenter(b)
@@ -679,6 +688,7 @@ local function PlaceTexts(b, icon)
 	local shield = db.showAbsorb and db.absorbText
 	if Z:Shape().inline then
 		Place(b.role, "role", "LEFT", b.hp, "LEFT", 3, 0)
+		Place(b.class, "class", "LEFT", b.hp, "LEFT", b.rows.classX, 0) -- après l'icône de rôle
 		Place(b.name, "name", "LEFT", b.hp, "LEFT", b.rows.nameX, 0) -- après l'icône de rôle, à sa taille
 		b.name:SetJustifyH("LEFT")
 		-- en Bandeau, à gauche du bloc d'icônes (et du chiffre du bouclier)
@@ -690,6 +700,7 @@ local function PlaceTexts(b, icon)
 		-- Accrochés à la barre de vie : ils remontent avec elle quand la barre de mana s'affiche
 		Place(b.name, "name", "CENTER", b.hp, "CENTER", 0, 3)
 		b.name:SetJustifyH("CENTER")
+		Place(b.class, "class", "LEFT", b.hp, "LEFT", 3, 3) -- au bord gauche, sur la ligne du nom (raccourci d'autant)
 		Place(b.text, "text", "BOTTOM", b.hp, "BOTTOM", 0, 4)
 		b.text:SetJustifyH("CENTER")
 		Place(b.leader, "leader", "TOPRIGHT", b.role, "TOPLEFT", -1, 0) -- à gauche de l'icône de rôle
@@ -782,6 +793,7 @@ local function Style(b)
 		region:SetSize(size, size)
 	end
 	Size(b.role, "role", icon - 2)
+	Size(b.class, "class", icon - 2)
 	Size(b.leader, "leader", Z.BadgeSize(icon))
 	Size(b.marker, "marker", icon)
 	Size(b.center, "center", icon + 8)
@@ -959,6 +971,10 @@ function Z.BuildVisuals(b)
 
 	b.role = top:CreateTexture(nil, "ARTWORK")
 	b.role:SetPoint("TOPRIGHT", -2, -2)
+
+	b.class = top:CreateTexture(nil, "ARTWORK") -- icône de classe (réglage showClassIcon)
+	b.class:SetPoint("LEFT", 3, 0)
+	b.class:Hide()
 
 	b.leader = top:CreateTexture(nil, "OVERLAY") -- chef de groupe ou assistant
 	b.leader:SetPoint("TOPLEFT", 2, -2)
@@ -1761,6 +1777,7 @@ function Z:Refresh()
 	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
 	if Z.RefreshCastIndicator then Z:RefreshCastIndicator() end
 	if Z.RefreshCooldowns then Z:RefreshCooldowns() end
+	if Z.RefreshTotems then Z:RefreshTotems() end
 	if Z.RefreshGroupCooldowns then Z:RefreshGroupCooldowns() end
 	if Z.RefreshManaEdge then Z:RefreshManaEdge() end
 	if Z.RefreshFiveSecondRule then Z:RefreshFiveSecondRule() end

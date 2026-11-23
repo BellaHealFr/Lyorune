@@ -96,16 +96,21 @@ Z.DISPEL_ATLAS = { Magic = "RaidFrame-Icon-DebuffMagic", Curse = "RaidFrame-Icon
 	Disease = "RaidFrame-Icon-DebuffDisease", Poison = "RaidFrame-Icon-DebuffPoison" }
 
 -- Place d'origine, sans le décalage de l'éditeur (aussi pour Placement.lua, qui ne peut pas passer par Z.Offset) :
--- au milieu du bord gauche de la case, juste à droite de la grande icône si elle est allumée (Tuile, Carré) ; sur
+-- au milieu du bord gauche de la case, juste à droite de la grande icône et de l'icône de classe allumées (Tuile, Carré) ; sur
 -- une ligne (Barre, Bandeau), sur la barre de vie après l'icône de rôle, le nom part après elle (Z.AuraRows).
 -- Rend le cadre ("HP" ou "CELL"), x (point « LEFT ») et la taille.
 function Z.DispelTypeHome()
 	local db, icon = Z.db, Z.IconSize()
 	local size = Z.ElementSize("dispelType", icon)
 	if Z:Shape().inline then
-		return "HP", db.showRole and Z.ElementSize("role", icon - 2) + 5 or 3, size
+		local x = db.showRole and Z.ElementSize("role", icon - 2) + 5 or 3
+		if db.showClassIcon then x = x + Z.ElementSize("class", icon - 2) + 2 end -- après l'icône de classe
+		return "HP", x, size
 	end
-	return "CELL", db.bossDebuffs and 3 + Z.BigIconSize() + 2 or 3, size
+	-- Tuile, Carré : après la grande icône, et après l'icône de classe (même bord gauche, Frames.lua)
+	local x = db.bossDebuffs and 3 + Z.BigIconSize() + 2 or 3
+	if db.showClassIcon then x = math.max(x, 3 + Z.ElementSize("class", icon - 2) + 2) end
+	return "CELL", x, size
 end
 
 -- Place réelle : l'origine plus le décalage de l'éditeur. Rend le cadre, x, y et la taille.

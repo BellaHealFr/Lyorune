@@ -1220,7 +1220,7 @@ Z.translations.enUS = {
 	["Trait de canalisation : quand vous canalisez un soin sur un joueur (Pénitence), un trait se vide en haut de sa case au rythme de la canalisation, même en combat (jamais pour un soin sans cible comme Tranquillité)."] = "Channel line: when you channel a heal on a player (Penance), a line empties at the top of their cell as the channel goes, even in combat (never for a heal without a target such as Tranquility).",
 	["Infobulle « Mes clics » : hors combat, un sort en recharge s'écrit en rouge avec ses secondes."] = "\"My clicks\" tooltip: out of combat, a spell that is cooling down is written in red with its seconds.",
 	-- Recharges du groupe (1.42.1)
-	["Vos sorts à recharge sous les cadres, même en combat, et ceux de vos alliés ? « Mes recharges » et « Recharges du groupe », chapitre Mes soins."] = "Your cooldown spells under the frames, even in combat, and your allies'? \"My cooldowns\" and \"Group cooldowns\", My heals chapter.",
+	["Vos sorts à recharge sous les cadres, même en combat, ceux de vos alliés et vos totems ? « Mes recharges », « Recharges du groupe » et « Mes totems », chapitre Mes soins."] = "Your cooldown spells under the frames, even in combat, your allies' and your totems? \"My cooldowns\", \"Group cooldowns\" and \"My totems\", My heals chapter.",
 	["Recharges du groupe"] = "Group cooldowns",
 	["Sous vos recharges, une ligne par gros sort de vos alliés (Renaissance, Innervation, Imposition des mains, Totem de vague de mana...) : le nom de chacun, net quand le sort est prêt, avec ses secondes sinon. Seuls les joueurs qui ont Lyorune y figurent (le jeu cache les sorts des autres) ; pendant un combat de boss ou un match JcJ, le jeu bloque les messages : la ligne garde le dernier état connu, marqué « avant le boss », et se met à jour à la fin."] = "Under your cooldowns, one line per big spell of your allies (Rebirth, Innervate, Lay on Hands, Mana Tide Totem...): everyone's name, sharp when the spell is ready, with its seconds otherwise. Only players who have Lyorune show up (the game hides the others' spells); during a boss fight or a PvP match, the game blocks messages: the line keeps the last known state, marked \"before the boss\", and updates at the end.",
 	["Les gros sorts de vos alliés qui ont Lyorune."] = "The big spells of your allies who have Lyorune.",
@@ -1272,4 +1272,16 @@ Z.translations.enUS = {
 	["Donjons"] = "Dungeons",
 	["Les amis de Lyorune : un nouveau chapitre des options avec Lyorune en chiffres (mises à jour, téléchargements, Discord), votre carnet de soigneur (soins, résurrections et buffs réussis, par personnage, avec son interrupteur), un mot de l'auteur et un mur de remerciements."] = "Friends of Lyorune: a new options chapter with Lyorune in numbers (updates, downloads, Discord), your healer's notebook (successful heals, resurrections and buffs, per character, with its own switch), a word from the author and a thank you wall.",
 	["Nouveautés de la 1.44.1 : la ligne sur /lyorune buffs s'affiche correctement."] = "1.44.1 news: the line about /lyorune buffs now shows correctly.",
+
+	-- Mes totems et icône de classe (1.46.0)
+	["Icône de classe"] = "Class icon",
+	["Une petite icône de la classe du joueur sur sa case : après l'icône de rôle en Barre et en Bandeau, au bord gauche de la ligne du nom en Tuile et en Carré. Sa place et sa taille se règlent dans l'éditeur de placement."] = "A small icon of the player's class on their cell: after the role icon in Bar and Banner, at the left edge of the name line in Tile and Square. Its position and size are set in the placement editor.",
+	["La classe de chaque joueur, en image."] = "Each player's class, as a picture.",
+	["Mes totems (chaman)"] = "My totems (shaman)", ["Mes totems"] = "My totems",
+	["Une rangée sous vos recharges : un emplacement par élément (Feu, Terre, Eau, Air), avec l'image du totem posé et le temps qui tourne, même en combat. Un emplacement vide reste pâle ; rien de posé, la rangée disparaît. Sans effet pour une autre classe."] = "A row under your cooldowns: one slot per element (Fire, Earth, Water, Air), with the picture of the totem down and its time running, even in combat. An empty slot stays pale; nothing down, the row disappears. No effect for another class.",
+	["Vos totems posés et leur temps, sous les cadres."] = "Your totems down and their time, under the frames.",
+	["Emplacement : %s"] = "Slot: %s", ["Aucun totem posé"] = "No totem down",
+	["Feu"] = "Fire", ["Terre"] = "Earth", ["Eau"] = "Water", ["Air"] = "Air",
+	["La petite image près du nom : la classe du joueur."] = "The small picture by the name: the player's class.",
+	["La classe de chacun en image ? « Icône de classe », chapitre Joueurs."] = "Everyone's class as a picture? \"Class icon\", Players chapter.",
 }

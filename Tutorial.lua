@@ -127,6 +127,8 @@ local steps = {
 				mana[#mana + 1] = L["Une boisson près de la mana d'un soigneur : il boit."]
 			end
 			if #mana > 0 then text = text .. "\n\n" .. table.concat(mana, " ") end
+			text = text .. "\n\n" .. (db.showClassIcon and L["La petite image près du nom : la classe du joueur."]
+				or L["La classe de chacun en image ? « Icône de classe », chapitre Joueurs."])
 			return text
 		end,
 		target = Cell,
@@ -142,7 +144,7 @@ local steps = {
 				.. "\n" .. Z.L["Tous vos soins et buffs y sont, même sans cible (Feu intérieur, totems). Un sort manque ? /lyorune sorts dit pourquoi."]
 				.. "\n" .. Z.L["Un rang plus bas pour garder de la mana ? « Choisir le rang des sorts », même chapitre."]
 				.. "\n" .. Z.L["Un autre sort sur un ennemi, en JcJ, sur un tank ou hors combat ? Le « + » au bout d'une ligne."]
-				.. "\n" .. Z.L["Vos sorts à recharge sous les cadres, même en combat, et ceux de vos alliés ? « Mes recharges » et « Recharges du groupe », chapitre Mes soins."]
+				.. "\n" .. Z.L["Vos sorts à recharge sous les cadres, même en combat, ceux de vos alliés et vos totems ? « Mes recharges », « Recharges du groupe » et « Mes totems », chapitre Mes soins."]
 		end,
 		target = Cell,
 		around = Block,

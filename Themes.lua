@@ -240,6 +240,9 @@ function Z.AuraRows()
 	-- Nom et chiffre de vie sur une ligne (Barre, Bandeau) : places d'origine, sauf en bloc (ci-dessous). Le nom
 	-- part après l'icône de rôle, à sa taille choisie ; l'icône masquée, il prend sa place (1.41.1).
 	local nameAfter = roleOn and roleW + 5 or 3
+	-- l'icône de classe (allumée) se pose juste après l'icône de rôle, à sa taille choisie
+	rows.classX = nameAfter
+	if db.showClassIcon then nameAfter = nameAfter + Z.ElementSize("class", icon - 2) + 2 end
 	-- l'icône du type à dissiper (allumée) se pose avant le nom, à sa taille choisie (Z.DispelTypeHome, Auras.lua)
 	if db.dispelIcon then nameAfter = nameAfter + Z.ElementSize("dispelType", icon) + 2 end
 	rows.nameX = nameAfter
@@ -308,6 +311,24 @@ function Z:UndoShape()
 	Z.shapeUndo = nil
 	for key, value in pairs(undo) do Z.db[key] = value end
 	Z:Refresh()
+end
+
+-- Icône d'une classe (nom interne : PRIEST...) sur une texture : l'image du jeu (atlas « classicon- »), sinon les
+-- cercles de classe du jeu. Classe inconnue ou secrète : texture cachée. Rend true si elle est montrée.
+function Z.SetClassIcon(tex, class)
+	if type(class) ~= "string" or Z.IsSecret(class) then tex:Hide() return false end
+	local atlas = "classicon-" .. class:lower()
+	if C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(atlas) then
+		tex:SetAtlas(atlas)
+	elseif CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class] then
+		tex:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
+		tex:SetTexCoord(unpack(CLASS_ICON_TCOORDS[class]))
+	else
+		tex:Hide()
+		return false
+	end
+	tex:Show()
+	return true
 end
 
 -- Couleur de classe, naturelle (celle du jeu) ou vive : plus saturée, sans perdre la teinte de la classe

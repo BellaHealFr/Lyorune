@@ -18,6 +18,7 @@
 --  10. Z.groupHeals.MACLASSE : ses soins sans cible (de zone, sur soi, totems), pour « Sorts et raccourcis »
 --  11. Z.cooldownSpells.MACLASSE : ses gros sorts à recharge, montrés dans « Mes recharges » même sans raccourci
 --  12. Z.groupCooldowns.MACLASSE : ceux que ses alliés voient dans « Recharges du groupe » (s'il a Lyorune)
+--  13. Z.totemSlots.MACLASSE : les noms de ses emplacements de totems, si elle en pose (« Mes totems »)
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -163,6 +164,12 @@ Z.groupCooldowns = {
 	DRUID   = { 20484, 29166, 740 },         -- Renaissance, Innervation, Tranquillité
 	PALADIN = { 633, 1022, 6940, 19752 },    -- Imposition des mains, Bénédictions de protection et de sacrifice, Intervention divine
 	SHAMAN  = { 16190 },                     -- Totem de vague de mana
+}
+
+-- Emplacements de totems (« Mes totems », Totems.lua) : un nom par emplacement du jeu (GetTotemInfo 1, 2...), dans
+-- l'ordre de la rangée. Vérifié hors jeu (ArcAuras porté sur Forever) : 1 Feu, 2 Terre, 3 Eau, 4 Air.
+Z.totemSlots = {
+	SHAMAN = { "Feu", "Terre", "Eau", "Air" },
 }
 
 -- Sorts de résurrection (toutes classes), pour l'annonce « je ressuscite untel »

@@ -19,6 +19,7 @@ Z.placeElements = {
 	{ "name", "Nom" },
 	{ "text", "Texte de vie" },
 	{ "role", "Icône de rôle" },
+	{ "class", "Icône de classe" },
 	{ "marker", "Marqueur de raid" },
 	{ "leader", "Chef de groupe" },
 	{ "center", "Icône centrale" },
@@ -35,7 +36,7 @@ Z.placeElements = {
 local KNOWN = {}
 for _, element in ipairs(Z.placeElements) do KNOWN[element[1]] = true end
 -- Ceux dont la taille se règle ici : les icônes (le nom, le texte de vie et les auras privées ont leur réglage)
-local SIZED = { role = true, marker = true, leader = true, center = true, lowMana = true, hots = true,
+local SIZED = { role = true, class = true, marker = true, leader = true, center = true, lowMana = true, hots = true,
 	debuffs = true, big = true, buff = true, controls = true, defensives = true, dispelType = true }
 
 function Z.IsPlaceElement(key)
@@ -49,7 +50,7 @@ end
 -- Masquer ne touche jamais au placement : l'élément revient à sa place et à sa taille d'avant.
 ----------------------------------------------------------------------------------------------------
 local SHOWN_BY = {
-	name = "showName", text = { "text", "NONE" }, role = "showRole", marker = "showMarker", leader = "showLeader",
+	name = "showName", text = { "text", "NONE" }, role = "showRole", class = "showClassIcon", marker = "showMarker", leader = "showLeader",
 	center = "showCenter", lowMana = { "lowManaHealers", 0 }, hots = "showHots", debuffs = "showDebuffs", dispelType = "dispelIcon",
 	big = "bossDebuffs", controls = "showControls", defensives = "showDefensives", buff = "missingBuffs",
 	private = "privateAuras",
@@ -232,14 +233,18 @@ local function Origins(power, roleRect)
 	end
 
 	local role, badge = Z.ElementSize("role", icon - 2), Z.ElementSize("leader", Z.BadgeSize(icon))
+	local class = Z.ElementSize("class", icon - 2)
 	if Z:Shape().inline then
 		Put("role", "LEFT", hp, "LEFT", 3, 0, role, role)
+		Put("class", "LEFT", hp, "LEFT", rows.classX, 0, class, class)
 		Put("name", "LEFT", hp, "LEFT", rows.nameX, 0, rows.nameW, font + 2, true)
 		Put("text", "RIGHT", hp, "RIGHT", rows.textX, 0, rows.textW, font + 1, true)
 		if roleRect then Put("leader", "CENTER", roleRect, "TOPRIGHT", 0, 0, badge, badge) end
 	else
 		Put("role", "TOPRIGHT", cell, "TOPRIGHT", -2 - Shift("TOPRIGHT"), -2, role, role)
-		Put("name", "CENTER", hp, "CENTER", 0, 3, W - 8, font + 2, true)
+		-- l'icône de classe (allumée) au bord gauche de la ligne du nom : le nom, centré, s'arrête avant elle
+		Put("class", "LEFT", hp, "LEFT", 3, 3, class, class)
+		Put("name", "CENTER", hp, "CENTER", 0, 3, db.showClassIcon and W - 2 * (class + 5) or W - 8, font + 2, true)
 		Put("text", "BOTTOM", hp, "BOTTOM", 0, 4, W - 8, font + 1, true)
 		if roleRect then Put("leader", "TOPRIGHT", roleRect, "TOPLEFT", -1, 0, badge, badge) end
 	end
@@ -434,7 +439,11 @@ end
 -- La fenêtre : la liste des éléments à gauche (une case à cocher devant chacun), la case d'exemple à droite, les
 -- flèches dessous, puis « Aussi sur la case »
 ----------------------------------------------------------------------------------------------------
-local WIDTH, HEIGHT = 580, 588
+-- Liste des éléments : une ligne tous les 24 pixels (la hauteur d'une case à cocher). « Aussi sur la case » et la
+-- note se rangent sous la liste, la fenêtre grandit d'autant (16 éléments : 597 pixels, sous les 600 permis).
+local ROW = 24
+local LIST_END = 48 + #Z.placeElements * ROW
+local WIDTH, HEIGHT = 580, LIST_END + 165
 local HIDDEN_ALPHA = 0.25 -- élément masqué, sur la case d'exemple
 local STAGE_W, STAGE_H = 352, 232
 local STAGE_MARGIN = 8
@@ -563,6 +572,7 @@ local function Draw()
 	cell.text:SetTextColor(1, 1, 1)
 	cell.role:SetAtlas("roleicon-tiny-healer")
 	cell.role:Show()
+	Z.SetClassIcon(cell.class, Z.class or "PRIEST")
 	SetRaidTargetIconTexture(cell.marker, 1)
 	cell.marker:Show()
 	cell.leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
@@ -825,9 +835,7 @@ local function BuildWindow()
 	tinsert(UISpecialFrames, "LyorunePlacement")
 
 	-- Liste des éléments, chacun avec sa case à cocher : le réglage des options qui le montre
-	-- Une ligne tous les 25 pixels : les 15 éléments tiennent au-dessus de « Aussi sur la case »
 	win.list, win.checks = {}, {}
-	local ROW = 25
 	for index, element in ipairs(Z.placeElements) do
 		local key = element[1]
 		local check = Shown(function() return Z.ElementShown(key) end, function(on) Z.ShowElement(key, on) end,
@@ -931,19 +939,19 @@ local function BuildWindow()
 
 	-- Aussi sur la case : ce qui n'a pas de place à régler mais change la case, trois par ligne
 	local also = UI.Label(win, 12, nil, "accent")
-	also:SetPoint("TOPLEFT", 16, -436)
+	also:SetPoint("TOPLEFT", 16, -LIST_END - 13)
 	also:SetText(L["Aussi sur la case"])
 	win.also = {}
 	for index, item in ipairs(Z.alsoOnCell) do
 		local spec = item[1]
 		local check = Shown(function() return Z.SettingShown(spec) end, function(on) Z.ShowSetting(spec, on) end,
 			"Même réglage que dans les options.", L[item[2]])
-		check:SetPoint("TOPLEFT", 16 + ((index - 1) % 3) * 184, -456 - math.floor((index - 1) / 3) * 22)
+		check:SetPoint("TOPLEFT", 16 + ((index - 1) % 3) * 184, -LIST_END - 33 - math.floor((index - 1) / 3) * 22)
 		win.also[index] = check
 	end
 
 	local note = UI.Label(win, 11, nil, "dim")
-	note:SetPoint("TOPLEFT", 16, -508)
+	note:SetPoint("TOPLEFT", 16, -LIST_END - 85)
 	note:SetPoint("RIGHT", -16, 0)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)

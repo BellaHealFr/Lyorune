@@ -696,6 +696,44 @@ function Z.PlaceUnderCells(frame)
 	end
 end
 
+-- Pose « frame » sous les cadres, collée au premier des cadres donnés (le plus proche d'abord) qui est visible
+-- du même côté : la pile bandeau des buffs, « Mes recharges », « Mes totems », recharges du groupe.
+function Z.PlaceInStack(frame, ...)
+	Z.PlaceUnderCells(frame)
+	for i = 1, select("#", ...) do
+		local above = select(i, ...)
+		if above and above:IsShown() and above.where == frame.where then
+			local gap = Z.db.spacing
+			frame:ClearAllPoints()
+			if frame.where == "ABOVE" then
+				frame:SetPoint("BOTTOMLEFT", above, "TOPLEFT", 0, gap)
+			else
+				frame:SetPoint("TOPLEFT", above, "BOTTOMLEFT", 0, -gap)
+			end
+			return
+		end
+	end
+end
+
+-- Appelle « fn » quand les cadres du groupe changent de taille, apparaissent ou disparaissent (une fois par
+-- fonction, dès que les cadres existent). Un seul crochet par cadre, pour toutes les fonctions.
+local followers = {}
+local function CellsMoved()
+	for _, fn in ipairs(followers) do fn() end
+end
+function Z.FollowCells(fn)
+	if #followers == 0 then
+		for _, h in ipairs(Z.headers or {}) do
+			if h.def and h.def.pos == "pos" then
+				h:HookScript("OnSizeChanged", CellsMoved)
+				h:HookScript("OnShow", CellsMoved)
+				h:HookScript("OnHide", CellsMoved)
+			end
+		end
+	end
+	followers[#followers + 1] = fn
+end
+
 local function PlaceBlock()
 	Z.PlaceUnderCells(block)
 end
@@ -713,19 +751,12 @@ local function BuildBlock()
 		end
 	end)
 	-- les cadres du groupe changent de taille, apparaissent ou disparaissent : le bloc se replace, une fois
-	local function Moved() Z:QueueBuffPanel() end
 	-- « Mes recharges » se range sous le bandeau quand il est là (Cooldowns.lua)
 	local function Follow() if Z.PlaceCooldowns then Z.PlaceCooldowns() end end
 	block:HookScript("OnShow", Follow)
 	block:HookScript("OnHide", Follow)
 	block:HookScript("OnSizeChanged", Follow)
-	for _, h in ipairs(Z.headers or {}) do
-		if h.def and h.def.pos == "pos" then
-			h:HookScript("OnSizeChanged", Moved)
-			h:HookScript("OnShow", Moved)
-			h:HookScript("OnHide", Moved)
-		end
-	end
+	Z.FollowCells(function() Z:QueueBuffPanel() end)
 	block:Hide()
 end
 

@@ -1127,8 +1127,24 @@ Idées en réserve d'avant le plan correctif, retenues par l'auteur le 23 novemb
 regarder HealKit, HealBot, VuhDo puis tout le dossier d'addons (règle de l'auteur), et décider avec l'auteur les
 points techniques (totems : ce que le jeu dit des totems d'un chaman sur Forever, `GetTotemInfo` pour les miens,
 auras laissées par les totems sur les joueurs, secret ou non en combat).
-- [ ] Totems du chaman : sur les cases des joueurs touchés (ou mes totems sous les cadres), à décider.
-- [ ] Icône de classe : petite icône sur la case, élément de l'éditeur de placement (taille, place, case à cocher).
+Règle de l'auteur (23 novembre 2026), valable pour cette étape et toutes les suivantes : chaque nouveauté a son
+interrupteur, le joueur choisit de l'avoir ou non. Les totems sont **éteints au départ**. Les étapes 34 (canal) et
+35 (builds) auront en plus leurs propres règles, à établir et proposer à l'auteur pendant leur recherche (34 a, 35 a).
+Comparaison (23 novembre 2026). HealBot et HealKit : aucun affichage de totems. VuhDo : mes totems comme « buff
+à surveiller » (`GetTotemInfo` 1 à 4, chaque valeur peut être secrète). ElvUI (oUF et TotemTracker) : une icône
+par emplacement, temps par `GetTotemDuration(slot)` + `SetCooldownFromDurationObject` quand la durée est secrète,
+présence par `SetAlphaFromBoolean`, événement `PLAYER_TOTEM_UPDATE`. ArcAuras : 4 emplacements sur Forever (Feu,
+Terre, Eau, Air), nom et sort secrets en combat. Aucun ne montre les joueurs touchés par un totem : il faudrait
+lire leurs auras, secrètes en combat. Icône de classe : VuhDo (`UI-Classes-Circles` + `CLASS_ICON_TCOORDS`),
+HealKit et oUF (atlas `classicon-<classe>`, vérifié par `C_Texture.GetAtlasInfo`).
+Décision de l'auteur (23 novembre 2026) : mes totems sous les cadres ; icône de classe éteinte au départ.
+- [x] Totems du chaman (éteints au départ, interrupteur) : une rangée de mes 4 totems (Feu, Terre, Eau, Air)
+  collée sous les cadres, temps qui tourne même en combat, seulement pour un chaman.
+- [x] Icône de classe (éteinte au départ, interrupteur) : petite icône sur la case, élément de l'éditeur de
+  placement (taille, place, case à cocher).
+- [x] Codé (Totems.lua, `Z.PlaceInStack`, `Z.SetClassIcon`, élément « class » de l'éditeur), test « 1.46.0 »
+  (123 étapes), guides, README, `## Notes`, visite guidée (cartes « Une case par joueur » et « Soigner d'un clic »).
+- [ ] Relecture, commit, essai en jeu et publication (accord de l'auteur).
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
 - [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
@@ -1150,6 +1166,8 @@ difficultés ou de l'addon.
   jeu ou le pays : l'anglais comme le français se parlent dans de nombreux pays (France, Belgique, Suisse,
   Canada, pays d'Afrique...). Chaque joueur choisit librement le canal français, le canal anglais ou les deux,
   jamais imposé ni proposé d'office selon la langue du client.
+  Règles propres au canal (demande de l'auteur, 23 novembre 2026) : à établir pendant la 34 a et à faire valider
+  par l'auteur avant tout codage (au minimum : interrupteur, éteint au départ, choix libre des canaux).
 - [ ] 34 b, codage selon la décision de l'auteur.
 
 ## Étape 35 : échange de builds de talents, avec vote
@@ -1161,6 +1179,8 @@ builds de talents et votent pour les meilleurs.
   partage et votes passent par les messages entre addons (joueurs en ligne seulement, bloqués en combat de boss et
   en match JcJ) ou par le canal de l'étape 34 : où garder les builds et les votes, comment éviter les votes en
   double ; lien possible avec la page « Les amis de Lyorune ».
+  Règles propres à l'échange (demande de l'auteur, 23 novembre 2026) : à établir pendant la 35 a et à faire
+  valider par l'auteur avant tout codage (au minimum : interrupteur, rien envoyé sans action du joueur).
 - [ ] 35 b, codage selon la décision de l'auteur.
 
 ## Fin d'une étape

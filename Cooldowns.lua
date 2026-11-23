@@ -147,18 +147,31 @@ local function Draw(f)
 	f.icon:SetAlpha(f.cooling == true and 0.75 or 1)
 end
 
-local function Icon(index)
-	if icons[index] then return icons[index] end
-	local f = CreateFrame("Frame", nil, row)
+-- Une icône sous les cadres : fond, image, temps qui tourne, bordure, infobulle. Aussi pour « Mes totems »
+function Z.UnderRowIcon(parent, onEnter, onLeave)
+	local f = CreateFrame("Frame", nil, parent)
 	f.bg = UI.Tex(f, "BACKGROUND", 0, 0, 0, 0.6)
 	f.bg:SetAllPoints()
 	f.icon = f:CreateTexture(nil, "ARTWORK")
 	f.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	f.icon:SetPoint("TOPLEFT", 1, -1)
+	f.icon:SetPoint("BOTTOMRIGHT", -1, 1)
 	f.cd = CreateFrame("Cooldown", nil, f, "CooldownFrameTemplate")
+	f.cd:SetAllPoints(f.icon)
 	f.cd:SetDrawEdge(false)
 	f.cd:SetDrawBling(false)
 	f.cd:SetHideCountdownNumbers(false) -- les secondes, écrites par le jeu (lisibles en combat)
 	f.cd:SetSwipeColor(0, 0, 0, 0.6)
+	f.border = UI.Border(f, 1)
+	f:EnableMouse(true)
+	f:SetScript("OnEnter", onEnter)
+	f:SetScript("OnLeave", onLeave)
+	return f
+end
+
+local function Icon(index)
+	if icons[index] then return icons[index] end
+	local f = Z.UnderRowIcon(row, IconEnter, IconLeave)
 	-- la recharge finie : l'icône redevient nette (le jeu n'envoie pas toujours SPELL_UPDATE_COOLDOWN à ce moment)
 	f.cd:SetScript("OnCooldownDone", function()
 		Z:Try("mes recharges", function()
@@ -166,20 +179,18 @@ local function Icon(index)
 			if Z.db.cooldownShow == "COOLING" then Layout() end
 		end)
 	end)
-	f.border = UI.Border(f, 1)
-	f:EnableMouse(true)
-	f:SetScript("OnEnter", IconEnter)
-	f:SetScript("OnLeave", IconLeave)
 	icons[index] = f
 	return f
 end
 
--- Côté d'une icône : la hauteur du bandeau des buffs manquants (deux lignes de texte), au moins 18
+-- Côté d'une icône : la hauteur du bandeau des buffs manquants (deux lignes de texte), au moins 18. Aussi pour
+-- « Mes totems » (Totems.lua)
 local function IconSize()
 	local theme = Z:Theme()
 	local size = Z.db.fontSize + (theme.fontBonus or 0)
 	return math.max(18, 2 * size + 4 + 2 * UI.Inset(theme.borderSize, Z.db.corners == "ROUND"))
 end
+Z.UnderRowIconSize = IconSize
 
 ----------------------------------------------------------------------------------------------------
 -- La rangée
@@ -189,21 +200,12 @@ local PlaceRow -- plus bas
 -- Sous les cadres, ou collée au bandeau des buffs manquants quand il est du même côté
 function Z.PlaceCooldowns()
 	if row and row:IsShown() then PlaceRow() end
-	if Z.PlaceGroupCooldowns then Z.PlaceGroupCooldowns() end -- les recharges du groupe suivent (GroupCooldowns.lua)
+	if Z.PlaceTotems then Z.PlaceTotems() end -- mes totems suivent (Totems.lua)
+	if Z.PlaceGroupCooldowns then Z.PlaceGroupCooldowns() end -- les recharges du groupe aussi (GroupCooldowns.lua)
 end
 
 function PlaceRow()
-	Z.PlaceUnderCells(row)
-	local block = Z.BuffBlock and Z:BuffBlock()
-	if block and block:IsShown() and block.where == row.where then
-		local gap = Z.db.spacing
-		row:ClearAllPoints()
-		if row.where == "ABOVE" then
-			row:SetPoint("BOTTOMLEFT", block, "TOPLEFT", 0, gap)
-		else
-			row:SetPoint("TOPLEFT", block, "BOTTOMLEFT", 0, -gap)
-		end
-	end
+	Z.PlaceInStack(row, Z.BuffBlock and Z:BuffBlock())
 end
 
 -- Range les icônes à montrer (toutes, ou seulement celles qui rechargent) et passe à la ligne au bord des cadres
@@ -232,11 +234,6 @@ function Layout()
 		f:SetSize(size, size)
 		f:ClearAllPoints()
 		f:SetPoint("TOPLEFT", col * (size + GAP), -line * (size + GAP))
-		f.icon:ClearAllPoints()
-		f.icon:SetPoint("TOPLEFT", 1, -1)
-		f.icon:SetPoint("BOTTOMRIGHT", -1, 1)
-		f.cd:ClearAllPoints()
-		f.cd:SetAllPoints(f.icon)
 		f.border:SetColor(theme.border[1], theme.border[2], theme.border[3], 1)
 		f:Show()
 	end
@@ -281,14 +278,7 @@ local function Rebuild()
 	-- combat (ce n'est pas un bouton du jeu). Une fois, dès que les cadres existent.
 	if not hooked and Z.headers and #Z.headers > 0 then
 		hooked = true
-		local function Moved() Z:Try("mes recharges", Layout) end
-		for _, h in ipairs(Z.headers) do
-			if h.def and h.def.pos == "pos" then
-				h:HookScript("OnSizeChanged", Moved)
-				h:HookScript("OnShow", Moved)
-				h:HookScript("OnHide", Moved)
-			end
-		end
+		Z.FollowCells(function() Z:Try("mes recharges", Layout) end)
 	end
 	spells = On() and Z.CooldownList() or {}
 	for i, entry in ipairs(spells) do

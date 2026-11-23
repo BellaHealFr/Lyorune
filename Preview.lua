@@ -76,6 +76,7 @@ local function Fill(cell, index, sample)
 	local role = slot == 0 and "TANK" or slot == 1 and "HEALER" or nil
 	cell.role:SetShown(db.showRole and role ~= nil)
 	if role then cell.role:SetAtlas(role == "TANK" and "roleicon-tiny-tank" or "roleicon-tiny-healer") end
+	if db.showClassIcon then Z.SetClassIcon(cell.class, class) else cell.class:Hide() end
 	-- Chef de groupe sur la première case, un assistant par groupe de cinq en raid
 	local leader = db.showLeader and ((sample or index == 1) and "LeaderIcon" or size > 5 and slot == 0 and "AssistantIcon")
 	if leader then cell.leader:SetTexture("Interface\\GroupFrame\\UI-Group-" .. leader) end

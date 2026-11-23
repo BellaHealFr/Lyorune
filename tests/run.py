@@ -9543,6 +9543,90 @@ step("1.45.0 : Les amis de Lyorune (chiffres, carnet, mot de l'auteur, mur de re
   assert(ok, err)
 end)
 
+step("1.46.0 : mes totems sous les cadres, icone de classe", function()
+  local old = { class = Z.class, totem = Z.db.totemPanel, icon = Z.db.showClassIcon, cd = Z.db.cooldownPanel, shape = Z.db.shape }
+  local TOTEMS, SECRET = {}, false
+  local ok, err = pcall(function()
+    -- eteints au depart, chacun son interrupteur ; emplacements donnes par Data.lua
+    assert(Z.defaults.totemPanel == false and Z.defaults.showClassIcon == false, "eteints au depart")
+    assert(Z.notInProfile.totemPanel and not Z.notInProfile.showClassIcon, "totems hors profil comme mes recharges")
+    assert(#Z.totemSlots.SHAMAN == 4 and Z.totemSlots.PRIEST == nil, "emplacements")
+    rawset(_G, "GetTotemInfo", function(slot)
+      if SECRET then return MakeSecret(), MakeSecret(), MakeSecret(), MakeSecret(), MakeSecret() end
+      if TOTEMS[slot] then return true, TOTEMS[slot], NOW - 5, 60, 136000 + slot end
+      return false, "", 0, 0, nil
+    end)
+    -- l'objet duree du jeu : present seulement quand un totem est pose, jamais secret
+    rawset(_G, "GetTotemDuration", function(slot) return TOTEMS[slot] and { slot = slot } or nil end)
+    Z.class, Z.db.cooldownPanel = "SHAMAN", false
+    Z.db.totemPanel = false Z:Refresh()
+    local row = Z:TotemRow()
+    assert(not row or not row:IsShown(), "rangee visible reglage eteint")
+    Z.db.totemPanel = true Z:Refresh()
+    local row, icons = Z:TotemRow()
+    assert(row and not row:IsShown(), "rien de pose : rangee cachee")
+    TOTEMS[2] = "Totem de peau de pierre" FireEvent("PLAYER_TOTEM_UPDATE", 2)
+    assert(row:IsShown(), "totem pose : rangee visible")
+    assert(icons[2].have == true and icons[2]:GetAlpha() == 1 and icons[2].element == "Terre", "emplacement de terre")
+    assert(icons[1].have == false and icons[1]:GetAlpha() < 1 and icons[1]:IsShown(), "emplacement vide pale, garde sa place")
+    -- en combat, GetTotemInfo est secret : GetTotemDuration decide, sans rien comparer de secret
+    SECRET = true FireEvent("PLAYER_TOTEM_UPDATE", 1)
+    assert(row:IsShown() and icons[2].have == true and icons[1].have == false and icons[1]:GetAlpha() < 1, "totems secrets")
+    TOTEMS = {} FireEvent("PLAYER_TOTEM_UPDATE", 2)
+    assert(not row:IsShown(), "en combat sans totem : rangee cachee")
+    -- jeu sans GetTotemDuration : GetTotemInfo, un oui secret compte comme pose
+    rawset(_G, "GetTotemDuration", nil)
+    FireEvent("PLAYER_TOTEM_UPDATE", 1)
+    assert(row:IsShown() and icons[1].have == true, "sans objet duree : secret = pose")
+    SECRET = false FireEvent("PLAYER_TOTEM_UPDATE", 1)
+    assert(not row:IsShown(), "totems partis : rangee cachee")
+    -- une classe sans totems : rien, et plus rien n'est ecoute
+    TOTEMS[1] = "Totem incendiaire" Z.class = "PRIEST" Z:Refresh()
+    FireEvent("PLAYER_TOTEM_UPDATE", 1)
+    assert(not row:IsShown(), "pretre : pas de rangee")
+
+    -- icone de classe : l'image du jeu, rien pour une classe secrete ou inconnue
+    rawset(_G, "CLASS_ICON_TCOORDS", { PRIEST = { 0.5, 0.75, 0.25, 0.5 }, SHAMAN = { 0.25, 0.5, 0.25, 0.5 } })
+    local tex = UIParent:CreateTexture()
+    assert(Z.SetClassIcon(tex, "PRIEST") and tex:IsShown(), "pretre")
+    assert(not Z.SetClassIcon(tex, MakeSecret()) and not tex:IsShown(), "classe secrete")
+    assert(not Z.SetClassIcon(tex, "INCONNUE") and not tex:IsShown(), "classe inconnue")
+    Z.class = old.class
+    local b = Z.buttons[1]
+    Z.db.showClassIcon = false Z:Refresh()
+    assert(not b.class:IsShown(), "icone visible reglage eteint")
+    Z.db.showClassIcon = true Z:Refresh()
+    assert(b.class:IsShown(), "icone de classe sur la case")
+    -- element de l'editeur de placement, lie au reglage ; en Barre, le nom part apres elle
+    assert(Z.IsPlaceElement("class") and Z.ElementShown("class"), "element de placement")
+    Z.ShowElement("class", false)
+    assert(Z.db.showClassIcon == false, "case de l'editeur")
+    Z.db.shape = "BAR"
+    local off = Z.AuraRows()
+    Z.db.showClassIcon = true
+    local on = Z.AuraRows()
+    assert(on.nameX > off.nameX and on.classX == off.classX, "nom apres l'icone de classe")
+    local typeOn = select(2, Z.DispelTypeHome())
+    Z.db.showClassIcon = false
+    assert(typeOn > select(2, Z.DispelTypeHome()), "type a dissiper apres l'icone de classe")
+    -- Tuile : le type a dissiper passe aussi apres l'icone de classe (meme bord gauche)
+    Z.db.shape, Z.db.showClassIcon = old.shape, true
+    if not Z:Shape().inline then
+      local x = select(2, Z.DispelTypeHome())
+      assert(x >= 3 + Z.ElementSize("class", Z.IconSize() - 2) + 2, "tuile : type a dissiper sur l'icone de classe")
+    end
+    Z.db.showClassIcon = false
+    for _, key in ipairs({ "Icône de classe", "Mes totems (chaman)", "Mes totems", "Emplacement : %s", "Aucun totem posé",
+      "Feu", "Terre", "Eau", "Air" }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  Z.class, Z.db.totemPanel, Z.db.showClassIcon, Z.db.cooldownPanel, Z.db.shape = old.class, old.totem, old.icon, old.cd, old.shape
+  rawset(_G, "GetTotemInfo", nil) rawset(_G, "GetTotemDuration", nil) rawset(_G, "CLASS_ICON_TCOORDS", nil)
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

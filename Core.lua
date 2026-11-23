@@ -80,6 +80,7 @@ Z.defaults = {
 	showThreat = true,         -- bordure rouge de menace
 	showName = true,           -- nom du joueur sur la case
 	showRole = true,           -- icône de rôle
+	showClassIcon = false,     -- icône de classe sur la case (éteinte au départ), placée par l'éditeur de placement
 	showMarker = true,         -- marqueur de raid
 	showLeader = true,         -- couronne du chef de groupe, drapeau des assistants en raid
 	pingCells = true,          -- la touche « signal » du jeu marque le joueur de la case survolée
@@ -118,6 +119,7 @@ Z.defaults = {
 	cooldownPanel = false,     -- « Mes recharges » : rangée d'icônes de mes sorts à recharge sous les cadres, même en combat (Cooldowns.lua)
 	cooldownShow = "ALL",      -- icônes montrées : tous mes sorts (prêts nets, en recharge grisés) ou seulement ceux qui rechargent
 	cooldownIgnored = {},      -- sorts à ne pas montrer dans « Mes recharges » et les recharges du groupe, par leur nom
+	totemPanel = false,        -- « Mes totems » : mes totems posés (Feu, Terre, Eau, Air) sous les cadres, même en combat (Totems.lua)
 	groupCooldowns = false,    -- recharges du groupe : les gros sorts des alliés qui ont Lyorune, sous les cadres (GroupCooldowns.lua)
 	channelMark = true,        -- soin canalisé sur un joueur (Pénitence) : un trait se vide sur sa case au rythme de la canalisation (Frames.lua)
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
@@ -267,7 +269,7 @@ Z.notInProfile = {
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
 	buffPanel = true, combatKey = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
-	cooldownPanel = true, cooldownShow = true, cooldownIgnored = true, groupCooldowns = true, cooldownShare = true,
+	cooldownPanel = true, cooldownShow = true, cooldownIgnored = true, groupCooldowns = true, cooldownShare = true, totemPanel = true,
 	buffGroups = true, blessingPick = true, blessingSync = true,
 }
 
