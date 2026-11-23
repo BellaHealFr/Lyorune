@@ -1102,11 +1102,12 @@ mur vide avec une invitation, à relire par l'auteur avant la publication.
   Discord) avec la date des chiffres et le lien du Discord à copier ; « Tenir mon carnet » et ses trois chiffres
   (suivent en direct, remise à zéro à confirmer) ; « Un mot de BellaDroode » ; mur « Merci ».
 - [x] Garde-fou de `outils/publier.py` : une note transformée en chemin par Git Bash est refusée (la 1.44.1
-  avait publié « C:/Program Files/Git/lyorune buffs », corrigé dans les fichiers ; la page GitHub de la 1.44.1
-  reste à corriger avec l'accord de l'auteur). L'archive refuse aussi un chemin `X:/`.
+  avait publié « C:/Program Files/Git/lyorune buffs », corrigé dans les fichiers et sur la page GitHub de la
+  1.44.1, accord de l'auteur). L'archive refuse aussi un chemin `X:/`.
 - [x] Tests : étape « 1.45.0 », douze chapitres. Visite guidée : une phrase sur la carte « Recherche et Accueil ».
   Guides (partie 15), README (ligne « Les amis de Lyorune »), `## Notes`, site (douze chapitres).
-- [ ] Relecture, accord de l'auteur sur le mot et les textes, total CurseForge, publication.
+- [x] Relecture (4 bugs, 3 optimisations, tout appliqué), mot de l'auteur réécrit à sa demande (passion du jeu
+  et du soin) puis accepté, publication. **Publiée : 1.45.0 (23 novembre 2026).**
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
