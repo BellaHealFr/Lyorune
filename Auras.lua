@@ -42,7 +42,7 @@ end
 
 -- Couleur selon le type : 1 magie, 2 malédiction, 3 maladie, 4 poison. Le jeu fait la correspondance,
 -- ce qui fonctionne même quand le type est une valeur secrète.
-local dispelCurve, veilCurve
+local dispelCurve, veilCurve, edgeCurve
 Z.DISPEL_VEIL = 0.18 -- opacité du voile de dissipation posé sur la vie (la vie reste visible dessous)
 
 local fadeCurve -- opacité d'une icône selon les secondes restantes : 1 jusqu'à 6 s, puis s'efface jusqu'à 0,3
@@ -56,25 +56,91 @@ local function BuildCurve()
 	end
 	-- Le jeu pose la couleur ET l'opacité de la courbe sur la texture (son opacité propre est remplacée) :
 	-- le voile a donc sa propre courbe, aux mêmes couleurs mais presque transparente
-	local function Colors(alpha)
+	-- none : sans type (ou un type que Lyorune ne colore pas), transparent sauf pour le liseré des icônes (noir)
+	local function Colors(alpha, none)
+		none = none or { 0, 0, 0, 0 }
 		local curve = C_CurveUtil.CreateColorCurve()
 		curve:SetType(Enum.LuaCurveType.Step)
-		curve:AddPoint(0, CreateColor(0, 0, 0, 0))
+		curve:AddPoint(0, CreateColor(none[1], none[2], none[3], none[4]))
 		curve:AddPoint(1, CreateColor(0.20, 0.60, 1.00, alpha)) -- magie : bleu
 		curve:AddPoint(2, CreateColor(0.65, 0.20, 1.00, alpha)) -- malédiction : violet
 		curve:AddPoint(3, CreateColor(0.75, 0.50, 0.10, alpha)) -- maladie : brun
 		curve:AddPoint(4, CreateColor(0.10, 0.85, 0.20, alpha)) -- poison : vert
-		curve:AddPoint(5, CreateColor(0, 0, 0, 0))
+		curve:AddPoint(5, CreateColor(none[1], none[2], none[3], none[4]))
 		return curve
 	end
 	dispelCurve = Colors(1)
 	veilCurve = Colors(Z.DISPEL_VEIL)
+	edgeCurve = Colors(1, { 0, 0, 0, 1 })
 end
 
 -- Les mêmes courbes servent aux conteneurs d'auras du jeu (Containers.lua) : veil = true pour le voile
 function Z.DispelCurve(veil)
 	if not dispelCurve then BuildCurve() end
 	return veil and veilCurve or dispelCurve
+end
+
+-- Liseré de chaque icône d'affaiblissement (1.43.0) : la couleur de son type, noir sans type. Deux affaiblissements
+-- de types différents se voient ensemble, ce que la bordure de la case ne peut pas montrer.
+function Z.EdgeCurve()
+	if not dispelCurve then BuildCurve() end
+	return edgeCurve
+end
+
+----------------------------------------------------------------------------------------------------
+-- Icône du type à dissiper (1.43.0) : goutte de magie, crâne de malédiction... pour ce que je peux dissiper.
+-- Sur les vraies cases, le jeu la dessine lui-même (Containers.lua, style « Icon »), même en combat. Ici : les
+-- fausses cases, et l'ancien affichage quand le type se lit.
+----------------------------------------------------------------------------------------------------
+Z.DISPEL_ATLAS = { Magic = "RaidFrame-Icon-DebuffMagic", Curse = "RaidFrame-Icon-DebuffCurse",
+	Disease = "RaidFrame-Icon-DebuffDisease", Poison = "RaidFrame-Icon-DebuffPoison" }
+
+-- Place d'origine, sans le décalage de l'éditeur (aussi pour Placement.lua, qui ne peut pas passer par Z.Offset) :
+-- au milieu du bord gauche de la case, juste à droite de la grande icône si elle est allumée (Tuile, Carré) ; sur
+-- une ligne (Barre, Bandeau), sur la barre de vie après l'icône de rôle, le nom part après elle (Z.AuraRows).
+-- Rend le cadre ("HP" ou "CELL"), x (point « LEFT ») et la taille.
+function Z.DispelTypeHome()
+	local db, icon = Z.db, Z.IconSize()
+	local size = Z.ElementSize("dispelType", icon)
+	if Z:Shape().inline then
+		return "HP", db.showRole and Z.ElementSize("role", icon - 2) + 5 or 3, size
+	end
+	return "CELL", db.bossDebuffs and 3 + Z.BigIconSize() + 2 or 3, size
+end
+
+-- Place réelle : l'origine plus le décalage de l'éditeur. Rend le cadre, x, y et la taille.
+function Z.DispelTypePlace()
+	local dx, dy = Z.Offset("dispelType")
+	local relative, x, size = Z.DispelTypeHome()
+	return relative, x + dx, dy, size
+end
+
+function Z.DispelTypeIcon(b)
+	local icon = b.dispelTypeIcon
+	if not icon then
+		icon = CreateFrame("Frame", nil, b.over)
+		icon:SetFrameLevel(b.over:GetFrameLevel() + 4)
+		icon.texture = icon:CreateTexture(nil, "OVERLAY")
+		icon.texture:SetAllPoints()
+		b.dispelTypeIcon = icon
+	end
+	local relative, x, y, size = Z.DispelTypePlace()
+	icon:SetSize(size, size)
+	icon:ClearAllPoints()
+	icon:SetPoint("LEFT", relative == "HP" and b.hp or b.over, "LEFT", x, y)
+	return icon
+end
+
+-- Montre l'icône du type « kind » (Magic, Curse, Disease, Poison) ; cachée sans type lisible
+function Z.ShowDispelType(b, kind)
+	local atlas = kind ~= nil and not issecret(kind) and Z.DISPEL_ATLAS[kind]
+	if atlas then
+		local icon = Z.DispelTypeIcon(b)
+		icon.texture:SetAtlas(atlas)
+		icon:Show()
+	elseif b.dispelTypeIcon then
+		b.dispelTypeIcon:Hide()
+	end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -136,8 +202,9 @@ local function ShieldLeft(aura)
 	return AbbreviateNumbers(left)
 end
 
--- mine : icône d'un de mes soins, qui suit les réglages cercle, décompte, fondu et charges
-local function ShowAura(icon, unit, aura, mine)
+-- mine : icône d'un de mes soins, qui suit les réglages cercle, décompte, fondu et charges ; numbers : secondes
+-- restantes sur une autre icône (affaiblissements, contrôle, grande icône, sort que je ne peux pas relancer)
+local function ShowAura(icon, unit, aura, mine, numbers)
 	local id = aura.auraInstanceID
 	local db = Z.db
 	icon.texture:SetTexture(aura.icon)
@@ -152,8 +219,9 @@ local function ShowAura(icon, unit, aura, mine)
 	end
 	-- Cercle et décompte sont dessinés par le jeu : ils marchent en combat, même sur une durée secrète
 	icon.cooldown:SetDrawSwipe(not mine or db.hotSwipe)
-	icon.cooldown:SetHideCountdownNumbers(not (mine and db.hotCountdown))
-	if mine and db.hotCountdown and icon.cooldown.SetCountdownFont then
+	if mine then numbers = db.hotCountdown end
+	icon.cooldown:SetHideCountdownNumbers(not numbers)
+	if numbers and icon.cooldown.SetCountdownFont then
 		local font = Z.CountdownFont(icon:GetWidth())
 		if icon.countdownFont ~= font then
 			icon.countdownFont = font
@@ -164,6 +232,15 @@ local function ShowAura(icon, unit, aura, mine)
 	icon:SetAlpha(1)
 	if mine and db.hotFade then Z.FadeIcon(icon) end
 	icon:Show()
+end
+
+-- Icône d'affaiblissement : ses secondes (« debuffCountdown ») et son liseré à la couleur de son type
+-- (« showDispel » ; la courbe rend le noir sans type), noir sinon
+local function ShowDebuff(icon, unit, aura)
+	local db = Z.db
+	ShowAura(icon, unit, aura, false, db.debuffCountdown)
+	local color = db.showDispel and GetDispelColor(unit, aura.auraInstanceID, Z.EdgeCurve())
+	if color then icon.border:SetColor(color:GetRGBA()) else icon.border:SetColor(0, 0, 0, 1) end
 end
 
 -- Icône qui s'efface : le jeu donne l'opacité à partir des secondes restantes (valeur parfois secrète)
@@ -506,6 +583,7 @@ function Z.HideAuras(b)
 	if b.bigIcon then b.bigIcon:Hide() end
 	if b.buffIcon then b.buffIcon:Hide() end
 	if b.drinkIcon then b.drinkIcon:Hide() end
+	if b.dispelTypeIcon then b.dispelTypeIcon:Hide() end
 	if b.glow then b.glow:Hide() end
 end
 
@@ -896,7 +974,7 @@ local function UpdateWithReading(b)
 					ShowBar(bar, unit, harmful[i])
 				else
 					local icon = Z.HotIcon(b, shown)
-					ShowAura(icon, unit, harmful[i], false)
+					ShowAura(icon, unit, harmful[i], false, db.lockoutCountdown)
 					Z.DarkenIcon(icon)
 				end
 			end
@@ -936,6 +1014,8 @@ local function UpdateWithReading(b)
 	else
 		Z.ShowDispel(b, false)
 	end
+	-- Icône du type (ancien affichage : seulement quand le type se lit, hors combat)
+	Z.ShowDispelType(b, db.dispelIcon and toDispel and toDispel.dispelName or nil)
 
 	-- 3. Icônes d'affaiblissements : ceux à dissiper en premier, puis les autres (comme les conteneurs du jeu :
 	-- une place pour le premier à dissiper, « debuffCount - 1 » pour les autres)
@@ -944,7 +1024,7 @@ local function UpdateWithReading(b)
 		local first = {}
 		for _, aura in ipairs(dispellable) do
 			shown = shown + 1
-			ShowAura(Z.DebuffIcon(b, shown), unit, aura)
+			ShowDebuff(Z.DebuffIcon(b, shown), unit, aura)
 			local id = aura.auraInstanceID
 			if id and not issecret(id) then first[id] = true end
 		end
@@ -956,7 +1036,7 @@ local function UpdateWithReading(b)
 				local id = aura.auraInstanceID
 				if not (id and not issecret(id) and first[id]) and not IsIgnored(aura) and not (lockouts and IsLockout(aura)) then
 					shown, others = shown + 1, others + 1
-					ShowAura(Z.DebuffIcon(b, shown), unit, aura)
+					ShowDebuff(Z.DebuffIcon(b, shown), unit, aura)
 				end
 			end
 		end
@@ -969,7 +1049,7 @@ local function UpdateWithReading(b)
 		important, gameDecides, fromList = FindImportant(harmful)
 	end
 	if important and db.bossDebuffs then
-		ShowAura(Z.BigIcon(b), unit, important)
+		ShowAura(Z.BigIcon(b), unit, important, false, db.debuffCountdown)
 		if gameDecides then b.bigIcon:SetAlphaFromBoolean(important.isBossAura, 1, 0) end
 	elseif b.bigIcon then
 		b.bigIcon:Hide()
@@ -996,7 +1076,7 @@ local function UpdateWithReading(b)
 	for i = shown + 1, #(b.defensives or {}) do b.defensives[i]:Hide() end
 	local control = not enemy and db.showControls and Auras(unit, "HARMFUL|CROWD_CONTROL", 1)
 	if control and control[1] then
-		ShowAura(Z.ControlIcon(b), unit, control[1])
+		ShowAura(Z.ControlIcon(b), unit, control[1], false, db.debuffCountdown)
 	elseif b.controlIcon then
 		b.controlIcon:Hide()
 	end

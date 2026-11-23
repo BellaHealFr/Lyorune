@@ -2402,7 +2402,8 @@ local function Chapters()
 				{ "check", "hotCountdown", "Décompte en secondes", "Sur les icônes de vos soins : les secondes restantes, écrites par le jeu (visibles en combat).", fine = true, dep = { "showHots", true } },
 				{ "check", "hotFade", "Icône qui s'efface à la fin", "Vers la fin du soin, l'icône s'assombrit : c'est le moment de relancer.", fine = true, dep = { "showHots", true } },
 				{ "check", "hotCharges", "Nombre de charges", "Petit chiffre en bas de l'icône quand votre soin a plusieurs charges.", fine = true, dep = { "showHots", true } },
-				{ "check", "showLockouts", "Sort que je ne peux pas relancer", "Âme affaiblie, après un Mot de pouvoir : Bouclier (le vôtre ou celui d'un autre prêtre) : son icône assombrie prend la dernière place de la rangée de vos soins. Tant qu'elle est là, pas de nouveau bouclier sur ce joueur.", desc = "Âme affaiblie, assombrie après vos soins (prêtre).", dep = { "showHots", true } },
+				{ "check", "showLockouts", "Sort que je ne peux pas relancer", "Prêtre : Âme affaiblie, après un Mot de pouvoir : Bouclier (le vôtre ou celui d'un autre prêtre), pas de nouveau bouclier tant qu'elle est là. Paladin : Longanimité, après Bouclier divin, Protection divine ou Bénédiction de protection, aucun des trois tant qu'elle est là. Son icône assombrie prend la dernière place de la rangée de vos soins.", desc = "Âme affaiblie (prêtre), Longanimité (paladin), assombries après vos soins.", dep = { "showHots", true } },
+				{ "check", "lockoutCountdown", "Ses secondes restantes", "Sur l'icône assombrie : les secondes avant de pouvoir relancer votre sort sur ce joueur, écrites par le jeu, même en combat.", fine = true, dep = { "showLockouts", true } },
 			} },
 			{ "Coins de la case", {
 				{ "note", "Un de vos sorts par coin : un carré de couleur qui se vide avec le temps. Le sort quitte alors la rangée d'icônes. Chaque classe garde ses propres coins ; la liste propose les sorts de votre classe et ceux de « Mes sorts à suivre », plus bas.", 46 },
@@ -2426,10 +2427,12 @@ local function Chapters()
 		} },
 		{ name = "Affaiblissements", rune = 3, old = { "Listes" }, intro = "Les affaiblissements à voir, à dissiper ou à surveiller.", sections = {
 			{ "Dissipation", {
-				{ "check", "showDispel", "Cadre coloré quand je peux dissiper", desc = "Bleu magie, violet malédiction, vert poison, brun maladie." },
+				{ "check", "showDispel", "Cadre coloré quand je peux dissiper", "Bleu magie, violet malédiction, vert poison, brun maladie, autour de la case. Le liseré de chaque icône d'affaiblissement prend aussi la couleur de son type : deux types différents se voient ensemble.", desc = "Bleu magie, violet malédiction, vert poison, brun maladie." },
+				{ "check", "dispelIcon", "Icône du type à dissiper", "Goutte de magie, crâne de malédiction, fiole de poison... : l'image du type de l'affaiblissement que vous pouvez dissiper, posée par le jeu sur la case, même en combat. Utile si les couleurs se distinguent mal. Sa place et sa taille se règlent dans le placement des éléments.", desc = "L'image du type, en plus de la couleur." },
 			} },
 			{ "Icônes", {
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
+				{ "check", "debuffCountdown", "Secondes restantes", "Sur les icônes d'affaiblissements, celle du contrôle subi et la grande icône des affaiblissements importants : les secondes restantes, écrites par le jeu, même en combat. Vous voyez s'il faut dissiper ou attendre la fin.", desc = "Dissiper tout de suite, ou attendre la fin ?" },
 				{ "seg", "debuffMode", "Affaiblissements affichés", dep = { "showDebuffs", true } },
 				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher."),
 				{ "step", "dispelCount", "Affaiblissements à dissiper", desc = "Montrés avant les autres, le plus important d'abord.", dep = { "showDebuffs", true } },

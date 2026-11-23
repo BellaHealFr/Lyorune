@@ -55,7 +55,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | Fait |
 | 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | Fait |
 | 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | Publiée (v1.42.1) |
-| 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
+| 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Codée, à publier |
+| 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | À faire |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -960,9 +961,26 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   6. **Mieux que les autres** : marche en combat pour mes sorts, aucune lecture toutes les 3 secondes, aucun chiffre
      secret envoyé, blocage des messages pris en compte, liste vérifiée sur Forever.
 
-## Étape 28 : affaiblissements (1.43.0)
-- [ ] Secondes restantes, Âme affaiblie et Longanimité avec leurs secondes, mode « Utiles » ; icône du type de
-  dissipation ; liste suivie qui dit si elle marche en combat.
+## Étape 28 : affaiblissements (1.43.0 et 1.43.1)
+Choix de l'auteur (23 novembre 2026, les quatre recommandés) : deux versions ; secondes allumées au départ ; icône
+du type en élément à part avec liseré coloré ; Longanimité comme Âme affaiblie. Recherche : HealKit 1.15 (une case
+« secondes sur toutes les icônes », éteinte, police partagée ; liseré teinté par type), HealBot Forever (Âme
+affaiblie à part, sans secondes ; tri « UnitFrameDebuff »), VuhDo Forever (style « Icon » du jeu proposé, tri par
+expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche en combat.
+- [x] 28 (1.43.0) : **secondes restantes** (`debuffCountdown`, allumé, chapitre Affaiblissements, partie Icônes) sur
+  les icônes d'affaiblissements, le contrôle subi et la grande icône (`Numbers`, `StyleIcon`, `PlaceBig`,
+  Containers.lua ; `ShowAura(..., numbers)`, Auras.lua). **Longanimité** (25771) au bout des soins du paladin
+  (`Z.lockouts.PALADIN`, Data.lua), toujours ignorée dans la rangée des affaiblissements, **avec ses secondes** comme
+  Âme affaiblie (`lockoutCountdown`, allumé, réglage fin sous « Sort que je ne peux pas relancer »). **Icône du type
+  à dissiper** (`dispelIcon`, allumé, partie Dissipation) : place fixe `dispelType` (filtre `HARMFUL|RAID`, modèle
+  `LyoruneAuraType`, style `Icon` du jeu : images `RaidFrame-Icon-Debuff*`, même en combat), nouvel élément du
+  placement « Type à dissiper » (à gauche, à droite de la grande icône ; Barre et Bandeau : après l'icône de rôle,
+  le nom part après elle ; `Z.DispelTypeHome`, `Z.DispelTypePlace`, Auras.lua ; `nameX`, Themes.lua) ; liste de l'éditeur resserrée (une ligne tous les 25 pixels). **Liseré de chaque
+  icône d'affaiblissement à la couleur de son type** (style `PreserveAsset` sur `Edge`, courbe `Z.EdgeCurve` : noir
+  sans type), avec « Cadre coloré quand je peux dissiper ». Ancien affichage, mode test et case témoin suivent.
+  Tests : étape 1.43.0.
+- [ ] 28 bis (1.43.1) : mode « Utiles » (D1 de `PLAN-CORRECTIF.md`) et liste « À mettre en avant » qui dit si elle
+  marche en combat, accepte un lien de sort et gagne sur « À ignorer » (D4).
 
 ## Étape 29 : éditeur de placement et JcJ (1.41.0 et 1.44.0)
 - [x] 29 a (1.41.0, avancée en priorité par l'auteur le 22 novembre 2026) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,

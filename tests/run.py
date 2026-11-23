@@ -1461,7 +1461,7 @@ step("etape 6 : echelle, editeur de placement", function()
   assert(b.hots[1]:IsShown() and b.hots[1]._point[4] == 7, "icones de soins decalees")
   AURAS = {}
   Z.db.shape = "BAR" Z:Refresh()
-  assert(Z.Offset("name") == 0 and b.name._point[4] == b.iconSize + 3, "une autre forme garde sa place d'origine")
+  assert(Z.Offset("name") == 0 and b.name._point[4] == b.iconSize + 3 + (Z.db.dispelIcon and Z.ElementSize("dispelType", Z.IconSize()) + 2 or 0), "une autre forme garde sa place d'origine")
   Z.db.shape = "TILE" Z:Refresh()
   -- bornes, nettoyage, element inconnu refuse
   Z.SetOffset("name", 999, -999)
@@ -3199,7 +3199,7 @@ step("refonte 1.26.0, lot 2 : fenetre a chapitres, defilement, recherche", funct
   for _, part in ipairs(page.parts) do
     if part.item and part.item[2] == "hotFade" then fade = part fold = part.fold end
   end
-  assert(fold and fold.count == 4 and not fold:IsOpen() and not fade.widget:IsShown(), "reglages fins replies")
+  assert(fold and fold.count == 5 and not fold:IsOpen() and not fade.widget:IsShown(), "reglages fins replies")
   local closed = page.used
   fold:Run("OnClick")
   assert(fold:IsOpen() and fade.widget:IsShown() and page.used > closed and Z.char.optionFolds["Mes soins.1"], "reglages fins deplies")
@@ -5113,6 +5113,7 @@ step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case
       for i = 1, Z.DEFENSIVE_COUNT do row[i] = Z.DefensiveIcon(b, i) end
       return row
     elseif key == "controls" then return { Z.ControlIcon(b) }
+    elseif key == "dispelType" then return { Z.DispelTypeIcon(b) }
     elseif key == "private" then return { (Z.PrivateHolder(b)) } end
     return { b[key] }
   end
@@ -5554,9 +5555,9 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   Z:ApplyShape("BAR")
   Z.SetElementSize("role", 150) Z:Refresh()
   local rows = Z.AuraRows()
-  assert(rows.nameX == Z.ElementSize("role", Z.IconSize() - 2) + 5 and b.name._point[4] == rows.nameX, "nom apres l'icone de role")
+  assert(rows.nameX == Z.ElementSize("role", Z.IconSize() - 2) + 5 + (Z.db.dispelIcon and Z.ElementSize("dispelType", Z.IconSize()) + 2 or 0) and b.name._point[4] == rows.nameX, "nom apres l'icone de role")
   Z.SetElementSize("role", 100) Z:Refresh()
-  assert(Z.AuraRows().nameX == Z.IconSize() + 3, "nom a sa place d'origine")
+  assert(Z.AuraRows().nameX == Z.IconSize() + 3 + (Z.db.dispelIcon and Z.ElementSize("dispelType", Z.IconSize()) + 2 or 0), "nom a sa place d'origine")
 
   -- Rangées de soins et d'affaiblissements à toutes les tailles : dans la case, deux lignes au plus
   local checked = 0
@@ -6232,7 +6233,7 @@ step("etape 23, lot 2 : sorts externes, Ame affaiblie au bout de mes soins (donn
     Z.class = "DRUID" Z:BuildData()
     assert(next(Z.lockoutIds) == nil and Z.HotSlots() == 3, "classe sans blocage : place gardee")
     Z.class = class Z:BuildData()
-    for _, text in ipairs({ "Sort que je ne peux pas relancer", "Âme affaiblie, assombrie après vos soins (prêtre)." }) do
+    for _, text in ipairs({ "Sort que je ne peux pas relancer", "Âme affaiblie (prêtre), Longanimité (paladin), assombries après vos soins." }) do
       assert(Z.translations.enUS[text], "sans traduction : " .. text)
     end
 
@@ -9081,6 +9082,121 @@ step("1.42.1 : recharges du groupe, partage de mes recharges, messages bloques",
   rawset(_G, "GetSpellBaseCooldown", nil)
   FireEvent("GROUP_ROSTER_UPDATE")
   Z:Refresh()
+  assert(ok, err)
+end)
+
+step("1.43.0 : secondes des affaiblissements, Longanimite au bout des soins du paladin, icone et lisere du type", function()
+  local old = { create = CreateFrame, name = C_Spell.GetSpellName, class = Z.class, placement = CopyTable(Z.db.placement) }
+  local form = {}
+  for _, key in ipairs({ "shape", "debuffCountdown", "lockoutCountdown", "dispelIcon", "showDispel", "showDebuffs",
+    "debuffMode", "showHots", "showLockouts", "bossDebuffs" }) do form[key] = Z.db[key] end
+  local made = {}
+  local ok, err = xpcall(function()
+    assert(Z.defaults.debuffCountdown == true and Z.defaults.lockoutCountdown == true and Z.defaults.dispelIcon == true,
+      "reglages allumes au depart")
+    -- 1. Longanimite : au bout des soins du paladin, jamais dans la rangee des affaiblissements
+    C_Spell.GetSpellName = function(id) if id == 25771 then return "Longanimité" end return old.name(id) end
+    Z.class = "PALADIN" Z:BuildData()
+    assert(Z.lockoutIds[25771] and Z.ShowsLockouts(), "Longanimite non suivie pour le paladin")
+    assert(Z.ignoredDebuffs[25771], "Longanimite sortie des ignores")
+    Z.class = "PRIEST" Z:BuildData()
+    assert(not Z.lockoutIds[25771] and Z.lockoutIds[6788], "pretre : Ame affaiblie seulement")
+
+    -- 2. Ancien affichage : secondes sur les affaiblissements, icone du type, lisere colore
+    Z.db.placement = {}
+    Z:ApplyShape("TILE")
+    local b = Z.buttons[1]
+    AURAS = {}
+    AURAS["HARMFUL"] = { { name = "Mot de l'ombre : Douleur", icon = 1, auraInstanceID = 71, spellId = 589, dispelName = "Magic" } }
+    AURAS[Z.DISPEL_MINE] = AURAS["HARMFUL"]
+    Z.db.showDebuffs, Z.db.showDispel, Z.db.dispelIcon, Z.db.debuffCountdown = true, true, true, true
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(b.dispelTypeIcon and b.dispelTypeIcon:IsShown(), "icone du type absente")
+    local atlas
+    b.dispelTypeIcon.texture.SetAtlas = function(_, a) atlas = a end
+    local hidden
+    b.debuffs[1].cooldown.SetHideCountdownNumbers = function(_, h) hidden = h end
+    Z.UpdateAurasNow(b)
+    assert(atlas == "RaidFrame-Icon-DebuffMagic", "image du type : " .. tostring(atlas))
+    assert(hidden == false, "secondes cachees sur l'affaiblissement")
+    assert(b.debuffs[1].border.color[3] == 1, "lisere pas a la couleur du type")
+    -- type secret (combat) : rien d'invente
+    AURAS["HARMFUL"][1].dispelName = MakeSecret()
+    Z.UpdateAurasNow(b)
+    assert(not b.dispelTypeIcon:IsShown(), "type secret : icone montree")
+    AURAS["HARMFUL"][1].dispelName = "Magic"
+    Z.db.debuffCountdown, Z.db.dispelIcon = false, false
+    Z:Refresh() Z.UpdateAurasNow(b)
+    assert(hidden == true and not b.dispelTypeIcon:IsShown(), "interrupteurs (ancien affichage)")
+    Z.db.debuffCountdown, Z.db.dispelIcon = true, true
+    AURAS = {}
+
+    -- 3. Conteneurs du jeu : place fixe du type (style Icon), lisere (PreserveAsset), secondes
+    local slots, edges, numbers = {}, {}, {}
+    CreateFrame = function(kind, name, parent, template)
+      local f = old.create(kind, name, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      function f:AddAuraGroup(key, filter, options)
+        local button = old.create("Button", nil, self)
+        button.Edge = old.create("Frame", nil, button):CreateTexture()
+        button.Cooldown = { SetHideCountdownNumbers = function(_, h) numbers[key] = not h end }
+        function button:AddDispelTypeTexture(tex, o) if tex == self.Edge then edges[key] = o.style end end
+        options.initializeFrame(button)
+      end
+      function f:AddAuraSlot(key, filter, options)
+        local button = old.create("Button", nil, self)
+        button.Type = old.create("Frame", nil, button):CreateTexture()
+        button.Face = { Cooldown = { SetHideCountdownNumbers = function(_, h) numbers[key] = not h end } }
+        function button:AddDispelTypeTexture(tex, o) if tex == self.Type then slots[key] = { filter = filter, style = o.style } end end
+        options.initializeFrame(button)
+        return button
+      end
+      function f:SetEnabled(on) self.enabled = on end
+      function f:SetUnit(unit) self.unit = unit end
+      function f:UpdateAllAuras() end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1, Icon = 3 }
+    Z.db.debuffMode, Z.db.bossDebuffs, Z.db.showHots, Z.db.showLockouts = "ALL", true, true, true
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton43", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    c:SetAttribute("unit", "player")
+    Z:Refresh()
+    assert(slots.dispelType and slots.dispelType.filter == Z.DISPEL_MINE and slots.dispelType.style == 3,
+      "place du type absente ou mauvais style")
+    assert(edges.dispellable == 1 and edges.others == 1, "lisere du type absent")
+    assert(numbers.dispellable and numbers.others and numbers.lockouts and numbers.boss, "secondes absentes")
+    assert(not numbers.hots, "secondes de mes soins suivies a tort (hotCountdown eteint)")
+    -- interrupteurs : reconstruits sans le type, sans secondes, sans lisere
+    slots, edges, numbers = {}, {}, {}
+    Z.db.dispelIcon, Z.db.debuffCountdown, Z.db.lockoutCountdown, Z.db.showDispel = false, false, false, false
+    Z:Refresh()
+    assert(not slots.dispelType and not edges.dispellable, "type ou lisere malgre les interrupteurs")
+    assert(not numbers.dispellable and not numbers.lockouts and not numbers.boss, "secondes malgre l'interrupteur")
+
+    -- 4. Placement et options
+    assert(Z.IsPlaceElement("dispelType") and Z.IsSizedElement("dispelType"), "element du placement")
+    Z.db.dispelIcon = true
+    Z:OpenPlacement()
+    local w = Z:PlacementWindow()
+    assert(w.cell.dispelTypeIcon and w.cell.dispelTypeIcon:IsShown(), "case d'exemple sans icone du type")
+    w:Hide() w:Run("OnHide")
+    local labels = table.concat(Z:OptionLabels(), "|")
+    for _, text in ipairs({ "Secondes restantes", "Icône du type à dissiper", "Ses secondes restantes" }) do
+      assert(labels:find(text, 1, true), "option absente : " .. text)
+    end
+  end, debug.traceback)
+  CreateFrame, C_Spell.GetSpellName, Z.class = old.create, old.name, old.class
+  AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle = nil, nil, nil
+  Z.boxWrap = nil
+  for _, c in ipairs(made) do pcall(c.SetAttribute, c, "unit", nil) end
+  for key, value in pairs(form) do Z.db[key] = value end
+  Z.db.placement = old.placement
+  AURAS = {}
+  Z:BuildData() Z:Refresh() RunUpdates()
   assert(ok, err)
 end)
 

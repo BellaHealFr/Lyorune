@@ -11,7 +11,8 @@
 --   defensives : gros défensifs posés par n'importe qui (Z.defensives, Data.lua)
 --   controls   : contrôle subi (étourdi, apeuré, métamorphosé), filtre « CROWD_CONTROL » du jeu
 --   drink      : la boisson d'un soigneur qui boit (Z.drinkSpells), à côté de sa mana basse
---   slots      : places fixes : un carré par coin, la bordure de dissipation, la grande icône et son contour
+--   slots      : places fixes : un carré par coin, la bordure de dissipation, l'icône du type à dissiper, la
+--                grande icône et son contour
 --   buffs      : mes buffs, une place fixe chacun, montrés seulement quand le jeu cache les buffs (repères gris
 --                dessous : gris = manquant, couleur = posé ; étape 26 b bis, plus bas)
 -- Si le jeu n'a pas ces conteneurs, Auras.lua garde l'ancien affichage (lecture des auras).
@@ -211,22 +212,42 @@ local function Silent(button)
 	Call(button, "SetMouseMotionEnabled", false)
 end
 
+-- Secondes restantes d'un groupe d'icônes qui n'est pas celui de mes soins (1.43.0) : affaiblissements et contrôle
+-- subi (« debuffCountdown »), sort que je ne peux pas relancer (« lockoutCountdown ») ; jamais les gros défensifs
+local function Numbers(key)
+	local db = Z.db
+	if key == "lockouts" then return db.lockoutCountdown and true or false end
+	if key == "dispellable" or key == "others" or key == "controls" then return db.debuffCountdown and true or false end
+	return false
+end
+
 -- Réglages d'une icône : cercle, décompte (police à la taille de l'icône), charges, voile de fin (seulement pour
--- mes soins)
-local function StyleIcon(button, mine, size)
+-- mes soins). numbers : secondes restantes d'une autre icône (Numbers)
+local function StyleIcon(button, mine, size, numbers)
 	local db = Z.db
 	local cooldown = button.Cooldown
+	if mine then numbers = db.hotCountdown end
 	Call(cooldown, "SetDrawSwipe", not mine or db.hotSwipe)
-	Call(cooldown, "SetHideCountdownNumbers", not (mine and db.hotCountdown))
-	if mine and db.hotCountdown then Call(cooldown, "SetCountdownFont", Z.CountdownFont(size)) end
+	Call(cooldown, "SetHideCountdownNumbers", not numbers)
+	if numbers then Call(cooldown, "SetCountdownFont", Z.CountdownFont(size)) end
 	Call(button.Texts, "SetAlpha", (not mine or db.hotCharges) and 1 or 0)
 	Call(button.Veil, "SetAlpha", (mine and db.hotFade) and 1 or 0)
 end
 
 -- Icône d'aura ; mine = un de mes soins ; size = taille de sa rangée ; edge = couleur du liseré (noir sinon) ;
--- dark = assombrie (un sort que je ne peux pas relancer)
-local function DressIcon(button, mine, size, edge, dark)
+-- dark = assombrie (un sort que je ne peux pas relancer) ; numbers = secondes restantes (StyleIcon) ; typed =
+-- liseré à la couleur du type de l'affaiblissement, posée par le jeu (même en combat), noir sans type
+local function DressIcon(button, mine, size, edge, dark, numbers, typed)
 	Silent(button)
+	if typed then
+		Call(button.Edge, "SetColorTexture", 1, 1, 1, 1)
+		Call(button.Edge, "SetVertexColor", 0, 0, 0, 1)
+		Call(button, "AddDispelTypeTexture", button.Edge, {
+			style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+			showWhenHarmful = true, showWhenHelpful = false, showWithoutDispelType = true, -- sans type : noir
+			customDispelColorCurve = Z.EdgeCurve(),
+		})
+	end
 	if dark then
 		Call(button.Icon, "SetDesaturated", true)
 		Call(button.Icon, "SetVertexColor", Z.LOCKOUT_SHADE, Z.LOCKOUT_SHADE, Z.LOCKOUT_SHADE)
@@ -238,7 +259,7 @@ local function DressIcon(button, mine, size, edge, dark)
 	Call(button, "SetApplicationCount", Part(button.Texts, "Count"), {})
 	-- Fin du soin : le jeu montre ce voile pendant les derniers instants (réglage « hotFade »)
 	if mine then Call(button, "AddPandemicRegion", button.Veil) end
-	StyleIcon(button, mine, size)
+	StyleIcon(button, mine, size, numbers)
 end
 
 -- Barre fine : couleur selon son rang (grise pour un sort que je ne peux pas relancer), largeur selon la case
@@ -268,6 +289,18 @@ local function PlaceBig(b, button)
 	Call(button.Face, "SetPoint", "LEFT", button, "LEFT", 3 + dx, dy)
 	Call(button.Face, "SetShown", db.bossDebuffs)
 	Call(button.Glow, "SetShown", db.importantGlow)
+	-- secondes restantes, comme les autres affaiblissements (1.43.0)
+	local cooldown = Part(button.Face, "Cooldown")
+	Call(cooldown, "SetHideCountdownNumbers", not db.debuffCountdown)
+	if db.debuffCountdown then Call(cooldown, "SetCountdownFont", Z.CountdownFont(big)) end
+end
+
+-- Icône du type à dissiper (1.43.0) : place et taille de Z.DispelTypePlace (Auras.lua), comme sur les fausses cases
+local function PlaceType(b, button)
+	local relative, x, y, size = Z.DispelTypePlace()
+	Call(button, "SetSize", size, size)
+	Call(button, "ClearAllPoints")
+	Call(button, "SetPoint", "LEFT", relative == "HP" and b.hp or b.boxes.slots, "LEFT", x, y)
 end
 
 -- Repère d'un buff : la place numéro « index » de la rangée qui part du coin bas gauche (Z.BuffMarkPlace)
@@ -315,6 +348,17 @@ local function DressDispel(b)
 		end
 		-- voile léger : la vie reste visible dessous (une opacité pleine cachait toute la barre)
 		Call(button, "AddDispelTypeTexture", button.Fill, Options(true))
+	end
+end
+
+-- Le jeu y pose l'image du type du premier affaiblissement que je peux dissiper (style « Icon »)
+local function DressType(b)
+	return function(button)
+		Silent(button)
+		Call(button, "AddDispelTypeTexture", button.Type, {
+			style = Enum.CustomAuraButtonDispelTypeTextureStyle.Icon, showWhenHarmful = true, showWhenHelpful = false,
+		})
+		PlaceType(b, button)
 	end
 end
 
@@ -414,7 +458,7 @@ local function Plan(b)
 	local rows = b.rows or Z.AuraRows()
 	local bigX, bigY = Z.Offset("big")
 	local drinkSize = select(3, Z.DrinkPlace())
-	local look = table.concat({ bigX, bigY, Z.BigIconSize(), Z.CornerSize(b), math.floor(Z.CellSize() * 0.45), drinkSize,
+	local look = table.concat({ tostring(db.debuffCountdown), tostring(db.lockoutCountdown), bigX, bigY, Z.BigIconSize(), Z.CornerSize(b), math.floor(Z.CellSize() * 0.45), drinkSize,
 		rows.hots.size, rows.hots.point, rows.debuffs.size, rows.debuffs.point, rows.defensives.size, rows.controls.size,
 		tostring(db.hotSwipe), tostring(db.hotCountdown), tostring(db.hotFade), tostring(db.hotCharges),
 		tostring(db.bossDebuffs), tostring(db.importantGlow) }, ",")
@@ -453,10 +497,10 @@ local function Plan(b)
 	local excluded = NilIfEmpty(ignored)
 	if db.showDebuffs then
 		Group("debuffs", "dispellable", Z.DISPEL_MINE, { excludeSpellIDs = excluded }, Z.DispelCount(), 1,
-			"LyoruneAuraIcon", "other")
+			"LyoruneAuraIcon", "debuff")
 		if db.debuffMode == "ALL" then
 			Group("debuffs", "others", Z.DISPEL_OTHERS, { excludeSpellIDs = excluded }, db.debuffCount - 1, 2,
-				"LyoruneAuraIcon", "other")
+				"LyoruneAuraIcon", "debuff")
 		end
 	end
 	-- Gros défensifs de tout lanceur, et contrôle subi : le jeu les reconnaît lui-même, même en combat
@@ -469,12 +513,15 @@ local function Plan(b)
 			"control")
 	end
 	if db.showDispel then Slot("dispel", Z.DISPEL_MINE, nil, "LyoruneAuraCover", "dispel") end
+	if db.dispelIcon then Slot("dispelType", Z.DISPEL_MINE, nil, "LyoruneAuraType", "dispelType") end
 	if db.bossDebuffs or db.importantGlow then
 		Slot("boss", "HARMFUL", { isBossAura = true }, "LyoruneAuraBig", "big")
 		if not Empty(important) then
 			Slot("listed", "HARMFUL", { includeSpellIDs = important }, "LyoruneAuraBig", "big")
 		end
 	end
+	-- place de l'icône du type : seulement si elle est montrée (un changement refait les conteneurs)
+	if db.dispelIcon then plan.look = plan.look .. "," .. table.concat({ Z.DispelTypePlace() }, ",") end
 	plan.marks = Marks(b)
 	if #plan.marks > 0 then
 		local x, y, size = Z.BuffMarkPlace(b)
@@ -510,13 +557,20 @@ local function Dresser(b, entry)
 	local how = entry.dress
 	if how == "mine" then return function(button) DressIcon(button, true, entry.size) end end
 	if how == "other" then return function(button) DressIcon(button, false, entry.size) end end
+	if how == "debuff" then
+		local numbers, typed = Numbers(entry.key), Z.db.showDispel and true or false
+		return function(button) DressIcon(button, false, entry.size, nil, false, numbers, typed) end
+	end
 	if how == "defensive" then return function(button) DressIcon(button, false, entry.size, Z.DEFENSIVE_EDGE) end end
-	if how == "control" then return function(button) DressIcon(button, false, entry.size, Z.CONTROL_EDGE) end end
-	if how == "lockout" then return function(button) DressIcon(button, false, entry.size, nil, true) end end
+	if how == "control" then
+		return function(button) DressIcon(button, false, entry.size, Z.CONTROL_EDGE, false, Numbers("controls")) end
+	end
+	if how == "lockout" then return function(button) DressIcon(button, false, entry.size, nil, true, Numbers("lockouts")) end end
 	if how == "bar" then return DressBar end
 	if how == "lockbar" then return function(button, index) DressBar(button, index, Z.LOCKOUT_BAR) end end
 	if how == "corner" then return DressCorner(b, entry.key) end
 	if how == "dispel" then return DressDispel(b) end
+	if how == "dispelType" then return DressType(b) end
 	return DressBig(b)
 end
 
@@ -585,7 +639,8 @@ local function Place(b)
 	for key, button in pairs(b.slots) do
 		if Open(button) then
 			if Z.CORNER_SIGN[key] then PlaceCorner(b, button, key)
-			elseif key == "boss" or key == "listed" then PlaceBig(b, button) end
+			elseif key == "boss" or key == "listed" then PlaceBig(b, button)
+			elseif key == "dispelType" then PlaceType(b, button) end
 		end
 	end
 	for _, button in ipairs(b.boxButtons.hots or {}) do
@@ -594,7 +649,7 @@ local function Place(b)
 	for key, row in pairs({ dispellable = rows.debuffs, others = rows.debuffs, defensives = rows.defensives,
 		controls = rows.controls, lockouts = rows.hots }) do
 		for _, button in ipairs(b.boxButtons[key] or {}) do
-			if Open(button) then StyleIcon(button, false, row.size) end
+			if Open(button) then StyleIcon(button, false, row.size, Numbers(key)) end
 		end
 	end
 	for _, button in ipairs(b.boxButtons.bars or {}) do

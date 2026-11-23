@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.43.0] - 2026-11-23
+
+### Added
+
+- Seconds left on debuffs, the crowd-control icon and the big icon of important debuffs, drawn by the game, even in combat (Debuffs chapter, on at first).
+- Paladin: Forbearance in grey after your heals, like Weakened Soul for the priest; both with their seconds left.
+- Dispel type icon (magic drop, curse skull...) drawn by the game on the cell, even in combat, a new placement element; each debuff icon's edge takes the colour of its type.
+
 ## [1.42.1] - 2026-11-23
 
 ### Added
@@ -820,6 +828,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0
 [1.42.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.0...v1.42.1
 [1.42.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.1...v1.42.0
 [1.41.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.0...v1.41.1

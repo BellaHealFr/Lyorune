@@ -284,6 +284,7 @@ Z.DEFENSIVE_COUNT = 2 -- gros défensifs montrés au plus sur une case
 -- Une ligne par affaiblissement, comme les gros défensifs : le premier numéro, puis ses doubles éventuels.
 Z.lockouts = {
 	PRIEST = { { 6788 } },                  -- Âme affaiblie (après Mot de pouvoir : Bouclier)
+	PALADIN = { { 25771 } },                -- Longanimité (après Bouclier divin, Protection divine, Bénédiction de protection)
 }
 Z.LOCKOUT_COUNT = 1 -- affaiblissements de ce genre montrés au plus sur une case
 
@@ -294,7 +295,8 @@ Z.LOCKOUT_COUNT = 1 -- affaiblissements de ce genre montrés au plus sur une cas
 Z.drinkSpells = { 430, 431, 432, 1133, 1135, 1137, 10250, 22734, 24355, 25696, 26261, 26402, 26473, 26475, 29007,
 	446714, 468767, 1330734 }
 
--- Affaiblissements sans intérêt pour un soigneur
+-- Affaiblissements sans intérêt pour un soigneur, jamais dans la rangée des affaiblissements (Longanimité reste
+-- montrée au paladin, au bout de ses soins : Z.lockouts)
 Z.ignoredDebuffs = {
 	[11196] = true, -- Bandé récemment
 	[25771] = true, -- Longanimité

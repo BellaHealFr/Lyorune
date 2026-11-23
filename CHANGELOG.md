@@ -6,6 +6,14 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.43.0] - 2026-11-23
+
+### Ajouté
+
+- Secondes restantes sur les affaiblissements, le contrôle subi et la grande icône des affaiblissements importants, écrites par le jeu, même en combat (chapitre Affaiblissements, allumé au départ).
+- Paladin : Longanimité grisée au bout de vos soins, comme Âme affaiblie pour le prêtre ; toutes deux avec leurs secondes restantes.
+- Icône du type à dissiper (goutte de magie, crâne de malédiction...) posée par le jeu sur la case, même en combat, nouvel élément du placement ; le liseré de chaque icône d'affaiblissement prend la couleur de son type.
+
 ## [1.42.1] - 2026-11-23
 
 ### Ajouté
@@ -820,6 +828,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0
 [1.42.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.0...v1.42.1
 [1.42.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.1...v1.42.0
 [1.41.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.0...v1.41.1

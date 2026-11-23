@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.42.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.43.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -83,17 +83,20 @@ Z.defaults = {
 	showMarker = true,         -- marqueur de raid
 	showLeader = true,         -- couronne du chef de groupe, drapeau des assistants en raid
 	pingCells = true,          -- la touche « signal » du jeu marque le joueur de la case survolée
-	showDispel = true,         -- cadre coloré de dissipation
+	showDispel = true,         -- cadre coloré de dissipation, et liseré de chaque icône d'affaiblissement à la couleur de son type
+	dispelIcon = true,         -- icône du type à dissiper (goutte de magie, crâne de malédiction...), dessinée par le jeu
 	showHots = true, hotStyle = "ICONS",
 	hotCount = 4,              -- nombre de mes soins sur la durée affichés par case (icônes ou barres)
 	hotSwipe = true,           -- icônes de mes soins : cercle qui se vide
 	hotCountdown = false,      -- icônes de mes soins : secondes restantes, écrites par le jeu
 	hotFade = false,           -- icônes de mes soins : l'icône s'assombrit vers la fin du soin
 	hotCharges = true,         -- icônes de mes soins : nombre de charges
-	showLockouts = true,       -- affaiblissement qui bloque un de mes sorts (Âme affaiblie, Z.lockouts) : assombri après mes soins
+	showLockouts = true,       -- affaiblissement qui bloque un de mes sorts (Âme affaiblie, Longanimité, Z.lockouts) : assombri après mes soins
+	lockoutCountdown = true,   -- ses secondes restantes, écrites par le jeu (même en combat)
 	cornerSpells = {},         -- un de mes sorts par coin de case, par classe : cornerSpells.DRUID.TOPLEFT = "Récupération"
 	threatBar = false,         -- barre fine de menace en haut de la vie (jaune, orange, rouge)
 	showDebuffs = true, debuffMode = "ALL",
+	debuffCountdown = true,    -- secondes restantes sur les affaiblissements, le contrôle subi et la grande icône
 	debuffCount = 2,           -- nombre d'icônes d'affaiblissements par case (celui à dissiper d'abord, puis les autres)
 	dispelCount = 2,           -- affaiblissements que je peux dissiper montrés avant les autres (le plus important d'abord)
 	bossDebuffs = true,        -- affaiblissement important en grand

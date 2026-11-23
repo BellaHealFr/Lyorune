@@ -226,6 +226,8 @@ function Z.AuraRows()
 	-- Nom et chiffre de vie sur une ligne (Barre, Bandeau) : places d'origine, sauf en bloc (ci-dessous). Le nom
 	-- part après l'icône de rôle, à sa taille choisie ; l'icône masquée, il prend sa place (1.41.1).
 	local nameAfter = roleOn and roleW + 5 or 3
+	-- l'icône du type à dissiper (allumée) se pose avant le nom, à sa taille choisie (Z.DispelTypeHome, Auras.lua)
+	if db.dispelIcon then nameAfter = nameAfter + Z.ElementSize("dispelType", icon) + 2 end
 	rows.nameX = nameAfter
 	rows.textX, rows.textW, rows.nameW = -4, W - 2 * inset - 8, math.max(20, W - nameAfter - 43)
 	if inline == "BLOCK" then

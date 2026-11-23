@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.43.0", date = "2026-11-23",
+		added = {
+			"Secondes restantes sur les affaiblissements, le contrôle subi et la grande icône des affaiblissements importants, écrites par le jeu, même en combat (chapitre Affaiblissements, allumé au départ).",
+			"Paladin : Longanimité grisée au bout de vos soins, comme Âme affaiblie pour le prêtre ; toutes deux avec leurs secondes restantes.",
+			"Icône du type à dissiper (goutte de magie, crâne de malédiction...) posée par le jeu sur la case, même en combat, nouvel élément du placement ; le liseré de chaque icône d'affaiblissement prend la couleur de son type.",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.42.1", date = "2026-11-23",
 		added = {
 			"Recharges du groupe : sous vos recharges, une ligne par gros sort de vos alliés qui ont Lyorune (Renaissance, Innervation, Infusion de puissance, Imposition des mains, Bénédictions de protection et de sacrifice, Gardien de peur, Totem de vague de mana, Tranquillité...) : le nom de chacun à la couleur de sa classe, net quand le sort est prêt, avec ses secondes sinon. Pendant un combat de boss ou un match JcJ, le jeu bloque les messages : la ligne garde le dernier état connu et se met à jour à la fin (chapitre Mes soins, éteint au départ).",

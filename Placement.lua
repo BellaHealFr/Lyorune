@@ -25,6 +25,7 @@ Z.placeElements = {
 	{ "lowMana", "Mana basse d'un soigneur" },
 	{ "hots", "Mes soins sur la durée" },
 	{ "debuffs", "Affaiblissements" },
+	{ "dispelType", "Type à dissiper" },
 	{ "big", "Affaiblissement important" },
 	{ "controls", "Joueur sous contrôle" },
 	{ "defensives", "Gros défensifs" },
@@ -35,7 +36,7 @@ local KNOWN = {}
 for _, element in ipairs(Z.placeElements) do KNOWN[element[1]] = true end
 -- Ceux dont la taille se règle ici : les icônes (le nom, le texte de vie et les auras privées ont leur réglage)
 local SIZED = { role = true, marker = true, leader = true, center = true, lowMana = true, hots = true,
-	debuffs = true, big = true, buff = true, controls = true, defensives = true }
+	debuffs = true, big = true, buff = true, controls = true, defensives = true, dispelType = true }
 
 function Z.IsPlaceElement(key)
 	return KNOWN[key] == true
@@ -49,7 +50,7 @@ end
 ----------------------------------------------------------------------------------------------------
 local SHOWN_BY = {
 	name = "showName", text = { "text", "NONE" }, role = "showRole", marker = "showMarker", leader = "showLeader",
-	center = "showCenter", lowMana = { "lowManaHealers", 0 }, hots = "showHots", debuffs = "showDebuffs",
+	center = "showCenter", lowMana = { "lowManaHealers", 0 }, hots = "showHots", debuffs = "showDebuffs", dispelType = "dispelIcon",
 	big = "bossDebuffs", controls = "showControls", defensives = "showDefensives", buff = "missingBuffs",
 	private = "privateAuras",
 }
@@ -263,6 +264,9 @@ local function Origins(power, roleRect)
 	local big, buff = Z.BigIconSize(), Z.ElementSize("buff", icon)
 	Put("big", "LEFT", cell, "LEFT", 3, 0, big, big)
 	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, buff, buff)
+	-- Type à dissiper : sa place d'origine (Z.DispelTypeHome, Auras.lua)
+	local typeAt, typeX, typeSize = Z.DispelTypeHome()
+	Put("dispelType", "LEFT", typeAt == "HP" and hp or cell, "LEFT", typeX, 0, typeSize, typeSize)
 	local size, point = db.privateAuraSize, db.privateAuraPoint
 	local spot = Z.PRIVATE_OFFSETS[point] or Z.PRIVATE_OFFSETS.CENTER
 	if not Z.PRIVATE_OFFSETS[point] then point = "CENTER" end
@@ -472,6 +476,8 @@ local function Regions(key)
 		return Row(cell.debuffs, Z.DebuffSlots())
 	elseif key == "big" then
 		return { cell.bigIcon }
+	elseif key == "dispelType" then
+		return { cell.dispelTypeIcon }
 	elseif key == "defensives" then
 		return Row(cell.defensives, Z.DEFENSIVE_COUNT)
 	elseif key == "controls" then
@@ -593,6 +599,8 @@ local function Draw()
 		SampleIcon(Z.DebuffIcon(cell, index), SAMPLE_ICONS.debuffs[(index - 1) % #SAMPLE_ICONS.debuffs + 1])
 	end
 	SampleIcon(Z.BigIcon(cell), SAMPLE_ICONS.big)
+	Z.ShowDispelType(cell, "Magic")
+	cell.dispelTypeIcon:SetAlpha(1)
 	-- Gros défensifs et contrôle : leur liseré de couleur, comme sur les vraies cases
 	local function Edge(icon, color) icon.border:SetColor(color[1], color[2], color[3], 1) end
 	for index = 1, Z.DEFENSIVE_COUNT do
@@ -817,16 +825,18 @@ local function BuildWindow()
 	tinsert(UISpecialFrames, "LyorunePlacement")
 
 	-- Liste des éléments, chacun avec sa case à cocher : le réglage des options qui le montre
+	-- Une ligne tous les 25 pixels : les 15 éléments tiennent au-dessus de « Aussi sur la case »
 	win.list, win.checks = {}, {}
+	local ROW = 25
 	for index, element in ipairs(Z.placeElements) do
 		local key = element[1]
 		local check = Shown(function() return Z.ElementShown(key) end, function(on) Z.ShowElement(key, on) end,
 			"Coché : affiché sur vos cases. Décoché : masqué, il garde sa place et sa taille pour son retour. Même réglage que dans les options.")
-		check:SetPoint("TOPLEFT", 16, -48 - (index - 1) * 27)
+		check:SetPoint("TOPLEFT", 16, -48 - (index - 1) * ROW)
 		win.checks[index] = check
-		local button = UI.Button(win, L[element[2]], 162, 24, function(self) Select(self.key) end)
+		local button = UI.Button(win, L[element[2]], 162, 22, function(self) Select(self.key) end)
 		button.key = key
-		button:SetPoint("TOPLEFT", 40, -48 - (index - 1) * 27)
+		button:SetPoint("TOPLEFT", 40, -48 - (index - 1) * ROW)
 		win.list[index] = button
 	end
 

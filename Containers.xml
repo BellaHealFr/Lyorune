@@ -124,6 +124,15 @@
 			</Layers>
 		</AuraButton>
 
+		<!-- Type à dissiper : le jeu y pose l'image du type (goutte de magie, crâne de malédiction...) -->
+		<AuraButton name="LyoruneAuraType" inherits="CustomAuraButtonTemplate" virtual="true">
+			<Layers>
+				<Layer level="OVERLAY">
+					<Texture parentKey="Type" setAllPoints="true" />
+				</Layer>
+			</Layers>
+		</AuraButton>
+
 		<!-- Affaiblissement important : le bouton couvre la case ; grande icône à gauche, contour doré qui pulse -->
 		<AuraButton name="LyoruneAuraBig" inherits="CustomAuraButtonTemplate" virtual="true">
 			<Frames>

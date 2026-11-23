@@ -14,6 +14,7 @@ local CLASSES = { "WARRIOR", "PRIEST", "DRUID", "MAGE", "PALADIN", "ROGUE", "SHA
 local HEALTH = { 100, 62, 100, 18, 85, 100, 0, 45, 100, 73 } -- vie des faux joueurs, en %
 local CLASS_POWER = Z.classPower -- ressource de chaque classe quand ce n'est pas la mana (Data.lua)
 local DISPEL_COLORS = { { 0.20, 0.60, 1.00 }, { 0.65, 0.20, 1.00 }, { 0.10, 0.85, 0.20 } }
+local DISPEL_KINDS = { "Magic", "Curse", "Poison" } -- les mêmes types, pour l'icône du type à dissiper
 
 -- Remplit une fausse case avec un état d'exemple. sample : la case témoin des options, à mon nom, où chaque
 -- indicateur allumé dans les options se voit. Renvoie le nombre de soins sur la durée montrés.
@@ -123,7 +124,9 @@ local function Fill(cell, index, sample)
 	cell:SetAlpha(((index % 10 == 9 and not sample) and db.rangeAlpha / 100 or 1) * dim)
 
 	-- Dissipation possible sur un joueur sur six
-	local dispel = db.showDispel and not dead and (sample or index % 6 == 3) and DISPEL_COLORS[math.floor(index / 6) % #DISPEL_COLORS + 1]
+	local kind = math.floor(index / 6) % #DISPEL_COLORS + 1
+	local toDispel = not dead and (sample or index % 6 == 3)
+	local dispel = db.showDispel and toDispel and DISPEL_COLORS[kind]
 	if dispel then
 		Z.ShowDispel(cell, true, dispel[1], dispel[2], dispel[3], 1)
 	else
@@ -132,6 +135,7 @@ local function Fill(cell, index, sample)
 
 	-- Soins sur la durée d'exemple, avec les icônes de mes vrais sorts
 	Z.HideAuras(cell)
+	if db.dispelIcon and toDispel then Z.ShowDispelType(cell, DISPEL_KINDS[kind]) end
 	local mine = not dead and (sample or index % 3 ~= 0) -- joueurs qui portent mes soins
 	local shown = 0
 	if db.showHots and mine then
@@ -197,6 +201,9 @@ local function Fill(cell, index, sample)
 		for i = 1, (sample and dispel) and math.min(2, Z.DispelCount()) or 1 do
 			local icon = Z.DebuffIcon(cell, i)
 			icon.texture:SetTexture(textures[i])
+			-- liseré à la couleur du type quand ils sont à dissiper, noir sinon
+			local edge = dispel or { 0, 0, 0 }
+			icon.border:SetColor(edge[1], edge[2], edge[3], 1)
 			icon.cooldown:Clear()
 			icon.count:SetText("")
 			icon:Show()
