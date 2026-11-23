@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.43.1", date = "2026-11-23",
+		added = {
+			"Affaiblissements affichés : nouveau choix « Utiles », ceux que le jeu montre sur ses propres cadres de raid, sans ceux de plus de 5 minutes (Déserteur, Épuisement), même en combat.",
+			"Liste « À mettre en avant » : Maj-clic sur un sort pour l'ajouter avec son numéro ; un nom en gris n'est pas encore reconnu en combat (survolez-le).",
+		},
+		improved = {
+			"Les affaiblissements de votre liste « À mettre en avant » sont toujours montrés en tête de la rangée (deux au plus), quel que soit le mode, même s'ils sont aussi dans « À ignorer ».",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.43.0", date = "2026-11-23",
 		added = {
 			"Secondes restantes sur les affaiblissements, le contrôle subi et la grande icône des affaiblissements importants, écrites par le jeu, même en combat (chapitre Affaiblissements, allumé au départ).",

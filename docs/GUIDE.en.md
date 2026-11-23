@@ -367,7 +367,9 @@ Everything works without any message, even if you are the only one with Lyorune.
 
 ### Lists
 
-Each list sits in its own chapter: "My spells to track" in My heals (Tracked spells part), "Ignore" (debuffs never to show) in Debuffs, Icons part, and "Highlight" (debuffs to show as a large icon) in Debuffs, Important part. Type the exact name, then Enter. Click a name to remove it.
+Each list sits in its own chapter: "My spells to track" in My heals (Tracked spells part), "Ignore" (debuffs never to show) in Debuffs, Icons part, and "Highlight" (debuffs to always show) in Debuffs, Important part. Type the exact name or the spell number, then Enter; or, with the field active, Shift-click a spell (chat, spellbook, tooltip): it goes into the list with its number. Click a name to remove it.
+
+In combat, the game hides debuff names: Lyorune only recognizes them by their number. In "Highlight", a grey name is not recognized yet (hover over it): it will be the first time it is seen out of combat, or right away if you type its number or Shift-click the spell. A normal name works in combat too.
 
 ### In dungeons and raids
 
@@ -375,11 +377,12 @@ Each list sits in its own chapter: "My spells to track" in My heals (Tracked spe
 - **Heal absorb** (Health and range chapter, fine settings of the Health part): the dark red band at the end of the health shows what a debuff "eats". Your heals fill it first. The amount comes from the game and stays accurate in combat.
 - **Seconds left** (Debuffs chapter, Icons part, on at first): on debuff icons, the crowd-control icon and the big icon of important debuffs, the seconds left, drawn by the game, even in combat. You see whether to dispel right away or wait for the end.
 - **Dispel type icon** (Debuffs chapter, Dispelling part, on at first): on top of the colour, the picture of the type of the debuff you can dispel (magic drop, curse skull, poison vial...), drawn by the game on the left of the cell, just right of the big icon's place (in Bar and Strip: after the role icon, the name starts after it), even in combat. Its place and size are set in "Place the cell elements..." ("Dispel type" element). With "Coloured frame when I can dispel", the edge of each debuff icon also takes the colour of its type: two different types show together.
+- **Debuffs shown** (Debuffs chapter, Icons part): three choices. "All": everything the player has. "Useful": those the game shows on its own raid frames, and nothing longer than 5 minutes (Deserter, Exhaustion, holidays); a longer boss debuff stays in the large icon. "Those I dispel": only what you can remove. In all three cases, a debuff from your "Highlight" list comes first in the row, even if it is also in "Ignore".
 - **Crowd-controlled player** (Debuffs chapter, Important part): a stunned, feared, polymorphed or sleeping player shows the icon of the crowd control in the centre of their cell, with a red edge. The game itself recognises crowd control: it works in the middle of combat.
 
 - **Players' big defensives** (Players chapter, On the cell part): Shield Wall, Last Stand, Divine Shield, Divine Protection, Blessings of Protection and Sacrifice, Evasion, Barkskin, Ice Block, Deterrence and Stoneform show their icon, with a blue edge, on the cell of the player who has them, whoever cast them. Two at most, on the right edge of the cell (just before the health number in Bar and Strip). You know at once who is taking hits safely and who needs your heals. If you cast one of these spells yourself (Blessing of Protection), it leaves the row of your heals so it is not shown twice.
 
-- **Glow and sound** (Debuffs chapter, Important part): a debuff from your "Highlight" list, or a boss debuff, surrounds the frame with a golden outline. The sound, to turn on in the fine settings, plays for those in your list.
+- **Glow and sound** (Debuffs chapter, Important part): a debuff from your "Highlight" list, or a boss debuff, surrounds the frame with a golden outline (those from your list also take the first place in the debuff row). The sound, to turn on in the fine settings, plays for those in your list.
   Good to know: in combat the game often hides boss debuff names. Lyorune then cannot tell which one is applied: the outline still works (the game itself decides whether it is a boss debuff), the sound does not.
 
 ## 10. Announcements and sounds

@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.43.1] - 2026-11-23
+
+### Added
+
+- Debuffs shown: new "Useful" choice, those the game shows on its own raid frames, without those longer than 5 minutes (Deserter, Exhaustion), even in combat.
+- "Highlight" list: Shift-click a spell to add it with its number; a grey name is not recognized in combat yet (hover over it).
+
+### Improved
+
+- Debuffs from your "Highlight" list are always shown first in the row (two at most), whatever the mode, even if they are also in "Ignore".
+
 ## [1.43.0] - 2026-11-23
 
 ### Added
@@ -828,6 +839,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1
 [1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0
 [1.42.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.0...v1.42.1
 [1.42.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.1...v1.42.0

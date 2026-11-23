@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.43.0"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.43.1"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -229,7 +229,7 @@ Z.choices = {
 	buffPlace = { { "FRAMES", "Avec les cadres" }, { "FREE", "Où vous voulez" } },
 	castIndicator = { { "OFF", "Aucun" }, { "BAR", "Barre sous les cadres" }, { "RING", "Anneau au curseur" } },
 	cooldownShow = { { "ALL", "Tous mes sorts" }, { "COOLING", "En recharge seulement" } },
-	debuffMode = { { "ALL", "Tous" }, { "DISPEL", "Dissipables par moi" } },
+	debuffMode = { { "ALL", "Tous" }, { "USEFUL", "Utiles" }, { "DISPEL", "Ceux que je dissipe" } },
 	manaBars = { { "OFF", "Personne" }, { "HEALERS", "Soigneurs" }, { "ALL", "Tous" } },
 	manaColor = { { "BLUE", "Bleu" }, { "SKY", "Bleu ciel" }, { "PURPLE", "Violet" }, { "TEAL", "Turquoise" }, { "WHITE", "Blanc" } },
 	privateAuraPoint = { { "CENTER", "Au centre" }, { "TOP", "En haut" }, { "BOTTOM", "En bas" }, { "LEFT", "À gauche" }, { "RIGHT", "À droite" } },

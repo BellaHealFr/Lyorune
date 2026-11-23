@@ -700,18 +700,34 @@ local function FindDrink(unit)
 	end
 end
 
+-- Dans une liste de noms : par son nom, ou par son numéro tapé (ou pris dans un lien), s'ils se lisent
+local function InList(list, aura)
+	local name, id = aura.name, aura.spellId
+	if name and not issecret(name) and list[name] then return true end
+	return id and not issecret(id) and list[tostring(id)] and true or false
+end
+
+-- Ma liste « À mettre en avant » gagne sur « À ignorer »
 local function IsIgnored(aura)
-	local id, name = aura.spellId, aura.name
-	if not issecret(id) and Z.ignoredDebuffs[id] then return true end
-	return not issecret(name) and Z.db.ignoredNames[name]
+	if InList(Z.db.importantNames, aura) then return false end
+	local id = aura.spellId
+	if id and not issecret(id) and Z.ignoredDebuffs[id] then return true end
+	return InList(Z.db.ignoredNames, aura)
+end
+
+-- « Utiles » (ancien affichage) : rien de plus de 5 minutes ni sans fin (Déserteur, Épuisement) ; une durée
+-- secrète laisse l'affaiblissement montré
+local function Useful(aura)
+	local duration = aura.duration
+	if duration == nil or issecret(duration) then return true end
+	return duration > 0 and duration <= 300
 end
 
 -- Affaiblissement important : d'abord ceux de ma liste (nom lisible), puis ceux marqués « boss » par le jeu.
 -- Renvoie l'aura, « le jeu décide » (marque secrète en combat), et « de ma liste ».
 local function FindImportant(harmful)
 	for i = 1, #harmful do
-		local name = harmful[i].name
-		if not issecret(name) and Z.db.importantNames[name] then return harmful[i], false, true end
+		if InList(Z.db.importantNames, harmful[i]) then return harmful[i], false, true end
 	end
 	for i = 1, #harmful do
 		local boss = harmful[i].isBossAura
@@ -1019,25 +1035,40 @@ local function UpdateWithReading(b)
 
 	-- 3. Icônes d'affaiblissements : ceux à dissiper en premier, puis les autres (comme les conteneurs du jeu :
 	-- une place pour le premier à dissiper, « debuffCount - 1 » pour les autres)
+	-- Ceux de ma liste « À mettre en avant » d'abord (deux au plus), quel que soit le mode
 	shown = 0
 	if db.showDebuffs and harmful then
+		local listedMax, _, othersMax = Z.DebuffPlaces()
 		local first = {}
-		for _, aura in ipairs(dispellable) do
+		local function Put(aura)
 			shown = shown + 1
 			ShowDebuff(Z.DebuffIcon(b, shown), unit, aura)
 			local id = aura.auraInstanceID
 			if id and not issecret(id) then first[id] = true end
 		end
-		if db.debuffMode == "ALL" then
-			local others = 0
-			for i = 1, #harmful do
-				if others >= db.debuffCount - 1 then break end
-				local aura = harmful[i]
-				local id = aura.auraInstanceID
-				if not (id and not issecret(id) and first[id]) and not IsIgnored(aura) and not (lockouts and IsLockout(aura)) then
-					shown, others = shown + 1, others + 1
-					ShowDebuff(Z.DebuffIcon(b, shown), unit, aura)
-				end
+		local function Taken(aura)
+			local id = aura.auraInstanceID
+			return id and not issecret(id) and first[id]
+		end
+		local listedShown = 0
+		for i = 1, #harmful do
+			if listedShown >= listedMax then break end
+			local aura = harmful[i]
+			if InList(Z.db.importantNames, aura) and not (lockouts and IsLockout(aura)) then
+				listedShown = listedShown + 1
+				Put(aura)
+			end
+		end
+		for _, aura in ipairs(dispellable) do
+			if not Taken(aura) then Put(aura) end
+		end
+		local others, useful = 0, db.debuffMode == "USEFUL"
+		for i = 1, #harmful do
+			if others >= othersMax then break end
+			local aura = harmful[i]
+			if not Taken(aura) and not IsIgnored(aura) and not (lockouts and IsLockout(aura)) and (not useful or Useful(aura)) then
+				others = others + 1
+				Put(aura)
 			end
 		end
 	end

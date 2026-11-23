@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.43.1] - 2026-11-23
+
+### Ajouté
+
+- Affaiblissements affichés : nouveau choix « Utiles », ceux que le jeu montre sur ses propres cadres de raid, sans ceux de plus de 5 minutes (Déserteur, Épuisement), même en combat.
+- Liste « À mettre en avant » : Maj-clic sur un sort pour l'ajouter avec son numéro ; un nom en gris n'est pas encore reconnu en combat (survolez-le).
+
+### Amélioré
+
+- Les affaiblissements de votre liste « À mettre en avant » sont toujours montrés en tête de la rangée (deux au plus), quel que soit le mode, même s'ils sont aussi dans « À ignorer ».
+
 ## [1.43.0] - 2026-11-23
 
 ### Ajouté
@@ -828,6 +839,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1
 [1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0
 [1.42.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.0...v1.42.1
 [1.42.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.1...v1.42.0

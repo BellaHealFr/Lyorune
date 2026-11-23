@@ -9200,6 +9200,145 @@ step("1.43.0 : secondes des affaiblissements, Longanimite au bout des soins du p
   assert(ok, err)
 end)
 
+step("1.43.1 : mode Utiles des affaiblissements, liste a mettre en avant en tete, liens de sorts et etat", function()
+  local old = { create = CreateFrame, auraIds = Z.db.auraIds, important = Z.db.importantNames, ignored = Z.db.ignoredNames }
+  local form = {}
+  for _, key in ipairs({ "debuffMode", "dispelCount", "debuffCount", "showDebuffs", "showDispel", "bossDebuffs",
+    "importantGlow", "showControls" }) do form[key] = Z.db[key] end
+  local made = {}
+  local ok, err = xpcall(function()
+    -- 1. Trois choix, places de la rangee
+    local values = {}
+    for _, c in ipairs(Z.choices.debuffMode) do values[#values + 1] = c[1] end
+    assert(table.concat(values, ",") == "ALL,USEFUL,DISPEL", "choix du mode : " .. table.concat(values, ","))
+    Z.db.importantNames, Z.db.ignoredNames, Z.db.auraIds = {}, {}, {}
+    Z.db.dispelCount, Z.db.debuffCount = 2, 3
+    Z.db.debuffMode = "ALL" assert(Z.DebuffSlots() == 4, "places (Tous)")
+    Z.db.debuffMode = "USEFUL" assert(Z.DebuffSlots() == 4, "places (Utiles)")
+    Z.db.debuffMode = "DISPEL" assert(Z.DebuffSlots() == 2, "places (Ceux que je dissipe)")
+    Z.db.importantNames = { X = true } assert(Z.DebuffSlots() == 3, "une place de plus pour ma liste")
+    Z.db.importantNames = { X = true, Y = true, ["5"] = true } assert(Z.DebuffSlots() == 4, "deux places au plus pour ma liste")
+    Z.db.importantNames = {}
+
+    -- 2. Lien de sort : nom garde, numero retenu, etat reconnu
+    local link = "|cff71d5ff|Hspell:424242:0|h[Peste noire]|h|r"
+    local name, id = Z.SpellFromLink(link)
+    assert(name == "Peste noire" and id == 424242, "lien mal lu")
+    assert(Z.SpellFromLink("Peste noire") == nil, "un nom n'est pas un lien")
+    assert(not Z.KnownAuraIds("Peste noire"), "reconnu avant le lien")
+    assert(Z.AddToList("importantNames", link) == "Peste noire" and Z.db.importantNames["Peste noire"], "lien non ajoute")
+    assert(Z.KnownAuraIds("Peste noire") and Z.db.auraIds["Peste noire"][424242], "numero du lien non retenu")
+    assert(Z.KnownAuraIds("777"), "un numero tape est reconnu")
+    Z.AddToList("ignoredNames", "Peste noire") -- par erreur dans les deux listes : ma liste gagne
+
+    -- 3. Ancien affichage : ma liste en tete, Utiles sans Deserteur, Ceux que je dissipe
+    local b = Z.buttons[1]
+    AURAS = {}
+    local listed = { name = "Peste noire", icon = 1, auraInstanceID = 81, spellId = 424242, duration = 30 }
+    local long = { name = "Malédiction lente", icon = 2, auraInstanceID = 82, spellId = 99002, duration = 900 }
+    local short = { name = "Brûlure", icon = 3, auraInstanceID = 83, spellId = 9001, duration = 12 }
+    local secret = { name = MakeSecret(), icon = 4, auraInstanceID = 84, spellId = MakeSecret(), duration = MakeSecret() }
+    AURAS["HARMFUL"] = { long, short, listed, secret }
+    Z.db.showDebuffs, Z.db.dispelCount, Z.db.debuffCount = true, 1, 5
+    local function icons()
+      local list = {}
+      for i = 1, #b.debuffs do if b.debuffs[i]:IsShown() then list[#list + 1] = b.debuffs[i].texture._tex end end
+      return table.concat(list, ",")
+    end
+    Z.db.debuffMode = "ALL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "1,2,3,4", "Tous : " .. icons())
+    Z.db.debuffMode = "USEFUL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "1,3,4", "Utiles : ma liste, le court, le secret ; pas Deserteur : " .. icons())
+    Z.db.debuffMode = "DISPEL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "1", "Ceux que je dissipe : ma liste reste montree : " .. icons())
+    -- par son numero tape
+    Z.db.importantNames = { ["9001"] = true } Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "3", "numero tape non reconnu : " .. icons())
+    Z.db.importantNames = { ["Peste noire"] = true }
+    AURAS = {}
+
+    -- 4. Conteneurs du jeu : groupe de ma liste en tete, Utiles trie par le jeu et par la duree
+    local groups, policy = {}, nil
+    CreateFrame = function(kind, fname, parent, template)
+      local f = old.create(kind, fname, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      function f:AddAuraGroup(key, filter, options)
+        groups[key] = { filter = filter, candidates = options.candidateFilters, max = options.maxFrameCount,
+          index = options.layout.layoutIndex, box = self }
+      end
+      function f:AddAuraSlot(key, filter, options) return old.create("Button", nil, self) end
+      function f:SetAuraProcessingPolicy(p, o) policy = { box = self, p = p, o = o } end
+      function f:SetEnabled(on) end
+      function f:SetUnit(unit) end
+      function f:UpdateAllAuras() end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    AuraUtil = { AuraUpdateChangedType = { Debuff = 7 } }
+    CustomAuraContainerAuraProcessingPolicy = { ProcessAura = 2 }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1, Icon = 3 }
+    Z.db.debuffMode, Z.db.dispelCount, Z.db.debuffCount, Z.db.showControls = "USEFUL", 1, 3, true
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton431", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    c:SetAttribute("unit", "player")
+    Z:Refresh()
+    local row, others = groups.listedRow, groups.others
+    assert(row and row.index == 1 and row.max == 1 and row.candidates.includeSpellIDs[424242], "groupe de ma liste absent")
+    -- un nom sans numero ne prend pas de place ; un sort bloque de ma liste reste au bout de mes soins
+    Z.db.importantNames["Nom jamais vu"] = true
+    assert(Z.DebuffPlaces() == 1, "place pour un nom sans numero")
+    Z.db.importantNames["Nom jamais vu"] = nil
+    -- un sort bloque (Ame affaiblie) mis dans ma liste ne reserve pas de place vide dans la rangee
+    local savedLock, savedHots, savedShow = Z.lockoutIds, Z.db.showHots, Z.db.showLockouts
+    Z.lockoutIds, Z.db.showHots, Z.db.showLockouts = { [515151] = true }, true, true
+    Z.db.importantNames["515151"] = true
+    assert(Z.KnownAuraIds("515151") and Z.KnownAuraIds("515151", true) == false, "sort bloque vu comme reconnu")
+    assert(Z.DebuffPlaces() == 1, "place vide pour un sort bloque de ma liste")
+    Z.db.importantNames["515151"] = nil
+    Z.lockoutIds, Z.db.showHots, Z.db.showLockouts = savedLock, savedHots, savedShow
+    assert(groups.dispellable.index == 2 and groups.dispellable.candidates.excludeSpellIDs[424242], "doublon avec ceux a dissiper")
+    assert(others and others.index == 3 and others.max == 2 and others.candidates.excludeSpellIDs[424242], "groupe des autres")
+    assert(others.candidates.maxDuration == 300 and others.candidates.processedAuraType == 7, "Utiles : tri du jeu et duree")
+    assert(policy and policy.box == others.box and policy.p == 2 and policy.o.displayOnlyDispellableDebuffs == false,
+      "politique du jeu non posee sur la rangee")
+    local ctrl = groups.controls.candidates.excludeSpellIDs
+    assert(not (ctrl and ctrl[424242]), "ma liste ignoree a tort (A ignorer gagne)")
+    -- Tous : ni tri du jeu ni duree ; Ceux que je dissipe : pas d'autres
+    groups, policy = {}, nil
+    Z.db.debuffMode = "ALL" Z:Refresh()
+    assert(groups.others and not groups.others.candidates.maxDuration and not groups.others.candidates.processedAuraType
+      and not policy, "Tous trie a tort")
+    groups = {}
+    Z.db.debuffMode = "DISPEL" Z:Refresh()
+    assert(not groups.others and groups.listedRow, "Ceux que je dissipe : autres montres, ou ma liste absente")
+    -- client sans politique : la duree seule trie
+    groups, policy = {}, nil
+    CustomAuraContainerAuraProcessingPolicy = nil
+    Z.db.debuffMode = "USEFUL" Z:Refresh()
+    assert(groups.others.candidates.maxDuration == 300 and not groups.others.candidates.processedAuraType and not policy,
+      "repli sans politique")
+
+    -- 5. Options
+    local labels = table.concat(Z:OptionLabels(), "|")
+    assert(labels:find("Affaiblissements affichés", 1, true) and labels:find("À mettre en avant", 1, true), "options absentes")
+    for _, text in ipairs({ "Utiles", "Ceux que je dissipe", "Reconnu par son numéro : le jeu le trouve aussi en combat." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end, debug.traceback)
+  CreateFrame = old.create
+  AuraContainerSortMethod, AnchorUtil, AuraUtil, CustomAuraContainerAuraProcessingPolicy = nil, nil, nil, nil
+  Enum.CustomAuraButtonDispelTypeTextureStyle = nil
+  Z.boxWrap = nil
+  for _, c in ipairs(made) do pcall(c.SetAttribute, c, "unit", nil) end
+  for key, value in pairs(form) do Z.db[key] = value end
+  Z.db.auraIds, Z.db.importantNames, Z.db.ignoredNames = old.auraIds, old.important, old.ignored
+  AURAS = {}
+  Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

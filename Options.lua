@@ -278,6 +278,7 @@ local function RefreshShownPages()
 	end
 	if AfterChange then AfterChange() end -- profil chargé, configuration reçue : pastilles et grisage suivent
 end
+Z.RefreshOptionPages = RefreshShownPages -- numéro d'un nom de liste appris en jeu (Containers.lua)
 
 -- Réglages changés hors de la fenêtre d'options, par une autre fenêtre (l'éditeur de placement) : même suite
 -- qu'un changement fait ici, et les interrupteurs des pages ouvertes suivent. values : { clé = valeur }.
@@ -529,7 +530,52 @@ end
 ----------------------------------------------------------------------------------------------------
 local CHIPS, CHIP_H = 3, 25 -- noms par rangée, hauteur d'une rangée
 
-local function ListBox(key, title, hint, clean, fields)
+-- Lien de sort (Maj-clic dans la discussion, le grimoire ou une infobulle) : son nom et son numéro
+function Z.SpellFromLink(text)
+	if type(text) ~= "string" then return end
+	local id = tonumber(text:match("|Hspell:(%d+)") or "")
+	local name = text:match("|h%[(.-)%]|h")
+	if id and name and name ~= "" then return name, id end
+end
+
+-- Ajoute un nom tapé, ou un lien de sort (le numéro du lien est retenu pour ce nom : reconnu même en combat)
+function Z.AddToList(key, text, clean)
+	local name, id = Z.SpellFromLink(text)
+	if name then
+		text = name
+		if Z.RememberAuraId then Z.RememberAuraId(name, id) end
+	end
+	if clean then text = clean(text) end
+	if not text or text == "" then return end
+	Z.db[key][text] = true
+	Z:Refresh()
+	return text
+end
+
+-- Maj-clic sur un sort pendant qu'un champ de liste est actif : le sort entre dans la liste. Le jeu passe tous
+-- les liens par ChatFrameUtil.InsertLink (ChatEdit_InsertLink sur les clients plus anciens) ; on ne fait que
+-- lire le lien après lui, sans rien changer à la discussion.
+local linkTarget
+local SPELL_LISTS = { extraTracked = true, cooldownIgnored = true, ignoredNames = true, importantNames = true } -- pas les joueurs
+local function WatchLinks()
+	if Z.linksWatched then return end
+	local function OnLink(link)
+		local edit = linkTarget
+		if not (edit and edit:IsVisible() and edit:HasFocus() and Z.SpellFromLink(link)) then return end
+		Z.AddToList(edit.listKey, link, edit.clean)
+		RefreshShownPages()
+	end
+	if ChatFrameUtil and ChatFrameUtil.InsertLink then
+		hooksecurefunc(ChatFrameUtil, "InsertLink", OnLink)
+	elseif ChatEdit_InsertLink then
+		hooksecurefunc("ChatEdit_InsertLink", OnLink)
+	else
+		return
+	end
+	Z.linksWatched = true
+end
+
+local function ListBox(key, title, hint, clean, fields, status)
 	local item = { "custom", function(page, width)
 		local box = CreateFrame("Frame", nil, page)
 		box:SetSize(width, 60)
@@ -541,15 +587,16 @@ local function ListBox(key, title, hint, clean, fields)
 		box.hint:SetWidth(width)
 		box.hint:SetJustifyH("LEFT")
 		box.hint:SetText(L[hint])
-		local edit = UI.Edit(box, 210, function(text)
-			if clean then text = clean(text) end
-			if text and text ~= "" then
-				Z.db[key][text] = true
-				Z:Refresh()
-			end
-		end)
+		local edit = UI.Edit(box, 210, function(text) Z.AddToList(key, text, clean) end)
 		edit:SetPoint("TOPRIGHT")
 		Placeholder(edit, "Nom exact, puis Entrée")
+		edit.listKey, edit.clean = key, clean
+		if SPELL_LISTS[key] then
+			edit:HookScript("OnEditFocusGained", function(self)
+				WatchLinks()
+				linkTarget = self
+			end)
+		end
 		edit:HookScript("OnEnterPressed", function(self)
 			self:SetText("")
 			RefreshShownPages() -- la liste, et les coins qui proposent les sorts suivis
@@ -572,13 +619,17 @@ local function ListBox(key, title, hint, clean, fields)
 						Z:Refresh()
 						RefreshShownPages()
 					end)
-					chip.tip = L["Cliquez pour retirer de la liste."]
 					self.chips[i] = chip
 				end
 				chip:ClearAllPoints()
 				chip:SetPoint("TOPLEFT", ((i - 1) % CHIPS) * (chipWidth + 6), -top - math.floor((i - 1) / CHIPS) * CHIP_H)
 				chip.name = name
 				chip.label:SetText(name)
+				-- État d'un nom (liste « À mettre en avant ») : gris tant qu'il n'est pas reconnu en combat
+				local tip = status and status(name)
+				UI.Paint(chip.label, tip and tip.dim and "dim" or "btext")
+				local remove = L["Cliquez pour retirer de la liste."]
+				chip.tip = tip and tip.text .. "\n" .. remove or remove
 				chip:Show()
 			end
 			for i = #names + 1, #self.chips do self.chips[i]:Hide() end
@@ -594,6 +645,14 @@ local function ListBox(key, title, hint, clean, fields)
 	end }
 	for field, value in pairs(fields or {}) do item[field] = value end -- fine, dep
 	return item
+end
+
+-- État d'un nom de « À mettre en avant » : en combat le nom est secret, le jeu ne le trouve que par son numéro
+local function ImportantStatus(name)
+	if Z.KnownAuraIds and Z.KnownAuraIds(name) then
+		return { text = L["Reconnu par son numéro : le jeu le trouve aussi en combat."] }
+	end
+	return { dim = true, text = L["Pas encore reconnu : il sera appris la première fois qu'il est vu hors combat. Ou tapez son numéro, ou faites Maj-clic sur le sort."] }
 end
 
 -- Épingler ma cible : sous la liste des joueurs épinglés
@@ -2433,8 +2492,8 @@ local function Chapters()
 			{ "Icônes", {
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
 				{ "check", "debuffCountdown", "Secondes restantes", "Sur les icônes d'affaiblissements, celle du contrôle subi et la grande icône des affaiblissements importants : les secondes restantes, écrites par le jeu, même en combat. Vous voyez s'il faut dissiper ou attendre la fin.", desc = "Dissiper tout de suite, ou attendre la fin ?" },
-				{ "seg", "debuffMode", "Affaiblissements affichés", dep = { "showDebuffs", true } },
-				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher."),
+				{ "seg", "debuffMode", "Affaiblissements affichés", "Tous : tout ce que porte le joueur. Utiles : ceux que le jeu montre sur ses propres cadres de raid, rien de plus de 5 minutes (Déserteur, Épuisement) ; un affaiblissement de boss plus long reste dans la grande icône. Ceux que je dissipe : seulement ce que vous pouvez retirer. Dans les trois cas, ceux de votre liste « À mettre en avant » passent en tête.", desc = "Tous, Utiles, ou seulement ceux que je dissipe.", dep = { "showDebuffs", true } },
+				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher, sauf s'ils sont dans « À mettre en avant ». Un nom, un numéro, ou Maj-clic sur un sort."),
 				{ "step", "dispelCount", "Affaiblissements à dissiper", desc = "Montrés avant les autres, le plus important d'abord.", dep = { "showDebuffs", true } },
 				{ "step", "debuffCount", "Nombre d'affaiblissements", fine = true, dep = { "showDebuffs", true } },
 			} },
@@ -2442,7 +2501,7 @@ local function Chapters()
 				{ "check", "bossDebuffs", "Affaiblissement important en grand", "Ceux des boss, et ceux de votre liste « À mettre en avant », plus bas." },
 				{ "check", "importantGlow", "Contour lumineux si important", "La case s'entoure d'un contour doré qui pulse. Marche en combat pour les affaiblissements de boss : le jeu décide lui-même." },
 				{ "check", "showControls", "Joueur sous contrôle", "Étourdi, apeuré, métamorphosé, endormi... : l'icône du contrôle au centre de la case, avec un liseré rouge. Le jeu le reconnaît lui-même, même en combat.", desc = "Étourdi, apeuré, métamorphosé : son icône au centre de la case." },
-				ListBox("importantNames", "À mettre en avant", "Affaiblissements affichés en grand comme ceux des boss, avec contour lumineux et son."),
+				ListBox("importantNames", "À mettre en avant", "Toujours montrés en tête de la rangée, quel que soit le mode, même s'ils sont dans « À ignorer » ; en grand comme ceux des boss, avec contour lumineux et son. Un nom, un numéro, ou Maj-clic sur un sort. Un nom en gris n'est pas encore reconnu en combat : survolez-le.", nil, nil, ImportantStatus),
 				{ "check", "importantSound", "Son pour ceux de ma liste", "Un son d'alerte quand un affaiblissement de la liste « À mettre en avant » est posé. En combat, le jeu cache souvent le nom des affaiblissements de boss : le son ne peut alors pas partir.", fine = true },
 			} },
 			{ "Auras privées des boss", {

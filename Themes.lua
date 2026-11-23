@@ -107,11 +107,25 @@ function Z.DispelCount()
 	return math.max(limits[1], math.min(limits[2], math.floor(tonumber(Z.db.dispelCount) or limits[1])))
 end
 
--- Places de la rangée des affaiblissements : ceux à dissiper, puis les autres (« Tous ») ; ceux à dissiper
--- seulement (« Dissipables par moi »)
+-- Places de la rangée des affaiblissements : ceux de ma liste « À mettre en avant » (deux au plus, quel que soit
+-- le mode), ceux à dissiper, puis les autres (« Tous » et « Utiles ») ; « Ceux que je dissipe » : rien de plus.
+-- Avec les conteneurs du jeu, seul un nom reconnu par son numéro compte (sinon le jeu ne peut pas le montrer).
+-- Un sort bloqué (Âme affaiblie) ne compte jamais : il est montré au bout de mes soins.
+local LISTED_MAX = 2
+function Z.DebuffPlaces()
+	local listed, boxes = 0, Z.HasAuraBoxes and Z.HasAuraBoxes()
+	for name in pairs(Z.db.importantNames) do
+		if listed >= LISTED_MAX then break end
+		local known = Z.KnownAuraIds and Z.KnownAuraIds(name, true)
+		if known or (known == nil and not boxes) then listed = listed + 1 end
+	end
+	local others = Z.db.debuffMode ~= "DISPEL" and Z.db.debuffCount - 1 or 0
+	return listed, Z.DispelCount(), others
+end
+
 function Z.DebuffSlots()
-	if Z.db.debuffMode == "ALL" then return Z.DispelCount() + Z.db.debuffCount - 1 end
-	return Z.DispelCount()
+	local listed, dispel, others = Z.DebuffPlaces()
+	return listed + dispel + others
 end
 
 -- Affaiblissements qui bloquent un de mes sorts (Âme affaiblie) : montrés au bout de la rangée de mes soins si

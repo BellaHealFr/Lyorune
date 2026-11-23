@@ -56,7 +56,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | Fait |
 | 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | Publiée (v1.42.1) |
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Publiée (v1.43.0) |
-| 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | À faire |
+| 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | Faite |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -979,8 +979,20 @@ expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche e
   icône d'affaiblissement à la couleur de son type** (style `PreserveAsset` sur `Edge`, courbe `Z.EdgeCurve` : noir
   sans type), avec « Cadre coloré quand je peux dissiper ». Ancien affichage, mode test et case témoin suivent.
   Tests : étape 1.43.0.
-- [ ] 28 bis (1.43.1) : mode « Utiles » (D1 de `PLAN-CORRECTIF.md`) et liste « À mettre en avant » qui dit si elle
-  marche en combat, accepte un lien de sort et gagne sur « À ignorer » (D4).
+- [x] 28 bis (1.43.1) : mode « Utiles » (D1 de `PLAN-CORRECTIF.md`) et liste « À mettre en avant » qui dit si elle
+  marche en combat, accepte un lien de sort et gagne sur « À ignorer » (D4). Choix de l'auteur (23 novembre 2026, les
+  deux recommandés) : « Utiles » = choix du jeu comme pour ses cadres de raid (politique `ProcessAura`, candidat
+  `processedAuraType` « affaiblissement », méthode de HealKit, faite pour Forever) et rien de plus de 5 minutes
+  (`maxDuration`), la durée seule si le client n'a pas la politique ; ma liste en tête de la rangée dans les trois
+  modes (`Z.DebuffPlaces`, Themes.lua : une place de plus quand la liste n'est pas vide). `debuffMode` : « Tous »,
+  « Utiles », « Ceux que je dissipe » (`USEFUL` ajouté, `DISPEL` gardé). Conteneurs (Containers.lua) : groupe
+  `listedRow` en tête, ma liste retirée des ignorés et des autres groupes (aucun doublon), politique posée sur la
+  rangée (`Z.UsefulPolicy`). Ancien affichage (Auras.lua) : `InList` (nom ou numéro tapé), `Useful` (durée lisible
+  de 5 min au plus, secrète = montrée). Options : lien de sort par Maj-clic (`Z.SpellFromLink`, `Z.AddToList`,
+  crochet sur `ChatFrameUtil.InsertLink`), numéro retenu (`Z.RememberAuraId`), nom gris tant qu'il n'est pas
+  reconnu (`Z.KnownAuraIds`, infobulle). Recherche : HealKit (onlyDispellable, rangée « Important » triée par le
+  jeu, 5 min au plus), HealBot et ElvUI (`RAID_IN_COMBAT`, non prouvé sur Forever), VuhDo (filtres au choix) ;
+  aucun ne dit si une liste marche en combat. Tests : étape 1.43.1.
 
 ## Étape 29 : éditeur de placement et JcJ (1.41.0 et 1.44.0)
 - [x] 29 a (1.41.0, avancée en priorité par l'auteur le 22 novembre 2026) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,

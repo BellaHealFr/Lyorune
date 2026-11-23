@@ -158,9 +158,19 @@ local function Wanted()
 			ignored[id] = true
 		end
 	end
-	local important = {}
+	-- Ma liste « À mettre en avant » gagne sur « À ignorer » (pas sur le sort bloqué, montré au bout de mes soins)
+	local important, listed, rowIgnored = {}, {}, {}
 	for name in pairs(db.importantNames) do AddIds(important, name) end
-	return hots, corners, ignored, important, defensives, lockouts
+	for id in pairs(important) do
+		if not lockouts[id] then
+			ignored[id] = nil
+			listed[id] = true
+		end
+	end
+	-- Rangée des affaiblissements : ma liste a son propre groupe en tête, les autres groupes l'écartent (aucun doublon)
+	for id in pairs(ignored) do rowIgnored[id] = true end
+	for id in pairs(listed) do rowIgnored[id] = true end
+	return hots, corners, ignored, important, defensives, lockouts, listed, rowIgnored
 end
 
 -- Un nom qui intéresse Lyorune (soins suivis, coins, listes) : son numéro vaut la peine d'être retenu
@@ -174,22 +184,48 @@ local function Interesting(name)
 	end
 end
 
--- Appelé par Auras.lua quand une aura est lisible (hors combat) : un numéro nouveau met les filtres à jour
-local refilterQueued
-function Z.LearnAuraId(name, id)
-	if not name or not id or issecret(name) or issecret(id) or not Z.HasAuraBoxes() then return end
-	if not Interesting(name) then return end
+-- Un nom de liste est-il reconnu par son numéro ? (sinon le jeu ne peut pas le trouver en combat, nom secret)
+-- Rend nil sans numéro. Avec outsideLockouts : faux si tous ses numéros sont des sorts bloqués (Âme affaiblie),
+-- montrés au bout de mes soins et jamais dans la rangée des affaiblissements.
+function Z.KnownAuraIds(name, outsideLockouts)
+	local set = {}
+	AddIds(set, name)
+	if Empty(set) then return nil end
+	if outsideLockouts and Z.ShowsLockouts() then
+		for id in pairs(Z.lockoutIds) do set[id] = nil end
+		if Empty(set) then return false end
+	end
+	return true
+end
+
+-- Numéro pris dans un lien de sort glissé dans une liste : retenu pour ce nom, comme un numéro vu hors combat
+-- Rend vrai si le numéro est nouveau pour ce nom
+function Z.RememberAuraId(name, id)
+	if type(name) ~= "string" or name == "" or type(id) ~= "number" then return end
 	local seen = Seen()
 	if type(seen[name]) ~= "table" then seen[name] = {} end
 	if seen[name][id] then return end
 	seen[name][id] = true
+	return true
+end
+
+-- Appelé par Auras.lua quand une aura est lisible (hors combat) : un numéro nouveau met les filtres à jour
+local refilterQueued -- nil, « boxes » (filtres) ou « all » (la rangée change de taille)
+function Z.LearnAuraId(name, id)
+	if not name or not id or issecret(name) or issecret(id) or not Z.HasAuraBoxes() then return end
+	if not Interesting(name) then return end
+	local listed = Z.db.importantNames[name] and Z.DebuffPlaces()
+	if not Z.RememberAuraId(name, id) then return end
+	if Z.db.importantNames[name] and Z.RefreshOptionPages then Z.RefreshOptionPages() end -- le nom n'est plus gris
 	if not refilterQueued then
-		refilterQueued = true
 		C_Timer.After(0, function()
-			refilterQueued = false
-			Z:Try("filtres des auras", Z.RefreshAuraBoxes)
+			local all = refilterQueued == "all"
+			refilterQueued = nil
+			if all then Z:Refresh() else Z:Try("filtres des auras", Z.RefreshAuraBoxes) end
 		end)
 	end
+	-- Un nom de « À mettre en avant » reconnu peut ouvrir une place dans la rangée : tout est remesuré
+	if listed and Z.DebuffPlaces() ~= listed then refilterQueued = "all" else refilterQueued = refilterQueued or "boxes" end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -217,7 +253,7 @@ end
 local function Numbers(key)
 	local db = Z.db
 	if key == "lockouts" then return db.lockoutCountdown and true or false end
-	if key == "dispellable" or key == "others" or key == "controls" then return db.debuffCountdown and true or false end
+	if key == "listedRow" or key == "dispellable" or key == "others" or key == "controls" then return db.debuffCountdown and true or false end
 	return false
 end
 
@@ -447,11 +483,20 @@ local function Marks(b)
 	return list
 end
 
+-- « Utiles » : le jeu trie comme pour ses cadres de raid si ce client sait le faire (politique de traitement des
+-- auras) ; sinon seule la durée trie
+local USEFUL_SECONDS = 300
+function Z.UsefulPolicy()
+	local changed = AuraUtil and AuraUtil.AuraUpdateChangedType
+	return (changed and changed.Debuff and CustomAuraContainerAuraProcessingPolicy
+		and CustomAuraContainerAuraProcessingPolicy.ProcessAura) and true or false
+end
+
 -- Ce que les conteneurs d'une case doivent montrer, selon les réglages et la classe jouée.
 -- Chaque entrée : conteneur, clé, filtre du jeu, filtres de candidats, nombre (groupes) ou place fixe.
 local function Plan(b)
 	local db = Z.db
-	local hots, corners, ignored, important, defensives, lockouts = Wanted()
+	local hots, corners, ignored, important, defensives, lockouts, listedIds, rowIgnored = Wanted()
 	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place et taille de la
 	-- grande icône, taille des coins, largeur des barres, taille et coin de départ des rangées (Z.AuraRows),
 	-- réglages des icônes. Un changement reconstruit les conteneurs (en combat : à la fin du combat).
@@ -491,16 +536,28 @@ local function Plan(b)
 		end
 	end
 
-	-- Ceux que je peux dissiper moi-même d'abord (filtre RAID du jeu, réglage « dispelCount »), puis tous les
-	-- autres (!RAID : le contraire exact, ni trou ni doublon ; réglage « debuffCount » : une place pour le premier à
-	-- dissiper, le reste aux autres). Le jeu sait ce que je peux dissiper, même un sort appris en montant de niveau.
+	-- Un de ma liste « À mettre en avant » d'abord, quel que soit le mode ; puis ceux que je peux dissiper
+	-- moi-même (filtre RAID du jeu, réglage « dispelCount »), puis les autres (!RAID : le contraire exact, ni trou
+	-- ni doublon ; réglage « debuffCount »). Le jeu sait ce que je peux dissiper, même un sort appris en montant de
+	-- niveau. « Utiles » : le jeu choisit comme pour ses cadres de raid (type d'aura traité « affaiblissement »),
+	-- et rien de plus de 5 minutes (Déserteur, Épuisement, fêtes).
 	local excluded = NilIfEmpty(ignored)
 	if db.showDebuffs then
-		Group("debuffs", "dispellable", Z.DISPEL_MINE, { excludeSpellIDs = excluded }, Z.DispelCount(), 1,
+		local listed, dispel, others = Z.DebuffPlaces()
+		local rowExcluded = NilIfEmpty(rowIgnored)
+		if listed > 0 and not Empty(listedIds) then
+			Group("debuffs", "listedRow", "HARMFUL", { includeSpellIDs = listedIds }, listed, 1, "LyoruneAuraIcon", "debuff")
+		end
+		Group("debuffs", "dispellable", Z.DISPEL_MINE, { excludeSpellIDs = rowExcluded }, dispel, 2,
 			"LyoruneAuraIcon", "debuff")
-		if db.debuffMode == "ALL" then
-			Group("debuffs", "others", Z.DISPEL_OTHERS, { excludeSpellIDs = excluded }, db.debuffCount - 1, 2,
-				"LyoruneAuraIcon", "debuff")
+		if others > 0 then
+			local candidates = { excludeSpellIDs = rowExcluded }
+			if db.debuffMode == "USEFUL" then
+				candidates.maxDuration = USEFUL_SECONDS
+				plan.useful = Z.UsefulPolicy() -- le conteneur reçoit alors la politique du jeu (Build)
+				if plan.useful then candidates.processedAuraType = AuraUtil.AuraUpdateChangedType.Debuff end
+			end
+			Group("debuffs", "others", Z.DISPEL_OTHERS, candidates, others, 3, "LyoruneAuraIcon", "debuff")
 		end
 	end
 	-- Gros défensifs de tout lanceur, et contrôle subi : le jeu les reconnaît lui-même, même en combat
@@ -646,7 +703,7 @@ local function Place(b)
 	for _, button in ipairs(b.boxButtons.hots or {}) do
 		if Open(button) then StyleIcon(button, true, rows.hots.size) end
 	end
-	for key, row in pairs({ dispellable = rows.debuffs, others = rows.debuffs, defensives = rows.defensives,
+	for key, row in pairs({ listedRow = rows.debuffs, dispellable = rows.debuffs, others = rows.debuffs, defensives = rows.defensives,
 		controls = rows.controls, lockouts = rows.hots }) do
 		for _, button in ipairs(b.boxButtons[key] or {}) do
 			if Open(button) then StyleIcon(button, false, row.size, Numbers(key)) end
@@ -706,6 +763,10 @@ local function Build(b, plan)
 	boxes.drink = NewBox(b, 1)
 	boxes.slots = NewBox(b, 4) -- au-dessus des icônes, sous les auras privées
 	boxes.buffs = NewBox(b, 2) -- au-dessus des repères gris (b.over + 1)
+	if plan.useful then -- « Utiles » : le jeu marque chaque aura comme pour ses cadres de raid
+		Call(boxes.debuffs, "SetAuraProcessingPolicy", CustomAuraContainerAuraProcessingPolicy.ProcessAura,
+			{ displayOnlyDispellableDebuffs = false })
+	end
 	for _, key in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "drink", "slots", "buffs" }) do
 		if not boxes[key] then error("création refusée") end
 	end
