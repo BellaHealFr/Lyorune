@@ -62,6 +62,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 31 | 1.45.0 | Les amis de Lyorune : chiffres du projet, carnet de soigneur, mot de l'auteur, mur de remerciements | Publiée (v1.45.0) |
 | **32** | **1.46.0** | **Totems du chaman sur les cases, icône de classe (idées en réserve d'avant le plan correctif)** | **À faire (prochaine)** |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire |
+| 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
+| 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -1132,6 +1134,30 @@ auras laissées par les totems sur les joueurs, secret ou non en combat).
 - [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
 - [ ] Bilan de la soirée : carnet de la session ou du donjon (soins, résurrections, buffs), à côté du carnet total
   de la 1.45.0 (Tally.lua) ; moment et forme à décider avec l'auteur.
+
+## Étape 34 : canal des soigneurs, en français et en anglais
+Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33 (son choix). Idée : un canal écrit réservé
+aux soigneurs et aux joueurs de Lyorune, un en français, un en anglais, pour parler de leur jeu, de leurs
+difficultés ou de l'addon.
+- [ ] 34 a, recherche (demande de l'auteur) : télécharger les addons qui mettent en place un canal de discussion
+  (dans `essais/`, exclu de git, rien repris) et les analyser ; regarder aussi le dossier d'addons installés.
+  Questions à trancher avec l'auteur : canal du jeu personnalisé (rejoint par l'addon, nom et langue choisis) ou
+  messages entre addons affichés dans une fenêtre à Lyorune ; ce que Forever permet (canaux personnalisés,
+  restrictions de la 12.x : messages secrets ou bloqués en donjon, en combat de boss et en match JcJ, déjà vus pour
+  les messages entre addons) ; interrupteur, éteint ou allumé au départ ; modération (canal public : un
+  propriétaire, signalement, ignorer) ; jamais de message envoyé sans action du joueur.
+- [ ] 34 b, codage selon la décision de l'auteur.
+
+## Étape 35 : échange de builds de talents, avec vote
+Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33. Idée : les soigneurs s'échangent leurs
+builds de talents et votent pour les meilleurs.
+- [ ] 35 a, recherche (demande de l'auteur) : télécharger les addons qui partagent des builds ou des talents
+  (dans `essais/`, rien repris) et les analyser. Questions à trancher avec l'auteur : forme des talents sur
+  Forever (arbres de l'époque ou système récent, code d'export du jeu ou non) ; un addon n'a pas internet, donc
+  partage et votes passent par les messages entre addons (joueurs en ligne seulement, bloqués en combat de boss et
+  en match JcJ) ou par le canal de l'étape 34 : où garder les builds et les votes, comment éviter les votes en
+  double ; lien possible avec la page « Les amis de Lyorune ».
+- [ ] 35 b, codage selon la décision de l'auteur.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
