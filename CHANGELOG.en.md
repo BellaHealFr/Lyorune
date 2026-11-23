@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.44.0] - 2026-11-23
+
+### Added
+
+- PvP match: out of combat during a match, a cell's tooltip says in one line that the game hides buffs and blocks messages between addons.
+
+### Improved
+
+- Share my cooldowns is off at first: turn it on if you want (Profiles and sharing chapter). It turns off once for those who had it on by default since 1.42.1.
+- No more "Arena" profile or mention of arenas: WoW Forever has no PvP arena. Automatic profiles keep group size and battleground.
+- Help for sync, "Who resurrects whom" and assignments: the game blocks messages between addons during a boss fight or a PvP match.
+
 ## [1.43.1] - 2026-11-23
 
 ### Added
@@ -839,6 +851,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0
 [1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1
 [1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0
 [1.42.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.0...v1.42.1

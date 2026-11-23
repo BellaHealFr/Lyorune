@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.44.0", date = "2026-11-23",
+		added = {
+			"Match JcJ : hors combat pendant un match, l'infobulle d'une case dit en une ligne que le jeu cache les buffs et bloque les messages entre addons.",
+		},
+		improved = {
+			"Partager mes recharges est éteint au départ : à vous de l'allumer (chapitre Profils et partage). Il s'éteint une fois pour ceux qui l'avaient eu allumé d'office depuis la 1.42.1.",
+			"Plus de profil « Arène » ni de mention de l'arène : WoW Forever n'a pas d'arène JcJ. Les profils automatiques gardent la taille du groupe et le champ de bataille.",
+			"Aides de la synchronisation, de « Qui relève qui » et de la répartition : le jeu bloque les messages entre addons pendant un combat de boss ou un match JcJ.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.43.1", date = "2026-11-23",
 		added = {
 			"Affaiblissements affichés : nouveau choix « Utiles », ceux que le jeu montre sur ses propres cadres de raid, sans ceux de plus de 5 minutes (Déserteur, Épuisement), même en combat.",

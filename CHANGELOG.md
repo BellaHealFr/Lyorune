@@ -6,6 +6,18 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.44.0] - 2026-11-23
+
+### Ajouté
+
+- Match JcJ : hors combat pendant un match, l'infobulle d'une case dit en une ligne que le jeu cache les buffs et bloque les messages entre addons.
+
+### Amélioré
+
+- Partager mes recharges est éteint au départ : à vous de l'allumer (chapitre Profils et partage). Il s'éteint une fois pour ceux qui l'avaient eu allumé d'office depuis la 1.42.1.
+- Plus de profil « Arène » ni de mention de l'arène : WoW Forever n'a pas d'arène JcJ. Les profils automatiques gardent la taille du groupe et le champ de bataille.
+- Aides de la synchronisation, de « Qui relève qui » et de la répartition : le jeu bloque les messages entre addons pendant un combat de boss ou un match JcJ.
+
 ## [1.43.1] - 2026-11-23
 
 ### Ajouté
@@ -839,6 +851,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.44.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.1...v1.44.0
 [1.43.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.43.0...v1.43.1
 [1.43.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.1...v1.43.0
 [1.42.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.42.0...v1.42.1
