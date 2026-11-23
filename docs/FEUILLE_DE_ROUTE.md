@@ -61,7 +61,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 30 | 1.44.1 | Correction C15 : buffs manquants en champ de bataille (hors combat avant le match, après une mort) | Publiée (v1.44.1), confirmée en jeu |
 | 31 | 1.45.0 | Les amis de Lyorune : chiffres du projet, carnet de soigneur, mot de l'auteur, mur de remerciements | Publiée (v1.45.0) |
 | 32 | 1.46.0 | Totems du chaman sous les cadres, icône de classe (idées en réserve d'avant le plan correctif) | Publiée (v1.46.0) |
-| **32 a** | **1.46.1** | **Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid** | **Corrigée, essai en jeu attendu** |
+| 32 a | 1.46.1 | Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid ; aussi C23 (journal), C24 (chef), icône des DPS | Publiée (24 novembre 2026) |
 | 32 b | à fixer | Correction C18 : cibler un joueur ou soi-même | À faire |
 | 32 c | à fixer | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | À faire |
 | 32 d | à fixer | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | À faire |
@@ -1159,7 +1159,7 @@ session. Méthode demandée par le joueur, pour chaque étape : chercher les add
 marchent sur WoW Forever (HealBot, VuhDo, Grid2, Clique, Cell, oUF d'ElvUI, PallyPower, etc.), les télécharger si
 besoin dans `essais/`, comparer avec Lyorune, présenter à l'auteur la cause et la correction proposée, puis
 corriger à notre façon, sans rien copier, et nommer les addons de référence dans la fiche.
-- [ ] **32 a (1.46.1), C17, critique** : interface qui gèle et cases perdues quand le groupe change (JcJ, raid
+- [x] **32 a (1.46.1), C17, critique** (publiée le 24 novembre 2026, avec C23, C24 et l'icône des DPS, C25) : interface qui gèle et cases perdues quand le groupe change (JcJ, raid
   de 20 à 40, donjon). Causes probables (lecture du code) : les en-têtes de groupe du jeu replacent toutes leurs
   cases à chaque attribut changé ; `ApplyLayout` (Frames.lua) et `PushHeaders` (Clicks.lua) en posent des
   dizaines d'affilée sans `_ignore` (ElvUI le pose) ; `ApplyLayout` vide d'abord la position de toutes les cases,
