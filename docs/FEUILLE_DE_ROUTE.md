@@ -1159,14 +1159,41 @@ session. Méthode demandée par le joueur, pour chaque étape : chercher les add
 marchent sur WoW Forever (HealBot, VuhDo, Grid2, Clique, Cell, oUF d'ElvUI, PallyPower, etc.), les télécharger si
 besoin dans `essais/`, comparer avec Lyorune, présenter à l'auteur la cause et la correction proposée, puis
 corriger à notre façon, sans rien copier, et nommer les addons de référence dans la fiche.
-- [ ] 32 a (1.46.1), C17, **critique** : interface qui gèle et cases perdues quand le groupe change (JcJ, raid de
-  20 à 40, donjon). Regrouper les mises à jour de groupe, rien sur les cadres sécurisés en combat (attente jusqu'à
-  la fin du combat), cases qui retrouvent leur place, essai hors jeu à 40 joueurs avec mesure du temps.
-- [ ] 32 b, C18 : cibler un joueur ou soi-même avec le raccourci de l'addon.
-- [ ] 32 c, C20, C21, C22 : buff presque fini reproposé (seuil en secondes, 75 s voulues, un seul réglage), même
-  affichage des buffs en JcE et en JcJ, buff perdu qui revient en gris (forme à décider avec l'auteur, interrupteur).
-- [ ] 32 d, C19 : version de groupe en priorité à partir du seuil de joueurs (`buffGroupAt` existe déjà : trouver
-  pourquoi le joueur ne le voit pas, ne compter que les joueurs touchés par le sort de groupe).
+- [ ] **32 a (1.46.1), C17, critique** : interface qui gèle et cases perdues quand le groupe change (JcJ, raid
+  de 20 à 40, donjon). Causes probables (lecture du code) : les en-têtes de groupe du jeu replacent toutes leurs
+  cases à chaque attribut changé ; `ApplyLayout` (Frames.lua) et `PushHeaders` (Clicks.lua) en posent des
+  dizaines d'affilée sans `_ignore` (ElvUI le pose) ; `ApplyLayout` vide d'abord la position de toutes les cases,
+  qui restent perdues si la suite s'arrête ; changement de profil automatique et réduction des cases relancent tout
+  quand le palier du groupe change ; une dizaine d'écouteurs de `GROUP_ROSTER_UPDATE` sans regroupement.
+  - [ ] Recherche : changement de groupe dans ElvUI et oUF (installés), VuhDo, HealBot (installés), Grid2 et Cell
+    (à télécharger dans `essais/`, vérifier qu'ils marchent sur Forever).
+  - [ ] Présenter à l'auteur la cause et la correction (fiche C17), accord avant de coder.
+  - [ ] `_ignore` pendant toute configuration d'un en-tête, un seul replacement à la fin ; plus de position vidée
+    à la main ; `ApplyLayout` sous `Z:Try`.
+  - [ ] Un seul écouteur de `GROUP_ROSTER_UPDATE`, rafale regroupée, les autres fichiers prévenus une fois.
+  - [ ] Rien de sécurisé en combat (attente jusqu'à la fin du combat, déjà `Z:Safe`), profil et réduction des cases
+    une seule fois par rafale.
+  - [ ] Test hors jeu : raid de 40 qui change 20 fois de composition (replacements comptés, cases toujours
+    placées, temps mesuré) ; essai en jeu en champ de bataille et en raid.
+- [ ] **32 b, C18** : cibler un joueur ou soi-même. Le clic « Cibler » pose bien l'action du jeu ; attendre les
+  réponses du joueur (touche ou clic, quelle case, combat ou non, autre addon de clic), comparer avec Clique et
+  VuhDo, revérifier « Lancer le sort dès l'appui » (C11). Si le joueur veut des touches sans souris, le jeu les a
+  déjà (« Cibler soi-même », « Cibler le membre du groupe 1 »...) : le dire dans le guide plutôt que les refaire.
+- [ ] **32 c, C20, C21, C22** : buffs.
+  - [ ] C20 : heure de fin secrète (donjon) = la mémoire de mes sorts décide, au lieu de « jamais » ; seuil en
+    secondes (valeur de départ à décider, 75 s demandées), un seul réglage, migration des minutes ; plafond du quart
+    à décider avec l'auteur.
+  - [ ] C21 : un seul fonctionnement sur la case en JcE et en JcJ : tous les buffs manquants, pas seulement le
+    premier (Auras.lua, `b.missingBuff`), en s'appuyant sur ce que fait déjà le chemin des conteneurs.
+  - [ ] C22 : rangée de la case, buff posé qui disparaît, buff perdu en gris ; forme et interrupteur décidés avec
+    l'auteur ; place dans les quatre formes de case et dans l'éditeur de placement.
+  - [ ] Recherche : HealKit, PallyPower, VuhDo, HealBot (installés), plus un addon de suivi des buffs.
+- [ ] **32 d, C19** : version de groupe en priorité. Déjà dans le bandeau (`Z.BuffRows`, `buffGroupAt`), pas
+  sur la case ; ne compter que les joueurs que le sort de groupe touche sur Forever (groupe, portée : vérifier avec
+  HealKit, PallyPower, VuhDo) ; réglage plus facile à trouver (aujourd'hui dans les réglages fins).
+- **Questions en attente pour le joueur** (par l'auteur) : sa version de Lyorune ; ses fichiers
+  `Logs\General.log` et `SavedVariables\Lyorune.lua` ; pour C17, profil automatique allumé ou non, disposition
+  (groupes, rôles, grille) ; pour C18, touche ou clic, quelle case, combat ou non, autre addon de clic.
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
 - [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
