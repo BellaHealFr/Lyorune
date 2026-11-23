@@ -3,6 +3,7 @@
 -- Fichier écrit par outils/publier.py à chaque publication : un addon n'a pas accès à internet, ces chiffres
 -- sont donc ceux du jour où la version installée a été publiée. Ne pas le modifier à la main : les noms du mur
 -- de remerciements se rangent dans outils/amis.txt (un par ligne, seulement des joueurs d'accord).
+--   names      : { name, class (PRIEST... : nom anglais du jeu, ou vide), mode (« Soins, JcJ », ou vide) }
 --   date       : jour où les chiffres ont été lus
 --   github     : téléchargements des archives publiées sur GitHub
 --   curseforge : total CurseForge (lu par cfwidget, sinon demandé à l'auteur)
@@ -17,6 +18,6 @@ Z.about = {
 	curseforge = 255,
 	discord = 10,
 	names = {
-		"Elesyio",
+		{ name = "Elesyio", class = "PRIEST", mode = "Soins, JcJ" },
 	},
 }

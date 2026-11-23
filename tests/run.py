@@ -9520,9 +9520,11 @@ step("1.45.0 : Les amis de Lyorune (chiffres, carnet, mot de l'auteur, mur de re
     assert(Z.Tally().heals == 0 and notebook.tallyRows.heals:GetText() == "0", "carnet remis a zero")
     wall:Update()
     assert(wall.thanks:GetText() == "Votre nom ici ?", "mur vide")
-    Z.about.names = { "Joueur 1", "Joueur 2" } -- (noms factices du test, jamais dans l'addon)
+    Z.about.names = { "Joueur 1", { name = "Joueur 2", class = "DRUID", mode = "Soins, JcJ" } } -- (noms factices du test)
     wall:Update()
-    assert(wall.thanks:GetText():find("Joueur 1", 1, true) and wall.thanks:GetText():find("Joueur 2", 1, true), "mur des noms")
+    local text = wall.thanks:GetText()
+    assert(text:find("Joueur 1", 1, true) and text:find("Joueur 2", 1, true), "mur des noms")
+    assert(text:find("|cff%x%x%x%x%x%xJoueur 2|r") and text:find("Druide, Soins, JcJ", 1, true), "classe et mode : " .. text)
     -- interrupteur du carnet : la page ouverte le dit aussitot
     Z.db.notebook = false Z:RefreshAlerts()
     assert(notebook.since:GetText():find("Carnet éteint", 1, true), "carnet eteint : page pas a jour")

@@ -123,6 +123,7 @@ ABOUT_HEAD = """-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LI
 -- Fichier écrit par outils/publier.py à chaque publication : un addon n'a pas accès à internet, ces chiffres
 -- sont donc ceux du jour où la version installée a été publiée. Ne pas le modifier à la main : les noms du mur
 -- de remerciements se rangent dans outils/amis.txt (un par ligne, seulement des joueurs d'accord).
+--   names      : { name, class (PRIEST... : nom anglais du jeu, ou vide), mode (« Soins, JcJ », ou vide) }
 --   date       : jour où les chiffres ont été lus
 --   github     : téléchargements des archives publiées sur GitHub
 --   curseforge : total CurseForge (lu par cfwidget, sinon demandé à l'auteur)
@@ -153,12 +154,28 @@ def curseforge_downloads():
     return int(json.load(urllib.request.urlopen(request, timeout=20))['downloads']['total'])
 
 
+CLASSES = {'guerrier': 'WARRIOR', 'voleur': 'ROGUE', 'chasseur': 'HUNTER', 'paladin': 'PALADIN', 'chaman': 'SHAMAN',
+           'druide': 'DRUID', 'prêtre': 'PRIEST', 'pretre': 'PRIEST', 'mage': 'MAGE', 'démoniste': 'WARLOCK',
+           'demoniste': 'WARLOCK'}
+
+
 def thank_names():
+    """Lignes de outils/amis.txt : « Nom ; Classe ; Mode de jeu » (classe et mode facultatifs) -> liste de dict."""
     path = os.path.join(ROOT, 'outils', 'amis.txt')
     if not os.path.exists(path):
         return []
-    names = [line.strip() for line in io.open(path, encoding='utf-8')]
-    return [name for name in names if name and not name.startswith('#')]
+    friends = []
+    for line in io.open(path, encoding='utf-8'):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = [part.strip() for part in line.split(';')] + ['', '']
+        name, classe, mode = parts[0], parts[1], parts[2]
+        token = CLASSES.get(classe.lower(), classe.upper()) if classe else ''
+        if token and token not in CLASSES.values():
+            sys.exit('outils/amis.txt : classe inconnue pour %s : %r (attendu : %s)' % (name, classe, ', '.join(sorted(set(CLASSES) - {'pretre', 'demoniste'}))))
+        friends.append({'name': name, 'class': token, 'mode': mode})
+    return friends
 
 
 def write_about(curseforge=None):
@@ -189,7 +206,8 @@ def write_about(curseforge=None):
         curseforge = int(typed) if typed.isdigit() else None
     numbers['curseforge'] = old_about('curseforge') if curseforge is None else curseforge
     noms = thank_names()
-    names = ''.join('\t\t%s,\n' % lua_string(name) for name in noms)
+    names = ''.join('\t\t{ name = %s, class = %s, mode = %s },\n' % (lua_string(f['name']), lua_string(f['class']), lua_string(f['mode']))
+                    for f in noms)
     write('About.lua', ABOUT_HEAD + '\nZ.about = {\n\tdate = "%s",\n\tgithub = %d,\n\tcurseforge = %d,\n\tdiscord = %d,\n\tnames = {\n%s\t},\n}\n'
           % (datetime.date.today().isoformat(), numbers['github'], numbers['curseforge'], numbers['discord'], names))
     print('About.lua : %d téléchargements GitHub, %d CurseForge, %d sur le Discord, %d nom(s) de remerciement.'

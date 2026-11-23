@@ -2476,6 +2476,24 @@ local function AuthorWord(page, width)
 	return box
 end
 
+-- Un ami du mur : son nom à la couleur de sa classe, puis sa classe et son mode de jeu (traduits mot par mot)
+local function FriendLine(friend)
+	if type(friend) == "string" then return friend end
+	local text = friend.name or ""
+	if friend.class and friend.class ~= "" then
+		local r, g, b = Z.ClassColor(friend.class)
+		text = ("|cff%02x%02x%02x%s|r"):format(math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5), text)
+	end
+	local about = {}
+	if Z.blessingSlotNames[friend.class or ""] then about[1] = L[Z.blessingSlotNames[friend.class]] end
+	for word in tostring(friend.mode or ""):gmatch("[^,]+") do
+		word = word:match("^%s*(.-)%s*$")
+		if word ~= "" then about[#about + 1] = L[word] end
+	end
+	if #about > 0 then text = text .. "  |cff" .. UI.Hex("dim") .. table.concat(about, ", ") .. "|r" end
+	return text
+end
+
 -- Mur de remerciements : les noms donnés par l'auteur (About.lua), sinon une invitation
 local function ThanksWall(page, width)
 	local box = CreateFrame("Frame", nil, page)
@@ -2492,8 +2510,9 @@ local function ThanksWall(page, width)
 	box.how:SetSpacing(3)
 	box.how:SetText(L["Ce mur remercie les joueurs qui font grandir Lyorune : en proposant des améliorations, en signalant des bugs régulièrement pour le rendre le plus parfait possible, ou en le faisant connaître autour d'eux. Vous en êtes ? Dites-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur."])
 	box.Update = function(self)
-		local names = Z.about and Z.about.names or {}
-		self.thanks:SetText(#names > 0 and table.concat(names, "   ·   ") or L["Votre nom ici ?"])
+		local lines = {}
+		for i, friend in ipairs(Z.about and Z.about.names or {}) do lines[i] = FriendLine(friend) end
+		self.thanks:SetText(#lines > 0 and table.concat(lines, "\n") or L["Votre nom ici ?"])
 		Fit(self, math.ceil(self.thanks:GetStringHeight() + self.how:GetStringHeight()) + 14)
 	end
 	box:Update()
