@@ -1,6 +1,6 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
 -- Lyorune - GroupCooldowns.lua : recharges du groupe (réglages « groupCooldowns », éteint au départ, et
--- « cooldownShare », allumé : vos alliés qui suivent voient vos sorts sans rien faire).
+-- « cooldownShare », éteint au départ : allumé, vos alliés qui suivent voient vos sorts sans rien faire).
 -- Le jeu cache les sorts lancés par les autres joueurs et ferme le journal de combat : seuls les joueurs qui ont
 -- Lyorune se suivent. Chacun annonce ses gros sorts de Data.lua (Z.groupCooldowns) : « lancé », puis « prêt »
 -- quand le jeu dit que la recharge est finie (isActive, jamais secret), et son état complet en rejoignant un

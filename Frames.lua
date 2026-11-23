@@ -589,7 +589,8 @@ local function OnEnter(b)
 	local clicks = db.clickTooltip and Z:ClickSummary()
 	if clicks and #clicks == 0 then clicks = nil end
 	local healers = Z.AssignHealers(b.unit) -- répartition reçue du chef : le soigneur prévu pour ce joueur
-	if not (db.showTooltip or clicks or healers) then return end
+	local match = Z.InPvPMatch() -- match JcJ : le dire, une ligne (1.44.0)
+	if not (db.showTooltip or clicks or healers or match) then return end
 	GameTooltip_SetDefaultAnchor(GameTooltip, b)
 	if db.showTooltip then
 		GameTooltip:SetUnit(b.unit)
@@ -598,6 +599,9 @@ local function OnEnter(b)
 	end
 	if healers then
 		GameTooltip:AddLine(L["Soigneur prévu : %s"]:format(table.concat(healers, ", ")), UI.gold[1], UI.gold[2], UI.gold[3])
+	end
+	if match then
+		GameTooltip:AddLine(L["Match JcJ : le jeu cache les buffs et bloque les messages entre addons."], 1, 0.82, 0.3, true)
 	end
 	if clicks then
 		GameTooltip:AddLine(" ")

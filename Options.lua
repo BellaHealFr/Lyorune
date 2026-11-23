@@ -868,9 +868,9 @@ local function BuffWatchList(page, width)
 	box:SetScript("OnShow", box.Update)
 	box:Update()
 	Z.buffWatchBox = box
-	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille et l'arène (JcJ)."]
+	Register(page, L["Mes buffs"], box, L["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille (JcJ)."]
 		.. " " .. L["La version simple et la version de groupe se cochent séparément."]
-		.. " " .. L["En champ de bataille et en arène, le jeu cache les buffs : Lyorune retient ceux que vous lancez (/lyorune buffs)."]
+		.. " " .. L["En champ de bataille, le jeu cache les buffs : Lyorune retient ceux que vous lancez (/lyorune buffs)."]
 		.. " " .. L["Un buff à poser sur une seule personne se règle juste en dessous : le tank, vous, ou un joueur choisi (son nom, ou votre cible)."])
 	return box
 end
@@ -1054,7 +1054,7 @@ local NewRow        -- une ligne de raccourci de plus (définie plus bas)
 -- Bulle de la situation d'une sous-ligne de variante
 local VARIANT_TIPS = {
 	enemy = "Sur une case qui montre un ennemi (Cible, Focalisation, allié sous Contrôle mental), ce raccourci lance ceci. Le jeu choisit au moment du clic, en combat aussi.",
-	pvp = "En champ de bataille et en arène, ce raccourci lance ceci. Posé à l'entrée du lieu, retiré à la sortie.",
+	pvp = "En champ de bataille, ce raccourci lance ceci. Posé à l'entrée du lieu, retiré à la sortie.",
 	tank = "Sur un tank, ce raccourci lance ceci (par exemple le rang le plus haut, et un rang économe sur les autres). Toujours juste dans le cadre « Tanks » et les cadres par rôle, même en combat ; ailleurs, posé hors combat selon le rôle de chacun.",
 	ooc = "Hors combat, ce raccourci lance ce sort ; en combat, le sort de la ligne du dessus. Le jeu choisit au moment du clic.",
 }
@@ -1570,7 +1570,7 @@ function NewRow(i)
 	end)
 	row.add:SetPoint("RIGHT", row.clear, "LEFT", -2, 0)
 	row.add.label:SetJustifyH("CENTER")
-	row.add.tip = L["Ajouter une variante : un autre sort sur un ennemi, en champ de bataille et en arène, ou hors combat."]
+	row.add.tip = L["Ajouter une variante : un autre sort sur un ennemi, en champ de bataille ou hors combat."]
 	-- Bijou 1 (emplacement 13) et bijou 2 (emplacement 14), utilisés juste avant le sort : deux carrés à la hauteur
 	-- de la ligne, posés de droite à gauche devant « x » ; bordure d'or quand le bijou est choisi
 	row.trinkets = {}
@@ -1932,9 +1932,9 @@ local function ProfileBox(page, width)
 	return box
 end
 
--- Profils automatiques : une ligne par situation (taille du groupe, champ de bataille, arène), une colonne par
+-- Profils automatiques : une ligne par situation (taille du groupe, champ de bataille), une colonne par
 -- spécialisation. Clic : profil suivant, clic droit : précédent.
-local SIZE_LABELS = { ["5"] = "Seul, 5", ["10"] = "10 joueurs", ["25"] = "25 joueurs", ["40"] = "40 joueurs", BG = "Champ de bataille", ARENA = "Arène" }
+local SIZE_LABELS = { ["5"] = "Seul, 5", ["10"] = "10 joueurs", ["25"] = "25 joueurs", ["40"] = "40 joueurs", BG = "Champ de bataille" }
 
 local function ProfileGrid(page, width)
 	local grid = CreateFrame("Frame", nil, page)
@@ -1975,7 +1975,7 @@ local function ProfileGrid(page, width)
 			cell.label:SetJustifyH("CENTER")
 			cell.Update = function(self)
 				local wanted = Z:ProfileRules(group)[size]
-				local pvp = size == "BG" or size == "ARENA"
+				local pvp = size == "BG"
 				self.label:SetText(wanted or (group == 2 and L["comme 1"] or pvp and L["selon la taille"] or "-"))
 				if wanted then
 					self.tip = wanted
@@ -2527,7 +2527,7 @@ local function Chapters()
 			{ "Buffs", {
 				{ "check", "missingBuffs", "Buff manquant sur la case", desc = "Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs." },
 				{ "check", "combatBuffs", "En combat", "En combat (et contre un boss), le jeu cache les buffs : il dessine lui-même vos buffs en bas à gauche des cases, en couleur quand le buff est posé (rien à faire), gris à bord rouge quand il manque. Un clic sur la case le relance. Rien n'apparaît sur un joueur qu'aucun de vos buffs ne concerne.", desc = "Couleur : posé, rien à faire. Gris à bord rouge : il manque.", dep = { "missingBuffs", true } },
-				{ "check", "pvpBuffs", "En champ de bataille et en arène", "Même chose pendant tout le match, en combat ou non. Éteint : en champ de bataille et en arène, Lyorune montre seulement les buffs qu'il a retenus avant le match.", desc = "Vos buffs dessinés par le jeu pendant tout le match.", dep = { "missingBuffs", true } },
+				{ "check", "pvpBuffs", "En champ de bataille", "Même chose pendant tout le match, en combat ou non. Éteint : en champ de bataille, Lyorune montre seulement les buffs qu'il a retenus avant le match.", desc = "Vos buffs dessinés par le jeu pendant tout le match.", dep = { "missingBuffs", true } },
 				{ "check", "buffPanel", "Buffs manquants à poser", "Hors combat, chaque buff qui manque à un joueur est proposé : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour son porteur. Tout disparaît en combat et quand tout est posé. Une touche peut lancer le premier : raccourcis du jeu, AddOns, Lyorune." },
 				{ "check", "combatKey", "En combat, la touche relance mon buff unique", "En combat, la touche du prochain buff manquant relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, choisi dans Mes buffs. Préparée juste avant le combat, par le nom du joueur : elle ne part jamais sur quelqu'un d'autre.", fine = true, dep = { "buffPanel", true } },
 				{ "seg", "buffPlace", "Emplacement des buffs manquants", nil, "Avec les cadres : un bandeau fin sous le dernier groupe (le joueur, puis « +N autres » ou le sort), qui passe au buff suivant après chaque sort. Où vous voulez : une petite fenêtre à déplacer." },
@@ -2614,7 +2614,7 @@ local function Chapters()
 				{ "custom", ProfileBox },
 			} },
 			{ "Profils automatiques", {
-				{ "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe, le champ de bataille ou l'arène, et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." },
+				{ "check", "autoProfile", "Changer de profil tout seul", "Selon la taille du groupe, le champ de bataille et votre spécialisation, sans /reload. En combat, le changement attend la fin du combat." },
 				{ "custom", ProfileGrid },
 			} },
 			{ "Profils prêts à l'emploi", {
@@ -2628,10 +2628,10 @@ local function Chapters()
 				{ "custom", ImportBox },
 			} },
 			{ "Entre joueurs", {
-				{ "check", "syncEnabled", "Synchronisation entre joueurs", "Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu." },
-				{ "check", "resSync", "Montrer qui relève qui", "Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss, le jeu bloque ces messages.", dep = { "syncEnabled", true } },
+				{ "check", "syncEnabled", "Synchronisation entre joueurs", "Messages invisibles entre joueurs qui ont Lyorune. Décochée : rien ne part, rien n'est lu. Pendant un combat de boss ou un match JcJ, le jeu les bloque : rien ne part." },
+				{ "check", "resSync", "Montrer qui relève qui", "Quand un soigneur commence une résurrection, son nom remplace « Mort » sur la case, chez tous ceux qui ont Lyorune. Pendant un combat de boss ou un match JcJ, le jeu bloque ces messages.", dep = { "syncEnabled", true } },
 				{ "check", "acceptConfigs", "Accepter qu'on me propose une configuration", "Seulement d'un membre du groupe, de la guilde ou d'un ami. Rien n'est appliqué sans votre accord : une fenêtre vous demande.", fine = true, dep = { "syncEnabled", true } },
-				{ "check", "assignAccept", "Appliquer la répartition du chef", "Le chef ou un assistant envoie qui soigne quoi et qui buffe quoi : vos repères et vos buffs suivent tout de suite, avec une ligne dans la discussion. Votre propre choix revient quand vous quittez le groupe. Décochée : les répartitions reçues sont ignorées.", dep = { "syncEnabled", true } },
+				{ "check", "assignAccept", "Appliquer la répartition du chef", "Le chef ou un assistant envoie qui soigne quoi et qui buffe quoi : vos repères et vos buffs suivent tout de suite, avec une ligne dans la discussion. Votre propre choix revient quand vous quittez le groupe. Décochée : les répartitions reçues sont ignorées. Pendant un combat de boss ou un match JcJ, le jeu bloque les messages : la répartition part avant.", dep = { "syncEnabled", true } },
 				{ "check", "blessingSync", "Entente entre paladins", "Les paladins qui ont Lyorune s'annoncent leurs bénédictions avant le combat : aucun ne pose celle d'un autre sur le même joueur. Sans cette case, une bénédiction déjà posée par un autre paladin est tout de même respectée.", dep = { "syncEnabled", true } },
 				{ "check", "cooldownShare", "Partager mes recharges", "Vos gros sorts (résurrection en combat, mana, protections, gros soins de groupe) sont annoncés au groupe quand vous les lancez et quand ils sont prêts : vos alliés qui suivent les recharges du groupe les voient sans que vous ayez rien à faire. Aucun message régulier.", dep = { "syncEnabled", true } },
 				{ "check", "versionNotice", "Me prévenir si une version plus récente existe", fine = true, dep = { "syncEnabled", true } },

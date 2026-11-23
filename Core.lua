@@ -186,7 +186,7 @@ Z.defaults = {
 	acceptConfigs = true,      -- accepter qu'un joueur me propose sa configuration
 	resSync = true,            -- qui relève qui : le nom du soigneur qui relève s'affiche sur la case du mort
 	assignAccept = true,       -- appliquer la répartition envoyée par le chef ou un assistant (Assign.lua, BuffAssign.lua)
-	cooldownShare = true,      -- partager mes recharges : mes gros sorts annoncés au groupe, pour ceux qui les suivent
+	cooldownShare = false,     -- partager mes recharges : mes gros sorts annoncés au groupe (éteint : au joueur de choisir)
 	blessingSync = true,       -- entente entre paladins : chacun annonce ses bénédictions, aucun ne pose celle d'un autre
 	showRunes = true,          -- inscription runique animée au bas de la fenêtre d'options
 	windowTheme = "MODERN",    -- thème des fenêtres de Lyorune (pas des cases) : Moderne, Classique, MMORPG
@@ -392,12 +392,13 @@ end
 
 -- Réglages venus d'une version plus ancienne
 local function Migrate(db)
+	local last, now = db.lastVersion and Z.VersionNumber(db.lastVersion), Z.VersionNumber(Z.version)
 	if db.locked ~= nil then -- avant la 1.7.0 : une simple case « verrouiller »
 		if db.locked == true and db.lockMode == nil then db.lockMode = "LOCKED" end
 		db.locked = nil
 	end
 	-- 1.7.0 : la barre de mana passe à « Tous » par défaut, une seule fois, pour ceux qui gardaient l'ancien défaut
-	if db.lastVersion and Z.VersionNumber(db.lastVersion) < 10700 and db.manaBars == "HEALERS" then db.manaBars = "ALL" end
+	if last and last < 10700 and db.manaBars == "HEALERS" then db.manaBars = "ALL" end
 	-- Visite guidée coupée sur la carte « Placer les cadres » (/reload, déconnexion) : le déplacement des cadres que
 	-- le joueur avait choisi revient, sauf s'il en a pris un autre pendant la carte (Tutorial.lua). Champ hors de
 	-- Z.defaults : jamais partagé, jamais copié dans un profil.
@@ -408,7 +409,7 @@ local function Migrate(db)
 	-- 1.27.0 : les icônes ont une nouvelle place en Barre, Carré et Bandeau (Z.shapes, Themes.lua). Un ancien
 	-- décalage les pousserait au mauvais endroit : il repart de zéro, une seule fois, pour ces trois formes
 	-- (à la première connexion avec la 1.27.0 ou plus récente).
-	if db.lastVersion and Z.VersionNumber(db.lastVersion) < 12700 and Z.VersionNumber(Z.version) >= 12700
+	if last and last < 12700 and now >= 12700
 		and type(db.placement) == "table" then
 		local reset = { BAR = { "hots", "debuffs" }, SQUARE = { "hots", "debuffs" }, BANNER = { "hots", "debuffs", "text" } }
 		for shape, keys in pairs(reset) do
@@ -421,14 +422,26 @@ local function Migrate(db)
 	end
 	-- 1.29.1 : la règle des 5 secondes devient éteinte au départ (demande de l'auteur). La 1.29.0 l'avait allumée
 	-- pour tous sans que le joueur la choisisse : elle repart du nouveau défaut, une seule fois.
-	if db.lastVersion and Z.VersionNumber(db.lastVersion) == 12900 and Z.VersionNumber(Z.version) >= 12901 then
+	if last and last == 12900 and now >= 12901 then
 		db.fiveSecondRule = nil
 	end
 	-- 1.33.7 : un buff est proposé 2 minutes avant sa fin (demande de l'auteur). Le départ était 0 de la 1.33.0 à la
 	-- 1.33.6 : un joueur resté sur 0 passe au nouveau départ, une seule fois ; un autre choix est gardé.
-	if db.lastVersion and Z.VersionNumber(db.lastVersion) < 13307 and Z.VersionNumber(Z.version) >= 13307
+	if last and last < 13307 and now >= 13307
 		and db.buffRefresh == 0 then
 		db.buffRefresh = nil
+	end
+	-- 1.44.0 : « Partager mes recharges » devient éteint au départ (demande de l'auteur : au joueur de choisir).
+	-- Les 1.42.1 à 1.43.1 l'allumaient pour tous : il repart du nouveau défaut, une seule fois.
+	if last and last >= 14201 and last < 14400
+		and now >= 14400 then
+		db.cooldownShare = nil
+	end
+	-- 1.44.0 : plus de profil « Arène » (WoW Forever n'a pas d'arène JcJ) : ses anciennes règles s'effacent
+	if type(db.autoProfiles) == "table" then
+		for _, rules in pairs(db.autoProfiles) do
+			if type(rules) == "table" then rules.ARENA = nil end
+		end
 	end
 end
 

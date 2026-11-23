@@ -57,7 +57,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | Publiée (v1.42.1) |
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type | Publiée (v1.43.0) |
 | 28 bis | 1.43.1 | Affaiblissements : mode « Utiles », liste suivie qui dit si elle marche en combat | Publiée (v1.43.1) |
-| 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
+| 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | Fait (pas d'arène sur Forever : profil retiré) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -944,7 +944,8 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   1. **Un panneau sous les cadres**, collé comme le bandeau des buffs : « Mes recharges » en haut, « Groupe »
      dessous, rangé par sort (« Renaissance : Lyra prête, Tom 4:10 »). Trois interrupteurs : « Mes recharges » et
      « Recharges du groupe » éteints au départ, « Partager mes recharges » allumé (vos alliés qui suivent voient vos
-     sorts sans rien faire).
+     sorts sans rien faire). **1.44.0** (demande de l'auteur, 23 novembre 2026) : « Partager mes recharges »
+     éteint au départ, au joueur de choisir ; ceux venus des 1.42.1 à 1.43.1 repartent de ce défaut une fois.
   2. **Mes recharges (1.42.0)** : mes sorts de raccourcis dont la recharge dépasse la recharge globale, et mes gros
      sorts de `Data.lua` ; balayage et secondes du jeu, icône nette quand le sort est prêt (`isActive`), en combat
      aussi. Rien d'écrit par classe hors de la liste de `Data.lua`.
@@ -1025,8 +1026,18 @@ expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche e
   chaque rangée dit ce qui l'arrêterait à sa plus grande taille (`blocker` : `ROLE`, `BUFF`, `HOTS`, `DEBUFFS`),
   lu par le message de l'éditeur (`FullText`) sur deux lignes. Les barres fines comptent comme rangée (posées
   à part, rien ne les recouvre). Tests : étape 1.41.1.
-- [ ] 29 b (1.44.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
+- [x] 29 b (1.44.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
   « Arène » seulement si Forever a des arènes.
+  Fait (23 novembre 2026), choix de l'auteur (les deux recommandés) : aucune trace d'arène JcJ sur WoW Forever
+  (seul l'objet « Arena Master » de l'arène de Gurubashi, HealKit ne prévoit que des champs de bataille) : pas de
+  cadre Arène, profil « Arène » retiré (`Z.profileSizes`, `Z.SituationLabel`, Share.lua ; grille des profils,
+  Options.lua ; anciennes règles `ARENA` effacées dans `Migrate`), « arène » retiré des textes ; une arène
+  ouverte un jour compterait comme un champ de bataille (`Z.PvPKind`). Infobulle d'une case en match :
+  « Match JcJ : le jeu cache les buffs et bloque les messages entre addons. » (`Z.InPvPMatch`, Share.lua :
+  restriction `PvPMatch`, réponse secrète prise pour un match ; le panneau des buffs avait déjà sa ligne).
+  Aides de « Synchronisation entre joueurs », « Qui relève qui » et « Répartition du chef » : messages bloqués
+  pendant un boss ou un match JcJ. Aussi (demande de l'auteur) : « Partager mes recharges » éteint au départ.
+  Tests : étape 1.44.0.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.

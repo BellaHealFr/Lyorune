@@ -311,16 +311,16 @@ end
 -- annonces n'en font pas partie (Z.notInProfile, Core.lua) : ils restent les mêmes quel que soit le profil.
 -- Le profil en cours est enregistré tout seul avant d'en changer et à la déconnexion : ce que l'on règle pendant
 -- qu'il est actif lui appartient.
--- Profils automatiques : pour 5, 10, 25 et 40 joueurs, en champ de bataille et en arène (#44), le profil voulu,
--- pour chaque spécialisation. La seconde spécialisation reprend le choix de la première quand rien n'est choisi
--- pour elle ; en champ de bataille ou en arène sans choix, la règle de la taille du groupe s'applique. Le changement
+-- Profils automatiques : pour 5, 10, 25 et 40 joueurs et en champ de bataille (#44), le profil voulu, pour
+-- chaque spécialisation. La seconde spécialisation reprend le choix de la première quand rien n'est choisi
+-- pour elle ; en champ de bataille sans choix, la règle de la taille du groupe s'applique. Le changement
 -- se fait sans /reload, à la fin du combat si besoin.
 -- Copie d'une partie (#44) : les réglages d'un chapitre des options (Disposition, Apparence, Vie et portée, Mes
 -- soins, Affaiblissements, Joueurs) d'un profil vers un autre. La partie d'un réglage est le chapitre où il se règle
 -- (Z.TabOfSetting, Options.lua) : un nouveau réglage suit tout seul son chapitre.
 ----------------------------------------------------------------------------------------------------
 local MAX_PROFILES, MAX_NAME = 20, 24
-Z.profileSizes = { "5", "10", "25", "40", "BG", "ARENA" }
+Z.profileSizes = { "5", "10", "25", "40", "BG" }
 Z.profileParts = { "Disposition", "Apparence", "Vie et portée", "Mes soins", "Affaiblissements", "Joueurs" }
 
 local function InProfile(key)
@@ -453,21 +453,33 @@ function Z.GroupSize()
 	return members <= 10 and "10" or members <= 25 and "25" or "40"
 end
 
--- Combat entre joueurs : « BG » en champ de bataille, « ARENA » en arène, sinon nil
+-- Combat entre joueurs : « BG » en champ de bataille, sinon nil. WoW Forever n'a pas d'arène JcJ (1.44.0, choix
+-- de l'auteur : rien n'est promis pour elle) ; si le jeu en ouvre une, elle compte comme un champ de bataille.
 function Z.PvPKind()
 	local _, kind = IsInInstance()
-	return kind == "pvp" and "BG" or kind == "arena" and "ARENA" or nil
+	return (kind == "pvp" or kind == "arena") and "BG" or nil
 end
 
--- Où l'on est, pour les profils automatiques : le champ de bataille ou l'arène, sinon la taille du groupe
+-- Match JcJ en cours (restriction « PvPMatch » du jeu) : buffs cachés et messages entre addons bloqués tout le
+-- match, même hors combat. Réponse secrète : on la prend pour un match (le jeu cache quelque chose).
+function Z.InPvPMatch()
+	local R, types = C_RestrictedActions, Enum and Enum.AddOnRestrictionType
+	if not (R and R.IsAddOnRestrictionActive and types and types.PvPMatch) then return false end
+	local ok, active = pcall(R.IsAddOnRestrictionActive, types.PvPMatch)
+	if not ok then return false end
+	if Z.IsSecret(active) then return true end
+	return active == true
+end
+
+-- Où l'on est, pour les profils automatiques : le champ de bataille, sinon la taille du groupe
 function Z.Situation()
 	return Z.PvPKind() or Z.GroupSize()
 end
 
--- Nom lisible d'une situation : « 25 joueurs », « champ de bataille », « arène »
+-- Nom lisible d'une situation : « 25 joueurs », « champ de bataille »
 function Z.SituationLabel(size)
 	local L = Z.L
-	if size == "BG" then return L["champ de bataille"] elseif size == "ARENA" then return L["arène"] end
+	if size == "BG" then return L["champ de bataille"] end
 	return (L["%s joueurs"]):format(size)
 end
 
@@ -479,7 +491,7 @@ function Z:ProfileRules(group)
 end
 
 -- Le profil voulu maintenant, ou nil (aucun choix : on garde les réglages du moment)
--- Ordre : ma spécialisation puis la 1re, d'abord pour le champ de bataille ou l'arène, puis pour la taille du groupe.
+-- Ordre : ma spécialisation puis la 1re, d'abord pour le champ de bataille, puis pour la taille du groupe.
 function Z:WantedProfile()
 	local group, rules = Z:SpecGroup(), Z.db.autoProfiles
 	local own, first = group > 1 and rules[Z.class .. group], rules[Z.class]

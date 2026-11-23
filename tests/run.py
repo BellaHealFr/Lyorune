@@ -2480,30 +2480,33 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
   -- champ de bataille et arene
   assert(Z.Situation() == "5" and Z.PvPKind() == nil)
   INSTANCE_TYPE = "pvp" assert(Z.Situation() == "BG")
-  INSTANCE_TYPE = "arena" assert(Z.Situation() == "ARENA")
-  assert(Z.SituationLabel("ARENA") == "arène" and Z.SituationLabel("25") == "25 joueurs")
+  -- 1.44.0 : pas d'arene sur WoW Forever, une arene compterait comme un champ de bataille
+  INSTANCE_TYPE = "arena" assert(Z.Situation() == "BG" and Z.PvPKind() == "BG")
+  assert(Z.SituationLabel("BG") == "champ de bataille" and Z.SituationLabel("25") == "25 joueurs")
   INSTANCE_TYPE = "none"
   Z.db.autoProfile = true
-  Z:ProfileRules(1)["5"], Z:ProfileRules(1).ARENA = "Raid", "Arene"
+  Z:ProfileRules(1)["5"] = "Raid"
   FireEvent("PLAYER_ENTERING_WORLD")
   assert(Z.db.activeProfile == "Raid")
-  INSTANCE_TYPE = "arena" FireEvent("PLAYER_ENTERING_WORLD")
-  assert(Z.db.activeProfile == "Arene" and Z.db.shape == "BAR", "arene : son profil")
-  -- 2e specialisation sans choix pour l'arene : celui de la 1re avant la taille du groupe
-  SPEC_GROUP = 2 Z:ProfileRules(2)["5"] = "Raid" FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
-  assert(Z.db.activeProfile == "Arene", "2e specialisation : arene de la 1re")
-  SPEC_GROUP = 1 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
   -- champ de bataille sans choix : la regle de la taille du groupe
   INSTANCE_TYPE = "pvp" FireEvent("ZONE_CHANGED_NEW_AREA")
   assert(Z.db.activeProfile == "Raid", "champ de bataille sans choix : taille du groupe")
   INSTANCE_TYPE = "none" FireEvent("PLAYER_ENTERING_WORLD")
-  -- chapitre Profils et partage : 12 cases (6 situations, 2 specialisations), fenetre de copie
+  Z:ProfileRules(1).BG = "Arene"
+  INSTANCE_TYPE = "arena" FireEvent("PLAYER_ENTERING_WORLD")
+  assert(Z.db.activeProfile == "Arene" and Z.db.shape == "BAR", "champ de bataille : son profil " .. tostring(Z.db.activeProfile) .. " " .. tostring(Z.db.shape))
+  -- 2e specialisation sans choix pour le champ de bataille : celui de la 1re avant la taille du groupe
+  SPEC_GROUP = 2 Z:ProfileRules(2)["5"] = "Raid" FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  assert(Z.db.activeProfile == "Arene", "2e specialisation : champ de bataille de la 1re")
+  SPEC_GROUP = 1 FireEvent("ACTIVE_TALENT_GROUP_CHANGED")
+  INSTANCE_TYPE = "none" FireEvent("PLAYER_ENTERING_WORLD")
+  -- chapitre Profils et partage : 10 cases (5 situations, 2 specialisations), fenetre de copie
   Z:ToggleOptions("Profils et partage")
   local page = OptionPart("profileCells")
-  assert(page and #page.profileCells == 12, "cases du tableau")
-  local arena = page.profileCells[11]
-  assert(arena.size == "ARENA" and arena.group == 1 and arena.label:GetText() == "Arene", "case arene")
-  assert(page.profileCells[9].label:GetText() == "selon la taille", "champ de bataille sans choix")
+  assert(page and #page.profileCells == 10, "cases du tableau")
+  local bg = page.profileCells[9]
+  assert(bg.size == "BG" and bg.group == 1 and bg.label:GetText() == "Arene", "case champ de bataille")
+  assert(page.profileCells[10].label:GetText() == "comme 1", "2e specialisation sans choix")
   OptionPart("copyButton").copyButton:Run("OnClick", "LeftButton")
   local w = Z:ProfileCopyWindow()
   assert(w and w:IsShown(), "fenetre de copie")
@@ -7914,7 +7917,7 @@ step("1.36.0 : buffs en combat : reperes dessines par le jeu (tous les rangs, co
     FireEvent("PLAYER_REGEN_DISABLED")
     assert(key:GetAttribute("type") == nil, "interrupteur de la touche")
     FireEvent("PLAYER_REGEN_ENABLED")
-    for _, text in ipairs({ "En combat", "En champ de bataille et en arène", "En combat, la touche relance mon buff unique",
+    for _, text in ipairs({ "En combat", "En champ de bataille", "En combat, la touche relance mon buff unique",
       "Couleur : posé, rien à faire. Gris à bord rouge : il manque.", "Buff manquant sur la case" }) do
       assert(Z.translations.enUS[text], "sans traduction anglaise : " .. text)
     end
@@ -8922,7 +8925,7 @@ step("1.42.1 : recharges du groupe, partage de mes recharges, messages bloques",
   local COOL = {}
   local LOCKED = false
   local ok, err = pcall(function()
-    assert(Z.defaults.groupCooldowns == false and Z.defaults.cooldownShare == true, "departs")
+    assert(Z.defaults.groupCooldowns == false and Z.defaults.cooldownShare == false, "departs")
     assert(Z.notInProfile.groupCooldowns and Z.notInProfile.cooldownShare, "hors profil")
     for class, list in pairs(Z.groupCooldowns) do
       for _, id in ipairs(list) do
@@ -9336,6 +9339,49 @@ step("1.43.1 : mode Utiles des affaiblissements, liste a mettre en avant en tete
   Z.db.auraIds, Z.db.importantNames, Z.db.ignoredNames = old.auraIds, old.important, old.ignored
   AURAS = {}
   Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("1.44.0 : JcJ (ligne Match JcJ, pas d'arene) et partage des recharges eteint au depart", function()
+  -- partager mes recharges : eteint au depart ; remis au defaut une fois pour ceux des 1.42.1 a 1.43.1
+  assert(Z.defaults.cooldownShare == false, "partage eteint au depart")
+  local savedDB, savedChar, version = LyoruneDB, LyoruneCharDB, Z.version
+  local fine, why = pcall(function()
+    local db = { lastVersion = "1.43.1", cooldownShare = true, autoProfiles = { PRIEST = { ["5"] = "Raid", ARENA = "Arene" } } }
+    LyoruneDB = db
+    Z.version = "1.44.0" FireEvent("ADDON_LOADED", "Lyorune")
+    assert(db.cooldownShare == false, "1.43.1 : partage pas remis au defaut")
+    assert(db.autoProfiles.PRIEST.ARENA == nil and db.autoProfiles.PRIEST["5"] == "Raid", "regle Arene effacee, les autres gardees")
+    db.lastVersion, db.cooldownShare = "1.44.0", true FireEvent("ADDON_LOADED", "Lyorune")
+    assert(db.cooldownShare == true, "choix du joueur ecrase apres la 1.44.0")
+    db = { lastVersion = "1.41.0", cooldownShare = true } LyoruneDB = db FireEvent("ADDON_LOADED", "Lyorune")
+    assert(db.cooldownShare == true, "avant la 1.42.1 : le reglage n'existait pas, rien a remettre")
+  end)
+  Z.version = version
+  LyoruneDB, LyoruneCharDB = savedDB, savedChar
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(fine, why)
+  -- plus de profil Arene
+  for _, size in ipairs(Z.profileSizes) do assert(size ~= "ARENA", "profil Arene encore propose") end
+  -- match JcJ : restriction du jeu, une ligne dans l'infobulle d'une case
+  local saved, oldTypes, add = C_RestrictedActions, Enum.AddOnRestrictionType, GameTooltip.AddLine
+  local ok, err = pcall(function()
+    local active = false
+    Enum.AddOnRestrictionType = oldTypes or { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3 }
+    C_RestrictedActions = { IsAddOnRestrictionActive = function(kind) return kind == Enum.AddOnRestrictionType.PvPMatch and active end }
+    assert(Z.InPvPMatch() == false, "hors match")
+    local b = Z.buttons[1]
+    local lines = {}
+    GameTooltip.AddLine = function(_, text) lines[#lines + 1] = text end
+    b:Run("OnEnter") b:Run("OnLeave")
+    assert(not table.concat(lines, ";"):find("Match JcJ", 1, true), "ligne hors match")
+    active = true lines = {}
+    assert(Z.InPvPMatch() == true, "match")
+    b:Run("OnEnter") b:Run("OnLeave")
+    assert(table.concat(lines, ";"):find("Match JcJ", 1, true), "ligne Match JcJ absente")
+    C_RestrictedActions = nil assert(Z.InPvPMatch() == false, "fonction absente")
+  end)
+  GameTooltip.AddLine, C_RestrictedActions, Enum.AddOnRestrictionType = add, saved, oldTypes
   assert(ok, err)
 end)
 
