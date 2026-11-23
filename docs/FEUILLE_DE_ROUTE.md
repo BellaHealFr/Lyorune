@@ -1146,9 +1146,10 @@ difficultés ou de l'addon.
   restrictions de la 12.x : messages secrets ou bloqués en donjon, en combat de boss et en match JcJ, déjà vus pour
   les messages entre addons) ; interrupteur, éteint ou allumé au départ ; modération (canal public : un
   propriétaire, signalement, ignorer) ; jamais de message envoyé sans action du joueur.
-  Précision de l'auteur (23 novembre 2026) : le canal anglais est ouvert à tous, quelle que soit la langue du
-  jeu ou le pays (l'anglais se parle dans de nombreux pays) ; chaque joueur choisit librement le canal français,
-  le canal anglais ou les deux, jamais imposé par la langue du client.
+  Précisions de l'auteur (23 novembre 2026) : les deux canaux sont ouverts à tous, quelle que soit la langue du
+  jeu ou le pays : l'anglais comme le français se parlent dans de nombreux pays (France, Belgique, Suisse,
+  Canada, pays d'Afrique...). Chaque joueur choisit librement le canal français, le canal anglais ou les deux,
+  jamais imposé ni proposé d'office selon la langue du client.
 - [ ] 34 b, codage selon la décision de l'auteur.
 
 ## Étape 35 : échange de builds de talents, avec vote
