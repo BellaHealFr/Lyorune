@@ -20,7 +20,7 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 | Layout | Cell size, sorting, position, shown frames (tanks, target, pinned players...) |
 | Look | Cell shape, theme, colours, transparency, text |
 | Health and range | Incoming heals, shield, low health, mana bar, players far away or out of sight |
-| My heals | Your heals over time, the cell corners, your tracked spells, the global cooldown |
+| My heals | Your heals over time, the cell corners, your tracked spells, the global cooldown, your cooldowns, the channel line |
 | Debuffs | Dispelling, icons, important debuffs, crowd-controlled player, boss private auras |
 | Players | Role, marker, leader, big defensives, threat, missing buffs, tooltip |
 | Spells and bindings | Your spells on clicks and keys, your macros |
@@ -313,7 +313,7 @@ The macros, element placement, bug report, error log, news and performance windo
 Every element of the cell has its switch, filed according to what it shows. Nothing is mandatory. You can, for example, only show the debuffs you can dispel.
 
 - **Health and range**: incoming heals, shield and its amount (off at first), low health overlay (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
-- **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown.
+- **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown, your cooldowns, the channel line.
 - **Debuffs**: dispelling, icons, important debuffs, crowd-controlled player, boss private auras.
 - **Players**: player name, role icon, raid marker, group leader, big defensives, icon in the middle of the cell (ready check, resurrection, out of sight, summon, very far away), summon and phase, threat, missing buffs, my players (healer assignments), tooltip.
 
@@ -334,7 +334,9 @@ Lyorune adapts to your class (priest, druid, paladin or shaman): it tracks your 
 - **Cell corners**: place one of your spells in each corner. It becomes a small coloured square (green, blue, yellow, pink) that drains over time, and leaves the icon row. At a glance you see who lacks your Renew or Rejuvenation. Each class keeps its own corners: your druid and your priest never mix. The chosen corners also show on the preview cell and in test mode.
 - **My spells to track** (Tracked spells part): add one of your spells, it shows with your heals over time and is offered for the corners. Power Infusion (priest) and Innervate (druid) are already tracked: you see who has them.
 - **Spell I cannot cast again** (priest, on at first): after a Power Word: Shield, yours or another priest's, Weakened Soul prevents a new shield on that player. Its grey, darkened icon takes the last place in the row of your heals (with 4 heals set: 3 heals, then it), and leaves the debuff row. It works in combat.
-- **Global cooldown and casting** (Global cooldown part, off at first): a thin bar under the frames, or a ring around the cursor, your choice. White during the global cooldown, accent colour during your cast. You see at a glance when the next heal can go, even in combat.
+- **Global cooldown and casting** (Cooldowns and channelling part, off at first): a thin bar under the frames, or a ring around the cursor, your choice. White during the global cooldown, accent colour during your cast. You see at a glance when the next heal can go, even in combat.
+- **My cooldowns** (same part, off at first): a row of icons under your frames, under the missing buffs strip when it is there. It holds your bound spells whose cooldown is longer than the global cooldown (Prayer of Mending, Swiftmend, Riptide...), and your big spells even when cast from a bar (Penance, Innervate, Nature's Swiftness, Lay on Hands, Mana Tide Totem...). The game draws the sweep and the seconds itself, in the middle of combat too; the icon is grey while the spell is cooling down, sharp as soon as it is ready. Hover an icon: its binding, and whether it is ready. **Icons shown**: "All my spells" (you also see what is ready) or "Cooling down only" (the row only shows up when a spell is cooling down). A spell you do not want there: type its name in **Cooldowns not to show**. Out of combat, a cell's "My clicks" tooltip writes a spell that is cooling down in red, with its seconds.
+- **Channel line** (same part, on at first): when you channel a heal on a player (the priest's Penance), a line in the accent colour empties at the top of their cell as the channel goes. You see who gets it and when it ends, even in combat. It follows the click or hover key that cast the spell; never for a heal without a target (Tranquility), nor on an enemy.
 
 Everything works in combat. The game hides aura names there, but Lyorune recognises your heals by their number, or by the spell you just cast. A heal it cannot recognise stays in the icon row, never in the wrong corner.
 

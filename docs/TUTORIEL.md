@@ -19,7 +19,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 | Disposition | Taille des cases, rangement, position, cadres affichés (tanks, cible, joueurs épinglés...) |
 | Apparence | Forme des cases, thème, couleurs, transparence, texte |
 | Vie et portée | Soins en route, bouclier, vie basse, barre de mana, joueurs loin ou hors de vue |
-| Mes soins | Vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale |
+| Mes soins | Vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale, vos recharges, le trait de canalisation |
 | Affaiblissements | Dissipation, icônes, affaiblissements importants, joueur sous contrôle, auras privées des boss |
 | Joueurs | Rôle, marqueur, chef, gros défensifs, menace, buffs manquants, infobulle |
 | Sorts et raccourcis | Vos sorts sur les clics et les touches, vos macros |
@@ -312,7 +312,7 @@ Les fenêtres des macros, du placement des éléments, du rapport de bug, du jou
 Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper.
 
 - **Vie et portée** : soins en route, bouclier et son chiffre (éteint au départ), voile de vie basse (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
-- **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale.
+- **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale, vos recharges, le trait de canalisation.
 - **Affaiblissements** : dissipation, icônes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
 - **Joueurs** : nom du joueur, icône de rôle, marqueur de raid, chef de groupe, gros défensifs, icône au centre de la case (appel, résurrection, hors de vue, invocation, très loin), invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
 
@@ -333,7 +333,9 @@ Lyorune s'adapte à votre classe (prêtre, druide, paladin ou chaman) : il suit 
 - **Coins de la case** : placez un de vos sorts dans chaque coin. Il devient un petit carré de couleur (vert, bleu, jaune, rose) qui se vide avec le temps, et quitte la rangée d'icônes. D'un coup d'œil, vous voyez qui n'a pas votre Rénovation ou votre Récupération. Chaque classe garde ses propres coins : votre druide et votre prêtre ne se mélangent pas. Les coins choisis se voient aussi sur la case témoin et dans le mode test.
 - **Mes sorts à suivre** (partie Sorts suivis) : ajoutez un de vos sorts, il s'affiche avec vos soins sur la durée et vous est proposé pour les coins. Infusion de puissance (prêtre) et Innervation (druide) sont déjà suivies : vous voyez sur qui elles sont posées.
 - **Sort que je ne peux pas relancer** (prêtre, allumé au départ) : après un Mot de pouvoir : Bouclier, le vôtre ou celui d'un autre prêtre, Âme affaiblie empêche un nouveau bouclier sur ce joueur. Son icône, grise et assombrie, prend la dernière place de la rangée de vos soins (avec 4 soins réglés : 3 soins, puis elle), et quitte la rangée des affaiblissements. Elle marche en combat.
-- **Recharge globale et incantation** (partie Temps de recharge global, coupé au départ) : une fine barre sous les cadres, ou un anneau autour du curseur, au choix. Blanc pendant le temps de recharge global, couleur d'accent pendant votre incantation. Vous voyez d'un coup d'œil quand le prochain soin peut partir, même en combat.
+- **Recharge globale et incantation** (partie Recharges et canalisation, coupé au départ) : une fine barre sous les cadres, ou un anneau autour du curseur, au choix. Blanc pendant le temps de recharge global, couleur d'accent pendant votre incantation. Vous voyez d'un coup d'œil quand le prochain soin peut partir, même en combat.
+- **Mes recharges** (même partie, éteint au départ) : une rangée d'icônes sous vos cadres, sous le bandeau des buffs manquants quand il est là. On y trouve les sorts de vos raccourcis dont la recharge dépasse la recharge globale (Prière de guérison, Prompte guérison, Remous...), et vos gros sorts même lancés d'une barre (Pénitence, Innervation, Rapidité de la nature, Imposition des mains, Totem de vague de mana...). Le jeu dessine lui-même le balayage et les secondes, en plein combat aussi ; l'icône est grisée tant que le sort recharge, nette dès qu'il est prêt. Survolez une icône : son raccourci, et s'il est prêt. **Icônes montrées** : « Tous mes sorts » (vous voyez aussi ce qui est prêt) ou « En recharge seulement » (la rangée n'apparaît que quand un sort recharge). Un sort que vous ne voulez pas y voir : tapez son nom dans **Recharges à ne pas montrer**. Hors combat, l'infobulle « Mes clics » d'une case écrit en rouge un sort en recharge, avec ses secondes.
+- **Trait de canalisation** (même partie, allumé au départ) : quand vous canalisez un soin sur un joueur (Pénitence du prêtre), un trait à la couleur d'accent se vide en haut de sa case au rythme de la canalisation. Vous voyez qui le reçoit et quand il finit, même en combat. Il suit le clic ou la touche au survol qui a lancé le sort ; jamais pour un soin sans cible (Tranquillité), ni sur un ennemi.
 
 Tout marche en combat. Le jeu y cache le nom des auras, mais Lyorune reconnaît vos soins à leur numéro, ou au sort que vous venez de lancer. Un soin qu'il ne peut pas reconnaître reste dans la rangée d'icônes, jamais dans un mauvais coin.
 

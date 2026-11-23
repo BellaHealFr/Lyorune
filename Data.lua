@@ -16,6 +16,7 @@
 --   8. Z.defensives.MACLASSE : ses gros défensifs, montrés sur sa case à tous les soigneurs
 --   9. Z.lockouts.MACLASSE : les affaiblissements qui l'empêchent de relancer un de ses sorts, s'il en a
 --  10. Z.groupHeals.MACLASSE : ses soins sans cible (de zone, sur soi, totems), pour « Sorts et raccourcis »
+--  11. Z.cooldownSpells.MACLASSE : ses gros sorts à recharge, montrés dans « Mes recharges » même sans raccourci
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -140,6 +141,17 @@ Z.groupHeals = {
 	PRIEST = { 15237, 596, 13908 },     -- Nova sacrée, Prière de soins, Prière du désespoir
 	DRUID  = { 740 },                   -- Tranquillité
 	SHAMAN = { 5394, 16190 },           -- Totem guérisseur, Totem de vague de mana
+}
+
+-- Gros sorts à recharge (« Mes recharges », Cooldowns.lua) : montrés dès qu'ils sont connus, même sans raccourci.
+-- Les sorts de mes raccourcis dont la recharge dépasse la recharge globale s'y ajoutent tout seuls : cette liste
+-- ne sert qu'aux sorts qu'on lance d'une barre (Innervation, Rapidité de la nature...). Numéros vérifiés hors jeu
+-- (HealKit, HealBot, VuhDo et ArcAuras portés sur Forever) ; un sort inconnu ou sans recharge n'apparaît pas.
+Z.cooldownSpells = {
+	PRIEST  = { 402261, 401859, 6346, 10060, 14751, 13908 }, -- Pénitence, Prière de guérison, Gardien de peur, Infusion de puissance, Focalisation intérieure, Prière du désespoir
+	DRUID   = { 18562, 408120, 29166, 17116, 20484, 740 },   -- Prompte guérison, Croissance sauvage, Innervation, Rapidité de la nature, Renaissance, Tranquillité
+	PALADIN = { 20473, 633, 1022, 6940, 1044, 20216, 642, 19752 }, -- Choc sacré, Imposition des mains, Bénédictions de protection, de sacrifice, de liberté, Faveur divine, Bouclier divin, Intervention divine
+	SHAMAN  = { 408521, 16188, 16190 },                      -- Remous, Rapidité de la nature, Totem de vague de mana
 }
 
 -- Sorts de résurrection (toutes classes), pour l'annonce « je ressuscite untel »
@@ -452,6 +464,13 @@ function Z:BuildData()
 	end
 	for _, check in ipairs(Z.uniqueChecks) do
 		Z.ownNames[check.name] = true
+	end
+
+	-- Mes soins sans cible (Tranquillité...) : jamais de trait de canalisation sur la case cliquée (Frames.lua)
+	Z.untargetedNames = {}
+	for _, id in ipairs(Z.groupHeals[Z.class] or {}) do
+		local name = Z.SpellName(id)
+		if name then Z.untargetedNames[name] = true end
 	end
 
 	Z.trackedNames = {}

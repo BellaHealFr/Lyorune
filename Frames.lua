@@ -608,7 +608,11 @@ local function OnEnter(b)
 				GameTooltip:AddLine(L["... et %d autre(s) : chapitre Sorts et raccourcis."]:format(#clicks - TOOLTIP_LINES), 0.6, 0.6, 0.65)
 				break
 			end
-			GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1)
+			if line.cooldown then -- sort en recharge : en rouge, avec ses secondes
+				GameTooltip:AddDoubleLine(line[1], line[2] .. "  " .. L["(%d s)"]:format(math.ceil(line.cooldown)), 0.75, 0.78, 0.85, 1, 0.4, 0.35)
+			else
+				GameTooltip:AddDoubleLine(line[1], line[2], 0.75, 0.78, 0.85, 1, 1, 1)
+			end
 		end
 	end
 	GameTooltip:Show()
@@ -1089,6 +1093,79 @@ local function OnGameError(_, message)
 		Z.MarkOutOfSight(clicked)
 	end
 end
+
+-- Soin canalisé sur un joueur (réglage « channelMark », Pénitence) : la bande des soins en route du jeu ne montre
+-- peut-être pas une canalisation. Quand une canalisation part juste après un clic sur une case (même lien que
+-- l'œil hors de vue), un trait à la couleur d'accent des cadres se vide sur cette case au rythme de la
+-- canalisation : l'objet durée du jeu (lisible en combat), sinon le début et la fin. Aucune quantité inventée.
+-- Jamais pour un soin sans cible (Tranquillité, Z.untargetedNames) ni sur un ennemi. Vaut pour toute
+-- canalisation : rien d'écrit par classe.
+local channelCell
+
+local function ChannelUpdate(mark)
+	if mark.finish then mark:SetValue(math.max(0, mark.finish - GetTime())) end
+end
+
+local function ChannelMark(b)
+	if b.channel then return b.channel end
+	local mark = CreateFrame("StatusBar", nil, b.top)
+	mark:SetStatusBarTexture(UI.WHITE)
+	mark:SetPoint("TOPLEFT", b.hp, "TOPLEFT", 0, 0)
+	mark:SetPoint("TOPRIGHT", b.hp, "TOPRIGHT", 0, 0)
+	mark:SetHeight(3)
+	mark.bg = UI.Tex(mark, "BACKGROUND", 0, 0, 0, 0.6)
+	mark.bg:SetAllPoints()
+	mark:Hide()
+	b.channel = mark
+	return mark
+end
+
+local function ChannelStopped()
+	local b = channelCell
+	channelCell = nil
+	if b and b.channel then
+		b.channel:SetScript("OnUpdate", nil)
+		b.channel.finish = nil
+		b.channel:Hide()
+	end
+end
+
+-- Pose (ou remet à jour, update) le trait sur la case de la canalisation qui commence
+local function ChannelStarted(update)
+	local b = update and channelCell or clicked
+	if not update then
+		ChannelStopped()
+		if not db.channelMark or not b or not b.unit or GetTime() - clickedAt > CLICK_WINDOW or not b:IsVisible() then return end
+	end
+	if not b or not b.unit then return end
+	local _, _, _, startMS, endMS, _, _, spellID = UnitChannelInfo("player")
+	if not issecret(spellID) and spellID then
+		local name = C_Spell.GetSpellName(spellID)
+		if not issecret(name) and name and Z.untargetedNames and Z.untargetedNames[name] then return end
+	end
+	local enemy = UnitCanAttack and UnitCanAttack("player", b.unit)
+	if not issecret(enemy) and enemy then return end
+	local mark = ChannelMark(b)
+	local color = UI.frameAccent
+	mark:SetStatusBarColor(color[1], color[2], color[3], 1)
+	local duration = UnitChannelDuration and UnitChannelDuration("player")
+	local readable = not issecret(startMS) and not issecret(endMS) and startMS and endMS and endMS > startMS
+	mark.finish = nil
+	mark:SetScript("OnUpdate", nil)
+	if duration and mark.SetTimerDuration and Enum.StatusBarInterpolation and Enum.StatusBarTimerDirection then
+		mark:SetTimerDuration(duration, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.RemainingTime)
+	elseif readable then
+		mark.finish = endMS / 1000
+		mark:SetMinMaxValues(0, (endMS - startMS) / 1000)
+		ChannelUpdate(mark)
+		mark:SetScript("OnUpdate", ChannelUpdate) -- seulement le temps de la canalisation, trait visible
+	else
+		return
+	end
+	channelCell = b
+	mark:Show()
+end
+Z.ChannelCell = function() return channelCell end -- pour les tests
 
 -- Création d'une case : le jeu crée le bouton sécurisé, Lyorune l'habille.
 local function InitButton(_, name)
@@ -1679,6 +1756,7 @@ function Z:Refresh()
 	if Z.RefreshPlacement then Z:RefreshPlacement() end
 	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
 	if Z.RefreshCastIndicator then Z:RefreshCastIndicator() end
+	if Z.RefreshCooldowns then Z:RefreshCooldowns() end
 	if Z.RefreshManaEdge then Z:RefreshManaEdge() end
 	if Z.RefreshFiveSecondRule then Z:RefreshFiveSecondRule() end
 end
@@ -1795,14 +1873,21 @@ function Z:CreateFrames()
 	Z:On("UI_ERROR_MESSAGE", OnGameError)
 	local casts = CreateFrame("Frame") -- mes incantations seulement, pas celles de tout le raid
 	for _, event in ipairs({ "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_STOP",
-		"UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_CHANNEL_STOP" }) do
+		"UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_CHANNEL_STOP",
+		"UNIT_SPELLCAST_CHANNEL_UPDATE" }) do
 		pcall(casts.RegisterUnitEvent, casts, event, "player")
 	end
 	casts:SetScript("OnEvent", function(_, event, unit)
+		if event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then -- canalisation retardée : le trait suit
+			if channelCell then Z:Try(event, ChannelStarted, true) end
+			return
+		end
 		if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
 			Z:Try(event, CastStarted, unit)
+			if event == "UNIT_SPELLCAST_CHANNEL_START" then Z:Try(event, ChannelStarted) end
 		else
 			Z:Try(event, CastEnded, unit)
+			if event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_INTERRUPTED" then ChannelStopped() end
 		end
 	end)
 

@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.42.0] - 2026-11-23
+
+### Added
+
+- My cooldowns: a row of icons under the frames (under the missing buffs when they are there) with your bound spells whose cooldown is longer than the global cooldown and your big spells (Penance, Innervate, Lay on Hands, Nature's Swiftness...). The game draws the sweep and the seconds on them, even in combat; grey while cooling down, sharp when the spell is ready. All your spells or only those cooling down, and a list of spells not to show (My heals chapter, off at first).
+- Channel line: when you channel a heal on a player (Penance), a line empties at the top of their cell as the channel goes, even in combat (never for a heal without a target such as Tranquility).
+
+### Improved
+
+- "My clicks" tooltip: out of combat, a spell that is cooling down is written in red with its seconds.
+
 ## [1.41.1] - 2026-11-23
 
 ### Improved
@@ -802,6 +813,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.42.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.1...v1.42.0
 [1.41.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.41.0...v1.41.1
 [1.41.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.1...v1.41.0
 [1.40.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.40.0...v1.40.1

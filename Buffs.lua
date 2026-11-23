@@ -618,42 +618,53 @@ end
 
 -- Bord des cases des cadres du groupe (pas les tanks, familiers, épinglés ni la cible), en pixels de l'écran
 local function MainCells()
-	local left, bottom, top, scale
+	local left, bottom, top, right, scale
 	for _, b in ipairs(Z.buttons) do
 		if MainCell(b) then
-			local l, bt, t = b:GetLeft(), b:GetBottom(), b:GetTop()
-			if l and bt and t then
+			local l, bt, t, r = b:GetLeft(), b:GetBottom(), b:GetTop(), b:GetRight()
+			if not issecret(l) and l and bt and t then
 				local s = b:GetEffectiveScale()
 				l, bt, t = l * s, bt * s, t * s
 				left = left and math.min(left, l) or l
 				bottom = bottom and math.min(bottom, bt) or bt
 				top = top and math.max(top, t) or t
+				if r and not issecret(r) then right = math.max(right or 0, r * s) end
 				scale = s
 			end
 		end
 	end
-	return left, bottom, top, scale
+	return left, bottom, top, scale, right
 end
 
--- Place le bloc : sous les cadres, au-dessus si la place manque, sous leur point de départ s'ils sont cachés.
--- block.where : « BELOW », « ABOVE » ou « ANCHOR ».
-local function PlaceBlock()
+-- Largeur des cadres du groupe dans les unités de « frame » (au moins une case) : la rangée « Mes recharges »
+-- (Cooldowns.lua) passe à la ligne au bord des cadres
+function Z.CellsWidth(frame)
+	local left, _, _, _, right = MainCells()
+	local eff = frame:GetEffectiveScale()
+	if left and right and right > left and eff > 0 then return math.floor((right - left) / eff + 0.5) end
+	return (Z.CellSize())
+end
+
+-- Pose « frame » sous les cadres du groupe, au-dessus si la place manque en bas de l'écran, sous leur point de
+-- départ s'ils sont cachés ; frame.where : « BELOW », « ABOVE » ou « ANCHOR ». Sert au bandeau des buffs
+-- manquants et à « Mes recharges » (Cooldowns.lua). Aucun bouton du jeu n'est déplacé : marche en combat.
+function Z.PlaceUnderCells(frame)
 	local db = Z.db
 	local gap = db.spacing + (db.groupPanel and 2 * PANEL_OUTSET or 0) -- le bloc ne touche pas un fond de groupe
 	local left, bottom, top, scale = MainCells()
-	block:ClearAllPoints()
+	frame:ClearAllPoints()
 	if not left then -- aucune case visible (seul, ma case cachée) : là où les cadres commencent
-		block:SetPoint("TOPLEFT", Z.anchor or UIParent, "BOTTOMLEFT", 0, -LABEL_GAP)
-		block.where = "ANCHOR"
+		frame:SetPoint("TOPLEFT", Z.anchor or UIParent, "BOTTOMLEFT", 0, -LABEL_GAP)
+		frame.where = "ANCHOR"
 		return
 	end
-	local eff = block:GetEffectiveScale()
+	local eff = frame:GetEffectiveScale()
 	local below = bottom - gap * scale
 	local point, y = "TOPLEFT", below
-	block.where = "BELOW"
-	if below - block:GetHeight() * eff < 0 then
+	frame.where = "BELOW"
+	if below - frame:GetHeight() * eff < 0 then
 		point, y = "BOTTOMLEFT", top + (gap + LABEL_GAP) * scale
-		block.where = "ABOVE"
+		frame.where = "ABOVE"
 	end
 	-- accroché au point de départ des cadres (comme leurs groupes) : il les suit pendant qu'on les déplace.
 	-- Point de départ pas encore mesuré : posé sur l'écran, il sera replacé au prochain changement.
@@ -661,10 +672,14 @@ local function PlaceBlock()
 	local ax, ay = anchor and anchor:GetLeft(), anchor and anchor:GetTop()
 	if ax and ay then
 		local aEff = anchor:GetEffectiveScale()
-		block:SetPoint(point, anchor, "TOPLEFT", (left - ax * aEff) / eff, (y - ay * aEff) / eff)
+		frame:SetPoint(point, anchor, "TOPLEFT", (left - ax * aEff) / eff, (y - ay * aEff) / eff)
 	else
-		block:SetPoint(point, UIParent, "BOTTOMLEFT", left / eff, y / eff)
+		frame:SetPoint(point, UIParent, "BOTTOMLEFT", left / eff, y / eff)
 	end
+end
+
+local function PlaceBlock()
+	Z.PlaceUnderCells(block)
 end
 
 local function BuildBlock()
@@ -681,6 +696,11 @@ local function BuildBlock()
 	end)
 	-- les cadres du groupe changent de taille, apparaissent ou disparaissent : le bloc se replace, une fois
 	local function Moved() Z:QueueBuffPanel() end
+	-- « Mes recharges » se range sous le bandeau quand il est là (Cooldowns.lua)
+	local function Follow() if Z.PlaceCooldowns then Z.PlaceCooldowns() end end
+	block:HookScript("OnShow", Follow)
+	block:HookScript("OnHide", Follow)
+	block:HookScript("OnSizeChanged", Follow)
 	for _, h in ipairs(Z.headers or {}) do
 		if h.def and h.def.pos == "pos" then
 			h:HookScript("OnSizeChanged", Moved)
@@ -704,6 +724,7 @@ local function ShowBlock(list)
 	PlaceBlock()
 	UpdateRange()
 	if not block:IsShown() then block:Show() end
+	if Z.PlaceCooldowns then Z.PlaceCooldowns() end
 end
 
 -- Fenêtre « où vous voulez » : une ligne par entrée (10 au plus), « et N autres »

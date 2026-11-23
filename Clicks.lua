@@ -435,18 +435,26 @@ function Z:ActionText(value)
 	return value
 end
 
+-- Secondes de recharge d'un raccourci qui lance un sort (Cooldowns.lua), lisibles hors combat ; sinon nil
+local function CooldownOf(value)
+	if not (Z.SpellCooldownLeft and Z.TakesTrinket(value)) or Z.IsMacro(value) or Z.MacroRef(value) then return end
+	local info = C_Spell.GetSpellInfo(Z.SpellOf(value))
+	local id = info and info.spellID
+	if id and not Z.IsSecret(id) then return Z.SpellCooldownLeft(id) end
+end
+
 -- Mes clics et touches au survol, dans l'ordre de l'onglet Clics : { { "Maj + Clic gauche", "Rénovation" }, ... }
--- Sert à l'infobulle d'une case.
+-- Un sort en recharge porte ses secondes restantes (champ cooldown). Sert à l'infobulle d'une case.
 function Z:ClickSummary()
 	local list = {}
 	for _, binding in ipairs(Z:Bindings()) do
 		if binding.value ~= "" then
 			local text = Z:ActionText(binding.value)
 			if binding.trinkets and Z.TakesTrinket(binding.value) then text = text .. " + " .. Z.L["bijou"] end
-			list[#list + 1] = { Z:TriggerLabel(binding), text }
+			list[#list + 1] = { Z:TriggerLabel(binding), text, cooldown = CooldownOf(binding.value) }
 			for _, kind in ipairs(Z.variantKinds) do -- ses variantes, en retrait
 				local value = binding.variants and binding.variants[kind[1]]
-				if value then list[#list + 1] = { "   " .. Z.L[kind[2]], Z:ActionText(value) } end
+				if value then list[#list + 1] = { "   " .. Z.L[kind[2]], Z:ActionText(value), cooldown = CooldownOf(value) } end
 			end
 		end
 	end
@@ -787,6 +795,7 @@ function Z:ApplyClicks()
 	Z:SyncBarMacros()
 	Z:WarnClickConflicts()
 	if Z.RefreshClicks then Z.RefreshClicks() end
+	if Z.RefreshCooldowns and Z.db.cooldownPanel then Z:RefreshCooldowns() end -- « Mes recharges » suit les raccourcis
 end
 
 -- Entrée ou sortie d'un champ de bataille ou d'une arène : les variantes JcJ suivent. On y entre hors combat ;

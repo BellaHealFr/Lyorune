@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.41.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.42.0"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -112,6 +112,10 @@ Z.defaults = {
 	buffGroups = {},           -- groupes de raid que je buffe : buffGroups[3] = false écarte le groupe 3 ; vide : tous (BuffAssign.lua)
 	blessingPick = {},         -- bénédiction par type de joueur : blessingPick.TANK = numéro du sort, 0 = aucune ; absent : le départ
 	castIndicator = "OFF",     -- temps de recharge global et incantation (Cast.lua) : aucun, barre sous les cadres, anneau au curseur
+	cooldownPanel = false,     -- « Mes recharges » : rangée d'icônes de mes sorts à recharge sous les cadres, même en combat (Cooldowns.lua)
+	cooldownShow = "ALL",      -- icônes montrées : tous mes sorts (prêts nets, en recharge grisés) ou seulement ceux qui rechargent
+	cooldownIgnored = {},      -- sorts à ne pas montrer dans « Mes recharges », par leur nom
+	channelMark = true,        -- soin canalisé sur un joueur (Pénitence) : un trait se vide sur sa case au rythme de la canalisation (Frames.lua)
 	manaBars = "ALL",          -- barre de mana : personne, soigneurs, tous
 	powerHeight = 4,           -- hauteur de la barre de mana, en pixels
 	manaColor = "BLUE",        -- couleur de la barre de mana (teintes de Z.manaColors, Frames.lua)
@@ -219,6 +223,7 @@ Z.choices = {
 	hotStyle = { { "ICONS", "Icônes" }, { "BARS", "Barres fines" } },
 	buffPlace = { { "FRAMES", "Avec les cadres" }, { "FREE", "Où vous voulez" } },
 	castIndicator = { { "OFF", "Aucun" }, { "BAR", "Barre sous les cadres" }, { "RING", "Anneau au curseur" } },
+	cooldownShow = { { "ALL", "Tous mes sorts" }, { "COOLING", "En recharge seulement" } },
 	debuffMode = { { "ALL", "Tous" }, { "DISPEL", "Dissipables par moi" } },
 	manaBars = { { "OFF", "Personne" }, { "HEALERS", "Soigneurs" }, { "ALL", "Tous" } },
 	manaColor = { { "BLUE", "Bleu" }, { "SKY", "Bleu ciel" }, { "PURPLE", "Violet" }, { "TEAL", "Turquoise" }, { "WHITE", "Blanc" } },
@@ -254,6 +259,7 @@ Z.notInProfile = {
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
 	buffPanel = true, combatKey = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
+	cooldownPanel = true, cooldownShow = true, cooldownIgnored = true,
 	buffGroups = true, blessingPick = true, blessingSync = true,
 }
 

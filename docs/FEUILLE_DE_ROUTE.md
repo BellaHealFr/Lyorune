@@ -53,7 +53,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 27 c | 1.40.0 | Boucliers du prêtre et du paladin : ce qui reste à absorber, même en combat, et leur fin (priorité haute) | Publiée (v1.40.0) |
 | 29 a | 1.41.0 | Éditeur de placement : afficher ou masquer chaque élément d'une case à cocher, « Aussi sur la case » (avancée en priorité par l'auteur, 22 novembre 2026), avec la correction C14 | Publiée (v1.41.0) |
 | 29 a bis | 1.41.1 | Éditeur de placement : la place d'un élément masqué profite aux autres, plafond à 300 %, « Remplir la place » | Fait |
-| 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | À faire |
+| 27 d | 1.42.0 | Mes recharges (panneau sous les cadres, marche en combat), Pénitence | Fait |
 | 27 d bis | 1.42.1 | Recharges du groupe : les gros sorts des joueurs qui ont Lyorune, dans le même panneau | À faire |
 | 28 | 1.43.0 | Affaiblissements : secondes restantes, Âme affaiblie et Longanimité, icône du type, liste suivie | À faire |
 | 29 b | 1.44.0 | JcJ : ce que le jeu cache pendant un match, cadre Arène si Forever en a | À faire |
@@ -872,7 +872,27 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   secret : absent en combat), VuhDo (total en mode secret, « 0 » compris ; reste par bouclier via le journal de
   combat, fermé sur Forever). À essayer en jeu : chiffre en combat, « 0 » bien caché (essai n° 3), effet réel de
   Veille de la Lumière et d'Égide divine sur Forever (essai n° 5).
-- [ ] 27 d (1.42.0) : « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
+- [x] 27 d (1.42.0) : « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
+  Fait (23 novembre 2026), d'après le plan décidé (27 d bis, points 1, 2, 4, 6) et S3 de `PLAN-CORRECTIF.md`.
+  Nouveau fichier `Cooldowns.lua` : rangée d'icônes « Mes recharges » (`cooldownPanel`, éteint au départ ; `cooldownShow`
+  « Tous mes sorts » ou « En recharge seulement » ; `cooldownIgnored`, liste de noms), chapitre Mes soins, partie
+  « Recharges et canalisation » (ancienne « Temps de recharge global »). Liste `Z.CooldownList` : sorts de mes
+  raccourcis et de leurs variantes dont la recharge de base (`GetSpellBaseCooldown`) dépasse 1,5 s, puis
+  `Z.cooldownSpells` (Data.lua, gardés si le jeu ne donne pas la recharge), connus, jamais passifs ; refaite hors
+  combat seulement (raccourcis, `SPELLS_CHANGED`, réglages ; en combat, à la fin du combat). Icônes : balayage et
+  secondes par l'objet durée du jeu (`GetSpellCooldownDuration(id, true)`), grisées si `isActive` et pas `isOnGCD`
+  (`Z.SpellCooling`, secret = nette), `OnCooldownDone` ; rangée posée par `Z.PlaceUnderCells` (tiré de Buffs.lua,
+  commun au bandeau), collée sous le bandeau des buffs manquants du même côté (`Z.PlaceCooldowns`), passe à la
+  ligne au bord des cadres (`Z.CellsWidth`), replacée en combat (pas de bouton du jeu). Infobulle « Mes clics » :
+  sort en recharge en rouge avec ses secondes, hors combat (`cooldown` de `Z:ClickSummary`). Pénitence : le jeu
+  la prédit-il ? pas vérifiable hors jeu, donc trait posé dans tous les cas (`channelMark`, allumé) : canalisation
+  qui part moins de 0,5 s après un clic ou une touche sur une case, trait en haut de la case qui se vide
+  (`UnitChannelDuration` et `SetTimerDuration`, sinon début et fin lisibles), suit le retard
+  (`UNIT_SPELLCAST_CHANNEL_UPDATE`), jamais pour un soin sans cible (`Z.untargetedNames`, tiré de
+  `Z.groupHeals`) ni sur un ennemi. Pas d'encoches d'impulsions : leur nombre n'est pas donné par le jeu.
+  Tests : étape 1.42.0. **À essayer en jeu** : balayage et grisé en combat (Pénitence, Prompte guérison), fin de
+  recharge (icône nette), rangée sous le bandeau des buffs, trait de Pénitence sur la case (et la bande des soins
+  en route : si le jeu la montre aussi, le trait reste utile pour la fin de la canalisation).
 - [ ] 27 d bis (1.42.1) : recharges des autres joueurs du groupe.
   **Demande de l'auteur (23 novembre 2026)** : suivre ses propres temps de recharge et ceux des joueurs groupés,
   activable, propre, mieux que les autres addons. Recherche faite le 23 novembre 2026 dans tous les addons du jeu

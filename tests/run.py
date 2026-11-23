@@ -8773,6 +8773,143 @@ step("1.41.1 : la place d'un element masque profite aux autres, plafond a 300 %,
   assert(ok, err)
 end)
 
+step("1.42.0 : mes recharges sous les cadres, trait de canalisation sur la case soignee", function()
+  local set = Z:ClickSet()
+  local old = { clicks = Z.db.clicks[set], keys = Z.db.hoverKeys[set], variants = (Z.db.clickVariants or {})[set],
+    panel = Z.db.cooldownPanel, show = Z.db.cooldownShow, ignored = Z.db.cooldownIgnored, mark = Z.db.channelMark,
+    name = C_Spell.GetSpellName, info = C_Spell.GetSpellInfo, known = C_SpellBook.IsSpellKnown, class = Z.class,
+    block = Z.BuffBlock }
+  local extra = { [402261] = "Pénitence", [13908] = "Prière du désespoir", [14751] = "Focalisation intérieure" }
+  local BASE = { [402261] = 12000, [401859] = 10000, [6346] = 30000, [10060] = 180000, [13908] = 600000, [17] = 4000 }
+  local COOL, SECRET_CD = {}, false
+  local ok, err = pcall(function()
+    assert(Z.defaults.cooldownPanel == false and Z.defaults.cooldownShow == "ALL" and Z.defaults.channelMark == true, "departs")
+    assert(Z.notInProfile.cooldownPanel and Z.notInProfile.cooldownIgnored, "hors profil comme la recharge globale")
+    Z.class = "PRIEST"
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_Spell.GetSpellInfo = function(spell)
+      for id, n in pairs(extra) do if spell == id or spell == n then return { name = n, spellID = id } end end
+      return old.info(spell)
+    end
+    C_SpellBook.IsSpellKnown = function(id) if id == 14751 then return false end return extra[id] ~= nil or old.known(id) end
+    rawset(_G, "GetSpellBaseCooldown", function(id) return BASE[id] or 0 end)
+    C_Spell.GetSpellCooldown = function(id)
+      if SECRET_CD then return { isActive = MakeSecret(), isOnGCD = MakeSecret(), startTime = MakeSecret(), duration = MakeSecret() } end
+      if COOL[id] then return { isActive = true, isOnGCD = false, startTime = NOW - 2, duration = 12 } end
+      return { isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+    end
+    Z.db.clicks[set] = { ["1"] = "Soins rapides", ["ctrl-1"] = "Prière de guérison", ["shift-2"] = "Mot de pouvoir : Bouclier" }
+    Z.db.hoverKeys[set] = {}
+    Z:GetVariants()["shift-2"] = { tank = "Pénitence" }
+    Z.db.cooldownIgnored = {}
+
+    -- la liste : raccourcis a recharge (pas Soins rapides), puis les gros sorts connus de Data.lua
+    local list = Z.CooldownList()
+    local names = {}
+    for _, e in ipairs(list) do names[#names + 1] = e.name end
+    assert(table.concat(names, ",") == "Prière de guérison,Mot de pouvoir : Bouclier,Pénitence,Gardien de peur,Infusion de puissance,Prière du désespoir",
+      "liste : " .. table.concat(names, ","))
+    assert(list[1].keys[1] == Z:ClickLabel("ctrl-1"), "raccourci de Priere de guerison")
+    assert(list[3].keys[1]:find(Z.L["Sur un tank"], 1, true), "variante tank de Penitence")
+    Z.db.cooldownIgnored = { ["Gardien de peur"] = true }
+    for _, e in ipairs(Z.CooldownList()) do assert(e.name ~= "Gardien de peur", "sort ecarte encore montre") end
+
+    -- eteint au depart : rien ; allume : une icone par sort
+    Z:Refresh()
+    local row = Z:CooldownRow()
+    assert(not row or not row:IsShown(), "rangee visible reglage eteint")
+    Z.db.cooldownPanel = true Z:Refresh()
+    local row, icons, spells = Z:CooldownRow()
+    assert(row:IsShown() and #spells == 5, "rangee : " .. tostring(#spells))
+    for i = 1, 5 do assert(icons[i]:IsShown() and icons[i].cooling == false and icons[i].icon:GetAlpha() == 1, "icone " .. i) end
+
+    -- un sort qui recharge : grise ; recharge cachee par le jeu : l'icone reste nette
+    COOL[402261] = true
+    FireEvent("SPELL_UPDATE_COOLDOWN")
+    assert(icons[3].cooling == true and icons[3].icon:GetAlpha() < 1, "Penitence pas grisee")
+    SECRET_CD = true
+    FireEvent("SPELL_UPDATE_COOLDOWN")
+    assert(icons[3].cooling == nil and icons[3].icon:GetAlpha() == 1 and icons[3]:IsShown(), "secret : icone cachee ou grisee")
+    SECRET_CD = false
+    FireEvent("SPELL_UPDATE_COOLDOWN")
+
+    -- en recharge seulement : la seule icone qui recharge ; plus rien : rangee cachee
+    Z.db.cooldownShow = "COOLING" Z:Refresh()
+    assert(row:IsShown() and icons[3]:IsShown() and not icons[1]:IsShown(), "seulement les recharges")
+    COOL[402261] = nil
+    icons[3].cd:Run("OnCooldownDone")
+    assert(not row:IsShown(), "rangee restee sans recharge")
+    Z.db.cooldownShow = "ALL" Z:Refresh()
+
+    -- infobulle Mes clics : le sort en recharge porte ses secondes
+    COOL[401859] = true
+    local found
+    for _, line in ipairs(Z:ClickSummary()) do if line[2] == "Prière de guérison" then found = line end end
+    assert(found and found.cooldown and math.abs(found.cooldown - 10) < 0.01, "secondes dans Mes clics")
+    COOL[401859] = nil
+
+    -- en combat : liste gardee, refaite a la fin du combat
+    COMBAT = true
+    Z.db.cooldownIgnored = {}
+    FireEvent("SPELLS_CHANGED")
+    assert(#select(3, Z:CooldownRow()) == 5, "liste refaite en combat")
+    COMBAT = false
+    FireEvent("PLAYER_REGEN_ENABLED")
+    assert(#select(3, Z:CooldownRow()) == 6, "liste pas refaite apres le combat")
+
+    -- sous le bandeau des buffs manquants quand il est du meme cote
+    local fake = CreateFrame("Frame", nil, UIParent)
+    fake.where = row.where
+    Z.BuffBlock = function() return fake end
+    Z.PlaceCooldowns()
+    assert(row._point[2] == fake, "rangee pas collee au bandeau")
+    fake:Hide()
+    Z.PlaceCooldowns()
+    assert(row._point[2] ~= fake, "rangee collee a un bandeau cache")
+    Z.BuffBlock = old.block
+
+    -- trait de canalisation : sur la case cliquee, pas pour un soin sans cible, pas sur un ennemi, pas eteint
+    local b
+    for _, button in ipairs(Z.buttons) do if button.unit and not b then b = button end end
+    local CHANNEL, ENEMY = 402261, false
+    rawset(_G, "UnitChannelInfo", function() return "x", "", 1, NOW * 1000, (NOW + 2) * 1000, false, false, CHANNEL end)
+    rawset(_G, "UnitCanAttack", function() return ENEMY end)
+    b:Run("OnClick", "LeftButton")
+    FireEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+    assert(Z.ChannelCell() == b and b.channel:IsShown(), "pas de trait sur la case cliquee")
+    FireEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+    assert(Z.ChannelCell() == nil and not b.channel:IsShown(), "trait reste apres la canalisation")
+    CHANNEL = 596 -- Priere de soins : sans cible
+    b:Run("OnClick", "LeftButton")
+    FireEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+    assert(Z.ChannelCell() == nil, "trait pour un soin sans cible")
+    CHANNEL, ENEMY = 402261, true
+    b:Run("OnClick", "LeftButton")
+    FireEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+    assert(Z.ChannelCell() == nil, "trait sur un ennemi")
+    ENEMY = false
+    b:Run("OnClick", "LeftButton")
+    NOW = NOW + 1 -- canalisation sans clic juste avant (barre d'action)
+    FireEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+    assert(Z.ChannelCell() == nil, "trait sans clic sur la case")
+    Z.db.channelMark = false
+    b:Run("OnClick", "LeftButton")
+    FireEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+    assert(Z.ChannelCell() == nil, "trait reglage eteint")
+    FireEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+  end)
+  Z.db.clicks[set], Z.db.hoverKeys[set] = old.clicks, old.keys
+  Z:GetVariants()["shift-2"] = old.variants and old.variants["shift-2"] or nil
+  Z.db.cooldownPanel, Z.db.cooldownShow, Z.db.cooldownIgnored, Z.db.channelMark = old.panel, old.show, old.ignored, old.mark
+  C_Spell.GetSpellName, C_Spell.GetSpellInfo, C_SpellBook.IsSpellKnown, Z.class, Z.BuffBlock = old.name, old.info, old.known, old.class, old.block
+  C_Spell.GetSpellCooldown = nil
+  rawset(_G, "GetSpellBaseCooldown", nil) rawset(_G, "UnitChannelInfo", nil) rawset(_G, "UnitCanAttack", nil)
+  COMBAT = false
+  Z:ApplyClicks()
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

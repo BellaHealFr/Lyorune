@@ -111,6 +111,9 @@ local steps = {
 				text = text .. (db.showIncoming and " " or "\n\n") .. L[shield]:format(Hex(theme.absorb))
 				if db.absorbText then text = text .. " " .. L["Son petit chiffre dit ce qui reste à absorber, même en combat."] end
 			end
+			if db.channelMark then
+				text = text .. "\n\n" .. L["Un trait qui se vide en haut d'une case : le soin que vous canalisez sur ce joueur (Pénitence)."]
+			end
 			-- Mana (étape 23) : seulement ce qui est allumé, et rien sur ma mana pour une classe sans mana
 			local mana = {}
 			local mine = Z.class ~= nil and not (Z.classPower and Z.classPower[Z.class])
@@ -139,6 +142,7 @@ local steps = {
 				.. "\n" .. Z.L["Tous vos soins et buffs y sont, même sans cible (Feu intérieur, totems). Un sort manque ? /lyorune sorts dit pourquoi."]
 				.. "\n" .. Z.L["Un rang plus bas pour garder de la mana ? « Choisir le rang des sorts », même chapitre."]
 				.. "\n" .. Z.L["Un autre sort sur un ennemi, en JcJ, sur un tank ou hors combat ? Le « + » au bout d'une ligne."]
+				.. "\n" .. Z.L["Vos sorts à recharge sous les cadres, même en combat ? « Mes recharges », chapitre Mes soins."]
 		end,
 		target = Cell,
 		around = Block,

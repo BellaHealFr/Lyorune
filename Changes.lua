@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.42.0", date = "2026-11-23",
+		added = {
+			"Mes recharges : une rangée d'icônes sous les cadres (sous les buffs manquants s'ils sont là) avec vos sorts de raccourcis dont la recharge dépasse la recharge globale et vos gros sorts (Pénitence, Innervation, Imposition des mains, Rapidité de la nature...). Le jeu y dessine le balayage et les secondes, même en combat ; grisée en recharge, nette quand le sort est prêt. Tous vos sorts ou seulement ceux en recharge, et une liste des sorts à ne pas montrer (chapitre Mes soins, éteint au départ).",
+			"Trait de canalisation : quand vous canalisez un soin sur un joueur (Pénitence), un trait se vide en haut de sa case au rythme de la canalisation, même en combat (jamais pour un soin sans cible comme Tranquillité).",
+		},
+		improved = {
+			"Infobulle « Mes clics » : hors combat, un sort en recharge s'écrit en rouge avec ses secondes.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.41.1", date = "2026-11-23",
 		added = {
 		},

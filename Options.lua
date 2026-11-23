@@ -2415,8 +2415,12 @@ local function Chapters()
 			{ "Sorts suivis", {
 				ListBox("extraTracked", "Mes sorts à suivre", "Vos sorts affichés avec vos soins sur la durée, et proposés pour les coins. Tous leurs rangs sont suivis."),
 			} },
-			{ "Temps de recharge global", {
+			{ "Recharges et canalisation", {
 				{ "cycle", "castIndicator", "Recharge globale et incantation", nil, "Une fine barre sous les cadres, ou un anneau autour du curseur, qui suit le temps de recharge global (blanc) et votre incantation en cours (couleur d'accent) : vous savez quand le prochain soin peut partir, même en combat." },
+				{ "check", "cooldownPanel", "Mes recharges", "Une rangée d'icônes sous les cadres (sous les buffs manquants s'ils sont là) : vos sorts de raccourcis dont la recharge dépasse la recharge globale, et vos gros sorts (Pénitence, Innervation, Imposition des mains, Rapidité de la nature...). Le jeu y dessine le balayage et les secondes, même en combat ; l'icône est grisée tant que le sort recharge, nette quand il est prêt. Survolez une icône : son raccourci.", desc = "Vos sorts à recharge sous les cadres, même en combat." },
+				{ "seg", "cooldownShow", "Icônes montrées", "Tous mes sorts : vous voyez aussi ce qui est prêt. En recharge seulement : la rangée n'apparaît que quand un sort recharge.", dep = { "cooldownPanel", true } },
+				ListBox("cooldownIgnored", "Recharges à ne pas montrer", "Un sort de « Mes recharges » que vous ne voulez pas voir : son nom exact."),
+				{ "check", "channelMark", "Trait de canalisation", "Quand vous canalisez un soin sur un joueur (Pénitence), un trait à la couleur d'accent se vide en haut de sa case au rythme de la canalisation : vous voyez qui reçoit le soin et quand il finit, même en combat. Jamais pour un soin sans cible (Tranquillité).", desc = "Pénitence : un trait se vide sur la case soignée." },
 			} },
 		} },
 		{ name = "Affaiblissements", rune = 3, old = { "Listes" }, intro = "Les affaiblissements à voir, à dissiper ou à surveiller.", sections = {
