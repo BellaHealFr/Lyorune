@@ -1891,6 +1891,7 @@ function Z:DiagnoseFrames()
 				h:IsShown() and L["affiché"] or L["masqué"], created, dressed, shown))
 		end
 	end
+	Z:SaveFrameState("frameStateDiag") -- relevé détaillé du moment, écrit dans le fichier de sauvegarde au /reload
 end
 
 -- Relevé détaillé, rangé dans LyoruneDB.frameState à la connexion et à la déconnexion : il se lit dans le
@@ -1908,6 +1909,44 @@ local function Describe(frame)
 		text(call("IsShown")), text(call("IsVisible")), text(width), text(height),
 		text(call("GetLeft")), text(call("GetTop")), text(call("GetAlpha")),
 		text(call("GetEffectiveScale")), text(call("GetNumPoints")))
+end
+
+-- Couches visibles qui couvrent au moins la moitié de la case (C38 : une case recouverte d'une couleur inconnue) :
+-- chemin des champs de la case, calque, couleur et opacité vue à l'écran. Tout passe par pcall et « secret ».
+local function BigLayers(b, lines)
+	local function text(value)
+		if issecret(value) then return "secret" end
+		return type(value) == "number" and ("%.2f"):format(value) or tostring(value)
+	end
+	local names = {}
+	for key, value in pairs(b) do
+		if type(value) == "table" and type(value.GetObjectType) == "function" then names[value] = key end
+	end
+	local ok, W, H = pcall(b.GetSize, b)
+	if not ok or issecret(W) or issecret(H) or not W or W * H <= 0 then return end
+	local function Scan(frame, path, depth)
+		local function Look(region, name)
+			local okSize, w, h = pcall(region.GetSize, region)
+			if not okSize or issecret(w) or issecret(h) or not w or w * h < W * H / 2 then return end
+			local okShown, visible = pcall(region.IsVisible, region)
+			if not okShown or not visible then return end
+			local _, r, g, bl, a = pcall(region.GetVertexColor, region)
+			local _, alpha = pcall(region.GetEffectiveAlpha, region)
+			local _, layer = pcall(region.GetDrawLayer, region)
+			lines[#lines + 1] = ("    couche %s : %s %dx%d couleur=%s,%s,%s,%s opacite=%s"):format(name, tostring(layer),
+				math.floor(w + 0.5), math.floor(h + 0.5), text(r), text(g), text(bl), text(a), text(alpha))
+		end
+		local okRegions, regions = pcall(function() return { frame:GetRegions() } end)
+		for _, region in ipairs(okRegions and regions or {}) do
+			local okType, texture = pcall(region.IsObjectType, region, "Texture")
+			if okType and texture then Look(region, path .. "." .. (names[region] or "?")) end
+		end
+		local okChildren, children = pcall(function() return { frame:GetChildren() } end)
+		if depth < 4 and okChildren then
+			for _, child in ipairs(children) do Scan(child, path .. "/" .. (names[child] or "cadre"), depth + 1) end
+		end
+	end
+	Scan(b, "case", 0)
 end
 
 function Z:FrameState()
@@ -1939,6 +1978,7 @@ function Z:FrameState()
 					issecret(max) and "secret" or tostring(max), issecret(veil) and "secret" or tostring(veil),
 					tostring(fighting))
 			end
+			if b.hp and b:IsVisible() then BigLayers(b, lines) end
 			index = index + 1
 		end
 		if index == 1 then lines[#lines + 1] = "  aucune case creee par le jeu" end

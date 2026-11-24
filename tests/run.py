@@ -565,6 +565,10 @@ step("affichage des cadres : toujours, ou en combat seulement", function()
   Z.header:SetAttribute("child1", Z.buttons[1])
   state = table.concat(Z:FrameState(), "\n")
   assert(state:find("case 1", 1, true) and state:find("unit=player", 1, true) and state:find("habillee=true", 1, true), state)
+  -- /lyorune diag garde le releve du moment (C38 : couches qui couvrent la case)
+  Z.db.frameStateDiag = nil Z:DiagnoseFrames()
+  assert(Z.db.frameStateDiag and table.concat(Z.db.frameStateDiag, " "):find("case 1", 1, true), "releve de /lyorune diag")
+  Z.db.frameStateDiag = nil
   Z.header:SetAttribute("child1", nil)
   assert(Z:LogText():find("État des cadres", 1, true))
   Z.db.errors = {}
