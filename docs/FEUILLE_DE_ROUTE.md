@@ -1204,7 +1204,10 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
   et faire mieux, à notre façon, sans rien copier.
   - [ ] Demander à l'auteur ce qui le gêne précisément (place, réglages, groupe qui change, combat).
   - [ ] Lire le fonctionnement actuel de Lyorune (cadres à part des tanks et des familiers).
-  - [ ] Recherche : HealKit, VuhDo, HealBot (installés), comparaison écrite dans la fiche C26.
+  - [ ] Piste de l'auteur (capture de HealKit) : le familier en petite case collée à droite de son maître, sur la
+    même ligne, au lieu d'un cadre détaché.
+  - [ ] Recherche : HealKit, VuhDo, HealBot (installés), en groupe et en raid de 10 à 40 joueurs (familiers, tanks,
+    place, groupe qui change, combat), comparaison écrite dans la fiche C26.
   - [ ] Présenter la cause et la proposition à l'auteur, accord avant de coder (boutons sécurisés : relecture high).
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
