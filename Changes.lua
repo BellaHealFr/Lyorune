@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.48.0", date = "2026-11-24",
+		added = {
+			"Buffs uniques en temps réel : votre Bouclier de terre, Gardien de peur ou buff unique se voit en couleur sur le porteur, avec ses charges, et passe en gris dès qu'il tombe, même en combat (épuisé ou dissipé). Un buff unique d'un autre soigneur est reconnu.",
+		},
+		improved = {
+			"Vie basse : un liseré rouge fixe, sans clignotement, en combat seulement ; le cadre de dissipation reste visible par-dessus.",
+		},
+		fixed = {
+			"Familiers : le chiffre de vie ne recouvre plus leur nom.",
+		},
+	},
+	{
 		version = "1.47.0", date = "2026-11-24",
 		added = {
 			"Bilan en sortant d'un donjon ou d'un raid : une ligne dans la discussion donne son nom, sa durée, vos soins, résurrections et buffs dedans, puis ceux du jour. Le carnet a une colonne Aujourd'hui, depuis votre connexion.",
@@ -1140,6 +1152,7 @@ Z.changes = {
 -- Par version, puis par rubrique : le réglage de chaque ligne, dans l'ordre des lignes (false : pas de réglage).
 -- Une clé qui n'a plus de ligne dans les options est simplement ignorée. Tenu à la main, vérifié par les tests.
 Z.changeShows = {
+	["1.48.0"] = { added = { "uniqueLive" }, improved = { "lowHealth" }, fixed = { "pets" } },
 	["1.47.0"] = { added = { "tallyExit", false }, improved = { "missingBuffs" } },
 	["1.46.5"] = { improved = { "pets" } },
 	["1.46.1"] = { added = { "showDpsRole" } },

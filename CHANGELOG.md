@@ -6,6 +6,20 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.48.0] - 2026-11-24
+
+### Ajouté
+
+- Buffs uniques en temps réel : votre Bouclier de terre, Gardien de peur ou buff unique se voit en couleur sur le porteur, avec ses charges, et passe en gris dès qu'il tombe, même en combat (épuisé ou dissipé). Un buff unique d'un autre soigneur est reconnu.
+
+### Amélioré
+
+- Vie basse : un liseré rouge fixe, sans clignotement, en combat seulement ; le cadre de dissipation reste visible par-dessus.
+
+### Corrigé
+
+- Familiers : le chiffre de vie ne recouvre plus leur nom.
+
 ## [1.47.0] - 2026-11-24
 
 ### Ajouté
@@ -930,6 +944,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0
 [1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5
 [1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4

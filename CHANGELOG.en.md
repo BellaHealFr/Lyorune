@@ -6,6 +6,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.48.0] - 2026-11-24
+
+### Added
+
+- Unique buffs in real time: your Earth Shield, Fear Ward or unique buff shows in colour on its wearer, with its charges, and turns grey as soon as it drops, even in combat (used up or dispelled). Another healer's unique buff is recognized.
+
+### Improved
+
+- Low health: a steady red edge, no blinking, in combat only; the dispel frame stays visible on top.
+
+### Fixed
+
+- Pets: the health number no longer covers their name.
+
 ## [1.47.0] - 2026-11-24
 
 ### Added
@@ -930,6 +944,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0
 [1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5
 [1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4
