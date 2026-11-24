@@ -338,11 +338,12 @@ end
 local function PlaceBig(b, button)
 	local db = Z.db
 	local dx, dy = Z.Offset("big")
-	local big = Z.BigIconSize()
+	local home = (b.rows or Z.AuraRows()).homes.big
+	local big = home.w
 	Call(button, "SetAllPoints", b.boxes.slots)
 	Call(button.Face, "SetSize", big, big)
 	Call(button.Face, "ClearAllPoints")
-	Call(button.Face, "SetPoint", "LEFT", button, "LEFT", 3 + dx, dy)
+	Call(button.Face, "SetPoint", "LEFT", button, "LEFT", home.x + dx, home.y + dy)
 	Call(button.Face, "SetShown", db.bossDebuffs)
 	Call(button.Glow, "SetShown", db.importantGlow)
 	-- secondes restantes, comme les autres affaiblissements (1.43.0)
@@ -353,7 +354,7 @@ end
 
 -- Icône du type à dissiper (1.43.0) : place et taille de Z.DispelTypePlace (Auras.lua), comme sur les fausses cases
 local function PlaceType(b, button)
-	local relative, x, y, size = Z.DispelTypePlace()
+	local relative, x, y, size = Z.DispelTypePlace(b)
 	Call(button, "SetSize", size, size)
 	Call(button, "ClearAllPoints")
 	Call(button, "SetPoint", "LEFT", relative == "HP" and b.hp or b.boxes.slots, "LEFT", x, y)
@@ -447,8 +448,9 @@ local function Plan(b)
 	-- réglages des icônes. Un changement reconstruit les conteneurs (en combat : à la fin du combat).
 	local rows = b.rows or Z.AuraRows()
 	local bigX, bigY = Z.Offset("big")
-	local drinkSize = select(3, Z.DrinkPlace())
-	local look = table.concat({ tostring(db.debuffCountdown), tostring(db.lockoutCountdown), bigX, bigY, Z.BigIconSize(), Z.CornerSize(b), math.floor(Z.CellSize() * 0.45), drinkSize,
+	local drinkSize = select(3, Z.DrinkPlace(b))
+	local look = table.concat({ tostring(db.debuffCountdown), tostring(db.lockoutCountdown), bigX, bigY, Z.BigIconSize(b),
+		rows.homes.big.x, rows.homes.big.y, Z.CornerSize(b), math.floor(Z.CellSize() * 0.45), drinkSize,
 		rows.hots.size, rows.hots.point, rows.debuffs.size, rows.debuffs.point, rows.defensives.size, rows.controls.size,
 		tostring(db.hotSwipe), tostring(db.hotCountdown), tostring(db.hotFade), tostring(db.hotCharges),
 		tostring(db.bossDebuffs), tostring(db.importantGlow) }, ",")
@@ -530,7 +532,7 @@ local function Plan(b)
 		end
 	end
 	-- place de l'icône du type : seulement si elle est montrée (un changement refait les conteneurs)
-	if db.dispelIcon then plan.look = plan.look .. "," .. table.concat({ Z.DispelTypePlace() }, ",") end
+	if db.dispelIcon then plan.look = plan.look .. "," .. table.concat({ Z.DispelTypePlace(b) }, ",") end
 	return plan
 end
 
@@ -629,9 +631,9 @@ local function Place(b)
 	Call(boxes.bars, "SetPoint", "TOPLEFT", b.over, "TOPLEFT", 3 + Z.CornerShift(b, "TOPLEFT") + dx, dy - 3)
 	Call(boxes.bars, "SetSize", math.floor(Z.CellSize() * 0.45), Z.HotSlots() * 4)
 
-	local x, y, size = Z.DrinkPlace()
+	local x, y, size, point, relative, relPoint = Z.DrinkPlace(b)
 	Call(boxes.drink, "ClearAllPoints")
-	Call(boxes.drink, "SetPoint", "BOTTOMLEFT", b.hp, "BOTTOMLEFT", x, y)
+	Call(boxes.drink, "SetPoint", point, relative == "HP" and b.hp or b.boxes.slots, relPoint, x, y)
 	Call(boxes.drink, "SetSize", size, size)
 
 	dx, dy = Z.Offset("debuffs")

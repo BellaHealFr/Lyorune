@@ -179,9 +179,9 @@ function Z.BadgeSize(icon)
 	return Z:Shape().inline and math.max(8, math.floor(icon * 0.7)) or icon - 2
 end
 
--- Grande icône d'affaiblissement (vraies cases, conteneurs du jeu, éditeur)
-function Z.BigIconSize()
-	return Z.ElementSize("big", math.floor(Z.IconSize() * 1.6 + 0.5))
+-- Grande icône d'affaiblissement (vraies cases, conteneurs du jeu, éditeur) : place d'origine de Z.AuraRows
+function Z.BigIconSize(b)
+	return ((b and b.rows) or Z.AuraRows()).homes.big.w
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -190,8 +190,9 @@ end
 -- sont protégées, et la largeur d'un nom change d'un joueur à l'autre). Un élément déjà en partie dehors à sa
 -- place d'origine (le marqueur de raid, à cheval sur le haut) ne va pas plus loin de ce côté.
 -- Le nom et le texte de vie rétrécissent près du bord au lieu d'en sortir (un nom long finit par « ... »).
--- Les places d'origine ci-dessous sont celles posées par PlaceTexts (Frames.lua), Auras.lua et Containers.lua ;
--- les rangées d'icônes et le chiffre de vie en Bandeau viennent tous de Z.AuraRows (Themes.lua). Elles changent ensemble. La sauvegarde n'est jamais réécrite : un ancien décalage trop grand est ramené au bord
+-- Les places d'origine ci-dessous viennent de Z.AuraRows (Themes.lua), comme celles posées par Frames.lua, Auras.lua
+-- et Containers.lua (sauf le marqueur, le chef et les auras privées, posés ici et là de la même façon).
+-- La sauvegarde n'est jamais réécrite : un ancien décalage trop grand est ramené au bord
 -- à la lecture, et retrouve sa valeur si la case grandit.
 ----------------------------------------------------------------------------------------------------
 local ICON_GAP = 2 -- écart entre deux icônes d'une rangée (Auras.lua, Containers.lua)
@@ -222,7 +223,6 @@ local function Origins(power, roleRect)
 	local icon = Z.IconSize()
 	local sizes = { iconSize = icon }
 	local function Shift(point) return Z.CornerShift(sizes, point) end
-	local font = db.fontSize + (theme.fontBonus or 0)
 	local hp = { inset, W - inset, inset + (power and Z.PowerHeight() + 1 or 0), H - inset }
 	local cell = { 0, W, 0, H }
 	local rows = Z.AuraRows() -- rangées d'icônes et textes sur une ligne, selon la forme (Themes.lua)
@@ -232,27 +232,19 @@ local function Origins(power, roleRect)
 		o[key] = { point, ax, ay, w, h, text = text }
 	end
 
-	local role, badge = Z.ElementSize("role", icon - 2), Z.ElementSize("leader", Z.BadgeSize(icon))
-	local class = Z.ElementSize("class", icon - 2)
-	if Z:Shape().inline then
-		Put("role", "LEFT", hp, "LEFT", 3, 0, role, role)
-		Put("class", "LEFT", hp, "LEFT", rows.classX, 0, class, class)
-		Put("name", "LEFT", hp, "LEFT", rows.nameX, 0, rows.nameW, font + 2, true)
-		Put("text", "RIGHT", hp, "RIGHT", rows.textX, 0, rows.textW, font + 1, true)
-		if roleRect then Put("leader", "CENTER", roleRect, "TOPRIGHT", 0, 0, badge, badge) end
-	else
-		Put("role", "TOPRIGHT", cell, "TOPRIGHT", -2 - Shift("TOPRIGHT"), -2, role, role)
-		-- l'icône de classe (allumée) au bord gauche de la ligne du nom : le nom, centré, s'arrête avant elle
-		Put("class", "LEFT", hp, "LEFT", 3, 3, class, class)
-		Put("name", "CENTER", hp, "CENTER", 0, 3, db.showClassIcon and W - 2 * (class + 5) or W - 8, font + 2, true)
-		Put("text", "BOTTOM", hp, "BOTTOM", 0, 4, W - 8, font + 1, true)
-		if roleRect then Put("leader", "TOPRIGHT", roleRect, "TOPLEFT", -1, 0, badge, badge) end
+	-- Places d'origine des éléments seuls (Z.AuraRows, Themes.lua), et du chef de groupe accroché à l'icône de rôle
+	local homes = rows.homes
+	for key, home in pairs(homes) do
+		Put(key, home.point, home.relative == "HP" and hp or cell, home.relPoint, home.x, home.y, home.w, home.h,
+			key == "name" or key == "text")
 	end
-	local marker, center = Z.ElementSize("marker", icon), Z.ElementSize("center", icon + 8)
-	local lowMana = Z.ElementSize("lowMana", icon - 1)
+	local badge = rows.leaderW
+	if roleRect then
+		if Z:Shape().inline then Put("leader", "CENTER", roleRect, "TOPRIGHT", 0, 0, badge, badge)
+		else Put("leader", "TOPRIGHT", roleRect, "TOPLEFT", -1, 0, badge, badge) end
+	end
+	local marker = Z.ElementSize("marker", icon)
 	Put("marker", "CENTER", cell, "TOP", 0, -1, marker, marker)
-	Put("center", "CENTER", cell, "CENTER", 0, 0, center, center)
-	Put("lowMana", "BOTTOMLEFT", hp, "BOTTOMLEFT", 2, 2, lowMana, lowMana)
 
 	-- Rangées : toutes les icônes réglées (la rangée la plus longue que la case montrera), sur une ou deux lignes
 	local function Row(key, row)
@@ -266,12 +258,7 @@ local function Origins(power, roleRect)
 	Row("debuffs", rows.debuffs)
 	Row("defensives", rows.defensives)
 	Row("controls", rows.controls)
-	local big, buff = Z.BigIconSize(), Z.ElementSize("buff", icon)
-	Put("big", "LEFT", cell, "LEFT", 3, 0, big, big)
-	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, buff, buff)
-	-- Type à dissiper : sa place d'origine (Z.DispelTypeHome, Auras.lua)
-	local typeAt, typeX, typeSize = Z.DispelTypeHome()
-	Put("dispelType", "LEFT", typeAt == "HP" and hp or cell, "LEFT", typeX, 0, typeSize, typeSize)
+	Put("buff", "BOTTOMLEFT", cell, "BOTTOMLEFT", 2 + Shift("BOTTOMLEFT"), 2, rows.buffW, rows.buffW)
 	local size, point = db.privateAuraSize, db.privateAuraPoint
 	local spot = Z.PRIVATE_OFFSETS[point] or Z.PRIVATE_OFFSETS.CENTER
 	if not Z.PRIVATE_OFFSETS[point] then point = "CENTER" end

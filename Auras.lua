@@ -95,29 +95,20 @@ end
 Z.DISPEL_ATLAS = { Magic = "RaidFrame-Icon-DebuffMagic", Curse = "RaidFrame-Icon-DebuffCurse",
 	Disease = "RaidFrame-Icon-DebuffDisease", Poison = "RaidFrame-Icon-DebuffPoison" }
 
--- Place d'origine, sans le décalage de l'éditeur (aussi pour Placement.lua, qui ne peut pas passer par Z.Offset) :
--- au milieu du bord gauche de la case, juste à droite de la grande icône et de l'icône de classe allumées (Tuile, Carré) ; sur
--- une ligne (Barre, Bandeau), sur la barre de vie après l'icône de rôle, le nom part après elle (Z.AuraRows).
--- Rend le cadre ("HP" ou "CELL"), x (point « LEFT ») et la taille.
-function Z.DispelTypeHome()
-	local db, icon = Z.db, Z.IconSize()
-	local size = Z.ElementSize("dispelType", icon)
-	if Z:Shape().inline then
-		local x = db.showRole and Z.ElementSize("role", icon - 2) + 5 or 3
-		if db.showClassIcon then x = x + Z.ElementSize("class", icon - 2) + 2 end -- après l'icône de classe
-		return "HP", x, size
-	end
-	-- Tuile, Carré : après la grande icône, et après l'icône de classe (même bord gauche, Frames.lua)
-	local x = db.bossDebuffs and 3 + Z.BigIconSize() + 2 or 3
-	if db.showClassIcon then x = math.max(x, 3 + Z.ElementSize("class", icon - 2) + 2) end
-	return "CELL", x, size
+-- Place d'origine, sans le décalage de l'éditeur : celle de Z.AuraRows (Themes.lua), commune aux vraies cases,
+-- aux conteneurs du jeu et à l'éditeur. Tuile, Carré : au début de la ligne du nom, après l'icône de classe
+-- allumée ; Barre, Bandeau : sur la barre de vie, entre l'icône de classe et le nom.
+-- Rend le cadre ("HP" ou "CELL"), x et y (point « LEFT ») et la taille.
+function Z.DispelTypeHome(b)
+	local home = ((b and b.rows) or Z.AuraRows()).homes.dispelType
+	return home.relative, home.x, home.y, home.w
 end
 
 -- Place réelle : l'origine plus le décalage de l'éditeur. Rend le cadre, x, y et la taille.
-function Z.DispelTypePlace()
+function Z.DispelTypePlace(b)
 	local dx, dy = Z.Offset("dispelType")
-	local relative, x, size = Z.DispelTypeHome()
-	return relative, x + dx, dy, size
+	local relative, x, y, size = Z.DispelTypeHome(b)
+	return relative, x + dx, y + dy, size
 end
 
 function Z.DispelTypeIcon(b)
@@ -129,7 +120,7 @@ function Z.DispelTypeIcon(b)
 		icon.texture:SetAllPoints()
 		b.dispelTypeIcon = icon
 	end
-	local relative, x, y, size = Z.DispelTypePlace()
+	local relative, x, y, size = Z.DispelTypePlace(b)
 	icon:SetSize(size, size)
 	icon:ClearAllPoints()
 	icon:SetPoint("LEFT", relative == "HP" and b.hp or b.over, "LEFT", x, y)
@@ -381,15 +372,22 @@ function Z.DebuffIcon(b, index)
 	return RowIcon(b, b.debuffs, index, (b.rows or Z.AuraRows()).debuffs, dx, dy)
 end
 
--- Boisson d'un soigneur : à droite de son icône de mana basse, à la même taille et avec le même décalage
--- (éditeur de placement). Poussée trop à droite, elle passe à gauche de l'icône. Rend x, y et la taille, depuis
--- le coin bas gauche de la barre de vie.
-function Z.DrinkPlace()
+-- Boisson d'un soigneur : à côté de son icône de mana basse, à la même taille et avec le même décalage (éditeur
+-- de placement). Tuile, Carré : en dessous (à gauche si la case est trop basse) ; Barre, Bandeau : à droite, vers
+-- l'intérieur (à gauche si elle est poussée trop à droite). Rend x, y, la taille, le point, le cadre ("HP" ou
+-- "CELL") et le point du cadre.
+function Z.DrinkPlace(b)
 	local dx, dy = Z.Offset("lowMana")
-	local size = Z.ElementSize("lowMana", Z.IconSize() - 1)
-	local x = 2 + dx + size + 2
-	if x + size > Z.CellSize() - 4 then x = 2 + dx - size - 2 end
-	return x, 2 + dy, size
+	local home = ((b and b.rows) or Z.AuraRows()).homes.lowMana
+	local W, H = Z.CellSize()
+	local size, x, y = home.w, home.x + dx, home.y + dy
+	if home.point == "TOPRIGHT" then
+		if 2 - y + 2 * size + 2 > H then x = x - size - 2 else y = y - size - 2 end
+	else
+		x = x + size + 2
+		if x + size > W - 4 then x = x - 2 * (size + 2) end
+	end
+	return x, y, size, home.point, home.relative, home.relPoint
 end
 
 function Z.DrinkIcon(b)
@@ -399,10 +397,10 @@ function Z.DrinkIcon(b)
 		icon = NewIcon(b)
 		b.drinkList[1] = icon
 	end
-	local x, y, size = Z.DrinkPlace()
+	local x, y, size, point, relative, relPoint = Z.DrinkPlace(b)
 	icon:SetSize(size, size)
 	icon:ClearAllPoints()
-	icon:SetPoint("BOTTOMLEFT", b.hp, "BOTTOMLEFT", x, y)
+	icon:SetPoint(point, relative == "HP" and b.hp or b.over, relPoint, x, y)
 	b.drinkIcon = icon
 	return icon
 end
@@ -436,14 +434,15 @@ end
 function Z.BigIcon(b)
 	local dx, dy = Z.Offset("big")
 	b.bigList = b.bigList or {}
-	b.bigIcon = GetIcon(b, b.bigList, 1, "LEFT", 3 + dx, dy, 1, Z.BigIconSize())
+	local home = (b.rows or Z.AuraRows()).homes.big
+	b.bigIcon = GetIcon(b, b.bigList, 1, "LEFT", home.x + dx, home.y + dy, 1, home.w)
 	return b.bigIcon
 end
 
 -- Place du buff à reposer : coin bas gauche, après le carré de coin (x, y, taille), puis vers la droite
 function Z.BuffMarkPlace(b)
 	local dx, dy = Z.Offset("buff")
-	return 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, Z.ElementSize("buff", Z.IconSize())
+	return 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, (b.rows or Z.AuraRows()).buffW
 end
 
 -- Icône numéro « index » des buffs à reposer (gris à bord rouge)

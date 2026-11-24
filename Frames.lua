@@ -738,8 +738,8 @@ local function Place(region, key, point, relative, relativePoint, x, y)
 end
 
 -- Nom, vie et rôle selon la forme : au centre (Tuile, Carré) ou sur une ligne (Barre, Bandeau).
--- Le marqueur et l'icône centrale suivent aussi l'éditeur de placement. Ces places d'origine sont aussi
--- décrites dans Placement.lua (Origins), qui borne les décalages au bord de la case : à changer ensemble.
+-- Le marqueur et l'icône centrale suivent aussi l'éditeur de placement. Les places d'origine viennent de
+-- Z.AuraRows (Themes.lua), lue aussi par Placement.lua (Origins) qui borne les décalages au bord de la case.
 -- Largeur du nom et du texte de vie : Z.TextWidth, qui les fait rétrécir quand ils sont poussés vers un bord.
 -- Chiffre du bouclier (absorbText) : sur la ligne du texte de vie, dont il suit le décalage de l'éditeur de
 -- placement. Barre et Bandeau : au bout du texte de vie, qui recule d'autant ; Tuile et Carré : en bas à droite.
@@ -781,31 +781,28 @@ local function PlaceLeader(b)
 end
 Z.PlaceLeader = PlaceLeader -- case d'exemple de l'éditeur de placement
 
-local function PlaceTexts(b, icon)
+-- Place d'origine d'un élément (Z.AuraRows, Themes.lua), plus le décalage de l'éditeur ; dx : un recul en plus
+local function PlaceHome(b, region, key, home, dx)
+	Place(region, key, home.point, home.relative == "HP" and b.hp or b, home.relPoint, home.x + (dx or 0), home.y)
+end
+
+local function PlaceTexts(b)
 	local shield = db.showAbsorb and db.absorbText
-	if Z:Shape().inline then
-		Place(b.role, "role", "LEFT", b.hp, "LEFT", 3, 0)
-		Place(b.class, "class", "LEFT", b.hp, "LEFT", b.rows.classX, 0) -- après l'icône de rôle
-		Place(b.name, "name", "LEFT", b.hp, "LEFT", b.rows.nameX, 0) -- après l'icône de rôle, à sa taille
-		b.name:SetJustifyH("LEFT")
-		-- en Bandeau, à gauche du bloc d'icônes (et du chiffre du bouclier)
-		Place(b.text, "text", "RIGHT", b.hp, "RIGHT", b.rows.textX - (shield and AbsorbSize() + 2 or 0), 0)
-		b.text:SetJustifyH("RIGHT")
-	else
-		Place(b.role, "role", "TOPRIGHT", b, "TOPRIGHT", -2 - Z.CornerShift(b, "TOPRIGHT"), -2)
-		-- Accrochés à la barre de vie : ils remontent avec elle quand la barre de mana s'affiche
-		Place(b.name, "name", "CENTER", b.hp, "CENTER", 0, 3)
-		b.name:SetJustifyH("CENTER")
-		Place(b.class, "class", "LEFT", b.hp, "LEFT", 3, 3) -- au bord gauche, sur la ligne du nom (raccourci d'autant)
-		Place(b.text, "text", "BOTTOM", b.hp, "BOTTOM", 0, 4)
-		b.text:SetJustifyH("CENTER")
-	end
+	local inline = Z:Shape().inline
+	local homes = b.rows.homes
+	PlaceHome(b, b.role, "role", homes.role)
+	PlaceHome(b, b.class, "class", homes.class)
+	PlaceHome(b, b.name, "name", homes.name)
+	-- Barre, Bandeau : le chiffre de vie recule devant celui du bouclier
+	PlaceHome(b, b.text, "text", homes.text, (inline and shield) and -(AbsorbSize() + 2) or 0)
+	b.name:SetJustifyH(inline and "LEFT" or "CENTER")
+	b.text:SetJustifyH(inline and "RIGHT" or "CENTER")
 	b.name:SetWidth(Z.TextWidth("name"))
 	b.text:SetWidth(Z.TextWidth("text"))
 	Place(b.marker, "marker", "CENTER", b.over, "TOP", 0, -1)
-	Place(b.center, "center", "CENTER", b.over, "CENTER", 0, 0)
-	Place(b.lowMana, "lowMana", "BOTTOMLEFT", b.hp, "BOTTOMLEFT", 2, 2)
-	if shield then PlaceAbsorbText(b, Z:Shape().inline) end
+	PlaceHome(b, b.center, "center", homes.center)
+	PlaceHome(b, b.lowMana, "lowMana", homes.lowMana)
+	if shield then PlaceAbsorbText(b, inline) end
 end
 
 local function Style(b)
@@ -885,23 +882,18 @@ local function Style(b)
 	local icon = b.isPet and math.max(10, math.floor(height * 0.30 + 0.5)) or Z.IconSize()
 	b.iconSize = icon
 	b.rows = b.isPet and Z.AuraRows(width, height) or Z.AuraRows() -- rangées de mes soins et des affaiblissements, à la mesure de la forme (Themes.lua)
-	PlaceTexts(b, icon)
+	PlaceTexts(b)
 	if b.isPet then -- case étroite : le nom et le chiffre ne débordent pas
 		b.name:SetWidth(math.min(b.name:GetWidth(), width - 6))
 		b.text:SetWidth(math.min(b.text:GetWidth(), width - 6))
 	end
-	-- Tailles d'origine, fois la taille choisie dans l'éditeur de placement (Z.ElementSize, Placement.lua)
-	local function Size(region, key, base)
-		local size = Z.ElementSize(key, base)
-		region:SetSize(size, size)
-	end
-	Size(b.role, "role", icon - 2)
-	Size(b.class, "class", icon - 2)
-	Size(b.leader, "leader", Z.BadgeSize(icon))
+	-- Tailles d'origine (Z.AuraRows), fois la taille choisie dans l'éditeur de placement (Z.ElementSize)
+	local homes = b.rows.homes
+	for _, key in ipairs({ "role", "class", "center", "lowMana" }) do b[key]:SetSize(homes[key].w, homes[key].w) end
+	b.leader:SetSize(b.rows.leaderW, b.rows.leaderW)
 	PlaceLeader(b) -- après les tailles : il mesure les deux icônes
-	Size(b.marker, "marker", icon)
-	Size(b.center, "center", icon + 8)
-	Size(b.lowMana, "lowMana", icon - 1)
+	local marker = Z.ElementSize("marker", icon)
+	b.marker:SetSize(marker, marker)
 
 	Z.HideAuras(b)
 	Z.AnchorPrivateAuras(b)

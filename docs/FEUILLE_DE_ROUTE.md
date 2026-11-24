@@ -1282,6 +1282,7 @@ Demande de l'auteur (24 novembre 2026), fiche C34 de `CORRECTIONS.md`.
 - [x] Proposition à l'auteur, nettement meilleure que HealKit, VuhDo et HealBot (quatre formes, ce qu'elle fait mieux
   point par point), décision avant tout codage (carte blanche, 24 novembre 2026).
 - [ ] Nouveaux défauts adaptés à la forme et à la taille, sans toucher aux éléments déplacés par le joueur.
+  Lot 1 fait (nouvelles places, rien ne se couvre, commit local) ; la migration (lot 2) reste à faire.
 - [ ] Placements propres à chaque personnage (migration des placements existants), éditeur, tests, guides, visite.
 
 ## Étape 34 : canal des soigneurs, en français et en anglais

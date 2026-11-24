@@ -1457,7 +1457,8 @@ step("etape 6 : echelle, editeur de placement", function()
   Z.db.shape = "TILE" Z.db.placement = {}
   Z.SetOffset("name", 4, -3) Z:Refresh()
   local p = b.name._point
-  assert(p[1] == "CENTER" and p[4] == 4 and p[5] == 0, "nom decale")
+  local home = Z.AuraRows().homes.name -- place d'origine (C34 : nom au-dessus de la vie, au milieu de la case)
+  assert(p[1] == "CENTER" and p[4] == 4 and p[5] == home.y + select(2, Z.Offset("name")) and select(2, Z.Offset("name")) < 0, "nom decale")
   Z.SetOffset("marker", 0, -2) Z:Refresh() -- à cheval sur le haut de la case : il peut seulement descendre
   assert(b.marker._point[5] == -3, "marqueur decale")
   AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", icon = 1, auraInstanceID = 41, spellId = 139 } }
@@ -1466,7 +1467,9 @@ step("etape 6 : echelle, editeur de placement", function()
   assert(b.hots[1]:IsShown() and b.hots[1]._point[4] == 7, "icones de soins decalees")
   AURAS = {}
   Z.db.shape = "BAR" Z:Refresh()
-  assert(Z.Offset("name") == 0 and b.name._point[4] == b.iconSize + 3 + (Z.db.dispelIcon and Z.ElementSize("dispelType", Z.IconSize()) + 2 or 0), "une autre forme garde sa place d'origine")
+  local after = Z.AuraRows().homes.dispelType
+  assert(Z.Offset("name") == 0 and b.name._point[4] == Z.AuraRows().homes.name.x and b.name._point[4] >= b.role._w + 5
+    and (not Z.db.dispelIcon or b.name._point[4] == after.x + after.w + 2), "une autre forme garde sa place d'origine")
   Z.db.shape = "TILE" Z:Refresh()
   -- bornes, nettoyage, element inconnu refuse
   Z.SetOffset("name", 999, -999)
@@ -5194,10 +5197,13 @@ step("refonte 1.26.0, lot 6c nonies b : retour 23 (aucun element hors de la case
   Z.db.cornerSpells[Z.class] = nil
   Push(0, 0)
   Z.StyleButton(b)
-  assert(b.name._w == 78 and b.text._w == 78, "23 : largeur d'origine du nom : " .. tostring(b.name._w))
+  -- C34 : le nom est raccourci des deux côtés par l'icône du type à dissiper, au début de sa ligne
+  local nameW = Z.AuraRows().homes.name.w
+  assert(nameW == 86 - 2 * (3 + Z.AuraRows().homes.dispelType.w + 2), "23 : nom raccourci par le type a dissiper : " .. nameW)
+  assert(b.name._w == nameW and b.text._w == 78, "23 : largeur d'origine du nom : " .. tostring(b.name._w))
   Z.db.placement = {} Z.SetOffset("name", -40, 0) Z:Refresh()
   local x = Z.Offset("name")
-  assert(x < 0 and x > -40 and b.name._w < 78 and b.name._w >= 33, "23 : nom pousse a gauche : " .. x .. ", largeur " .. b.name._w)
+  assert(x < 0 and x > -40 and b.name._w < nameW and b.name._w >= 33, "23 : nom pousse a gauche : " .. x .. ", largeur " .. b.name._w)
   -- Ancien décalage trop grand dans la sauvegarde : ramené au bord à la lecture, jamais réécrit
   Z.db.placement = { TILE = { name = { -40, 0 } } } Z:Refresh()
   assert(Z.Offset("name") == x and Z.db.placement.TILE.name[1] == -40, "23 : sauvegarde reecrite")
@@ -5397,8 +5403,9 @@ step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre,
           end
           if not rules.inline then
             -- Tuile et Carré : les soins s'arrêtent avant l'icône de rôle, les affaiblissements avant le buff manquant
-            local role = { W - 2 - (icon - 2), W - 2, H - 2 - (icon - 2), H - 2 }
-            local buff = { 2, 2 + icon, 2, 2 + icon }
+            local roleW, buffW = rows.homes.role.w, rows.buffW
+            local role = { W - 2 - roleW, W - 2, H - 2 - roleW, H - 2 }
+            local buff = { 2, 2 + buffW, 2, 2 + buffW }
             for _, r in ipairs(h) do assert(not Overlap(r, role), "soins sous l'icone de role : " .. where) end
             for _, r in ipairs(d) do assert(not Overlap(r, buff), "affaiblissements sous le buff manquant : " .. where) end
           else
@@ -5417,7 +5424,8 @@ step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre,
                 for _, r in ipairs(list) do assert(textRight <= r[1] - 4, "chiffre de vie sur le bloc : " .. where) end
               end
               assert(b.text._point[1] == "RIGHT" and b.text._point[2] == b.hp and b.text._point[4] == rows.textX, "chiffre de vie pas pose : " .. where)
-              assert(inset + icon + 3 + rows.nameW <= textRight - rows.textW, "nom sur le chiffre de vie : " .. where)
+              local name = rows.homes.name
+              assert(name.w == Z.db.fontSize or inset + name.x + name.w <= textRight - rows.textW, "nom sur le chiffre de vie : " .. where)
             end
           end
           -- Les icônes posées sur la case sont celles calculées (ancien affichage, mode test, éditeur)
@@ -5440,19 +5448,20 @@ step("etape 21, lot 2 : icones a la mesure de chaque forme (Barre, Tuile, Carre,
   assert(checked == 1376, "nombre de verifications : " .. checked) -- avec la place d'Ame affaiblie apres un seul soin (pretre, etape 23)
   MEMBERS = 5
 
-  -- Tailles décidées sur la maquette (taille d'origine des formes, barre de mana)
+  -- Tailles d'origine des formes (C34 : trois bandes en Tuile et Carré, rien ne se couvre ; barre de mana)
   local function At(shape, hots, debuffs)
     Z:ApplyShape(shape) Z.db.hotCount, Z.db.debuffCount = hots, debuffs
     return Z.AuraRows()
   end
   local r = At("TILE", 4, 2)
-  assert(r.hots.size == 11 and r.hots.lines == 1 and r.hots.point == "TOPLEFT" and r.debuffs.point == "BOTTOMRIGHT", "Tuile : 11 pixels")
+  assert(r.mode == "LINE" and r.hots.size == 9 and r.debuffs.size == 9 and r.hots.lines == 1 and r.hots.point == "TOPLEFT"
+    and r.debuffs.point == "BOTTOMRIGHT", "Tuile : 9 pixels, vie sous le nom")
   r = At("SQUARE", 4, 2)
-  assert(r.hots.size == 10 and r.hots.perLine == 3 and r.hots.lines == 2, "Carre : 10 pixels, deux lignes")
+  assert(r.hots.size == 6 and r.hots.perLine == 2 and r.hots.lines == 2 and r.debuffs.size == 10, "Carre : soins sur deux lignes")
   r = At("SQUARE", 2, 5)
   assert(r.debuffs.lines == 2 and r.debuffs.size < 10, "Carre : 5 affaiblissements, deux lignes et plus petits")
   r = At("BAR", 4, 2)
-  assert(r.hots.size == 8 and r.hots.point == "TOPRIGHT" and r.hots.relative == "HP" and r.textX == -4, "Barre : 8 pixels")
+  assert(r.hots.size == 7 and r.hots.point == "TOPRIGHT" and r.hots.relative == "HP" and r.textX == -4, "Barre : 7 pixels")
   r = At("BANNER", 4, 2)
   assert(r.hots.size == 9 and r.debuffs.size == 9 and r.textX < -4, "Bandeau : 9 pixels, chiffre de vie a gauche")
   -- Bandeau : seules les rangées montrées comptent pour le bloc
@@ -5523,9 +5532,11 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
 
   -- Réglage : taille gardée avec le décalage, bornée, effacée à 100 %
   assert(Z.GetElementSize("role") == 100 and Z.ElementScale("role") == 1, "taille d'origine")
+  local roleBase = b.role._w -- taille d'origine (C34 : jamais plus haute que la bande du haut)
+  assert(roleBase <= icon - 2, "icone de role plus grande qu'avant : " .. roleBase)
   Z.SetElementSize("role", 150) Z:Refresh()
   assert(Z.db.placement.TILE.role[1] == 0 and Z.db.placement.TILE.role[3] == 150, "taille enregistree")
-  assert(b.role._w == math.floor((icon - 2) * 1.5 + 0.5), "icone de role agrandie : " .. b.role._w)
+  assert(b.role._w == math.floor(roleBase * 1.5 + 0.5), "icone de role agrandie : " .. b.role._w)
   Z.SetOffset("role", -3, -1)
   assert(Z.db.placement.TILE.role[3] == 150 and Z.db.placement.TILE.role[1] == -3, "le decalage garde la taille")
   Z.SetOffset("role", 0, 0)
@@ -5545,11 +5556,13 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   assert(Z.db.placement.TILE == nil, "taille d'un texte enregistree")
   Z.db.hotStyle = "BARS" assert(not Z.CanSize("hots"), "barres fines") Z.db.hotStyle = "ICONS"
   -- Chaque forme garde ses tailles
+  local bigBase = Z.BigIconSize() -- C34 : jamais plus haute que le milieu de la case
+  assert(bigBase <= math.floor(icon * 1.6 + 0.5), "grande icone plus grande qu'avant")
   Z.SetElementSize("big", 150)
   Z:ApplyShape("BAR")
   assert(Z.GetElementSize("big") == 100 and Z.GetElementSize("big", "TILE") == 150, "taille propre a chaque forme")
   Z:ApplyShape("TILE") Z:Refresh()
-  assert(Z.BigIcon(b)._w == Z.BigIconSize() and Z.BigIconSize() == math.floor(math.floor(icon * 1.6 + 0.5) * 1.5 + 0.5), "grande icone")
+  assert(Z.BigIcon(b)._w == Z.BigIconSize() and Z.BigIconSize() == math.floor(bigBase * 1.5 + 0.5), "grande icone")
   Z.SetElementSize("big", 100)
   -- Jamais plus grand que la case
   Z:ApplyShape("BANNER")
@@ -5562,10 +5575,12 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   -- Sur une ligne, le nom part après l'icône de rôle, à sa taille
   Z:ApplyShape("BAR")
   Z.SetElementSize("role", 150) Z:Refresh()
-  local rows = Z.AuraRows()
-  assert(rows.nameX == Z.ElementSize("role", Z.IconSize() - 2) + 5 + (Z.db.dispelIcon and Z.ElementSize("dispelType", Z.IconSize()) + 2 or 0) and b.name._point[4] == rows.nameX, "nom apres l'icone de role")
+  local homes = Z.AuraRows().homes
+  local nameX = homes.name.x
+  assert(homes.dispelType.x >= b.role._w + 5 and (not Z.db.dispelIcon or nameX == homes.dispelType.x + homes.dispelType.w + 2)
+    and b.name._point[4] == nameX, "nom apres l'icone de role")
   Z.SetElementSize("role", 100) Z:Refresh()
-  assert(Z.AuraRows().nameX == Z.IconSize() + 3 + (Z.db.dispelIcon and Z.ElementSize("dispelType", Z.IconSize()) + 2 or 0), "nom a sa place d'origine")
+  assert(Z.AuraRows().homes.name.x < nameX and Z.AuraRows().homes.dispelType.x >= b.role._w + 5, "nom a sa place d'origine")
 
   -- Rangées de soins et d'affaiblissements à toutes les tailles : dans la case, deux lignes au plus
   local checked = 0
@@ -6352,8 +6367,11 @@ step("etape 23, lot 2 : sorts externes, Ame affaiblie au bout de mes soins (donn
     assert(drink and drink.filter == "HELPFUL" and drink.max == 1 and drink.candidates.includeSpellIDs[430], "groupe boisson")
     assert(not drink.candidates.includeSpellIDs[26473], "boisson au mauvais nom dans le filtre")
     assert(c.boxes.drink:IsShown(), "boisson cachee sur un soigneur")
-    local x, y, size = Z.DrinkPlace()
-    assert(drink.size == size and x > size, "boisson pas a cote de la mana basse")
+    -- C34 : sous l'icône de mana basse (Tuile, Carré), à sa droite (Barre, Bandeau)
+    local x, y, size, point = Z.DrinkPlace()
+    local low = Z.AuraRows().homes.lowMana
+    assert(drink.size == size and size == low.w and ((point == "TOPRIGHT" and x == low.x and y == low.y - size - 2)
+      or (point == "LEFT" and x == low.x + size + 2 and y == low.y)), "boisson pas a cote de la mana basse")
     UnitGroupRolesAssigned = function() return "DAMAGER" end
     Z:Refresh() RunUpdates()
     assert(not c.boxes.drink:IsShown(), "boisson montree sur un joueur qui n'est pas soigneur")
@@ -8926,7 +8944,7 @@ step("1.41.0 : afficher ou masquer chaque element dans l'editeur de placement, m
 end)
 
 step("1.41.1 : la place d'un element masque profite aux autres, plafond a 300 %, Remplir la place", function()
-  local keys = { "shape", "showRole", "missingBuffs", "showHots", "showDebuffs", "hotStyle", "manaBars", "width", "height" }
+  local keys = { "shape", "showRole", "showLeader", "missingBuffs", "showHots", "showDebuffs", "hotStyle", "manaBars", "width", "height" }
   local old = { placement = CopyTable(Z.db.placement) }
   for _, key in ipairs(keys) do old[key] = Z.db[key] end
   local ok, err = pcall(function()
@@ -8941,10 +8959,13 @@ step("1.41.1 : la place d'un element masque profite aux autres, plafond a 300 %,
     assert(rows.hots.blocker == "ROLE", "obstacle de mes soins : " .. tostring(rows.hots.blocker))
     local before = rows.hots.size
     Z.db.showRole = false Z:Refresh()
+    -- C34 : la ligne s'arrête aussi au chef de groupe, à gauche du rôle
+    assert(Z.AuraRows().hots.blocker == "ROLE", "chef de groupe oublie par la rangee de mes soins")
+    Z.db.showLeader = false Z:Refresh()
     rows = Z.AuraRows()
     assert(rows.hots.size > before and rows.hots.blocker == nil, "role masque : mes soins n'ont pas grandi " .. before .. " -> " .. rows.hots.size)
     assert(Z.buttons[1].rows.hots.size == rows.hots.size, "vraie case qui ne suit pas")
-    Z.db.showRole = true Z:Refresh()
+    Z.db.showRole, Z.db.showLeader = true, true Z:Refresh()
     assert(Z.AuraRows().hots.size == before, "role revenu : la place n'est pas rendue")
     -- affaiblissements et buff manquant
     Z.SetElementSize("debuffs", 300)
@@ -8967,12 +8988,14 @@ step("1.41.1 : la place d'un element masque profite aux autres, plafond a 300 %,
     rows = Z.AuraRows()
     assert(rows.hots.size > before and rows.hots.blocker == nil, "rangee seule : pas toute la hauteur")
     assert(Z.FillSize("hots") > math.max(110, shared), "rangee seule bloquee a " .. Z.FillSize("hots") .. " %")
-    -- le nom prend la place de l'icone de role masquee
-    local nameX, nameW = rows.nameX, rows.nameW
+    -- le nom prend la place de l'icone de role masquee (et du badge du chef, pose sur son coin)
+    local nameX, nameW = rows.homes.name.x, rows.homes.name.w
     Z.db.showRole = false Z:Refresh()
+    assert(Z.AuraRows().homes.name.x == nameX, "nom sous le badge du chef")
+    Z.db.showLeader = false Z:Refresh()
     rows = Z.AuraRows()
-    assert(rows.nameX < nameX and rows.nameW > nameW, "nom qui ne prend pas la place de l'icone de role")
-    Z.db.showRole, Z.db.showDebuffs = true, true Z:Refresh()
+    assert(rows.homes.name.x < nameX and rows.homes.name.w > nameW, "nom qui ne prend pas la place de l'icone de role")
+    Z.db.showRole, Z.db.showLeader, Z.db.showDebuffs = true, true, true Z:Refresh()
 
     -- 300 % toujours borne par la case
     Z.SetElementSize("center", 300)
@@ -9836,7 +9859,7 @@ step("1.46.0 : mes totems sous les cadres, icone de classe", function()
     local off = Z.AuraRows()
     Z.db.showClassIcon = true
     local on = Z.AuraRows()
-    assert(on.nameX > off.nameX and on.classX == off.classX, "nom apres l'icone de classe")
+    assert(on.homes.name.x > off.homes.name.x and on.homes.class.x == off.homes.class.x, "nom apres l'icone de classe")
     local typeOn = select(2, Z.DispelTypeHome())
     Z.db.showClassIcon = false
     assert(typeOn > select(2, Z.DispelTypeHome()), "type a dissiper apres l'icone de classe")
@@ -9844,7 +9867,7 @@ step("1.46.0 : mes totems sous les cadres, icone de classe", function()
     Z.db.shape, Z.db.showClassIcon = old.shape, true
     if not Z:Shape().inline then
       local x = select(2, Z.DispelTypeHome())
-      assert(x >= 3 + Z.ElementSize("class", Z.IconSize() - 2) + 2, "tuile : type a dissiper sur l'icone de classe")
+      assert(x >= 3 + Z.AuraRows().homes.class.w + 2, "tuile : type a dissiper sur l'icone de classe")
     end
     Z.db.showClassIcon = false
     for _, key in ipairs({ "Icône de classe", "Mes totems (chaman)", "Mes totems", "Emplacement : %s", "Aucun totem posé",
@@ -10629,6 +10652,170 @@ step("nouveautes : toujours relisibles (en-tete des options, mini-carte, rappel 
   Z.db.newsSeen, Z.db.minimapButton = old.seen, old.button
   Z:RefreshMinimap()
   if LyoruneNews then LyoruneNews:Hide() end
+  assert(ok, err)
+end)
+
+step("C34 lot 1 : places d'origine sans chevauchement (trois bandes en Tuile et Carre, bord gauche en Barre et Bandeau)", function()
+  local keys = { "shape", "width", "height", "fontSize", "powerHeight", "corners", "manaBars", "hotStyle", "hotCount",
+    "debuffCount", "text", "showClassIcon", "lowManaHealers", "autoShrink", "showLeader", "showRole", "missingBuffs" }
+  local old = { placement = CopyTable(Z.db.placement), cornerSpells = Z.db.cornerSpells[Z.class] }
+  for _, key in ipairs(keys) do old[key] = Z.db[key] end
+  local db, b = Z.db, Z.buttons[1]
+  local ok, err = pcall(function()
+    -- Rectangle de chaque morceau, recalculé à partir des ancres notées par le faux client (sans Placement.lua)
+    local W, H
+    local Rect
+    local function Spot(r, point)
+      local x = point:find("LEFT") and r[1] or point:find("RIGHT") and r[2] or (r[1] + r[2]) / 2
+      local y = point:find("BOTTOM") and r[3] or point:find("TOP") and r[4] or (r[3] + r[4]) / 2
+      return x, y
+    end
+    local function Anchor(region, p)
+      local relative, relPoint, x, y
+      if type(p[2]) == "table" then
+        relative = p[2]
+        if type(p[3]) == "string" then relPoint, x, y = p[3], p[4], p[5] else relPoint, x, y = p[1], p[3], p[4] end
+      else relative, relPoint, x, y = region._parent, p[1], p[2], p[3] end
+      local px, py = Spot(Rect(relative), relPoint)
+      return px + (x or 0), py + (y or 0)
+    end
+    function Rect(region)
+      if region == b then return { 0, W, 0, H } end
+      if region._all then return Rect(region._all) end
+      local points = region._points
+      if points.TOPLEFT and points.BOTTOMRIGHT then
+        local left, top = Anchor(region, points.TOPLEFT)
+        local right, bottom = Anchor(region, points.BOTTOMRIGHT)
+        return { left, right, bottom, top }
+      end
+      local p = region._point
+      local x, y = Anchor(region, p)
+      local w, h = region._w, region._kind == "FontString" and region._size or region._h
+      local left = p[1]:find("LEFT") and x or p[1]:find("RIGHT") and x - w or x - w / 2
+      local bottom = p[1]:find("BOTTOM") and y or p[1]:find("TOP") and y - h or y - h / 2
+      return { left, left + w, bottom, bottom + h, point = p[1] }
+    end
+    -- Toujours là (1) et alertes (2) ; une alerte peut couvrir les « petits » (nom, vie, rôle, classe, chef, type)
+    local FAMILY = { name = 1, text = 1, role = 1, class = 1, leader = 1, hots = 1, debuffs = 1, dispelType = 1, buff = 1,
+      lowMana = 2, big = 2, controls = 2, center = 2, defensives = 2 }
+    local SOFT = { name = true, text = true, role = true, class = true, leader = true, dispelType = true }
+    local function Parts(key)
+      local list = {}
+      if key == "hots" then for i = 1, Z.HotSlots() do list[i] = Z.HotIcon(b, i) end
+      elseif key == "debuffs" then for i = 1, Z.DebuffSlots() do list[i] = Z.DebuffIcon(b, i) end
+      elseif key == "defensives" then for i = 1, Z.DEFENSIVE_COUNT do list[i] = Z.DefensiveIcon(b, i) end
+      elseif key == "big" then list[1] = Z.BigIcon(b)
+      elseif key == "buff" then list[1] = Z.BuffIcon(b)
+      elseif key == "controls" then list[1] = Z.ControlIcon(b)
+      elseif key == "dispelType" then list[1] = Z.DispelTypeIcon(b)
+      elseif key == "lowMana" then list = { b.lowMana, Z.DrinkIcon(b) }
+      else list[1] = b[key] end
+      return list
+    end
+    -- Lettres réelles : Z.LETTERS tailles de police de haut ; chiffre de vie : Z.DIGITS de large
+    local function Letters(key, r)
+      if key ~= "name" and key ~= "text" then return r end
+      local font = db.fontSize - (key == "text" and 1 or 0)
+      local h, cy = math.ceil(font * Z.LETTERS), (r[3] + r[4]) / 2
+      local out = { r[1], r[2], cy - h / 2, cy + h / 2 }
+      if key == "text" then
+        local w = math.min(r[2] - r[1], math.ceil(db.fontSize * Z.DIGITS))
+        if r.point:find("RIGHT") then out[1] = r[2] - w elseif r.point:find("LEFT") then out[2] = r[1] + w
+        else local cx = (r[1] + r[2]) / 2 out[1], out[2] = cx - w / 2, cx + w / 2 end
+      end
+      return out
+    end
+    local function Over(a, c) return a[1] < c[2] - 0.01 and c[1] < a[2] - 0.01 and a[3] < c[4] - 0.01 and c[3] < a[4] - 0.01 end
+    local checked = 0
+    local function Check(label)
+      for _, power in ipairs({ false, true }) do
+        b.powerShown = power
+        Z.StyleButton(b)
+        W, H = Z.CellSize()
+        local all = {}
+        for key in pairs(FAMILY) do
+          all[key] = {}
+          for i, part in ipairs(Parts(key)) do all[key][i] = Letters(key, Rect(part)) end
+        end
+        local inline = Z:Shape().inline
+        for a, fa in pairs(FAMILY) do
+          for c, fc in pairs(FAMILY) do
+            local badge = inline and a == "leader" and c == "role" -- le badge du chef, posé sur le coin du rôle
+            local forbidden = (fa == 1 and fc == 1) or (fa ~= fc and ((fa == 1 and not SOFT[a]) or (fc == 1 and not SOFT[c])))
+            if a < c and forbidden and not badge and Z.ElementShown(a) and Z.ElementShown(c) then
+              for i, ra in ipairs(all[a]) do
+                for j, rc in ipairs(all[c]) do
+                  assert(not Over(ra, rc), string.format("%s%s : %s %d sur %s %d", label, power and ", mana" or "", a, i, c, j))
+                  checked = checked + 1
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    db.placement, db.autoShrink, db.manaBars, db.lowManaHealers = {}, false, "ALL", 20
+    db.showLeader, db.showRole, db.missingBuffs = true, true, true
+    db.cornerSpells[Z.class] = nil
+    local function Reset(shape, width, height)
+      Z:ApplyShape(shape)
+      db.width, db.height = width or db.width, height or db.height
+      db.corners, db.hotStyle, db.hotCount, db.debuffCount, db.text, db.showClassIcon = "SQUARE", "ICONS", 4, 2, "DEFICIT", false
+      db.cornerSpells[Z.class] = nil
+    end
+    for _, shape in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
+      local s = Z.shapes[shape]
+      local sizes = { { s.width, s.height }, { Z.limits.width[2], Z.limits.height[2] }, { s.width, Z.limits.height[2] },
+        { Z.limits.width[2], s.height } }
+      if not s.inline then sizes[#sizes + 1] = { s.width, 40 } end
+      for _, size in ipairs(sizes) do
+        Reset(shape, size[1], size[2]) Z:Refresh()
+        Check(shape .. " " .. size[1] .. "x" .. size[2])
+      end
+      -- Autres réglages, à la taille d'origine de la forme
+      local variants = {
+        { "classe", function() db.showClassIcon = true end },
+        { "angles arrondis", function() db.corners = "ROUND" end },
+        { "sans chiffre de vie", function() db.text = "NONE" end },
+        { "6 soins, 5 affaiblissements", function() db.hotCount, db.debuffCount = 6, 5 end },
+        { "police 14", function() db.fontSize = 14 end },
+      }
+      -- Carré : quatre carrés de coin ne laissent plus la place (icônes déjà à leur plus petite taille)
+      if shape ~= "SQUARE" then
+        variants[#variants + 1] = { "coins pris", function()
+          db.cornerSpells[Z.class] = { TOPLEFT = "Rénovation", TOPRIGHT = "Rénovation", BOTTOMRIGHT = "Rénovation", BOTTOMLEFT = "Rénovation" }
+        end }
+      end
+      for _, variant in ipairs(variants) do
+        Reset(shape, s.width, s.height) variant[2]() Z:Refresh()
+        Check(shape .. " " .. variant[1])
+      end
+    end
+    assert(checked > 10000, "trop peu de verifications : " .. checked)
+
+    -- Tuile : la vie sous le nom ; sans chiffre de vie, les bandes s'agrandissent et les icônes aussi
+    Reset("TILE") Z:Refresh()
+    local rows = Z.AuraRows()
+    assert(rows.mode == "LINE" and rows.homes.name.y > 0 and rows.homes.text.y < 0, "Tuile : vie sous le nom")
+    local size = rows.hots.size
+    db.text = "NONE" Z:Refresh()
+    assert(Z.AuraRows().hots.size > size, "sans chiffre de vie, les icones ne grandissent pas")
+    -- Barre : le rôle remonte au-dessus du buff, la mana basse se pose sur lui, la boisson à côté vers l'intérieur
+    Reset("BAR") Z:Refresh()
+    rows = Z.AuraRows()
+    assert(rows.homes.role.y > 0 and rows.homes.lowMana.y == rows.homes.role.y and rows.homes.lowMana.x == rows.homes.role.x, "Barre : role et mana basse")
+    local x, _, drinkSize = Z.DrinkPlace(b)
+    assert(x == rows.homes.lowMana.x + drinkSize + 2, "Barre : boisson a cote de la mana basse")
+    -- Un élément agrandi dans l'éditeur garde sa taille au-delà de sa bande
+    Reset("TILE") Z:Refresh()
+    local role = Z.AuraRows().homes.role.w
+    Z.SetElementSize("role", 200) Z:Refresh()
+    assert(b.role._w == math.floor(role * 2 + 0.5), "role agrandi : " .. b.role._w)
+  end)
+  db.placement, db.cornerSpells[Z.class] = old.placement, old.cornerSpells
+  for _, key in ipairs(keys) do db[key] = old[key] end
+  b.powerShown = nil
+  Z:Refresh()
   assert(ok, err)
 end)
 
