@@ -67,6 +67,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 d | 1.46.4 | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | Publiée le 24 novembre 2026 |
 | 32 e | 1.46.5 | Correction C26 : familiers repensés (colonne en face du maître en groupe, colonne rangée par groupe en raid, nom et couleur du maître, portée, réglage à trois choix) ; cadre des tanks gardé | Publiée le 24 novembre 2026 |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
+| 33 bis | à fixer | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | À faire (étude faite, décision prise) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
@@ -1241,6 +1242,15 @@ les versions. Rien de tel chez HealKit, HealBot ni VuhDo.
 - [x] Relecture medium faite (2 bugs corrigés : fenêtre des nouveautés rangée à côté des options, rien au wipe ;
   2 optimisations), 131 étapes.
 - [ ] Essai en jeu (lien cliquable, rune, ligne de sortie), feu vert, publication de la 1.47.0.
+
+## Étape 33 bis (PRIORITÉ HAUTE) : buff posé caché, de retour en gris quand il faut le reposer
+Demande de l'auteur (24 novembre 2026), en JcE et en JcJ, avant l'étape 34. Étude de HealKit et plan complet dans
+`CORRECTIONS.md` (fiche C31).
+- [x] Étude du code de HealKit (repères seulement pour les manquants, seuil, rien en combat, mémoire en champ de
+  bataille) et de l'affichage actuel de Lyorune (conteneur du jeu : posé en couleur).
+- [x] Décision de l'auteur (24 novembre 2026) : en combat, repères gris tirés de la mémoire, jamais le buff posé.
+- [ ] Codage (hors combat partout : seulement les repères gris de `b.missingBuffs`), tests, guides, relecture high
+  (valeurs secrètes), essai en jeu (monde, donjon, champ de bataille, combat), publication.
 
 ## Étape 34 : canal des soigneurs, en français et en anglais
 Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33 (son choix). Idée : un canal écrit réservé
