@@ -64,7 +64,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 a | 1.46.1 | Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid ; aussi C23 (journal), C24 (chef), icône des DPS | Publiée (24 novembre 2026) |
 | 32 b | 1.46.2 | Correction C18 : cibler un joueur ou soi-même | Publiée |
 | 32 c | 1.46.3 | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | Corrigée, à essayer en jeu |
-| 32 d | à fixer | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | À faire |
+| 32 d | 1.46.4 | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | Codée, à essayer en jeu |
 | 32 e | à fixer | Correction C26 : cadres des familiers et des tanks séparés revus (comparaison HealKit, VuhDo, HealBot) | À faire |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
@@ -1204,7 +1204,7 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
   - [x] Corrections (carte blanche de l'auteur) : mise de côté après un refus du jeu, rang adapté au niveau, buff
     d'un autre jamais remplacé, buffs uniques renouvelés sur leur porteur, arme, mort, moi d'abord, mana du
     chasseur. Plus tard : rang plus faible porté, durées en champ de bataille, cible hors du groupe.
-- [ ] **32 d, C19** : version de groupe en priorité. Déjà dans le bandeau (`Z.BuffRows`, `buffGroupAt`), pas
+- [x] **32 d, C19** (codée le 24 novembre 2026, à essayer en jeu) : version de groupe en priorité. Déjà dans le bandeau (`Z.BuffRows`, `buffGroupAt`), pas
   sur la case ; ne compter que les joueurs que le sort de groupe touche sur Forever (groupe, portée : vérifier avec
   HealKit, PallyPower, VuhDo) ; réglage plus facile à trouver (aujourd'hui dans les réglages fins).
 - **Questions en attente pour le joueur** (par l'auteur) : sa version de Lyorune ; ses fichiers

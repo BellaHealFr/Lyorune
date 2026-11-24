@@ -6919,6 +6919,41 @@ step("etape 26 a : buffs complets (quatre classes, JcE et JcJ, toutes les absenc
     assert(n < 2 or GroupRow(), "version de groupe des 2 joueurs")
     Z.db.buffGroupAt = math.min(5, n + 1) Update()
     assert(n >= 5 or not GroupRow(), "version de groupe sous le seuil")
+    -- 32 d : seuls comptent les joueurs a portee du sort de groupe ; leurs cases montrent l'icone de cette version
+    Z.db.buffGroupAt = 2 Update()
+    local row = GroupRow()
+    if n >= 2 then
+      local check = row.check
+      assert(check.groupIcon and row.icon == check.groupIcon, "ligne de groupe : icone de la version de groupe")
+      for _, e in ipairs(row.players) do
+        assert(Z.GroupCover(e.unit, check) == check.groupIcon, "case couverte sans l'icone de groupe")
+      end
+      local far
+      for _, e in ipairs(row.players) do if not UnitIsUnit(e.unit, "player") then far = far or e.unit end end
+      local oldDistance = UnitDistanceSquared
+      local okFar, errFar = pcall(function()
+        UnitDistanceSquared = function(u) if u == far then return 50 * 50, true end return 25, true end
+        Z.db.buffGroupAt = row.count
+        assert(not GroupRow(), "joueur hors de portee compte pour la version de groupe")
+        local own
+        for _, r in ipairs(Z.BuffRows()) do if r.unit == far and r.check == check and not r.count then own = r end end
+        assert(own, "joueur loin sans sa propre ligne")
+        assert(not Z.GroupCover(far, check), "joueur loin couvert par la version de groupe")
+        -- distance secrete (en instance) : rien n'est ecarte a tort
+        UnitDistanceSquared = function() return MakeSecret(2500), MakeSecret(true) end
+        assert(GroupRow(), "distance secrete : joueur ecarte a tort")
+        -- version de groupe seule cochee : personne n'a de ligne a lui, le joueur loin reste dans la ligne de groupe
+        UnitDistanceSquared = function(u) if u == far then return 50 * 50, true end return 25, true end
+        Z.db.buffWatch = { [1243] = { pve = false } } Update()
+        local g = GroupRow()
+        assert(g and g.count == row.count, "groupe seul : joueur loin perdu")
+        assert(not UnitIsUnit(g.unit, far), "groupe seul : la ligne vise le joueur loin")
+        Z.db.buffWatch = {} Update()
+      end)
+      UnitDistanceSquared = oldDistance
+      Z.db.buffWatch = {}
+      assert(okFar, errFar)
+    end
     Z.db.buffGroupAt = 3
     -- JcJ : la colonne JcJ compte en champ de bataille et en arene
     INSTANCE_TYPE = "pvp" Update()

@@ -750,12 +750,17 @@ function Z.RaiseBuffMarks(b)
 	if not (b.marksShown and b.markIcons) then return end
 	local missing = {}
 	if not (fighting or InCombatLockdown()) and b.buffRead == "ok" then
-		for _, entry in ipairs(b.missingBuffs or {}) do missing["buff" .. entry.check.id] = true end
+		for _, entry in ipairs(b.missingBuffs or {}) do missing["buff" .. entry.check.id] = entry.check end
 	end
 	local level = b.over:GetFrameLevel()
 	for index, entry in ipairs(b.markList or {}) do
 		local icon = b.markIcons[index]
-		if icon then icon:SetFrameLevel(level + (missing[entry.key] and 4 or 1)) end -- (boutons du conteneur : +3)
+		if icon then
+			icon:SetFrameLevel(level + (missing[entry.key] and 4 or 1)) -- (boutons du conteneur : +3)
+			-- manquant, et posé par un seul sort de groupe (bandeau, « Groupe N ») : l'icône de ce sort
+			local check = missing[entry.key]
+			icon.texture:SetTexture(check and Z.GroupCover and Z.GroupCover(b.unit, check) or entry.icon)
+		end
 	end
 end
 

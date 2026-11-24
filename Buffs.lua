@@ -234,6 +234,20 @@ end)
 -- Joueur hors de vue ou hors de portée de ce sort, lisible hors combat. Sur Forever, UnitInRange reste secret même hors combat :
 -- la portée du sort lui-même d'abord (C_Spell.IsSpellInRange, souvent 30 m), puis UnitInRange s'il répond.
 -- Une valeur secrète ou inconnue compte comme « à portée » (rien n'est écarté à tort).
+-- La distance elle-même reste lisible hors combat (sauf en instance, où elle n'est pas vérifiée) : comparée à la
+-- portée du sort, elle écarte aussi un joueur entre 30 et 40 m, que UnitInRange laisserait passer.
+local reach = {} -- portée de chaque sort, en mètres, oubliée quand mes sorts changent (talent, nouveau rang)
+local function Reach(spell)
+	if not reach[spell] then
+		local info = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(spell)
+		local range = info and info.maxRange
+		if issecret(range) or type(range) ~= "number" or range <= 0 then return 30 end -- (relue la fois suivante)
+		reach[spell] = range
+	end
+	return reach[spell]
+end
+Z:On("SPELLS_CHANGED", function() wipe(reach) end)
+
 local function Away(unit, spell)
 	if not unit then return false end
 	local me = UnitIsUnit(unit, "player")
@@ -241,6 +255,11 @@ local function Away(unit, spell)
 	-- hors de vue (une centaine de mètres) : le jeu ne peut pas le cibler, le sort partirait sur moi
 	local visible = UnitIsVisible and UnitIsVisible(unit)
 	if visible == false then return true end
+	if spell and UnitDistanceSquared then
+		local distance, checked = UnitDistanceSquared(unit)
+		if not issecret(distance) and not issecret(checked) and checked and type(distance) == "number"
+			and distance > Reach(spell) ^ 2 then return true end
+	end
 	if spell and C_Spell.IsSpellInRange then
 		local ok, inRange = pcall(C_Spell.IsSpellInRange, spell, unit)
 		if ok and not issecret(inRange) and inRange == false then return true end
@@ -487,8 +506,38 @@ function Z.UniqueDiagnostic()
 end
 
 -- Lignes du panneau : un buff après l'autre (ordre de Data.lua), un joueur ou un groupe entier par ligne
+-- Joueurs couverts par une ligne « Groupe N » : { [unité] = { [check] = true } }, relu par les cases (Auras.lua,
+-- Containers.lua) pour montrer l'icône de la version de groupe. Une case dont la couverture change est relue.
+local coveredNow = {}
+local watched = {} -- { unit, spell, away } des joueurs triés par la portée : un changement relit le panneau
+
+local function SameCover(a, b)
+	for check in pairs(a or {}) do if not (b and b[check]) then return false end end
+	for check in pairs(b or {}) do if not (a and a[check]) then return false end end
+	return true
+end
+
+local function KeepCover(covered)
+	local old = coveredNow
+	coveredNow = covered
+	for _, b in ipairs(Z.buttons or {}) do
+		local unit = b.unit
+		if unit and not SameCover(old[unit], covered[unit]) then
+			Z.QueueAuras(b) -- icônes grises de Lyorune
+			if Z.RaiseBuffMarks then Z.RaiseBuffMarks(b) end -- repères dessinés sous les conteneurs du jeu
+		end
+	end
+end
+
+-- Ce buff manque à ce joueur, et la version de groupe le lui posera : l'icône à montrer sur sa case, sinon nil
+function Z.GroupCover(unit, check)
+	local mine = unit and coveredNow[unit]
+	return mine and mine[check] and check.groupIcon or nil
+end
+
 function Z.BuffRows()
-	local missing, result = Missing(), {}
+	local missing, result, covered = Missing(), {}, {}
+	wipe(watched)
 	for _, check in ipairs(Z.buffChecks) do
 		local byGroup, order = {}, {}
 		for _, entry in ipairs(missing) do
@@ -508,23 +557,47 @@ function Z.BuffRows()
 		local groupAt = simple and Z.db.buffGroupAt or 1
 		for _, group in ipairs(order) do
 			local players = byGroup[group]
-			-- la ligne de groupe vise le premier joueur que le jeu n'a pas refusé (C30) : un refus sur un seul joueur
-			-- ne cache pas tout son groupe
-			local aim
-			for _, entry in ipairs(players) do
-				if not Aside(entry.unit, groupSpell) then aim = aim or entry end
-			end
-			if groupSpell and aim and group > 0 and #players >= groupAt then
-				result[#result + 1] = { check = check, spell = groupSpell, icon = check.icon, unit = aim.unit,
-					group = group, count = #players, players = players }
-			elseif simple then
+			-- seuls comptent les joueurs que le sort de groupe toucherait : à sa portée (un joueur loin garde sa
+			-- ligne à lui, en fin de liste). La ligne de groupe vise le premier que le jeu n'a pas refusé (C30).
+			-- Version de groupe seule cochée : personne n'a de ligne à lui, tous restent dans la ligne de groupe.
+			local reached, rest, aim = players, players, nil
+			if groupSpell and group > 0 then
+				local near
+				if simple then reached, rest = {}, {} end
 				for _, entry in ipairs(players) do
+					local away = Away(entry.unit, groupSpell)
+					watched[#watched + 1] = { entry.unit, groupSpell, away and true or false }
+					entry.away = away or nil
+					if simple then
+						if away then rest[#rest + 1] = entry else reached[#reached + 1] = entry end
+					end
+				end
+				for _, entry in ipairs(reached) do
+					if not Aside(entry.unit, groupSpell) then
+						if not entry.away then near = near or entry end
+						aim = aim or entry
+					end
+				end
+				aim = near or aim
+			end
+			local grouped = aim and #reached >= groupAt
+			if grouped then
+				result[#result + 1] = { check = check, spell = groupSpell, icon = check.groupIcon or check.icon, unit = aim.unit,
+					group = group, count = #reached, players = reached }
+				for _, entry in ipairs(reached) do
+					covered[entry.unit] = covered[entry.unit] or {}
+					covered[entry.unit][check] = true
+				end
+			end
+			if simple then
+				for _, entry in ipairs(grouped and rest or players) do
 					result[#result + 1] = { check = check, spell = entry.spell, spell2 = groupSpell, icon = entry.icon,
-						unit = entry.unit, name = entry.name, class = entry.class }
+						unit = entry.unit, name = entry.name, class = entry.class, away = grouped and entry.away }
 				end
 			end
 		end
 	end
+	KeepCover(covered)
 	UniqueRows(result)
 	-- hors de portée : en fin de liste (lisible hors combat), l'ordre reste le même dans chaque partie
 	-- un buff qui me manque passe en tête (C30) : rien à viser, il part toujours, même en raid où ma case est loin
@@ -535,7 +608,7 @@ function Z.BuffRows()
 		if Recent(entry.unit, entry.spell) then -- je viens de le lui lancer : l'aura arrive
 		elseif Aside(entry.unit, entry.spell) then -- le jeu l'a refusé sur lui (C30)
 		elseif isMe then mine[#mine + 1] = entry
-		elseif Away(entry.unit, entry.spell) then far[#far + 1] = entry else near[#near + 1] = entry end
+		elseif entry.away or Away(entry.unit, entry.spell) then far[#far + 1] = entry else near[#near + 1] = entry end
 	end
 	for _, entry in ipairs(near) do mine[#mine + 1] = entry end
 	for _, entry in ipairs(far) do mine[#mine + 1] = entry end
@@ -552,6 +625,10 @@ local function UpdateRange()
 			row:SetAlpha(Away(row.unitToken, row.spellName) and 0.4 or 1)
 		end
 	end end
+	-- un joueur entre ou sort de la portée du sort de groupe : la ligne « Groupe N » et les icônes des cases suivent
+	for _, seen in ipairs(watched) do
+		if (Away(seen[1], seen[2]) and true or false) ~= seen[3] then Z:QueueBuffPanel() return end
+	end
 end
 
 local function RowEnter(self)
@@ -1015,7 +1092,10 @@ function Z:UpdateBuffPanel()
 	-- mort ou fantôme : rien ne peut partir avant mon retour (C30)
 	local dead = UnitIsDeadOrGhost("player")
 	dead = not issecret(dead) and dead
-	local list = (not dead and Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
+	-- panneau éteint : aucune ligne « Groupe N », les cases gardent l'icône de la version simple
+	local read = not dead and Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)
+	local list = read and Z.BuffRows() or {}
+	if not read then KeepCover({}) wipe(watched) end
 	SetNextBuff(list[1])
 	if #list == 0 and Z.db.buffPanel then list = SampleList() end
 	if Z.db.buffPlace == "FREE" then

@@ -387,7 +387,7 @@ function Z.BuffCheck(entry)
 	end
 	if not check.spell then return end
 	local group = entry[2] and Z.Knows(entry[2]) and Z.SpellName(entry[2])
-	if group and group ~= check.spell then check.groupSpell, check.groupId = group, entry[2] end
+	if group and group ~= check.spell then check.groupSpell, check.groupId, check.groupIcon = group, entry[2], Z.SpellIcon(entry[2]) end
 	return check
 end
 

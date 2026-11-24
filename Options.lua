@@ -2715,11 +2715,11 @@ local function Chapters()
 				{ "check", "combatKey", "En combat, la touche relance mon buff unique", "En combat, la touche du prochain buff manquant relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, choisi dans Mes buffs. Préparée juste avant le combat, par le nom du joueur : elle ne part jamais sur quelqu'un d'autre.", fine = true, dep = { "buffPanel", true } },
 				{ "seg", "buffPlace", "Emplacement des buffs manquants", nil, "Avec les cadres : un bandeau fin sous le dernier groupe (le joueur, puis « +N autres » ou le sort), qui passe au buff suivant après chaque sort. Où vous voulez : une petite fenêtre à déplacer." },
 				{ "custom", BuffWatchList },
+				{ "step", "buffGroupAt", "Sort de groupe dès (joueurs sans le buff)", "Nombre de joueurs d'un même groupe sans le buff, à portée du sort, à partir duquel une seule ligne « Groupe N » lance la version de groupe (Prière de robustesse, Don du fauve...). Leurs cases montrent alors l'icône de cette version. Un joueur trop loin ne compte pas : il garde sa propre ligne.", desc = "Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve." },
 				{ "custom", BuffGroups },
 				{ "custom", BlessingGrid },
 				{ "button", "Répartir les buffs...", function() Z:OpenBuffAssign() end, "Chef ou assistant : cochez les groupes que chacun buffe et la bénédiction que chaque paladin pose en premier, puis envoyez avant le combat. Aussi : /lyorune repartir buffs." },
 				{ "step", "buffRenew", "Proposer à nouveau sous (secondes)", "Un buff qui finit dans moins de secondes que ce nombre est proposé comme s'il manquait, en gris sur la case : pratique avant un boss. Jamais avant le dernier quart d'un buff court. 0 : seulement quand il manque.", desc = "Au départ : 75 secondes avant la fin. 0 : seulement quand le buff manque." },
-				{ "step", "buffGroupAt", "Sort de groupe dès (joueurs sans le buff)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", desc = "Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve.", fine = true },
 			} },
 			{ "Mes joueurs (répartition entre soigneurs)", {
 				{ "note", "Les joueurs dont vous vous occupez portent un trait doré au bord gauche de leur case. Utile même si vous êtes seul à avoir Lyorune.", 30 },

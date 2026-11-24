@@ -1357,7 +1357,8 @@ UpdateBuffs = function(b, unit, enemy)
 			if not marked["buff" .. missing.check.id] and skip + shown < fit then
 				shown = shown + 1
 				local icon = Z.BuffIcon(b, shown, skip)
-				icon.texture:SetTexture(missing.icon)
+				-- un seul sort de groupe le posera (bandeau, ligne « Groupe N ») : son icône, pour le voir sur la case
+				icon.texture:SetTexture(Z.GroupCover and Z.GroupCover(unit, missing.check) or missing.icon)
 				icon.texture:SetDesaturated(true)
 				icon.border:SetColor(1, 0.2, 0.2, 1)
 				icon.cooldown:Clear()
