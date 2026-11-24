@@ -112,7 +112,7 @@ Z.defaults = {
 	combatKey = true,          -- en combat, la touche du prochain buff relance mon buff unique sur son porteur (Buffs.lua)
 	buffPlace = "FRAMES",      -- où : collé sous les cadres, à la forme des cases (départ), ou fenêtre posée où l'on veut
 	buffWatch = {},            -- « Mes buffs » : buffWatch[numéro du buff] = { pve = bool, pvp = bool } ; absent : le départ de Data.lua
-	buffRefresh = 2,           -- proposer à nouveau un buff qui finit dans moins de N minutes (0 : seulement s'il manque)
+	buffRenew = 75,            -- proposer à nouveau un buff qui finit dans moins de N secondes (0 : seulement s'il manque)
 	buffGroupAt = 3,           -- joueurs d'un même groupe sans le buff à partir desquels la version de groupe est proposée
 	buffGroups = {},           -- groupes de raid que je buffe : buffGroups[3] = false écarte le groupe 3 ; vide : tous (BuffAssign.lua)
 	blessingPick = {},         -- bénédiction par type de joueur : blessingPick.TANK = numéro du sort, 0 = aucune ; absent : le départ
@@ -209,7 +209,7 @@ Z.limits = {
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
 	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 300, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
 	lowHealthAt = { 10, 60, 5 }, healthyFadeAt = { 50, 100, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, dispelCount = { 1, 3, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
-	buffRefresh = { 0, 15, 1 }, buffGroupAt = { 2, 5, 1 },
+	buffRenew = { 0, 900, 15 }, buffGroupAt = { 2, 5, 1 },
 }
 
 Z.choices = {
@@ -269,7 +269,7 @@ Z.notInProfile = {
 	profiles = true, activeProfile = true, autoProfile = true, autoProfiles = true,
 	language = true, showNews = true, syncEnabled = true, versionNotice = true, acceptConfigs = true, resSync = true, showRunes = true, windowTheme = true,
 	reduceMotion = true, magicEffects = true, logoAnimation = true, errorNotice = true, tutorialDone = true, wizardDone = true,
-	buffPanel = true, combatKey = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRefresh = true, buffGroupAt = true,
+	buffPanel = true, combatKey = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRenew = true, buffGroupAt = true,
 	cooldownPanel = true, cooldownShow = true, cooldownIgnored = true, groupCooldowns = true, cooldownShare = true, totemPanel = true,
 	buffGroups = true, blessingPick = true, blessingSync = true,
 }
@@ -470,11 +470,18 @@ local function Migrate(db)
 		db.fiveSecondRule = nil
 	end
 	-- 1.33.7 : un buff est proposé 2 minutes avant sa fin (demande de l'auteur). Le départ était 0 de la 1.33.0 à la
-	-- 1.33.6 : un joueur resté sur 0 passe au nouveau départ, une seule fois ; un autre choix est gardé.
+	-- 1.33.6 : un joueur resté sur 0 passe au départ, une seule fois ; un autre choix est gardé (en secondes plus bas).
 	if last and last < 13307 and now >= 13307
 		and db.buffRefresh == 0 then
-		db.buffRefresh = nil
+		db.buffRefresh = 2
 	end
+	-- 1.46.3 : le seuil « Proposer à nouveau sous » passe des minutes aux secondes (C20 : 75 s demandées par un
+	-- joueur, impossible en minutes). Resté sur l'ancien départ (2 minutes) : le nouveau départ, 75 s ; un autre choix
+	-- est converti. Une seule fois, l'ancienne clé disparaît.
+	if type(db.buffRefresh) == "number" then
+		if db.buffRefresh ~= 2 then db.buffRenew = math.min(math.max(math.floor(db.buffRefresh) * 60, 0), 900) end
+	end
+	db.buffRefresh = nil
 	-- 1.44.0 : « Partager mes recharges » devient éteint au départ (demande de l'auteur : au joueur de choisir).
 	-- Les 1.42.1 à 1.43.1 l'allumaient pour tous : il repart du nouveau défaut, une seule fois.
 	if last and last >= 14201 and last < 14400

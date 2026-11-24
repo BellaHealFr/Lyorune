@@ -2708,7 +2708,7 @@ local function Chapters()
 				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la barre de vie : jaune quand le joueur prend de la menace sur un monstre, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui.", fine = true },
 			} },
 			{ "Buffs", {
-				{ "check", "missingBuffs", "Buff manquant sur la case", desc = "Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs." },
+				{ "check", "missingBuffs", "Mes buffs sur la case", "Une rangée en bas à gauche de la case, pour chacun de vos buffs qui concerne ce joueur : en couleur quand il est posé, gris à bord rouge quand il manque ou finit bientôt. Le même affichage hors combat, en combat et en champ de bataille.", desc = "Couleur : posé. Gris à bord rouge : à relancer." },
 				{ "check", "combatBuffs", "En combat", "En combat (et contre un boss), le jeu cache les buffs : il dessine lui-même vos buffs en bas à gauche des cases, en couleur quand le buff est posé (rien à faire), gris à bord rouge quand il manque. Un clic sur la case le relance. Rien n'apparaît sur un joueur qu'aucun de vos buffs ne concerne.", desc = "Couleur : posé, rien à faire. Gris à bord rouge : il manque.", dep = { "missingBuffs", true } },
 				{ "check", "pvpBuffs", "En champ de bataille", "Même chose pendant tout le match, en combat ou non. Éteint : en champ de bataille, Lyorune montre seulement les buffs qu'il a retenus avant le match.", desc = "Vos buffs dessinés par le jeu pendant tout le match.", dep = { "missingBuffs", true } },
 				{ "check", "buffPanel", "Buffs manquants à poser", "Hors combat, chaque buff qui manque à un joueur est proposé : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour son porteur. Tout disparaît en combat et quand tout est posé. Une touche peut lancer le premier : raccourcis du jeu, AddOns, Lyorune." },
@@ -2718,7 +2718,7 @@ local function Chapters()
 				{ "custom", BuffGroups },
 				{ "custom", BlessingGrid },
 				{ "button", "Répartir les buffs...", function() Z:OpenBuffAssign() end, "Chef ou assistant : cochez les groupes que chacun buffe et la bénédiction que chaque paladin pose en premier, puis envoyez avant le combat. Aussi : /lyorune repartir buffs." },
-				{ "step", "buffRefresh", "Proposer à nouveau sous (minutes)", "Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque.", desc = "Au départ : 2 minutes avant la fin. 0 : seulement quand le buff manque." },
+				{ "step", "buffRenew", "Proposer à nouveau sous (secondes)", "Un buff qui finit dans moins de secondes que ce nombre est proposé comme s'il manquait, en gris sur la case : pratique avant un boss. Jamais avant le dernier quart d'un buff court. 0 : seulement quand il manque.", desc = "Au départ : 75 secondes avant la fin. 0 : seulement quand le buff manque." },
 				{ "step", "buffGroupAt", "Sort de groupe dès (joueurs sans le buff)", "Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...).", desc = "Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve.", fine = true },
 			} },
 			{ "Mes joueurs (répartition entre soigneurs)", {

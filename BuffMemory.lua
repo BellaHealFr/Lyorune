@@ -30,9 +30,14 @@ local function Key(unit)
 	return unit
 end
 
-local function Duration(name)
+-- Durée lue une fois sur une aura lisible (nil : jamais lue)
+local function Learned(name)
 	local known = Z.db and Z.db.buffDurations and Z.db.buffDurations[name]
-	return type(known) == "number" and known > 0 and known or DEFAULT_DURATION
+	return type(known) == "number" and known > 0 and known or nil
+end
+
+local function Duration(name)
+	return Learned(name) or DEFAULT_DURATION
 end
 
 -- Le jeu cache-t-il les buffs maintenant ? (combat, boss, match JcJ)
@@ -100,7 +105,18 @@ function Z.NoteBuffs(unit, list, names, own)
 	local store = own and mine or seen
 	local found = store[key]
 	if found then
-		for name in pairs(names) do found[name] = nil end
+		-- un buff là dont le jeu cache l'heure de fin (donjon, C20) : le souvenir de mon sort reste
+		local kept
+		for i = 1, #list do
+			local name = list[i].name
+			if names[name] and issecret(list[i].expirationTime) then
+				kept = kept or {}
+				kept[name] = true
+			end
+		end
+		for name in pairs(names) do
+			if not (kept and kept[name]) then found[name] = nil end
+		end
 	end
 	for i = 1, #list do
 		local aura = list[i]
@@ -118,11 +134,15 @@ function Z.NoteBuffs(unit, list, names, own)
 end
 
 -- Secondes avant de proposer de nouveau ce buff d'après la mémoire (nil : rien de su). Même règle que la
--- lecture : ce qui reste, moins le seuil « buffRefresh », plafonné au quart de sa durée.
-function Z.BuffMemoryLeft(unit, name, own, now, margin)
+-- lecture : ce qui reste, moins le seuil « buffRenew », plafonné au quart de sa durée. sure : seulement si la vraie
+-- durée du buff a déjà été lue (buff là mais fin cachée : une durée devinée le proposerait à tort).
+function Z.BuffMemoryLeft(unit, name, own, now, margin, sure)
 	local found = (own and mine or seen)[Key(unit)]
 	local ends = found and found[name]
 	if not ends then return nil end
+	if sure and not Learned(name) then return nil end
+	-- toujours là après la fin retenue : quelqu'un l'a relancé (fin cachée, rien de plus à savoir)
+	if sure and ends <= now then return nil end
 	if margin > 0 then margin = math.min(margin, Duration(name) * 0.25) end
 	return ends - now - margin
 end
@@ -371,7 +391,7 @@ function Z.BuffDiagnostic()
 	end
 	local lines = { L["état : buffs cachés %s, restriction %s, match JcJ %s, partie %s, en combat %s."]:format(YesNo(secret),
 		YesNo(Z.AurasRestricted()), YesNo(Z.InPvPMatch and Z.InPvPMatch()), match, YesNo(InCombatLockdown())) }
-	local n = { players = 0, missing = 0, dead = 0, fighting = 0, away = 0, refused = 0, secret = 0, restricted = 0, name = 0, hidden = 0 }
+	local n = { players = 0, missing = 0, dead = 0, fighting = 0, away = 0, refused = 0, secret = 0, restricted = 0, name = 0, hidden = 0, ends = 0 }
 	local done = {}
 	for _, b in ipairs(Z.buttons or {}) do
 		local unit = b.unit
@@ -381,6 +401,7 @@ function Z.BuffDiagnostic()
 			local name = UnitName(unit)
 			if not name or issecret(name) then n.name = n.name + 1 end
 			if n[b.buffRead or ""] then n[b.buffRead] = n[b.buffRead] + 1 end -- refused, secret, restricted
+			if b.buffEndHidden then n.ends = n.ends + 1 end -- heure de fin d'un buff cachée par le jeu (C20)
 			if b.status then n.dead = n.dead + 1
 			elseif not b:IsVisible() then n.hidden = n.hidden + 1
 			elseif Z.BuffFighting and Z.BuffFighting(unit) then n.fighting = n.fighting + 1
@@ -394,5 +415,6 @@ function Z.BuffDiagnostic()
 		:format(n.players, n.missing, n.away, n.dead, n.fighting, n.hidden)
 	lines[#lines + 1] = L["lecture : %d refusée(s), %d avec des noms secrets, %d lisible(s) mais sous restriction ; %d nom(s) de joueur secret(s)."]
 		:format(n.refused, n.secret, n.restricted, n.name)
+	lines[#lines + 1] = L["fin cachée : %d joueur(s) dont un buff a une heure de fin secrète (la mémoire de vos sorts décide)."]:format(n.ends)
 	return lines
 end

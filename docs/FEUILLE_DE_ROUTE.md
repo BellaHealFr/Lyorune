@@ -63,7 +63,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 | 1.46.0 | Totems du chaman sous les cadres, icône de classe (idées en réserve d'avant le plan correctif) | Publiée (v1.46.0) |
 | 32 a | 1.46.1 | Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid ; aussi C23 (journal), C24 (chef), icône des DPS | Publiée (24 novembre 2026) |
 | 32 b | 1.46.2 | Correction C18 : cibler un joueur ou soi-même | Publiée |
-| 32 c | à fixer | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | À faire |
+| 32 c | 1.46.3 | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | Corrigée, à essayer en jeu |
 | 32 d | à fixer | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | À faire |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
@@ -1181,15 +1181,16 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
   dans la liste des clics, au premier lancement et à la mise à jour (combinaison libre chez Lyorune et dans le clic
   pour lancer du jeu, message à la connexion). Carte « Soigner d'un clic », texte d'aide, tutoriel et guide anglais
   disent comment cibler et renvoient aux raccourcis du jeu (« Cibler soi-même »). Essayée en jeu par l'auteur, publiée en 1.46.2.
-- [ ] **32 c, C20, C21, C22** : buffs.
-  - [ ] C20 : heure de fin secrète (donjon) = la mémoire de mes sorts décide, au lieu de « jamais » ; seuil en
+- [ ] **32 c (1.46.3), C20, C21, C22** : buffs. Codée et testée (128 étapes) le 24 novembre 2026, décisions de
+  l'auteur : 75 s, quart gardé, buff posé en couleur partout. Reste : essai en jeu, publication.
+  - [x] C20 : heure de fin secrète (donjon) = la mémoire de mes sorts décide, au lieu de « jamais » ; seuil en
     secondes (valeur de départ à décider, 75 s demandées), un seul réglage, migration des minutes ; plafond du quart
     à décider avec l'auteur.
-  - [ ] C21 : un seul fonctionnement sur la case en JcE et en JcJ : tous les buffs manquants, pas seulement le
+  - [x] C21 : un seul fonctionnement sur la case en JcE et en JcJ : tous les buffs manquants, pas seulement le
     premier (Auras.lua, `b.missingBuff`), en s'appuyant sur ce que fait déjà le chemin des conteneurs.
-  - [ ] C22 : rangée de la case, buff posé qui disparaît, buff perdu en gris ; forme et interrupteur décidés avec
+  - [x] C22 : rangée de la case, buff posé qui disparaît, buff perdu en gris ; forme et interrupteur décidés avec
     l'auteur ; place dans les quatre formes de case et dans l'éditeur de placement.
-  - [ ] Recherche : HealKit, PallyPower, VuhDo, HealBot (installés), plus un addon de suivi des buffs.
+  - [x] Recherche : HealKit, PallyPower, VuhDo, HealBot (installés), comparaison dans les fiches C20 et C22.
 - [ ] **32 d, C19** : version de groupe en priorité. Déjà dans le bandeau (`Z.BuffRows`, `buffGroupAt`), pas
   sur la case ; ne compter que les joueurs que le sort de groupe touche sur Forever (groupe, portée : vérifier avec
   HealKit, PallyPower, VuhDo) ; réglage plus facile à trouver (aujourd'hui dans les réglages fins).

@@ -418,26 +418,30 @@ end
 local function NilIfEmpty(set) if set and next(set) then return set end end
 
 ----------------------------------------------------------------------------------------------------
--- Repères des buffs (étape 26 b bis, choix de l'auteur le 22 novembre 2026). Quand le jeu cache les buffs (combat,
--- champ de bataille, arène), Lyorune ne peut plus lire qu'un buff manque. Chaque buff de ma liste qui
+-- Repères des buffs (étape 26 b bis, choix de l'auteur le 22 novembre 2026 ; partout depuis la 1.46.3, C21 et C22 :
+-- même rangée hors combat, en combat et en champ de bataille). Quand le jeu cache les buffs (combat, champ de
+-- bataille), Lyorune ne peut plus lire qu'un buff manque. Chaque buff de ma liste qui
 -- concerne ce joueur (décidé hors combat, mêmes règles que le panneau : Z.BuffConcerns) reçoit un repère gris à bord
 -- rouge (Z.BuffMark, Auras.lua) et une place du conteneur « buffs », juste au-dessus : le jeu y dessine le buff en
 -- couleur quand il est là. Gris = manquant, couleur = posé. Un seul conteneur par case (pas un par buff), tous les
 -- rangs du buff (Z.spellRanks, Data.lua), bénédictions, auras et buffs uniques : seulement les miens.
+-- Hors combat, Lyorune sait aussi ce qui manque ou finit bientôt (Auras.lua, b.missingBuffs) : ce repère gris passe
+-- alors devant le buff dessiné (RaiseMarks). En combat, seul le jeu décide.
 ----------------------------------------------------------------------------------------------------
 local fighting = false -- entre PLAYER_REGEN_DISABLED et PLAYER_REGEN_ENABLED (le verrou arrive juste après)
 
--- Deux interrupteurs (1.37.1, retour d'un joueur) : en champ de bataille et en arène, seul « pvpBuffs » décide ;
--- ailleurs (combat, boss hors combat), seul « combatBuffs ».
+-- Deux interrupteurs (1.37.1, retour d'un joueur) : en champ de bataille, seul « pvpBuffs » décide ; ailleurs, en
+-- combat (et boss hors combat), seul « combatBuffs » ; hors combat, « missingBuffs » suffit.
+local function Fighting()
+	return fighting or InCombatLockdown() or Z.AurasHidden()
+end
+
 function Z.BuffMarksOn()
 	local db = Z.db
 	if not (db and db.missingBuffs) then return false end
-	if Z.PvPKind and Z.PvPKind() then
-		if not db.pvpBuffs then return false end
-	elseif not db.combatBuffs then
-		return false
-	end
-	return fighting or InCombatLockdown() or Z.AurasHidden()
+	if Z.PvPKind and Z.PvPKind() then return db.pvpBuffs == true end
+	if Fighting() then return db.combatBuffs == true end
+	return true
 end
 
 function Z.BuffMarksShown(b)
@@ -457,8 +461,8 @@ end
 local function Marks(b)
 	local db, list = Z.db, {}
 	local unit = b.unit
-	-- préparés dès qu'un des deux interrupteurs est allumé : Z.BuffMarksOn choisit selon le lieu, sans reconstruire
-	if not (db.missingBuffs and (db.combatBuffs or db.pvpBuffs)) or b.extra or not unit or InCombatLockdown() then return list end
+	-- préparés dès que la rangée est allumée : Z.BuffMarksOn choisit selon le lieu, sans reconstruire
+	if not db.missingBuffs or b.extra or not unit or InCombatLockdown() then return list end
 	local me = UnitIsUnit(unit, "player")
 	if issecret(me) then return list end
 	for _, check in ipairs(Z.buffChecks or {}) do
@@ -736,6 +740,23 @@ local function Visibility(b)
 		icon:SetShown(b.marksShown)
 	end
 	for index = #list + 1, #(b.markIcons or {}) do b.markIcons[index]:Hide() end
+	Z.RaiseBuffMarks(b)
+end
+
+-- Hors combat, sur une lecture sûre : le repère gris d'un buff qui manque ou finit bientôt (b.missingBuffs, Auras.lua)
+-- passe devant le conteneur, qui le dessinerait en couleur. En combat, en champ de bataille ou contre un boss (la
+-- mémoire devine), tous derrière : ce que le jeu dessine fait foi.
+function Z.RaiseBuffMarks(b)
+	if not (b.marksShown and b.markIcons) then return end
+	local missing = {}
+	if not (fighting or InCombatLockdown()) and b.buffRead == "ok" then
+		for _, entry in ipairs(b.missingBuffs or {}) do missing["buff" .. entry.check.id] = true end
+	end
+	local level = b.over:GetFrameLevel()
+	for index, entry in ipairs(b.markList or {}) do
+		local icon = b.markIcons[index]
+		if icon then icon:SetFrameLevel(level + (missing[entry.key] and 4 or 1)) end -- (boutons du conteneur : +3)
+	end
 end
 
 local function EachBox(b, method, ...)
@@ -890,7 +911,7 @@ local function MarksChanged()
 			Visibility(b)
 			if b.marksShown and not before then
 				Call(b.boxes.buffs, "UpdateAllAuras")
-				if b.buffIcon then b.buffIcon:Hide() end
+				if Z.QueueAuras then Z.QueueAuras(b) end -- les absences sans repère se replacent après eux
 			elseif before and not b.marksShown and Z.QueueAuras then
 				Z.QueueAuras(b)
 			end

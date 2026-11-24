@@ -162,7 +162,8 @@ Z.translations.enUS = {
 	["Mes soins"] = "My heals", ["Mes soins sur la durée"] = "My heals over time",
 	["Affichage des soins sur la durée"] = "Heal over time display", ["Icônes"] = "Icons", ["Barres fines"] = "Thin bars",
 	["Buff manquant sur la case (hors combat)"] = "Missing buff on the cell (out of combat)",
-	["Buff manquant sur la case"] = "Missing buff on the cell",
+	["Mes buffs sur la case"] = "My buffs on the cell",
+	["Une rangée en bas à gauche de la case, pour chacun de vos buffs qui concerne ce joueur : en couleur quand il est posé, gris à bord rouge quand il manque ou finit bientôt. Le même affichage hors combat, en combat et en champ de bataille."] = "A row at the bottom left of the cell, for each of your buffs that concerns this player: in colour when it is up, grey with a red edge when it is missing or ending soon. The same display out of combat, in combat and in battlegrounds.",
 	["En combat"] = "In combat",
 	["En combat (et contre un boss), le jeu cache les buffs : il dessine lui-même vos buffs en bas à gauche des cases, en couleur quand le buff est posé (rien à faire), gris à bord rouge quand il manque. Un clic sur la case le relance. Rien n'apparaît sur un joueur qu'aucun de vos buffs ne concerne."] = "In combat (and against a boss), the game hides buffs: it draws your buffs itself at the bottom left of the cells, in colour when the buff is up (nothing to do), grey with a red edge when it is missing. A click on the cell casts it again. Nothing appears on a player none of your buffs concern.",
 	["Couleur : posé, rien à faire. Gris à bord rouge : il manque."] = "Colour: up, nothing to do. Grey with a red edge: missing.",
@@ -171,7 +172,7 @@ Z.translations.enUS = {
 	["Vos buffs dessinés par le jeu pendant tout le match."] = "Your buffs drawn by the game for the whole match.",
 	["En combat, la touche relance mon buff unique"] = "In combat, the key recasts my single-target buff",
 	["En combat, la touche du prochain buff manquant relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, choisi dans Mes buffs. Préparée juste avant le combat, par le nom du joueur : elle ne part jamais sur quelqu'un d'autre."] = "In combat, the next missing buff key recasts your single-target buff (Earth Shield, Fear Ward...) on its holder, chosen in My buffs. Set up just before combat, by the player's name: it never goes to anyone else.",
-	["Icône grise en bas à gauche quand un joueur n'a pas un de vos buffs."] = "Grey icon at the bottom left when a player lacks one of your buffs.",
+	["Couleur : posé. Gris à bord rouge : à relancer."] = "Colour: up. Grey with a red edge: cast it again.",
 	["Affaiblissements"] = "Debuffs", ["Cadre coloré quand je peux dissiper"] = "Coloured frame when I can dispel",
 	["Bleu magie, violet malédiction, vert poison, brun maladie, autour de la case. Le liseré de chaque icône d'affaiblissement prend aussi la couleur de son type : deux types différents se voient ensemble."] = "Blue magic, purple curse, green poison, brown disease, around the frame. The edge of each debuff icon also takes the colour of its type: two different types show together.",
 	["Icône du type à dissiper"] = "Dispel type icon", ["L'image du type, en plus de la couleur."] = "The type's picture, on top of the colour.",
@@ -528,10 +529,10 @@ Z.translations.enUS = {
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
-			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, le prochain buff qui manque s'affiche sous vos cadres, dans un bandeau fin : un clic le pose, puis le suivant prend sa place. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs. En combat et en champ de bataille (deux interrupteurs), le jeu les dessine sur les cases : en couleur, posés, rien à faire ; gris, ils manquent. Vos groupes à buffer et la bénédiction de chaque joueur s'y règlent aussi ; le chef peut les répartir.\n\n"
+			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, le prochain buff qui manque s'affiche sous vos cadres, dans un bandeau fin : un clic le pose, puis le suivant prend sa place. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs. Sur chaque case, une rangée de vos buffs, partout : en couleur, posés, rien à faire ; gris, à relancer (en combat et en champ de bataille : deux interrupteurs). Vos groupes à buffer et la bénédiction de chaque joueur s'y règlent aussi ; le chef peut les répartir.\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur."] =
-		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click). A key can do it too, or hide the frames and cast the next missing buff: game key bindings, AddOns section. Out of combat, the next missing buff shows under your frames, in a thin strip: a click casts it, then the next one takes its place. Your buffs to watch, in PvE and in PvP: Players chapter. In combat and in battlegrounds (two switches), the game draws them on the cells: in colour, up, nothing to do; grey, missing. Your buff groups and each player's blessing are set there too; the leader can assign them.\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
+		"You know the essentials. Happy healing!\n\nTip: before an important fight, check the Spells and bindings chapter. Click and size changes requested in combat apply as soon as it ends.\n\nThe Lyorune button on the edge of the minimap opens the options (left click) or test mode (right click). A key can do it too, or hide the frames and cast the next missing buff: game key bindings, AddOns section. Out of combat, the next missing buff shows under your frames, in a thin strip: a click casts it, then the next one takes its place. Your buffs to watch, in PvE and in PvP: Players chapter. On each cell, a row of your buffs, everywhere: in colour, up, nothing to do; grey, cast it again (in combat and in battlegrounds: two switches). Your buff groups and each player's blessing are set there too; the leader can assign them.\n\nA problem or a display glitch? Type |cff33dd88/lyorune bug|r: three questions, and a report ready to copy for the author.",
 	["Cliquez sur une case pour lancer un sort sur ce joueur, sans le cibler."] = "Click a cell to cast a spell on that player, without targeting them.",
 	["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."] = "No spell is assigned yet: you will choose them in the Spells and bindings chapter of the options.",
 	["Suivant"] = "Next", ["Précédent"] = "Back", ["Terminer"] = "Finish",
@@ -543,7 +544,7 @@ Z.translations.enUS = {
 	["Nom, texte de vie, icônes : décalez chaque élément au pixel près sur une case d'exemple agrandie."] = "Name, health text, icons: move each element to the exact pixel on an enlarged sample cell.",
 	["Placement des éléments"] = "Element placement",
 	["Icône de rôle"] = "Role icon", ["Icône centrale"] = "Centre icon", ["Affaiblissement important"] = "Important debuff",
-	["Buff manquant"] = "Missing buff", ["Auras privées"] = "Private auras",
+	["Auras privées"] = "Private auras",
 	["Joueur sous contrôle"] = "Crowd-controlled player", ["Gros défensifs"] = "Big defensives", ["Type à dissiper"] = "Dispel type",
 	["Gauche"] = "Left", ["Haut"] = "Up", ["Bas"] = "Down", ["Droite"] = "Right",
 	["Un pixel par clic, cinq avec Maj."] = "One pixel per click, five with Shift.",
@@ -562,7 +563,7 @@ Z.translations.enUS = {
 	["Tout afficher"] = "Show all", ["Remplir la place"] = "Fill the room",
 	["L'élément choisi prend la plus grande taille qui tient sur la case. Un élément masqué laisse sa place aux autres."] = "The chosen element takes the largest size that fits on the cell. A hidden element leaves its room to the others.",
 	["Au plus grand : %d %%. L'icône de rôle bloque : décochez-la pour lui laisser sa place."] = "As large as it gets: %d %%. The role icon is in the way: uncheck it to free its room.",
-	["Au plus grand : %d %%. Le buff manquant bloque : décochez-le pour lui laisser sa place."] = "As large as it gets: %d %%. The missing buff is in the way: uncheck it to free its room.",
+	["Au plus grand : %d %%. Mes buffs bloquent : décochez-les pour leur laisser la place."] = "As large as it gets: %d %%. My buffs are in the way: uncheck them to free their room.",
 	["Au plus grand : %d %%. Mes soins prennent l'autre moitié : décochez-les pour lui laisser la place."] = "As large as it gets: %d %%. My heals take the other half: uncheck them to free the room.",
 	["Au plus grand : %d %%. Les affaiblissements prennent l'autre moitié : décochez-les."] = "As large as it gets: %d %%. Debuffs take the other half: uncheck them.",
 	["Chaque élément masqué de la liste revient sur vos cases, à sa place et à sa taille d'avant."] = "Every hidden element of the list comes back on your cells, at its former place and size.",
@@ -874,6 +875,7 @@ Z.translations.enUS = {
 	["état : buffs cachés %s, restriction %s, match JcJ %s, partie %s, en combat %s."] = "state: buffs hidden %s, restriction %s, PvP match %s, match state %s, in combat %s.",
 	["cases : %d joueur(s), %d au panneau (dont %d hors de portée), %d mort(s), %d en combat, %d case(s) cachée(s)."] = "frames: %d player(s), %d in the panel (%d out of range), %d dead, %d in combat, %d hidden frame(s).",
 	["lecture : %d refusée(s), %d avec des noms secrets, %d lisible(s) mais sous restriction ; %d nom(s) de joueur secret(s)."] = "reading: %d refused, %d with secret names, %d readable but under a restriction; %d secret player name(s).",
+	["fin cachée : %d joueur(s) dont un buff a une heure de fin secrète (la mémoire de vos sorts décide)."] = "hidden end: %d player(s) with a buff whose end time is secret (the memory of your spells decides).",
 	["buffs uniques : de retour sur le tank."] = "single-target buffs: back on the tank.",
 	["buffs uniques : %s les recevra."] = "single-target buffs: %s will get them.",
 	["le joueur survolé reçoit mes buffs uniques"] = "the hovered player gets my single-target buffs",
@@ -1070,9 +1072,9 @@ Z.translations.enUS = {
 	["Bénédictions (une de vous par joueur)"] = "Blessings (one from you per player)",
 	["Enchantement de l'arme"] = "Weapon enchantment",
 	["Les buffs de votre classe à surveiller : une liste pour les donjons, raids et le monde (JcE), une autre pour les champs de bataille (JcJ)."] = "The buffs of your class to watch: one list for dungeons, raids and the world (PvE), another for battlegrounds (PvP).",
-	["Proposer à nouveau sous (minutes)"] = "Offer again below (minutes)",
-	["Un buff qui finit dans moins de minutes que ce nombre est proposé comme s'il manquait : pratique avant un boss. 0 : seulement quand il manque."] = "A buff ending in fewer minutes than this number is offered as if it were missing: handy before a boss. 0: only when it is missing.",
-	["Au départ : 2 minutes avant la fin. 0 : seulement quand le buff manque."] = "At first: 2 minutes before it ends. 0: only when the buff is missing.",
+	["Proposer à nouveau sous (secondes)"] = "Offer again below (seconds)",
+	["Un buff qui finit dans moins de secondes que ce nombre est proposé comme s'il manquait, en gris sur la case : pratique avant un boss. Jamais avant le dernier quart d'un buff court. 0 : seulement quand il manque."] = "A buff ending in fewer seconds than this number is offered as if it were missing, grey on the frame: handy before a boss. Never before the last quarter of a short buff. 0: only when it is missing.",
+	["Au départ : 75 secondes avant la fin. 0 : seulement quand le buff manque."] = "At first: 75 seconds before it ends. 0: only when the buff is missing.",
 	["Sort de groupe dès (joueurs sans le buff)"] = "Group spell from (players without the buff)",
 	["Ex. : à 3, trois joueurs d'un même groupe sans Marque du fauve donnent une seule ligne qui lance Don du fauve."] = "E.g.: at 3, three players of the same group without Mark of the Wild give a single line that casts Gift of the Wild.",
 	["Nombre de joueurs d'un même groupe sans le buff à partir duquel le panneau propose une seule ligne pour la version de groupe (Prière de robustesse, Don du fauve...)."] = "Number of players in the same group without the buff from which the panel offers a single line for the group version (Prayer of Fortitude, Gift of the Wild...).",

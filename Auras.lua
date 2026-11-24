@@ -447,11 +447,18 @@ function Z.BuffMarkPlace(b)
 	return 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, Z.ElementSize("buff", Z.IconSize())
 end
 
-function Z.BuffIcon(b)
+-- Icône numéro « index » des buffs manquants lus par Lyorune, après « skip » places de la rangée (les repères dessinés
+-- par le jeu, Containers.lua, viennent d'abord)
+function Z.BuffIcon(b, index, skip)
 	local x, y, size = Z.BuffMarkPlace(b)
 	b.buffList = b.buffList or {}
-	b.buffIcon = GetIcon(b, b.buffList, 1, "BOTTOMLEFT", x, y, 1, size)
-	return b.buffIcon
+	local icon = GetIcon(b, b.buffList, index or 1, "BOTTOMLEFT", x + (skip or 0) * (size + 2), y, 1, size)
+	b.buffIcon = b.buffList[1]
+	return icon
+end
+
+function Z.HideBuffIcons(b, from)
+	for index = from or 1, #(b.buffList or {}) do b.buffList[index]:Hide() end
 end
 
 -- Repère numéro « index » d'un buff de ma liste quand le jeu cache les buffs : gris à bord rouge, sous le conteneur
@@ -586,7 +593,7 @@ function Z.HideAuras(b)
 	end
 	if b.controlIcon then b.controlIcon:Hide() end
 	if b.bigIcon then b.bigIcon:Hide() end
-	if b.buffIcon then b.buffIcon:Hide() end
+	Z.HideBuffIcons(b)
 	if b.drinkIcon then b.drinkIcon:Hide() end
 	if b.dispelTypeIcon then b.dispelTypeIcon:Hide() end
 	if b.glow then b.glow:Hide() end
@@ -769,7 +776,7 @@ local function Remaining(aura, now)
 	return expires - now
 end
 
--- Secondes avant de proposer ce buff à nouveau : ce qui lui reste, moins le seuil « buffRefresh », plafonné au quart
+-- Secondes avant de proposer ce buff à nouveau : ce qui lui reste, moins le seuil « buffRenew », plafonné au quart
 -- de sa durée (un buff de 5 minutes n'est jamais proposé avant ses 75 dernières secondes : pas de mana perdue).
 -- Durée secrète ou inconnue : le seuil entier.
 local function Until(aura, now, margin)
@@ -790,7 +797,7 @@ local function WeaponLeft()
 	return (tonumber(expiration) or 0) / 1000
 end
 
--- Relire la case quand un buff passe sous le seuil « buffRefresh » (aucun événement du jeu ne le dit) ; un seul
+-- Relire la case quand un buff passe sous le seuil « buffRenew » (aucun événement du jeu ne le dit) ; un seul
 -- rendez-vous par case, le plus proche
 local function Recheck(b, seconds)
 	if seconds == math.huge then return end
@@ -804,6 +811,21 @@ local function Recheck(b, seconds)
 			Z.QueueAuras(b)
 		end
 	end)
+end
+
+-- Buff là, mais heure de fin secrète (donjon, C20) : ce qu'en dit la mémoire de mes sorts (BuffMemory.lua), si sa
+-- durée a été lue une fois ailleurs ; sinon il reste « là » (jamais proposé à tort). Noté pour /lyorune buffs.
+local function EndFromMemory(b, unit, check, own, left, endHidden, now, margin)
+	if left ~= math.huge then return left, false end
+	local memory
+	for name in pairs(check.names) do
+		if endHidden[name] then
+			b.buffEndHidden = true
+			local found = Z.BuffMemoryLeft(unit, name, own, now, margin, true)
+			if found then memory = math.max(memory or -math.huge, found) end
+		end
+	end
+	return memory or left, memory ~= nil
 end
 
 -- Ce buff de ma liste concerne-t-il ce joueur ? (sur moi seulement, joueurs à mana, pas les familiers, en raid
@@ -820,13 +842,15 @@ end
 Z.BuffConcerns = Concerns -- aussi pour les repères des buffs dessinés par le jeu (Containers.lua)
 
 -- Buffs de ma liste que ce joueur n'a pas, tous, dans l'ordre de Data.lua : { { check, spell, icon }, ... }, et
--- une clé qui les résume. Hors combat seulement. Un buff qui finit dans moins de « buffRefresh » minutes
--- compte comme absent (au plus le quart de sa durée, Until).
+-- une clé qui les résume. Hors combat seulement. Un buff qui finit dans moins de « buffRenew » secondes
+-- compte comme absent (au plus le quart de sa durée, Until). Heure de fin cachée par le jeu (donjon, même hors
+-- combat, C20) : la mémoire de mes sorts dit quand il finit ; rien de su, il compte comme présent (HealKit et VuhDo
+-- s'arrêtent là).
 -- Là où le jeu cache les buffs même hors combat (champ de bataille, arène) : un buff qui reste
 -- lisible se lit, les autres viennent de la mémoire (BuffMemory.lua), et un buff inconnu compte comme absent.
 -- Une lecture refusée par le jeu (match JcJ) compte comme une liste cachée, pas comme « rien ne manque ».
 local function FindMissingBuffs(b, unit)
-	b.buffRead = nil -- pour /lyorune buffs : seulement la dernière lecture faite
+	b.buffRead, b.buffEndHidden = nil, nil -- pour /lyorune buffs : seulement la dernière lecture faite
 	if not (Z.db.missingBuffs or Z.db.buffPanel) or #Z.buffChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL", 40)
 	local refused = not list
@@ -836,16 +860,18 @@ local function FindMissingBuffs(b, unit)
 		if not Z.AurasHidden() then return end
 		list = {}
 	end
-	local now, margin = GetTime(), Z.db.buffRefresh * 60
+	local now, margin = GetTime(), Z.db.buffRenew
 	-- restriction en place : même une liste lisible ne dit pas ce qui manque, seulement ce qui est là
 	local restricted = refused or Z.AurasRestricted()
 	local present, mine, secret = {}, nil, false
+	local endHidden = {} -- noms lisibles dont l'heure de fin est secrète (C20)
 	for i = 1, #list do
 		local name = list[i].name
 		if issecret(name) then
 			secret = true
 		else
 			present[name] = math.max(present[name] or -math.huge, Until(list[i], now, margin))
+			if issecret(list[i].expirationTime) then endHidden[name] = true end
 		end
 	end
 	local hidden = restricted or secret
@@ -858,7 +884,7 @@ local function FindMissingBuffs(b, unit)
 	local missing, key, soonest = {}, Z.buffGeneration .. "|", math.huge
 	for _, check in ipairs(Z.buffChecks) do
 		if Concerns(check, unit, me) then
-			local left, choice = -math.huge, nil -- secondes avant de le proposer à nouveau (absent : jamais assez)
+			local left, choice, fromMemory = -math.huge, nil, false -- secondes avant de le proposer à nouveau (absent : jamais assez)
 			local own = check.blessing or check.aura
 			if check.weapon then
 				local weapon = WeaponLeft()
@@ -883,11 +909,13 @@ local function FindMissingBuffs(b, unit)
 							hidden2 = true
 						else
 							mine[name] = math.max(mine[name] or -math.huge, Until(list2[i], now, margin))
+							if issecret(list2[i].expirationTime) then endHidden[name] = true end
 						end
 					end
 					if hidden2 or restricted then hidden = true else Z.NoteBuffs(unit, list2, Z.ownNames, true) end
 				end
 				for name in pairs(check.names) do left = math.max(left, mine[name] or -math.huge) end
+				left, fromMemory = EndFromMemory(b, unit, check, own, left, endHidden, now, margin)
 				if check.blessing then
 					-- bénédictions qu'un autre paladin lui a posées : jamais reprises, la suivante de sa ligne est proposée
 					local taken
@@ -904,6 +932,7 @@ local function FindMissingBuffs(b, unit)
 				end
 			else
 				for name in pairs(check.names) do left = math.max(left, present[name] or -math.huge) end
+				left, fromMemory = EndFromMemory(b, unit, check, own, left, endHidden, now, margin)
 			end
 			-- caché par le jeu : la mémoire (photo d'avant la restriction, mes sorts), relue à la fin du buff retenu
 			local remembered = false
@@ -917,7 +946,7 @@ local function FindMissingBuffs(b, unit)
 				local spell = choice and choice.name or check.spell
 				missing[#missing + 1] = { check = check, spell = spell, icon = choice and choice.icon or check.icon }
 				key = key .. check.id .. ":" .. spell .. ";"
-			elseif margin > 0 or remembered then
+			elseif margin > 0 or remembered or fromMemory then
 				soonest = math.min(soonest, left)
 			end
 		end
@@ -1184,7 +1213,9 @@ UpdateAuras = function(b)
 end
 
 -- Buffs manquants et mes buffs uniques, hors combat. Le panneau des buffs manquants (Buffs.lua) lit
--- b.missingBuffs (toutes les absences) ; b.missingBuff est la première, montrée sur la case.
+-- b.missingBuffs (toutes les absences) ; b.missingBuff est la première. Sur la case, une seule rangée (C21, C22) :
+-- les repères dessinés par le jeu (Containers.lua), puis, en gris, chaque absence qu'ils ne montrent pas (arme,
+-- sort sans numéro connu, ou tout, quand le jeu ne dessine rien).
 UpdateBuffs = function(b, unit, enemy)
 	local db = Z.db
 	local list, key
@@ -1193,19 +1224,32 @@ UpdateBuffs = function(b, unit, enemy)
 	local changed = b.missingKey ~= key or b.myUniques ~= uniques or (b.missingBuff ~= nil) ~= (list ~= nil)
 	b.missingBuffs, b.missingBuff, b.missingKey, b.myUniques = list, list and list[1], key, uniques
 	if changed then Z:QueueBuffPanel() end
-	local missing = b.missingBuff
-	-- le jeu cache les buffs et dessine lui-même ceux de ma liste (Containers.lua) : ses repères remplacent celui-ci
-	if missing and db.missingBuffs and not Z.BuffMarksShown(b) then
-		Z.BuffIcon(b)
-		b.buffIcon.texture:SetTexture(missing.icon)
-		b.buffIcon.texture:SetDesaturated(true)
-		b.buffIcon.border:SetColor(1, 0.2, 0.2, 1)
-		b.buffIcon.cooldown:Clear()
-		b.buffIcon.count:SetText("")
-		b.buffIcon:Show()
-	elseif b.buffIcon then
-		b.buffIcon:Hide()
+	local shown = 0
+	if list and db.missingBuffs then
+		local marked, skip = {}, 0
+		if Z.BuffMarksShown(b) then
+			for _, entry in ipairs(b.markList or {}) do marked[entry.key] = true end
+			skip = #(b.markList or {})
+		end
+		-- jamais au-delà du bord droit de la case : autant d'icônes que sa largeur en laisse (HealKit en fixe 3)
+		local x, _, size = Z.BuffMarkPlace(b)
+		local width = b.GetWidth and b:GetWidth() or 0
+		local fit = (issecret(width) or width <= 0) and math.huge or math.max(1, math.floor((width - x) / (size + 2)))
+		for _, missing in ipairs(list) do
+			if not marked["buff" .. missing.check.id] and skip + shown < fit then
+				shown = shown + 1
+				local icon = Z.BuffIcon(b, shown, skip)
+				icon.texture:SetTexture(missing.icon)
+				icon.texture:SetDesaturated(true)
+				icon.border:SetColor(1, 0.2, 0.2, 1)
+				icon.cooldown:Clear()
+				icon.count:SetText("")
+				icon:Show()
+			end
+		end
 	end
+	Z.HideBuffIcons(b, shown + 1)
+	if changed and Z.RaiseBuffMarks then Z.RaiseBuffMarks(b) end
 end
 
 ----------------------------------------------------------------------------------------------------

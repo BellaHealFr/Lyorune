@@ -30,7 +30,7 @@ Z.placeElements = {
 	{ "big", "Affaiblissement important" },
 	{ "controls", "Joueur sous contrôle" },
 	{ "defensives", "Gros défensifs" },
-	{ "buff", "Buff manquant" },
+	{ "buff", "Mes buffs" },
 	{ "private", "Auras privées" },
 }
 local KNOWN = {}
@@ -457,6 +457,7 @@ local SAMPLE_ICONS = {
 	defensives = { "Interface\\Icons\\Ability_Warrior_ShieldWall", "Interface\\Icons\\Spell_Holy_DivineIntervention" },
 	controls = "Interface\\Icons\\Spell_Nature_Polymorph",
 	buff = "Interface\\Icons\\Spell_Holy_WordFortitude",
+	buffAgain = "Interface\\Icons\\Spell_Holy_MagicalSentry",
 	private = "Interface\\Icons\\INV_Misc_QuestionMark",
 }
 
@@ -492,7 +493,7 @@ local function Regions(key)
 	elseif key == "controls" then
 		return { cell.controlIcon }
 	elseif key == "buff" then
-		return { cell.buffIcon }
+		return Row(cell.buffList or {}, 2)
 	elseif key == "private" then
 		return { cell.privateHolder }
 	end
@@ -621,10 +622,12 @@ local function Draw()
 	end
 	SampleIcon(Z.ControlIcon(cell), SAMPLE_ICONS.controls)
 	Edge(cell.controlIcon, Z.CONTROL_EDGE)
-	local buff = Z.BuffIcon(cell)
-	SampleIcon(buff, SAMPLE_ICONS.buff)
-	buff.texture:SetDesaturated(true)
-	buff.border:SetColor(1, 0.2, 0.2, 1)
+	-- Mes buffs : un posé (en couleur), un à relancer (gris à bord rouge), comme sur les vraies cases
+	SampleIcon(Z.BuffIcon(cell, 1), SAMPLE_ICONS.buff)
+	local again = Z.BuffIcon(cell, 2)
+	SampleIcon(again, SAMPLE_ICONS.buffAgain)
+	again.texture:SetDesaturated(true)
+	again.border:SetColor(1, 0.2, 0.2, 1)
 
 	-- Auras privées : le jeu les dessine lui-même, la case d'exemple montre deux points d'interrogation
 	local holder, size = Z.PrivateHolder(cell)
@@ -701,7 +704,7 @@ end
 -- Ce qui empêche l'élément de grandir encore (1.41.1) : un voisin à décocher, sinon la case elle-même
 local BLOCKED = {
 	ROLE = "Au plus grand : %d %%. L'icône de rôle bloque : décochez-la pour lui laisser sa place.",
-	BUFF = "Au plus grand : %d %%. Le buff manquant bloque : décochez-le pour lui laisser sa place.",
+	BUFF = "Au plus grand : %d %%. Mes buffs bloquent : décochez-les pour leur laisser la place.",
 	HOTS = "Au plus grand : %d %%. Mes soins prennent l'autre moitié : décochez-les pour lui laisser la place.",
 	DEBUFFS = "Au plus grand : %d %%. Les affaiblissements prennent l'autre moitié : décochez-les.",
 }
