@@ -65,6 +65,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 b | 1.46.2 | Correction C18 : cibler un joueur ou soi-même | Publiée |
 | 32 c | 1.46.3 | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | Corrigée, à essayer en jeu |
 | 32 d | à fixer | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | À faire |
+| 32 e | à fixer | Correction C26 : cadres des familiers et des tanks séparés revus (comparaison HealKit, VuhDo, HealBot) | À faire |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
@@ -1197,6 +1198,14 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
 - **Questions en attente pour le joueur** (par l'auteur) : sa version de Lyorune ; ses fichiers
   `Logs\General.log` et `SavedVariables\Lyorune.lua` ; pour C17, profil automatique allumé ou non, disposition
   (groupes, rôles, grille) ; pour C18, touche ou clic, quelle case, combat ou non, autre addon de clic.
+
+- [ ] **32 e, C26** : cadres des familiers et des tanks séparés. Demande de l'auteur (24 novembre 2026) : leur
+  fonctionnement actuel ne lui plaît pas. Regarder comment HealKit gère familiers et tanks, puis VuhDo et HealBot,
+  et faire mieux, à notre façon, sans rien copier.
+  - [ ] Demander à l'auteur ce qui le gêne précisément (place, réglages, groupe qui change, combat).
+  - [ ] Lire le fonctionnement actuel de Lyorune (cadres à part des tanks et des familiers).
+  - [ ] Recherche : HealKit, VuhDo, HealBot (installés), comparaison écrite dans la fiche C26.
+  - [ ] Présenter la cause et la proposition à l'auteur, accord avant de coder (boutons sécurisés : relecture high).
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
 - [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
