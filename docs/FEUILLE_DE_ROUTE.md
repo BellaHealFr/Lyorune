@@ -68,7 +68,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 e | 1.46.5 | Correction C26 : familiers repensés (colonne en face du maître en groupe, colonne rangée par groupe en raid, nom et couleur du maître, portée, réglage à trois choix) ; cadre des tanks gardé | Publiée le 24 novembre 2026 |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan du jour | Publiée (v1.47.0) |
 | 33 bis | 1.47.0 | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | Publiée (v1.47.0) |
-| 33 ter | à fixer | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | Prête, à publier (essai en jeu) |
+| 33 ter | 1.48.0 | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | Publiée (24 novembre 2026) |
 | 33 quater | à fixer | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | À faire (étude d'abord) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
@@ -1273,7 +1273,7 @@ C33 de `CORRECTIONS.md`.
   aussi (une seule rangée avec les buffs à reposer de C31) ; tests, guides.
 - [x] C35 (signalé pendant l'étape) : plus de chiffre de vie sur les familiers.
 - [x] Relecture high (4 bugs, 3 optimisations).
-- [ ] Essai en jeu et feu vert de l'auteur, publication.
+- [x] Essai en jeu et feu vert de l'auteur, publiée en 1.48.0 (24 novembre 2026).
 
 ## Étape 33 quater (PRIORITAIRE, juste après la 33 ter) : placement des icônes par défaut, placements par personnage
 Demande de l'auteur (24 novembre 2026), fiche C34 de `CORRECTIONS.md`.
