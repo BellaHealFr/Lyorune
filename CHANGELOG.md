@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.48.1] - 2026-11-24
+
+### Amélioré
+
+- Nouveautés toujours à portée : un bouton Nouveautés en haut de la fenêtre d'options, à gauche de la recherche, et Maj + clic sur le bouton de la mini-carte. Après une mise à jour, une ligne dans la discussion rappelle comment les relire.
+
+### Corrigé
+
+- Familiers : un familier mort n'est plus cerclé de rouge, le liseré de vie basse ne se montre jamais sur un familier.
+
 ## [1.48.0] - 2026-11-24
 
 ### Ajouté
@@ -944,6 +954,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0
 [1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5

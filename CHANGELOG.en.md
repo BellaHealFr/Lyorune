@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.48.1] - 2026-11-24
+
+### Improved
+
+- What's new always at hand: a What's new button at the top of the options window, left of the search box, and Shift + click on the minimap button. After an update, a line in the chat reminds you how to read it again.
+
+### Fixed
+
+- Pets: a dead pet no longer has a red edge, the low health edge never shows on a pet.
+
 ## [1.48.0] - 2026-11-24
 
 ### Added
@@ -944,6 +954,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0
 [1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5

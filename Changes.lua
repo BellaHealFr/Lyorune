@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.48.1", date = "2026-11-24",
+		added = {
+		},
+		improved = {
+			"Nouveautés toujours à portée : un bouton Nouveautés en haut de la fenêtre d'options, à gauche de la recherche, et Maj + clic sur le bouton de la mini-carte. Après une mise à jour, une ligne dans la discussion rappelle comment les relire.",
+		},
+		fixed = {
+			"Familiers : un familier mort n'est plus cerclé de rouge, le liseré de vie basse ne se montre jamais sur un familier.",
+		},
+	},
+	{
 		version = "1.48.0", date = "2026-11-24",
 		added = {
 			"Buffs uniques en temps réel : votre Bouclier de terre, Gardien de peur ou buff unique se voit en couleur sur le porteur, avec ses charges, et passe en gris dès qu'il tombe, même en combat (épuisé ou dissipé). Un buff unique d'un autre soigneur est reconnu.",
@@ -1152,6 +1163,7 @@ Z.changes = {
 -- Par version, puis par rubrique : le réglage de chaque ligne, dans l'ordre des lignes (false : pas de réglage).
 -- Une clé qui n'a plus de ligne dans les options est simplement ignorée. Tenu à la main, vérifié par les tests.
 Z.changeShows = {
+	["1.48.1"] = { improved = { false }, fixed = { "lowHealth" } },
 	["1.48.0"] = { added = { "uniqueLive" }, improved = { "lowHealth" }, fixed = { "pets" } },
 	["1.47.0"] = { added = { "tallyExit", false }, improved = { "missingBuffs" } },
 	["1.46.5"] = { improved = { "pets" } },
