@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.47.0] - 2026-11-24
+
+### Ajouté
+
+- Bilan en sortant d'un donjon ou d'un raid : une ligne dans la discussion donne son nom, sa durée, vos soins, résurrections et buffs dedans, puis ceux du jour. Le carnet a une colonne Aujourd'hui, depuis votre connexion.
+- Nouveautés : un lien Me montrer mène au réglage de chaque nouveauté, et une rune d'or Nouveau pour vous marque les versions pas encore lues.
+
+### Amélioré
+
+- Buffs sur les cases : un buff posé ne se montre plus, la case reste propre. Il revient en gris seulement quand il faut le reposer (absent, perdu, bientôt fini, joueur mort), hors combat comme en combat, en JcE et en JcJ. En combat, Lyorune garde ce qu'il a lu avant le combat et retient vos sorts réussis.
+
 ## [1.46.5] - 2026-11-24
 
 ### Amélioré
@@ -919,6 +930,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0
 [1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5
 [1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4
 [1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3

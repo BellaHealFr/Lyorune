@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.47.0", date = "2026-11-24",
+		added = {
+			"Bilan en sortant d'un donjon ou d'un raid : une ligne dans la discussion donne son nom, sa durée, vos soins, résurrections et buffs dedans, puis ceux du jour. Le carnet a une colonne Aujourd'hui, depuis votre connexion.",
+			"Nouveautés : un lien Me montrer mène au réglage de chaque nouveauté, et une rune d'or Nouveau pour vous marque les versions pas encore lues.",
+		},
+		improved = {
+			"Buffs sur les cases : un buff posé ne se montre plus, la case reste propre. Il revient en gris seulement quand il faut le reposer (absent, perdu, bientôt fini, joueur mort), hors combat comme en combat, en JcE et en JcJ. En combat, Lyorune garde ce qu'il a lu avant le combat et retient vos sorts réussis.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.46.5", date = "2026-11-24",
 		added = {
 		},
@@ -1128,6 +1140,7 @@ Z.changes = {
 -- Par version, puis par rubrique : le réglage de chaque ligne, dans l'ordre des lignes (false : pas de réglage).
 -- Une clé qui n'a plus de ligne dans les options est simplement ignorée. Tenu à la main, vérifié par les tests.
 Z.changeShows = {
+	["1.47.0"] = { added = { "tallyExit", false }, improved = { "missingBuffs" } },
 	["1.46.5"] = { improved = { "pets" } },
 	["1.46.1"] = { added = { "showDpsRole" } },
 	["1.46.0"] = { added = { "totemPanel", "showClassIcon" } },

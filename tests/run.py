@@ -10427,9 +10427,10 @@ step("1.47.0 : Me montrer, nouveautes pas encore vues, bilan du donjon et de la 
     text = Z:NewsText()
     local first, second = text:match("Lyorune 1%.46%.5[^%c]*"), text:match("Lyorune 1%.46%.4[^%c]*")
     assert(Z.version == "1.46.5" or Z.VersionNumber(Z.version) > Z.VersionNumber("1.46.4"), "version")
-    assert(first:find("Nouveau pour vous", 1, true) and not second:find("Nouveau pour vous", 1, true), "rune des nouveautes : " .. first)
+    assert(first:find("|cffffd24dNouveau pour vous|r", 1, true) and not second:find("|cffffd24dNouveau pour vous|r", 1, true), "rune des nouveautes : " .. first)
     Z:ShowNews() news:Hide() news:Run("OnHide")
-    assert(Z.db.newsSeen == Z.version and not Z:NewsText():find("Nouveau pour vous", 1, true), "nouveautes lues : rune restee")
+    -- (la rune elle-meme : une note de version peut citer ces mots)
+    assert(Z.db.newsSeen == Z.version and not Z:NewsText():find("|cffffd24dNouveau pour vous|r", 1, true), "nouveautes lues : rune restee")
     for _, key in ipairs({ "En tout", "Aujourd'hui", "Me montrer", "Nouveau pour vous", "%s soins, %s résurrections, %s buffs",
       "Bilan du jour : %s.", "%s (%d min) : %s.",
       "Mène au réglage de cette nouveauté dans les options." }) do

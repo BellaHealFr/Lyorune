@@ -66,8 +66,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 c | 1.46.3 | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | Corrigée, à essayer en jeu |
 | 32 d | 1.46.4 | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | Publiée le 24 novembre 2026 |
 | 32 e | 1.46.5 | Correction C26 : familiers repensés (colonne en face du maître en groupe, colonne rangée par groupe en raid, nom et couleur du maître, portée, réglage à trois choix) ; cadre des tanks gardé | Publiée le 24 novembre 2026 |
-| 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
-| 33 bis | à fixer | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | En cours (codée, essai en jeu à faire) |
+| 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan du jour | Publiée (v1.47.0) |
+| 33 bis | 1.47.0 | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | Publiée (v1.47.0) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
@@ -1257,7 +1257,7 @@ Demande de l'auteur (24 novembre 2026), en JcE et en JcJ, avant l'étape 34. Ét
 - [x] Relecture high (5 bugs corrigés : joueur déjà en combat, changement de groupe, bénédiction sans choix et arme
   après une mort, joueur mort avant le combat, buff unique posé sur un autre ; 1 optimisation). 131 étapes.
 - [x] Avec elle, demande de l'auteur : carnet « Ce soir » devenu « Aujourd'hui » (colonne, bilan du jour).
-- [ ] Essai en jeu (monde, donjon, champ de bataille, combat, mort, Bouclier de terre), publication.
+- [x] Essai en jeu de l'auteur (« tout est ok », 24 novembre 2026), publiée avec l'étape 33 en 1.47.0.
 
 ## Étape 34 : canal des soigneurs, en français et en anglais
 Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33 (son choix). Idée : un canal écrit réservé

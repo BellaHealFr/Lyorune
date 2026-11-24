@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.47.0] - 2026-11-24
+
+### Added
+
+- Summary when leaving a dungeon or a raid: a chat line gives its name, how long you stayed, your heals, resurrections and buffs inside, then today's. The notebook has a Today column, since you logged in.
+- What's new: a Show me link leads to the setting of each new feature, and a golden Unread rune marks the versions you have not read yet.
+
+### Improved
+
+- Buffs on the cells: a buff that is up is no longer shown, the cell stays clean. It comes back in grey only when it must be cast again (missing, lost, ending soon, player dead), out of combat and in combat, in PvE and in PvP. In combat, Lyorune keeps what it read before combat and remembers your successful casts.
+
 ## [1.46.5] - 2026-11-24
 
 ### Improved
@@ -919,6 +930,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0
 [1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5
 [1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4
 [1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3
