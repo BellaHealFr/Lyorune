@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.46.5", date = "2026-11-24",
+		added = {
+		},
+		improved = {
+			"Familiers repensés : en groupe, une colonne à part, chacun en face de son maître, en cases plus petites (taille réglable) ; en raid, une colonne après les groupes, rangée par groupe, avec le nom du maître. Couleur du maître en plus pâle, portée juste, réglage à trois choix (Non, En groupe, En groupe et en raid), familiers aussi dans le mode test.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.46.4", date = "2026-11-24",
 		added = {
 		},

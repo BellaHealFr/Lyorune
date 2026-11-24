@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.5] - 2026-11-24
+
+### Amélioré
+
+- Familiers repensés : en groupe, une colonne à part, chacun en face de son maître, en cases plus petites (taille réglable) ; en raid, une colonne après les groupes, rangée par groupe, avec le nom du maître. Couleur du maître en plus pâle, portée juste, réglage à trois choix (Non, En groupe, En groupe et en raid), familiers aussi dans le mode test.
+
 ## [1.46.4] - 2026-11-24
 
 ### Corrigé
@@ -913,6 +919,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5
 [1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4
 [1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3
 [1.46.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.1...v1.46.2

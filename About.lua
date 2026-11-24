@@ -14,8 +14,8 @@ local _, Z = ...
 
 Z.about = {
 	date = "2026-11-24",
-	github = 893,
-	curseforge = 294,
+	github = 905,
+	curseforge = 302,
 	discord = 10,
 	names = {
 		{ name = "Elesyio", class = "PRIEST", mode = "Soins, JcJ" },

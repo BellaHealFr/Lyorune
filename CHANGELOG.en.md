@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.5] - 2026-11-24
+
+### Improved
+
+- Pets reworked: in a party, a column of their own, each facing its owner, in smaller cells (adjustable size); in a raid, a column after the groups, in group order, showing the owner's name. Owner's color made paler, correct range, a three-way setting (No, In a party, In a party and a raid), pets in test mode too.
+
 ## [1.46.4] - 2026-11-24
 
 ### Fixed
@@ -913,6 +919,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.46.5]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.4...v1.46.5
 [1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4
 [1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3
 [1.46.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.1...v1.46.2
