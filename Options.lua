@@ -2741,7 +2741,7 @@ local function Chapters()
 				{ "note", "Un clic ou une touche par ligne, autant que vous voulez, avec Alt, Ctrl, Maj ou leurs combinaisons. Le sort part sur la case survolée.", 30 },
 				{ "custom", SpecLine },
 				{ "custom", ClickList },
-				{ "note", "Clic gauche libre : cibler. Clic droit libre : menu du joueur. Glissez un sort du grimoire sur une ligne pour le poser. Le « + » d'une ligne ajoute une variante : sur un ennemi, en JcJ, sur un tank, hors combat.", 44 },
+				{ "note", "Au départ, Alt + clic gauche cible le joueur et Alt + clic droit ouvre son menu. « Cibler » et « Menu du joueur » se posent sur toute ligne : en haut de la fenêtre des sorts. Glissez un sort du grimoire sur une ligne pour le poser. Le « + » d'une ligne ajoute une variante : sur un ennemi, en JcJ, sur un tank, hors combat.", 58 },
 				{ "button", "Mes macros...", function() Z:OpenMacros() end, "Votre bibliothèque de macros : écrire, vérifier, importer de /macro, puis glisser sur un clic ou dans une barre de sorts." },
 			} },
 			{ "Comportement", {

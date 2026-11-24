@@ -105,6 +105,8 @@ Survolez une case hors combat : l'infobulle montre le joueur, puis la liste de v
 
 Cliquez sur une case : le sort part sur ce joueur, sans le cibler.
 
+**Cibler un joueur** : Alt + clic gauche sur sa case ; Alt + clic droit ouvre son menu. Ces deux clics sont posés au départ (et ajoutés à la mise à jour s'ils étaient libres, chez Lyorune comme dans le clic pour lancer du jeu) et se changent comme les autres : « Cibler » et « Menu du joueur » sont en haut de la fenêtre de choix du sort, pour n'importe quel clic ou touche au survol. Pour vous cibler vous-même ou cibler un membre du groupe sans la souris, le jeu a déjà ses raccourcis : Échap, Options, Raccourcis, rubrique Ciblage (« Cibler soi-même », puis chaque membre du groupe).
+
 Pour choisir vos sorts : `/lyorune`, chapitre **Sorts et raccourcis**. Tous vos raccourcis sont sur une seule liste, un par ligne : à gauche le clic ou la touche, au milieu le sort, à droite « x » pour le retirer.
 
 **Ajouter un raccourci :**
@@ -138,7 +140,7 @@ Il n'y a pas de limite : ajoutez autant de lignes que vous voulez. Toutes les li
 - **Utiliser un bijou avec le sort** : allumez d'abord « Bijoux avec les sorts » (réglages fins de Comportement). Chaque ligne a alors deux petits carrés au bout, vos bijoux du haut (1) et du bas (2) ; l'infobulle dit lequel. Cliquez sur l'un pour l'allumer (bordure d'or, icône de votre bijou) : le bijou est utilisé juste avant le sort, seulement si le joueur est vivant. Cliquez de nouveau pour l'éteindre. Si le bijou n'est pas prêt, le sort part quand même.
 - **Savoir quels clics servent** : allumez « Compter mes clics » (partie Comportement). Un nombre apparaît à côté de chaque ligne : combien de fois vous l'avez utilisée, pour ce personnage et cette spécialisation (l'infobulle dit depuis quand). Une ligne jamais utilisée est grisée : un clic que vous pouvez peut-être libérer. Chaque clic compte, même si le sort échoue (hors de portée, en recharge). Changer le sort d'une ligne remet son compte à zéro ; échanger deux raccourcis garde le compte de chaque sort. « Remettre mes comptes à zéro » repart de zéro pour la spécialisation affichée.
 - **Arrêter l'incantation** : dans la fenêtre de choix du sort, ce bouton fait d'un clic un « stop » qui interrompt le sort en cours (un long soin devenu inutile, par exemple).
-- Un clic gauche ou droit sans sort garde son rôle habituel : cibler le joueur, ouvrir son menu.
+- Un clic gauche ou droit sans sort, seul ou avec Maj, Ctrl, Alt, garde son rôle habituel : cibler le joueur, ouvrir son menu.
 
 Les réglages du clic lui-même sont dans la partie **Comportement**, sous la liste : « Lancer le sort dès l'appui (plus rapide) », « Le même clic relève un joueur mort », puis dans ses réglages fins les clics par spécialisation, les deux signalements expliqués plus bas et « Laisser Clique ou le jeu gérer les clics ».
 

@@ -55,6 +55,7 @@ step("clics par defaut et resurrection automatique", function()
   local c = Z.db.clicks.PRIEST
   assert(c["1"] == "Soins rapides", "clic gauche = " .. tostring(c["1"]))
   assert(c["shift-1"] == "Soins supérieurs" and c["2"] == "Rénovation")
+  assert(c["alt-1"] == "@target" and c["alt-2"] == "@menu", "C18 : cibler et menu au premier lancement")
   assert(Z.header:GetAttribute("z-count") > 0)
   assert(Z.canDispel.Magic and Z.canDispel.Disease and not Z.canDispel.Curse)
 end)
@@ -9789,6 +9790,60 @@ step("C24 et C25 : chef jamais sur l'icone de role, icone des DPS", function()
   rawset(_G, "UnitGroupRolesAssigned", old.roles)
   b.role.SetAtlas = nil
   Z:Refresh()
+  assert(ok, err)
+end)
+
+step("C18 : Alt + clic gauche cible, Alt + clic droit ouvre le menu", function()
+  local saved = CopyTable(Z.db.clicks.PRIEST)
+  Z.db.clicks.PRIEST["alt-1"], Z.db.clicks.PRIEST["alt-2"] = "@target", "@menu"
+  Z:ApplyClicks()
+  local b = Z.buttons[1]
+  assert(b:GetAttribute("alt-type1") == "target" and b:GetAttribute("alt-type2") == "togglemenu", "attributs du ciblage")
+  -- carte « Soigner d'un clic » : elle dit comment cibler, ou où poser Cibler
+  Z.db.tutorialDone = false Z:StartTutorial()
+  local card = LyoruneTutorial
+  card.next:Run("OnClick") card.next:Run("OnClick")
+  assert(card.body:GetText():find("Alt + Clic gauche|r sur sa case", 1, true), card.body:GetText())
+  card.close:Run("OnClick")
+  Z.db.clicks.PRIEST["alt-1"] = nil
+  Z.db.tutorialDone = false Z:StartTutorial()
+  card.next:Run("OnClick") card.next:Run("OnClick")
+  assert(card.body:GetText():find("Clic gauche|r sur sa case", 1, true), "sans Cibler : combinaison libre du clic gauche")
+  -- Clique ou le jeu gerent les clics : rien sur le ciblage
+  card.close:Run("OnClick")
+  Z.db.externalClicks = true Z.db.tutorialDone = false Z:StartTutorial()
+  card.next:Run("OnClick") card.next:Run("OnClick")
+  assert(not card.body:GetText():find("Pour cibler", 1, true), "ciblage annonce avec les clics externes")
+  Z.db.externalClicks = false
+  card.close:Run("OnClick")
+  Z.db.tutorialDone = true
+  -- mise a jour : ajoutes une fois, a la connexion, seulement sur une combinaison libre chez Lyorune et dans le
+  -- clic pour lancer du jeu, joueur prevenu
+  local savedDB, version = LyoruneDB, Z.version
+  local ok, err = pcall(function()
+    local db = { lastVersion = "1.46.1", clicks = { PRIEST = { ["1"] = "Soins rapides", ["alt-1"] = "Rénovation" }, PRIEST2 = {}, MAGE = "abime" } }
+    LyoruneDB = db Z.version = "1.46.2" Z.clickActionsPending = nil
+    FireEvent("ADDON_LOADED", "Lyorune")
+    assert(Z.clickActionsPending and db.clicks.PRIEST["alt-2"] == nil, "rien a poser avant la connexion")
+    -- le clic pour lancer du jeu a un sort sur Alt + clic droit
+    Enum.ClickBindingType = { Spell = 1, Macro = 2, Interaction = 3, PetAction = 4 }
+    GetStringFromModifiers = function(m) return m == 4 and "ALT" or "" end
+    C_ClickBindings = { GetProfileInfo = function() return { { type = 1, actionID = 139, button = "RightButton", modifiers = 4 } } end }
+    local n = #PRINTED
+    local added = Z:AddPendingClickActions()
+    assert(added and #PRINTED == n + 1 and PRINTED[n + 1]:find("Alt + clic gauche", 1, true), "joueur non prevenu")
+    assert(db.clicks.PRIEST["alt-1"] == "Rénovation", "clic du joueur ecrase")
+    assert(db.clicks.PRIEST2["alt-1"] == "@target", "actions non ajoutees")
+    assert(db.clicks.PRIEST2["alt-2"] == nil and db.clicks.PRIEST["alt-2"] == nil, "clic pour lancer du jeu ecrase")
+    assert(not Z.clickActionsPending and not Z:AddPendingClickActions(), "ajoute une seconde fois")
+    db.lastVersion = "1.46.2" FireEvent("ADDON_LOADED", "Lyorune")
+    assert(not Z.clickActionsPending, "migration rejouee")
+    assert(Z.translations.enUS["Pour cibler un joueur : %s sur sa case."], "sans traduction anglaise")
+  end)
+  C_ClickBindings, GetStringFromModifiers, Enum.ClickBindingType = nil, nil, nil
+  Z.clickActionsPending = nil
+  LyoruneDB, Z.version = savedDB, version FireEvent("ADDON_LOADED", "Lyorune")
+  Z.db.clicks.PRIEST = saved Z:ApplyClicks()
   assert(ok, err)
 end)
 

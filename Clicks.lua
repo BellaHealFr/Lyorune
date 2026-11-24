@@ -846,31 +846,71 @@ function Z.GameClickKey(button, modifiers)
 	return key .. number
 end
 
--- Mes clics que le clic pour lancer du jeu prend aussi : { ["shift-1"] = "Soins rapides", ... }
--- Seuls ses sorts et ses macros comptent : « cibler » et « menu » font la même chose que chez Lyorune.
-function Z:GameClickConflicts()
-	local found = {}
+-- Combinaisons que le clic pour lancer du jeu prend pour un sort, une macro ou une action de familier :
+-- { ["shift-1"] = info du jeu, ... }. « Cibler » et « menu » n'y sont pas : ils font la même chose que chez Lyorune.
+local function GameSpellClicks()
+	local taken = {}
 	local api = C_ClickBindings
-	if Z.db.externalClicks or not (api and api.GetProfileInfo) then return found end
+	if not (api and api.GetProfileInfo) then return taken end
 	local ok, profile = pcall(api.GetProfileInfo)
-	if not ok or type(profile) ~= "table" then return found end
+	if not ok or type(profile) ~= "table" then return taken end
 	local types = Enum and Enum.ClickBindingType or {}
-	local clicks = Z:GetClicks()
 	for _, info in ipairs(profile) do
 		local kind = type(info) == "table" and info.type
 		if kind and (kind == types.Spell or kind == types.Macro or kind == types.PetAction) then
 			local key = Z.GameClickKey(info.button, info.modifiers)
-			if key and clicks[key] and clicks[key] ~= "" then
-				local name
-				pcall(function()
-					if kind == types.Macro then name = GetMacroInfo(info.actionID)
-					else name = C_Spell.GetSpellName(info.actionID) end
-				end)
-				found[key] = type(name) == "string" and name or "?"
-			end
+			if key then taken[key] = info end
+		end
+	end
+	return taken
+end
+
+-- Mes clics que le clic pour lancer du jeu prend aussi : { ["shift-1"] = "Soins rapides", ... }
+function Z:GameClickConflicts()
+	local found = {}
+	if Z.db.externalClicks then return found end
+	local clicks = Z:GetClicks()
+	local macro = Enum and Enum.ClickBindingType and Enum.ClickBindingType.Macro
+	for key, info in pairs(GameSpellClicks()) do
+		if clicks[key] and clicks[key] ~= "" then
+			local name
+			pcall(function()
+				if info.type == macro then name = GetMacroInfo(info.actionID)
+				else name = C_Spell.GetSpellName(info.actionID) end
+			end)
+			found[key] = type(name) == "string" and name or "?"
 		end
 	end
 	return found
+end
+
+-- Pose Cibler et Menu du joueur (Z.clickActions, Data.lua) dans « clicks » (un jeu de clics), sur leurs
+-- combinaisons seulement si elles sont libres chez Lyorune et dans le clic pour lancer du jeu (C18).
+-- Renvoie true si au moins une a été posée.
+function Z.AddClickActions(clicks)
+	local added, taken = false, GameSpellClicks()
+	for key, value in pairs(Z.clickActions) do
+		if clicks[key] == nil and not taken[key] then
+			clicks[key] = value
+			added = true
+		end
+	end
+	return added
+end
+
+-- Mise à jour 1.46.2 (Z.clickActionsPending, posé par Migrate dans Core.lua) : Cibler et Menu du joueur dans chaque
+-- jeu de clics déjà enregistré, à la connexion (le clic pour lancer du jeu est alors lisible). Joueur prévenu.
+function Z:AddPendingClickActions()
+	if not Z.clickActionsPending then return end
+	Z.clickActionsPending = nil
+	local added = false
+	for _, clicks in pairs(Z.db.clicks or {}) do
+		if type(clicks) == "table" and Z.AddClickActions(clicks) then added = true end
+	end
+	if added and not Z.db.externalClicks then
+		Z:Print(Z.L["nouveau : Alt + clic gauche cible un joueur, Alt + clic droit ouvre son menu (si ces clics étaient libres). Chapitre Sorts et raccourcis pour les changer."])
+	end
+	return added
 end
 
 -- Message dans le chat, une fois par combinaison et par session (option « clickConflictAlert »)

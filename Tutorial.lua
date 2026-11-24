@@ -68,21 +68,41 @@ local function FakeGroup(wanted)
 	end
 end
 
--- Résumé des clics du joueur, écrit à partir de ses vrais réglages
+-- Comment cibler un joueur (C18) : son premier raccourci « Cibler » (Alt + clic gauche au départ), sinon une
+-- combinaison du clic gauche laissée libre (elle cible aussi : *type1, Frames.lua), sinon où poser « Cibler ».
+-- Rien quand Clique ou le jeu gèrent les clics.
+local function TargetLine(target)
+	if Z.db.externalClicks then return "" end
+	local label = target and Z:TriggerLabel(target)
+	if not label then
+		local clicks = Z:GetClicks()
+		for _, modifier in ipairs(Z.clickModifiers) do
+			local key = modifier[1] .. "1"
+			if (clicks[key] or "") == "" then label = Z:ClickLabel(key) break end
+		end
+	end
+	if not label then
+		return "\n" .. Z.L["Pour cibler un joueur : chapitre Sorts et raccourcis, bouton « Cibler » en haut de la fenêtre des sorts."]
+	end
+	return "\n" .. Z.L["Pour cibler un joueur : %s sur sa case."]:format("|cff33dd88" .. label .. "|r")
+end
+
+-- Résumé des clics du joueur, écrit à partir de ses vrais réglages, puis comment cibler
 local function ClickSummary()
-	local lines = {}
+	local lines, target = {}, nil
 	for _, binding in ipairs(Z:Bindings()) do
 		local value = binding.value
 		local shown = Z.MacroRef(value) and Z.L["macro"] .. " " .. Z.MacroRef(value)
 			or Z.RankId(value) and Z.RankLabel(value) or value
+		if value == "@target" then target = target or binding end
 		if value ~= "" and (value:sub(1, 1) ~= "@" or Z.MacroRef(value)) and #lines < 5 then
 			lines[#lines + 1] = "|cff33dd88" .. Z:TriggerLabel(binding) .. "|r : " .. shown
 		end
 	end
 	if #lines == 0 then
-		return Z.L["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."]
+		return Z.L["Aucun sort n'est encore attribué : vous les choisirez dans le chapitre Sorts et raccourcis des options."] .. TargetLine(target)
 	end
-	return table.concat(lines, "\n")
+	return table.concat(lines, "\n") .. TargetLine(target)
 end
 
 local steps = {

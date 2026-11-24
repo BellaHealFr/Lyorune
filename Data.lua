@@ -89,6 +89,11 @@ Z.spellRanks = {
 	[1459]  = { 1460, 1461, 10156, 10157 },                                    -- Intelligence des arcanes
 }
 
+-- Actions proposées à toutes les classes, en plus des sorts (C18) : les clics de départ prennent le clic gauche et
+-- le clic droit : Cibler et Menu du joueur ont donc leur ligne, sur Alt (pris par aucun clic de départ). Posées
+-- seulement sur une combinaison libre (Z.AddClickActions, Clicks.lua), au premier lancement et à la mise à jour.
+Z.clickActions = { ["alt-1"] = "@target", ["alt-2"] = "@menu" }
+
 -- Clics proposés au premier lancement. Pour chaque case, le premier sort connu de la liste est retenu.
 -- Clé : touche de modification + numéro du bouton (1 gauche, 2 droit, 3 milieu).
 Z.clickDefaults = {
@@ -581,6 +586,7 @@ function Z:BuildData()
 		end
 		-- Si le grimoire n'est pas encore chargé, on réessaiera au prochain changement de sorts
 		if next(binds) or not Z.clickDefaults[Z.class] then
+			Z.AddClickActions(binds)
 			Z.db.clicks[Z.class] = binds
 			if Z.header then Z:ApplyClicks() end
 		end

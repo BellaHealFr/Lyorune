@@ -106,6 +106,8 @@ Hover a frame out of combat: the tooltip shows the player, then the list of your
 
 Click a frame: the spell is cast on that player, without targeting them.
 
+**Targeting a player**: Alt + left click on their cell; Alt + right click opens their menu. Both clicks are set at first (and added on update if they were free, in Lyorune and in the game's click casting) and change like any other: "Target" and "Player menu" are at the top of the spell window, for any click or hover key. To target yourself or a group member without the mouse, the game already has its own key bindings: Esc, Options, Keybindings, Targeting section ("Target Self", then each party member).
+
 To choose your spells: `/lyorune`, **Spells and bindings** chapter. All your shortcuts are on a single list, one per line: the click or key on the left, the spell in the middle, "x" on the right to remove it.
 
 **Adding a shortcut:**
@@ -139,7 +141,7 @@ There is no limit: add as many lines as you like. All lines stay visible; when t
 - **Using a trinket with the spell**: first turn on "Trinkets with spells" (fine settings of Behaviour). Each line then has two small squares at its end, your top (1) and bottom (2) trinkets; the tooltip says which one. Click one to light it up (golden border, your trinket's icon): the trinket is used right before the spell, only if the player is alive. Click again to turn it off. If the trinket is not ready, the spell is still cast.
 - **See which clicks you use**: turn on "Count my clicks" (Behaviour part). A number appears next to each line: how many times you used it, for this character and this specialization (the tooltip says since when). A line never used is greyed out: a click you may want to free. Every click counts, even if the spell fails (out of range, on cooldown). Changing the spell of a line resets its count; swapping two bindings keeps each spell's count. "Reset my counts" starts again from zero for the specialization shown.
 - **Stop casting**: in the spell choice window, this button turns a click into a "stop" that interrupts the spell being cast (a long heal that is no longer needed, for example).
-- A left or right click without a spell keeps its usual role: target the player, open their menu.
+- A left or right click without a spell, alone or with Shift, Ctrl, Alt, keeps its usual role: target the player, open their menu.
 
 The settings of the click itself are in the **Behaviour** part, below the list: "Cast on key press (faster)", "The same click resurrects a dead player", then in its fine settings the clicks per specialization, the two warnings explained below and "Let Clique or the game handle clicks".
 

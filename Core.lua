@@ -481,6 +481,10 @@ local function Migrate(db)
 		and now >= 14400 then
 		db.cooldownShare = nil
 	end
+	-- 1.46.2 : Cibler (Alt + clic gauche) et Menu du joueur (Alt + clic droit) rejoignent la liste des clics (C18 :
+	-- les clics de départ prennent le clic gauche et le clic droit, et rien ne disait comment cibler). Ajoutés une
+	-- seule fois à chaque jeu de clics, à la connexion (Z:AddPendingClickActions, Clicks.lua).
+	if last and last < 14602 and now >= 14602 then Z.clickActionsPending = true end
 	-- 1.44.0 : plus de profil « Arène » (WoW Forever n'a pas d'arène JcJ) : ses anciennes règles s'effacent
 	if type(db.autoProfiles) == "table" then
 		for _, rules in pairs(db.autoProfiles) do
@@ -530,6 +534,7 @@ Z:On("PLAYER_LOGIN", function()
 	Z:BuildData()
 	Z:CreateFrames()
 	Z:MigrateMacros(false) -- macros écrites sur un clic avant la 1.6.0 : rangées dans la bibliothèque
+	Z:AddPendingClickActions()
 	Z:ApplyClicks()
 	Z:StartBarMacros()
 	Z:RefreshAlerts()
