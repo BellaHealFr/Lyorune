@@ -1277,7 +1277,7 @@ C33 de `CORRECTIONS.md`.
 
 ## Étape 33 quater (PRIORITAIRE, juste après la 33 ter) : placement des icônes par défaut, placements par personnage
 Demande de l'auteur (24 novembre 2026), fiche C34 de `CORRECTIONS.md`.
-- [ ] Étude en profondeur (demande de l'auteur) : lire le code de HealKit, VuhDo et HealBot pour leurs places, tailles et
+- [x] Étude en profondeur (demande de l'auteur) : lire le code de HealKit, VuhDo et HealBot pour leurs places, tailles et
   ancrages d'icônes par défaut et leur adaptation à la taille des cases ; où sont rangés les placements aujourd'hui.
 - [ ] Proposition à l'auteur, nettement meilleure que HealKit, VuhDo et HealBot (quatre formes, ce qu'elle fait mieux
   point par point), décision avant tout codage.
