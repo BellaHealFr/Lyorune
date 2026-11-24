@@ -10972,6 +10972,92 @@ step("C34 lot 2 : anciens placements gardes au pixel pres, placements par person
   win:Hide()
 end)
 
+step("1.50.0 : canal des soigneurs (eteint au depart, rejoint, nom de secours, quitte, /leave)", function()
+  local db, char = Z.db, Z.char
+  assert(db.channelFR == false and db.channelEN == false, "canaux eteints au depart")
+  FireEvent("PLAYER_ENTERING_WORLD") -- le premier regard attend que le jeu ait remis ses canaux
+  assert(#CHANNEL_CALLS == 0, "canal rejoint sans action du joueur")
+  assert(Z.notInProfile.channelFR and Z.notInProfile.channelEN and Z.notInProfile.channelLocks, "canal dans les profils")
+  -- case cochee : LyoruneFR rejoint, dans la fenetre principale, avec la ligne qui dit comment y ecrire
+  db.channelFR = true Z:RefreshAlerts()
+  assert(GetChannelName("LyoruneFR") > 0 and char.channels.FR == "LyoruneFR", "LyoruneFR pas rejoint")
+  assert(PRINTED[#PRINTED]:find("LyoruneFR rejoint", 1, true), "ligne d'aide : " .. PRINTED[#PRINTED])
+  assert(DEFAULT_CHAT_FRAME.added[#DEFAULT_CHAT_FRAME.added] == "LyoruneFR", "pas dans la fenetre de discussion")
+  Z:RefreshAlerts()
+  assert(#CHANNEL_CALLS == 1, "rejoint deux fois")
+  -- canal anglais verrouille par un inconnu : nom de secours, nom refuse retenu un jour
+  LOCKED_CHANNELS.LyoruneEN = true
+  db.channelEN = true Z:RefreshAlerts()
+  assert(char.channels.EN == "LyoruneEN2" and GetChannelName("LyoruneEN2") > 0, "nom de secours : " .. tostring(char.channels.EN))
+  assert(db.channelLocks.LyoruneEN, "nom refuse oublie")
+  local knocks = #CHANNEL_CALLS
+  Z:RefreshAlerts()
+  assert(#CHANNEL_CALLS == knocks, "nom refuse redemande")
+  -- la page dit ou ecrire
+  SlashCmdList.LYORUNE("")
+  local w = Z:OptionsWindow()
+  w.Select("Les amis de Lyorune")
+  local box = OptionPart("rules")
+  assert(box and box.where, "partie du canal absente")
+  box:Update()
+  local text = box.where:GetText()
+  assert(text:find("/4 LyoruneFR", 1, true) and text:find("LyoruneEN2", 1, true), "page : " .. text)
+  -- case decochee : Lyorune quitte le sien, jamais un canal rejoint a la main
+  db.channelEN = false Z:RefreshAlerts()
+  assert(GetChannelName("LyoruneEN2") == 0 and not char.channels.EN, "LyoruneEN2 pas quitte")
+  CHANNELS.lyoruneen = 9
+  Z:RefreshAlerts()
+  assert(GetChannelName("LyoruneEN") == 9, "canal rejoint a la main quitte")
+  CHANNELS.lyoruneen = nil
+  -- /leave du joueur : la case se decoche, Lyorune ne le fait pas revenir
+  PlayerLeavesChannel("LyoruneFR")
+  assert(db.channelFR == false and not char.channels.FR, "case pas decochee apres /leave")
+  Z:RefreshAlerts()
+  assert(GetChannelName("LyoruneFR") == 0, "le joueur revient de force")
+  -- case decochee sur un autre personnage : le jeu remet le canal a la connexion, Lyorune le quitte
+  char.channels.FR = "LyoruneFR"
+  GameRejoinsChannel("LyoruneFR")
+  assert(GetChannelName("LyoruneFR") == 0 and not char.channels.FR, "canal remis par le jeu garde")
+  -- remis par le jeu, case cochee : garde, sans ligne d'aide ni ajout a la fenetre
+  local added, printed = #DEFAULT_CHAT_FRAME.added, #PRINTED
+  db.channelFR = true
+  GameRejoinsChannel("LyoruneFR")
+  assert(char.channels.FR == "LyoruneFR" and #DEFAULT_CHAT_FRAME.added == added and #PRINTED == printed, "canal remis par le jeu : fenetre ou ligne")
+  db.channelFR = false Z:RefreshAlerts()
+  -- dix canaux : le jeu ne repond pas, la demande est oubliee et le joueur prevenu
+  CHANNELS_FULL = true
+  db.channelEN = true Z:RefreshAlerts()
+  assert(PRINTED[#PRINTED]:find("dix canaux", 1, true) and not char.channels.EN, "dix canaux : " .. PRINTED[#PRINTED])
+  CHANNELS_FULL = nil
+  Z:RefreshAlerts()
+  assert(char.channels.EN == "LyoruneEN2", "nouvel essai apres dix canaux")
+  db.channelEN = false Z:RefreshAlerts()
+  box:Update()
+  assert(box.where:GetText() == "Aucun canal rejoint pour l'instant.", "page : " .. box.where:GetText())
+  -- trois noms verrouilles : un message, aucun essai de plus
+  for _, name in ipairs({ "LyoruneFR", "LyoruneFR2", "LyoruneFR3" }) do LOCKED_CHANNELS[name] = true end
+  db.channelFR = true Z:RefreshAlerts()
+  assert(PRINTED[#PRINTED]:find("trois noms", 1, true) and not char.channels.FR, "tous verrouilles")
+  knocks = #CHANNEL_CALLS
+  Z:RefreshAlerts()
+  assert(#CHANNEL_CALLS == knocks, "noms verrouilles redemandes")
+  -- un jour plus tard : nouvel essai
+  for name in pairs(db.channelLocks) do db.channelLocks[name] = db.channelLocks[name] - 86400 end
+  LOCKED_CHANNELS = {}
+  Z:RefreshAlerts()
+  assert(char.channels.FR == "LyoruneFR", "pas de nouvel essai apres un jour")
+  for _, key in ipairs({ "Ouverts à tous, quelle que soit la langue de votre jeu : le français, l'anglais ou les deux, à votre choix.",
+    "Pour y écrire : %s.", "Aucun canal rejoint pour l'instant.", "%s rejoint : écrivez /%d suivi de votre message.",
+    "%s est verrouillé par un autre joueur : Lyorune passe à %s.",
+    "%s : le jeu n'a pas ouvert le canal. Vous avez peut-être déjà dix canaux : quittez-en un, puis recochez la case.", "Vous avez quitté %s : la case « %s » est décochée.",
+    "%s : les trois noms du canal sont verrouillés par d'autres joueurs. Lyorune réessaiera demain." }) do
+    assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+  end
+  w:Hide()
+  db.channelFR, db.channelLocks, CHANNELS, CHANNEL_CALLS = false, {}, {}, {}
+  char.channels = {}
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

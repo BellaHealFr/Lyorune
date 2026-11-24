@@ -70,7 +70,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 33 bis | 1.47.0 | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | Publiée (v1.47.0) |
 | 33 ter | 1.48.0 | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | Publiée (24 novembre 2026) |
 | 33 quater | 1.49.0 | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | Publiée (v1.49.0) |
-| 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
+| 34 | 1.50.0 | Canal des soigneurs : canaux du jeu « LyoruneFR » et « LyoruneEN », rejoints sur une case de la page « Les amis de Lyorune », éteints au départ | Codée, essai en jeu à venir |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -1290,7 +1290,7 @@ Demande de l'auteur (24 novembre 2026), fiche C34 de `CORRECTIONS.md`.
 Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33 (son choix). Idée : un canal écrit réservé
 aux soigneurs et aux joueurs de Lyorune, un en français, un en anglais, pour parler de leur jeu, de leurs
 difficultés ou de l'addon.
-- [ ] 34 a, recherche (demande de l'auteur) : télécharger les addons qui mettent en place un canal de discussion
+- [x] 34 a, recherche (demande de l'auteur) : télécharger les addons qui mettent en place un canal de discussion
   (dans `essais/`, exclu de git, rien repris) et les analyser ; regarder aussi le dossier d'addons installés.
   Questions à trancher avec l'auteur : canal du jeu personnalisé (rejoint par l'addon, nom et langue choisis) ou
   messages entre addons affichés dans une fenêtre à Lyorune ; ce que Forever permet (canaux personnalisés,
@@ -1303,7 +1303,13 @@ difficultés ou de l'addon.
   jamais imposé ni proposé d'office selon la langue du client.
   Règles propres au canal (demande de l'auteur, 23 novembre 2026) : à établir pendant la 34 a et à faire valider
   par l'auteur avant tout codage (au minimum : interrupteur, éteint au départ, choix libre des canaux).
-- [ ] 34 b, codage selon la décision de l'auteur.
+- [x] Décision de l'auteur (24 novembre 2026) : canal du jeu visible, « LyoruneFR » et « LyoruneEN », rejoint quand
+  le joueur coche sa case (deux cases, éteintes au départ, page « Les amis de Lyorune »). Lyorune n'y envoie jamais
+  rien ; affichage, /ignore et signalement restent ceux du jeu. Nom verrouillé par un inconnu : noms de secours
+  (LyoruneFR2, LyoruneFR3), nom refusé passé un jour. Un /leave du joueur décoche la case. Écartée : canal caché et
+  fenêtre à Lyorune (modération maison, pas de signalement officiel, bien plus lourd).
+- [x] 34 b, codage (`Channels.lua`), tests, guides, visite, notes.
+- [ ] Relecture de fin d'étape, essai en jeu, feu vert de l'auteur, publication (1.50.0).
 
 ## Étape 35 : échange de builds de talents, avec vote
 Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33. Idée : les soigneurs s'échangent leurs

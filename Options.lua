@@ -2409,6 +2409,49 @@ local function FriendsNumbers(page, width)
 	return box
 end
 
+-- Canal des soigneurs (Channels.lua) : à quoi il sert, les règles en trois lignes, puis où écrire dans chaque canal rejoint
+local CHANNEL_RULES = {
+	"Ouverts à tous, quelle que soit la langue de votre jeu : le français, l'anglais ou les deux, à votre choix.",
+	"Entraide et bienveillance entre soigneurs de tous niveaux, et Lyorune bien sûr. Ni publicité, ni vente, ni insulte.",
+	"Lyorune n'y écrit jamais à votre place. Un gêneur ? Clic droit sur son nom : Ignorer ou Signaler, comme partout dans le jeu.",
+}
+
+local function ChannelBox(page, width)
+	local box = CreateFrame("Frame", nil, page)
+	box:SetSize(width, 20)
+	box.intro = UI.Label(box, 12)
+	box.intro:SetPoint("TOPLEFT", 4, 0)
+	box.intro:SetWidth(width - 8)
+	box.intro:SetJustifyH("LEFT")
+	box.intro:SetSpacing(3)
+	box.intro:SetText(L["Un lieu pour que les soigneurs échangent entre eux : vos façons de jouer, vos spécialisations et vos talents, vos astuces de placement ou de mana, vos difficultés comme vos réussites. Débutant ou vétéran, chacun y apprend des autres."])
+	box.rules = UI.Label(box, 11, nil, "dim")
+	box.rules:SetPoint("TOPLEFT", box.intro, "BOTTOMLEFT", 0, -8)
+	box.rules:SetWidth(width - 8)
+	box.rules:SetJustifyH("LEFT")
+	box.rules:SetSpacing(3)
+	local lines = {}
+	for i, rule in ipairs(CHANNEL_RULES) do lines[i] = "- " .. L[rule] end
+	box.rules:SetText(table.concat(lines, "\n"))
+	box.where = UI.Label(box, 12, nil, "accent")
+	box.where:SetPoint("TOPLEFT", box.rules, "BOTTOMLEFT", 0, -8)
+	box.where:SetWidth(width - 8)
+	box.where:SetJustifyH("LEFT")
+	box.Update = function(self)
+		local parts, numbers = {}, Z.ChannelNumbers()
+		for _, lang in ipairs({ "FR", "EN" }) do
+			local here = numbers[lang]
+			if here and here.number then parts[#parts + 1] = ("/%d %s"):format(here.number, here.name) end
+		end
+		self.where:SetText(#parts > 0 and L["Pour y écrire : %s."]:format(table.concat(parts, L[" ou "])) or L["Aucun canal rejoint pour l'instant."])
+		Fit(self, math.ceil(self.intro:GetStringHeight() + self.rules:GetStringHeight() + self.where:GetStringHeight()) + 20)
+	end
+	box:SetScript("OnShow", box.Update)
+	Z.ChannelsChanged = function() if box:IsVisible() then box:Update() end end
+	box:Update()
+	return box
+end
+
 -- Votre carnet : trois chiffres en tout et aujourd'hui (depuis la connexion), depuis quand, et la remise à zéro
 local TALLY_LINES = { { "heals", "Soins lancés" }, { "res", "Résurrections" }, { "buffs", "Buffs posés" } }
 local TALLY_H = 22
@@ -2858,9 +2901,14 @@ local function Chapters()
 				{ "custom", CommandList },
 			} },
 		} },
-		{ name = "Les amis de Lyorune", rune = 7, intro = "Lyorune en chiffres, votre carnet de soigneur et un grand merci.", sections = {
+		{ name = "Les amis de Lyorune", rune = 7, intro = "Lyorune en chiffres, le canal des soigneurs, votre carnet et un grand merci.", sections = {
 			{ "Lyorune en chiffres", {
 				{ "custom", FriendsNumbers },
+			} },
+			{ "Canal des soigneurs", {
+				{ "check", "channelFR", "Canal en français", "Rejoint le canal du jeu « LyoruneFR », pour échanger entre soigneurs en français : façons de jouer, spécialisations, astuces. Vous y écrivez avec son numéro, comme dans tout canal (/5 Bonjour). Décochée : Lyorune quitte le canal. Vaut pour tous vos personnages.", desc = "Le canal « LyoruneFR », pour parler soins et Lyorune." },
+				{ "check", "channelEN", "Canal en anglais", "Rejoint le canal du jeu « LyoruneEN », pour échanger entre soigneurs en anglais : façons de jouer, spécialisations, astuces. Vous y écrivez avec son numéro, comme dans tout canal (/6 Hello). Décochée : Lyorune quitte le canal. Vaut pour tous vos personnages.", desc = "Le canal « LyoruneEN », pour parler soins et Lyorune en anglais." },
+				{ "custom", ChannelBox },
 			} },
 			{ "Votre carnet", {
 				{ "check", "notebook", "Tenir mon carnet", "Compte vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent : cases, barres, macros, touches. Les dissipations ne comptent pas. Rien n'est envoyé : le carnet reste sur votre ordinateur.", desc = "Vos soins, résurrections et buffs réussis, par personnage." },

@@ -296,4 +296,5 @@ function Z:RefreshAlerts()
 	end
 	if Z.RefreshComm then Z:RefreshComm() end -- synchronisation (Comm.lua) : même moment, mêmes réglages
 	if Z.RefreshTally then Z:RefreshTally() end -- « Votre carnet » (Tally.lua) : idem
+	if Z.RefreshChannels then Z:RefreshChannels() end -- canal des soigneurs (Channels.lua) : idem
 end

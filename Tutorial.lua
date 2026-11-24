@@ -255,7 +255,7 @@ local steps = {
 		text = "Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
 			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel. "
 			.. "Le bouton |cff33dd88Nouveautés|r, près de la recherche, les rouvre : |cff33dd88Me montrer|r mène au réglage de chacune. "
-			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur, en tout et aujourd'hui.",
+			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres, le canal des soigneurs (français, anglais) et votre carnet de soigneur.",
 		window = "Accueil",
 		target = function() return Z:OptionsWindow().search end,
 	},

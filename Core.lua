@@ -168,6 +168,9 @@ Z.defaults = {
 	-- Les amis de Lyorune
 	notebook = true,           -- tenir « Votre carnet » : mes soins, résurrections et buffs réussis, par personnage (Tally.lua)
 	tallyExit = true,          -- bilan du jour dans la discussion en sortant d'un donjon ou d'un raid (Tally.lua)
+	channelFR = false,         -- (éteint au départ) rejoindre le canal des soigneurs en français, « LyoruneFR » (Channels.lua)
+	channelEN = false,         -- (éteint au départ) rejoindre le canal des soigneurs en anglais, « LyoruneEN »
+	channelLocks = {},         -- noms de canal refusés à l'entrée (mot de passe d'un inconnu) -> heure du refus, passés un jour
 
 	-- Listes personnelles (noms de sorts)
 	extraTracked = {},         -- mes sorts à suivre en plus
@@ -267,6 +270,7 @@ Z.notInProfile = {
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
 	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
 	rankChoice = true, rankAdapt = true, clickVariants = true, enemyGuard = true, notebook = true, tallyExit = true,
+	channelFR = true, channelEN = true, channelLocks = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	assignMark = true, assignGroups = true, assignPlayers = true, assignFade = true, assignAccept = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
@@ -287,6 +291,7 @@ Z.charDefaults = {
 	extraPos = { "CENTER", 120, 200 }, -- cible, cible de la cible, focalisation
 	pinnedPos = { "CENTER", 120, 60 }, -- joueurs épinglés
 	buffPos = { "CENTER", 360, 0 },    -- panneau des buffs manquants
+	channels = {},                     -- canaux des soigneurs rejoints par Lyorune sur ce personnage : { FR = "LyoruneFR" }
 	buffTarget = {},                   -- buffTarget.name : le joueur de /lyorune porteur (tous mes buffs uniques) ;
 	                                   -- buffTarget.byId[numéro] = { mode = "TANK"/"ME"/"NAME", name } : choix par buff (Buffs.lua)
 	-- lastChoice (sans valeur au départ) : lastChoice[ligne de buff] = dernier enchantement d'arme ou aura lancé (Data.lua)

@@ -536,8 +536,8 @@ Z.translations.enUS = {
 	["Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
 			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel. "
 			.. "Le bouton |cff33dd88Nouveautés|r, près de la recherche, les rouvre : |cff33dd88Me montrer|r mène au réglage de chacune. "
-			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur, en tout et aujourd'hui."] =
-		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial. The |cff33dd88What's new|r button, next to the search box, opens the news again: |cff33dd88Show me|r takes you to each feature's setting. At the very bottom, |cff33dd88Friends of Lyorune|r: Lyorune in numbers and your healer's notebook, in total and today.",
+			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres, le canal des soigneurs (français, anglais) et votre carnet de soigneur."] =
+		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial. The |cff33dd88What's new|r button, next to the search box, opens the news again: |cff33dd88Show me|r takes you to each feature's setting. At the very bottom, |cff33dd88Friends of Lyorune|r: Lyorune in numbers, the healers' channel (French, English) and your healer's notebook.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
@@ -1279,13 +1279,34 @@ Z.translations.enUS = {
 
 	-- Les amis de Lyorune (1.45.0)
 	["Les amis de Lyorune"] = "Friends of Lyorune",
-	["Lyorune en chiffres, votre carnet de soigneur et un grand merci."] = "Lyorune in numbers, your healer's notebook and a big thank you.",
+	["Lyorune en chiffres, le canal des soigneurs, votre carnet et un grand merci."] = "Lyorune in numbers, the healers' channel, your notebook and a big thank you.",
 	["Lyorune en chiffres"] = "Lyorune in numbers",
 	["mises à jour"] = "updates",
 	["téléchargements"] = "downloads",
 	["sur le Discord"] = "on Discord",
 	["Discord de Lyorune (Ctrl+C) :"] = "Lyorune's Discord (Ctrl+C):",
 	["Chiffres du %s (GitHub et CurseForge), mis à jour à chaque version de Lyorune."] = "Numbers as of %s (GitHub and CurseForge), updated with each Lyorune version.",
+	-- Canal des soigneurs (1.50.0)
+	["Canal des soigneurs"] = "Healers' channel",
+	["Canal en français"] = "French channel",
+	["Canal en anglais"] = "English channel",
+	["Rejoint le canal du jeu « LyoruneFR », pour échanger entre soigneurs en français : façons de jouer, spécialisations, astuces. Vous y écrivez avec son numéro, comme dans tout canal (/5 Bonjour). Décochée : Lyorune quitte le canal. Vaut pour tous vos personnages."] = "Joins the game channel \"LyoruneFR\", for healers to talk with each other in French: how they play, specialisations, tips. You write in it with its number, like in any channel (/5 Bonjour). Unchecked: Lyorune leaves the channel. Applies to all your characters.",
+	["Rejoint le canal du jeu « LyoruneEN », pour échanger entre soigneurs en anglais : façons de jouer, spécialisations, astuces. Vous y écrivez avec son numéro, comme dans tout canal (/6 Hello). Décochée : Lyorune quitte le canal. Vaut pour tous vos personnages."] = "Joins the game channel \"LyoruneEN\", for healers to talk with each other in English: how they play, specialisations, tips. You write in it with its number, like in any channel (/6 Hello). Unchecked: Lyorune leaves the channel. Applies to all your characters.",
+	["Le canal « LyoruneFR », pour parler soins et Lyorune."] = "The \"LyoruneFR\" channel, healing and Lyorune talk in French.",
+	["Le canal « LyoruneEN », pour parler soins et Lyorune en anglais."] = "The \"LyoruneEN\" channel, healing and Lyorune talk in English.",
+	["Ouverts à tous, quelle que soit la langue de votre jeu : le français, l'anglais ou les deux, à votre choix."] = "Open to everyone, whatever the language of your game: French, English or both, your choice.",
+	["Un lieu pour que les soigneurs échangent entre eux : vos façons de jouer, vos spécialisations et vos talents, vos astuces de placement ou de mana, vos difficultés comme vos réussites. Débutant ou vétéran, chacun y apprend des autres."] = "A place for healers to talk with each other: how you play, your specialisations and talents, your positioning or mana tips, your struggles as well as your successes. Beginner or veteran, everyone learns from the others.",
+	["Entraide et bienveillance entre soigneurs de tous niveaux, et Lyorune bien sûr. Ni publicité, ni vente, ni insulte."] = "Help and kindness between healers of every level, and Lyorune of course. No advertising, no selling, no insults.",
+	["Lyorune n'y écrit jamais à votre place. Un gêneur ? Clic droit sur son nom : Ignorer ou Signaler, comme partout dans le jeu."] = "Lyorune never writes there for you. Someone bothering you? Right-click their name: Ignore or Report, as anywhere in the game.",
+	["Pour y écrire : %s."] = "To write there: %s.",
+	[" ou "] = " or ",
+	["Aucun canal rejoint pour l'instant."] = "No channel joined yet.",
+	["%s : les trois noms du canal sont verrouillés par d'autres joueurs. Lyorune réessaiera demain."] = "%s: all three channel names are locked by other players. Lyorune will try again tomorrow.",
+	["%s est verrouillé par un autre joueur : Lyorune passe à %s."] = "%s is locked by another player: Lyorune moves to %s.",
+	["%s rejoint : écrivez /%d suivi de votre message."] = "%s joined: type /%d followed by your message.",
+	["%s : le jeu n'a pas ouvert le canal. Vous avez peut-être déjà dix canaux : quittez-en un, puis recochez la case."] = "%s: the game did not open the channel. You may already have ten channels: leave one, then check the box again.",
+	["Vous avez quitté %s : la case « %s » est décochée."] = "You left %s: the \"%s\" box is unchecked.",
+
 	["Votre carnet"] = "Your notebook",
 	["Tenir mon carnet"] = "Keep my notebook",
 	["Compte vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent : cases, barres, macros, touches. Les dissipations ne comptent pas. Rien n'est envoyé : le carnet reste sur votre ordinateur."] = "Counts your successful heals, resurrections and buffs, for each character, wherever they come from: cells, bars, macros, keys. Dispels do not count. Nothing is sent: the notebook stays on your computer.",

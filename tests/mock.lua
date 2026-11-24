@@ -489,3 +489,46 @@ LEADER, ASSISTS = nil, {}
 function UnitIsGroupLeader(u) if SECRET_LEADER then return MakeSecret() end return u == LEADER end
 function UnitIsGroupAssistant(u) return ASSISTS[u] or false end
 PingableType_UnitFrameMixin = {}
+
+----------------------------------------------------------------------------------------------------
+-- Ajouts 1.50.0 : canaux de discussion personnalisés (canal des soigneurs)
+-- CHANNELS[nom en minuscules] = numéro ; LOCKED_CHANNELS[nom] = true : le jeu demande un mot de passe
+----------------------------------------------------------------------------------------------------
+CHANNELS, LOCKED_CHANNELS, CHANNEL_CALLS = {}, {}, {}
+local function ChannelNotice(kind, name) FireEvent("CHAT_MSG_CHANNEL_NOTICE", kind, "", "", "", "", "", 0, 0, name) end
+function GetChannelName(name)
+	local id = CHANNELS[tostring(name):lower()]
+	if id then return id, name end
+	return 0
+end
+function JoinPermanentChannel(name, password, frameID)
+	CHANNEL_CALLS[#CHANNEL_CALLS + 1] = "join " .. name
+	if CHANNELS_FULL then return end -- dix canaux : le jeu ne répond rien
+	if LOCKED_CHANNELS[name] then
+		FireEvent("CHANNEL_PASSWORD_REQUEST", name)
+		ChannelNotice("WRONG_PASSWORD", name)
+		return
+	end
+	local n = 4
+	for _, id in pairs(CHANNELS) do if id >= n then n = id + 1 end end
+	CHANNELS[name:lower()] = n
+	ChannelNotice("YOU_JOINED", name)
+end
+function LeaveChannelByName(name)
+	CHANNEL_CALLS[#CHANNEL_CALLS + 1] = "leave " .. name
+	CHANNELS[name:lower()] = nil
+	ChannelNotice("YOU_LEFT", name)
+end
+function GameRejoinsChannel(name) -- le jeu remet un canal permanent à la connexion
+	local n = 4
+	for _, id in pairs(CHANNELS) do if id >= n then n = id + 1 end end
+	CHANNELS[name:lower()] = n
+	ChannelNotice("YOU_JOINED", name)
+end
+function PlayerLeavesChannel(name) -- un /leave tapé par le joueur
+	CHANNELS[name:lower()] = nil
+	ChannelNotice("YOU_LEFT", name)
+end
+DEFAULT_CHAT_FRAME = CreateFrame("Frame", "ChatFrame1")
+function DEFAULT_CHAT_FRAME:GetID() return 1 end
+function DEFAULT_CHAT_FRAME:AddChannel(name) self.added = self.added or {} self.added[#self.added + 1] = name end
