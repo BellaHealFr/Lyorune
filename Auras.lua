@@ -574,10 +574,12 @@ castWatcher:SetScript("OnEvent", function(_, _, _, _, spellID) Z:Try("mes sorts 
 
 -- Mon enchantement d'arme posé ou fini (chaman) : ma case relit ses buffs manquants. Événements absents d'un
 -- client : ignorés sans erreur.
+local weaponTip -- infobulle de l'arme lue (WeaponLeft) : { left = secondes ou false, at = GetTime() }
 local weaponWatcher = CreateFrame("Frame")
 pcall(weaponWatcher.RegisterEvent, weaponWatcher, "WEAPON_ENCHANT_CHANGED")
 pcall(weaponWatcher.RegisterUnitEvent, weaponWatcher, "UNIT_INVENTORY_CHANGED", "player")
 weaponWatcher:SetScript("OnEvent", function()
+	weaponTip = nil -- l'infobulle de l'arme sera relue (WeaponLeft)
 	if not (Z.weaponIds and next(Z.weaponIds) and Z.buttons) then return end
 	for _, b in ipairs(Z.buttons) do
 		local me = b.unit and UnitIsUnit(b.unit, "player")
@@ -788,13 +790,68 @@ local function Until(aura, now, margin)
 	return left - margin
 end
 
--- Mon enchantement d'arme principale : secondes restantes (0 : aucun ; inconnu : toujours là)
+-- Durée restante écrite dans l'infobulle de mon arme (« Croque-roc 1 (60 min) ») : les formats du jeu, traduits,
+-- deviennent des motifs une fois pour toutes ; nil si aucune ligne ne correspond
+local tipFormats
+local function TipWeaponLeft()
+	if not (C_TooltipInfo and C_TooltipInfo.GetInventoryItem) then return nil end
+	if not tipFormats then
+		tipFormats = {}
+		for _, f in ipairs({ { ITEM_ENCHANT_TIME_LEFT_SEC, 1 }, { ITEM_ENCHANT_TIME_LEFT_MIN, 60 },
+			{ ITEM_ENCHANT_TIME_LEFT_HOURS, 3600 } }) do
+			if type(f[1]) == "string" then
+				local p = f[1]:gsub("%%%d%$", "%%")      -- « %1$s » : sans numéro
+					:gsub("|4[^;]*;", "\1")             -- pluriels du jeu (« heure:heures; »)
+					:gsub("[%^%$%(%)%.%[%]%*%+%-%?]", "%%%0")
+					:gsub("%%s", ".+"):gsub("%%d", "(%%d+)"):gsub("\1", "%%S+")
+				tipFormats[#tipFormats + 1] = { "^" .. p .. "$", f[2] }
+			end
+		end
+	end
+	local ok, tip = pcall(C_TooltipInfo.GetInventoryItem, "player", 16)
+	for _, line in ipairs(ok and type(tip) == "table" and tip.lines or {}) do
+		local text = line.leftText
+		if type(text) == "string" and not issecret(text) then
+			for _, f in ipairs(tipFormats) do
+				local n = tonumber(text:match(f[1]))
+				if n then return n * f[2] end
+			end
+		end
+	end
+end
+
+-- Ce buff vient-il de moi ? Le lanceur lisible d'abord, sinon le filtre « mes auras » du jeu ; rien de sûr : oui
+-- (le buff est traité comme avant, repris sous le seuil)
+local function FromMe(unit, aura)
+	local source = aura.sourceUnit
+	if source and not issecret(source) then
+		local same = UnitIsUnit(source, "player")
+		if not issecret(same) then return same and true or false end
+	end
+	local id = aura.auraInstanceID
+	if IsFilteredOut and id and not issecret(id) then
+		local ok, out = pcall(IsFilteredOut, unit, id, "HELPFUL|PLAYER")
+		if ok and not issecret(out) and out ~= nil then return out == false end
+	end
+	return true
+end
+
+-- Mon enchantement d'arme principale : secondes restantes (0 : aucun ; inconnu : toujours là). Sans arme en main
+-- principale, rien à enchanter. Sur Forever, le jeu peut répondre « aucun » avec Croque-roc posé (C30) : l'infobulle
+-- de l'arme a le dernier mot, lue seulement dans ce cas et gardée jusqu'au prochain changement d'arme.
 local function WeaponLeft()
 	if not GetWeaponEnchantInfo then return math.huge end
+	if GetInventoryItemID then
+		local item = GetInventoryItemID("player", 16)
+		if not issecret(item) and not item then return math.huge end
+	end
 	local has, expiration = GetWeaponEnchantInfo()
 	if issecret(has) or issecret(expiration) then return math.huge end
-	if not has then return 0 end
-	return (tonumber(expiration) or 0) / 1000
+	if has then return (tonumber(expiration) or 0) / 1000 end
+	-- « aucun » relu au bout de 5 s : juste après la connexion, l'infobulle peut ne pas être prête
+	if not weaponTip or (not weaponTip.left and GetTime() - weaponTip.at > 5) then weaponTip = { left = TipWeaponLeft() or false, at = GetTime() } end
+	if not weaponTip.left then return 0 end
+	return math.max(0, weaponTip.left - (GetTime() - weaponTip.at))
 end
 
 -- Relire la case quand un buff passe sous le seuil « buffRenew » (aucun événement du jeu ne le dit) ; un seul
@@ -870,7 +927,11 @@ local function FindMissingBuffs(b, unit)
 		if issecret(name) then
 			secret = true
 		else
-			present[name] = math.max(present[name] or -math.huge, Until(list[i], now, margin))
+			-- le buff d'un autre joueur compte jusqu'à sa fin, jamais repris avant (C30) : le sien peut être plus fort
+			-- (talents), et le jeu refuserait le mien ; seuls mes buffs sont repris sous le seuil « buffRenew »
+			local aura = list[i]
+			local left = (Z.buffNames[name] and not FromMe(unit, aura)) and Remaining(aura, now) or Until(aura, now, margin)
+			present[name] = math.max(present[name] or -math.huge, left)
 			if issecret(list[i].expirationTime) then endHidden[name] = true end
 		end
 	end
@@ -955,8 +1016,21 @@ local function FindMissingBuffs(b, unit)
 	if #missing > 0 then return missing, key end
 end
 
--- Mes buffs uniques (Bouclier de terre...) posés sur ce joueur : leur nom, ou nil. Hors combat seulement. Caché
--- par le jeu : ceux que je lui ai lancés et qui durent encore (BuffMemory.lua).
+-- Mes buffs uniques (Bouclier de terre...) sur ce joueur, hors combat seulement. Rend trois listes « nom,nom » (ou
+-- nil) : posés et assez longs ; posés mais sous le seuil « buffRenew » (à renouveler sur lui, C30) ; posés par un
+-- autre joueur (jamais remplacés, C30). Caché par le jeu : ceux que je lui ai lancés et qui durent encore
+-- (BuffMemory.lua).
+local function Add(list, name) return (list and list .. "," or "") .. name end
+
+-- Range sur la case ce que la lecture a trouvé ; vrai si quelque chose a changé (le panneau est à relire)
+local function StoreBuffs(b, list, key, uniques, renew, others)
+	local changed = b.missingKey ~= key or b.myUniques ~= uniques or b.renewUniques ~= renew or b.otherUniques ~= others
+		or (b.missingBuff ~= nil) ~= (list ~= nil)
+	b.missingBuffs, b.missingBuff, b.missingKey, b.myUniques = list, list and list[1], key, uniques
+	b.renewUniques, b.otherUniques = renew, others
+	return changed
+end
+
 local function FindMyUniques(b, unit)
 	if not Z.db.buffPanel or #Z.uniqueChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL|PLAYER", 16)
@@ -966,35 +1040,61 @@ local function FindMyUniques(b, unit)
 		if soonest then Recheck(b, soonest) end
 		return remembered
 	end
-	local mine, hidden
+	local now, margin = GetTime(), Z.db.buffRenew
+	local mine, renew, hidden, seen, soonest = nil, nil, false, {}, math.huge
 	for i = 1, #list do
 		local name = list[i].name
 		if issecret(name) then
 			hidden = true
 		else
 			for _, check in ipairs(Z.uniqueChecks) do
-				if check.name == name then mine = (mine and mine .. "," or "") .. name end
+				if check.name == name and not seen[name] then
+					seen[name] = true
+					local left = Until(list[i], now, margin)
+					if left > 0 then
+						mine = Add(mine, name)
+						soonest = math.min(soonest, left) -- relu quand il passe sous le seuil
+					else
+						renew = Add(renew, name)
+					end
+				end
 			end
 		end
 	end
 	if not hidden and not Z.AurasRestricted() then
 		Z.NoteBuffs(unit, list, Z.ownNames, true)
-		return mine
+		Recheck(b, soonest)
+		-- celui d'un autre joueur (Gardien de peur d'un autre prêtre...) : le mien ne ferait que le remplacer
+		local others
+		if C_UnitAuras.GetAuraDataBySpellName then
+			for _, check in ipairs(Z.uniqueChecks) do
+				if not seen[check.name] then
+					local ok, aura = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, check.name, "HELPFUL")
+					if ok and aura and not issecret(aura) then others = Add(others, check.name) end
+				end
+			end
+		end
+		return mine, renew, others
 	end
 	-- caché par le jeu : la mémoire de mes sorts, sauf pour un buff que le jeu laisse lire et qui n'est pas dans une
 	-- vraie liste (son absence est sûre) ; la case se relit quand le souvenir finit (C29 : aucun événement du jeu)
 	local absent
 	if #list > 0 then
 		for _, check in ipairs(Z.uniqueChecks) do
-			if Z.BuffReadable(check) and not (mine and ("," .. mine .. ","):find("," .. check.name .. ",", 1, true)) then
+			if Z.BuffReadable(check) and not seen[check.name] then
 				absent = absent or {}
 				absent[check.name] = true
 			end
 		end
 	end
-	local remembered, soonest = Z.UniquesInMemory(unit, absent)
-	if soonest then Recheck(b, soonest) end
-	return mine or remembered
+	-- lu sous le seuil : à renouveler, jamais cru « assez long » d'après la mémoire
+	for name in (renew or ""):gmatch("[^,]+") do
+		absent = absent or {}
+		absent[name] = true
+	end
+	local remembered, memorySoon = Z.UniquesInMemory(unit, absent)
+	if memorySoon then Recheck(b, memorySoon) end
+	return mine or remembered, renew
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1238,9 +1338,9 @@ UpdateBuffs = function(b, unit, enemy)
 	local db = Z.db
 	local list, key
 	if not enemy then list, key = FindMissingBuffs(b, unit) end
-	local uniques = not enemy and FindMyUniques(b, unit) or nil
-	local changed = b.missingKey ~= key or b.myUniques ~= uniques or (b.missingBuff ~= nil) ~= (list ~= nil)
-	b.missingBuffs, b.missingBuff, b.missingKey, b.myUniques = list, list and list[1], key, uniques
+	local uniques, renew, others
+	if not enemy then uniques, renew, others = FindMyUniques(b, unit) end
+	local changed = StoreBuffs(b, list, key, uniques, renew, others)
 	if changed then Z:QueueBuffPanel() end
 	local shown = 0
 	if list and db.missingBuffs then
@@ -1320,15 +1420,14 @@ end
 
 function Z.UpdateHiddenSelf()
 	local b = hiddenSelf
-	local list, key, uniques
+	local list, key, uniques, renew, others
 	if Z.db and Z.SelfHidden() then
 		local dead = UnitIsDeadOrGhost("player")
 		b.status = (not issecret(dead) and dead) and "dead" or nil
 		list, key = FindMissingBuffs(b, "player")
-		uniques = FindMyUniques(b, "player")
+		uniques, renew, others = FindMyUniques(b, "player")
 	end
-	local changed = b.missingKey ~= key or b.myUniques ~= uniques or (b.missingBuff ~= nil) ~= (list ~= nil)
-	b.missingBuffs, b.missingBuff, b.missingKey, b.myUniques = list, list and list[1], key, uniques
+	local changed = StoreBuffs(b, list, key, uniques, renew, others)
 	if changed then Z:QueueBuffPanel() end
 end
 

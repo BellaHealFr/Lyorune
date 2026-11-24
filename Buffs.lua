@@ -36,22 +36,143 @@ local function Recent(unit, spell)
 	return untilAt ~= nil and untilAt > GetTime()
 end
 
--- Après un clic sur un bouton de buff (case du bloc, ligne de la fenêtre, touche) : le joueur et le sort visés
+-- Clic sur un bouton de buff (case du bloc, ligne de la fenêtre, touche), noté AVANT l'action du jeu (PreClick) :
+-- l'envoi du sort et les refus immédiats arrivent pendant le clic. spell : le sort lancé (comparé aux événements du
+-- jeu) ; key : le sort de la ligne (clic droit : la ligne garde son sort simple), pour la mise de côté
 local function NoteTry(button, mouse)
 	if button.sample then return end
 	local unit = button:GetAttribute("unit")
 	local spell = button:GetAttribute("spell")
 		or (mouse == "RightButton" and button:GetAttribute("spell2") or button:GetAttribute("spell1"))
-	tried = unit and spell and { unit = unit, spell = spell, at = GetTime() } or nil
+	if type(spell) == "number" then spell = C_Spell.GetSpellName(spell) end -- rang lancé par son numéro (CastFor)
+	local key = button.spellName or (button.entry and button.entry.spell) or spell
+	tried = unit and spell and not issecret(spell) and { unit = unit, spell = spell, key = key, at = GetTime() } or nil
+end
+
+-- Le sort à lancer sur ce joueur : un rang qu'il peut recevoir (règle du jeu : niveau d'apprentissage du rang moins
+-- 10, Z.FitRank, Clicks.lua), lancé par son numéro, sinon le sort par son nom (mon rang le plus haut). Rien de
+-- perdu si le jeu sait déjà baisser le rang tout seul ; s'il ne le sait pas, plus de « niveau trop bas » (C30).
+local function CastFor(spell, unit)
+	-- interrupteur « Rang adapté au niveau du joueur soigné » (le même que pour les clics)
+	if not (spell and unit and Z.db.rankAdapt and Z.FitRank and C_Spell.GetSpellInfo) then return spell end
+	local level = UnitLevel(unit)
+	if issecret(level) or type(level) ~= "number" or level <= 0 then return spell end
+	local info = C_Spell.GetSpellInfo(spell)
+	local id = info and info.spellID
+	if not id or issecret(id) then return spell end
+	local fit = Z.FitRank(id, level)
+	if fit and fit ~= id then return fit end
+	return spell
+end
+Z.BuffCastFor = CastFor -- pour les tests
+
+-- Refus du jeu après mon clic (C30) : ce joueur est mis de côté pour ce buff, sinon il resterait en tête et bloquerait
+-- le bandeau et la touche. Une seule règle pour tous les refus, lus dans les messages d'erreur du jeu :
+--   - le buff ne peut pas aller sur lui (un buff plus fort déjà là, avantage de camp de Forever, niveau trop bas) :
+--     10 minutes, ou jusqu'à sa mort ;
+--   - il est trop loin ou hors de vue : 20 secondes, le temps de se rapprocher.
+-- Par identifiant de joueur (l'ordre du raid peut changer). Seul un refus qui suit mon clic compte : tout de suite
+-- (avant l'envoi du sort), ou dans les 3 secondes si c'est bien ce sort qui est parti (réponse du serveur).
+local ASIDE_LONG, ASIDE_SHORT = 600, 20
+local aside = {} -- aside["joueur|sort"] = { untilAt, why }
+local REFUSALS = {
+	{ "SPELL_FAILED_AURA_BOUNCED", ASIDE_LONG }, { "SPELL_FAILED_LOWLEVEL", ASIDE_LONG },
+	{ "SPELL_FAILED_TARGET_TOO_LOW", ASIDE_LONG }, -- (au cas où le jeu prendrait ce nom)
+	{ "ERR_OUT_OF_RANGE", ASIDE_SHORT }, { "SPELL_FAILED_OUT_OF_RANGE", ASIDE_SHORT },
+	{ "ERR_SPELL_OUT_OF_RANGE", ASIDE_SHORT }, { "SPELL_FAILED_LINE_OF_SIGHT", ASIDE_SHORT },
+}
+
+local function PlayerKey(unit)
+	local ok, guid = pcall(UnitGUID, unit)
+	if ok and guid and not issecret(guid) then return guid end
+	return unit
+end
+
+local function Aside(unit, spell)
+	if not (unit and spell and next(aside)) then return false end
+	local key = PlayerKey(unit) .. "|" .. spell
+	local entry = aside[key]
+	if entry and entry[1] <= GetTime() then aside[key], entry = nil, nil end -- fini : effacé
+	return entry ~= nil
+end
+
+-- Durée de mise de côté pour ce message du jeu, ou nil (autre message)
+local function RefusalTime(message)
+	for _, r in ipairs(REFUSALS) do
+		local text = _G[r[1]]
+		if type(text) == "string" and text ~= "" and (message == text or message:find(text, 1, true)) then return r[2], r[1] end
+	end
+end
+
+-- Un joueur mort perd ses buffs : sa mise de côté aussi (Z.ForgetBuffs, BuffMemory.lua)
+function Z.ForgetAside(unit)
+	local key = PlayerKey(unit) .. "|"
+	for k in pairs(aside) do
+		if k:sub(1, #key) == key then aside[k] = nil end
+	end
+end
+
+-- /lyorune buffs : les joueurs mis de côté en ce moment
+function Z.AsideReport()
+	local lines, now = {}, GetTime()
+	for k, entry in pairs(aside) do
+		if entry[1] > now then
+			lines[#lines + 1] = Z.L["mis de côté : %s, %s (%s), encore %d s."]:format(entry[3] or "?", k:match("|(.*)$") or "?",
+				entry[2], math.ceil(entry[1] - now))
+		end
+	end
+	return lines
+end
+
+-- Le joueur du dernier clic, mis de côté pour ce buff ; le panneau passe au suivant, et le reprend à la fin
+local function SetAside(seconds, kind)
+	local name = UnitName(tried.unit)
+	aside[PlayerKey(tried.unit) .. "|" .. tried.key] = { GetTime() + seconds, kind,
+		name and not issecret(name) and name or tried.unit }
+	tried = nil
+	Z:QueueBuffPanel()
+	C_Timer.After(seconds + 0.1, function() Z:QueueBuffPanel() end) -- de nouveau proposé
+end
+
+-- Nom sans royaume, pour comparer le nom donné par le jeu à l'envoi d'un sort et celui d'une case
+local function Bare(name)
+	if not name or issecret(name) or name == "" then return nil end
+	return name:match("^[^-]+") or name
 end
 
 local castWatch = CreateFrame("Frame")
 castWatch:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
-castWatch:SetScript("OnEvent", function(_, _, _, _, spellID)
-	if not tried or GetTime() - tried.at > 3 or not spellID or issecret(spellID) then return end
-	local name = C_Spell.GetSpellName(spellID)
-	if not name or issecret(name) or name ~= tried.spell then return end
-	recent[tried.unit .. "|" .. tried.spell] = GetTime() + RECENT
+castWatch:RegisterUnitEvent("UNIT_SPELLCAST_SENT", "player")
+castWatch:RegisterEvent("UI_ERROR_MESSAGE")
+castWatch:SetScript("OnEvent", function(_, event, a, b, c, d)
+	if not tried or GetTime() - tried.at > 3 then return end
+	if event == "UI_ERROR_MESSAGE" then
+		if issecret(b) or type(b) ~= "string" then return end
+		local seconds, kind = RefusalTime(b)
+		if not seconds then return end
+		local age = GetTime() - tried.at
+		if tried.other or age > (tried.sent and 3 or 1) then return end
+		SetAside(seconds, kind)
+		return
+	end
+	local spellID = event == "UNIT_SPELLCAST_SENT" and d or c
+	local name = spellID and not issecret(spellID) and C_Spell.GetSpellName(spellID)
+	if not name or issecret(name) then return end
+	if event == "UNIT_SPELLCAST_SENT" then
+		-- un autre sort parti entre-temps : un refus ne peut plus être attribué à ce clic
+		if name == tried.spell and not tried.sent then
+			tried.sent = true
+			-- parti sur quelqu'un d'autre que le joueur visé : hors de vue, le jeu l'a lancé sur moi (C30). Sans
+			-- mise de côté, ce joueur resterait en tête et chaque clic me rebufferait.
+			local wanted, target = Bare(UnitName(tried.unit)), Bare(b)
+			if tried.unit ~= "player" and wanted and target and wanted ~= target then SetAside(ASIDE_SHORT, "SPELL_FAILED_LINE_OF_SIGHT") end
+		else
+			tried.other = true
+		end
+		return
+	end
+	if name ~= tried.spell then return end
+	recent[tried.unit .. "|" .. tried.key] = GetTime() + RECENT
 	tried = nil
 	Z:QueueBuffPanel()
 	C_Timer.After(RECENT + 0.1, function() Z:QueueBuffPanel() end) -- l'aura n'est pas venue : de nouveau proposé
@@ -72,7 +193,7 @@ local function SetNextBuff(entry)
 	nextBuff:SetAttribute("useOnKeyDown", castOnDown and true or false)
 	nextBuff:SetAttribute("unit", entry and entry.unit)
 	nextBuff:SetAttribute("type", entry and "spell")
-	nextBuff:SetAttribute("spell", entry and entry.spell)
+	nextBuff:SetAttribute("spell", entry and CastFor(entry.spell, entry.unit))
 	nextBuff:SetAttribute("macrotext", nil)
 	nextBuff.entry, nextBuff.combat = entry, nil
 end
@@ -101,8 +222,8 @@ Z.CombatBuffKey = CombatKey -- pour les tests et /lyorune buffs
 
 -- Après l'appui : un mot quand rien n'est parti (combat, ou aucun buff à poser), pour que la touche ne semble
 -- pas cassée
-nextBuff:SetScript("PostClick", function(self, mouse)
-	NoteTry(self, mouse)
+nextBuff:SetScript("PreClick", NoteTry)
+nextBuff:SetScript("PostClick", function(self)
 	if InCombatLockdown() then
 		if not self.combat then Z:Print(Z.L["le prochain buff manquant se pose hors combat seulement."]) end
 	elseif not self.entry then
@@ -216,6 +337,11 @@ local function CooldownLeft(name)
 	return left > 0 and left or nil
 end
 
+-- Ce nom est-il dans une liste « nom,nom » ? (nom entier : jamais une partie d'un autre)
+local function HasName(list, name)
+	return list ~= nil and ("," .. list .. ","):find("," .. name .. ",", 1, true) ~= nil
+end
+
 -- Une ligne de buff unique pour son porteur, si elle est à proposer
 local function UniqueRow(result, check, placed, target, why)
 	local wanted = not placed[check.name] and Z.BuffWatched(check)
@@ -283,6 +409,7 @@ end
 local function UniqueRows(result)
 	if #Z.uniqueChecks == 0 then return end
 	local placed, members, tank, me = {}, {}, nil, nil
+	local renewOn, others = {}, {} -- mon buff à renouveler sur ce joueur ; buff d'un autre joueur sur lui (C30)
 	for _, b in ipairs(Z.buttons) do
 		local unit = b.unit
 		if unit and not b.extra and b:IsVisible() and not unit:find("pet", 1, true) then
@@ -291,6 +418,8 @@ local function UniqueRows(result)
 			-- mort, fantôme ou déconnecté : ne peut pas recevoir le buff ; en combat : ses buffs sont cachés
 			if name and not b.status and not Fighting(unit) then
 				local player = { unit = unit, name = name }
+				for spell in (b.renewUniques or ""):gmatch("[^,]+") do renewOn[spell] = renewOn[spell] or player end
+				if b.otherUniques then others[name] = b.otherUniques end
 				members[name] = members[name] or player
 				local role = UnitGroupRolesAssigned(unit)
 				if not issecret(role) and role == "TANK" then tank = tank or player end
@@ -307,17 +436,31 @@ local function UniqueRows(result)
 		if name and not hidden.status and not me then
 			me = { unit = "player", name = name }
 			members[name] = members[name] or me
+			for spell in (hidden.renewUniques or ""):gmatch("[^,]+") do renewOn[spell] = renewOn[spell] or me end
+			if hidden.otherUniques then others[name] = hidden.otherUniques end
 		end
 	end
 	for _, check in ipairs(Z.uniqueChecks) do
 		local mode, name = Z.BuffBearer(check.id)
 		local target, why
-		if mode == "NAME" and members[name] then target, why = members[name], Z.L["choisi"]
+		-- presque fini : renouvelé sur le joueur qui le porte, même s'il l'a reçu à la place du porteur prévu
+		if renewOn[check.name] then target, why = renewOn[check.name], Z.L["à renouveler"]
+		elseif mode == "NAME" and members[name] then target, why = members[name], Z.L["choisi"]
 		elseif mode == "ME" and me then target, why = me, Z.L["vous"] end
 		if not target and tank then target, why = tank, Z.L["tank"] end
 		if not target and me then target, why = me, Z.L["vous"] end
+		-- le même buff posé par un autre joueur sur lui : le mien ne ferait que le remplacer
+		if target and HasName(others[target.name], check.name) then target = nil end
 		if target then UniqueRow(result, check, placed, target, why) end
 	end
+end
+
+-- Ce buff unique est-il déjà sur ce joueur, posé par un autre (lu par sa case, b.otherUniques) ?
+function Z.UniqueTakenOn(unit, name)
+	for _, b in ipairs(Z.buttons or {}) do
+		if b.unit == unit and not b.extra and HasName(b.otherUniques, name) then return true end
+	end
+	return false
 end
 
 -- /lyorune buffs (C29) : pour chaque buff unique, pourquoi il est proposé ou non (porteur, déjà posé et d'où on le
@@ -328,12 +471,13 @@ function Z.UniqueDiagnostic()
 		local unit, name = Z.UniqueBearer(check)
 		local where
 		for _, b in ipairs(Z.buttons or {}) do
-			if b.unit and not b.extra and (b.myUniques or ""):find(check.name, 1, true) then where = Z.UnitPinName(b.unit) or "?" end
+			if b.unit and not b.extra and HasName(b.myUniques, check.name) then where = Z.UnitPinName(b.unit) or "?" end
 		end
 		local why
 		if not Z.BuffWatched(check) then why = L["décoché dans Mes buffs"]
 		elseif not unit then why = L["aucun porteur (ni tank, ni vous)"]
 		elseif where then why = L["déjà posé sur %s"]:format(where)
+		elseif Z.UniqueTakenOn(unit, check.name) then why = L["un autre joueur le lui a déjà posé"]
 		elseif Fighting(unit) then why = L["porteur en combat"]
 		elseif CooldownLeft(check.spell) then why = L["en recharge"]
 		else why = L["proposé"] end
@@ -364,8 +508,14 @@ function Z.BuffRows()
 		local groupAt = simple and Z.db.buffGroupAt or 1
 		for _, group in ipairs(order) do
 			local players = byGroup[group]
-			if groupSpell and group > 0 and #players >= groupAt then
-				result[#result + 1] = { check = check, spell = groupSpell, icon = check.icon, unit = players[1].unit,
+			-- la ligne de groupe vise le premier joueur que le jeu n'a pas refusé (C30) : un refus sur un seul joueur
+			-- ne cache pas tout son groupe
+			local aim
+			for _, entry in ipairs(players) do
+				if not Aside(entry.unit, groupSpell) then aim = aim or entry end
+			end
+			if groupSpell and aim and group > 0 and #players >= groupAt then
+				result[#result + 1] = { check = check, spell = groupSpell, icon = check.icon, unit = aim.unit,
 					group = group, count = #players, players = players }
 			elseif simple then
 				for _, entry in ipairs(players) do
@@ -377,13 +527,19 @@ function Z.BuffRows()
 	end
 	UniqueRows(result)
 	-- hors de portée : en fin de liste (lisible hors combat), l'ordre reste le même dans chaque partie
-	local near, far = {}, {}
+	-- un buff qui me manque passe en tête (C30) : rien à viser, il part toujours, même en raid où ma case est loin
+	local mine, near, far = {}, {}, {}
 	for _, entry in ipairs(result) do
+		local isMe = not entry.count and UnitIsUnit(entry.unit, "player")
+		if issecret(isMe) then isMe = false end
 		if Recent(entry.unit, entry.spell) then -- je viens de le lui lancer : l'aura arrive
+		elseif Aside(entry.unit, entry.spell) then -- le jeu l'a refusé sur lui (C30)
+		elseif isMe then mine[#mine + 1] = entry
 		elseif Away(entry.unit, entry.spell) then far[#far + 1] = entry else near[#near + 1] = entry end
 	end
-	for _, entry in ipairs(far) do near[#near + 1] = entry end
-	return near
+	for _, entry in ipairs(near) do mine[#mine + 1] = entry end
+	for _, entry in ipairs(far) do mine[#mine + 1] = entry end
+	return mine
 end
 
 -- Portée : une ligne hors de portée est estompée, comme sa case (le jeu ne dit rien en combat, le panneau
@@ -449,7 +605,7 @@ local function Row(index)
 	row.label:SetWordWrap(false)
 	row:SetScript("OnEnter", RowEnter)
 	row:SetScript("OnLeave", RowLeave)
-	row:SetScript("PostClick", NoteTry)
+	row:SetScript("PreClick", NoteTry)
 	rows[index] = row
 	return row
 end
@@ -503,9 +659,9 @@ local function Arm(button, entry)
 	button.sample = entry.sample
 	button:SetAttribute("unit", not entry.sample and entry.unit or nil) -- l'exemple ne lance rien
 	button:SetAttribute("type1", not entry.sample and "spell" or nil)
-	button:SetAttribute("spell1", not entry.sample and entry.spell or nil)
+	button:SetAttribute("spell1", not entry.sample and CastFor(entry.spell, entry.unit) or nil)
 	button:SetAttribute("type2", not entry.sample and entry.spell2 and "spell" or nil)
-	button:SetAttribute("spell2", not entry.sample and entry.spell2 or nil)
+	button:SetAttribute("spell2", not entry.sample and CastFor(entry.spell2, entry.unit) or nil)
 	button.unitToken, button.spellName, button.spell2Name, button.why = entry.unit, entry.spell, entry.spell2, entry.why
 end
 
@@ -551,7 +707,7 @@ local function Tile(index)
 	tile.border = UI.Border(tile, 1)
 	tile:SetScript("OnEnter", RowEnter)
 	tile:SetScript("OnLeave", RowLeave)
-	tile:SetScript("PostClick", NoteTry)
+	tile:SetScript("PreClick", NoteTry)
 	tiles[index] = tile
 	return tile
 end
@@ -856,7 +1012,10 @@ function Z:UpdateBuffPanel()
 	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
 	Z.UpdateHiddenSelf() -- ma case cachée (seul) : ma fiche à jour avant la lecture (relit le panneau si elle change)
 	if Z.RecheckBuffMarks then Z.RecheckBuffMarks() end -- repères des buffs (Containers.lua) : porteur, réglages
-	local list = (Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
+	-- mort ou fantôme : rien ne peut partir avant mon retour (C30)
+	local dead = UnitIsDeadOrGhost("player")
+	dead = not issecret(dead) and dead
+	local list = (not dead and Z.db.buffPanel and (#Z.buffChecks > 0 or #Z.uniqueChecks > 0)) and Z.BuffRows() or {}
 	SetNextBuff(list[1])
 	if #list == 0 and Z.db.buffPanel then list = SampleList() end
 	if Z.db.buffPlace == "FREE" then
@@ -899,6 +1058,9 @@ Z:On("PLAYER_REGEN_ENABLED", function()
 	Z:QueueBuffPanel()
 end)
 Z:OnRosterSettled(function() Z:QueueBuffPanel() end)
+for _, event in ipairs({ "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST" }) do
+	Z:On(event, function() Z:QueueBuffPanel() end)
+end
 
 -- /lyorune porteur [nom] : le joueur qui reçoit mes buffs uniques à la place du tank (le joueur survolé, ou ma
 -- cible). Le même joueur une 2e fois, ou sans joueur : retour au tank. Gardé pour ce personnage.

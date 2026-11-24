@@ -168,6 +168,7 @@ end
 function Z.ForgetBuffs(unit)
 	local key = Key(unit)
 	seen[key], mine[key] = nil, nil
+	if Z.ForgetAside then Z.ForgetAside(unit) end -- refus du jeu oublié aussi (Buffs.lua, C30)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -378,6 +379,7 @@ function Z:BuffsCommand()
 	Z:Print(L["mémoire : %d fiche(s) de joueur en cours."]:format(players))
 	for _, line in ipairs(Z.BuffDiagnostic()) do Z:Print(line) end
 	for _, line in ipairs(Z.UniqueDiagnostic and Z.UniqueDiagnostic() or {}) do Z:Print(line) end -- buffs uniques (C29)
+	for _, line in ipairs(Z.AsideReport and Z.AsideReport() or {}) do Z:Print(line) end -- refus du jeu (C30)
 	for _, line in ipairs(Z.BuffAssignReport and Z.BuffAssignReport() or {}) do Z:Print(line) end -- qui buffe qui
 end
 

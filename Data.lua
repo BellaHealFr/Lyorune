@@ -424,12 +424,16 @@ function Z.BuffFollowed(check)
 	return Z.BuffWatched(check) or Z.GroupWanted(check)
 end
 
--- Joueur à mana : sa classe n'est pas dans Z.classPower (un familier ne compte pas ; classe secrète : non)
+-- Joueur à mana : sa classe n'est pas dans Z.classPower, ou le jeu dit qu'il a de la mana (C30 : le chasseur en a
+-- peut-être sur Forever, la réponse du jeu tranche). Un druide en forme garde sa mana : sa classe suffit. Un familier
+-- ne compte pas ; classe ou réponse secrète : la classe décide.
 function Z.UsesMana(unit)
 	if unit:find("pet", 1, true) then return false end
 	local class = select(2, UnitClass(unit))
 	if not class or Z.IsSecret(class) then return false end
-	return not Z.classPower[class]
+	if not Z.classPower[class] then return true end
+	local kind = UnitPowerType(unit)
+	return not Z.IsSecret(kind) and kind == 0
 end
 
 -- Bénédiction à poser sur ce joueur : Z.BlessingFor, dans BuffAssign.lua (grille, entente entre paladins)

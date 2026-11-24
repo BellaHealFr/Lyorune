@@ -366,7 +366,15 @@ function UnitHasIncomingResurrection() return S(false) end
 function UnitPower() return S(MANA) end
 function UnitPowerMax() return S(1000) end
 -- Ressource du joueur (bug C7) : la mana, sauf si un test choisit POWER_TYPE et POWER_TOKEN
-function UnitPowerType() return S(POWER_TYPE or 0), S(POWER_TOKEN or "MANA") end
+-- Sans choix du test : la ressource de la classe (guerrier rage, voleur énergie, chasseur focalisation), sinon la mana
+local CLASS_POWER = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2, "FOCUS" } }
+function UnitPowerType(u)
+	if POWER_TYPE == nil and u and UnitClass then
+		local p = CLASS_POWER[select(2, UnitClass(u)) or ""]
+		if p then return S(p[1]), S(p[2]) end
+	end
+	return S(POWER_TYPE or 0), S(POWER_TOKEN or "MANA")
+end
 -- Couleurs des barres de ressource du jeu, par nom et par numéro
 PowerBarColor = { MANA = { r = 0, g = 0, b = 1 }, RAGE = { r = 1, g = 0, b = 0 }, ENERGY = { r = 1, g = 1, b = 0 },
 	FOCUS = { r = 1, g = 0.5, b = 0.25 } }

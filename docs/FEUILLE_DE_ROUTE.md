@@ -1200,6 +1200,10 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
   porteur, familiers, joueurs en combat ou hors de portée, version de groupe (lien avec 32 d), bouton et touche,
   coût en performance. Écrire la comparaison dans `CORRECTIONS.md` (fiche C30), présenter à l'auteur les écarts et
   ce que Lyorune fera mieux, à sa façon, sans rien copier ; corriger avant de publier la 1.46.3.
+  - [x] Lecture complète et comparaison faites (24 novembre 2026) : 13 écarts, fiche C30.
+  - [x] Corrections (carte blanche de l'auteur) : mise de côté après un refus du jeu, rang adapté au niveau, buff
+    d'un autre jamais remplacé, buffs uniques renouvelés sur leur porteur, arme, mort, moi d'abord, mana du
+    chasseur. Plus tard : rang plus faible porté, durées en champ de bataille, cible hors du groupe.
 - [ ] **32 d, C19** : version de groupe en priorité. Déjà dans le bandeau (`Z.BuffRows`, `buffGroupAt`), pas
   sur la case ; ne compter que les joueurs que le sort de groupe touche sur Forever (groupe, portée : vérifier avec
   HealKit, PallyPower, VuhDo) ; réglage plus facile à trouver (aujourd'hui dans les réglages fins).

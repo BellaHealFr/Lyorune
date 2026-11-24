@@ -7588,7 +7588,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
       for _, r in ipairs(Z.BuffRows()) do if r.unit == e.unit and r.spell == e.spell then return true end end
     end
     C_Spell.GetSpellName = function(id) if id == 999999 then return e.spell end return oldName(id) end
-    tile:Run("PostClick", "LeftButton")
+    tile:Run("PreClick", "LeftButton")
     assert(Proposed(), "clic seul (sort pas encore parti) : deja ecarte")
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 1)
     assert(Proposed(), "un autre sort reussi : ecarte a tort")
@@ -7598,7 +7598,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
     assert(Proposed(), "aura jamais venue : pas propose de nouveau")
     -- la touche aussi ; un clic trop ancien n'ecarte rien
     Z:UpdateBuffPanel()
-    LyoruneNextBuff:Run("PostClick", "LeftButton")
+    LyoruneNextBuff:Run("PreClick", "LeftButton")
     NOW = NOW + 10
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 999999)
     assert(Proposed(), "clic trop ancien : ecarte a tort")
@@ -7613,7 +7613,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
       "exemple absent, ou il lance un sort")
     assert(LyoruneNextBuff:GetAttribute("spell") == nil, "la touche lancerait l'exemple")
     tile:Run("OnEnter") tile:Run("OnLeave")
-    tile:Run("PostClick", "LeftButton")
+    tile:Run("PreClick", "LeftButton")
     Z:ToggleOptions("Clics") Z:UpdateBuffPanel()
     assert(not block:IsShown(), "exemple hors du chapitre Joueurs")
     Z:ToggleOptions("Joueurs") Z:OptionsWindow():Hide() Z:UpdateBuffPanel()
@@ -9924,7 +9924,10 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
       local list = {}
       for _, t in ipairs(timers) do list[#list + 1] = math.floor(t.s) if t.s > 590 and t.s < 610 then due = t end end
       assert(due, "aucune relecture prevue a la fin du souvenir (C29) : " .. table.concat(list, ","))
-      NOW = NOW + due.s due.f() RunUpdates()
+      -- (le porteur peut avoir deux cases, chacune son rendez-vous : tous sont tenus)
+      NOW = NOW + due.s
+      for _, t in ipairs(timers) do if t.s > 590 and t.s < 610 then t.f() end end
+      RunUpdates()
       assert(not cell.myUniques, "buff unique toujours cru pose apres la fin du souvenir")
       C_Timer.After = function(sec, f) if sec < 1 then f() end end
       AURAS = {} Z.db.buffWatch = {}
@@ -9969,6 +9972,191 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
   Z.db.buffDurations, Z.db.buffRenew = old.durations, old.renew
   AURAS = {}
   Z.class = old.class Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("C30 : buffs d'apres l'etude de HealKit (refus du jeu, buff d'un autre, buffs uniques, arme, mort, moi d'abord, mana)", function()
+  local old = { isUnit = UnitIsUnit, after = C_Timer.After, class = Z.class, renew = Z.db.buffRenew, name = C_Spell.GetSpellName,
+    known = C_SpellBook.IsSpellKnown, unitClass = UnitClass, byName = C_UnitAuras.GetAuraDataBySpellName,
+    panel = Z.db.buffPanel, place = Z.db.buffPlace, groupAt = Z.db.buffGroupAt }
+  local globals = { "SPELL_FAILED_AURA_BOUNCED", "ERR_OUT_OF_RANGE", "ITEM_ENCHANT_TIME_LEFT_MIN", "ITEM_ENCHANT_TIME_LEFT_HOURS",
+    "GetWeaponEnchantInfo", "GetInventoryItemID" }
+  local ok, err = pcall(function()
+    local timers = {}
+    C_Timer.After = function(s, f) if s < 1 then f() else timers[#timers + 1] = { s = s, f = f } end end
+    local extra = { [8024] = "Arme Langue de feu", [8017] = "Arme Croque-roc", [408510] = "Bouclier d'eau" }
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
+    local me = Z.buttons[1]
+    local other
+    for _, b in ipairs(Z.buttons) do
+      if b ~= me and b.unit and not b.extra and b:IsVisible() and not b.unit:find("pet") then other = other or b end
+    end
+    UnitIsUnit = function(a, b) return a == b or (b == "player" and a == me.unit) or (a == "player" and b == me.unit) end
+    local function Has(b, id) for _, m in ipairs(b.missingBuffs or {}) do if m.check.id == id then return true end end end
+    local function Update() Z:Refresh() RunUpdates() end
+    local function Row(unit, spell)
+      for _, r in ipairs(Z.BuffRows()) do if r.unit == unit and r.spell == spell and not r.count then return r end end
+    end
+    NOW = 30000
+    Z.db.buffWatch, Z.db.buffGroupAt, Z.db.missingBuffs, Z.db.buffPanel, Z.db.buffPlace = {}, 99, true, true, "FREE"
+    Z.db.buffRenew = 75
+    Z.class = "PRIEST" Z:BuildData()
+    local fort = "Mot de pouvoir : Robustesse"
+
+    -- 6 : le buff d'un autre joueur compte jusqu'a sa fin, le mien est repris sous le seuil
+    AURAS = { HELPFUL = { { name = fort, icon = 9, auraInstanceID = 81, expirationTime = NOW + 60, duration = 1800,
+      sourceUnit = "raid9" } } }
+    Update() assert(not Has(other, 1243), "buff d'un autre joueur repris avant sa fin (C30)")
+    local rdv
+    for _, t in ipairs(timers) do if t.s > 59 and t.s < 62 then rdv = t end end
+    assert(rdv, "fin du buff d'un autre joueur non attendue")
+    AURAS.HELPFUL[1].sourceUnit = "player"
+    Update() assert(Has(other, 1243), "mon buff sous le seuil non propose")
+    AURAS.HELPFUL[1].sourceUnit = MakeSecret()
+    Update() assert(Has(other, 1243), "lanceur secret : traite comme avant (repris sous le seuil)")
+
+    -- 11 : un buff qui me manque passe en tete du panneau et de la touche
+    AURAS = {} Update() Z:UpdateBuffPanel()
+    local list = Z.BuffRows()
+    assert(#list > 1 and list[1].unit == me.unit, "mon buff pas en tete : " .. tostring(list[1] and list[1].unit))
+    assert(LyoruneNextBuff:GetAttribute("unit") == me.unit, "touche : mon buff pas en premier")
+
+    -- 1, 4, 9 : refus du jeu apres mon clic : ce joueur est mis de cote pour ce buff
+    rawset(_G, "SPELL_FAILED_AURA_BOUNCED", "Un sort plus puissant est déjà actif")
+    rawset(_G, "ERR_OUT_OF_RANGE", "Hors de portée")
+    -- (les lignes changent d'ordre a chaque mise a jour : la bonne est cherchee avant chaque clic)
+    local function Click()
+      Z:UpdateBuffPanel()
+      for i = 1, 10 do
+        local r = _G["LyoruneBuffsRow" .. i]
+        if r and r:IsShown() and r.unitToken == other.unit and r.spellName == fort then r:Run("PreClick", "LeftButton") return end
+      end
+      error("ligne de la Robustesse de l'autre joueur absente")
+    end
+    -- un message sans clic ne met personne de cote
+    FireEvent("UI_ERROR_MESSAGE", 50, SPELL_FAILED_AURA_BOUNCED)
+    assert(Row(other.unit, fort), "refus sans clic : joueur mis de cote")
+    -- un autre sort parti apres le clic : le refus ne lui est pas attribue
+    Click()
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit), "c30-a", 2061)
+    FireEvent("UI_ERROR_MESSAGE", 50, SPELL_FAILED_AURA_BOUNCED)
+    assert(Row(other.unit, fort), "refus attribue au mauvais sort")
+    -- mon sort parti, refuse par le serveur : de cote 10 minutes, les autres restent proposes
+    Click()
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit), "c30-b", 1243)
+    NOW = NOW + 2
+    FireEvent("UI_ERROR_MESSAGE", 50, SPELL_FAILED_AURA_BOUNCED)
+    assert(not Row(other.unit, fort), "refuse par le jeu : toujours propose (C30)")
+    assert(Row(me.unit, fort), "les autres joueurs ne sont plus proposes")
+    local report = Z.AsideReport()
+    assert(#report == 1 and report[1]:find("SPELL_FAILED_AURA_BOUNCED", 1, true), "/lyorune buffs : mise de cote absente")
+    NOW = NOW + 599 assert(not Row(other.unit, fort), "mis de cote moins de 10 minutes")
+    NOW = NOW + 2 assert(Row(other.unit, fort), "toujours de cote apres 10 minutes")
+    -- trop loin : 20 secondes ; sa mort efface la mise de cote
+    Click()
+    FireEvent("UI_ERROR_MESSAGE", 50, ERR_OUT_OF_RANGE)
+    assert(not Row(other.unit, fort), "hors de portee : toujours en tete")
+    Z.ForgetBuffs(other.unit)
+    assert(Row(other.unit, fort), "mort : mise de cote gardee")
+    Click()
+    FireEvent("UI_ERROR_MESSAGE", 50, ERR_OUT_OF_RANGE)
+    NOW = NOW + 21 assert(Row(other.unit, fort), "hors de portee : de cote plus de 20 s")
+    -- hors de vue : le jeu lance le sort sur moi a la place du joueur vise ; il est mis de cote 20 s
+    Click()
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Quelqu'un", "c30-c", 1243)
+    assert(not Row(other.unit, fort), "sort parti sur moi : le joueur vise reste en tete (C30)")
+    NOW = NOW + 21 assert(Row(other.unit, fort), "sort parti sur moi : de cote plus de 20 s")
+    Click()
+    FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(other.unit) .. "-Royaume", "c30-d", 1243)
+    assert(Row(other.unit, fort), "nom avec royaume pris pour un autre joueur")
+    -- 4 : rang que le joueur peut recevoir, lance par son numero ; niveau inconnu ou assez haut : le sort par son nom
+    local oldFit, oldInfo, oldLevel = Z.FitRank, C_Spell.GetSpellInfo, UnitLevel
+    local level = 10
+    Z.FitRank = function(id, lvl) return (id == 10938 and lvl < 40) and 1245 or id end
+    C_Spell.GetSpellInfo = function() return { spellID = 10938 } end
+    UnitLevel = function() return level end
+    assert(Z.BuffCastFor(fort, other.unit) == 1245, "joueur de bas niveau : rang trop haut lance")
+    level = 60 assert(Z.BuffCastFor(fort, other.unit) == fort, "joueur de haut niveau : rang choisi a tort")
+    level = MakeSecret() assert(Z.BuffCastFor(fort, other.unit) == fort, "niveau secret : rang devine")
+    level = 10 Z.db.rankAdapt = false
+    assert(Z.BuffCastFor(fort, other.unit) == fort, "interrupteur du rang adapte eteint : rang baisse quand meme")
+    Z.db.rankAdapt = true
+    Z.FitRank, C_Spell.GetSpellInfo, UnitLevel = oldFit, oldInfo, oldLevel
+
+    -- 8 : mort ou fantome, rien a poser
+    DEAD = { player = true } Z:UpdateBuffPanel()
+    assert(LyoruneNextBuff:GetAttribute("spell") == nil, "mort : la touche lance encore un buff")
+    DEAD = nil Z:UpdateBuffPanel()
+    assert(LyoruneNextBuff:GetAttribute("spell") ~= nil, "revenu : plus rien propose")
+
+    -- 7 : buff unique presque fini, renouvele sur le joueur qui le porte ; celui d'un autre jamais remplace
+    local fear = Z.uniqueChecks[1]
+    if fear then
+      local bearer = Z.UniqueBearer(fear)
+      local function Fear() for _, r in ipairs(Z.BuffRows()) do if r.spell == fear.spell then return r end end end
+      AURAS = { ["HELPFUL|PLAYER"] = { { name = fear.name, icon = 9, auraInstanceID = 91, expirationTime = NOW + 100, duration = 600 } } }
+      Update() assert(not Fear(), "buff unique a 100 s propose")
+      AURAS["HELPFUL|PLAYER"][1].expirationTime = NOW + 30
+      Update()
+      local r = Fear()
+      assert(r and r.why == Z.L["à renouveler"], "buff unique presque fini non renouvele (C30)")
+      AURAS = {}
+      C_UnitAuras.GetAuraDataBySpellName = function(unit, name) if name == fear.name and unit == bearer then return { name = name } end end
+      Update() assert(not Fear(), "buff unique d'un autre joueur remplace (C30)")
+      local said
+      for _, line in ipairs(Z.UniqueDiagnostic()) do if line:find(Z.L["un autre joueur le lui a déjà posé"], 1, true) then said = true end end
+      assert(said, "/lyorune buffs ne dit pas que le buff vient d'un autre")
+      C_UnitAuras.GetAuraDataBySpellName = old.byName
+      Update() assert(Fear(), "buff unique plus propose")
+    end
+
+    -- 3 : arme du chaman : sans arme, rien ; enchantement que le jeu ne voit pas, lu dans l'infobulle
+    AURAS = { HELPFUL = { { name = "Bouclier d'eau", icon = 9, auraInstanceID = 95 } } }
+    Z.class = "SHAMAN" Z:BuildData()
+    rawset(_G, "GetWeaponEnchantInfo", function() return false, 0 end)
+    local item
+    rawset(_G, "GetInventoryItemID", function() return item end)
+    Update() assert(not Has(me, 8024), "sans arme : enchantement propose")
+    item = 1234
+    FireEvent("WEAPON_ENCHANT_CHANGED") RunUpdates()
+    assert(Has(me, 8024), "arme sans enchantement : rien de propose")
+    rawset(_G, "ITEM_ENCHANT_TIME_LEFT_MIN", "%s (%d min)")
+    rawset(_G, "ITEM_ENCHANT_TIME_LEFT_HOURS", "%s (%d |4heure:heures;)")
+    local tip = "Croque-roc 1 (60 min)"
+    C_TooltipInfo = { GetInventoryItem = function() return { lines = { { leftText = "Masse" }, { leftText = tip } } } end }
+    FireEvent("WEAPON_ENCHANT_CHANGED") RunUpdates()
+    assert(not Has(me, 8024), "enchantement de l'infobulle non lu (C30)")
+    tip = "Croque-roc 1 (2 heures)"
+    FireEvent("WEAPON_ENCHANT_CHANGED") RunUpdates()
+    assert(not Has(me, 8024), "infobulle en heures non lue")
+    tip = "Croque-roc 1 (1 min)"
+    FireEvent("WEAPON_ENCHANT_CHANGED") RunUpdates()
+    assert(Has(me, 8024), "enchantement presque fini (infobulle) non propose")
+    C_TooltipInfo = nil
+
+    -- 10 : chasseur : la reponse du jeu tranche (mana ou non), un guerrier n'en a jamais
+    UnitClass = function() return "Chasseur", "HUNTER" end
+    assert(not Z.UsesMana("party1"), "chasseur sans mana compte comme joueur a mana")
+    POWER_TYPE = 0 assert(Z.UsesMana("party1"), "chasseur a mana (Forever) ecarte")
+    POWER_TYPE = MakeSecret() assert(not Z.UsesMana("party1"), "reponse secrete : la classe ne decide pas")
+    POWER_TYPE = nil
+    UnitClass = function() return "Druide", "DRUID" end
+    POWER_TYPE = 1 assert(Z.UsesMana("party1"), "druide en forme d'ours prive de mana")
+    POWER_TYPE = nil
+
+    for _, text in ipairs({ "à renouveler", "un autre joueur le lui a déjà posé", "mis de côté : %s, %s (%s), encore %d s." }) do
+      assert(Z.translations.enUS[text], "sans traduction : " .. text)
+    end
+  end)
+  for _, name in ipairs(globals) do rawset(_G, name, nil) end
+  C_TooltipInfo, POWER_TYPE, DEAD = nil, nil, nil
+  UnitIsUnit, C_Timer.After, UnitClass = old.isUnit, old.after, old.unitClass
+  C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, C_UnitAuras.GetAuraDataBySpellName = old.name, old.known, old.byName
+  Z.db.buffRenew, Z.db.buffPanel, Z.db.buffPlace, Z.db.buffGroupAt = old.renew, old.panel, old.place, old.groupAt
+  Z.db.buffWatch = {}
+  AURAS = {}
+  Z.class = old.class Z:BuildData() Z:Refresh() RunUpdates() Z:UpdateBuffPanel()
   assert(ok, err)
 end)
 
