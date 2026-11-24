@@ -211,9 +211,11 @@ end
 -- d'une courbe du jeu (rien n'est comparé). Recalculé à chaque changement de vie, au passage de la portée (2 fois
 -- par seconde) et en entrant ou en sortant de combat : il ne reste jamais bloqué.
 local fighting = InCombatLockdown() and true or false
+-- Jamais sur un familier : sa vie basse n'aide pas le soigneur, et mort en combat (état parfois secret), il
+-- restait cerclé de rouge.
 local function UpdateLow(b)
 	if not db.lowHealth then return end
-	if b.status or not fighting then return b.low.fill:SetAlpha(0) end
+	if b.status or b.isPet or not fighting then return b.low.fill:SetAlpha(0) end
 	local max = UnitHealthMax(b.unit)
 	-- vie maximale lisible à 0 (joueur que le jeu ne connaît pas encore, en chargement) : jamais de liseré
 	if not issecret(max) and (tonumber(max) or 0) <= 0 then
@@ -862,8 +864,9 @@ local function Style(b)
 	local shade = db.classIntensity == "VIVID" and 0.5 or 1
 	b.shade:SetGradient("VERTICAL", CreateColor(0, 0, 0, theme.shade[1] * shade), CreateColor(1, 1, 1, theme.shade[2]))
 	b.dim:SetAlpha(1 - db.brightness / 100)
-	b.low:SetShown(db.lowHealth)
-	if not db.lowHealth then b.low.fill:SetAlpha(0) end
+	local lowShown = db.lowHealth and not b.isPet
+	b.low:SetShown(lowShown)
+	if not lowShown then b.low.fill:SetAlpha(0) end
 	b.assign:SetColorTexture(ASSIGN_COLOR[1], ASSIGN_COLOR[2], ASSIGN_COLOR[3], 0.95)
 	b.assign:SetWidth(math.max(2, math.floor(height / 14)))
 

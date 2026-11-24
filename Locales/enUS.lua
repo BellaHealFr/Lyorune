@@ -416,6 +416,9 @@ Z.translations.enUS = {
 	["Autour de Lyorune"] = "Around Lyorune", ["Bouton sur la mini-carte"] = "Minimap button",
 	["Clic gauche : options. Clic droit : mode test. Faites-le glisser pour le déplacer."] = "Left click: options. Right click: test mode. Drag it to move it.",
 	["Clic gauche : ouvrir les options"] = "Left click: open the options", ["Clic droit : mode test"] = "Right click: test mode",
+	["Maj + clic gauche : nouveautés"] = "Shift + left click: what's new", ["Nouveautés"] = "What's new",
+	["Relire les nouveautés de chaque version, avec « Me montrer » pour aller au réglage."] = "Read again what's new in each version, with Show me to reach the setting.",
+	["Pour relire les nouveautés : bouton Nouveautés en haut des options, Maj + clic sur le bouton de la mini-carte, ou /lyorune nouveautes."] = "To read what's new again: What's new button at the top of the options, Shift + click on the minimap button, or /lyorune nouveautes.",
 	["Glisser : déplacer ce bouton"] = "Drag: move this button",
 	["Inscription runique au bas de cette fenêtre"] = "Runic inscription at the bottom of this window",
 	["Passez la souris sur les runes pour lire leur traduction."] = "Hover the runes to read their translation.",
@@ -531,10 +534,10 @@ Z.translations.enUS = {
 			.. "Les boutons « 5 », « 10 », « 25 » et « 40 » ouvrent le mode test."] =
 		"The |cff33dd88preview cell|r follows every setting live, with a fake group below it.\n\nThe \"5\", \"10\", \"25\" and \"40\" buttons open test mode.",
 	["Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
-			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés, relance ce tutoriel et ouvre les nouveautés, "
-			.. "où |cff33dd88Me montrer|r mène au réglage de chacune. "
+			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel. "
+			.. "Le bouton |cff33dd88Nouveautés|r, près de la recherche, les rouvre : |cff33dd88Me montrer|r mène au réglage de chacune. "
 			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur, en tout et aujourd'hui."] =
-		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings, restarts this tutorial and opens the news, where |cff33dd88Show me|r takes you to each feature's setting. At the very bottom, |cff33dd88Friends of Lyorune|r: Lyorune in numbers and your healer's notebook, in total and today.",
+		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial. The |cff33dd88What's new|r button, next to the search box, opens the news again: |cff33dd88Show me|r takes you to each feature's setting. At the very bottom, |cff33dd88Friends of Lyorune|r: Lyorune in numbers and your healer's notebook, in total and today.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "

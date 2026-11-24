@@ -52,7 +52,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 
 - **Profil actif** : le profil en cours et comment il a été choisi, avec le bouton « Changer de profil » ;
 - **Vos réglages changés** : tous vos réglages qui ne sont plus comme à l'installation. Un clic sur un nom vous y emmène ; un clic sur sa rune d'or le rétablit ;
-- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». Dans les nouveautés, « Me montrer » au bout d'une ligne ouvre les options sur son réglage, mis en lumière. La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus ; si vos cadres sont cachés (« En combat seulement », ou seul sans votre propre cadre), elle ouvre le faux groupe du mode test pour vous montrer les cases, puis le referme. Échap ou la croix arrêtent la visite à tout moment, et la fenêtre revient de la même façon. Une fenêtre ouverte à côté des options (Mes macros, Placement, Signaler un bug...) est fermée au départ de la visite ; en ouvrir une pendant la visite l'arrête, et les options restent sur la page où vous êtes. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
+- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». Les nouveautés se rouvrent aussi à tout moment par le bouton « Nouveautés » en haut de la fenêtre, à gauche de la recherche, par Maj + clic sur le bouton de la mini-carte ou par `/lyorune nouveautes` ; après une mise à jour, une ligne dans la discussion le rappelle quand vous les fermez. Dans les nouveautés, « Me montrer » au bout d'une ligne ouvre les options sur son réglage, mis en lumière. La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus ; si vos cadres sont cachés (« En combat seulement », ou seul sans votre propre cadre), elle ouvre le faux groupe du mode test pour vous montrer les cases, puis le referme. Échap ou la croix arrêtent la visite à tout moment, et la fenêtre revient de la même façon. Une fenêtre ouverte à côté des options (Mes macros, Placement, Signaler un bug...) est fermée au départ de la visite ; en ouvrir une pendant la visite l'arrête, et les options restent sur la page où vous êtes. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
 
 Au bas du chapitre Fenêtre et aide, « Lire une case » rappelle ce que veulent dire les couleurs principales d'une case, et « Commandes » liste les commandes `/lyorune`.
 
@@ -315,7 +315,7 @@ Les fenêtres des macros, du placement des éléments, du rapport de bug, du jou
 
 Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper.
 
-- **Vie et portée** : soins en route, bouclier et son chiffre (éteint au départ), liseré de vie basse, en combat seulement (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
+- **Vie et portée** : soins en route, bouclier et son chiffre (éteint au départ), liseré de vie basse, en combat seulement et jamais sur les familiers (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale, vos recharges et celles du groupe, vos totems, le trait de canalisation.
 - **Affaiblissements** : dissipation et image du type, icônes et leurs secondes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
 - **Joueurs** : nom du joueur, icône de rôle, icône des DPS (épée, éteinte au départ), icône de classe (éteinte au départ), marqueur de raid, chef de groupe, gros défensifs, icône au centre de la case (appel, résurrection, hors de vue, invocation, très loin), invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
@@ -439,6 +439,7 @@ Un petit bouton rond aux couleurs de Lyorune se trouve au bord de la mini-carte.
 
 - **Clic gauche** : ouvrir ou fermer les options.
 - **Clic droit** : lancer ou fermer le mode test.
+- **Maj + clic gauche** : relire les nouveautés.
 - **Glisser** : le déplacer autour de la mini-carte.
 
 Vous n'en voulez pas ? Coupez « Bouton sur la mini-carte » (chapitre Fenêtre et aide, réglages fins de la partie Fenêtres de Lyorune). La commande `/lyorune` ouvre toujours les options.

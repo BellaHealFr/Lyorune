@@ -1287,7 +1287,13 @@ function Z:ShowNews()
 		window.text:SetJustifyH("LEFT")
 		window.text:SetSpacing(4)
 		window.content, window.scroll = content, scroll
-		window:HookScript("OnHide", function() Z.db.newsSeen = Z.version end) -- lue : plus rien de nouveau pour vous
+		window:HookScript("OnHide", function() -- lue : plus rien de nouveau pour vous
+			-- Première fermeture après une mise à jour : dire où les relire
+			if Z.db.newsSeen ~= Z.version then
+				Z:Print(Z.L["Pour relire les nouveautés : bouton Nouveautés en haut des options, Maj + clic sur le bouton de la mini-carte, ou /lyorune nouveautes."])
+			end
+			Z.db.newsSeen = Z.version
+		end)
 	end
 	-- Relu à chaque appel (couleurs du thème en cours), depuis le haut ; ouverte, elle passe devant
 	window.text:SetText(Z:NewsText())

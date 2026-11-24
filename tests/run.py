@@ -6876,6 +6876,7 @@ end)
 
 step("33 ter (C35) : aucun chiffre de vie sur un familier (vraie case et mode test)", function()
   local kept = Z.db.text
+  local old = { health = UnitHealth, dead = UnitIsDeadOrGhost }
   local ok, err = pcall(function()
     local b = Z.buttons[1]
     for _, mode in ipairs({ "PERCENT", "DEFICIT" }) do
@@ -6885,7 +6886,18 @@ step("33 ter (C35) : aucun chiffre de vie sur un familier (vraie case et mode te
       b.isPet = nil Z.cellUpdates.health(b)
       assert(b.text:GetText() ~= "", mode .. " : chiffre de vie perdu sur un joueur")
     end
+    -- familier mort en combat, état secret : vie à 0 lue, jamais de liseré rouge (retour de l'auteur, 1.48.0)
+    UnitHealth = function() return 0 end
+    UnitIsDeadOrGhost = function() return MakeSecret() end
+    COMBAT = true FireEvent("PLAYER_REGEN_DISABLED")
+    b.isPet = true Z:Refresh() Z.cellUpdates.health(b)
+    assert(b.low.fill:GetAlpha() == 0 and not b.low:IsShown(), "liseré rouge sur un familier")
+    b.isPet = nil Z:Refresh() Z.cellUpdates.health(b)
+    local a = b.low.fill:GetAlpha()
+    assert(issecretvalue(a) or a > 0, "plus de liseré sur un joueur à 0")
   end)
+  UnitHealth, UnitIsDeadOrGhost = old.health, old.dead
+  if COMBAT then COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") end
   Z.buttons[1].isPet = nil
   Z.db.text = kept Z:Refresh()
   assert(ok, err)
@@ -10573,6 +10585,46 @@ step("1.47.0 : Me montrer, nouveautes pas encore vues, bilan du donjon et de la 
   Z.db.notebook, Z.db.tallyExit, INSTANCE, INSTANCE_TYPE, Z.class = old.notebook, old.exit, old.instance, old.kind, old.class
   Z.db.newsSeen, DEAD, INSTANCE_NAME = old.seen, false, nil
   Z:BuildData() Z:RefreshAlerts()
+  assert(ok, err)
+end)
+
+step("nouveautes : toujours relisibles (en-tete des options, mini-carte, rappel a la fermeture)", function()
+  local old = { seen = Z.db.newsSeen, button = Z.db.minimapButton, shift = IsShiftKeyDown }
+  local ok, err = pcall(function()
+    local w = Z:OptionsWindow() w:Show()
+    local news = LyoruneNews
+    if news then news:Hide() end
+    assert(w.news and w.news:IsShown(), "bouton Nouveautes absent de l'en-tete")
+    w.news:Run("OnClick", "LeftButton")
+    assert(LyoruneNews and LyoruneNews:IsShown(), "le bouton n'ouvre pas les nouveautes")
+    LyoruneNews:Hide() w:Hide()
+    -- Maj + clic gauche sur la mini-carte : les nouveautes, pas les options
+    Z.db.minimapButton = true Z:RefreshMinimap()
+    IsShiftKeyDown = function() return true end
+    LyoruneMinimapButton:Run("OnClick", "LeftButton")
+    assert(LyoruneNews:IsShown() and not w:IsShown(), "Maj + clic sur la mini-carte")
+    Z.db.newsSeen = Z.version
+    LyoruneMinimapButton:Run("OnClick", "LeftButton")
+    assert(not LyoruneNews:IsShown(), "Maj + clic ne referme pas les nouveautes")
+    Z:ShowNews()
+    IsShiftKeyDown = old.shift
+    -- premiere fermeture apres une mise a jour : une ligne dit ou les relire, une seule fois
+    Z.db.newsSeen = "1.0.0"
+    local count = #PRINTED
+    LyoruneNews:Hide() LyoruneNews:Run("OnHide")
+    assert(#PRINTED == count + 1 and PRINTED[#PRINTED]:find("/lyorune nouveautes", 1, true), "rappel absent")
+    Z:ShowNews() LyoruneNews:Hide() LyoruneNews:Run("OnHide")
+    assert(#PRINTED == count + 1, "rappel repete")
+    for _, key in ipairs({ "Nouveautés", "Maj + clic gauche : nouveautés",
+      "Relire les nouveautés de chaque version, avec « Me montrer » pour aller au réglage.",
+      "Pour relire les nouveautés : bouton Nouveautés en haut des options, Maj + clic sur le bouton de la mini-carte, ou /lyorune nouveautes." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  IsShiftKeyDown = old.shift
+  Z.db.newsSeen, Z.db.minimapButton = old.seen, old.button
+  Z:RefreshMinimap()
+  if LyoruneNews then LyoruneNews:Hide() end
   assert(ok, err)
 end)
 

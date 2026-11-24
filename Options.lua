@@ -3585,7 +3585,13 @@ local function Build()
 
 	BuildSearch()
 	BuildWitness()
-	window.magic = UI.HeaderMagic(window, logo, window.search)
+	-- Nouveautés, à gauche de la recherche : toujours à portée, quel que soit le chapitre ouvert
+	local news = UI.Button(window, L["Nouveautés"], 96, 22, function() Z:ShowNews() end)
+	news:SetPoint("RIGHT", window.search, "LEFT", -8, 0)
+	news.label:SetJustifyH("CENTER")
+	news.tip = L["Relire les nouveautés de chaque version, avec « Me montrer » pour aller au réglage."]
+	window.news = news
+	window.magic = UI.HeaderMagic(window, logo, news)
 	if Z.RefreshRunes then Z:RefreshRunes(window) end
 	window.Select, window.GoToSetting = Select, GoToSetting
 	window.chapters = chapters

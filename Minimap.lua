@@ -51,13 +51,17 @@ local function Create()
 	button:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
 	button:SetScript("OnClick", function(_, mouseButton)
 		if not Z.header then return end -- Lyorune n'a pas pu démarrer
-		if mouseButton == "RightButton" then Z:TogglePreview() else Z:ToggleOptions() end
+		if mouseButton == "RightButton" then Z:TogglePreview()
+		elseif IsShiftKeyDown() then -- les nouveautés : ouvre ou ferme, comme le clic gauche pour les options
+			if LyoruneNews and LyoruneNews:IsShown() then LyoruneNews:Hide() else Z:ShowNews() end
+		else Z:ToggleOptions() end
 	end)
 	button:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 		GameTooltip:AddLine("Lyorune", 0.93, 0.75, 0.35)
 		GameTooltip:AddLine(L["Clic gauche : ouvrir les options"], 1, 1, 1)
 		GameTooltip:AddLine(L["Clic droit : mode test"], 1, 1, 1)
+		GameTooltip:AddLine(L["Maj + clic gauche : nouveautés"], 1, 1, 1)
 		GameTooltip:AddLine(L["Glisser : déplacer ce bouton"], 0.6, 0.64, 0.7)
 		GameTooltip:Show()
 	end)
