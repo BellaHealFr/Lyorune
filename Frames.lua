@@ -83,6 +83,12 @@ function Z.CellSize()
 	return math.floor(db.width * factor + 0.5), math.floor(db.height * factor + 0.5)
 end
 
+-- Case d'un familier (C26) : moitié moins large que celle d'un joueur, même hauteur, sur la ligne de son maître
+function Z.PetSize()
+	local width, height = Z.CellSize()
+	return math.max(30, math.floor(width / 2 + 0.5)), height
+end
+
 -- Taille des icônes de la case (rôle, marqueur, grande icône...) : 30 % de sa hauteur, 10 pixels au moins.
 -- Les rangées de mes soins et des affaiblissements ont leur propre taille, selon la forme (Z.AuraRows).
 function Z.IconSize()
@@ -289,6 +295,7 @@ Z.ASSIGN_DIM = ASSIGN_DIM -- le mode test estompe de la même façon
 
 local function UpdateRange(b)
 	local k = b.assignDim or 1
+	if b.owner then k = k * db.frameAlpha / 100 end -- familier collé : sa propre portée, pas celle de son maître
 	local me = UnitIsUnit(b.unit, "player")
 	if not issecret(me) and me then SetFar(b, false) return b:SetAlpha(1) end -- je suis toujours à portée de moi-même
 	if IsFar(b.unit) then
@@ -584,13 +591,25 @@ local function OnAttributeChanged(b, name, value)
 	b.drinkShown = nil -- le rôle du joueur d'avant : UpdateRole repose celui du nouveau
 	b.powerType, b.powerToken = nil, nil -- la ressource du joueur d'avant : UpdateRole repose la sienne
 	b.lowMana:Hide()
-	if value then
+	if value and (not b.owner or b:IsShown()) then -- un familier collé caché n'écoute rien (PetShown)
 		for event in pairs(unitEvents) do b:RegisterUnitEvent(event, value) end
 		if b:IsVisible() then UpdateAll(b) end
 	end
 	Z.AnchorPrivateAuras(b) -- les auras privées suivent le joueur de la case
 	Z.BindAuraBoxes(b) -- les conteneurs d'auras du jeu aussi (Containers.lua)
 	if InCombatLockdown() then Z:FitAllRanks() else Z:FitRanks(b) end -- rang choisi : au niveau du nouveau joueur
+end
+
+-- Familier collé (C26) : il n'écoute ses événements que pendant qu'il est montré (pas appelé, ou familiers coupés :
+-- caché). Montrer et cacher une case sont confiés au jeu ; ces abonnements, eux, sont permis en combat.
+local function PetShown(b)
+	if b.unit then
+		for event in pairs(unitEvents) do b:RegisterUnitEvent(event, b.unit) end
+	end
+end
+local function PetHidden(b)
+	b:UnregisterAllEvents()
+	b.powerListen, b.lowManaShown = false, false -- UpdateRole les reprend quand il revient
 end
 
 -- Infobulle hors combat : le joueur (infobulle du jeu), puis mes clics et touches (option)
@@ -739,7 +758,8 @@ end
 local function Style(b)
 	local theme = Z:Theme()
 	local texture = UI.BarTexture()
-	local width, height = Z.CellSize()
+	local width, height
+	if b.isPet then width, height = Z.PetSize() else width, height = Z.CellSize() end
 	local rounded = db.corners == "ROUND"
 	local inset = UI.Inset(theme.borderSize, rounded)
 	LayoutBars(b)
@@ -808,8 +828,12 @@ local function Style(b)
 
 	local icon = Z.IconSize()
 	b.iconSize = icon
-	b.rows = Z.AuraRows() -- rangées de mes soins et des affaiblissements, à la mesure de la forme (Themes.lua)
+	b.rows = Z.AuraRows(b.isPet and width or nil) -- rangées de mes soins et des affaiblissements, à la mesure de la forme (Themes.lua)
 	PlaceTexts(b, icon)
+	if b.isPet then -- case étroite : le nom et le chiffre ne débordent pas
+		b.name:SetWidth(math.min(b.name:GetWidth(), width - 6))
+		b.text:SetWidth(math.min(b.text:GetWidth(), width - 6))
+	end
 	-- Tailles d'origine, fois la taille choisie dans l'éditeur de placement (Z.ElementSize, Placement.lua)
 	local function Size(region, key, base)
 		local size = Z.ElementSize(key, base)
@@ -1084,7 +1108,7 @@ function Z.StylePanel(panel, first, last)
 	local theme, rounded = Z:Theme(), db.corners == "ROUND"
 	panel:ClearAllPoints()
 	panel:SetPoint("TOPLEFT", first, "TOPLEFT", -PANEL_OUTSET, PANEL_OUTSET)
-	panel:SetPoint("BOTTOMRIGHT", last or first, "BOTTOMRIGHT", PANEL_OUTSET, -PANEL_OUTSET)
+	panel:SetPoint("BOTTOMRIGHT", last or first, "BOTTOMRIGHT", PANEL_OUTSET + ((last or first).petRoom or 0), -PANEL_OUTSET)
 	local r, g, bl = theme.bg[1], theme.bg[2], theme.bg[3]
 	panel.bg:SetVertexColor(r, g, bl, 0.75)
 	panel.bgRound:SetVertexColor(r, g, bl, 0.75)
@@ -1211,15 +1235,41 @@ local function ChannelStarted(update)
 end
 Z.ChannelCell = function() return channelCell end -- pour les tests
 
+-- Familier collé à son maître (C26, modèle LyoruneOwnerTemplate de Pets.xml) : le jeu le montre seulement s'il
+-- existe, en suivant l'unité que le code sécurisé lui donne. Confié au jeu hors combat seulement : une case créée en
+-- plein combat attend la fin du combat (petsAfterCombat).
+local petsAfterCombat
+local function WatchPet(pet)
+	if InCombatLockdown() then petsAfterCombat = true return end
+	if db.showPets then
+		RegisterUnitWatch(pet)
+	else
+		UnregisterUnitWatch(pet)
+		pet:Hide()
+	end
+end
+Z:On("PLAYER_REGEN_ENABLED", function()
+	if not petsAfterCombat then return end
+	petsAfterCombat = false
+	for _, b in ipairs(buttons) do
+		if b.owner then WatchPet(b) end
+	end
+end)
+
 -- Création d'une case : le jeu crée le bouton sécurisé, Lyorune l'habille.
-local function InitButton(_, name)
+local function InitButton(h, name)
 	local b = _G[name]
 	if not b or b.hp then return end
 	buttons[#buttons + 1] = b
+	if h and h.def and h.def.key == "pets" then b.isPet = true end -- colonne des familiers du raid
 	Z.BuildVisuals(b)
 
 	b:SetScript("OnEvent", OnEvent)
 	b:HookScript("OnAttributeChanged", OnAttributeChanged)
+	if b.owner then -- avant UpdateAll : ses événements d'abord
+		b:HookScript("OnShow", PetShown)
+		b:HookScript("OnHide", PetHidden)
+	end
 	b:HookScript("OnShow", UpdateAll)
 	b:HookScript("OnShow", MembersChanged)
 	b:HookScript("OnHide", MembersChanged)
@@ -1231,6 +1281,15 @@ local function InitButton(_, name)
 	ApplyClickMode() -- en combat, attend la fin du combat
 	Z:RegisterExternalClicks(b)
 	OnAttributeChanged(b, "unit", b:GetAttribute("unit"))
+
+	local pet = b.zPet -- sa case de familier, si le cadre en porte (cadre « Groupe », Pets.xml)
+	if pet and not pet.hp then
+		pet.isPet, pet.owner = true, b
+		b.petCell = pet
+		if pet.SetIgnoreParentAlpha then pet:SetIgnoreParentAlpha(true) end -- sa portée, pas celle de son maître
+		InitButton(h, pet:GetName())
+		WatchPet(pet)
+	end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1255,7 +1314,10 @@ frameDefs[#frameDefs + 1] = { key = "tanks", name = "LyoruneTanks", template = "
 -- Joueurs épinglés : un en-tête du jeu qui ne montre que les noms de la liste (attribut « nameList »). Le jeu
 -- range lui-même ces joueurs quand ils rejoignent le groupe, même en combat ; la liste ne change que hors combat.
 frameDefs[#frameDefs + 1] = { key = "pinned", name = "LyorunePinned", template = "SecureGroupHeaderTemplate", pos = "pinnedPos", label = "Épinglés", always = true }
-frameDefs[#frameDefs + 1] = { key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "petPos", label = "Familiers", option = "showPets", always = true }
+-- Familiers (C26) : seul ou en groupe, chacun est collé à son maître (Pets.xml). En raid, une colonne
+-- « Familiers » collée à droite des groupes (sous la première ligne si les groupes sont en lignes), qui les suit :
+-- son étiquette déplace tout le cadre principal.
+frameDefs[#frameDefs + 1] = { key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "pos", label = "Familiers", option = "showPets" }
 -- Cadre « Cible » (#25) : trois cases fixes, chacune avec son interrupteur. Ce n'est pas un en-tête de groupe :
 -- Lyorune crée lui-même les trois boutons sécurisés, et le jeu les montre ou les cache selon que l'unité existe.
 frameDefs[#frameDefs + 1] = { key = "extra", extra = true, name = "LyoruneExtra", template = "SecureHandlerStateTemplate", pos = "extraPos", label = "Cible", always = true }
@@ -1267,7 +1329,7 @@ local EXTRA_SLOTS = {
 local extraButtons = {}
 
 local raidHeaders = {}
-local anchors = {}   -- un point d'attache invisible par position enregistrée (cadre principal, tanks, familiers)
+local anchors = {}   -- un point d'attache invisible par position enregistrée (cadre principal, tanks, épinglés...)
 local unlockNote     -- mention discrète « déverrouillé »
 
 -- La première ligne nomme Lyorune : le jeu la cite si ce code échoue, et le journal d'erreurs la reconnaît.
@@ -1279,8 +1341,22 @@ local CONFIG_SNIPPET = [[-- Lyorune
 	self:SetAttribute("*type2", "togglemenu")
 	self:SetAttribute("toggleForVehicle", true)
 	self:SetAttribute("ping-receiver", header:GetAttribute("z-ping"))
+	local pet -- case du familier collée à droite (cadre « Groupe », Pets.xml)
+	local kids = newtable(self:GetChildren())
+	for i = 1, #kids do
+		if kids[i]:GetAttribute("z-pet") then pet = kids[i] end
+	end
+	if pet then
+		pet:SetWidth(header:GetAttribute("z-petwidth") or 30)
+		pet:SetHeight(header:GetAttribute("z-height"))
+		pet:ClearAllPoints()
+		pet:SetPoint("TOPLEFT", self, "TOPRIGHT", header:GetAttribute("z-petgap") or 0, 0)
+		pet:SetAttribute("*type1", "target")
+		pet:SetAttribute("*type2", "togglemenu")
+	end
 	for i = 1, header:GetAttribute("z-count") or 0 do
 		self:SetAttribute(header:GetAttribute("z-key" .. i), header:GetAttribute("z-value" .. i))
+		if pet then pet:SetAttribute(header:GetAttribute("z-key" .. i), header:GetAttribute("z-value" .. i)) end
 	end
 	header:CallMethod("InitButton", self:GetName())
 ]]
@@ -1420,9 +1496,11 @@ local function CreateHeader(def)
 	h:HookScript("OnHide", UpdateHandles)
 	Z.headers[#Z.headers + 1] = h
 	if def.extra then return h end -- ses cases sont créées à la première demande (LayoutExtra)
-	h:SetAttribute("template", "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate" .. PING_TEMPLATE)
+	-- Les cases du cadre « Groupe » portent la case de leur familier (Pets.xml)
+	local owner = def.key == "main" and ",LyoruneOwnerTemplate" or ""
+	h:SetAttribute("template", "SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate" .. PING_TEMPLATE .. owner)
 	h:SetAttribute("showPlayer", true)
-	h:SetAttribute("showParty", not def.raid)
+	h:SetAttribute("showParty", not def.raid and def.key ~= "pets") -- familiers hors raid : collés à leur maître
 	h:SetAttribute("showRaid", def.key ~= "main") -- en raid, les cadres par groupe prennent le relais
 	h:SetAttribute("sortMethod", "INDEX")
 	h:SetAttribute("initialConfigFunction", CONFIG_SNIPPET)
@@ -1430,7 +1508,13 @@ local function CreateHeader(def)
 	h:SetAttribute("_initialAttribute-_onenter", "self:ClearBindings()")
 	h:SetAttribute("_initialAttribute-_onleave", "self:ClearBindings()")
 	if def.key == "tanks" then h:SetAttribute("roleFilter", "TANK") end
-	if def.raid then raidHeaders[def.raid] = h end
+	if def.raid then
+		raidHeaders[def.raid] = h
+		-- Un groupe vide ne prend aucune place (sinon le jeu lui laisse celle d'une case) : les groupes suivants et la
+		-- colonne des familiers se collent aux groupes remplis
+		h:SetAttribute("minWidth", 0.1)
+		h:SetAttribute("minHeight", 0.1)
+	end
 	return h
 end
 
@@ -1440,7 +1524,7 @@ end
 local function VisibilityRule(def)
 	if Z.framesHidden then return "hide" end -- masqués par le joueur (raccourci ou /lyorune cadres), même en combat
 	local combat = Z.previewActive or db.visibility == "COMBAT"
-	if def.raid then
+	if def.raid or def.key == "pets" then
 		return combat and "[group:raid,combat] show; hide" or "[group:raid] show; hide"
 	elseif def.key == "main" then
 		return combat and "[group:raid] hide; [combat] show; hide" or "[group:raid] hide; show"
@@ -1523,13 +1607,15 @@ end
 
 -- Réglages d'un cadre (taille, tri, filtres, sens) : appelée pendant que le cadre du jeu attend (_ignore).
 -- Renvoie true si le cadre doit être affiché.
-local function HeaderAttributes(h, width, height, grid, perColumn, roles)
+local function HeaderAttributes(h, width, height, petWidth, grid, perColumn, roles)
 	local def = h.def
 	local enabled = not def.option or db[def.option]
 	if def.extra then enabled = LayoutExtra(h, width, height) end
 	if def.label then h.labelText = L[def.label] end -- suit le changement de langue
-	h:SetAttribute("z-width", width)
+	h:SetAttribute("z-width", def.key == "pets" and petWidth or width)
 	h:SetAttribute("z-height", height)
+	h:SetAttribute("z-petwidth", petWidth) -- case du familier collée au maître (cadre « Groupe », CONFIG_SNIPPET)
+	h:SetAttribute("z-petgap", db.spacing)
 	h:SetAttribute("maxColumns", math.ceil(40 / perColumn))
 	if def.key == "main" then
 		if db.layout == "ROLE" then -- le rôle d'abord ; « par classe » devient alors « par nom » dans chaque rôle
@@ -1575,18 +1661,22 @@ local function HeaderAttributes(h, width, height, grid, perColumn, roles)
 		ApplySort(h)
 	end
 	h:SetAttribute("z-ping", db.pingCells or nil) -- cases créées plus tard, même en combat (CONFIG_SNIPPET)
+	-- Familiers collés : la place de leur case à droite de chaque joueur du cadre « Groupe »
+	local petRoom = def.key == "main" and db.showPets and petWidth + db.spacing or 0
+	h.petRoom = petRoom -- au-delà du bord droit du cadre (fond de groupe, barre sous les cadres)
 	if db.horizontal then
 		h:SetAttribute("point", "LEFT")
-		h:SetAttribute("xOffset", db.spacing)
+		h:SetAttribute("xOffset", db.spacing + petRoom)
 		h:SetAttribute("yOffset", 0)
 		h:SetAttribute("columnAnchorPoint", "TOP")
+		h:SetAttribute("columnSpacing", db.spacing)
 	else
 		h:SetAttribute("point", "TOP")
 		h:SetAttribute("xOffset", 0)
 		h:SetAttribute("yOffset", -db.spacing)
 		h:SetAttribute("columnAnchorPoint", "LEFT")
+		h:SetAttribute("columnSpacing", db.spacing + petRoom)
 	end
-	h:SetAttribute("columnSpacing", db.spacing)
 	h:SetAttribute("unitsPerColumn", perColumn) -- 5 par groupe, ou la taille choisie en grille
 	return enabled
 end
@@ -1599,9 +1689,16 @@ end
 local layoutWave = 0
 local function ApplyLayout()
 	local width, height = Z.CellSize()
+	local petWidth = Z.PetSize()
 	for _, b in ipairs(buttons) do
-		b:SetSize(width, height)
-		if PING_TEMPLATE ~= "" then b:SetAttribute("ping-receiver", db.pingCells or nil) end
+		b:SetSize(b.isPet and petWidth or width, height)
+		-- (pas sur un familier collé : son modèle n'est pas du type « signal » du jeu)
+		if PING_TEMPLATE ~= "" and not b.owner then b:SetAttribute("ping-receiver", db.pingCells or nil) end
+		if b.owner then -- familier collé à droite de son maître (C26)
+			b:ClearAllPoints()
+			b:SetPoint("TOPLEFT", b.owner, "TOPRIGHT", db.spacing, 0)
+			WatchPet(b)
+		end
 	end
 	local gap = (db.showGroupLabels or db.lockMode == "FREE") and LABEL_SPACE or 0
 	local grid = db.layout == "GRID"
@@ -1619,6 +1716,7 @@ local function ApplyLayout()
 	end
 
 	layoutWave = layoutWave + 1
+	local lastRaid -- dernier cadre de raid affiché : la colonne des familiers se colle à sa droite
 	for _, h in ipairs(Z.headers) do
 		local def = h.def
 		local wasShown = h:IsVisible()
@@ -1633,7 +1731,7 @@ local function ApplyLayout()
 		end
 		local enabled = false
 		Z:Try("disposition du cadre " .. tostring(def.key), function()
-			enabled = HeaderAttributes(h, width, height, grid, perColumn, roles)
+			enabled = HeaderAttributes(h, width, height, petWidth, grid, perColumn, roles)
 		end)
 		h:SetAttribute("_ignore", nil)
 
@@ -1643,7 +1741,11 @@ local function ApplyLayout()
 		local previous = def.raid and raidHeaders[def.raid - 1]
 		local apart = db.spacing + (db.groupPanel and 2 * PANEL_OUTSET or 0) -- deux fonds de groupe ne se touchent pas
 		local fixed = def.raid and db.keepGroupPlace and db.layout == "GROUP"
-		if fixed and db.horizontal then
+		if def.key == "pets" and db.horizontal then -- à droite de la première ligne de groupes
+			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", perColumn * (width + db.spacing) - db.spacing + apart, -gap)
+		elseif def.key == "pets" and lastRaid then
+			h:SetPoint("TOPLEFT", lastRaid, "TOPRIGHT", apart, 0)
+		elseif fixed and db.horizontal then
 			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", 0, -gap - (def.raid - 1) * (height + apart + gap))
 		elseif fixed then
 			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", (def.raid - 1) * (width + apart), -gap)
@@ -1659,6 +1761,7 @@ local function ApplyLayout()
 		Z.StylePanel(h.panel, h)
 		h.handle:SetPoint("BOTTOMLEFT", h, "TOPLEFT", 0, db.groupPanel and PANEL_OUTSET + 2 or 2)
 
+		if enabled and def.raid then lastRaid = h end
 		if enabled then
 			local rule = VisibilityRule(def)
 			RegisterStateDriver(h, "visibility", rule)

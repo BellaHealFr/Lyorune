@@ -51,7 +51,7 @@ local function PlaceBar()
 			local l, r, b = h:GetLeft(), h:GetRight(), h:GetBottom()
 			if l and r and b and not issecret(l) and r > l then
 				local ratio = h:GetEffectiveScale() / uiScale
-				l, r, b = l * ratio, r * ratio, b * ratio
+				l, r, b = l * ratio, (r + (h.petRoom or 0)) * ratio, b * ratio -- familiers collés à droite compris
 				left = left and math.min(left, l) or l
 				right = right and math.max(right, r) or r
 				bottom = bottom and math.min(bottom, b) or b

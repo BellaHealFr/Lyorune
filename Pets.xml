@@ -1,0 +1,31 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<!-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE. -->
+	<!-- Familier collé à son maître (seul ou en groupe) : chaque case du cadre « Groupe » porte une petite case de
+	     familier, créée avec elle par le jeu, même en plein combat. Quand le jeu donne un joueur à la case, le code
+	     sécurisé ci-dessous donne son familier à la petite case (player : pet, party2 : partypet2), même en combat.
+	     Le jeu montre la petite case seulement si le familier existe (RegisterUnitWatch, Frames.lua). -->
+	<Button name="LyoruneOwnerTemplate" virtual="true" inherits="SecureHandlerAttributeTemplate">
+		<Attributes>
+			<Attribute name="_onattributechanged" type="string" value="
+				if name ~= &quot;unit&quot; then return end
+				local unit = value
+				if unit == &quot;player&quot; then unit = &quot;pet&quot; elseif unit then unit = unit:gsub(&quot;^(%a+)(%d+)$&quot;, &quot;%1pet%2&quot;) end
+				local kids = newtable(self:GetChildren())
+				for i = 1, #kids do
+					if kids[i]:GetAttribute(&quot;z-pet&quot;) then kids[i]:SetAttribute(&quot;unit&quot;, unit) end
+				end
+			" />
+		</Attributes>
+		<Frames>
+			<Button name="$parentPet" parentKey="zPet" inherits="SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate" hidden="true">
+				<Size x="30" y="30" />
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" />
+				</Anchors>
+				<Attributes>
+					<Attribute name="z-pet" type="boolean" value="true" />
+				</Attributes>
+			</Button>
+		</Frames>
+	</Button>
+</Ui>

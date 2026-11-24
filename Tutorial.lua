@@ -193,7 +193,8 @@ local steps = {
 			.. "En raid, chaque groupe a son numéro, et n'importe lequel déplace l'ensemble.\n\n"
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (chapitre Disposition, partie Position), "
 			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
-			.. "Dans la partie Cadres affichés, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat.",
+			.. "Dans la partie Cadres affichés, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat. "
+			.. "Les familiers peuvent se coller à leur maître ; en raid, leur colonne suit les groupes.",
 		target = function() return Z.header.handle end,
 		around = Block,
 		-- Les cadres sont libres le temps de l'étape, puis le choix du joueur revient (verrou compris). L'ancien choix

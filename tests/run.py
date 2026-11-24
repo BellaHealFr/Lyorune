@@ -228,7 +228,7 @@ step("reglages d'apparence et de rangement", function()
   assert(Z.buttons[1].text:GetText() == "80%", Z.buttons[1].text:GetText())
   assert(Z.header:GetAttribute("groupBy") == "ASSIGNEDROLE" and Z.header:GetAttribute("point") == "LEFT")
   assert(Z.header:GetAttribute("groupingOrder") == "HEALER,TANK,DAMAGER,NONE", Z.header:GetAttribute("groupingOrder"))
-  assert(LyoruneTanks:IsShown() and LyorunePets:IsShown() and LyoruneTanks:GetAttribute("roleFilter") == "TANK")
+  assert(LyoruneTanks:IsShown() and not LyorunePets:IsShown() and LyoruneTanks:GetAttribute("roleFilter") == "TANK", "C26 : familiers hors raid collés au maître, pas de colonne")
   assert(Z:Theme().id == "CONTRAST")
   Z.db.highContrast = false Z.db.showTanks = false Z.db.showPets = false Z.db.text = "NONE" Z.db.color = "CLASS" Z.db.layout = "GROUP" Z.db.horizontal = false
   Z:Refresh()
@@ -3351,28 +3351,28 @@ step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", functio
   assert(Z:OptionChapter() == "Profils et partage", "bouton vers les profils")
 
   -- Réglages changés : un réglage changé a sa ligne ; un clic mène au réglage (réglages fins dépliés), la rune le rétablit
-  Z.db.width, Z.db.showPets = Z.defaults.width, Z.defaults.showPets
+  Z.db.width, Z.db.showFocus = Z.defaults.width, Z.defaults.showFocus
   w.Select("Accueil")
   local before = home.changed.count
   assert(home.changed.empty:IsShown() == (before == 0), "liste vide annoncee")
-  Z.db.width, Z.db.showPets = Z.defaults.width + 4, not Z.defaults.showPets
+  Z.db.width, Z.db.showFocus = Z.defaults.width + 4, not Z.defaults.showFocus
   w.Select("Accueil")
   assert(home.changed.count == before + 2 and not home.changed.empty:IsShown(), "deux reglages changes")
   local function Row(key)
     for _, row in ipairs(home.changed.rows) do if row:IsShown() and row.key == key then return row end end
   end
-  local row = Row("showPets")
+  local row = Row("showFocus")
   assert(row and row.where:GetText() == "Disposition" and row.rune:IsShown(), "ligne du reglage change")
-  assert(row.value:GetText() == (Z.db.showPets and "Activé" or "Coupé"), "valeur du reglage : " .. tostring(row.value:GetText()))
+  assert(row.value:GetText() == (Z.db.showFocus and "Activé" or "Coupé"), "valeur du reglage : " .. tostring(row.value:GetText()))
   assert(Row("width").value:GetText() == tostring(Z.defaults.width + 4), "valeur d'un nombre")
   row:Run("OnClick", "LeftButton")
-  assert(Z:OptionChapter() == "Disposition" and w.found and w.found.key == "showPets", "clic : aller au reglage")
+  assert(Z:OptionChapter() == "Disposition" and w.found and w.found.key == "showFocus", "clic : aller au reglage")
   local fold = w.found.widget.part.fold
   assert(fold and fold:IsOpen(), "reglage fin deplie")
   fold:Run("OnClick")
   w.Select("Accueil")
-  Row("showPets").rune:Run("OnClick")
-  assert(Z.db.showPets == Z.defaults.showPets and home.changed.count == before + 1 and not Row("showPets"), "la rune retablit le reglage")
+  Row("showFocus").rune:Run("OnClick")
+  assert(Z.db.showFocus == Z.defaults.showFocus and home.changed.count == before + 1 and not Row("showFocus"), "la rune retablit le reglage")
   Row("width").rune:Run("OnClick")
   assert(Z.db.width == Z.defaults.width and home.changed.count == before, "la liste se vide")
 
@@ -10193,6 +10193,71 @@ step("C30 : buffs d'apres l'etude de HealKit (refus du jeu, buff d'un autre, buf
   AURAS = {}
   Z.class = old.class Z:BuildData() Z:Refresh() RunUpdates() Z:UpdateBuffPanel()
   assert(ok, err)
+end)
+
+step("C26 : familier colle a son maitre, colonne des familiers collee aux groupes en raid", function()
+  local saved = { showPets = Z.db.showPets, horizontal = Z.db.horizontal, layout = Z.db.layout, raid = RAID }
+  Z.db.showPets, Z.db.horizontal, Z.db.layout, RAID = true, false, "GROUP", false
+  -- Le modèle du cadre « Groupe » porte la case du familier (Pets.xml), créée avec celle du maître
+  assert(Z.header:GetAttribute("template"):find("LyoruneOwnerTemplate", 1, true), "modele du maitre")
+  assert(not LyoruneRaid1:GetAttribute("template"):find("LyoruneOwnerTemplate", 1, true), "pas en raid")
+  local owner = CreateFrame("Button", "LyoruneHeaderUnitButton990", Z.header)
+  local pet = CreateFrame("Button", "LyoruneHeaderUnitButton990Pet", owner)
+  owner.zPet = pet
+  owner:Hide()
+  Z.header:InitButton(owner:GetName())
+  assert(owner.petCell == pet and pet.isPet and pet.owner == owner and pet.hp, "case du familier habillee")
+  assert(UNIT_WATCH[pet], "le jeu montre le familier seulement s'il existe")
+  Z:Refresh()
+  local width, height = Z.CellSize()
+  local pw = Z.PetSize()
+  assert(pw < width and pet:GetWidth() == pw and pet:GetHeight() == height, "plus etroite, meme hauteur")
+  local p = pet._points.TOPLEFT
+  assert(p[2] == owner and p[3] == "TOPRIGHT" and p[4] == Z.db.spacing, "collee a droite de son maitre")
+  assert(Z.header:GetAttribute("z-petwidth") == pw, "taille donnee au code securise")
+  assert(Z.header:GetAttribute("columnSpacing") == Z.db.spacing + pw + Z.db.spacing, "place gardee entre colonnes")
+  Z.db.horizontal = true Z:Refresh()
+  assert(Z.header:GetAttribute("xOffset") == Z.db.spacing + pw + Z.db.spacing, "en lignes : place a droite de chacun")
+  assert(LyoruneRaid1:GetAttribute("xOffset") == Z.db.spacing, "les groupes du raid gardent leur pas")
+  Z.db.horizontal = false
+  -- Portée : la case du familier garde la sienne (opacité générale comprise), pas celle de son maître
+  pet:Hide() pet:SetAttribute("unit", "partypet1")
+  assert(not pet._events.UNIT_HEALTH, "cache : n'ecoute rien")
+  pet:Show()
+  assert(pet._events.UNIT_HEALTH, "montre : ecoute sa vie")
+  assert(pet:GetAttribute("ping-receiver") == nil, "pas de signal sur la petite case")
+  assert(pet:GetAlpha() <= Z.db.frameAlpha / 100 + 1e-6, "opacite generale")
+  -- Hors raid : pas de colonne ; en raid : colonne étroite collée à droite du dernier groupe, sans place à elle
+  assert(not LyorunePets:IsShown(), "pas de colonne hors raid")
+  RAID = true Z:Refresh()
+  assert(LyorunePets:IsShown() and LyorunePets:GetAttribute("z-width") == pw, "colonne en raid, cases etroites")
+  local q = LyorunePets._points.TOPLEFT
+  assert(q[2] == LyoruneRaid8 and q[3] == "TOPRIGHT", "collee au dernier groupe")
+  assert(LyoruneRaid8:GetAttribute("minWidth") == 0.1, "un groupe vide ne prend aucune place")
+  assert(Z.header.petRoom == pw + Z.db.spacing, "fond de groupe et barre comptent les familiers")
+  assert(LyorunePets.def.pos == "pos", "son etiquette deplace tout le cadre principal")
+  Z.db.layout = "GRID" Z:Refresh()
+  q = LyorunePets._points.TOPLEFT
+  assert(q[2] == LyoruneRaid1 and q[3] == "TOPRIGHT", "en grille : a droite de la grille")
+  Z.db.layout, Z.db.horizontal = "GROUP", true Z:Refresh()
+  q = LyorunePets._points.TOPLEFT
+  assert(q[3] == "BOTTOMLEFT" and q[4] > 4 * width, "en lignes : a droite de la premiere ligne")
+  -- Coupé : la colonne disparaît, la petite case n'est plus confiée au jeu
+  Z.db.showPets = false Z:Refresh()
+  assert(not LyorunePets:IsShown() and not UNIT_WATCH[pet] and not pet:IsShown(), "familiers coupes")
+  assert(Z.header:GetAttribute("columnSpacing") == Z.db.spacing and Z.header:GetAttribute("xOffset") == Z.db.spacing, "plus de place gardee")
+  -- Une case créée en combat est confiée au jeu à la fin du combat
+  Z.db.showPets, RAID, Z.db.horizontal = true, false, false
+  COMBAT = true
+  local owner2 = CreateFrame("Button", "LyoruneHeaderUnitButton991", Z.header)
+  local pet2 = CreateFrame("Button", "LyoruneHeaderUnitButton991Pet", owner2)
+  owner2.zPet = pet2
+  Z.header:InitButton(owner2:GetName())
+  assert(pet2.isPet and not UNIT_WATCH[pet2], "rien en combat")
+  COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+  assert(UNIT_WATCH[pet2], "confiee au jeu a la fin du combat")
+  Z.db.showPets, Z.db.horizontal, Z.db.layout, RAID = saved.showPets, saved.horizontal, saved.layout, saved.raid
+  Z:Refresh()
 end)
 
 step("aucune variable globale imprevue", function()

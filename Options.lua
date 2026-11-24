@@ -2570,7 +2570,7 @@ local function Chapters()
 				{ "check", "showSolo", "Mon cadre quand je suis seul" },
 				{ "check", "showTanks", "Cadre séparé pour les tanks", desc = "Un second cadre, déplaçable, qui ne montre que les tanks." },
 				{ "check", "showTarget", "Case de ma cible", "Dans un petit cadre « Cible », déplaçable : mêmes clics et même apparence que les autres cases. Un ennemi est en rouge, sans icônes." },
-				{ "check", "showPets", "Cadre séparé pour les familiers", fine = true },
+				{ "check", "showPets", "Familiers à côté de leur maître", "Seul ou en groupe : une petite case collée à droite de son maître, sur sa ligne. En raid : une colonne « Familiers » collée à droite des groupes. Le familier apparaît dès qu'il est appelé, même en combat.", desc = "Une petite case collée à son maître ; en raid, une colonne à droite des groupes." },
 				{ "check", "showTargetTarget", "Case de la cible de ma cible", "Par exemple le joueur que le boss frappe. Revue deux fois par seconde : le jeu ne prévient pas quand elle change.", fine = true },
 				{ "check", "showFocus", "Case de ma focalisation", fine = true },
 				{ "check", "showPinned", "Cadre des joueurs épinglés", "Un petit cadre « Épinglés » avec les joueurs de la liste ci-dessous, par exemple un 2e tank. Pour épingler : survolez sa case et tapez /lyorune epingler.", desc = "Pour épingler : survolez une case et tapez /lyorune epingler.", fine = true },

@@ -65,7 +65,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 b | 1.46.2 | Correction C18 : cibler un joueur ou soi-même | Publiée |
 | 32 c | 1.46.3 | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | Corrigée, à essayer en jeu |
 | 32 d | 1.46.4 | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | Publiée le 24 novembre 2026 |
-| 32 e | à fixer | Correction C26 : cadres des familiers et des tanks séparés revus (comparaison HealKit, VuhDo, HealBot) | À faire |
+| 32 e | 1.46.5 | Correction C26 : familiers collés à leur maître, colonne collée aux groupes en raid ; cadre des tanks gardé (choix de l'auteur) | Codée, à essayer en jeu |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
@@ -1214,13 +1214,18 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
 - [ ] **32 e, C26** : cadres des familiers et des tanks séparés. Demande de l'auteur (24 novembre 2026) : leur
   fonctionnement actuel ne lui plaît pas. Regarder comment HealKit gère familiers et tanks, puis VuhDo et HealBot,
   et faire mieux, à notre façon, sans rien copier.
-  - [ ] Demander à l'auteur ce qui le gêne précisément (place, réglages, groupe qui change, combat).
-  - [ ] Lire le fonctionnement actuel de Lyorune (cadres à part des tanks et des familiers).
-  - [ ] Piste de l'auteur (capture de HealKit) : le familier en petite case collée à droite de son maître, sur la
+  - [x] Demander à l'auteur ce qui le gêne précisément : cadres à placer à la main, familier sans son maître.
+  - [x] Lire le fonctionnement actuel de Lyorune (cadres à part des tanks et des familiers).
+  - [x] Piste de l'auteur (capture de HealKit) : le familier en petite case collée à droite de son maître, sur la
     même ligne, au lieu d'un cadre détaché.
-  - [ ] Recherche : HealKit, VuhDo, HealBot (installés), en groupe et en raid de 10 à 40 joueurs (familiers, tanks,
-    place, groupe qui change, combat), comparaison écrite dans la fiche C26.
-  - [ ] Présenter la cause et la proposition à l'auteur, accord avant de coder (boutons sécurisés : relecture high).
+  - [x] Recherche : HealKit, VuhDo, HealBot (installés), en groupe et en raid de 10 à 40 joueurs (familiers, tanks,
+    place, groupe qui change, combat), comparaison écrite dans la fiche C26 (faite le 24 novembre 2026).
+  - [x] Présenter la cause et la proposition à l'auteur, accord avant de coder (boutons sécurisés : relecture high).
+    Choix de l'auteur (24 novembre 2026) : le principe de HealKit (petite case collée au maître, colonne à part en
+    raid), interrupteur gardé, cases des familiers plus petites que celles des joueurs ; cadre des tanks inchangé.
+  - [x] Codée (Pets.xml, Frames.lua), 130 étapes, relecture high faite (5 bugs corrigés, 1 optimisation).
+  - [ ] Essai en jeu (seul avec familier, groupe, raid par groupes, par rôle, en grille, en lignes, combat, appel
+    d'un familier en combat), feu vert, publication de la 1.46.5.
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
 - [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.

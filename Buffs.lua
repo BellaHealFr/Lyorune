@@ -792,7 +792,7 @@ end
 -- Case des cadres du groupe (pas les tanks, familiers, épinglés ni la cible)
 local function MainCell(b)
 	local header = b:GetParent()
-	return b.unit and not b.extra and b:IsVisible() and header and header.def and header.def.pos == "pos"
+	return b.unit and not b.extra and not b.isPet and b:IsVisible() and header and header.def and header.def.pos == "pos"
 end
 
 -- Largeur d'une case en unités du bandeau : mesurée sur une case visible (échelles des cadres et du bandeau,
