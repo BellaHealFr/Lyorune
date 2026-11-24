@@ -105,7 +105,23 @@ end
 -- Couleur de classe, naturelle ou vive selon le réglage (Z.ClassColor, Themes.lua)
 -- Sur les cases cible et focalisation (extra), un personnage non joueur prend la couleur de son camp.
 local ENEMY_COLOR, FRIEND_COLOR = { 0.85, 0.20, 0.18 }, { 0.30, 0.75, 0.35 }
-local function ClassColor(unit, extra)
+
+-- Maître d'un familier (C26) : pet -> player, partypet2 -> party2, raidpet7 -> raid7
+local function OwnerUnit(unit)
+	if unit == "pet" then return "player" end
+	return (unit:gsub("pet", "", 1))
+end
+Z.OwnerUnit = OwnerUnit
+
+-- Un familier prend la couleur de la classe de son maître (la sienne serait celle de la créature : un diablotin
+-- compterait comme mage), pâlie pour ne jamais passer pour un joueur
+local PET_PALE = 0.35
+function Z.PetColor(class)
+	local r, g, bl = Z.ClassColor(class)
+	return r + (1 - r) * PET_PALE, g + (1 - g) * PET_PALE, bl + (1 - bl) * PET_PALE
+end
+local function ClassColor(unit, extra, pet)
+	if pet then return Z.PetColor((select(2, UnitClass(OwnerUnit(unit))))) end
 	if extra then
 		local player = UnitIsPlayer(unit)
 		if not issecret(player) and not player then
@@ -172,7 +188,7 @@ local function UpdateState(b)
 	if status ~= b.status and Z.QueueBuffPanel then Z:QueueBuffPanel() end
 	b.status = status
 
-	local r, g, bl = ClassColor(unit, b.extra)
+	local r, g, bl = ClassColor(unit, b.extra, b.isPet)
 	if status then
 		b.hp:SetStatusBarColor(0.25, 0.25, 0.28)
 		b.name:SetTextColor(0.65, 0.65, 0.68)
@@ -267,8 +283,12 @@ local function UpdatePower(b)
 	end
 end
 
+-- En raid, la colonne des familiers ne les met pas en face de leur maître : son nom remplace celui du familier
+-- (C26), qui reste dans l'infobulle
 local function UpdateName(b)
-	b.name:SetText(UnitName(b.unit))
+	local unit = b.unit
+	if b.isPet and not b.owner then unit = OwnerUnit(unit) end -- (colonne du raid : seuls familiers sans maître collé)
+	b.name:SetText(UnitName(unit))
 end
 
 -- Distance, en trois paliers, sans la position des joueurs (cachée par le jeu en donjon et en raid) :
@@ -296,6 +316,30 @@ end
 local ASSIGN_DIM = 0.6
 Z.ASSIGN_DIM = ASSIGN_DIM -- le mode test estompe de la même façon
 
+-- Portée d'un familier (C26) : le jeu ne répond pas pour lui avec UnitInRange (toujours « loin »). La portée du
+-- sort de mon clic gauche d'abord, sinon celle de son maître (un familier reste près de lui). Le sort est relu
+-- toutes les 5 secondes au plus (clics changés, sort appris).
+local petSpell, petSpellAt = nil, -10
+local function PetSpell()
+	local now = GetTime()
+	if now - petSpellAt > 5 then
+		petSpellAt = now
+		local value = Z.GetClicks and Z:GetClicks()["1"]
+		petSpell = type(value) == "string" and value ~= "" and value:sub(1, 1) ~= "@"
+			and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(value) and value or nil
+	end
+	return petSpell
+end
+local function PetRange(b)
+	local spell = PetSpell()
+	if spell and C_Spell.IsSpellInRange then
+		local ok, inRange = pcall(C_Spell.IsSpellInRange, spell, b.unit)
+		if ok and (issecret(inRange) or inRange ~= nil) then return inRange, true end
+	end
+	if b.unit == "pet" then return true, true end -- le mien, sans réponse : près de moi
+	return UnitInRange(OwnerUnit(b.unit))
+end
+
 local function UpdateRange(b)
 	local k = b.assignDim or 1
 	if b.owner then k = k * db.frameAlpha / 100 end -- familier collé : sa propre portée, pas celle de son maître
@@ -306,7 +350,8 @@ local function UpdateRange(b)
 		return b:SetAlpha(math.max(0.1, rangeAlpha * 0.5) * k)
 	end
 	SetFar(b, false)
-	local inRange, checked = UnitInRange(b.unit)
+	local inRange, checked
+	if b.isPet then inRange, checked = PetRange(b) else inRange, checked = UnitInRange(b.unit) end
 	if issecret(inRange) then
 		b:SetAlphaFromBoolean(inRange, k, rangeAlpha * k)
 	elseif checked and not inRange then
@@ -1245,7 +1290,7 @@ Z.ChannelCell = function() return channelCell end -- pour les tests
 local petsAfterCombat
 local function WatchPet(pet)
 	if InCombatLockdown() then petsAfterCombat = true return end
-	if db.showPets then
+	if db.pets ~= "OFF" then
 		RegisterUnitWatch(pet)
 	else
 		UnregisterUnitWatch(pet)
@@ -1321,7 +1366,7 @@ frameDefs[#frameDefs + 1] = { key = "pinned", name = "LyorunePinned", template =
 -- Familiers (C26) : seul ou en groupe, chacun est collé à son maître (Pets.xml). En raid, une colonne
 -- « Familiers » collée à droite des groupes (sous la première ligne si les groupes sont en lignes), qui les suit :
 -- son étiquette déplace tout le cadre principal.
-frameDefs[#frameDefs + 1] = { key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "pos", label = "Familiers", option = "showPets" }
+frameDefs[#frameDefs + 1] = { key = "pets", name = "LyorunePets", template = "SecureGroupPetHeaderTemplate", pos = "pos", label = "Familiers" }
 -- Cadre « Cible » (#25) : trois cases fixes, chacune avec son interrupteur. Ce n'est pas un en-tête de groupe :
 -- Lyorune crée lui-même les trois boutons sécurisés, et le jeu les montre ou les cache selon que l'unité existe.
 frameDefs[#frameDefs + 1] = { key = "extra", extra = true, name = "LyoruneExtra", template = "SecureHandlerStateTemplate", pos = "extraPos", label = "Cible", always = true }
@@ -1653,9 +1698,11 @@ local function HeaderAttributes(h, width, height, petWidth, petHeight, grid, per
 			ApplySort(h)
 			h.labelText = L["Groupe %d"]:format(def.raid)
 		end
-	elseif def.key == "pets" then -- un familier n'a pas de classe de joueur : seulement le nom
-		h:SetAttribute("groupBy", nil)
-		h:SetAttribute("sortMethod", db.sortOrder == "INDEX" and "INDEX" or "NAME")
+	elseif def.key == "pets" then -- dans l'ordre des groupes de leurs maîtres, tenu à jour par le jeu même en combat
+		enabled = db.pets == "RAID"
+		h:SetAttribute("groupBy", "GROUP")
+		h:SetAttribute("groupingOrder", "1,2,3,4,5,6,7,8")
+		h:SetAttribute("sortMethod", "INDEX")
 	elseif def.key == "tanks" then
 		ApplySort(h)
 	elseif def.key == "pinned" then
@@ -1668,14 +1715,15 @@ local function HeaderAttributes(h, width, height, petWidth, petHeight, grid, per
 	end
 	h:SetAttribute("z-ping", db.pingCells or nil) -- cases créées plus tard, même en combat (CONFIG_SNIPPET)
 	-- Familiers : la place de leur colonne à droite de chaque joueur du cadre « Groupe »
-	local petRoom = def.key == "main" and db.showPets and Z.PetGap() + petWidth or 0
+	local petRoom = def.key == "main" and db.pets ~= "OFF" and Z.PetGap() + petWidth or 0
 	h.petRoom = petRoom -- au-delà du bord droit du cadre (fond de groupe, barre sous les cadres)
 	if db.horizontal then
 		h:SetAttribute("point", "LEFT")
 		h:SetAttribute("xOffset", db.spacing + petRoom)
 		h:SetAttribute("yOffset", 0)
 		h:SetAttribute("columnAnchorPoint", "TOP")
-		h:SetAttribute("columnSpacing", db.spacing)
+		-- colonne des familiers du raid : chaque rangée à la hauteur d'une ligne de joueurs
+		h:SetAttribute("columnSpacing", db.spacing + (pets and height - petHeight or 0))
 	else
 		h:SetAttribute("point", "TOP")
 		h:SetAttribute("xOffset", 0)
@@ -1749,7 +1797,8 @@ local function ApplyLayout()
 		local apart = db.spacing + (db.groupPanel and 2 * PANEL_OUTSET or 0) -- deux fonds de groupe ne se touchent pas
 		local fixed = def.raid and db.keepGroupPlace and db.layout == "GROUP"
 		if def.key == "pets" and db.horizontal then -- à droite de la première ligne de groupes
-			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", perColumn * (width + db.spacing) - db.spacing + Z.PetGap(), -gap)
+			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", perColumn * (width + db.spacing) - db.spacing + Z.PetGap(),
+				-gap - math.floor((height - petHeight) / 2))
 		elseif def.key == "pets" and lastRaid then -- au milieu de la première ligne de joueurs
 			h:SetPoint("TOPLEFT", lastRaid, "TOPRIGHT", Z.PetGap(), -math.floor((height - petHeight) / 2))
 		elseif fixed and db.horizontal then

@@ -70,11 +70,11 @@ Z.translations.enUS = {
 	["affiché"] = "shown", ["masqué"] = "hidden",
 	["Cadre séparé pour les tanks"] = "Separate frame for tanks",
 	["Un second cadre, déplaçable, qui ne montre que les tanks."] = "A second, movable frame that only shows tanks.",
-	["Familiers à côté de leur maître"] = "Pets next to their owner",
-	["Seul ou en groupe : les familiers forment une colonne à part, à droite du groupe, chacun en face de son maître. En raid : une colonne « Familiers » à droite des groupes. Un familier apparaît dès qu'il est appelé, même en combat."] = "Solo or in a party: pets form a column of their own, right of the group, each facing its owner. In a raid: a Pets column right of the groups. A pet shows as soon as it is summoned, even in combat.",
+	["En groupe : les familiers forment une colonne à part, à droite du groupe, chacun en face de son maître, aux couleurs de son maître en plus pâle. En raid aussi : une colonne « Familiers » à droite des groupes, rangée dans l'ordre des groupes, chaque case portant le nom du maître. Un familier apparaît dès qu'il est appelé, même en combat."] = "In a party: pets form a column of their own, right of the group, each facing its owner, in its owner's colors made paler. In a raid too: a Pets column right of the groups, in group order, each cell showing its owner's name. A pet shows as soon as it is summoned, even in combat.",
+	["En groupe : en face de leur maître. En raid : une colonne à droite des groupes."] = "In a party: facing their owner. In a raid: a column right of the groups.",
+	["En groupe"] = "In a party", ["En groupe et en raid"] = "In a party and a raid",
 	["Taille des familiers (%)"] = "Pet size (%)",
 	["Taille de leurs cases, par rapport à celle d'un joueur."] = "Size of their cells, compared with a player's.",
-	["Une colonne à part, chacun en face de son maître ; en raid, à droite des groupes."] = "A column of their own, each facing its owner; in a raid, right of the groups.",
 	["Expérimental. Pour les faire revenir, décochez puis tapez /reload."] = "Experimental. To bring them back, untick then type /reload.",
 	["Mode test"] = "Test mode", ["joueurs"] = "players", ["Joueur"] = "Player",
 	["Par groupe"] = "By group", ["Par rôle"] = "By role", ["Grille"] = "Grid",
@@ -87,7 +87,7 @@ Z.translations.enUS = {
 	["Tank, soin, dégâts"] = "Tank, healer, damage", ["Tank, dégâts, soin"] = "Tank, damage, healer",
 	["Soin, tank, dégâts"] = "Healer, tank, damage", ["Soin, dégâts, tank"] = "Healer, damage, tank",
 	["Dégâts, tank, soin"] = "Damage, tank, healer", ["Dégâts, soin, tank"] = "Damage, healer, tank",
-	["Tanks"] = "Tanks", ["Familiers"] = "Pets",
+	["Tanks"] = "Tanks", ["Familiers"] = "Pets", ["Familier"] = "Pet",
 	["Glisser : déplacer les cadres"] = "Drag: move the frames", ["Clic droit : options"] = "Right-click: options",
 
 	-- Apparence

@@ -223,14 +223,14 @@ end)
 step("reglages d'apparence et de rangement", function()
   for _, k in ipairs({ "width", "height", "spacing" }) do Z.db[k] = Z.db[k] + 2 end
   Z.db.color = "HEALTH" Z.db.text = "PERCENT" Z.db.layout = "ROLE" Z.db.roleOrder = "HEALER,TANK,DAMAGER" Z.db.horizontal = true
-  Z.db.brightness = 60 Z.db.frameAlpha = 80 Z.db.highContrast = true Z.db.showTanks = true Z.db.showPets = true
+  Z.db.brightness = 60 Z.db.frameAlpha = 80 Z.db.highContrast = true Z.db.showTanks = true Z.db.pets = "RAID"
   Z:Refresh()
   assert(Z.buttons[1].text:GetText() == "80%", Z.buttons[1].text:GetText())
   assert(Z.header:GetAttribute("groupBy") == "ASSIGNEDROLE" and Z.header:GetAttribute("point") == "LEFT")
   assert(Z.header:GetAttribute("groupingOrder") == "HEALER,TANK,DAMAGER,NONE", Z.header:GetAttribute("groupingOrder"))
   assert(LyoruneTanks:IsShown() and not LyorunePets:IsShown() and LyoruneTanks:GetAttribute("roleFilter") == "TANK", "C26 : familiers hors raid collés au maître, pas de colonne")
   assert(Z:Theme().id == "CONTRAST")
-  Z.db.highContrast = false Z.db.showTanks = false Z.db.showPets = false Z.db.text = "NONE" Z.db.color = "CLASS" Z.db.layout = "GROUP" Z.db.horizontal = false
+  Z.db.highContrast = false Z.db.showTanks = false Z.db.pets = "PARTY" Z.db.text = "NONE" Z.db.color = "CLASS" Z.db.layout = "GROUP" Z.db.horizontal = false
   Z:Refresh()
   assert(not LyoruneTanks:IsShown())
   Z.db.text = "DEFICIT" Z:Refresh()
@@ -1788,7 +1788,7 @@ step("etape 9 : mode panneau, mode grille, tri", function()
   for _, class in ipairs({ "PRIEST", "DRUID", "PALADIN", "SHAMAN", "EVOKER", "MONK" }) do
     assert(("," .. order .. ","):find("," .. class .. ",", 1, true), "classe absente du tri : " .. class)
   end
-  assert(LyoruneTanks:GetAttribute("groupBy") == "CLASS" and LyorunePets:GetAttribute("groupBy") == nil, "tanks par classe, familiers par nom")
+  assert(LyoruneTanks:GetAttribute("groupBy") == "CLASS" and LyorunePets:GetAttribute("groupBy") == "GROUP", "tanks par classe, familiers dans l'ordre des groupes")
   -- par role : le role d'abord, puis la classe dans chaque cadre de role
   Z.db.layout = "ROLE" Z:Refresh()
   assert(raid1:GetAttribute("roleFilter") == "TANK" and raid1:GetAttribute("groupBy") == "CLASS")
@@ -2978,13 +2978,13 @@ end)
 
 step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   local UI = Z.UI
-  local saved = { showPets = Z.db.showPets, horizontal = Z.db.horizontal, width = Z.db.width }
+  local saved = { showFocus = Z.db.showFocus, horizontal = Z.db.horizontal, width = Z.db.width }
   local function Get(key) return function() return Z.db[key] end end
   local function Set(key) return function(value) Z.db[key] = value end end
   local function Choices(key) local t = {} for _, c in ipairs(Z.choices[key]) do t[#t + 1] = { c[1], Z.L[c[2]] } end return t end
   local function Build()
     local w = {}
-    w.switch = UI.Switch(UIParent, "Familiers", Get("showPets"), Set("showPets"))
+    w.switch = UI.Switch(UIParent, "Familiers", Get("showFocus"), Set("showFocus"))
     w.seg = UI.Segmented(UIParent, "Sens", Choices("horizontal"), Get("horizontal"), Set("horizontal"))
     w.side = UI.SideButton(UIParent, 4, "Disposition", function(self) self.clicked = true end)
     w.fold = UI.Fold(UIParent, "essai", 3)
@@ -2993,7 +2993,7 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   end
   -- Chaque brique, créée dans chaque thème et en contraste élevé, ou créée avant et repeinte au changement
   local early = Build()
-  Z.db.showPets, Z.db.horizontal = false, false
+  Z.db.showFocus, Z.db.horizontal = false, false
   for _, look in ipairs({ "MODERN", "CLASSIC", "MMO", "CONTRAST" }) do
     Z.db.windowTheme, Z.db.highContrast = look == "CONTRAST" and "MODERN" or look, look == "CONTRAST"
     Z:Refresh()
@@ -3026,16 +3026,16 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   Z.db.windowTheme, Z.db.highContrast = "MODERN", false Z:Refresh()
 
   -- Interrupteur : écrit le réglage, la pastille glisse (sauf en animations réduites) et prend l'accent
-  local sw = UI.Switch(UIParent, "Familiers", Get("showPets"), Set("showPets"))
+  local sw = UI.Switch(UIParent, "Familiers", Get("showFocus"), Set("showFocus"))
   sw:Run("OnClick")
-  assert(Z.db.showPets == true and sw.on and sw.slide:IsPlaying(), "interrupteur")
+  assert(Z.db.showFocus == true and sw.on and sw.slide:IsPlaying(), "interrupteur")
   assert(sw.knob._color[1] == UI.accent[1] and sw.confirm:IsPlaying(), "interrupteur allume")
   Z.db.reduceMotion = true
   sw:Run("OnClick")
-  assert(Z.db.showPets == false and not sw.slide:IsPlaying() and sw.knob._color[1] == UI.dim[1], "interrupteur en animations reduites")
+  assert(Z.db.showFocus == false and not sw.slide:IsPlaying() and sw.knob._color[1] == UI.dim[1], "interrupteur en animations reduites")
   Z.db.reduceMotion = false
   -- Une case à cocher garde son allure d'avant
-  local check = UI.Check(UIParent, "essai", Get("showPets"), Set("showPets"))
+  local check = UI.Check(UIParent, "essai", Get("showFocus"), Set("showFocus"))
   assert(not check.track and check.box._w == 16, "case a cocher changee")
 
   -- Choix côte à côte : écrit le réglage, un seul choix sélectionné
@@ -3069,10 +3069,10 @@ step("refonte 1.26.0, lot 1 : briques de la fenetre a chapitres", function()
   assert(Z.db.width == Z.defaults.width and not rune:IsShown() and st.value:GetText() == tostring(Z.defaults.width), "retablir")
   st.plus:Run("OnClick") assert(rune:IsShown(), "la rune suit le nombre")
   rune:Run("OnClick")
-  local swRune = UI.ChangedRune(sw, "showPets", Get("showPets"), Set("showPets"))
+  local swRune = UI.ChangedRune(sw, "showFocus", Get("showFocus"), Set("showFocus"))
   assert(not swRune:IsShown()) sw:Run("OnClick") assert(swRune:IsShown(), "la rune suit l'interrupteur")
   swRune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : Coupé", GameTooltip:GetText())
-  swRune:Run("OnClick") assert(Z.db.showPets == Z.defaults.showPets and not sw.on, "interrupteur retabli")
+  swRune:Run("OnClick") assert(Z.db.showFocus == Z.defaults.showFocus and not sw.on, "interrupteur retabli")
   local segRune = UI.ChangedRune(seg, "horizontal", Get("horizontal"), Set("horizontal"))
   segRune:Run("OnEnter") assert(GameTooltip:GetText() == "Rétablir : En colonnes", GameTooltip:GetText())
   segRune:Run("OnClick") assert(Z.db.horizontal == false and seg.segments[1].selected, "choix retabli")
@@ -3310,7 +3310,7 @@ step("refonte 1.26.0, lot 3a : listes dans leurs chapitres, clics et alertes en 
 end)
 
 step("refonte 1.26.0, lot 3b : profils et aide en une colonne, Accueil", function()
-  local saved = { width = Z.db.width, showPets = Z.db.showPets, syncEnabled = Z.db.syncEnabled, profiles = Z.db.profiles,
+  local saved = { width = Z.db.width, showFocus = Z.db.showFocus, syncEnabled = Z.db.syncEnabled, profiles = Z.db.profiles,
     activeProfile = Z.db.activeProfile }
   Z.char.optionFolds = {}
   Z:ToggleOptions("Accueil")
@@ -10196,8 +10196,8 @@ step("C30 : buffs d'apres l'etude de HealKit (refus du jeu, buff d'un autre, buf
 end)
 
 step("C26 : familiers en colonne a part, en face de leur maitre, plus petits ; colonne apres les groupes en raid", function()
-  local saved = { showPets = Z.db.showPets, horizontal = Z.db.horizontal, layout = Z.db.layout, raid = RAID }
-  Z.db.showPets, Z.db.horizontal, Z.db.layout, RAID = true, false, "GROUP", false
+  local saved = { pets = Z.db.pets, horizontal = Z.db.horizontal, layout = Z.db.layout, raid = RAID }
+  Z.db.pets, Z.db.horizontal, Z.db.layout, RAID = "RAID", false, "GROUP", false
   -- Le modèle du cadre « Groupe » porte la case du familier (Pets.xml), créée avec celle du maître
   assert(Z.header:GetAttribute("template"):find("LyoruneOwnerTemplate", 1, true), "modele du maitre")
   assert(not LyoruneRaid1:GetAttribute("template"):find("LyoruneOwnerTemplate", 1, true), "pas en raid")
@@ -10247,12 +10247,50 @@ step("C26 : familiers en colonne a part, en face de leur maitre, plus petits ; c
   Z.db.layout, Z.db.horizontal = "GROUP", true Z:Refresh()
   q = LyorunePets._points.TOPLEFT
   assert(q[3] == "BOTTOMLEFT" and q[4] > 4 * width, "en lignes : a droite de la premiere ligne")
+  assert(LyorunePets:GetAttribute("columnSpacing") == Z.db.spacing + height - ph, "en lignes : chaque rangee a la hauteur d'une ligne")
+  assert(LyorunePets:GetAttribute("groupBy") == "GROUP" and LyorunePets:GetAttribute("groupingOrder") == "1,2,3,4,5,6,7,8", "rangee dans l'ordre des groupes")
+  -- Case de la colonne du raid : nom du maître, couleur de sa classe pâlie, portée par le sort du clic gauche
+  local raidPet = CreateFrame("Button", "LyorunePetsUnitButton990", LyorunePets)
+  LyorunePets:InitButton(raidPet:GetName())
+  raidPet:SetAttribute("unit", "raidpet3") raidPet:Show()
+  assert(raidPet.isPet and not raidPet.owner and raidPet.name:GetText() == "Joueur-raid3", "nom du maitre en raid")
+  assert(pet.name:GetText() == "Joueur-partypet1", "en groupe, en face du maitre : son propre nom")
+  Z.db.color = "CLASS" Z.cellUpdates.all(raidPet)
+  local r, g = Z.ClassColor("PRIEST")
+  local c = raidPet.hp._barColor
+  assert(math.abs(c[1] - (r + (1 - r) * 0.35)) < 1e-6 and math.abs(c[2] - (g + (1 - g) * 0.35)) < 1e-6, "couleur du maitre, palie")
+  local inRange, owner = C_Spell.IsSpellInRange, UnitInRange
+  local asked
+  C_Spell.IsSpellInRange = function(spell, unit) asked = spell return false end
+  NOW = (NOW or 0) + 10
+  Z.cellUpdates.range(raidPet)
+  assert(asked == Z:GetClicks()["1"] and raidPet:GetAlpha() < 1, "portee du sort du clic gauche")
+  C_Spell.IsSpellInRange = function() return nil end
+  Z.cellUpdates.range(raidPet)
+  assert(raidPet:GetAlpha() == 1, "sans reponse du sort : portee du maitre (a portee ici)")
+  C_Spell.IsSpellInRange, UnitInRange = inRange, owner
+  -- Mode test : un faux familier en face du faux chasseur (groupe), puis dans la colonne après les groupes (raid)
+  RAID = false Z.db.horizontal = false Z:Refresh()
+  Z:TogglePreview(5)
+  local fake = Z:PreviewPets()[4]
+  assert(fake and fake:IsShown() and fake:GetWidth() == pw and fake:GetHeight() == ph, "faux familier, plus petit")
+  assert(fake._points.LEFT and fake._points.LEFT[4] == Z.PetGap() and fake.name:GetText() == "Familier", "en face de son maitre")
+  Z:TogglePreview(5)
+  Z:TogglePreview(10)
+  fake = Z:PreviewPets()[4]
+  assert(fake:IsShown() and fake.name:GetText() == "Joueur 4" and fake._points.TOPLEFT, "en raid : colonne, nom du maitre")
+  assert(Z:PreviewPets()[9]:IsShown(), "le demoniste aussi")
+  Z.db.pets = "PARTY" Z:RefreshPreview()
+  assert(not fake:IsShown(), "familiers du raid coupes : rien en raid")
+  Z.db.pets = "RAID"
+  Z:TogglePreview(10)
+  RAID, Z.db.horizontal = true, true Z:Refresh()
   -- Coupé : la colonne disparaît, la petite case n'est plus confiée au jeu
-  Z.db.showPets = false Z:Refresh()
+  Z.db.pets = "OFF" Z:Refresh()
   assert(not LyorunePets:IsShown() and not UNIT_WATCH[pet] and not pet:IsShown(), "familiers coupes")
   assert(Z.header:GetAttribute("columnSpacing") == Z.db.spacing and Z.header:GetAttribute("xOffset") == Z.db.spacing, "plus de place gardee")
   -- Une case créée en combat est confiée au jeu à la fin du combat
-  Z.db.showPets, RAID, Z.db.horizontal = true, false, false
+  Z.db.pets, RAID, Z.db.horizontal = "RAID", false, false
   COMBAT = true
   local owner2 = CreateFrame("Button", "LyoruneHeaderUnitButton991", Z.header)
   local pet2 = CreateFrame("Button", "LyoruneHeaderUnitButton991Pet", owner2)
@@ -10261,7 +10299,7 @@ step("C26 : familiers en colonne a part, en face de leur maitre, plus petits ; c
   assert(pet2.isPet and not UNIT_WATCH[pet2], "rien en combat")
   COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
   assert(UNIT_WATCH[pet2], "confiee au jeu a la fin du combat")
-  Z.db.showPets, Z.db.horizontal, Z.db.layout, RAID = saved.showPets, saved.horizontal, saved.layout, saved.raid
+  Z.db.pets, Z.db.horizontal, Z.db.layout, RAID = saved.pets, saved.horizontal, saved.layout, saved.raid
   Z:Refresh()
 end)
 

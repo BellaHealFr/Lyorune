@@ -35,7 +35,7 @@ Z.defaults = {
 	showSolo = true,           -- afficher mon cadre quand je suis seul
 	visibility = "ALWAYS",     -- afficher les cadres : en permanence, ou seulement en combat
 	showTanks = false,         -- cadre séparé pour les tanks
-	showPets = false,          -- familiers : colonne à part, chacun en face de son maître ; en raid, après les groupes (C26)
+	pets = "PARTY",            -- familiers (C26) : non, en groupe (colonne à part, en face de leur maître), ou aussi en raid
 	petSize = 60,              -- taille de leurs cases, en % de celle d'un joueur
 	showTarget = false,        -- petite case de ma cible (cadre « Cible », déplaçable)
 	showTargetTarget = false,  -- case de la cible de ma cible
@@ -230,6 +230,7 @@ Z.choices = {
 	classIntensity = { { "NATURAL", "Naturelles" }, { "VIVID", "Vives" } },
 	lockMode = { { "FREE", "Libre" }, { "LOCKED", "Verrouillé" }, { "ALT", "Avec Alt" }, { "CTRL", "Avec Ctrl" }, { "SHIFT", "Avec Maj" } },
 	visibility = { { "ALWAYS", "Toujours" }, { "COMBAT", "En combat seulement" } },
+	pets = { { "OFF", "Non" }, { "PARTY", "En groupe" }, { "RAID", "En groupe et en raid" } },
 	color = { { "CLASS", "Classe" }, { "HEALTH", "Vie restante" } },
 	text = { { "DEFICIT", "Vie manquante" }, { "PERCENT", "Pourcentage" }, { "NONE", "Aucun" } },
 	hotStyle = { { "ICONS", "Icônes" }, { "BARS", "Barres fines" } },
@@ -482,6 +483,16 @@ local function Migrate(db)
 		if db.buffRefresh ~= 2 then db.buffRenew = math.min(math.max(math.floor(db.buffRefresh) * 60, 0), 900) end
 	end
 	db.buffRefresh = nil
+	-- 1.46.5 : « Cadre séparé pour les familiers » devient « Familiers » à trois choix (C26). Coché : en groupe et en
+	-- raid, comme avant ; décoché : le nouveau départ (en groupe). Une seule fois, l'ancienne clé disparaît
+	-- (les profils enregistrés aussi)
+	local function Pets(saved)
+		if type(saved) ~= "table" then return end
+		if saved.showPets == true then saved.pets = "RAID" end
+		saved.showPets = nil
+	end
+	Pets(db)
+	for _, profile in pairs(type(db.profiles) == "table" and db.profiles or {}) do Pets(profile) end
 	-- 1.44.0 : « Partager mes recharges » devient éteint au départ (demande de l'auteur : au joueur de choisir).
 	-- Les 1.42.1 à 1.43.1 l'allumaient pour tous : il repart du nouveau défaut, une seule fois.
 	if last and last >= 14201 and last < 14400

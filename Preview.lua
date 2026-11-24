@@ -8,9 +8,12 @@ local UI = Z.UI
 
 local container
 local cells = {}
+local petCells = {} -- faux familiers, par numéro de faux joueur (C26)
 local size = 10
 
-local CLASSES = { "WARRIOR", "PRIEST", "DRUID", "MAGE", "PALADIN", "ROGUE", "SHAMAN", "HUNTER", "WARLOCK" }
+-- (un chasseur dans les cinq premiers : le faux groupe montre aussi un familier)
+local CLASSES = { "WARRIOR", "PRIEST", "DRUID", "HUNTER", "PALADIN", "ROGUE", "SHAMAN", "MAGE", "WARLOCK" }
+local PET_CLASSES = { HUNTER = true, WARLOCK = true }
 local HEALTH = { 100, 62, 100, 18, 85, 100, 0, 45, 100, 73 } -- vie des faux joueurs, en %
 local CLASS_POWER = Z.classPower -- ressource de chaque classe quand ce n'est pas la mana (Data.lua)
 local DISPEL_COLORS = { { 0.20, 0.60, 1.00 }, { 0.65, 0.20, 1.00 }, { 0.10, 0.85, 0.20 } }
@@ -22,7 +25,7 @@ local function Fill(cell, index, sample)
 	local db, L = Z.db, Z.L
 	local class = (sample and Z.class) or CLASSES[(index - 1) % #CLASSES + 1]
 	local r, g, b = Z.ClassColor(class)
-	local health = HEALTH[(index - 1) % #HEALTH + 1]
+	local health = cell.fakeHealth or HEALTH[(index - 1) % #HEALTH + 1] -- (faux familier : en pleine forme)
 	local dead = health == 0
 
 	cell.hp:SetMinMaxValues(0, 100)
@@ -283,6 +286,14 @@ local function Layout()
 	local perColumn = grid and db.gridSize or 5
 	local apart = (db.groupPanel and not grid) and 6 or 0 -- même écart que les vrais cadres entre deux fonds de groupe
 	local order = Order()
+	-- Familiers (C26), comme les vrais : en groupe, chacun en face de son maître (une colonne de place gardée) ; en
+	-- raid, une colonne après les groupes, dans l'ordre des groupes
+	local party = size <= 5
+	local petWidth, petHeight = Z.PetSize()
+	local gapToPets = Z.PetGap()
+	local petsShown = db.pets == "RAID" or (party and db.pets == "PARTY")
+	local petRoom = (party and db.pets ~= "OFF") and gapToPets + petWidth or 0
+	local owners = {}
 	for place, cell in ipairs(cells) do
 		local shown = place <= size
 		cell:SetShown(shown)
@@ -290,14 +301,49 @@ local function Layout()
 			local group, slot = math.floor((place - 1) / perColumn), (place - 1) % perColumn
 			local x, y
 			if db.horizontal then
-				x, y = slot * (width + db.spacing), -group * (height + db.spacing + apart)
+				x, y = slot * (width + db.spacing + petRoom), -group * (height + db.spacing + apart)
 			else
-				x, y = group * (width + db.spacing + apart), -slot * (height + db.spacing)
+				x, y = group * (width + db.spacing + apart + petRoom), -slot * (height + db.spacing)
 			end
 			cell:ClearAllPoints()
 			cell:SetPoint("TOPLEFT", container, "TOPLEFT", x, y)
+			cell.petRoom = petRoom -- le fond de groupe compte la colonne des familiers (Z.StylePanel)
 			Z.DrawFakeCell(cell, order[place], false, width, height)
+			if petsShown and PET_CLASSES[CLASSES[(order[place] - 1) % #CLASSES + 1]] then owners[#owners + 1] = { cell, order[place] } end
 		end
+	end
+	for _, pet in pairs(petCells) do pet:Hide() end
+	local groups = math.ceil(size / perColumn)
+	for k, owner in ipairs(owners) do
+		local cell, index = owner[1], owner[2]
+		local pet = petCells[index]
+		if not pet then
+			pet = CreateFrame("Frame", nil, container)
+			pet.isPet, pet.fakeHealth = true, 100
+			Z.BuildVisuals(pet)
+			petCells[index] = pet
+		end
+		Z.DrawFakeCell(pet, index, false, petWidth, petHeight)
+		if db.color == "CLASS" then pet.hp:SetStatusBarColor(Z.PetColor(CLASSES[(index - 1) % #CLASSES + 1])) end
+		pet.role:Hide() pet.class:Hide() pet.leader:Hide()
+		pet:ClearAllPoints()
+		if party then
+			pet.name:SetText(Z.L["Familier"])
+			pet:SetPoint("LEFT", cell, "RIGHT", gapToPets, 0)
+		else
+			pet.name:SetText(Z.L["Joueur"] .. " " .. index) -- en raid : le nom du maître
+			local column, line = math.floor((k - 1) / perColumn), (k - 1) % perColumn -- comme le vrai cadre
+			local x, y
+			if db.horizontal then
+				x = perColumn * (width + db.spacing) - db.spacing + gapToPets + line * (petWidth + db.spacing)
+				y = -column * (height + db.spacing) - math.floor((height - petHeight) / 2)
+			else
+				x = groups * (width + db.spacing + apart) - db.spacing - apart + gapToPets + column * (petWidth + db.spacing)
+				y = -line * (height + db.spacing) - math.floor((height - petHeight) / 2)
+			end
+			pet:SetPoint("TOPLEFT", container, "TOPLEFT", x, y)
+		end
+		pet:Show()
 	end
 	for group = 1, 8 do
 		local first = cells[(group - 1) * 5 + 1]
@@ -311,6 +357,7 @@ local function Layout()
 			container.box:ClearAllPoints()
 			container.box:SetPoint("TOPLEFT", container, "TOPLEFT")
 			container.box:SetSize(columns * width + (columns - 1) * db.spacing, rows * height + (rows - 1) * db.spacing)
+			container.box.petRoom = petRoom
 			first, last = container.box, container.box
 		end
 		local panel = container.panels[group]
@@ -376,6 +423,11 @@ end
 -- La mesure des performances (Perf.lua) prête ces mêmes cases : aucun cadre de plus en mémoire
 function Z:PreviewCells(count)
 	return EnsureCells(count)
+end
+
+-- Faux familiers, par numéro de faux joueur (pour les tests)
+function Z:PreviewPets()
+	return petCells
 end
 
 -- Z:TogglePreview() ouvre ou ferme. Z:TogglePreview(25) ouvre avec 25 faux joueurs.
