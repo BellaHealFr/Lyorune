@@ -60,7 +60,7 @@ Z.alsoOnCell = {
 	{ { "manaBars", "OFF" }, "Barre de mana" },
 	{ "showAbsorb", "Bouclier" },
 	{ "showIncoming", "Soins en route" },
-	{ "lowHealth", "Voile de vie basse" },
+	{ "lowHealth", "Liseré de vie basse" },
 	{ "showThreat", "Bordure de menace" },
 	{ "showDispel", "Cadre de dissipation" },
 }

@@ -6803,57 +6803,91 @@ step("etape 25, lot 2 : repartition du chef (droits, reception, envoi, blocage, 
   assert(ok, err)
 end)
 
-step("1.32.1 : voile de vie basse (quelques battements puis fixe, vie inconnue, releve, mode test)", function()
+step("33 ter (C32) : vie basse en lisere rouge fixe, en combat seulement (sans battement, vie inconnue, portee, releve, mode test)", function()
   local kept = { lowHealth = Z.db.lowHealth, lowHealthAt = Z.db.lowHealthAt }
+  local create = C_CurveUtil.CreateColorCurve
+  C_CurveUtil.CreateColorCurve = function()
+    local c = { points = {} }
+    function c:SetType() end
+    function c:AddPoint(x, color) self.points[#self.points + 1] = { x, color } end
+    function c:Evaluate(x)
+      local found = self.points[1][2]
+      for _, p in ipairs(self.points) do if x >= p[1] then found = p[2] end end
+      return found
+    end
+    return c
+  end
   local ok, err = pcall(function()
-    Z.db.lowHealth = true Z:Refresh()
+    Z.db.lowHealth, Z.db.lowHealthAt = true, 25 Z:Refresh()
     local b = Z.buttons[1]
-    local pulse = b.low.pulse
-    -- un changement de vie relance les battements
-    pulse:Stop()
+    assert(b.low.fill.isBorder and not b.low.pulse, "le voile bat encore ou n'est pas un lisere")
+    assert(Z.PulseLow == nil and Z.LOW_BEATS == nil, "restes du battement")
+    -- hors combat : jamais de lisere, meme a 10 %
+    HEALTH_PCT = 0.1
+    FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
     FireEvent("UNIT_HEALTH", b.unit) RunUpdates()
-    assert(pulse:IsPlaying(), "le voile ne bat pas quand la vie change")
-    -- au bout de Z.LOW_BEATS battements, il s'arrete et reste fixe (plus de boucle sans fin)
-    for _ = 1, Z.LOW_BEATS - 1 do pulse:Run("OnLoop") end
-    assert(pulse:IsPlaying(), "arret trop tot")
-    pulse:Run("OnLoop")
-    assert(not pulse:IsPlaying(), "le voile clignote sans fin")
-    -- la vie change encore : il repart, compte remis a zero
-    FireEvent("UNIT_HEALTH", b.unit) RunUpdates()
-    assert(pulse:IsPlaying() and pulse.beats == 0, "battements non relances")
-    -- vie maximale lisible a 0 (joueur en chargement) : voile eteint, pas de rouge plein
-    b.low.fill:SetAlpha(1)
+    assert(b.low.fill:GetAlpha() == 0, "lisere hors combat")
+    -- entree en combat : le lisere vient sans attendre un changement de vie
+    COMBAT = true FireEvent("PLAYER_REGEN_DISABLED") RunUpdates()
+    assert(b.low.fill:GetAlpha() == 1, "pas de lisere en combat a 10 %")
+    -- la vie remonte sans evenement (jeu en retard) : le passage de la portee l'efface (jamais bloque)
+    HEALTH_PCT = 1
+    b:Show() TICK() TICK()
+    assert(b.low.fill:GetAlpha() == 0, "lisere reste a 100 %")
+    HEALTH_PCT = 0.1 Z.cellUpdates.health(b)
+    assert(b.low.fill:GetAlpha() == 1, "lisere absent a 10 %")
+    -- vie maximale lisible a 0 (joueur en chargement) : rien
     HEALTH_MAX = 0
     FireEvent("UNIT_MAXHEALTH", b.unit) RunUpdates()
-    assert(b.low.fill:GetAlpha() == 0, "voile plein pour une vie inconnue")
-    -- vie maximale secrete (en combat) : aucune comparaison, aucune erreur
+    assert(b.low.fill:GetAlpha() == 0, "lisere pour une vie inconnue")
+    -- vie maximale secrete : aucune comparaison, aucune erreur
     HEALTH_MAX = nil
-    SECRET = true COMBAT = true
+    SECRET = true
     FireEvent("UNIT_MAXHEALTH", b.unit) RunUpdates()
-    SECRET = false COMBAT = false
-    -- releve des cadres : vie max et voile de chaque case
+    SECRET = false
+    -- sortie de combat : efface tout de suite
+    Z.cellUpdates.health(b)
+    assert(b.low.fill:GetAlpha() == 1, "lisere perdu")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+    assert(b.low.fill:GetAlpha() == 0, "lisere reste apres le combat")
+    -- releve des cadres : vie max, lisere, combat
     Z.header:SetAttribute("child1", b)
     local state = table.concat(Z:FrameState(), "\n")
     Z.header:SetAttribute("child1", nil)
-    assert(state:find("vie basse : vie max=1000", 1, true), state)
-    -- mode test : meme regle, le voile bat a l'affichage
+    assert(state:find("vie basse : vie max=1000", 1, true) and state:find("combat=false", 1, true), state)
+    -- mode test : montre le lisere meme hors combat, pour le voir
     Z.db.lowHealthAt = 100 Z:Refresh()
-    for _, cell in ipairs(Z:PreviewCells(10)) do cell.low.pulse:Stop() end
     Z:TogglePreview(10)
-    local low, beating = 0, 0
+    local low = 0
     for index, cell in ipairs(Z:PreviewCells(10)) do
-      if index <= 10 and cell.low.fill:GetAlpha() == 1 then
-        low = low + 1
-        if cell.low.pulse:IsPlaying() then beating = beating + 1 end
-      end
+      if index <= 10 and cell.low.fill:GetAlpha() == 1 then low = low + 1 end
     end
     Z:TogglePreview()
-    assert(low > 0 and beating == low, "mode test : " .. beating .. " voiles battent sur " .. low)
+    assert(low > 0, "mode test : aucun lisere")
   end)
+  C_CurveUtil.CreateColorCurve, HEALTH_PCT = create, false
   HEALTH_MAX = nil
   SECRET = false COMBAT = false
+  FireEvent("PLAYER_REGEN_ENABLED")
   for key, value in pairs(kept) do Z.db[key] = value end
   Z:Refresh()
+  assert(ok, err)
+end)
+
+step("33 ter (C35) : aucun chiffre de vie sur un familier (vraie case et mode test)", function()
+  local kept = Z.db.text
+  local ok, err = pcall(function()
+    local b = Z.buttons[1]
+    for _, mode in ipairs({ "PERCENT", "DEFICIT" }) do
+      Z.db.text = mode Z:Refresh()
+      b.isPet = true Z.cellUpdates.health(b)
+      assert(b.text:GetText() == "", mode .. " : chiffre de vie sur un familier")
+      b.isPet = nil Z.cellUpdates.health(b)
+      assert(b.text:GetText() ~= "", mode .. " : chiffre de vie perdu sur un joueur")
+    end
+  end)
+  Z.buttons[1].isPet = nil
+  Z.db.text = kept Z:Refresh()
   assert(ok, err)
 end)
 
@@ -7892,7 +7926,7 @@ step("C31 : buff pose jamais montre, de retour en gris quand il faut le reposer 
     AuraContainerSortMethod = { Default = 0 }
     AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
     Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
-    Z.db.buffWatch, Z.db.missingBuffs, Z.db.combatBuffs, Z.db.buffPanel, Z.db.combatKey = {}, true, true, true, true
+    Z.db.buffWatch, Z.db.missingBuffs, Z.db.combatBuffs, Z.db.buffPanel, Z.db.combatKey, Z.db.uniqueLive = {}, true, true, true, true, false -- (memoire ; en temps reel : etape 33 ter)
     Z.char.buffTarget = { byId = { [6346] = { mode = "ME" } } }
     Z.class = "PRIEST" Z:BuildData()
     -- tous les rangs, simple et groupe, sans le numero d'un autre sort
@@ -8008,6 +8042,105 @@ step("C31 : buff pose jamais montre, de retour en gris quand il faut le reposer 
   C_Secrets, Z.class, C_Timer.After, NOW, AURAS["HELPFUL"] = old.secrets, old.class, old.after, old.now, nil
   AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle, Z.boxWrap = nil, nil, nil, nil
   Z.db.combatBuffs, Z.db.pvpBuffs, Z.db.combatKey, Z.char.buffTarget, COMBAT = true, true, true, {}, false
+  for _, button in ipairs(made) do pcall(button.SetAttribute, button, "unit", nil) end
+  Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
+
+step("33 ter (C33) : buff unique en temps reel sur son porteur (place du jeu avec charges, repere gris dessous, en combat, hors de la rangee des soins, interrupteur)", function()
+  local old = { create = CreateFrame, name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit,
+    secrets = C_Secrets, class = Z.class, after = C_Timer.After, now = NOW, live = Z.db.uniqueLive }
+  local made = {}
+  local ok, err = pcall(function()
+    local extra = { [1244] = "Mot de pouvoir : Robustesse", [6346] = "Gardien de peur" }
+    C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
+    C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
+    C_Timer.After = function(s, f) if s < 1 then f() end end
+    local hidden = false
+    C_Secrets = { ShouldAurasBeSecret = function() return hidden end }
+    CreateFrame = function(kind, name, parent, template)
+      local f = old.create(kind, name, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      f.groups, f.slots = {}, {}
+      function f:AddAuraGroup(key, filter, options)
+        self.groups[key] = (options.candidateFilters or {}).includeSpellIDs or {}
+        options.initializeFrame(old.create("Button", nil, self))
+      end
+      function f:AddAuraSlot(key, filter, options)
+        local button = old.create("Button", nil, self)
+        self.slots[key] = { filter = filter, ids = (options.candidateFilters or {}).includeSpellIDs, button = button }
+        options.initializeFrame(button)
+        return button
+      end
+      function f:SetEnabled(on) assert(not COMBAT, "SetEnabled en combat") self.enabled = on end
+      function f:SetUnit(unit) self.unit = unit end
+      function f:UpdateAllAuras() end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1 }
+    Z.db.buffWatch, Z.db.missingBuffs, Z.db.combatBuffs, Z.db.buffPanel, Z.db.uniqueLive = {}, true, true, true, true
+    assert(Z.defaults.uniqueLive == true, "uniqueLive allume au depart (decision de l'auteur)")
+    Z.char.buffTarget = { byId = { [6346] = { mode = "ME" } } }
+    Z.class = "PRIEST" Z:BuildData()
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton36", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    UnitIsUnit = function(a, b) return a == b or (a == "player" and b == Z.buttons[1].unit) or (b == "player" and a == Z.buttons[1].unit) end
+    c:SetAttribute("unit", "player")
+    NOW = (NOW or 0) + 1 -- le porteur est retenu le temps d'un instant (Auras.lua, Bearer)
+    Z:Refresh() RunUpdates()
+    assert(Z.UniqueLive(), "temps reel inactif")
+    -- une place fixe du jeu pour Gardien de peur, mes auras seulement ; plus dans la rangee des soins
+    local slot = c.boxes.slots.slots.unique1
+    assert(slot and slot.filter == "HELPFUL|PLAYER" and slot.ids[6346], "pas de place du jeu pour le buff unique")
+    assert(not c.boxes.hots.groups.hots[6346], "buff unique encore dans la rangee des soins")
+    -- son repere gris en premiere place, sous la place du jeu ; plus suivi par la memoire
+    local function Shown(index) local icon = c.buffList and c.buffList[index] return icon and icon:IsShown() and icon end
+    local ward = Z.uniqueChecks[1]
+    assert(ward.id == 6346 and Shown(1) and Shown(1).texture._tex == ward.icon, "repere gris du buff unique absent")
+    for _, entry in ipairs(c.buffWatch or {}) do assert(entry.check.id ~= 6346, "buff unique aussi suivi par la memoire") end
+    assert(Shown(2) and Shown(2).texture._tex ~= nil, "les autres buffs a reposer ne suivent pas le buff unique")
+    -- en combat, buffs caches : le repere reste (le jeu le couvre tant que le buff est la)
+    FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true hidden = true
+    Z.QueueAuras(c) RunUpdates()
+    assert(Shown(1) and Shown(1).texture._tex == ward.icon, "combat : repere gris du buff unique perdu")
+    -- en combat, ce qui a ete lu avant reste (un buff unique d'un autre pretre ne fait pas apparaitre le gris)
+    c.otherUniques = "Gardien de peur" Z.QueueAuras(c) RunUpdates()
+    assert(c.otherUniques == "Gardien de peur" and not (Shown(1) and Shown(1).texture._tex == ward.icon and #c.buffList > 1 and Shown(2) and Shown(2).texture._tex == ward.icon),
+      "combat : lecture d'avant effacee")
+    c.otherUniques = nil
+    COMBAT = false hidden = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+    -- case sans la place du jeu (refaite a la fin du combat, conteneurs refuses) : pas de gris que rien ne couvre,
+    -- le buff unique revient a la memoire
+    local place = c.slots.unique1
+    c.slots.unique1 = nil
+    NOW = NOW + 1 Z.QueueAuras(c) RunUpdates()
+    local watched = false
+    for _, entry in ipairs(c.buffWatch or {}) do if entry.check.id == 6346 then watched = true end end
+    assert(watched and not Z.HasUniquePlace(c, 1), "case sans place du jeu : buff unique ni suivi ni ecarte")
+    c.slots.unique1 = place
+    NOW = NOW + 1 Z.QueueAuras(c) RunUpdates()
+    -- un autre joueur que le porteur : aucun repere en premiere place
+    local realBearer = Z.UniqueBearer
+    Z.UniqueBearer = function() return "party4" end
+    NOW = NOW + 1 Z.QueueAuras(c) RunUpdates()
+    Z.UniqueBearer = realBearer
+    local count = 0
+    for index = 1, #(c.buffList or {}) do if Shown(index) then count = count + 1 end end
+    assert(count == 1 and Shown(1), "repere gris chez un joueur qui n'est pas le porteur, ou place gardee pour rien")
+    -- interrupteur coupe : plus de place du jeu, le sort revient dans la rangee des soins
+    Z.db.uniqueLive = false Z:Refresh() RunUpdates()
+    assert(not c.boxes.slots.slots.unique1 and c.boxes.hots.groups.hots[6346], "interrupteur sans effet")
+    for _, text in ipairs({ "Buffs uniques en temps réel", "En couleur avec ses charges ; gris dès qu'il tombe, même en combat." }) do
+      assert(Z.translations.enUS[text], "sans traduction anglaise : " .. text)
+    end
+  end)
+  CreateFrame, C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit = old.create, old.name, old.known, old.isUnit
+  C_Secrets, Z.class, C_Timer.After, NOW, Z.db.uniqueLive = old.secrets, old.class, old.after, old.now, old.live
+  AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle, Z.boxWrap = nil, nil, nil, nil
+  Z.char.buffTarget, COMBAT = {}, false
   for _, button in ipairs(made) do pcall(button.SetAttribute, button, "unit", nil) end
   Z:BuildData() Z:Refresh() RunUpdates()
   assert(ok, err)

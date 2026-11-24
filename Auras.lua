@@ -1347,11 +1347,12 @@ local function PlacedElsewhere(unit, name)
 	return false
 end
 
-local function WatchUniques(watch, unit, uniques, others)
+local function WatchUniques(b, watch, unit, uniques, others)
 	if not Z.db.buffPanel or unit:find("pet", 1, true) then return end -- (FindMyUniques ne lit rien sans le panneau)
 	local now, margin = GetTime(), Z.db.buffRenew
-	for _, check in ipairs(Z.uniqueChecks or {}) do
-		local bearer = Z.BuffWatched(check) and Bearer(check)
+	for index, check in ipairs(Z.uniqueChecks or {}) do
+		-- en temps réel (C33), la place du jeu le montre et son repère gris attend dessous (UniquePlaces)
+		local bearer = not Z.HasUniquePlace(b, index) and Z.BuffWatched(check) and Bearer(check)
 		local same = bearer and UnitIsUnit(unit, bearer)
 		if same and not issecret(same) and not Listed(others, check.name) and not PlacedElsewhere(unit, check.name) then
 			-- posé : hors combat, la lecture relit la case sous le seuil ; en combat, la fin retenue si sa durée est sûre
@@ -1397,13 +1398,52 @@ local function Due(b, unit, enemy)
 	return due
 end
 
+-- Mes buffs uniques en temps réel (C33, demande de l'auteur) : sur leur porteur, le repère gris attend à la place
+-- « index », sous le buff que le jeu dessine en couleur avec ses charges (Containers.lua, PlaceUnique). Rien n'est lu :
+-- dès que le buff tombe (charges épuisées, dissipé, fini), le jeu cesse de le dessiner et le repère se découvre, même
+-- en combat. Rend le nombre de places gardées au début de la rangée (jusqu'au dernier buff unique qui concerne ce
+-- joueur : porteur, ou buff posé sur lui) et les places où montrer le repère.
+local NO_GRAY = {}
+local function UniquePlaces(b, unit, enemy)
+	if enemy or not b.slots or not Z.UniqueLive() or unit:find("pet", 1, true) then return 0, NO_GRAY end
+	local used, gray = 0, NO_GRAY
+	for index, check in ipairs(Z.uniqueChecks) do
+		if Z.HasUniquePlace(b, index) then
+			local bearer = not b.extra and not b.status and Z.BuffWatched(check) and Bearer(check)
+			local same = bearer and UnitIsUnit(unit, bearer)
+			if same and not issecret(same) and not Listed(b.otherUniques, check.name) and not PlacedElsewhere(unit, check.name) then
+				if gray == NO_GRAY then gray = {} end
+				gray[index], used = check, index
+			elseif Listed(b.myUniques, check.name) then
+				used = index -- posé sur lui sans qu'il soit le porteur : sa place reste libre pour le buff en couleur
+			end
+		end
+	end
+	return used, gray
+end
+
+-- Repère gris à bord rouge : un buff à reposer
+local function GrayMark(icon, texture)
+	icon.texture:SetTexture(texture)
+	icon.texture:SetDesaturated(true)
+	icon.border:SetColor(1, 0.2, 0.2, 1)
+	icon.cooldown:Clear()
+	icon.count:SetText("")
+	icon:Show()
+end
+
 -- Le panneau des buffs manquants (Buffs.lua) lit b.missingBuffs (toutes les absences, hors combat) ; b.missingBuff
 -- est la première. Sur la case, une seule rangée : les buffs à reposer, en gris à bord rouge (Due).
 UpdateBuffs = function(b, unit, enemy)
 	local list, key, watch
 	if not enemy then list, key, watch = FindMissingBuffs(b, unit) end
 	local uniques, renew, others
-	if not enemy then uniques, renew, others = FindMyUniques(b, unit) end
+	if InCombatLockdown() then
+		-- rien ne se lit en combat : ce qui a été lu avant reste (le repère gris en dépend, UniquePlaces)
+		uniques, renew, others = b.myUniques, b.renewUniques, b.otherUniques
+	elseif not enemy then
+		uniques, renew, others = FindMyUniques(b, unit)
+	end
 	local changed = StoreBuffs(b, list, key, uniques, renew, others)
 	if changed then Z:QueueBuffPanel() end
 	-- gardé tel quel en combat. Gardé aussi pour un joueur déjà en combat (rien ne se lit sur lui : Z.BuffFighting) ou
@@ -1412,11 +1452,16 @@ UpdateBuffs = function(b, unit, enemy)
 		if Z.BuffFighting and Z.BuffFighting(unit) then
 			b.buffWatch = b.buffWatch or { unit = unit, stale = true } -- (aucune lecture sûre : rien à montrer)
 		elseif watch or not b.status then
-			if watch then WatchUniques(watch, unit, uniques, others) end
+			if watch then WatchUniques(b, watch, unit, uniques, others) end
 			b.buffWatch = watch
 		end
 	end
-	local shown = 0
+	local places, gray = UniquePlaces(b, unit, enemy)
+	for index = 1, places do
+		local icon = Z.BuffIcon(b, index)
+		if gray[index] then GrayMark(icon, gray[index].icon) else icon:Hide() end
+	end
+	local shown = places
 	local due = Due(b, unit, enemy)
 	if due then
 		-- jamais au-delà du bord droit de la case : autant d'icônes que sa largeur en laisse (HealKit en fixe 3)
@@ -1426,14 +1471,8 @@ UpdateBuffs = function(b, unit, enemy)
 		for _, entry in ipairs(due) do
 			if shown >= fit then break end
 			shown = shown + 1
-			local icon = Z.BuffIcon(b, shown)
 			-- un seul sort de groupe le posera (bandeau, ligne « Groupe N ») : son icône, pour le voir sur la case
-			icon.texture:SetTexture(Z.GroupCover and Z.GroupCover(unit, entry.check) or entry.icon)
-			icon.texture:SetDesaturated(true)
-			icon.border:SetColor(1, 0.2, 0.2, 1)
-			icon.cooldown:Clear()
-			icon.count:SetText("")
-			icon:Show()
+			GrayMark(Z.BuffIcon(b, shown), Z.GroupCover and Z.GroupCover(unit, entry.check) or entry.icon)
 		end
 	end
 	Z.HideBuffIcons(b, shown + 1)

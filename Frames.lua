@@ -207,12 +207,20 @@ local function UpdateState(b)
 	end
 end
 
--- Voile de vie basse : quelques battements (environ 3 secondes), relancés à chaque changement de vie. Rien n'est
--- comparé : au-dessus du seuil, le voile est invisible et ses battements ne se voient pas.
-Z.LOW_BEATS = 6
-function Z.PulseLow(low)
-	low.pulse.beats = 0
-	if not low.pulse:IsPlaying() then low.pulse:Play() end
+-- Vie basse (C32) : liseré rouge fixe sous le seuil, en combat seulement, jamais de battement. Son opacité vient
+-- d'une courbe du jeu (rien n'est comparé). Recalculé à chaque changement de vie, au passage de la portée (2 fois
+-- par seconde) et en entrant ou en sortant de combat : il ne reste jamais bloqué.
+local fighting = InCombatLockdown() and true or false
+local function UpdateLow(b)
+	if not db.lowHealth then return end
+	if b.status or not fighting then return b.low.fill:SetAlpha(0) end
+	local max = UnitHealthMax(b.unit)
+	-- vie maximale lisible à 0 (joueur que le jeu ne connaît pas encore, en chargement) : jamais de liseré
+	if not issecret(max) and (tonumber(max) or 0) <= 0 then
+		b.low.fill:SetAlpha(0)
+	else
+		b.low.fill:SetAlpha(UnitHealthPercent(b.unit, true, lowHealthCurve).a) -- visible sous le seuil seulement
+	end
 end
 
 local function UpdateHealth(b)
@@ -229,17 +237,11 @@ local function UpdateHealth(b)
 		if db.color == "HEALTH" then
 			hp:SetStatusBarColor(UnitHealthPercent(unit, true, healthCurve):GetRGB())
 		end
-		if db.lowHealth then
-			-- vie maximale lisible à 0 (joueur que le jeu ne connaît pas encore, en chargement) : pas de voile plein
-			if not issecret(max) and (tonumber(max) or 0) <= 0 then
-				b.low.fill:SetAlpha(0)
-			else
-				b.low.fill:SetAlpha(UnitHealthPercent(unit, true, lowHealthCurve).a) -- visible sous le seuil seulement
-				Z.PulseLow(b.low)
-			end
-		end
+		UpdateLow(b)
 		local fade = db.healthyFade and not b.hovered
-		if db.text == "DEFICIT" then
+		if b.isPet then
+			b.text:SetText("") -- familier : case étroite, le chiffre de vie cachait son nom (C35) ; « Mort » reste
+		elseif db.text == "DEFICIT" then
 			b.text:SetFormattedText("-%s", AbbreviateNumbers(UnitHealthMissing(unit)))
 			-- invisible à 100 % ; estompé au-dessus du seuil de bonne santé (une seule courbe pour les deux)
 			b.text:SetAlpha(UnitHealthPercent(unit, true, fade and healthyDeficitCurve or hideWhenFullCurve).a)
@@ -716,6 +718,7 @@ end
 ----------------------------------------------------------------------------------------------------
 local HEAL_ABSORB_COLOR = { 0.45, 0.02, 0.10, 0.75 } -- rouge sombre, si le thème n'en donne pas
 local ASSIGN_COLOR = { 1.00, 0.80, 0.30 } -- repère « pour moi » : or, lisible sur toutes les couleurs de classe
+local LOW_EDGE = 3 -- liseré de vie basse (C32), plus épais que le cadre de dissipation (2) : on ne les confond pas
 Z.ASSIGN_COLOR = ASSIGN_COLOR
 
 -- Voiles posés sur toute la case : à l'intérieur des angles quand ils sont arrondis
@@ -853,7 +856,8 @@ local function Style(b)
 	b.border:SetThickness(theme.borderSize)
 	b.border:SetColor(theme.border[1], theme.border[2], theme.border[3], 1)
 	for _, border in ipairs({ b.border, b.threat, b.dispel, b.selected, b.glow and b.glow.border }) do border:SetRounded(rounded) end
-	for _, veil in ipairs({ b.hover, b.low.fill, b.dispel.fill }) do Cover(veil, rounded and inset or 0) end
+	for _, veil in ipairs({ b.hover, b.dispel.fill }) do Cover(veil, rounded and inset or 0) end
+	b.low.fill:SetRounded(rounded)
 	-- Couleurs vives : un relief plus léger, pour ne pas ternir la couleur de la classe
 	local shade = db.classIntensity == "VIVID" and 0.5 or 1
 	b.shade:SetGradient("VERTICAL", CreateColor(0, 0, 0, theme.shade[1] * shade), CreateColor(1, 1, 1, theme.shade[2]))
@@ -1011,24 +1015,14 @@ function Z.BuildVisuals(b)
 	b.hover:SetAllPoints()
 	b.hover:Hide()
 
-	-- Vie basse : voile rouge (son opacité est calculée par le jeu à partir de la vie). Il bat quelques fois quand
-	-- la vie change (Z.PulseLow), puis reste fixe : plus de clignotement sans fin sur un joueur resté bas.
+	-- Vie basse : liseré rouge fixe à l'intérieur de la case (opacité calculée par le jeu à partir de la vie),
+	-- en combat seulement (UpdateLow)
 	local low = CreateFrame("Frame", nil, over)
 	low:SetAllPoints()
-	low.fill = UI.Tex(low, "ARTWORK", 1, 0.05, 0.05, 0.45)
-	low.fill:SetAllPoints()
+	low:SetFrameLevel(over:GetFrameLevel()) -- sous le cadre de dissipation et les repères des buffs : il ne les cache pas
+	low.fill = UI.Border(low, LOW_EDGE)
+	low.fill:SetColor(1, 0.08, 0.08, 1)
 	low.fill:SetAlpha(0)
-	low.pulse = low:CreateAnimationGroup()
-	low.pulse:SetLooping("BOUNCE")
-	local fade = low.pulse:CreateAnimation("Alpha")
-	fade:SetFromAlpha(1)
-	fade:SetToAlpha(0.2)
-	fade:SetDuration(0.45)
-	low.pulse:SetScript("OnLoop", function(self)
-		self.beats = (self.beats or 0) + 1
-		if self.beats >= Z.LOW_BEATS then self:Stop() end -- Stop remet le voile à pleine opacité
-	end)
-	low:SetScript("OnShow", function(self) Z.PulseLow(self) end)
 	low:Hide()
 	b.low = low
 
@@ -1933,14 +1927,14 @@ function Z:FrameState()
 			lines[#lines + 1] = ("  case %d : %s | unit=%s habillee=%s"):format(index, Describe(b),
 				tostring(b:GetAttribute("unit")), tostring(b.hp ~= nil))
 			if b.hp then lines[#lines + 1] = "    barre de vie : " .. Describe(b.hp) end
-			-- voile de vie basse (C12) : dit si la vie était inconnue (maximum 0) ou vraiment basse
+			-- liseré de vie basse (C12, C32) : dit si la vie était inconnue (maximum 0) ou vraiment basse
 			if b.low then
 				local unit = b:GetAttribute("unit")
 				local max = unit and UnitHealthMax(unit)
 				local veil = b.low.fill:GetAlpha()
-				lines[#lines + 1] = ("    vie basse : vie max=%s voile=%s bat=%s"):format(
+				lines[#lines + 1] = ("    vie basse : vie max=%s liseré=%s combat=%s"):format(
 					issecret(max) and "secret" or tostring(max), issecret(veil) and "secret" or tostring(veil),
-					tostring(b.low.pulse:IsPlaying()))
+					tostring(fighting))
 			end
 			index = index + 1
 		end
@@ -2077,6 +2071,10 @@ function Z:CreateFrames()
 	-- Entrée et sortie de combat : les buffs manquants ne se lisent que hors combat
 	Z:On("PLAYER_REGEN_ENABLED", ForVisible(Z.QueueAuras))
 	Z:On("PLAYER_REGEN_DISABLED", ForVisible(Z.QueueAuras))
+	-- Vie basse : liseré en combat seulement (C32)
+	local updateLow = ForVisible(UpdateLow)
+	Z:On("PLAYER_REGEN_DISABLED", function() fighting = true updateLow() end)
+	Z:On("PLAYER_REGEN_ENABLED", function() fighting = false updateLow() end)
 	-- Sortie de combat : la ressource de chacun relue, si une forme a changé pendant une réponse secrète
 	Z:On("PLAYER_REGEN_ENABLED", ForVisible(UpdateRole))
 	-- Étiquettes : masquées pendant un combat si elles ne servaient qu'au déplacement, revenues ensuite ;
@@ -2142,6 +2140,7 @@ function Z:CreateFrames()
 	local everyCell = ForVisible(function(b)
 		if b.unit == "targettarget" then UpdateAll(b) end
 		UpdateRange(b)
+		if fighting then UpdateLow(b) end -- vie basse : jamais bloquée si le jeu tarde à envoyer un changement de vie (C32)
 		if db.hotFade then Z.FadeHots(b) end
 	end)
 	local ticks = 0

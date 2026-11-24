@@ -68,7 +68,8 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 e | 1.46.5 | Correction C26 : familiers repensés (colonne en face du maître en groupe, colonne rangée par groupe en raid, nom et couleur du maître, portée, réglage à trois choix) ; cadre des tanks gardé | Publiée le 24 novembre 2026 |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan du jour | Publiée (v1.47.0) |
 | 33 bis | 1.47.0 | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | Publiée (v1.47.0) |
-| 33 ter | à fixer | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | À faire (décisions prises) |
+| 33 ter | à fixer | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | Prête, à publier (essai en jeu) |
+| 33 quater | à fixer | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | À faire (étude d'abord) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
@@ -1264,13 +1265,24 @@ Demande de l'auteur (24 novembre 2026), en JcE et en JcJ, avant l'étape 34. Ét
 Demandes de l'auteur (24 novembre 2026), après la 1.47.0. Étude de HealKit, VuhDo et HealBot dans les fiches C32 et
 C33 de `CORRECTIONS.md`.
 - [x] Étude et décisions de l'auteur (liseré fixe, en combat seulement ; place en temps réel sur le porteur).
-- [ ] C32 : voile qui bat remplacé par un liseré rouge fixe sous `lowHealthAt`, seulement en combat (cases, mode
+- [x] C32 : voile qui bat remplacé par un liseré rouge fixe sous `lowHealthAt`, seulement en combat (cases, mode
   test, case témoin, éditeur) ; recalculé avec la portée (2 fois par seconde) et à l'entrée et la sortie de combat ;
   garde vie maximale à 0 ; textes du réglage, guides, visite.
-- [ ] C33 : conteneur du jeu sur la case du porteur pour `Z.uniqueChecks` (couleur + charges, repère gris dessous
+- [x] C33 : conteneur du jeu sur la case du porteur pour `Z.uniqueChecks` (couleur + charges, repère gris dessous
   découvert dès qu'il tombe, en combat compris), retiré de la rangée des soins sur ce porteur ; repère hors combat
   aussi (une seule rangée avec les buffs à reposer de C31) ; tests, guides.
-- [ ] Relecture high (boutons sécurisés non, conteneurs et valeurs secrètes oui), essai en jeu, publication.
+- [x] C35 (signalé pendant l'étape) : plus de chiffre de vie sur les familiers.
+- [x] Relecture high (4 bugs, 3 optimisations).
+- [ ] Essai en jeu et feu vert de l'auteur, publication.
+
+## Étape 33 quater (PRIORITAIRE, juste après la 33 ter) : placement des icônes par défaut, placements par personnage
+Demande de l'auteur (24 novembre 2026), fiche C34 de `CORRECTIONS.md`.
+- [ ] Étude en profondeur (demande de l'auteur) : lire le code de HealKit, VuhDo et HealBot pour leurs places, tailles et
+  ancrages d'icônes par défaut et leur adaptation à la taille des cases ; où sont rangés les placements aujourd'hui.
+- [ ] Proposition à l'auteur, nettement meilleure que HealKit, VuhDo et HealBot (quatre formes, ce qu'elle fait mieux
+  point par point), décision avant tout codage.
+- [ ] Nouveaux défauts adaptés à la forme et à la taille, sans toucher aux éléments déplacés par le joueur.
+- [ ] Placements propres à chaque personnage (migration des placements existants), éditeur, tests, guides, visite.
 
 ## Étape 34 : canal des soigneurs, en français et en anglais
 Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33 (son choix). Idée : un canal écrit réservé

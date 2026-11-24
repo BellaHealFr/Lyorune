@@ -107,6 +107,7 @@ Z.defaults = {
 	showDefensives = true,     -- gros défensifs posés par n'importe qui (Z.defensives, Data.lua) : leur icône sur la case
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
+	uniqueLive = true,         -- mes buffs uniques (Bouclier de terre...) en temps réel sur le porteur, gris dessous (C33)
 	combatBuffs = true,        -- en combat, le jeu cache les buffs : mes buffs à reposer, d'après la mémoire, en gris (Auras.lua, Due)
 	pvpBuffs = true,           -- même chose en combat en champ de bataille et en arène ; là, seul ce réglage décide (Auras.lua, Due)
 	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris

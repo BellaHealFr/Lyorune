@@ -117,8 +117,7 @@ local function Fill(cell, index, sample)
 	cell.marker:SetShown(sample and db.showMarker and true or false)
 	cell.threat:SetShown(db.showThreat and (sample or slot == 0) and not dead)
 	local low = db.lowHealth and not dead and health <= db.lowHealthAt
-	cell.low.fill:SetAlpha(low and 1 or 0)
-	if low then Z.PulseLow(cell.low) end -- quelques battements, puis fixe, comme sur les vraies cases
+	cell.low.fill:SetAlpha(low and 1 or 0) -- liseré fixe ; montré ici même hors combat, pour le voir (C32)
 	cell.selected:SetAlpha((index == 2 and not sample) and 1 or 0)
 	-- Répartition entre soigneurs : mes groupes (en raid) portent le repère, un joueur choisi est montré par le
 	-- premier tank ; la case témoin le porte dès qu'un choix existe. Les autres s'estompent (réglage assignFade).
@@ -326,6 +325,7 @@ local function Layout()
 		Z.DrawFakeCell(pet, index, false, petWidth, petHeight)
 		if db.color == "CLASS" then pet.hp:SetStatusBarColor(Z.PetColor(CLASSES[(index - 1) % #CLASSES + 1])) end
 		pet.role:Hide() pet.class:Hide() pet.leader:Hide()
+		pet.text:SetText("") -- pas de chiffre de vie sur un familier, comme sur les vraies cases (C35)
 		pet:ClearAllPoints()
 		if party then
 			pet.name:SetText(Z.L["Familier"])

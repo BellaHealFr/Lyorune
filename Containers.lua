@@ -3,7 +3,8 @@
 -- En combat, le jeu refuse à tout addon la lecture des auras (« auras secrètes »). Il prête en revanche des
 -- conteneurs : Lyorune leur dit quoi montrer (filtres, numéros de sorts) et où, le jeu y dessine les auras,
 -- leur durée et la couleur de dissipation. Rien n'est lu, rien ne tourne en boucle.
--- Sept conteneurs par case (mes buffs n'en ont plus, C31 : seul ce qu'il faut reposer, en gris, Auras.lua) :
+-- Sept conteneurs par case (mes buffs n'en ont plus, C31 : seul ce qu'il faut reposer, en gris, Auras.lua ; sauf mes
+-- buffs uniques, C33, une place fixe chacun dans « slots », posée sur leur repère gris) :
 --   hots       : mes soins sur la durée en icônes (place et taille selon la forme, Z.AuraRows dans Themes.lua),
 --                puis, assombri, l'affaiblissement qui bloque un de mes sorts (Âme affaiblie, Z.lockouts)
 --   bars       : les mêmes en barres fines (style « Barres »)
@@ -12,7 +13,7 @@
 --   controls   : contrôle subi (étourdi, apeuré, métamorphosé), filtre « CROWD_CONTROL » du jeu
 --   drink      : la boisson d'un soigneur qui boit (Z.drinkSpells), à côté de sa mana basse
 --   slots      : places fixes : un carré par coin, la bordure de dissipation, l'icône du type à dissiper, la
---                grande icône et son contour
+--                grande icône et son contour, mes buffs uniques (Bouclier de terre, avec ses charges)
 -- Si le jeu n'a pas ces conteneurs, Auras.lua garde l'ancien affichage (lecture des auras).
 
 local _, Z = ...
@@ -24,6 +25,20 @@ local SPACING = 2
 function Z.HasAuraBoxes()
 	return AuraContainerSortMethod ~= nil and AnchorUtil ~= nil and AnchorUtil.FlowDirection ~= nil
 		and Enum.CustomAuraButtonDispelTypeTextureStyle ~= nil
+end
+
+-- Mes buffs uniques en temps réel sur leur porteur (C33, réglage « uniqueLive », sous « Mes buffs sur la case »).
+-- Sans conteneurs, l'ancien affichage reste : le buff unique suivi est dans la rangée de mes soins. Comme le suivi des
+-- buffs uniques, seulement avec le panneau des buffs (« buffPanel ») : c'est lui qui lit qui le porte.
+function Z.UniqueLive()
+	local db = Z.db
+	return (db.uniqueLive and db.missingBuffs and db.buffPanel and #(Z.uniqueChecks or {}) > 0 and Z.HasAuraBoxes()) and true or false
+end
+
+-- Cette case a-t-elle la place du jeu de mon buff unique numéro « index », montrée ? (case refaite à la fin du
+-- combat, conteneurs refusés, joueur pas encore suivi : non, et son repère gris ne serait couvert par rien)
+function Z.HasUniquePlace(b, index)
+	return (b.slots and b.slots["unique" .. index] and b.boxesShown ~= false and Z.UniqueLive()) and true or false
 end
 
 -- Une rangée peut-elle passer à la ligne (Carré) ? Le jeu le fait avec SetFlowLayoutMaximumLineSize, en pixels.
@@ -132,6 +147,17 @@ local function Wanted()
 		AddIds(hots, Z.SpellName(id))
 	end
 	for name in pairs(db.extraTracked) do AddIds(hots, name) end
+	-- Mes buffs uniques en temps réel (C33) : chacun sa place fixe au début des repères des buffs, ils quittent la
+	-- rangée de mes soins (jamais deux fois)
+	local uniques = {}
+	if Z.UniqueLive() then
+		for index, check in ipairs(Z.uniqueChecks) do
+			local set = { [check.id] = true }
+			AddIds(set, check.name)
+			uniques[index] = set
+			for id in pairs(set) do hots[id] = nil end
+		end
+	end
 	for id in pairs(inCorner) do hots[id] = nil end -- un sort placé dans un coin n'est plus dans la rangée
 	-- Gros défensifs : montrés à part pour tout lanceur, ils quittent la rangée de mes soins (jamais deux fois)
 	local defensives = {}
@@ -164,7 +190,7 @@ local function Wanted()
 	-- Rangée des affaiblissements : ma liste a son propre groupe en tête, les autres groupes l'écartent (aucun doublon)
 	for id in pairs(ignored) do rowIgnored[id] = true end
 	for id in pairs(listed) do rowIgnored[id] = true end
-	return hots, corners, ignored, important, defensives, lockouts, listed, rowIgnored
+	return hots, corners, ignored, important, defensives, lockouts, listed, rowIgnored, uniques
 end
 
 -- Un nom qui intéresse Lyorune (soins suivis, coins, listes) : son numéro vaut la peine d'être retenu
@@ -333,6 +359,15 @@ local function PlaceType(b, button)
 	Call(button, "SetPoint", "LEFT", relative == "HP" and b.hp or b.boxes.slots, "LEFT", x, y)
 end
 
+-- Buff unique numéro « index » (C33) : exactement sur la place de son repère gris (Z.BuffIcon), qu'il recouvre
+-- entièrement (liseré noir compris) tant qu'il est là
+local function PlaceUnique(b, button, index)
+	local x, y, size = Z.BuffMarkPlace(b)
+	Call(button, "SetSize", size, size)
+	Call(button, "ClearAllPoints")
+	Call(button, "SetPoint", "BOTTOMLEFT", b.over, "BOTTOMLEFT", x + (index - 1) * (size + 2), y)
+end
+
 local function DressCorner(b, point)
 	return function(button)
 		Silent(button)
@@ -406,7 +441,7 @@ end
 -- Chaque entrée : conteneur, clé, filtre du jeu, filtres de candidats, nombre (groupes) ou place fixe.
 local function Plan(b)
 	local db = Z.db
-	local hots, corners, ignored, important, defensives, lockouts, listedIds, rowIgnored = Wanted()
+	local hots, corners, ignored, important, defensives, lockouts, listedIds, rowIgnored, uniques = Wanted()
 	-- Ce que le jeu ne laisse régler qu'à la création d'un bouton (il le protège ensuite) : place et taille de la
 	-- grande icône, taille des coins, largeur des barres, taille et coin de départ des rangées (Z.AuraRows),
 	-- réglages des icônes. Un changement reconstruit les conteneurs (en combat : à la fin du combat).
@@ -479,6 +514,13 @@ local function Plan(b)
 		Group("controls", "controls", "HARMFUL|CROWD_CONTROL", { excludeSpellIDs = excluded }, 1, 1, "LyoruneAuraIcon",
 			"control")
 	end
+	-- Mes buffs uniques (C33) : une place fixe chacun, à l'endroit de son repère gris (Auras.lua, UpdateBuffs)
+	for index, set in ipairs(uniques) do
+		Slot("unique" .. index, "HELPFUL|PLAYER", { includeSpellIDs = set }, "LyoruneAuraIcon", "unique")
+		plan.slots[#plan.slots].index = index
+	end
+	-- leur place suit celle des repères : réglée à la création des boutons, elle refait les conteneurs si elle change
+	if #uniques > 0 then plan.look = plan.look .. "," .. table.concat({ Z.BuffMarkPlace(b) }, ",") end
 	if db.showDispel then Slot("dispel", Z.DISPEL_MINE, nil, "LyoruneAuraCover", "dispel") end
 	if db.dispelIcon then Slot("dispelType", Z.DISPEL_MINE, nil, "LyoruneAuraType", "dispelType") end
 	if db.bossDebuffs or db.importantGlow then
@@ -533,6 +575,12 @@ local function Dresser(b, entry)
 	if how == "corner" then return DressCorner(b, entry.key) end
 	if how == "dispel" then return DressDispel(b) end
 	if how == "dispelType" then return DressType(b) end
+	if how == "unique" then
+		return function(button)
+			DressIcon(button, false, select(3, Z.BuffMarkPlace(b))) -- charges toujours écrites par le jeu
+			PlaceUnique(b, button, entry.index)
+		end
+	end
 	return DressBig(b)
 end
 
@@ -598,7 +646,8 @@ local function Place(b)
 		if Open(button) then
 			if Z.CORNER_SIGN[key] then PlaceCorner(b, button, key)
 			elseif key == "boss" or key == "listed" then PlaceBig(b, button)
-			elseif key == "dispelType" then PlaceType(b, button) end
+			elseif key == "dispelType" then PlaceType(b, button)
+			elseif key:match("^unique%d+$") then PlaceUnique(b, button, tonumber(key:match("%d+"))) end
 		end
 	end
 	for _, button in ipairs(b.boxButtons.hots or {}) do
