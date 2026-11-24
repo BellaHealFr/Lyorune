@@ -828,15 +828,15 @@ local function EndFromMemory(b, unit, check, own, left, endHidden, now, margin)
 	return memory or left, memory ~= nil
 end
 
--- Ce buff de ma liste concerne-t-il ce joueur ? (sur moi seulement, joueurs à mana, pas les familiers, en raid
+-- Ce buff de ma liste concerne-t-il ce joueur ? (sur moi seulement, joueurs à mana, jamais un familier, en raid
 -- seulement mes groupes à buffer : BuffAssign.lua)
 local function Concerns(check, unit, me)
+	-- un familier n'est jamais proposé (C28, demande de l'auteur ; HealKit et VuhDo les écartent aussi) : la
+	-- version de groupe le couvre de toute façon
+	if unit:find("pet", 1, true) then return false end
 	if check.self and not me then return false end
 	if not me and not Z.BuffGroupOK(unit) then return false end
 	if check.mana and not Z.UsesMana(unit) then return false end
-	if check.blessing and unit:find("pet", 1, true) then return false end
-	-- version de groupe seulement : un familier n'a pas de ligne « Groupe N », rien à lui proposer
-	if unit:find("pet", 1, true) and not Z.BuffWatched(check) and Z.GroupSpell(check) then return false end
 	return Z.BuffFollowed(check) -- version simple ou version de groupe cochée
 end
 Z.BuffConcerns = Concerns -- aussi pour les repères des buffs dessinés par le jeu (Containers.lua)

@@ -9916,6 +9916,13 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
     for _, icon in ipairs(me.buffList or {}) do if icon:IsShown() then shown = shown + 1 end end
     if not me.marksShown then assert(shown == 1, "rangee qui deborde de la case : " .. shown) end
     me:SetWidth(width) Update()
+    -- C28 : un familier n'est jamais propose (case, bandeau, touche)
+    for _, unit in ipairs({ "pet", "partypet1", "raidpet3" }) do
+      for _, check in ipairs(Z.buffChecks) do
+        assert(not Z.BuffConcerns(check, unit, false), "buff propose a un familier : " .. unit .. " " .. check.spell)
+      end
+    end
+    assert(Z.BuffConcerns(Z.buffChecks[1], other.unit, false), "joueur ecarte avec les familiers")
     -- interrupteur : rien sur la case
     Z.db.missingBuffs = false Update()
     for _, icon in ipairs(me.buffList or {}) do assert(not icon:IsShown(), "rangee montree interrupteur eteint") end
