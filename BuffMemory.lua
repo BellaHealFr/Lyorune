@@ -372,6 +372,7 @@ function Z:BuffsCommand()
 	end
 	Z:Print(L["mémoire : %d fiche(s) de joueur en cours."]:format(players))
 	for _, line in ipairs(Z.BuffDiagnostic()) do Z:Print(line) end
+	for _, line in ipairs(Z.UniqueDiagnostic and Z.UniqueDiagnostic() or {}) do Z:Print(line) end -- buffs uniques (C29)
 	for _, line in ipairs(Z.BuffAssignReport and Z.BuffAssignReport() or {}) do Z:Print(line) end -- qui buffe qui
 end
 

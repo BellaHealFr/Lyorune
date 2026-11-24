@@ -9903,6 +9903,10 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
     assert(not Has(other, 1243), "buff relance par un autre (fin cachee) propose sans fin")
     local lines = table.concat(Z.BuffDiagnostic(), " | ")
     assert(lines:find("fin cachée : ", 1, true), "/lyorune buffs ne dit rien de la fin cachee")
+    -- C29 : chaque buff unique dit pourquoi il est propose ou non
+    local uniques = Z.UniqueDiagnostic()
+    assert(#uniques == #Z.uniqueChecks, "diagnostic des buffs uniques incomplet")
+    for _, line in ipairs(uniques) do assert(line:find("porteur", 1, true), line) end
     -- C21 : toutes les absences sur la case, pas seulement la premiere ; jamais au-dela de son bord
     AURAS = {} Update()
     local shown = 0

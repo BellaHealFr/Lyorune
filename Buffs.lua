@@ -320,6 +320,28 @@ local function UniqueRows(result)
 	end
 end
 
+-- /lyorune buffs (C29) : pour chaque buff unique, pourquoi il est proposé ou non (porteur, déjà posé et d'où on le
+-- sait, porteur en combat, recharge, décoché dans Mes buffs)
+function Z.UniqueDiagnostic()
+	local L, lines = Z.L, {}
+	for _, check in ipairs(Z.uniqueChecks or {}) do
+		local unit, name = Z.UniqueBearer(check)
+		local where
+		for _, b in ipairs(Z.buttons or {}) do
+			if b.unit and not b.extra and (b.myUniques or ""):find(check.name, 1, true) then where = Z.UnitPinName(b.unit) or "?" end
+		end
+		local why
+		if not Z.BuffWatched(check) then why = L["décoché dans Mes buffs"]
+		elseif not unit then why = L["aucun porteur (ni tank, ni vous)"]
+		elseif where then why = L["déjà posé sur %s"]:format(where)
+		elseif Fighting(unit) then why = L["porteur en combat"]
+		elseif CooldownLeft(check.spell) then why = L["en recharge"]
+		else why = L["proposé"] end
+		lines[#lines + 1] = L["%s : porteur %s, %s."]:format(check.spell, name or "-", why)
+	end
+	return lines
+end
+
 -- Lignes du panneau : un buff après l'autre (ordre de Data.lua), un joueur ou un groupe entier par ligne
 function Z.BuffRows()
 	local missing, result = Missing(), {}
