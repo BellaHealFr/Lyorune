@@ -68,7 +68,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 32 e | 1.46.5 | Correction C26 : familiers repensés (colonne en face du maître en groupe, colonne rangée par groupe en raid, nom et couleur du maître, portée, réglage à trois choix) ; cadre des tanks gardé | Publiée le 24 novembre 2026 |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan du jour | Publiée (v1.47.0) |
 | 33 bis | 1.47.0 | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | Publiée (v1.47.0) |
-| 33 ter | à fixer | **Priorité haute** : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | À faire (décisions prises) |
+| 33 ter | à fixer | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | À faire (décisions prises) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
@@ -1260,7 +1260,7 @@ Demande de l'auteur (24 novembre 2026), en JcE et en JcJ, avant l'étape 34. Ét
 - [x] Avec elle, demande de l'auteur : carnet « Ce soir » devenu « Aujourd'hui » (colonne, bilan du jour).
 - [x] Essai en jeu de l'auteur (« tout est ok », 24 novembre 2026), publiée avec l'étape 33 en 1.47.0.
 
-## Étape 33 ter (PRIORITÉ HAUTE) : vie basse sans clignotement, soins à charges en temps réel
+## Étape 33 ter (PRIORITÉ ABSOLUE, avant toute autre étape) : vie basse sans clignotement, soins à charges en temps réel
 Demandes de l'auteur (24 novembre 2026), après la 1.47.0. Étude de HealKit, VuhDo et HealBot dans les fiches C32 et
 C33 de `CORRECTIONS.md`.
 - [x] Étude et décisions de l'auteur (liseré fixe, en combat seulement ; place en temps réel sur le porteur).
