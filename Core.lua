@@ -35,7 +35,8 @@ Z.defaults = {
 	showSolo = true,           -- afficher mon cadre quand je suis seul
 	visibility = "ALWAYS",     -- afficher les cadres : en permanence, ou seulement en combat
 	showTanks = false,         -- cadre séparé pour les tanks
-	showPets = false,          -- familiers : collés à leur maître, en colonne à part en raid (C26)
+	showPets = false,          -- familiers : colonne à part, chacun en face de son maître ; en raid, après les groupes (C26)
+	petSize = 60,              -- taille de leurs cases, en % de celle d'un joueur
 	showTarget = false,        -- petite case de ma cible (cadre « Cible », déplaçable)
 	showTargetTarget = false,  -- case de la cible de ma cible
 	showFocus = false,         -- case de ma focalisation
@@ -207,7 +208,7 @@ Z.defaults = {
 Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
-	scale = { 50, 200, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 300, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
+	scale = { 50, 200, 5 }, petSize = { 40, 100, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 300, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
 	lowHealthAt = { 10, 60, 5 }, healthyFadeAt = { 50, 100, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, dispelCount = { 1, 3, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 	buffRenew = { 0, 900, 15 }, buffGroupAt = { 2, 5, 1 },
 }

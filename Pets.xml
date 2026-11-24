@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 	<!-- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE. -->
-	<!-- Familier collé à son maître (seul ou en groupe) : chaque case du cadre « Groupe » porte une petite case de
+	<!-- Familier en face de son maître (seul ou en groupe) : chaque case du cadre « Groupe » porte une petite case de
 	     familier, créée avec elle par le jeu, même en plein combat. Quand le jeu donne un joueur à la case, le code
 	     sécurisé ci-dessous donne son familier à la petite case (player : pet, party2 : partypet2), même en combat.
 	     Le jeu montre la petite case seulement si le familier existe (RegisterUnitWatch, Frames.lua). -->
@@ -20,7 +20,7 @@
 			<Button name="$parentPet" parentKey="zPet" inherits="SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate" hidden="true">
 				<Size x="30" y="30" />
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" />
+					<Anchor point="LEFT" relativePoint="RIGHT" />
 				</Anchors>
 				<Attributes>
 					<Attribute name="z-pet" type="boolean" value="true" />

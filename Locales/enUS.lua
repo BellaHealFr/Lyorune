@@ -71,8 +71,10 @@ Z.translations.enUS = {
 	["Cadre séparé pour les tanks"] = "Separate frame for tanks",
 	["Un second cadre, déplaçable, qui ne montre que les tanks."] = "A second, movable frame that only shows tanks.",
 	["Familiers à côté de leur maître"] = "Pets next to their owner",
-	["Seul ou en groupe : une petite case collée à droite de son maître, sur sa ligne. En raid : une colonne « Familiers » collée à droite des groupes. Le familier apparaît dès qu'il est appelé, même en combat."] = "Solo or in a party: a small cell right next to its owner, on the same line. In a raid: a Pets column right next to the groups. The pet shows as soon as it is summoned, even in combat.",
-	["Une petite case collée à son maître ; en raid, une colonne à droite des groupes."] = "A small cell next to its owner; in a raid, a column right of the groups.",
+	["Seul ou en groupe : les familiers forment une colonne à part, à droite du groupe, chacun en face de son maître. En raid : une colonne « Familiers » à droite des groupes. Un familier apparaît dès qu'il est appelé, même en combat."] = "Solo or in a party: pets form a column of their own, right of the group, each facing its owner. In a raid: a Pets column right of the groups. A pet shows as soon as it is summoned, even in combat.",
+	["Taille des familiers (%)"] = "Pet size (%)",
+	["Taille de leurs cases, par rapport à celle d'un joueur."] = "Size of their cells, compared with a player's.",
+	["Une colonne à part, chacun en face de son maître ; en raid, à droite des groupes."] = "A column of their own, each facing its owner; in a raid, right of the groups.",
 	["Expérimental. Pour les faire revenir, décochez puis tapez /reload."] = "Experimental. To bring them back, untick then type /reload.",
 	["Mode test"] = "Test mode", ["joueurs"] = "players", ["Joueur"] = "Player",
 	["Par groupe"] = "By group", ["Par rôle"] = "By role", ["Grille"] = "Grid",
@@ -508,8 +510,8 @@ Z.translations.enUS = {
 			.. "Une fois satisfait, choisissez « Verrouillé » dans « Déplacement des cadres » (chapitre Disposition, partie Position), "
 			.. "ou « Avec Alt » pour ne les déplacer qu'en maintenant la touche.\n\n"
 			.. "Dans la partie Cadres affichés, « Afficher les cadres » permet de les voir en permanence, ou seulement en combat. "
-			.. "Les familiers peuvent se coller à leur maître ; en raid, leur colonne suit les groupes."] =
-		"Drag the |cff33dd88Group|r label above the cells to move the frames wherever you like. In a raid, each group has its number, and any of them moves the whole set.\n\nOnce you are happy, pick \"Locked\" in \"Moving the frames\" (Layout chapter, Position part), or \"With Alt\" to move them only while holding the key.\n\nIn the Shown frames part, \"Show the frames\" lets you see them all the time, or only in combat. Pets can sit next to their owner; in a raid, their column follows the groups.",
+			.. "Les familiers peuvent avoir leur colonne, chacun en face de son maître ; en raid, elle suit les groupes."] =
+		"Drag the |cff33dd88Group|r label above the cells to move the frames wherever you like. In a raid, each group has its number, and any of them moves the whole set.\n\nOnce you are happy, pick \"Locked\" in \"Moving the frames\" (Layout chapter, Position part), or \"With Alt\" to move them only while holding the key.\n\nIn the Shown frames part, \"Show the frames\" lets you see them all the time, or only in combat. Pets can have their own column, each facing its owner; in a raid, it follows the groups.",
 	["Le |cff33dd88mode test|r affiche un faux groupe pour régler l'apparence tranquillement : "
 			.. "joueurs blessés, soins en route, dissipation, vie basse.\n\n"
 			.. "Ouvrez-le avec |cff33dd88/lyorune test|r, ou avec « 5 », « 10 », « 25 » ou « 40 » sous la case témoin des options. Glissez son bandeau pour le déplacer ; un second clic sur le même nombre, ou le bouton |cff33dd88Fermer|r au bout du bandeau, le quitte ; il se ferme aussi tout seul en combat."] =

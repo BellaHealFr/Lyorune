@@ -163,13 +163,13 @@ end
 -- (dirX, dirY), largeur et hauteur. textX, textW, nameX, nameW : place du chiffre de vie et du nom, et leurs
 -- largeurs (Barre, Bandeau). La taille choisie dans l'éditeur de placement (Z.ElementScale) agrandit ou réduit
 -- chaque rangée ; trop grande, elle passe à la ligne ou rapetisse comme une rangée trop longue.
--- width : largeur d'une case plus étroite (familier collé à son maître), sinon celle des joueurs.
-function Z.AuraRows(width)
+-- width, height : taille d'une case plus petite (familier), sinon celle des joueurs.
+function Z.AuraRows(width, height)
 	local db, theme = Z.db, Z:Theme()
 	local shape = Z:Shape()
 	local rules = shape.auras or Z.shapes.TILE.auras
 	local W, H = Z.CellSize()
-	W = width or W
+	W, H = width or W, height or H
 	local inset = Z.UI.Inset(theme.borderSize, db.corners == "ROUND")
 	local icon = Z.IconSize()
 	local sizes = { iconSize = icon }

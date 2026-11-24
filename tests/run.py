@@ -10195,7 +10195,7 @@ step("C30 : buffs d'apres l'etude de HealKit (refus du jeu, buff d'un autre, buf
   assert(ok, err)
 end)
 
-step("C26 : familier colle a son maitre, colonne des familiers collee aux groupes en raid", function()
+step("C26 : familiers en colonne a part, en face de leur maitre, plus petits ; colonne apres les groupes en raid", function()
   local saved = { showPets = Z.db.showPets, horizontal = Z.db.horizontal, layout = Z.db.layout, raid = RAID }
   Z.db.showPets, Z.db.horizontal, Z.db.layout, RAID = true, false, "GROUP", false
   -- Le modèle du cadre « Groupe » porte la case du familier (Pets.xml), créée avec celle du maître
@@ -10210,14 +10210,18 @@ step("C26 : familier colle a son maitre, colonne des familiers collee aux groupe
   assert(UNIT_WATCH[pet], "le jeu montre le familier seulement s'il existe")
   Z:Refresh()
   local width, height = Z.CellSize()
-  local pw = Z.PetSize()
-  assert(pw < width and pet:GetWidth() == pw and pet:GetHeight() == height, "plus etroite, meme hauteur")
-  local p = pet._points.TOPLEFT
-  assert(p[2] == owner and p[3] == "TOPRIGHT" and p[4] == Z.db.spacing, "collee a droite de son maitre")
-  assert(Z.header:GetAttribute("z-petwidth") == pw, "taille donnee au code securise")
-  assert(Z.header:GetAttribute("columnSpacing") == Z.db.spacing + pw + Z.db.spacing, "place gardee entre colonnes")
+  local pw, ph = Z.PetSize()
+  assert(Z.db.petSize == 60 and pw == math.floor(width * 0.6 + 0.5) and ph == math.floor(height * 0.6 + 0.5), "60 % au depart")
+  assert(pet:GetWidth() == pw and pet:GetHeight() == ph, "plus petite")
+  local p = pet._points.LEFT
+  assert(p[2] == owner and p[3] == "RIGHT" and p[4] == Z.PetGap() and Z.PetGap() > Z.db.spacing, "en face de son maitre, apres un vrai espace")
+  assert(Z.header:GetAttribute("z-petwidth") == pw and Z.header:GetAttribute("z-petheight") == ph, "taille donnee au code securise")
+  assert(Z.header:GetAttribute("columnSpacing") == Z.db.spacing + Z.PetGap() + pw, "place gardee entre colonnes")
+  Z.db.petSize = 80 Z:Refresh()
+  assert(pet:GetWidth() == math.floor(width * 0.8 + 0.5), "taille reglable")
+  Z.db.petSize = 60
   Z.db.horizontal = true Z:Refresh()
-  assert(Z.header:GetAttribute("xOffset") == Z.db.spacing + pw + Z.db.spacing, "en lignes : place a droite de chacun")
+  assert(Z.header:GetAttribute("xOffset") == Z.db.spacing + Z.PetGap() + pw, "en lignes : place a droite de chacun")
   assert(LyoruneRaid1:GetAttribute("xOffset") == Z.db.spacing, "les groupes du raid gardent leur pas")
   Z.db.horizontal = false
   -- Portée : la case du familier garde la sienne (opacité générale comprise), pas celle de son maître
@@ -10230,11 +10234,12 @@ step("C26 : familier colle a son maitre, colonne des familiers collee aux groupe
   -- Hors raid : pas de colonne ; en raid : colonne étroite collée à droite du dernier groupe, sans place à elle
   assert(not LyorunePets:IsShown(), "pas de colonne hors raid")
   RAID = true Z:Refresh()
-  assert(LyorunePets:IsShown() and LyorunePets:GetAttribute("z-width") == pw, "colonne en raid, cases etroites")
+  assert(LyorunePets:IsShown() and LyorunePets:GetAttribute("z-width") == pw and LyorunePets:GetAttribute("z-height") == ph, "colonne en raid, cases plus petites")
+  assert(LyorunePets:GetAttribute("yOffset") == -Z.db.spacing - (height - ph), "chaque familier a la hauteur d'une ligne de joueurs")
   local q = LyorunePets._points.TOPLEFT
-  assert(q[2] == LyoruneRaid8 and q[3] == "TOPRIGHT", "collee au dernier groupe")
+  assert(q[2] == LyoruneRaid8 and q[3] == "TOPRIGHT" and q[4] == Z.PetGap(), "apres le dernier groupe, un vrai espace")
   assert(LyoruneRaid8:GetAttribute("minWidth") == 0.1, "un groupe vide ne prend aucune place")
-  assert(Z.header.petRoom == pw + Z.db.spacing, "fond de groupe et barre comptent les familiers")
+  assert(Z.header.petRoom == pw + Z.PetGap(), "fond de groupe et barre comptent les familiers")
   assert(LyorunePets.def.pos == "pos", "son etiquette deplace tout le cadre principal")
   Z.db.layout = "GRID" Z:Refresh()
   q = LyorunePets._points.TOPLEFT

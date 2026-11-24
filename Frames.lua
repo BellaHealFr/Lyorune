@@ -83,11 +83,14 @@ function Z.CellSize()
 	return math.floor(db.width * factor + 0.5), math.floor(db.height * factor + 0.5)
 end
 
--- Case d'un familier (C26) : moitié moins large que celle d'un joueur, même hauteur, sur la ligne de son maître
+-- Case d'un familier (C26) : une part de celle d'un joueur (réglage petSize, 60 % au départ), en face de son maître
 function Z.PetSize()
 	local width, height = Z.CellSize()
-	return math.max(30, math.floor(width / 2 + 0.5)), height
+	local k = db.petSize / 100
+	return math.max(30, math.floor(width * k + 0.5)), math.max(16, math.floor(height * k + 0.5))
 end
+-- Écart entre les joueurs et la colonne de leurs familiers : un vrai espace, plus large qu'entre deux cases
+function Z.PetGap() return db.spacing + 8 end
 
 -- Taille des icônes de la case (rôle, marqueur, grande icône...) : 30 % de sa hauteur, 10 pixels au moins.
 -- Les rangées de mes soins et des affaiblissements ont leur propre taille, selon la forme (Z.AuraRows).
@@ -816,6 +819,7 @@ local function Style(b)
 	b.assign:SetWidth(math.max(2, math.floor(height / 14)))
 
 	local size = db.fontSize + (theme.fontBonus or 0)
+	if b.isPet and db.petSize < 100 then size = math.max(8, size - 2) end -- case plus petite : texte un peu plus petit
 	b.name:SetFont(theme.font, size, theme.flags)
 	b.name:SetShown(db.showName) -- réglage « Nom du joueur » (vraies cases, mode test, case témoin)
 	b.text:SetFont(theme.font, size - 1, theme.flags)
@@ -826,9 +830,9 @@ local function Style(b)
 		b.absorbText:SetTextColor(shield[1] + (1 - shield[1]) * 0.4, shield[2] + (1 - shield[2]) * 0.4, shield[3] + (1 - shield[3]) * 0.4)
 	end
 
-	local icon = Z.IconSize()
+	local icon = b.isPet and math.max(10, math.floor(height * 0.30 + 0.5)) or Z.IconSize()
 	b.iconSize = icon
-	b.rows = Z.AuraRows(b.isPet and width or nil) -- rangées de mes soins et des affaiblissements, à la mesure de la forme (Themes.lua)
+	b.rows = b.isPet and Z.AuraRows(width, height) or Z.AuraRows() -- rangées de mes soins et des affaiblissements, à la mesure de la forme (Themes.lua)
 	PlaceTexts(b, icon)
 	if b.isPet then -- case étroite : le nom et le chiffre ne débordent pas
 		b.name:SetWidth(math.min(b.name:GetWidth(), width - 6))
@@ -1348,9 +1352,9 @@ local CONFIG_SNIPPET = [[-- Lyorune
 	end
 	if pet then
 		pet:SetWidth(header:GetAttribute("z-petwidth") or 30)
-		pet:SetHeight(header:GetAttribute("z-height"))
+		pet:SetHeight(header:GetAttribute("z-petheight") or 16)
 		pet:ClearAllPoints()
-		pet:SetPoint("TOPLEFT", self, "TOPRIGHT", header:GetAttribute("z-petgap") or 0, 0)
+		pet:SetPoint("LEFT", self, "RIGHT", header:GetAttribute("z-petgap") or 0, 0)
 		pet:SetAttribute("*type1", "target")
 		pet:SetAttribute("*type2", "togglemenu")
 	end
@@ -1607,15 +1611,17 @@ end
 
 -- Réglages d'un cadre (taille, tri, filtres, sens) : appelée pendant que le cadre du jeu attend (_ignore).
 -- Renvoie true si le cadre doit être affiché.
-local function HeaderAttributes(h, width, height, petWidth, grid, perColumn, roles)
+local function HeaderAttributes(h, width, height, petWidth, petHeight, grid, perColumn, roles)
 	local def = h.def
 	local enabled = not def.option or db[def.option]
 	if def.extra then enabled = LayoutExtra(h, width, height) end
 	if def.label then h.labelText = L[def.label] end -- suit le changement de langue
-	h:SetAttribute("z-width", def.key == "pets" and petWidth or width)
-	h:SetAttribute("z-height", height)
-	h:SetAttribute("z-petwidth", petWidth) -- case du familier collée au maître (cadre « Groupe », CONFIG_SNIPPET)
-	h:SetAttribute("z-petgap", db.spacing)
+	local pets = def.key == "pets"
+	h:SetAttribute("z-width", pets and petWidth or width)
+	h:SetAttribute("z-height", pets and petHeight or height)
+	h:SetAttribute("z-petwidth", petWidth) -- case du familier en face de son maître (cadre « Groupe », CONFIG_SNIPPET)
+	h:SetAttribute("z-petheight", petHeight)
+	h:SetAttribute("z-petgap", Z.PetGap())
 	h:SetAttribute("maxColumns", math.ceil(40 / perColumn))
 	if def.key == "main" then
 		if db.layout == "ROLE" then -- le rôle d'abord ; « par classe » devient alors « par nom » dans chaque rôle
@@ -1661,8 +1667,8 @@ local function HeaderAttributes(h, width, height, petWidth, grid, perColumn, rol
 		ApplySort(h)
 	end
 	h:SetAttribute("z-ping", db.pingCells or nil) -- cases créées plus tard, même en combat (CONFIG_SNIPPET)
-	-- Familiers collés : la place de leur case à droite de chaque joueur du cadre « Groupe »
-	local petRoom = def.key == "main" and db.showPets and petWidth + db.spacing or 0
+	-- Familiers : la place de leur colonne à droite de chaque joueur du cadre « Groupe »
+	local petRoom = def.key == "main" and db.showPets and Z.PetGap() + petWidth or 0
 	h.petRoom = petRoom -- au-delà du bord droit du cadre (fond de groupe, barre sous les cadres)
 	if db.horizontal then
 		h:SetAttribute("point", "LEFT")
@@ -1673,7 +1679,8 @@ local function HeaderAttributes(h, width, height, petWidth, grid, perColumn, rol
 	else
 		h:SetAttribute("point", "TOP")
 		h:SetAttribute("xOffset", 0)
-		h:SetAttribute("yOffset", -db.spacing)
+		-- colonne des familiers du raid : chacun à la hauteur d'une ligne de joueurs
+		h:SetAttribute("yOffset", -db.spacing - (pets and height - petHeight or 0))
 		h:SetAttribute("columnAnchorPoint", "LEFT")
 		h:SetAttribute("columnSpacing", db.spacing + petRoom)
 	end
@@ -1689,14 +1696,14 @@ end
 local layoutWave = 0
 local function ApplyLayout()
 	local width, height = Z.CellSize()
-	local petWidth = Z.PetSize()
+	local petWidth, petHeight = Z.PetSize()
 	for _, b in ipairs(buttons) do
-		b:SetSize(b.isPet and petWidth or width, height)
+		if b.isPet then b:SetSize(petWidth, petHeight) else b:SetSize(width, height) end
 		-- (pas sur un familier collé : son modèle n'est pas du type « signal » du jeu)
 		if PING_TEMPLATE ~= "" and not b.owner then b:SetAttribute("ping-receiver", db.pingCells or nil) end
 		if b.owner then -- familier collé à droite de son maître (C26)
 			b:ClearAllPoints()
-			b:SetPoint("TOPLEFT", b.owner, "TOPRIGHT", db.spacing, 0)
+			b:SetPoint("LEFT", b.owner, "RIGHT", Z.PetGap(), 0) -- en face de son maître, après un vrai espace
 			WatchPet(b)
 		end
 	end
@@ -1731,7 +1738,7 @@ local function ApplyLayout()
 		end
 		local enabled = false
 		Z:Try("disposition du cadre " .. tostring(def.key), function()
-			enabled = HeaderAttributes(h, width, height, petWidth, grid, perColumn, roles)
+			enabled = HeaderAttributes(h, width, height, petWidth, petHeight, grid, perColumn, roles)
 		end)
 		h:SetAttribute("_ignore", nil)
 
@@ -1742,9 +1749,9 @@ local function ApplyLayout()
 		local apart = db.spacing + (db.groupPanel and 2 * PANEL_OUTSET or 0) -- deux fonds de groupe ne se touchent pas
 		local fixed = def.raid and db.keepGroupPlace and db.layout == "GROUP"
 		if def.key == "pets" and db.horizontal then -- à droite de la première ligne de groupes
-			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", perColumn * (width + db.spacing) - db.spacing + apart, -gap)
-		elseif def.key == "pets" and lastRaid then
-			h:SetPoint("TOPLEFT", lastRaid, "TOPRIGHT", apart, 0)
+			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", perColumn * (width + db.spacing) - db.spacing + Z.PetGap(), -gap)
+		elseif def.key == "pets" and lastRaid then -- au milieu de la première ligne de joueurs
+			h:SetPoint("TOPLEFT", lastRaid, "TOPRIGHT", Z.PetGap(), -math.floor((height - petHeight) / 2))
 		elseif fixed and db.horizontal then
 			h:SetPoint("TOPLEFT", anchors[def.pos], "BOTTOMLEFT", 0, -gap - (def.raid - 1) * (height + apart + gap))
 		elseif fixed then
