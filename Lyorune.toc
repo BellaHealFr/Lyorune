@@ -6,7 +6,7 @@
 ## X-License: Tous droits réservés (voir LICENSE)
 ## X-Website: https://github.com/BellaHealFr/Lyorune
 ## X-Curse-Project-ID: 1815533
-## Version: 1.46.1
+## Version: 1.46.2
 ## IconTexture: Interface\AddOns\Lyorune\Media\Logo
 ## Category-frFR: Portraits d'unités
 ## Category-enUS: Unit Frames

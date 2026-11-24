@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.2] - 2026-11-24
+
+### Fixed
+
+- Targeting a player: Alt + left click targets the player and Alt + right click opens their menu, two lines of the click list, added on update if these clicks are free (in Lyorune and in the game's click casting). The guided tour and the guide say how to target (C18).
+
 ## [1.46.1] - 2026-11-24
 
 ### Added
@@ -890,6 +896,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.46.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.1...v1.46.2
 [1.46.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.0...v1.46.1
 [1.46.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.44.1...v1.45.0

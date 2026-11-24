@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.46.2", date = "2026-11-24",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Cibler un joueur : Alt + clic gauche cible le joueur et Alt + clic droit ouvre son menu, deux lignes de la liste des clics, ajoutées à la mise à jour si ces clics sont libres (dans Lyorune et dans le clic pour lancer du jeu). La visite guidée et le guide disent comment cibler (C18).",
+		},
+	},
+	{
 		version = "1.46.1", date = "2026-11-24",
 		added = {
 			"Icône des DPS au choix : l'épée des DPS sur leur case, à côté des tanks et des soigneurs (chapitre Joueurs, éteinte au départ).",
