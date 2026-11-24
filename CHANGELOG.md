@@ -6,6 +6,16 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.49.0] - 2026-11-24
+
+### Ajouté
+
+- Placements propres à chaque personnage : chaque personnage garde la place et la taille de ses éléments, qui ne suivent plus les profils. Un nouveau personnage part de vos derniers placements, et le bouton « Copier les placements de... » de la fenêtre Placement des éléments reprend ceux d'un autre personnage.
+
+### Amélioré
+
+- Icônes mieux placées par défaut : rien ne se couvre plus aux tailles d'origine des quatre formes. En Tuile et en Carré, trois bandes (soins sur la durée, affaiblissements, rôle et buff) laissent le nom et la vie lisibles. Les éléments que vous aviez déplacés ou agrandis restent exactement à leur place.
+
 ## [1.48.1] - 2026-11-24
 
 ### Amélioré
@@ -954,6 +964,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0
 [1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0

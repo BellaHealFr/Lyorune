@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.49.0] - 2026-11-24
+
+### Added
+
+- Placements per character: each character keeps the position and size of its elements, which no longer follow profiles. A new character starts from your latest placements, and the « Copy the placements of... » button of the Element placement window takes those of another character.
+
+### Improved
+
+- Better default icon placement: nothing overlaps any more at the original sizes of the four shapes. In Tile and Square, three bands (heals over time, debuffs, role and buff) keep the name and health readable. Elements you had moved or resized stay exactly where they were.
+
 ## [1.48.1] - 2026-11-24
 
 ### Improved
@@ -954,6 +964,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0
 [1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.5...v1.47.0

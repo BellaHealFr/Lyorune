@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.49.0", date = "2026-11-24",
+		added = {
+			"Placements propres à chaque personnage : chaque personnage garde la place et la taille de ses éléments, qui ne suivent plus les profils. Un nouveau personnage part de vos derniers placements, et le bouton « Copier les placements de... » de la fenêtre Placement des éléments reprend ceux d'un autre personnage.",
+		},
+		improved = {
+			"Icônes mieux placées par défaut : rien ne se couvre plus aux tailles d'origine des quatre formes. En Tuile et en Carré, trois bandes (soins sur la durée, affaiblissements, rôle et buff) laissent le nom et la vie lisibles. Les éléments que vous aviez déplacés ou agrandis restent exactement à leur place.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.48.1", date = "2026-11-24",
 		added = {
 		},
