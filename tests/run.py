@@ -7435,6 +7435,8 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
     assert(tile:GetAttribute("type1") == "spell" and tile:GetAttribute("spell1") == list[1].spell
       and tile:GetAttribute("unit") == list[1].unit, "premiere case mal reglee")
     assert(LyoruneNextBuff:GetAttribute("spell") == tile:GetAttribute("spell1"), "la touche ne lance pas la premiere case")
+    -- C27 : le temps du clic que le jeu garde (useOnKeyDown) suit « Lancer le sort des l'appui »
+    assert(tile:GetAttribute("useOnKeyDown") == (Z.db.castOnDown and true or false), "bandeau : useOnKeyDown absent (C27)")
     local function Shown()
       local n = 0
       for i = 1, 8 do local t = rawget(_G, "LyoruneBuffsTile" .. i) if t and t:IsShown() then n = n + 1 end end

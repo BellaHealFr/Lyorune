@@ -474,7 +474,10 @@ end
 
 -- Réglages communs d'un bouton du jeu qui lance le buff d'une entrée (ligne de la fenêtre ou case du bloc)
 local function Arm(button, entry)
+	-- le jeu ne garde qu'un temps du clic, selon « useOnKeyDown » (sinon son réglage « lancer à l'appui ») : posé au
+	-- même sens que RegisterForClicks, sinon un clic n'y lance rien quand les deux réglages diffèrent (C27, comme C11)
 	button:RegisterForClicks(Z.db.castOnDown and "AnyDown" or "AnyUp")
+	button:SetAttribute("useOnKeyDown", Z.db.castOnDown and true or false)
 	button.sample = entry.sample
 	button:SetAttribute("unit", not entry.sample and entry.unit or nil) -- l'exemple ne lance rien
 	button:SetAttribute("type1", not entry.sample and "spell" or nil)
