@@ -2411,7 +2411,7 @@ end
 
 -- Canal des soigneurs (Channels.lua) : à quoi il sert, les règles en trois lignes, puis où écrire dans chaque canal rejoint
 local CHANNEL_RULES = {
-	"Ouverts à tous, quelle que soit la langue de votre jeu : le français, l'anglais ou les deux, à votre choix.",
+	"Ouverts à tous, quelle que soit la langue de votre jeu : le français, l'anglais ou les deux, à votre choix. Le jeu sépare l'Alliance et la Horde : chaque faction a son canal.",
 	"Entraide et bienveillance entre soigneurs de tous niveaux, et Lyorune bien sûr. Ni publicité, ni vente, ni insulte.",
 	"Lyorune n'y écrit jamais à votre place. Un gêneur ? Clic droit sur son nom : Ignorer ou Signaler, comme partout dans le jeu.",
 }

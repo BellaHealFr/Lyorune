@@ -13,6 +13,7 @@
 --   * Un nom refusé à l'entrée (mot de passe posé par un inconnu, bannissement) : Lyorune passe au suivant
 --     (LyoruneFR2, LyoruneFR3) et retient le nom refusé un jour, pour ne pas faire surgir chaque fois la demande de
 --     mot de passe du jeu. Une demande restée sans réponse (dix canaux déjà rejoints...) est oubliée en 10 s.
+--     Le jeu sépare les canaux par faction : un refus n'est retenu que pour la faction et le royaume où il a eu lieu.
 --   * Le joueur quitte le canal lui-même (/leave) : la case se décoche, Lyorune ne le fait pas revenir.
 -- Rien ne tourne en boucle : tout part d'un réglage changé, de la connexion ou d'un avis du canal.
 
@@ -62,9 +63,13 @@ local function Current(lang)
 	end
 end
 
+-- Noms refusés de ma faction et de mon royaume (l'Alliance et la Horde ont chacune leur LyoruneFR)
 local function Locks()
 	if type(Z.db.channelLocks) ~= "table" then Z.db.channelLocks = {} end
-	return Z.db.channelLocks
+	local faction = UnitFactionGroup and UnitFactionGroup("player")
+	local key = tostring(faction or "?") .. "-" .. tostring(GetRealmName() or "?")
+	if type(Z.db.channelLocks[key]) ~= "table" then Z.db.channelLocks[key] = {} end
+	return Z.db.channelLocks[key]
 end
 
 -- Premier nom de cette langue qui ne m'a pas été refusé depuis un jour

@@ -170,7 +170,7 @@ Z.defaults = {
 	tallyExit = true,          -- bilan du jour dans la discussion en sortant d'un donjon ou d'un raid (Tally.lua)
 	channelFR = false,         -- (éteint au départ) rejoindre le canal des soigneurs en français, « LyoruneFR » (Channels.lua)
 	channelEN = false,         -- (éteint au départ) rejoindre le canal des soigneurs en anglais, « LyoruneEN »
-	channelLocks = {},         -- noms de canal refusés à l'entrée (mot de passe d'un inconnu) -> heure du refus, passés un jour
+	channelLocks = {},         -- par faction et royaume (« Alliance-Royaume »), noms de canal refusés à l'entrée -> heure, passés un jour
 
 	-- Listes personnelles (noms de sorts)
 	extraTracked = {},         -- mes sorts à suivre en plus

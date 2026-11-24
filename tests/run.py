@@ -10989,7 +10989,19 @@ step("1.50.0 : canal des soigneurs (eteint au depart, rejoint, nom de secours, q
   LOCKED_CHANNELS.LyoruneEN = true
   db.channelEN = true Z:RefreshAlerts()
   assert(char.channels.EN == "LyoruneEN2" and GetChannelName("LyoruneEN2") > 0, "nom de secours : " .. tostring(char.channels.EN))
-  assert(db.channelLocks.LyoruneEN, "nom refuse oublie")
+  assert(db.channelLocks["Alliance-Mon Royaume"].LyoruneEN, "nom refuse oublie")
+  -- la Horde a son propre LyoruneEN : le refus de l'Alliance ne la concerne pas
+  FACTION = "Horde"
+  db.channelEN, char.channels.EN = false, nil
+  CHANNELS.lyoruneen2 = nil
+  LOCKED_CHANNELS = {}
+  db.channelEN = true Z:RefreshAlerts()
+  assert(char.channels.EN == "LyoruneEN", "Horde : nom refuse par l'Alliance saute")
+  db.channelEN = false Z:RefreshAlerts()
+  FACTION = "Alliance"
+  LOCKED_CHANNELS.LyoruneEN = true
+  db.channelEN = true Z:RefreshAlerts()
+  assert(char.channels.EN == "LyoruneEN2", "Alliance : nom de secours perdu")
   local knocks = #CHANNEL_CALLS
   Z:RefreshAlerts()
   assert(#CHANNEL_CALLS == knocks, "nom refuse redemande")
@@ -11042,11 +11054,12 @@ step("1.50.0 : canal des soigneurs (eteint au depart, rejoint, nom de secours, q
   Z:RefreshAlerts()
   assert(#CHANNEL_CALLS == knocks, "noms verrouilles redemandes")
   -- un jour plus tard : nouvel essai
-  for name in pairs(db.channelLocks) do db.channelLocks[name] = db.channelLocks[name] - 86400 end
+  local locks = db.channelLocks["Alliance-Mon Royaume"]
+  for name in pairs(locks) do locks[name] = locks[name] - 86400 end
   LOCKED_CHANNELS = {}
   Z:RefreshAlerts()
   assert(char.channels.FR == "LyoruneFR", "pas de nouvel essai apres un jour")
-  for _, key in ipairs({ "Ouverts à tous, quelle que soit la langue de votre jeu : le français, l'anglais ou les deux, à votre choix.",
+  for _, key in ipairs({ "Ouverts à tous, quelle que soit la langue de votre jeu : le français, l'anglais ou les deux, à votre choix. Le jeu sépare l'Alliance et la Horde : chaque faction a son canal.",
     "Pour y écrire : %s.", "Aucun canal rejoint pour l'instant.", "%s rejoint : écrivez /%d suivi de votre message.",
     "%s est verrouillé par un autre joueur : Lyorune passe à %s.",
     "%s : le jeu n'a pas ouvert le canal. Vous avez peut-être déjà dix canaux : quittez-en un, puis recochez la case.", "Vous avez quitté %s : la case « %s » est décochée.",

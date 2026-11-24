@@ -495,6 +495,8 @@ PingableType_UnitFrameMixin = {}
 -- CHANNELS[nom en minuscules] = numéro ; LOCKED_CHANNELS[nom] = true : le jeu demande un mot de passe
 ----------------------------------------------------------------------------------------------------
 CHANNELS, LOCKED_CHANNELS, CHANNEL_CALLS = {}, {}, {}
+FACTION = "Alliance"
+function UnitFactionGroup() return FACTION, FACTION end
 local function ChannelNotice(kind, name) FireEvent("CHAT_MSG_CHANNEL_NOTICE", kind, "", "", "", "", "", 0, 0, name) end
 function GetChannelName(name)
 	local id = CHANNELS[tostring(name):lower()]
