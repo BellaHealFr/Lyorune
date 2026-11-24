@@ -69,7 +69,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan du jour | Publiée (v1.47.0) |
 | 33 bis | 1.47.0 | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | Publiée (v1.47.0) |
 | 33 ter | 1.48.0 | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | Publiée (24 novembre 2026) |
-| 33 quater | 1.49.0 | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | En cours (lots 1 et 2 codés, essai en jeu à faire) |
+| 33 quater | 1.49.0 | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | Publiée (v1.49.0) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
