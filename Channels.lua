@@ -27,6 +27,8 @@ local NAMES = 3          -- LyoruneFR, LyoruneFR2, LyoruneFR3
 local LOCK_FOR = 86400   -- un nom refusé est passé un jour
 local SETTLE = 5         -- secondes laissées au jeu pour remettre ses canaux après l'entrée dans le monde
 local ANSWER = 10        -- secondes d'attente d'une réponse du jeu à une demande
+local RENUMBER = 3       -- d'autres addons renumérotent les canaux juste après une arrivée (ArcAuras_Finds range
+                         -- son canal caché en dernier au bout de 2 s) : le numéro est donné après ce délai
 
 -- Noms de chaque langue, dans l'ordre, et la recherche inverse : « lyoruneen2 » -> { "EN", "LyoruneEN2" }
 local NAMES_OF, BY_LOWER = {}, {}
@@ -167,12 +169,15 @@ local function OnNotice(kind, _, _, _, _, _, _, _, baseName)
 			return -- sinon rejoint à la main, case décochée : pas le nôtre
 		end
 		mine[lang] = name
-		local number = Number(name)
 		if asked then
 			-- seulement à la demande : un canal retiré d'un onglet par le joueur n'y revient pas à chaque connexion
 			local frame = DEFAULT_CHAT_FRAME
 			if frame and frame.AddChannel then pcall(frame.AddChannel, frame, name) end
-			if number then Z:Print(L["%s rejoint : écrivez /%d suivi de votre message."]:format(name, number)) end
+			C_Timer.After(RENUMBER, function()
+				local number = Number(name)
+				if number then Z:Print(L["%s rejoint : écrivez /%d suivi de votre message."]:format(name, number)) end
+				Changed()
+			end)
 		end
 		Changed()
 	elseif (kind == "WRONG_PASSWORD" or kind == "BANNED") and knocking[name] then
@@ -192,6 +197,8 @@ local function OnNotice(kind, _, _, _, _, _, _, _, baseName)
 end
 
 Z:On("CHAT_MSG_CHANNEL_NOTICE", OnNotice)
+-- Numéros des canaux changés (réglages de discussion, autre addon) : la page ouverte suit
+Z:On("CHANNEL_UI_UPDATE", function() Changed() end)
 -- Le jeu demande un mot de passe (sa propre fenêtre est déjà ouverte) : ce nom nous est fermé
 Z:On("CHANNEL_PASSWORD_REQUEST", function(name)
 	local lang, ours = LangOf(name)

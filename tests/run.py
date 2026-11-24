@@ -11014,6 +11014,11 @@ step("1.50.0 : canal des soigneurs (eteint au depart, rejoint, nom de secours, q
   box:Update()
   local text = box.where:GetText()
   assert(text:find("/4 LyoruneFR", 1, true) and text:find("LyoruneEN2", 1, true), "page : " .. text)
+  -- un autre addon renumerote les canaux : la page ouverte suit
+  CHANNELS.lyorunefr = 12
+  FireEvent("CHANNEL_UI_UPDATE")
+  assert(box.where:GetText():find("/12 LyoruneFR", 1, true), "renumerotation : " .. box.where:GetText())
+  CHANNELS.lyorunefr = 4
   -- case decochee : Lyorune quitte le sien, jamais un canal rejoint a la main
   db.channelEN = false Z:RefreshAlerts()
   assert(GetChannelName("LyoruneEN2") == 0 and not char.channels.EN, "LyoruneEN2 pas quitte")
