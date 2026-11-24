@@ -43,8 +43,8 @@ jobs:
           date=$(date -u +%Y-%m-%d)
           grep -rl -e __VERSION__ -e __DATE__ -e __BUILD__ public --include='*.html' --include='*.xml' --include='*.txt'             | xargs sed -i "s/__VERSION__/$version/g; s/__DATE__/$date/g; s/__BUILD__/${GITHUB_SHA::8}/g"
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: public
       - id: deploiement
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
