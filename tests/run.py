@@ -1656,7 +1656,9 @@ step("etape 8 : profils automatiques, cible et focalisation", function()
   assert(Z:SaveProfile("  Raid ") and Z.db.activeProfile == "Raid", "nom nettoye, profil en cours")
   local raid = Z.db.profiles.Raid
   assert(raid.width == 80 and raid.clicks == nil and raid.manaText == nil and raid.macros == nil and raid.profiles == nil, "contenu d'un profil")
-  assert(type(raid.placement) == "table" and raid.placement ~= Z.db.placement, "copie, pas un lien")
+  assert(raid.placement == nil, "1.49.0 : placements propres au personnage, hors des profils")
+  Z.db.cornerSpells = Z.db.cornerSpells or {}
+  assert(type(raid.cornerSpells) == "table" and raid.cornerSpells ~= Z.db.cornerSpells, "copie, pas un lien")
   assert(not Z:SaveProfile("") and not Z:SaveProfile(("x"):rep(25)) and not Z:SaveProfile("a\nb"), "noms refuses")
   -- charger : le profil quitte garde ce qui a ete regle pendant qu'il etait actif
   Z.db.width = 82
@@ -2457,7 +2459,7 @@ step("etape 17 : copie d'une partie d'un profil, champ de bataille et arene", fu
     if Z.notInProfile[key] then assert(part == nil, "hors profil mais classe : " .. key)
     else assert(parts[part], "partie inconnue pour " .. key .. " : " .. tostring(part)) end
   end
-  assert(Z.ProfilePart("width") == "Disposition" and Z.ProfilePart("placement") == "Disposition" and Z.ProfilePart("layout") == "Disposition")
+  assert(Z.ProfilePart("width") == "Disposition" and Z.ProfilePart("placement") == nil and Z.ProfilePart("layout") == "Disposition")
   assert(Z.ProfilePart("shape") == "Apparence" and Z.ProfilePart("theme") == "Apparence" and Z.ProfilePart("rangeAlpha") == "Apparence")
   assert(Z.ProfilePart("showIncoming") == "Vie et portée" and Z.ProfilePart("farHint") == "Vie et portée")
   assert(Z.ProfilePart("showRole") == "Joueurs" and Z.ProfilePart("privateAuraSize") == "Affaiblissements")
@@ -5660,7 +5662,7 @@ step("etape 21, lot 3 : taille de chaque element dans l'editeur de placement (50
   assert(Z:Import(code), "import")
   assert(Z.GetElementSize("buff") == 140 and Z.db.placement.TILE.buff[1] == 2 and Z.GetElementSize("debuffs", "BAR") == 70, "taille importee")
   Z.db.placement = {}
-  assert(Z:Import("Lyorune2;p.TILE.role=s3%2C1;p.TILE.name=s0%2C0%2C150;p.TILE.marker=s0%2C0%2C999"), "ancien code")
+  assert(Z:Import("Lyorune2;pv=n2;p.TILE.role=s3%2C1;p.TILE.name=s0%2C0%2C150;p.TILE.marker=s0%2C0%2C999"), "ancien code")
   assert(Z.db.placement.TILE.role[1] == 3 and Z.GetElementSize("role") == 100, "ancien code : decalage seul")
   assert(Z.db.placement.TILE.name[3] == nil and Z.GetElementSize("marker") == 300, "taille d'un texte, ou hors limites")
 
@@ -10817,6 +10819,157 @@ step("C34 lot 1 : places d'origine sans chevauchement (trois bandes en Tuile et 
   b.powerShown = nil
   Z:Refresh()
   assert(ok, err)
+end)
+
+step("C34 lot 2 : anciens placements gardes au pixel pres, placements par personnage", function()
+  local keys = { "shape", "width", "height", "fontSize", "powerHeight", "autoShrink", "showClassIcon", "dispelIcon",
+    "showLeader", "showRole", "missingBuffs", "manaBars", "hotStyle", "bossDebuffs" }
+  local db = Z.db
+  local old = { placement = db.placement, placements = db.placements }
+  for _, key in ipairs(keys) do old[key] = db[key] end
+  local ok, err = pcall(function()
+    local function Box(spec, dx, dy)
+      local point, x, y, w, h = spec[1], spec[2] + dx, spec[3] + dy, spec[4], spec[5]
+      local left = point:find("LEFT") and x or point:find("RIGHT") and x - w or x - w / 2
+      local bottom = point:find("BOTTOM") and y or point:find("TOP") and y - h or y - h / 2
+      return { left, left + w, bottom, bottom + h }
+    end
+    local function Spot(r, point)
+      return point:find("LEFT") and r[1] or point:find("RIGHT") and r[2] or (r[1] + r[2]) / 2,
+        point:find("BOTTOM") and r[3] or point:find("TOP") and r[4] or (r[3] + r[4]) / 2
+    end
+    local ROWS = { hots = true, debuffs = true, defensives = true, controls = true }
+    local function Measure(spec, key, rows)
+      if ROWS[key] then return rows[key].size end
+      if key == "leader" then return rows.leaderW end
+      if key == "buff" then return rows.buffW end
+      return spec[4]
+    end
+    local saved = { role = { -3, -2, 150 }, name = { 0, 2 }, text = { -1, 1 }, hots = { 1, 0, 120 }, debuffs = { 0, 0, 80 },
+      buff = { 2, 1 }, leader = { -1, 0 }, lowMana = { 0, 1, 130 }, big = { 4, 0 }, dispelType = { 0, -1 },
+      class = { 1, 0, 110 }, center = { 0, 0, 90 }, defensives = { -2, 0 }, controls = { 0, 0, 120 }, marker = { 0, -2 } }
+    local checked, report = 0, {}
+    for _, shape in ipairs({ "TILE", "SQUARE", "BAR", "BANNER" }) do
+      for _, variant in ipairs({ "moved", "plain" }) do
+        db.shape = shape
+        for _, key in ipairs(Z.shapeKeys) do db[key] = Z.shapes[shape][key] end
+        db.autoShrink, db.showClassIcon, db.dispelIcon, db.showLeader = false, true, true, true
+        db.showRole, db.missingBuffs, db.manaBars, db.hotStyle, db.bossDebuffs = true, true, "ALL", "ICONS", true
+        db.placement = { [shape] = variant == "moved" and CopyTable(saved) or { hots = { 0, 0, 130 }, debuffs = { 0, 0, 120 } } }
+        Z.ForgetPlacementRanges()
+        local power = true
+        -- où chaque élément était, avec les règles de la 1.48.1
+        local before = Z.OldPlacementOrigins(power)
+        local roleAt = db.placement[shape].role or { 0, 0 }
+        before = Z.OldPlacementOrigins(power, Box(before.role, roleAt[1], roleAt[2]))
+        local want = {}
+        for key, at in pairs(db.placement[shape]) do
+          if key ~= "marker" then
+            want[key] = { rect = Box(before[key], at[1], at[2]), size = before.rowSize[key] or before[key][4] }
+          end
+        end
+        -- une autre forme enregistrée, réglée à ses tailles d'origine : migrée aussi
+        local other = shape == "TILE" and "BAR" or "TILE"
+        db.placement[other] = { big = { 2, 0 } }
+        Z.MigratePlacement()
+        assert(db.shape == shape and db.width == Z.shapes[shape].width and db.autoShrink == false, "reglages rendus")
+        assert(db.placement[other] and db.placement[other].big, "autre forme gardee")
+        Z.ForgetPlacementRanges()
+        local rows = Z.AuraRows()
+        local now = Z.PlacementOrigins(power)
+        local rx, ry = Z.Offset("role")
+        now = Z.PlacementOrigins(power, Box(now.role, rx, ry))
+        for key, w in pairs(want) do
+          local dx, dy = Z.Offset(key)
+          local rect = Box(now[key], dx, dy)
+          local size = Measure(now[key], key, rows)
+          local x1, y1 = Spot(rect, now[key][1])
+          local x2, y2 = Spot(w.rect, now[key][1])
+          -- nom et vie : leur largeur suit la case ; une rangée que les nouvelles règles bornent (elle ne couvre
+          -- plus le chef ni le buff) peut être plus petite, jamais plus grande, toujours partie du même coin
+          local text = key == "name" or key == "text"
+          local wrong = not text and size ~= w.size and not (ROWS[key] and size < w.size)
+          if wrong or math.abs(x1 - x2) > 0.5 or math.abs(y1 - y2) > 0.5 then
+            report[#report + 1] = shape .. " " .. variant .. " " .. key .. " taille " .. size .. "/" .. w.size .. " place " .. x1 .. "," .. y1 .. " / " .. x2 .. "," .. y2
+          end
+          checked = checked + 1
+        end
+        local marker = (db.placement[shape] or {}).marker
+        assert(variant == "plain" or marker[2] == -2, "marqueur inchange")
+      end
+    end
+    assert(#report == 0, table.concat(report, " | "))
+    assert(checked > 60, "elements verifies : " .. checked)
+    -- Code de partage d'avant la 1.49.0 : ses placements passent aussi ; un code d'aujourd'hui porte « pv=n2 »
+    db.shape = "TILE"
+    for _, key in ipairs(Z.shapeKeys) do db[key] = Z.shapes.TILE[key] end
+    db.placement = {}
+    local backup = db.importBackup
+    assert(Z:Import("Lyorune2;p.TILE.lowMana=s0%2C0"), "ancien code")
+    local lx = db.placement.TILE.lowMana[1]
+    assert(lx < -20, "mana basse gardee en bas a gauche : " .. lx)
+    assert(Z:Export():find(";pv=n2;", 1, true), "code marque")
+    db.placement = {}
+    assert(Z:Import("Lyorune2;pv=n2;p.TILE.lowMana=s0%2C0") and db.placement.TILE.lowMana[1] == 0, "code d'aujourd'hui tel quel")
+    db.importBackup = backup
+
+    -- Passage une seule fois, à la connexion ; les profils perdent leur ancienne copie des placements
+    local savedDB, savedChar, version = LyoruneDB, LyoruneCharDB, Z.version
+    local ok2, err2 = pcall(function()
+      local up = { lastVersion = "1.48.1", placement = { TILE = { role = { 2, 0 } } }, profiles = { Raid = { width = 90, placement = { TILE = { big = { 1, 1 } } } }, Solo = { placement = { TILE = { role = { 2, 0 } } } } } }
+      LyoruneDB = up Z.version = "1.49.0" Z.placementPending = nil
+      FireEvent("ADDON_LOADED", "Lyorune")
+      local me = Z.CharKey()
+      assert(Z.placementPending and up.placements[me] and up.placement == up.placements[me], "passage prevu, placements du personnage")
+      assert(up.placements[me].TILE.role[1] == 2, "copie des placements du compte")
+      assert(up.profiles.Raid.placement == nil and up.profiles.Raid.width == 90 and up.profiles.Solo.placement == nil, "profils sans placements")
+      assert(up.placements["Profil : Raid"].TILE.big and not up.placements["Profil : Solo"], "placements d'un profil gardes s'ils different")
+      assert(#Z.placementProfiles == 1, "placements du profil passes a la connexion")
+      Z.placementPending, Z.placementProfiles = nil, nil
+      up.lastVersion = "1.49.0" FireEvent("ADDON_LOADED", "Lyorune")
+      assert(not Z.placementPending, "passage rejoue")
+      -- un autre personnage : ses placements, copiables
+      up.placements["Autre-Mon Royaume"] = { BAR = { name = { 1, 1 } } }
+      up.placements["Vide-Mon Royaume"] = {}
+      local list = Z.PlacementCharacters()
+      assert(#list == 2 and list[1] == "Autre-Mon Royaume" and list[2] == "Profil : Raid", "liste des autres personnages")
+      local mine = Z.db.placement
+      assert(Z.CopyPlacements("Autre-Mon Royaume") and Z.db.placement == mine and mine.BAR.name[1] == 1 and mine.TILE == nil, "copie")
+      assert(mine.BAR ~= up.placements["Autre-Mon Royaume"].BAR, "copie, pas un lien")
+      assert(not Z.CopyPlacements(me) and not Z.CopyPlacements("Personne"), "copie refusee")
+      -- annuler un import : les placements ne reviennent qu'au personnage qui a importé
+      Z.db.importBackup = { settings = {}, placement = { TILE = { role = { 9, 9 } } }, placementOwner = "Autre-Mon Royaume" }
+      assert(Z:UndoImport() and Z.db.placement == mine and mine.BAR.name[1] == 1, "annulation d'un autre personnage")
+      Z.db.importBackup = { settings = {}, placement = { TILE = { role = { 9, 9 } } }, placementOwner = me }
+      assert(Z:UndoImport() and Z.db.placement.TILE.role[1] == 9, "annulation du personnage")
+      Z.db.placement = mine
+      -- une annulation remplace la table : la déconnexion garde quand même les placements du personnage
+      Z.db.placement = { SQUARE = { big = { 3, 3 } } }
+      FireEvent("PLAYER_LOGOUT")
+      assert(up.placements[me].SQUARE.big[1] == 3, "placements gardes a la deconnexion")
+      -- un nouveau personnage reçoit une copie des derniers placements
+      up.placements[me] = nil
+      FireEvent("ADDON_LOADED", "Lyorune")
+      assert(up.placements[me].SQUARE.big[1] == 3, "nouveau personnage")
+    end)
+    LyoruneDB, LyoruneCharDB, Z.version, Z.placementPending = savedDB, savedChar, version, nil
+    FireEvent("ADDON_LOADED", "Lyorune")
+    assert(ok2, err2)
+  end)
+  db = Z.db
+  db.placement, db.placements = old.placement, old.placements
+  if type(db.placements) == "table" then db.placements[Z.CharKey()] = db.placement end
+  for _, key in ipairs(keys) do db[key] = old[key] end
+  Z.ForgetPlacementRanges()
+  Z:Refresh()
+  assert(ok, err)
+  -- L'éditeur : le bouton de copie, sans autre personnage, le dit
+  Z:OpenPlacement()
+  local win = Z:PlacementWindow()
+  assert(win.copy, "bouton de copie")
+  win.copy:Run("OnClick")
+  assert(win.size:GetText():find("Aucun autre", 1, true), "message sans autre personnage : " .. tostring(win.size:GetText()))
+  win:Hide()
 end)
 
 step("aucune variable globale imprevue", function()

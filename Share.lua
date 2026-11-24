@@ -8,6 +8,8 @@
 --   l.liste=sNom            une entrée d'une liste personnelle
 --   p.FORME.element=sX,Y    un élément décalé dans l'éditeur de placement ; sX,Y,T avec sa taille T en %
 --                           (absente à 100 % : un code sans taille reste lisible par les anciennes versions)
+--   pv=n2                   places d'origine de la 1.49.0 ; absent (code plus ancien), les placements reçus
+--                           passent d'abord par Z.MigratePlacement (ignoré par les anciennes versions)
 -- Les caractères spéciaux sont écrits %XX. A l'import, chaque valeur est contrôlée avec les tables
 -- Z.defaults, Z.limits et Z.choices (Core.lua) : un code abîmé ou malveillant ne peut rien casser.
 -- Un texte libre (les annonces dites dans le chat) n'est jamais partagé : un code reçu pourrait sinon faire dire
@@ -17,6 +19,7 @@ local _, Z = ...
 
 local PREFIX = "Lyorune2"
 local LISTS = { extraTracked = true, ignoredNames = true, importantNames = true }
+local PLACES_VERSION = 2 -- places d'origine de la 1.49.0 (C34)
 local MAX_KEYS = 100 -- touches au survol reçues par spécialisation : sans limite dans les options, bornées à l'import
 
 local function Encode(text)
@@ -41,6 +44,7 @@ local function Backup()
 		if Shared(key) then copy.settings[key] = Z.db[key] end
 	end
 	for _, key in ipairs(BACKUP_TABLES) do copy[key] = CopyTable(Z.db[key]) end
+	copy.placementOwner = Z.CharKey() -- les placements sont ceux de ce personnage (1.49.0)
 	return copy
 end
 
@@ -105,6 +109,7 @@ function Z:Export()
 			parts[#parts + 1] = "l." .. list .. "=s" .. Encode(name)
 		end
 	end
+	parts[#parts + 1] = "pv=n" .. PLACES_VERSION
 	for shape, elements in pairs(Z.db.placement) do
 		for key, at in pairs(elements) do
 			local size = at[3] and ("," .. at[3]) or ""
@@ -158,6 +163,7 @@ function Z:Import(code)
 
 	local settings, clicks, hovers, lists, places, count = {}, {}, {}, {}, {}, 0
 	local trinkets, variants = {}, {}
+	local placesVersion
 	for entry in code:gmatch("[^;]+") do
 		local key, kind, raw = entry:match("^([%w%.%%]+)=(%a)(.*)$")
 		if key then
@@ -168,7 +174,9 @@ function Z:Import(code)
 			local variantClass, variantId, variantKind = key:match("^v%.(%u+%d?)%.([%w%%]+)%.(%a+)$")
 			local list = key:match("^l%.(%a+)$")
 			local shape, element = key:match("^p%.(%u+)%.(%a+)$")
-			if class then
+			if key == "pv" then
+				placesVersion = tonumber(raw)
+			elseif class then
 				click = Decode(click)
 				if kind == "s" and Z.ParseClickKey(click) and SafeSpell(raw) then
 					clicks[class] = clicks[class] or {}
@@ -256,6 +264,8 @@ function Z:Import(code)
 	for class in pairs(hovers) do Z.db.clickVariants[class] = variants[class] or {} end
 	for list, names in pairs(lists) do Z.db[list] = names end
 	for shape, elements in pairs(places) do Z.db.placement[shape] = elements end
+	-- code d'avant la 1.49.0 : ses décalages partent des anciennes places d'origine
+	if next(places) and (placesVersion or 1) < PLACES_VERSION then Z.MigratePlacement(nil, places) end
 	Z:Refresh()
 	Z:ApplyClicks()
 	Z:RefreshAlerts()
@@ -272,8 +282,10 @@ function Z:UndoImport()
 	for key, value in pairs(copy.settings) do
 		if Shared(key) and type(value) == type(Z.defaults[key]) then Z.db[key] = value end
 	end
+	-- les placements reviennent seulement au personnage qui a importé (un autre garde les siens)
+	local mine = copy.placementOwner == nil or copy.placementOwner == Z.CharKey()
 	for _, key in ipairs(BACKUP_TABLES) do
-		if type(copy[key]) == "table" then Z.db[key] = copy[key] end
+		if type(copy[key]) == "table" and (key ~= "placement" or mine) then Z.db[key] = copy[key] end
 	end
 	Z.db.importBackup = nil
 	Z:Refresh()
@@ -402,7 +414,7 @@ end
 
 -- Partie d'un réglage du profil : le chapitre où il se règle. Ce qui n'est dans aucun de ces chapitres (forme,
 -- bouton « Placer les éléments », mode performance du chapitre Fenêtre et aide) est rangé ici.
-local OTHER_PART = { shape = "Apparence", placement = "Disposition", cornerSpells = "Mes soins", perfMode = "Disposition" }
+local OTHER_PART = { shape = "Apparence", cornerSpells = "Mes soins", perfMode = "Disposition" }
 
 function Z.ProfilePart(key)
 	if not InProfile(key) then return nil end

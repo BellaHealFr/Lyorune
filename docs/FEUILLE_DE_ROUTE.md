@@ -69,7 +69,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan du jour | Publiée (v1.47.0) |
 | 33 bis | 1.47.0 | **Priorité haute** : un buff posé n'est plus montré sur la case, il revient en gris quand il faut le reposer, en JcE et en JcJ | Publiée (v1.47.0) |
 | 33 ter | 1.48.0 | **Priorité absolue** (avant toute autre étape) : vie basse en liseré rouge fixe, en combat seulement ; Bouclier de terre et buffs uniques en temps réel avec charges, gris dès qu'ils tombent | Publiée (24 novembre 2026) |
-| 33 quater | à fixer | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | À faire (étude d'abord) |
+| 33 quater | 1.49.0 | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | En cours (lots 1 et 2 codés, essai en jeu à faire) |
 | 34 | à fixer | Canal de discussion des soigneurs et des joueurs de Lyorune, un en français, un en anglais | À faire (recherche d'abord) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 
@@ -1281,9 +1281,10 @@ Demande de l'auteur (24 novembre 2026), fiche C34 de `CORRECTIONS.md`.
   ancrages d'icônes par défaut et leur adaptation à la taille des cases ; où sont rangés les placements aujourd'hui.
 - [x] Proposition à l'auteur, nettement meilleure que HealKit, VuhDo et HealBot (quatre formes, ce qu'elle fait mieux
   point par point), décision avant tout codage (carte blanche, 24 novembre 2026).
-- [ ] Nouveaux défauts adaptés à la forme et à la taille, sans toucher aux éléments déplacés par le joueur.
-  Lot 1 fait (nouvelles places, rien ne se couvre, commit local) ; la migration (lot 2) reste à faire.
-- [ ] Placements propres à chaque personnage (migration des placements existants), éditeur, tests, guides, visite.
+- [x] Nouveaux défauts adaptés à la forme et à la taille, sans toucher aux éléments déplacés par le joueur (lot 1 :
+  nouvelles places, rien ne se couvre ; lot 2 : passage des placements enregistrés au pixel près).
+- [x] Placements propres à chaque personnage, bouton « Copier les placements de... », tests, guides, visite.
+- [ ] Relecture de fin d'étape, essai en jeu, feu vert de l'auteur, publication (1.49.0).
 
 ## Étape 34 : canal des soigneurs, en français et en anglais
 Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33 (son choix). Idée : un canal écrit réservé

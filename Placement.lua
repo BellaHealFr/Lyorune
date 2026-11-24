@@ -265,6 +265,7 @@ local function Origins(power, roleRect)
 	Put("private", point, cell, point, spot[1], spot[2], Z.PRIVATE_SLOTS * (size + ICON_GAP) - ICON_GAP, size)
 	return o
 end
+Z.PlacementOrigins = Origins -- pour les tests (passage à la 1.49.0)
 
 -- Bornes { gauche, droite, bas, haut } du décalage d'un élément : jusqu'au bord de la case, sans dépasser
 -- Z.limits.placement. Un texte peut s'approcher du bord tant qu'il garde TEXT_MIN tailles de police de large.
@@ -419,6 +420,136 @@ end
 -- Tous les éléments de la forme choisie reviennent à leur place d'origine
 function Z.ResetPlacement()
 	Z.db.placement[Z.db.shape] = nil
+	cache = nil
+end
+
+----------------------------------------------------------------------------------------------------
+-- Placements propres à chaque personnage (1.49.0) : LyoruneDB.placements["Nom-Royaume"], dans le fichier du compte
+-- pour pouvoir copier ceux d'un autre personnage. Z.db.placement est celui du personnage connecté (Core.lua,
+-- LoadPlacements) ; il ne suit pas les profils (Z.notInProfile). Le code de partage reste celui de ce personnage.
+----------------------------------------------------------------------------------------------------
+-- Les autres personnages qui ont au moins un élément placé, dans l'ordre alphabétique
+function Z.PlacementCharacters()
+	local list, all, me = {}, LyoruneDB and LyoruneDB.placements, Z.CharKey()
+	for name, places in pairs(type(all) == "table" and all or {}) do
+		if name ~= me and type(places) == "table" and next(places) then list[#list + 1] = name end
+	end
+	table.sort(list)
+	return list
+end
+
+-- Mes placements (toutes les formes) remplacés par une copie de ceux d'un autre personnage. Rend true si copiés.
+function Z.CopyPlacements(name)
+	local all = LyoruneDB and LyoruneDB.placements
+	local from = type(all) == "table" and all[name]
+	if name == Z.CharKey() or type(from) ~= "table" then return false end
+	local mine = Z.db.placement
+	wipe(mine)
+	for shape, elements in pairs(from) do
+		if Z.shapes[shape] and type(elements) == "table" then mine[shape] = CopyTable(elements) end
+	end
+	cache = nil
+	return true
+end
+
+----------------------------------------------------------------------------------------------------
+-- Passage à la 1.49.0 (C34), une seule fois : les places d'origine ont changé. Chaque élément enregistré garde, au
+-- pixel près, la place et la taille qu'il avait à l'écran (règles d'avant : Z.OldPlacementOrigins, PlacementOld.lua).
+-- Chaque forme est calculée à ses tailles de cases : celles réglées pour la forme choisie, celles de la forme pour
+-- les autres (choisir une forme les reprend), sans le rétrécissement des grands groupes, avec la barre de mana si
+-- elle est affichée. Un élément jamais touché prend sa nouvelle place d'origine.
+----------------------------------------------------------------------------------------------------
+local MIGRATED_SIZES = { "role", "leader", "buff", "class", "dispelType", "lowMana", "big", "center",
+	"hots", "debuffs", "defensives", "controls" }
+
+-- Mesure d'un élément avec les règles d'aujourd'hui : taille d'une icône des rangées, sinon largeur
+local function NewMeasure(key)
+	local rows = Z.AuraRows()
+	if rows[key] then return rows[key].size end
+	if key == "leader" then return rows.leaderW end
+	if key == "buff" then return rows.buffW end
+	return rows.homes[key] and rows.homes[key].w
+end
+
+-- La taille en % qui redonne à l'élément sa mesure d'avant (la plus proche, puis la plus proche du calcul)
+local function MatchSize(key, target)
+	local limit = Z.limits.placement.size
+	Z.SetElementSize(key, 100)
+	local base = NewMeasure(key)
+	if not (base and base > 0 and target) then return end
+	local guess = math.max(limit[1], math.min(limit[2], math.floor(100 * target / base + 0.5)))
+	local best, bestGap
+	for size = math.max(limit[1], guess - 15), math.min(limit[2], guess + 15) do
+		Z.SetElementSize(key, size)
+		local gap = math.abs(NewMeasure(key) - target)
+		if not bestGap or gap < bestGap or (gap == bestGap and math.abs(size - guess) < math.abs(best - guess)) then
+			best, bestGap = size, gap
+		end
+	end
+	Z.SetElementSize(key, best)
+end
+
+local function MigrateShape(shape)
+	local db = Z.db
+	local power = db.manaBars ~= "OFF"
+	local keys = {}
+	for key in pairs(db.placement[shape] or {}) do
+		if KNOWN[key] and key ~= "marker" and key ~= "private" then keys[key] = true end -- mêmes règles qu'avant
+	end
+	if not next(keys) then return end
+	local function Raw(key)
+		local at = Entry(key, shape)
+		return at and Limit(at[1]) or 0, at and Limit(at[2]) or 0
+	end
+	local function Moved(spec, dx, dy) return Box(spec[1], spec[2] + dx, spec[3] + dy, spec[4], spec[5]) end
+	-- Où était chaque élément à l'écran (règles, décalages et tailles d'avant) : un décalage trop grand était ramené
+	-- au bord de la case à la lecture, comme aujourd'hui (Range) ; le chef suit le rôle ainsi borné
+	local W, H = Z.CellSize()
+	local function Shown(spec, key) return Clamp(Range(spec, W, H), Raw(key)) end
+	local old = Z.OldPlacementOrigins(power)
+	old = Z.OldPlacementOrigins(power, Moved(old.role, Shown(old.role, "role")))
+	local before = {}
+	for key in pairs(keys) do before[key] = { Shown(old[key], key) } end
+	-- Tailles : deux tours, car la taille d'un élément peut changer la place des autres (le rôle borne mes soins)
+	for _ = 1, 2 do
+		for _, key in ipairs(MIGRATED_SIZES) do
+			if keys[key] and Z.CanSize(key) then MatchSize(key, old.rowSize[key] or old[key][4]) end
+		end
+	end
+	-- Décalages : le point d'accroche d'aujourd'hui posé là où il était à l'écran
+	local function Follow(key, new)
+		local x, y = Spot(Moved(old[key], before[key][1], before[key][2]), new[key][1])
+		Store(shape, key, Limit(x - new[key][2]), Limit(y - new[key][3]), SavedSize(key, shape))
+	end
+	local new = Origins(power)
+	if keys.role then Follow("role", new) end
+	new = Origins(power, Moved(new.role, Raw("role")))
+	for key in pairs(keys) do
+		if key ~= "role" then Follow(key, new) end
+	end
+end
+
+-- placement : la table à passer (celle du personnage connecté si absente) ; only : seulement ces formes (code de
+-- partage d'avant la 1.49.0). Une forme dont le passage échoue revient telle qu'elle était, jamais à moitié passée.
+function Z.MigratePlacement(placement, only)
+	local db = Z.db
+	placement = placement or db.placement
+	if type(placement) ~= "table" then return end
+	local keep = { shape = db.shape, autoShrink = db.autoShrink, placement = db.placement }
+	for _, key in ipairs(Z.shapeKeys) do keep[key] = db[key] end
+	local shapes = {}
+	for shape, elements in pairs(placement) do
+		if Z.shapes[shape] and type(elements) == "table" and (not only or only[shape]) then shapes[#shapes + 1] = shape end
+	end
+	db.autoShrink, db.placement = false, placement
+	for _, shape in ipairs(shapes) do
+		db.shape = shape
+		for _, key in ipairs(Z.shapeKeys) do db[key] = shape == keep.shape and keep[key] or Z.shapes[shape][key] end
+		cache = nil
+		local saved = CopyTable(placement[shape])
+		if not Z:Try("placements de la 1.49.0", MigrateShape, shape) then placement[shape] = saved end
+	end
+	for key, value in pairs(keep) do db[key] = value end
 	cache = nil
 end
 
@@ -929,6 +1060,12 @@ local function BuildWindow()
 	win.fill.label:SetJustifyH("CENTER")
 	win.fill.tip = L["L'élément choisi prend la plus grande taille qui tient sur la case. Un élément masqué laisse sa place aux autres."]
 
+	-- Chaque personnage a ses placements (1.49.0) : ceux d'un autre personnage se copient d'un clic
+	win.copy = UI.Button(win, L["Copier les placements de..."], 352, 22, function(self) Z.ChooseCopyPlacements(self) end)
+	win.copy:SetPoint("TOPLEFT", win.showAll, "BOTTOMLEFT", 0, -8)
+	win.copy.label:SetJustifyH("CENTER")
+	win.copy.tip = L["Vos placements sont propres à ce personnage. Choisissez un autre de vos personnages (ou un ancien profil) : ses placements et ses tailles, pour toutes les formes de case, remplacent les vôtres."]
+
 	-- Aussi sur la case : ce qui n'a pas de place à régler mais change la case, trois par ligne
 	local also = UI.Label(win, 12, nil, "accent")
 	also:SetPoint("TOPLEFT", 16, -LIST_END - 13)
@@ -947,11 +1084,31 @@ local function BuildWindow()
 	note:SetPoint("RIGHT", -16, 0)
 	note:SetJustifyH("LEFT")
 	note:SetSpacing(3)
-	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque forme de case garde ses propres placements. Un élément décoché est masqué sur vos cases et laisse sa place aux autres : il reste ici en transparence, prêt à revenir."])
+	note:SetText(L["Glissez un élément sur la case, ou choisissez-le dans la liste et poussez-le avec les flèches (Maj : 5 pixels). La molette sur une icône, ou « - » et « + », change sa taille. Rien ne sort de la case. Chaque personnage et chaque forme de case gardent leurs propres placements. Un élément décoché est masqué sur vos cases et laisse sa place aux autres : il reste ici en transparence, prêt à revenir."])
 
 
 	win:HookScript("OnShow", Draw)
 	win.StageScale, win.STAGE_MARGIN = StageScale, STAGE_MARGIN -- pour les tests
+end
+
+-- « Copier les placements de... » : la liste de mes autres personnages qui ont placé un élément
+function Z.ChooseCopyPlacements(button)
+	local names = Z.PlacementCharacters()
+	if #names == 0 then
+		win.size:SetText(L["Aucun autre de vos personnages n'a encore placé d'élément."])
+		return
+	end
+	if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
+	MenuUtil.CreateContextMenu(button, function(_, root)
+		root:CreateTitle(L["Remplacer mes placements par ceux de :"])
+		for _, name in ipairs(names) do
+			root:CreateButton(name, function()
+				if not Z.CopyPlacements(name) then return end
+				Changed()
+				win.size:SetText(L["Placements de %s copiés."]:format(name))
+			end)
+		end
+	end)
 end
 
 -- Rappelée alors qu'elle est ouverte, la fenêtre passe devant sans se fermer (OnShow la dessine)

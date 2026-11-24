@@ -25,7 +25,8 @@ Z.defaults = {
 	width = 86, height = 42, spacing = 3,
 	scale = 100,               -- échelle générale de tous les cadres, en %
 	placement = {},            -- place et taille de chaque élément de la case, par forme : placement.TILE.role = { 3, -2, 150 }
-	                           -- (décalage en pixels, puis taille en %, absente à 100 %)
+	                           -- (décalage en pixels, puis taille en %, absente à 100 %). Celui du personnage connecté
+	                           -- (LyoruneDB.placements, LoadPlacements plus bas), hors des profils
 	layout = "GROUP",          -- rangement : par groupe de raid, par rôle, ou en une seule grille
 	sortOrder = "INDEX",       -- ordre dans chaque bloc : celui du groupe, par nom, ou par classe puis nom
 	keepGroupPlace = false,    -- en raid, chaque groupe garde sa place, même vide (rangement par groupe)
@@ -210,7 +211,7 @@ Z.defaults = {
 Z.limits = {
 	width = { 50, 180, 2 }, height = { 24, 90, 2 }, spacing = { 0, 12, 1 }, fontSize = { 8, 16, 1 },
 	frameAlpha = { 30, 100, 5 }, brightness = { 40, 100, 5 }, rangeAlpha = { 10, 100, 5 },
-	scale = { 50, 200, 5 }, petSize = { 40, 100, 5 }, gridSize = { 2, 20, 1 }, placement = { -40, 40, 1, size = { 50, 300, 10 } }, -- placement : décalage d'un élément dans chaque sens, et sa taille en % de sa taille d'origine
+	scale = { 50, 200, 5 }, petSize = { 40, 100, 5 }, gridSize = { 2, 20, 1 }, placement = { -180, 180, 1, size = { 50, 300, 10 } }, -- placement : décalage d'un élément dans chaque sens (jusqu'à la plus grande largeur de case, 1.49.0), et sa taille en % de sa taille d'origine
 	lowHealthAt = { 10, 60, 5 }, healthyFadeAt = { 50, 100, 5 }, powerHeight = { 2, 60, 1 }, privateAuraSize = { 12, 40, 2 }, hotCount = { 1, 6, 1 }, debuffCount = { 2, 5, 1 }, dispelCount = { 1, 3, 1 }, manaThreshold = { 5, 80, 5 }, regenThreshold = { 50, 100, 5 },
 	buffRenew = { 0, 900, 15 }, buffGroupAt = { 2, 5, 1 },
 }
@@ -276,6 +277,7 @@ Z.notInProfile = {
 	buffPanel = true, combatKey = true, buffPlace = true, castIndicator = true, buffWatch = true, buffRenew = true, buffGroupAt = true,
 	cooldownPanel = true, cooldownShow = true, cooldownIgnored = true, groupCooldowns = true, cooldownShare = true, totemPanel = true,
 	buffGroups = true, blessingPick = true, blessingSync = true,
+	placement = true, -- propre à chaque personnage (1.49.0)
 }
 
 -- Position des cadres : gardée pour chaque personnage (LyoruneCharDB). Un personnage neuf part d'ici.
@@ -505,6 +507,24 @@ local function Migrate(db)
 	-- les clics de départ prennent le clic gauche et le clic droit, et rien ne disait comment cibler). Ajoutés une
 	-- seule fois à chaque jeu de clics, à la connexion (Z:AddPendingClickActions, Clicks.lua).
 	if last and last < 14602 and now >= 14602 then Z.clickActionsPending = true end
+	-- 1.49.0 : nouvelles places d'origine des éléments de la case (C34). Les éléments déplacés ou agrandis gardent
+	-- leur place à l'écran, une seule fois, à la connexion (Z.MigratePlacement, Placement.lua : il faut les cases).
+	if last and last < 14900 and now >= 14900 then Z.placementPending = true end
+	-- 1.49.0 : les placements ne suivent plus les profils (un par personnage). Au passage, ceux d'un profil qui
+	-- diffèrent des placements en cours sont gardés sous « Profil : nom », à copier dans l'éditeur ; puis la copie
+	-- de chaque profil s'efface.
+	for name, profile in pairs(type(db.profiles) == "table" and db.profiles or {}) do
+		if type(profile) == "table" then
+			local places = profile.placement
+			if Z.placementPending and type(places) == "table" and next(places) and not Z.UI.Same(places, db.placement) then
+				if type(db.placements) ~= "table" then db.placements = {} end
+				db.placements[Z.PROFILE_PLACES .. tostring(name)] = places
+				Z.placementProfiles = Z.placementProfiles or {}
+				Z.placementProfiles[#Z.placementProfiles + 1] = places
+			end
+			profile.placement = nil
+		end
+	end
 	-- 1.44.0 : plus de profil « Arène » (WoW Forever n'a pas d'arène JcJ) : ses anciennes règles s'effacent
 	if type(db.autoProfiles) == "table" then
 		for _, rules in pairs(db.autoProfiles) do
@@ -526,6 +546,27 @@ local function LoadCharacter(db)
 	Z.char = char
 end
 
+Z.PROFILE_PLACES = "Profil : " -- placements d'un profil d'avant la 1.49.0 (Migrate), gardés à côté des personnages
+
+-- Personnage connecté : « Nom-Royaume »
+function Z.CharKey()
+	return (UnitName("player") or "?") .. "-" .. (GetRealmName() or "?")
+end
+
+-- Placements par personnage (1.49.0) : LyoruneDB.placements["Nom-Royaume"]. Un personnage qui n'en a pas encore
+-- reçoit une copie des derniers placements utilisés (Z.db.placement, ceux du compte avant la 1.49.0). Gardés à la
+-- déconnexion, même si une annulation ou une réinitialisation a remplacé la table.
+local function LoadPlacements(db)
+	if type(db.placements) ~= "table" then db.placements = {} end
+	local key = Z.CharKey()
+	if type(db.placements[key]) ~= "table" then db.placements[key] = CopyTable(db.placement) end
+	db.placement = db.placements[key]
+end
+
+Z:On("PLAYER_LOGOUT", function()
+	if Z.db and type(Z.db.placements) == "table" then Z.db.placements[Z.CharKey()] = Z.db.placement end
+end)
+
 -- Textes des annonces proposés à un joueur dont le jeu n'est pas en français (il peut les réécrire)
 Z.englishTexts = {
 	manaText = "Low mana: {mana}%! Let me drink.",
@@ -544,6 +585,7 @@ Z:On("ADDON_LOADED", function(name)
 	Migrate(LyoruneDB)
 	FillDefaults(LyoruneDB)
 	LoadCharacter(LyoruneDB)
+	LoadPlacements(LyoruneDB)
 	Z.db = LyoruneDB
 	Z:SetLanguage()
 	Z.UI.ApplySkin()
@@ -553,6 +595,13 @@ Z:On("PLAYER_LOGIN", function()
 	if not Z:CheckGame() then return end -- journal d'erreurs + contrôle de compatibilité (Log.lua)
 	Z:BuildData()
 	Z:CreateFrames()
+	if Z.placementPending then -- 1.49.0 : les éléments déplacés restent à leur place (il faut la taille des cases)
+		Z.placementPending = nil
+		Z.MigratePlacement()
+		for _, places in ipairs(Z.placementProfiles or {}) do Z.MigratePlacement(places) end
+		Z.placementProfiles = nil
+		Z:Refresh()
+	end
 	Z:MigrateMacros(false) -- macros écrites sur un clic avant la 1.6.0 : rangées dans la bibliothèque
 	Z:AddPendingClickActions()
 	Z:ApplyClicks()
