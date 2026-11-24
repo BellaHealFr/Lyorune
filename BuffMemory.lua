@@ -148,15 +148,20 @@ function Z.BuffMemoryLeft(unit, name, own, now, margin, sure)
 end
 
 -- Mes buffs uniques retenus sur ce joueur (ceux qui durent encore), comme FindMyUniques : « nom,nom » ou nil
-function Z.UniquesInMemory(unit)
+-- absent : noms dont l'absence est sûre (lue dans une vraie liste), jamais repris de la mémoire. Rend aussi les
+-- secondes avant la fin du plus proche, pour relire la case à ce moment-là (C29).
+function Z.UniquesInMemory(unit, absent)
 	local found = mine[Key(unit)]
 	if not found then return nil end
-	local now, list = GetTime(), nil
+	local now, list, soonest = GetTime(), nil, nil
 	for _, check in ipairs(Z.uniqueChecks or {}) do
 		local ends = found[check.name]
-		if ends and ends > now then list = (list and list .. "," or "") .. check.name end
+		if ends and ends > now and not (absent and absent[check.name]) then
+			list = (list and list .. "," or "") .. check.name
+			soonest = math.min(soonest or math.huge, ends - now)
+		end
 	end
-	return list
+	return list, soonest
 end
 
 -- Un joueur mort perd ses buffs : la mémoire aussi (appelé par Frames.lua, qui voit la mort même en combat)

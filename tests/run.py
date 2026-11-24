@@ -9903,6 +9903,32 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
     assert(not Has(other, 1243), "buff relance par un autre (fin cachee) propose sans fin")
     local lines = table.concat(Z.BuffDiagnostic(), " | ")
     assert(lines:find("fin cachée : ", 1, true), "/lyorune buffs ne dit rien de la fin cachee")
+    -- C29 : buff unique cache par le jeu (noms secrets en donjon) : le souvenir de mon sort, puis la case se relit
+    -- toute seule a sa fin (aucun evenement du jeu), et le buff est propose de nouveau
+    local fear = Z.uniqueChecks[1]
+    if fear then
+      Z.db.buffWatch = { [fear.id] = { pve = true, pvp = true } }
+      local bearer = Z.UniqueBearer(fear)
+      local cell
+      for _, b in ipairs(Z.buttons) do if b.unit == bearer and not b.extra then cell = b end end
+      assert(cell, "case du porteur introuvable")
+      local timers = {}
+      C_Timer.After = function(sec, f) if sec < 1 then f() else timers[#timers + 1] = { s = sec, f = f } end end
+      AURAS = { HELPFUL = { { name = MakeSecret(), icon = 9, auraInstanceID = 71 } },
+        ["HELPFUL|PLAYER"] = { { name = MakeSecret(), icon = 9, auraInstanceID = 72 } } }
+      FireEvent("UNIT_SPELLCAST_SENT", "player", UnitName(bearer), "cast-c29", fear.id)
+      FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-c29", fear.id)
+      Update()
+      assert(cell.myUniques and cell.myUniques:find(fear.name, 1, true), "souvenir du buff unique absent")
+      local due
+      local list = {}
+      for _, t in ipairs(timers) do list[#list + 1] = math.floor(t.s) if t.s > 590 and t.s < 610 then due = t end end
+      assert(due, "aucune relecture prevue a la fin du souvenir (C29) : " .. table.concat(list, ","))
+      NOW = NOW + due.s due.f() RunUpdates()
+      assert(not cell.myUniques, "buff unique toujours cru pose apres la fin du souvenir")
+      C_Timer.After = function(sec, f) if sec < 1 then f() end end
+      AURAS = {} Z.db.buffWatch = {}
+    end
     -- C29 : chaque buff unique dit pourquoi il est propose ou non
     local uniques = Z.UniqueDiagnostic()
     assert(#uniques == #Z.uniqueChecks, "diagnostic des buffs uniques incomplet")

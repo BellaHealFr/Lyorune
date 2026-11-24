@@ -960,7 +960,12 @@ end
 local function FindMyUniques(b, unit)
 	if not Z.db.buffPanel or #Z.uniqueChecks == 0 or b.status or InCombatLockdown() then return end
 	local list = Auras(unit, "HELPFUL|PLAYER", 16)
-	if not list then return Z.AurasHidden() and Z.UniquesInMemory(unit) or nil end -- lecture refusée en match (C15)
+	if not list then -- lecture refusée en match (C15) : la mémoire, relue à sa fin (C29)
+		if not Z.AurasHidden() then return nil end
+		local remembered, soonest = Z.UniquesInMemory(unit)
+		if soonest then Recheck(b, soonest) end
+		return remembered
+	end
 	local mine, hidden
 	for i = 1, #list do
 		local name = list[i].name
@@ -976,7 +981,20 @@ local function FindMyUniques(b, unit)
 		Z.NoteBuffs(unit, list, Z.ownNames, true)
 		return mine
 	end
-	return mine or Z.UniquesInMemory(unit)
+	-- caché par le jeu : la mémoire de mes sorts, sauf pour un buff que le jeu laisse lire et qui n'est pas dans une
+	-- vraie liste (son absence est sûre) ; la case se relit quand le souvenir finit (C29 : aucun événement du jeu)
+	local absent
+	if #list > 0 then
+		for _, check in ipairs(Z.uniqueChecks) do
+			if Z.BuffReadable(check) and not (mine and ("," .. mine .. ","):find("," .. check.name .. ",", 1, true)) then
+				absent = absent or {}
+				absent[check.name] = true
+			end
+		end
+	end
+	local remembered, soonest = Z.UniquesInMemory(unit, absent)
+	if soonest then Recheck(b, soonest) end
+	return mine or remembered
 end
 
 ----------------------------------------------------------------------------------------------------
