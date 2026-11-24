@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.50.0", date = "2026-11-24",
+		added = {
+			"Canal des soigneurs, en français et en anglais : sur la page « Les amis de Lyorune », deux cases (éteintes au départ) font rejoindre le canal du jeu LyoruneFR ou LyoruneEN, ouvert à tous quelle que soit la langue de votre jeu, pour échanger entre soigneurs sur vos façons de jouer, vos spécialisations, vos astuces et vos difficultés. Lyorune vous donne le numéro à taper et n'y écrit jamais à votre place ; chaque faction a son canal.",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.49.0", date = "2026-11-24",
 		added = {
 			"Placements propres à chaque personnage : chaque personnage garde la place et la taille de ses éléments, qui ne suivent plus les profils. Un nouveau personnage part de vos derniers placements, et le bouton « Copier les placements de... » de la fenêtre Placement des éléments reprend ceux d'un autre personnage.",
@@ -1174,6 +1184,7 @@ Z.changes = {
 -- Par version, puis par rubrique : le réglage de chaque ligne, dans l'ordre des lignes (false : pas de réglage).
 -- Une clé qui n'a plus de ligne dans les options est simplement ignorée. Tenu à la main, vérifié par les tests.
 Z.changeShows = {
+	["1.50.0"] = { added = { "channelFR" } },
 	["1.48.1"] = { improved = { false }, fixed = { "lowHealth" } },
 	["1.48.0"] = { added = { "uniqueLive" }, improved = { "lowHealth" }, fixed = { "pets" } },
 	["1.47.0"] = { added = { "tallyExit", false }, improved = { "missingBuffs" } },

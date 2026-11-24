@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.50.0] - 2026-11-24
+
+### Ajouté
+
+- Canal des soigneurs, en français et en anglais : sur la page « Les amis de Lyorune », deux cases (éteintes au départ) font rejoindre le canal du jeu LyoruneFR ou LyoruneEN, ouvert à tous quelle que soit la langue de votre jeu, pour échanger entre soigneurs sur vos façons de jouer, vos spécialisations, vos astuces et vos difficultés. Lyorune vous donne le numéro à taper et n'y écrit jamais à votre place ; chaque faction a son canal.
+
 ## [1.49.0] - 2026-11-24
 
 ### Ajouté
@@ -964,6 +970,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.50.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0
 [1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0

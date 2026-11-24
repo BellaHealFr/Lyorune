@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.50.0] - 2026-11-24
+
+### Added
+
+- Healers' channel, in French and in English: on the Friends of Lyorune page, two boxes (off at first) join the game channel LyoruneFR or LyoruneEN, open to everyone whatever the language of your game, for healers to talk about how they play, their specialisations, their tips and their struggles. Lyorune gives you the number to type and never writes there for you; each faction has its own channel.
+
 ## [1.49.0] - 2026-11-24
 
 ### Added
@@ -964,6 +970,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.50.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0
 [1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.47.0...v1.48.0
