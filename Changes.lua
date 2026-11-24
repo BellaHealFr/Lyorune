@@ -8,6 +8,21 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.46.3", date = "2026-11-24",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Buff presque fini : proposé de nouveau 75 secondes avant sa fin, en donjon aussi (C20).",
+			"Sur la case : tous les buffs qui manquent, en JcE comme en JcJ, et un buff perdu en gris (C21, C22).",
+			"Bandeau des buffs manquants : un clic lance de nouveau le buff, quel que soit le réglage « lancer à l'appui » (C27).",
+			"Les familiers ne sont plus proposés aux buffs (C28).",
+			"Épines, Bouclier de terre et Gardien de peur de nouveau proposés dès qu'ils tombent, en donjon aussi (C29).",
+			"Buff refusé par le jeu (buff plus fort, avantage de camp, niveau trop bas, trop loin, hors de vue) : le joueur est mis de côté et le bandeau passe au suivant. Rang adapté au niveau, buff d'un autre jamais remplacé, buffs uniques renouvelés sur leur porteur, arme du chaman lue correctement, rien proposé quand vous êtes mort (C30).",
+		},
+	},
+	{
 		version = "1.46.2", date = "2026-11-24",
 		added = {
 		},

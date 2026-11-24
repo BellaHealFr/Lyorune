@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.3] - 2026-11-24
+
+### Corrigé
+
+- Buff presque fini : proposé de nouveau 75 secondes avant sa fin, en donjon aussi (C20).
+- Sur la case : tous les buffs qui manquent, en JcE comme en JcJ, et un buff perdu en gris (C21, C22).
+- Bandeau des buffs manquants : un clic lance de nouveau le buff, quel que soit le réglage « lancer à l'appui » (C27).
+- Les familiers ne sont plus proposés aux buffs (C28).
+- Épines, Bouclier de terre et Gardien de peur de nouveau proposés dès qu'ils tombent, en donjon aussi (C29).
+- Buff refusé par le jeu (buff plus fort, avantage de camp, niveau trop bas, trop loin, hors de vue) : le joueur est mis de côté et le bandeau passe au suivant. Rang adapté au niveau, buff d'un autre jamais remplacé, buffs uniques renouvelés sur leur porteur, arme du chaman lue correctement, rien proposé quand vous êtes mort (C30).
+
 ## [1.46.2] - 2026-11-24
 
 ### Corrigé
@@ -896,6 +907,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3
 [1.46.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.1...v1.46.2
 [1.46.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.0...v1.46.1
 [1.46.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.45.0...v1.46.0

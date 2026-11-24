@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.3] - 2026-11-24
+
+### Fixed
+
+- Buff about to end: offered again 75 seconds before it ends, in dungeons too (C20).
+- On the frame: every missing buff, in PvE as in PvP, and a lost buff in grey (C21, C22).
+- Missing buffs bar: a click casts the buff again, whatever the cast on key down setting (C27).
+- Pets are no longer offered buffs (C28).
+- Thorns, Earth Shield and Fear Ward offered again as soon as they drop, in dungeons too (C29).
+- Buff refused by the game (stronger buff, camp benefit, level too low, too far, out of sight): the player is set aside and the bar moves on. Rank fitted to the level, another player's buff never replaced, single-target buffs renewed on their holder, shaman weapon read correctly, nothing offered while you are dead (C30).
+
 ## [1.46.2] - 2026-11-24
 
 ### Fixed
@@ -896,6 +907,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3
 [1.46.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.1...v1.46.2
 [1.46.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.0...v1.46.1
 [1.46.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.45.0...v1.46.0
