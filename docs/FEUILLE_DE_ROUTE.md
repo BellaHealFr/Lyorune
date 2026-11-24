@@ -62,7 +62,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 31 | 1.45.0 | Les amis de Lyorune : chiffres du projet, carnet de soigneur, mot de l'auteur, mur de remerciements | Publiée (v1.45.0) |
 | 32 | 1.46.0 | Totems du chaman sous les cadres, icône de classe (idées en réserve d'avant le plan correctif) | Publiée (v1.46.0) |
 | 32 a | 1.46.1 | Correction C17 (critique) : gel et cases perdues quand le groupe change, en groupe comme en raid ; aussi C23 (journal), C24 (chef), icône des DPS | Publiée (24 novembre 2026) |
-| 32 b | 1.46.2 | Correction C18 : cibler un joueur ou soi-même | Faite, à publier |
+| 32 b | 1.46.2 | Correction C18 : cibler un joueur ou soi-même | Publiée |
 | 32 c | à fixer | Corrections C20, C21, C22 : buff presque fini (seuil en secondes), même affichage en JcE et en JcJ, buff perdu en gris | À faire |
 | 32 d | à fixer | Correction C19 : version de groupe en priorité à partir du seuil de joueurs | À faire |
 | 33 | 1.47.0 | « Me montrer » dans les nouveautés, bilan de la soirée | À faire (après 32 a à 32 d) |
@@ -1180,7 +1180,7 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
   restait caché dans la fenêtre des sorts. Comme HealKit : Alt + clic gauche cible, Alt + clic droit ouvre le menu,
   dans la liste des clics, au premier lancement et à la mise à jour (combinaison libre chez Lyorune et dans le clic
   pour lancer du jeu, message à la connexion). Carte « Soigner d'un clic », texte d'aide, tutoriel et guide anglais
-  disent comment cibler et renvoient aux raccourcis du jeu (« Cibler soi-même »). Essai en jeu à faire.
+  disent comment cibler et renvoient aux raccourcis du jeu (« Cibler soi-même »). Essayée en jeu par l'auteur, publiée en 1.46.2.
 - [ ] **32 c, C20, C21, C22** : buffs.
   - [ ] C20 : heure de fin secrète (donjon) = la mémoire de mes sorts décide, au lieu de « jamais » ; seuil en
     secondes (valeur de départ à décider, 75 s demandées), un seul réglage, migration des minutes ; plafond du quart
