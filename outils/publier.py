@@ -355,6 +355,9 @@ def parse(args):
         if re.search(r'(?<![A-Za-z])[A-Za-z]:/', note):
             sys.exit('Note transformée en chemin de fichier (Git Bash) : %r\n'
                      'Relancez depuis PowerShell, ou avec MSYS_NO_PATHCONV=1 devant la commande.' % note)
+        # numéros du suivi interne des corrections (C20...) : jamais dans les notes des joueurs (demande de l'auteur)
+        if re.search(r'\bC\d+\b', note):
+            sys.exit('Note refusée : numéro de suivi interne (C20...) à retirer : %r' % note)
     if not any(notes.values()):
         sys.exit('Indiquez au moins un changement : python outils/publier.py 1.4.0 --corrige "Ce qui est corrigé."')
     return version, notes, english

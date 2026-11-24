@@ -10,18 +10,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Fixed
 
-- Buff about to end: offered again 75 seconds before it ends, in dungeons too (C20).
-- On the frame: every missing buff, in PvE as in PvP, and a lost buff in grey (C21, C22).
-- Missing buffs bar: a click casts the buff again, whatever the cast on key down setting (C27).
-- Pets are no longer offered buffs (C28).
-- Thorns, Earth Shield and Fear Ward offered again as soon as they drop, in dungeons too (C29).
-- Buff refused by the game (stronger buff, camp benefit, level too low, too far, out of sight): the player is set aside and the bar moves on. Rank fitted to the level, another player's buff never replaced, single-target buffs renewed on their holder, shaman weapon read correctly, nothing offered while you are dead (C30).
+- Buff about to end: offered again 75 seconds before it ends, in dungeons too.
+- On the frame: every missing buff, in PvE as in PvP, and a lost buff in grey.
+- Missing buffs bar: a click casts the buff again, whatever the cast on key down setting.
+- Pets are no longer offered buffs.
+- Thorns, Earth Shield and Fear Ward offered again as soon as they drop, in dungeons too.
+- Buff refused by the game (stronger buff, camp benefit, level too low, too far, out of sight): the player is set aside and the bar moves on. Rank fitted to the level, another player's buff never replaced, single-target buffs renewed on their holder, shaman weapon read correctly, nothing offered while you are dead.
 
 ## [1.46.2] - 2026-11-24
 
 ### Fixed
 
-- Targeting a player: Alt + left click targets the player and Alt + right click opens their menu, two lines of the click list, added on update if these clicks are free (in Lyorune and in the game's click casting). The guided tour and the guide say how to target (C18).
+- Targeting a player: Alt + left click targets the player and Alt + right click opens their menu, two lines of the click list, added on update if these clicks are free (in Lyorune and in the game's click casting). The guided tour and the guide say how to target.
 
 ## [1.46.1] - 2026-11-24
 
