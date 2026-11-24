@@ -2409,7 +2409,7 @@ local function FriendsNumbers(page, width)
 	return box
 end
 
--- Votre carnet : trois chiffres en tout et ce soir (depuis la connexion), depuis quand, et la remise à zéro
+-- Votre carnet : trois chiffres en tout et aujourd'hui (depuis la connexion), depuis quand, et la remise à zéro
 local TALLY_LINES = { { "heals", "Soins lancés" }, { "res", "Résurrections" }, { "buffs", "Buffs posés" } }
 local TALLY_H = 22
 local TALLY_ROWS = #TALLY_LINES + 1 -- les titres des deux colonnes, puis une ligne par chiffre
@@ -2418,7 +2418,7 @@ local function NotebookBox(page, width)
 	local box = CreateFrame("Frame", nil, page)
 	box:SetSize(width, TALLY_ROWS * TALLY_H + 52)
 	box.tallyRows, box.tonightRows = {}, {}
-	for x, title in pairs({ [200] = "En tout", [300] = "Ce soir" }) do
+	for x, title in pairs({ [200] = "En tout", [300] = "Aujourd'hui" }) do
 		local head = UI.Label(box, 11, nil, "dim")
 		head:SetPoint("TOPLEFT", x, 0)
 		head:SetText(L[title])
@@ -2452,7 +2452,7 @@ local function NotebookBox(page, width)
 			self.tonightRows[key]:SetText(Grouped(tonight[key]))
 		end
 		self.since:SetText(Z.db.notebook
-			and L["En tout depuis le %s, ce soir depuis votre connexion, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."]:format(Day(tally.since))
+			and L["En tout depuis le %s, aujourd'hui depuis votre connexion, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."]:format(Day(tally.since))
 			or L["Carnet éteint : plus rien n'est compté, vos chiffres sont gardés."])
 		self:SetAlpha(Z.db.notebook and 1 or 0.6)
 	end
@@ -2714,9 +2714,9 @@ local function Chapters()
 				{ "check", "threatBar", "Barre fine de menace", "Trait de couleur en haut de la barre de vie : jaune quand le joueur prend de la menace sur un monstre, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui.", fine = true },
 			} },
 			{ "Buffs", {
-				{ "check", "missingBuffs", "Mes buffs sur la case", "Une rangée en bas à gauche de la case, pour chacun de vos buffs qui concerne ce joueur : en couleur quand il est posé, gris à bord rouge quand il manque ou finit bientôt. Le même affichage hors combat, en combat et en champ de bataille.", desc = "Couleur : posé. Gris à bord rouge : à relancer." },
-				{ "check", "combatBuffs", "En combat", "En combat (et contre un boss), le jeu cache les buffs : il dessine lui-même vos buffs en bas à gauche des cases, en couleur quand le buff est posé (rien à faire), gris à bord rouge quand il manque. Un clic sur la case le relance. Rien n'apparaît sur un joueur qu'aucun de vos buffs ne concerne.", desc = "Couleur : posé, rien à faire. Gris à bord rouge : il manque.", dep = { "missingBuffs", true } },
-				{ "check", "pvpBuffs", "En champ de bataille", "Même chose pendant tout le match, en combat ou non. Éteint : en champ de bataille, Lyorune montre seulement les buffs qu'il a retenus avant le match.", desc = "Vos buffs dessinés par le jeu pendant tout le match.", dep = { "missingBuffs", true } },
+				{ "check", "missingBuffs", "Mes buffs sur la case", "En bas à gauche de la case, seulement vos buffs à reposer sur ce joueur, gris à bord rouge : absent, perdu, ou bientôt fini. Un buff posé ne se montre pas, la case reste propre. Le même affichage hors combat, en combat et en champ de bataille.", desc = "Gris à bord rouge : à reposer. Un buff posé ne se montre pas." },
+				{ "check", "combatBuffs", "En combat", "En combat (et contre un boss), le jeu cache les buffs : Lyorune garde ce qu'il a lu avant le combat et vos sorts réussis. Un buff revient en gris quand il finit bientôt, ou à la mort du joueur. Un buff dissipé en combat se voit à la fin du combat. Éteint : rien sur les cases en combat.", desc = "Gris à bord rouge : à reposer, d'après ce que Lyorune retient.", dep = { "missingBuffs", true } },
+				{ "check", "pvpBuffs", "En champ de bataille", "Même chose en combat pendant un match. Hors combat, les buffs à reposer restent toujours montrés (lus ou retenus). Éteint : rien sur les cases en combat pendant un match.", desc = "Vos buffs à reposer, en combat pendant un match.", dep = { "missingBuffs", true } },
 				{ "check", "buffPanel", "Buffs manquants à poser", "Hors combat, chaque buff qui manque à un joueur est proposé : un clic le lui lance. Un groupe entier sans buff : une seule ligne pour la version de groupe. Un buff à poser sur une seule personne (Bouclier de terre, Épines, Gardien de peur) est proposé pour son porteur. Tout disparaît en combat et quand tout est posé. Une touche peut lancer le premier : raccourcis du jeu, AddOns, Lyorune." },
 				{ "check", "combatKey", "En combat, la touche relance mon buff unique", "En combat, la touche du prochain buff manquant relance votre buff unique (Bouclier de terre, Gardien de peur...) sur son porteur, choisi dans Mes buffs. Préparée juste avant le combat, par le nom du joueur : elle ne part jamais sur quelqu'un d'autre.", fine = true, dep = { "buffPanel", true } },
 				{ "seg", "buffPlace", "Emplacement des buffs manquants", nil, "Avec les cadres : un bandeau fin sous le dernier groupe (le joueur, puis « +N autres » ou le sort), qui passe au buff suivant après chaque sort. Où vous voulez : une petite fenêtre à déplacer." },
@@ -2863,7 +2863,7 @@ local function Chapters()
 			} },
 			{ "Votre carnet", {
 				{ "check", "notebook", "Tenir mon carnet", "Compte vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent : cases, barres, macros, touches. Les dissipations ne comptent pas. Rien n'est envoyé : le carnet reste sur votre ordinateur.", desc = "Vos soins, résurrections et buffs réussis, par personnage." },
-				{ "check", "tallyExit", "Bilan en sortant d'un donjon", "En sortant d'un donjon ou d'un raid, une ligne dans la discussion donne son nom, sa durée et vos soins, résurrections et buffs dedans, puis ceux de la soirée (depuis votre connexion). Rien quand vous sortez mort, pour revenir après un wipe.", dep = { "notebook", true } },
+				{ "check", "tallyExit", "Bilan en sortant d'un donjon", "En sortant d'un donjon ou d'un raid, une ligne dans la discussion donne son nom, sa durée et vos soins, résurrections et buffs dedans, puis ceux du jour (depuis votre connexion). Rien quand vous sortez mort, pour revenir après un wipe.", dep = { "notebook", true } },
 				{ "custom", NotebookBox },
 			} },
 			{ "Un mot de BellaDroode", {

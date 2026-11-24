@@ -9,7 +9,7 @@
 -- Les dissipations ne comptent pas comme des soins. Un seul événement, sur moi seulement, écouté seulement
 -- quand le carnet est allumé. Un numéro de sort secret (en combat, selon le jeu) n'est pas compté.
 -- Rangé dans LyoruneCharDB.tally = { since = "AAAA-MM-JJ", heals = n, res = n, buffs = n }.
--- Bilan de la soirée : les mêmes chiffres depuis la connexion du personnage (LyoruneCharDB.tonight), gardés après
+-- Bilan du jour : les mêmes chiffres depuis la connexion du personnage (LyoruneCharDB.tonight), gardés après
 -- un /reload, repartis de zéro à chaque connexion. En sortant d'un donjon ou d'un raid, une ligne dans la
 -- discussion donne le donjon quitté (nom, durée, ses chiffres) puis la soirée (réglage tallyExit, avec le carnet).
 
@@ -116,7 +116,7 @@ end
 function Z.TonightLine()
 	local tonight = Z.Tonight()
 	if tonight.heals + tonight.res + tonight.buffs == 0 then return end
-	return Z.L["Bilan de la soirée : %s."]:format(Numbers(tonight.heals, tonight.res, tonight.buffs))
+	return Z.L["Bilan du jour : %s."]:format(Numbers(tonight.heals, tonight.res, tonight.buffs))
 end
 
 -- La ligne de sortie : le donjon quitté (nom, durée, ses chiffres), puis la soirée. outing : LyoruneCharDB.outing.

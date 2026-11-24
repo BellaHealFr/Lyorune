@@ -7856,9 +7856,9 @@ step("1.35.0 : buffs caches par le jeu (champ de bataille, arene) : photo, memoi
   assert(ok, err)
 end)
 
-step("1.36.0 : buffs en combat : reperes dessines par le jeu (tous les rangs, couleur / gris), champ de bataille, joueur change en combat, touche du buff unique", function()
+step("C31 : buff pose jamais montre, de retour en gris quand il faut le reposer (hors combat, combat, mort, groupe change, champ de bataille), touche du buff unique", function()
   local old = { create = CreateFrame, name = C_Spell.GetSpellName, known = C_SpellBook.IsSpellKnown, isUnit = UnitIsUnit,
-    secrets = C_Secrets, class = Z.class, after = C_Timer.After }
+    secrets = C_Secrets, class = Z.class, after = C_Timer.After, now = NOW }
   local made = {}
   local ok, err = pcall(function()
     local extra = { [1244] = "Mot de pouvoir : Robustesse", [10938] = "Mot de pouvoir : Robustesse", [21562] = "Prière de robustesse",
@@ -7906,68 +7906,106 @@ step("1.36.0 : buffs en combat : reperes dessines par le jeu (tous les rangs, co
     UnitIsUnit = function(a, b) return a == b or (a == "player" and b == Z.buttons[1].unit) or (b == "player" and a == Z.buttons[1].unit) end
     c:SetAttribute("unit", "player")
     Z:Refresh() RunUpdates()
-    local slots = c.boxes.buffs.slots
-    assert(slots.buff1243 and slots.buff1243.filter == "HELPFUL" and slots.buff1243.ids[10938], "place de Robustesse")
-    assert(slots.buff588 and slots.buff588.ids[10952], "Feu interieur absent de ma case")
-    assert(slots.buff6346 and slots.buff6346.filter == "HELPFUL|PLAYER", "buff unique absent chez son porteur")
-    -- hors combat aussi (1.46.3, C21 et C22) : la meme rangee ; un buff qui manque passe devant le conteneur
-    assert(c.marksShown and c.boxes.buffs:IsShown(), "rangee absente hors combat")
-    local base = c.over:GetFrameLevel()
+    -- plus de conteneur des buffs : le jeu ne dessine jamais un buff pose (C31)
+    assert(c.boxes and c.boxes.hots and not c.boxes.buffs, "conteneur des buffs encore cree")
+    local robust = "Mot de pouvoir : Robustesse"
+    local function Gray()
+      local list = {}
+      for _, icon in ipairs(c.buffList or {}) do
+        if icon:IsShown() then list[#list + 1] = icon.texture._tex end
+      end
+      return list
+    end
+    local function Count() return #Gray() end
+    local function Again() Z.QueueAuras(c) RunUpdates() end
+    -- hors combat, rien de pose : tout en gris, le buff unique aussi chez son porteur (moi)
     assert(c.missingBuffs and c.missingBuffs[1].check == fort, "Robustesse non manquante")
-    assert(c.markIcons[1]:GetFrameLevel() == base + 4, "buff manquant cache derriere le conteneur hors combat")
-    -- combat : reperes gris derriere le conteneur du jeu (lui seul sait ce qui est pose), ancienne icone effacee
-    FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true
-    assert(c.marksShown and c.boxes.buffs:IsShown(), "reperes absents en combat")
-    assert(c.markIcons[1]:IsShown() and c.markIcons[1].texture._tex == fort.icon, "repere gris absent")
-    assert(c.markIcons[1]:GetFrameLevel() == base + 1, "repere gris devant le conteneur en combat")
-    assert(not (c.buffIcon and c.buffIcon:IsShown()), "icone lue encore montree en combat")
+    local ward
+    for _, entry in ipairs(c.buffWatch) do if entry.check.id == 6346 then ward = entry end end
+    assert(ward, "buff unique non suivi chez son porteur")
+    local all = Count()
+    assert(all == #c.buffWatch and all >= 3, "buffs absents en gris : " .. all .. "/" .. #c.buffWatch)
+    -- Robustesse posee : elle disparait de la case
+    local start = NOW
+    AURAS["HELPFUL"] = { { name = robust, icon = 99, auraInstanceID = 31, spellId = 10938, expirationTime = NOW + 1800, duration = 1800 } }
+    Again()
+    assert(Count() == all - 1 and not c.missingBuffs[2], "buff pose encore montre hors combat")
+    -- combat : le jeu cache tout, la case garde ce qu'elle savait (rien en couleur, Robustesse toujours cachee)
+    FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true hidden = true
+    AURAS["HELPFUL"] = nil
+    Again()
+    assert(Count() == all - 1, "combat : buffs lus avant le combat perdus, ou buff pose montre")
+    -- toujours en combat, 75 s avant sa fin : de retour en gris (memoire)
+    NOW = start + 1800 - Z.db.buffRenew + 1
+    Again()
+    assert(Count() == all, "combat : Robustesse pas revenue en gris sous le seuil")
+    -- je la relance en combat (sort reussi, memoire) : cachee de nouveau
+    Z.NoteBuffs("player", { { name = robust, expirationTime = NOW + 1800, duration = 1800 } }, Z.buffNames, false)
+    Again()
+    assert(Count() == all - 1, "combat : sort reussi sans effet sur la case")
+    -- mort en combat : tout revient en gris, meme ce qui etait pose avant
+    NOW = NOW + 1
+    Z.ForgetBuffs("player")
+    Again()
+    assert(Count() == all, "combat : mort sans effet sur la case")
     -- touche du prochain buff : mon buff unique sur son porteur, par son nom
     local key = _G.LyoruneNextBuff
     assert(key:GetAttribute("type") == "macro" and key:GetAttribute("macrotext"):find("^/cast %[@.+%] Gardien de peur$"),
       "touche du buff unique : " .. tostring(key:GetAttribute("macrotext")))
-    -- le groupe change en combat : reperes caches jusqu'a la fin du combat (le joueur n'est plus sur)
-    FireEvent("GROUP_ROSTER_UPDATE")
-    assert(not c.marksShown and c.marksStale, "reperes gardes apres un changement de groupe en combat")
-    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
-    assert(c.marksShown and not c.marksStale, "fin du combat : reperes non revus")
+    -- le groupe change en combat : rien sur la case jusqu'a la fin du combat (le joueur n'est plus sur)
+    FireEvent("GROUP_ROSTER_UPDATE") RunUpdates()
+    assert(#Gray() == 0, "buffs gardes apres un changement de groupe en combat")
+    COMBAT = false hidden = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+    assert(Count() == all and not c.buffWatch.stale, "fin du combat : buffs non revus")
     assert(key:GetAttribute("type") ~= "macro", "touche du buff unique gardee hors combat")
-    -- champ de bataille hors combat : le jeu cache les buffs, ses reperes reviennent
-    hidden = true FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 2)
-    assert(c.marksShown, "reperes absents en champ de bataille")
-    hidden = false FireEvent("ADDON_RESTRICTION_STATE_CHANGED", 3, 0)
-    assert(c.marksShown, "rangee perdue apres le match")
-    -- interrupteurs (1.37.1 : « En combat » et « En champ de bataille et en arene », chacun a sa place)
+    -- le groupe change en combat mais le joueur reste le meme (identifiant lisible) : sa case garde ses buffs
+    local oldGuid = UnitGUID
+    UnitGUID = function(unit) return "Joueur-" .. tostring(unit) end
+    Again()
+    FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true RunUpdates()
+    FireEvent("GROUP_ROSTER_UPDATE") RunUpdates()
+    assert(not c.buffWatch.stale and Count() == all, "meme joueur apres un changement de groupe : buffs effaces")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+    -- mort avant le combat, releve en combat : tout revient en gris (la liste d'avant sa mort est gardee)
+    AURAS["HELPFUL"] = { { name = robust, icon = 99, auraInstanceID = 32, spellId = 10938, expirationTime = NOW + 1800, duration = 1800 } }
+    Again()
+    assert(Count() == all - 1, "Robustesse posee montree")
+    Z.ForgetBuffs("player") c.status = "dead" AURAS["HELPFUL"] = nil
+    Again()
+    assert(Count() == 0 and c.buffWatch, "joueur mort : buffs montres, ou liste perdue")
+    FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true c.status = nil
+    Again()
+    assert(Count() == all, "releve en combat : buffs pas revenus en gris")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates()
+    UnitGUID = oldGuid
+    -- interrupteurs : « En combat » ailleurs, « En champ de bataille » en match ; hors combat, toujours montre
     local realKind = Z.PvPKind
-    Z.db.combatBuffs = false Z:Refresh() RunUpdates()
-    assert(c.boxes.buffs.slots.buff1243, "reperes non prepares alors que le champ de bataille les veut")
-    FireEvent("PLAYER_REGEN_DISABLED")
-    assert(not c.marksShown, "En combat eteint : reperes montres en combat")
-    Z.PvPKind = function() return "BG" end Z.RecheckBuffMarks()
-    assert(c.marksShown, "En champ de bataille allume : reperes absents en champ de bataille")
-    FireEvent("PLAYER_REGEN_ENABLED")
-    Z.db.combatBuffs, Z.db.pvpBuffs = true, false Z:Refresh() RunUpdates()
-    FireEvent("PLAYER_REGEN_DISABLED")
-    assert(not c.marksShown, "champ de bataille eteint : reperes montres en champ de bataille")
-    Z.PvPKind = realKind Z.RecheckBuffMarks()
-    assert(c.marksShown, "En combat allume : reperes absents en combat hors champ de bataille")
-    FireEvent("PLAYER_REGEN_ENABLED")
-    Z.db.combatBuffs = false Z:Refresh() RunUpdates()
-    FireEvent("PLAYER_REGEN_DISABLED")
-    assert(not c.marksShown and c.boxes.buffs.slots.buff1243, "deux interrupteurs eteints : rangee hors combat perdue")
-    FireEvent("PLAYER_REGEN_ENABLED")
+    local function InCombat() FireEvent("PLAYER_REGEN_DISABLED") COMBAT = true Again() return #Gray() > 0 end
+    local function OutCombat() COMBAT = false FireEvent("PLAYER_REGEN_ENABLED") RunUpdates() return #Gray() > 0 end
+    Z.db.combatBuffs = false
+    assert(not InCombat(), "En combat eteint : buffs montres en combat")
+    Z.PvPKind = function() return "BG" end
+    assert(InCombat(), "En champ de bataille allume : rien en combat en champ de bataille")
+    Z.db.combatBuffs, Z.db.pvpBuffs = true, false
+    assert(not InCombat(), "champ de bataille eteint : buffs montres en combat en match")
+    assert(OutCombat(), "champ de bataille eteint : rien hors combat")
+    Z.PvPKind = realKind
+    assert(InCombat(), "En combat allume : rien en combat")
+    assert(OutCombat(), "hors combat : rangee perdue")
     Z.db.pvpBuffs = true
     assert(Z.defaults.combatBuffs == true and Z.defaults.pvpBuffs == true, "deux interrupteurs allumes au depart")
     Z.db.combatBuffs, Z.db.combatKey = true, false
     FireEvent("PLAYER_REGEN_DISABLED")
     assert(key:GetAttribute("type") == nil, "interrupteur de la touche")
     FireEvent("PLAYER_REGEN_ENABLED")
+    AURAS["HELPFUL"] = nil
     for _, text in ipairs({ "En combat", "En champ de bataille", "En combat, la touche relance mon buff unique",
-      "Couleur : posé, rien à faire. Gris à bord rouge : il manque.", "Mes buffs sur la case" }) do
+      "Gris à bord rouge : à reposer. Un buff posé ne se montre pas.", "Mes buffs sur la case" }) do
       assert(Z.translations.enUS[text], "sans traduction anglaise : " .. text)
     end
   end)
   CreateFrame, C_Spell.GetSpellName, C_SpellBook.IsSpellKnown, UnitIsUnit = old.create, old.name, old.known, old.isUnit
-  C_Secrets, Z.class, C_Timer.After = old.secrets, old.class, old.after
+  C_Secrets, Z.class, C_Timer.After, NOW, AURAS["HELPFUL"] = old.secrets, old.class, old.after, old.now, nil
   AuraContainerSortMethod, AnchorUtil, Enum.CustomAuraButtonDispelTypeTextureStyle, Z.boxWrap = nil, nil, nil, nil
   Z.db.combatBuffs, Z.db.pvpBuffs, Z.db.combatKey, Z.char.buffTarget, COMBAT = true, true, true, {}, false
   for _, button in ipairs(made) do pcall(button.SetAttribute, button, "unit", nil) end
@@ -9576,7 +9614,7 @@ step("1.45.0 : Les amis de Lyorune (chiffres, carnet, mot de l'auteur, mur de re
     assert(notebook.since:GetText():find("En tout depuis le", 1, true), "carnet rallume : page pas a jour")
     for _, key in ipairs({ "mises à jour", "téléchargements", "sur le Discord", "Soins lancés", "Buffs posés",
       "Discord de Lyorune (Ctrl+C) :", "Chiffres du %s (GitHub et CurseForge), mis à jour à chaque version de Lyorune.",
-      "En tout depuis le %s, ce soir depuis votre connexion, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches.",
+      "En tout depuis le %s, aujourd'hui depuis votre connexion, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches.",
       "Carnet éteint : plus rien n'est compté, vos chiffres sont gardés.", "Votre nom ici ?" }) do
       assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
     end
@@ -9975,14 +10013,17 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
     AURAS = {} Update()
     local shown = 0
     for _, icon in ipairs(me.buffList or {}) do if icon:IsShown() then shown = shown + 1 end end
-    local expected = #me.missingBuffs
-    if not me.marksShown then assert(shown == expected and expected >= 3, "une seule icone de buff : " .. shown .. "/" .. expected) end
+    -- (plus mon buff unique quand je suis son porteur, C31)
+    local expected = 0
+    for _, entry in ipairs(me.buffWatch or {}) do if entry.at <= NOW then expected = expected + 1 end end
+    assert(expected >= #me.missingBuffs and #me.missingBuffs >= 3, "absences non suivies sur la case")
+    assert(shown == expected, "une seule icone de buff : " .. shown .. "/" .. expected)
     local x, _, size = Z.BuffMarkPlace(me)
     local width = me:GetWidth()
     me:SetWidth(x + (size + 2) * 1.5) Z.QueueAuras(me) RunUpdates()
     shown = 0
     for _, icon in ipairs(me.buffList or {}) do if icon:IsShown() then shown = shown + 1 end end
-    if not me.marksShown then assert(shown == 1, "rangee qui deborde de la case : " .. shown) end
+    assert(shown == 1, "rangee qui deborde de la case : " .. shown)
     me:SetWidth(width) Update()
     -- C28 : un familier n'est jamais propose (case, bandeau, touche)
     for _, unit in ipairs({ "pet", "partypet1", "raidpet3" }) do
@@ -9997,7 +10038,7 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
     Z.db.missingBuffs = true
     -- textes : option et traductions
     for _, text in ipairs({ "Proposer à nouveau sous (secondes)", "Mes buffs sur la case",
-      "Couleur : posé. Gris à bord rouge : à relancer.", "Au plus grand : %d %%. Mes buffs bloquent : décochez-les pour leur laisser la place.",
+      "Gris à bord rouge : à reposer. Un buff posé ne se montre pas.", "Au plus grand : %d %%. Mes buffs bloquent : décochez-les pour leur laisser la place.",
       "fin cachée : %d joueur(s) dont un buff a une heure de fin secrète (la mémoire de vos sorts décide)." }) do
       assert(Z.translations.enUS[text], "sans traduction : " .. text)
     end
@@ -10366,7 +10407,7 @@ step("1.47.0 : Me montrer, nouveautes pas encore vues, bilan du donjon et de la 
     INSTANCE, INSTANCE_TYPE = false, "none" FireEvent("PLAYER_ENTERING_WORLD", false, false)
     local said = PRINTED[n + 1] or ""
     assert(#PRINTED == n + 1 and said:find("Donjon 1 (1 min) : 2 soins, 0 résurrections, 0 buffs.", 1, true)
-      and said:find("Bilan de la soirée : 3 soins, 1 résurrections, 0 buffs.", 1, true), "bilan en sortie : " .. said)
+      and said:find("Bilan du jour : 3 soins, 1 résurrections, 0 buffs.", 1, true), "bilan en sortie : " .. said)
     assert(Z.char.outing == nil, "donjon pas oublie a la sortie")
     INSTANCE_NAME = nil
     -- interrupteur eteint, ou sortie d'un champ de bataille : rien
@@ -10377,10 +10418,10 @@ step("1.47.0 : Me montrer, nouveautes pas encore vues, bilan du donjon et de la 
     INSTANCE, INSTANCE_TYPE = true, "pvp" FireEvent("PLAYER_ENTERING_WORLD", false, false)
     INSTANCE, INSTANCE_TYPE = false, "none" FireEvent("PLAYER_ENTERING_WORLD", false, false)
     assert(#PRINTED == n + 1, "bilan donne a tort")
-    -- la page des amis : colonne Ce soir
+    -- la page des amis : colonne Aujourd'hui
     local notebook = OptionPart("tonightRows")
     notebook:Update()
-    assert(notebook.tonightRows.heals:GetText() == "3" and notebook.tonightRows.res:GetText() == "1", "colonne Ce soir")
+    assert(notebook.tonightRows.heals:GetText() == "3" and notebook.tonightRows.res:GetText() == "1", "colonne Aujourd'hui")
     -- nouveautes pas encore vues : une rune d'or sur les versions sorties depuis la derniere lecture
     Z.db.newsSeen = "1.46.4"
     text = Z:NewsText()
@@ -10389,8 +10430,8 @@ step("1.47.0 : Me montrer, nouveautes pas encore vues, bilan du donjon et de la 
     assert(first:find("Nouveau pour vous", 1, true) and not second:find("Nouveau pour vous", 1, true), "rune des nouveautes : " .. first)
     Z:ShowNews() news:Hide() news:Run("OnHide")
     assert(Z.db.newsSeen == Z.version and not Z:NewsText():find("Nouveau pour vous", 1, true), "nouveautes lues : rune restee")
-    for _, key in ipairs({ "En tout", "Ce soir", "Me montrer", "Nouveau pour vous", "%s soins, %s résurrections, %s buffs",
-      "Bilan de la soirée : %s.", "%s (%d min) : %s.",
+    for _, key in ipairs({ "En tout", "Aujourd'hui", "Me montrer", "Nouveau pour vous", "%s soins, %s résurrections, %s buffs",
+      "Bilan du jour : %s.", "%s (%d min) : %s.",
       "Mène au réglage de cette nouveauté dans les options." }) do
       assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
     end

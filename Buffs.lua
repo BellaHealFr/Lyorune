@@ -524,7 +524,6 @@ local function KeepCover(covered)
 		local unit = b.unit
 		if unit and not SameCover(old[unit], covered[unit]) then
 			Z.QueueAuras(b) -- icônes grises de Lyorune
-			if Z.RaiseBuffMarks then Z.RaiseBuffMarks(b) end -- repères dessinés sous les conteneurs du jeu
 		end
 	end
 end
@@ -1088,7 +1087,7 @@ function Z:UpdateBuffPanel()
 	queued = false
 	if InCombatLockdown() then return end -- les boutons du jeu ne bougent plus en combat
 	Z.UpdateHiddenSelf() -- ma case cachée (seul) : ma fiche à jour avant la lecture (relit le panneau si elle change)
-	if Z.RecheckBuffMarks then Z.RecheckBuffMarks() end -- repères des buffs (Containers.lua) : porteur, réglages
+	if Z.RecheckBearers then Z.RecheckBearers() end -- porteur d'un buff unique changé : les cases se relisent (Auras.lua)
 	-- mort ou fantôme : rien ne peut partir avant mon retour (C30)
 	local dead = UnitIsDeadOrGhost("player")
 	dead = not issecret(dead) and dead

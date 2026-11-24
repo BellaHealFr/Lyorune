@@ -50,7 +50,6 @@ local function Recheck()
 		if b.unit and Z.QueueAuras then Z.QueueAuras(b) end
 	end
 	if Z.hiddenSelf and Z.QueueAuras then Z.QueueAuras(Z.hiddenSelf) end
-	if Z.RecheckBuffMarks then Z.RecheckBuffMarks() end
 	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
 end
 Z.RecheckAllBuffs = Recheck

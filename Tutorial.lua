@@ -255,7 +255,7 @@ local steps = {
 		text = "Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
 			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés, relance ce tutoriel et ouvre les nouveautés, "
 			.. "où |cff33dd88Me montrer|r mène au réglage de chacune. "
-			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur, en tout et ce soir.",
+			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur, en tout et aujourd'hui.",
 		window = "Accueil",
 		target = function() return Z:OptionsWindow().search end,
 	},
@@ -264,7 +264,7 @@ local steps = {
 		text = "Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
-			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, le prochain buff qui manque s'affiche sous vos cadres, dans un bandeau fin : un clic le pose, puis le suivant prend sa place. Trois joueurs d'un groupe sans le buff : un seul sort de groupe, son icône sur leurs cases. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs. Sur chaque case, une rangée de vos buffs, partout : en couleur, posés, rien à faire ; gris, à relancer (en combat et en champ de bataille : deux interrupteurs). Vos groupes à buffer et la bénédiction de chaque joueur s'y règlent aussi ; le chef peut les répartir.\n\n"
+			.. "Une touche peut aussi le faire, ou masquer les cadres et poser le prochain buff manquant : raccourcis du jeu, rubrique AddOns. Hors combat, le prochain buff qui manque s'affiche sous vos cadres, dans un bandeau fin : un clic le pose, puis le suivant prend sa place. Trois joueurs d'un groupe sans le buff : un seul sort de groupe, son icône sur leurs cases. Vos buffs à surveiller, en JcE et en JcJ : chapitre Joueurs. Sur chaque case, seulement vos buffs à reposer, en gris, partout ; un buff posé ne se montre pas (en combat et en champ de bataille : deux interrupteurs). Vos groupes à buffer et la bénédiction de chaque joueur s'y règlent aussi ; le chef peut les répartir.\n\n"
 			.. "Un souci ou un défaut d'affichage ? Tapez |cff33dd88/lyorune bug|r : trois questions, "
 			.. "et un rapport prêt à copier pour l'auteur.",
 	},

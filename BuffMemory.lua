@@ -22,6 +22,7 @@ local SENT_WINDOW = 15       -- un sort annoncé (UNIT_SPELLCAST_SENT) qui réus
 local seen = {}   -- seen[joueur][nom du buff] = fin (GetTime) : buffs de tout le monde
 local mine = {}   -- mine[joueur][nom du buff] = fin : mes buffs (bénédictions, auras, buffs uniques)
 local readable = {} -- readable[numéro] = vrai / faux : le jeu le laisse lisible maintenant (vidé à chaque restriction)
+local deaths = {} -- deaths[joueur] = nombre de morts vues depuis le chargement
 
 -- Le joueur, par son identifiant (sinon l'unité, quand l'identifiant est secret)
 local function Key(unit)
@@ -167,8 +168,13 @@ end
 -- Un joueur mort perd ses buffs : la mémoire aussi (appelé par Frames.lua, qui voit la mort même en combat)
 function Z.ForgetBuffs(unit)
 	local key = Key(unit)
-	seen[key], mine[key] = nil, nil
+	seen[key], mine[key], deaths[key] = nil, nil, (deaths[key] or 0) + 1
 	if Z.ForgetAside then Z.ForgetAside(unit) end -- refus du jeu oublié aussi (Buffs.lua, C30)
+end
+
+-- Nombre de morts de ce joueur : une mort après une lecture efface, en combat, les buffs lus avant (Auras.lua, C31)
+function Z.BuffDeaths(unit)
+	return deaths[Key(unit)] or 0
 end
 
 ----------------------------------------------------------------------------------------------------

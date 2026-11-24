@@ -622,12 +622,13 @@ local function Draw()
 	end
 	SampleIcon(Z.ControlIcon(cell), SAMPLE_ICONS.controls)
 	Edge(cell.controlIcon, Z.CONTROL_EDGE)
-	-- Mes buffs : un posé (en couleur), un à relancer (gris à bord rouge), comme sur les vraies cases
-	SampleIcon(Z.BuffIcon(cell, 1), SAMPLE_ICONS.buff)
-	local again = Z.BuffIcon(cell, 2)
-	SampleIcon(again, SAMPLE_ICONS.buffAgain)
-	again.texture:SetDesaturated(true)
-	again.border:SetColor(1, 0.2, 0.2, 1)
+	-- Mes buffs : seulement ceux à reposer, gris à bord rouge, comme sur les vraies cases (un buff posé ne se montre pas)
+	for index, texture in ipairs({ SAMPLE_ICONS.buff, SAMPLE_ICONS.buffAgain }) do
+		local again = Z.BuffIcon(cell, index)
+		SampleIcon(again, texture)
+		again.texture:SetDesaturated(true)
+		again.border:SetColor(1, 0.2, 0.2, 1)
+	end
 
 	-- Auras privées : le jeu les dessine lui-même, la case d'exemple montre deux points d'interrogation
 	local holder, size = Z.PrivateHolder(cell)

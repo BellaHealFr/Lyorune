@@ -3,7 +3,7 @@
 -- En combat, le jeu refuse à tout addon la lecture des auras (« auras secrètes »). Il prête en revanche des
 -- conteneurs : Lyorune leur dit quoi montrer (filtres, numéros de sorts) et où, le jeu y dessine les auras,
 -- leur durée et la couleur de dissipation. Rien n'est lu, rien ne tourne en boucle.
--- Sept conteneurs par case :
+-- Sept conteneurs par case (mes buffs n'en ont plus, C31 : seul ce qu'il faut reposer, en gris, Auras.lua) :
 --   hots       : mes soins sur la durée en icônes (place et taille selon la forme, Z.AuraRows dans Themes.lua),
 --                puis, assombri, l'affaiblissement qui bloque un de mes sorts (Âme affaiblie, Z.lockouts)
 --   bars       : les mêmes en barres fines (style « Barres »)
@@ -13,8 +13,6 @@
 --   drink      : la boisson d'un soigneur qui boit (Z.drinkSpells), à côté de sa mana basse
 --   slots      : places fixes : un carré par coin, la bordure de dissipation, l'icône du type à dissiper, la
 --                grande icône et son contour
---   buffs      : mes buffs, une place fixe chacun, montrés seulement quand le jeu cache les buffs (repères gris
---                dessous : gris = manquant, couleur = posé ; étape 26 b bis, plus bas)
 -- Si le jeu n'a pas ces conteneurs, Auras.lua garde l'ancien affichage (lecture des auras).
 
 local _, Z = ...
@@ -57,7 +55,7 @@ local function Show(value)
 end
 
 function Z.DescribeAuraBoxes(b, Add)
-	for _, name in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "drink", "slots", "buffs" }) do
+	for _, name in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "drink", "slots" }) do
 		local box = b.boxes[name]
 		local ok, text = pcall(function()
 			local point, relative, _, x, y = box:GetPoint()
@@ -86,10 +84,6 @@ function Z.DescribeAuraBoxes(b, Add)
 			Show(Call(box, "GetAuraGroupFrameCount", key)), Frame(Call(box, "GetAuraGroupFrame", key, 1))))
 	end
 	for key, button in pairs(b.slots) do Add("  place " .. key .. " : " .. Frame(button)) end
-	for i, entry in ipairs(b.markList or {}) do
-		Add(("  repère %s : %s, %s"):format(entry.key, Frame(b.markButtons and b.markButtons[i]),
-			b.marksShown and "montré" or (b.marksStale and "en attente (joueur changé en combat)" or "caché")))
-	end
 	for method in pairs(logged) do Add("  erreur notée : " .. method) end
 end
 
@@ -339,24 +333,6 @@ local function PlaceType(b, button)
 	Call(button, "SetPoint", "LEFT", relative == "HP" and b.hp or b.boxes.slots, "LEFT", x, y)
 end
 
--- Repère d'un buff : la place numéro « index » de la rangée qui part du coin bas gauche (Z.BuffMarkPlace)
-local function PlaceMark(b, button, index)
-	local x, y, size = Z.BuffMarkPlace(b)
-	Call(button, "SetSize", size, size)
-	Call(button, "ClearAllPoints")
-	Call(button, "SetPoint", "BOTTOMLEFT", b.boxes.buffs, "BOTTOMLEFT", x + (index - 1) * (size + 2), y)
-end
-
--- Le buff posé, en couleur, sans durée ni voile : il dit seulement « il est là » et cache le repère gris dessous
-local function DressMark(b, index)
-	return function(button)
-		Silent(button)
-		Call(button, "SetIcon", button.Icon)
-		Call(button.Texts, "SetAlpha", 0)
-		PlaceMark(b, button, index)
-	end
-end
-
 local function DressCorner(b, point)
 	return function(button)
 		Silent(button)
@@ -416,76 +392,6 @@ end
 --   * un filtre ne se modifie pas : un réglage changé reconstruit les conteneurs (l'ancien est caché).
 ----------------------------------------------------------------------------------------------------
 local function NilIfEmpty(set) if set and next(set) then return set end end
-
-----------------------------------------------------------------------------------------------------
--- Repères des buffs (étape 26 b bis, choix de l'auteur le 22 novembre 2026 ; partout depuis la 1.46.3, C21 et C22 :
--- même rangée hors combat, en combat et en champ de bataille). Quand le jeu cache les buffs (combat, champ de
--- bataille), Lyorune ne peut plus lire qu'un buff manque. Chaque buff de ma liste qui
--- concerne ce joueur (décidé hors combat, mêmes règles que le panneau : Z.BuffConcerns) reçoit un repère gris à bord
--- rouge (Z.BuffMark, Auras.lua) et une place du conteneur « buffs », juste au-dessus : le jeu y dessine le buff en
--- couleur quand il est là. Gris = manquant, couleur = posé. Un seul conteneur par case (pas un par buff), tous les
--- rangs du buff (Z.spellRanks, Data.lua), bénédictions, auras et buffs uniques : seulement les miens.
--- Hors combat, Lyorune sait aussi ce qui manque ou finit bientôt (Auras.lua, b.missingBuffs) : ce repère gris passe
--- alors devant le buff dessiné (RaiseMarks). En combat, seul le jeu décide.
-----------------------------------------------------------------------------------------------------
-local fighting = false -- entre PLAYER_REGEN_DISABLED et PLAYER_REGEN_ENABLED (le verrou arrive juste après)
-
--- Deux interrupteurs (1.37.1, retour d'un joueur) : en champ de bataille, seul « pvpBuffs » décide ; ailleurs, en
--- combat (et boss hors combat), seul « combatBuffs » ; hors combat, « missingBuffs » suffit.
-local function Fighting()
-	return fighting or InCombatLockdown() or Z.AurasHidden()
-end
-
-function Z.BuffMarksOn()
-	local db = Z.db
-	if not (db and db.missingBuffs) then return false end
-	if Z.PvPKind and Z.PvPKind() then return db.pvpBuffs == true end
-	if Fighting() then return db.combatBuffs == true end
-	return true
-end
-
-function Z.BuffMarksShown(b)
-	return b.boxes ~= nil and b.marksShown == true
-end
-
--- Porteur de chaque buff unique (Z.UniqueBearer, Buffs.lua), cherché une fois par image pour toutes les cases
-local bearers, bearersAt = {}, nil
-local function Bearer(check)
-	local now = GetTime()
-	if bearersAt ~= now then bearers, bearersAt = {}, now end
-	if bearers[check.id] == nil then bearers[check.id] = Z.UniqueBearer and Z.UniqueBearer(check) or false end
-	return bearers[check.id] or nil
-end
-
--- Les buffs suivis sur cette case : { key, filter, ids, icon }. Rien en combat (rien n'y est sûr : la case attend).
-local function Marks(b)
-	local db, list = Z.db, {}
-	local unit = b.unit
-	-- préparés dès que la rangée est allumée : Z.BuffMarksOn choisit selon le lieu, sans reconstruire
-	if not db.missingBuffs or b.extra or not unit or InCombatLockdown() then return list end
-	local me = UnitIsUnit(unit, "player")
-	if issecret(me) then return list end
-	for _, check in ipairs(Z.buffChecks or {}) do
-		if check.auraIds and Z.BuffConcerns(check, unit, me) then
-			local own = check.blessing or check.aura
-			local choice = check.blessing and Z.BlessingFor(check, unit) or (check.aura and Z.LastChoice(check))
-			if choice or not check.blessing then -- (aucune bénédiction prévue pour lui : grille, autres paladins)
-				list[#list + 1] = { box = "buffs", key = "buff" .. check.id, filter = own and "HELPFUL|PLAYER" or "HELPFUL", ids = check.auraIds,
-					icon = choice and choice.icon or check.icon }
-			end
-		end
-	end
-	if not unit:find("pet", 1, true) then
-		for _, check in ipairs(Z.uniqueChecks or {}) do
-			local bearer = Z.BuffWatched(check) and Bearer(check)
-			local same = bearer and UnitIsUnit(unit, bearer)
-			if same and not issecret(same) then
-				list[#list + 1] = { box = "buffs", key = "buff" .. check.id, filter = "HELPFUL|PLAYER", ids = check.auraIds, icon = check.icon }
-			end
-		end
-	end
-	return list
-end
 
 -- « Utiles » : le jeu trie comme pour ses cadres de raid si ce client sait le faire (politique de traitement des
 -- auras) ; sinon seule la durée trie
@@ -583,11 +489,6 @@ local function Plan(b)
 	end
 	-- place de l'icône du type : seulement si elle est montrée (un changement refait les conteneurs)
 	if db.dispelIcon then plan.look = plan.look .. "," .. table.concat({ Z.DispelTypePlace() }, ",") end
-	plan.marks = Marks(b)
-	if #plan.marks > 0 then
-		local x, y, size = Z.BuffMarkPlace(b)
-		plan.look = plan.look .. "," .. x .. "," .. y .. "," .. size
-	end
 	return plan
 end
 
@@ -601,7 +502,7 @@ end
 
 local function Signature(plan)
 	local parts = { plan.look }
-	for _, list in ipairs({ plan.groups, plan.slots, plan.marks }) do
+	for _, list in ipairs({ plan.groups, plan.slots }) do
 		for _, entry in ipairs(list) do
 			local candidates = { ids = entry.ids and "{" .. Sorted(entry.ids) .. "}" or nil }
 			for key, value in pairs(entry.candidates or {}) do
@@ -691,10 +592,6 @@ local function Place(b)
 	PlaceRow(b, boxes.controls, rows.controls, Z.Offset("controls"))
 
 	Call(boxes.slots, "SetAllPoints", b.over)
-	Call(boxes.buffs, "SetAllPoints", b.over)
-	for index, button in ipairs(b.markButtons or {}) do
-		if Open(button) then PlaceMark(b, button, index) end
-	end
 
 	-- Boutons déjà créés par le jeu : seulement s'il nous laisse y toucher (sinon, à la prochaine occasion)
 	for key, button in pairs(b.slots) do
@@ -730,38 +627,6 @@ local function Visibility(b)
 	Call(b.boxes.hots, "SetShown", shown and not bars)
 	Call(b.boxes.bars, "SetShown", shown and bars)
 	Call(b.boxes.drink, "SetShown", shown and b.drinkShown == true)
-	-- repères des buffs : seulement quand le jeu cache les buffs, et jamais pour un joueur changé en combat
-	local list = b.markList or {}
-	local marks = shown and #list > 0 and not b.marksStale and Z.BuffMarksOn()
-	b.marksShown = marks and true or false
-	Call(b.boxes.buffs, "SetShown", b.marksShown)
-	for index, entry in ipairs(list) do
-		local icon = Z.BuffMark(b, index, entry.icon)
-		icon:SetShown(b.marksShown)
-	end
-	for index = #list + 1, #(b.markIcons or {}) do b.markIcons[index]:Hide() end
-	Z.RaiseBuffMarks(b)
-end
-
--- Hors combat, sur une lecture sûre : le repère gris d'un buff qui manque ou finit bientôt (b.missingBuffs, Auras.lua)
--- passe devant le conteneur, qui le dessinerait en couleur. En combat, en champ de bataille ou contre un boss (la
--- mémoire devine), tous derrière : ce que le jeu dessine fait foi.
-function Z.RaiseBuffMarks(b)
-	if not (b.marksShown and b.markIcons) then return end
-	local missing = {}
-	if not (fighting or InCombatLockdown()) and b.buffRead == "ok" then
-		for _, entry in ipairs(b.missingBuffs or {}) do missing["buff" .. entry.check.id] = entry.check end
-	end
-	local level = b.over:GetFrameLevel()
-	for index, entry in ipairs(b.markList or {}) do
-		local icon = b.markIcons[index]
-		if icon then
-			icon:SetFrameLevel(level + (missing[entry.key] and 4 or 1)) -- (boutons du conteneur : +3)
-			-- manquant, et posé par un seul sort de groupe (bandeau, « Groupe N ») : l'icône de ce sort
-			local check = missing[entry.key]
-			icon.texture:SetTexture(check and Z.GroupCover and Z.GroupCover(b.unit, check) or entry.icon)
-		end
-	end
 end
 
 local function EachBox(b, method, ...)
@@ -772,14 +637,11 @@ end
 local function Drop(b)
 	if not b.boxes then return end
 	EachBox(b, "Hide")
-	for _, icon in ipairs(b.markIcons or {}) do icon:Hide() end
 	b.boxes, b.boxButtons, b.slots, b.boxesSig = nil, nil, nil, nil
-	b.markButtons, b.markList, b.marksShown = nil, nil, nil
 end
 
 local function Build(b, plan)
-	b.boxes, b.boxButtons, b.slots, b.markButtons = {}, {}, {}, {}
-	b.markList, b.marksStale, b.markUnit = plan.marks, nil, b.unit
+	b.boxes, b.boxButtons, b.slots = {}, {}, {}
 	local boxes = b.boxes
 	boxes.hots = NewBox(b, 1)
 	boxes.bars = NewBox(b, 1)
@@ -788,12 +650,11 @@ local function Build(b, plan)
 	boxes.controls = NewBox(b, 3) -- au-dessus des autres icônes : un joueur qui ne peut plus agir se voit d'abord
 	boxes.drink = NewBox(b, 1)
 	boxes.slots = NewBox(b, 4) -- au-dessus des icônes, sous les auras privées
-	boxes.buffs = NewBox(b, 2) -- au-dessus des repères gris (b.over + 1)
 	if plan.useful then -- « Utiles » : le jeu marque chaque aura comme pour ses cadres de raid
 		Call(boxes.debuffs, "SetAuraProcessingPolicy", CustomAuraContainerAuraProcessingPolicy.ProcessAura,
 			{ displayOnlyDispellableDebuffs = false })
 	end
-	for _, key in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "drink", "slots", "buffs" }) do
+	for _, key in ipairs({ "hots", "bars", "debuffs", "defensives", "controls", "drink", "slots" }) do
 		if not boxes[key] then error("création refusée") end
 	end
 
@@ -843,17 +704,6 @@ local function Build(b, plan)
 		if not ok then error("AddAuraSlot " .. entry.key .. " : " .. tostring(button)) end
 		b.slots[entry.key] = button
 	end
-	for index, entry in ipairs(plan.marks) do
-		local box = boxes.buffs
-		local ok, button = pcall(box.AddAuraSlot, box, entry.key, entry.filter, {
-			templateNames = { "LyoruneAuraIcon" },
-			candidateFilters = { includeSpellIDs = entry.ids },
-			initializeFrame = DressMark(b, index),
-		})
-		if not ok then error("AddAuraSlot " .. entry.key .. " : " .. tostring(button)) end
-		b.markButtons[index] = button
-	end
-
 	-- 4. en dernier : le jeu se met à suivre les auras
 	EachBox(b, "SetEnabled", true)
 	Visibility(b)
@@ -882,14 +732,7 @@ local function Rebuild(b)
 	Probe(b)
 	local plan = Plan(b)
 	local signature = Signature(plan)
-	if b.boxes and b.boxesSig == signature then
-		-- mêmes places : seules les icônes des repères peuvent changer (bénédiction choisie, dernière aura)
-		if not InCombatLockdown() then
-			b.markList, b.marksStale = plan.marks, nil
-			Visibility(b)
-		end
-		return
-	end
+	if b.boxes and b.boxesSig == signature then return end
 	if InCombatLockdown() then waiting[b] = true return end
 	waiting[b] = nil
 	Drop(b)
@@ -907,61 +750,12 @@ local function Rebuild(b)
 	Z.ShowDispel(b, false)
 end
 
--- Le jeu se met à cacher les buffs, ou cesse : les repères des buffs apparaissent ou s'effacent sur chaque case.
--- Montrés : le jeu redessine le conteneur, et l'ancien repère lu hors combat s'efface. Effacés : la case se relit.
-local function MarksChanged()
-	for _, b in ipairs(Z.buttons or {}) do
-		if b.boxes then
-			local before = b.marksShown
-			Visibility(b)
-			if b.marksShown and not before then
-				Call(b.boxes.buffs, "UpdateAllAuras")
-				if Z.QueueAuras then Z.QueueAuras(b) end -- les absences sans repère se replacent après eux
-			elseif before and not b.marksShown and Z.QueueAuras then
-				Z.QueueAuras(b)
-			end
-		end
-	end
-end
-
-Z:On("PLAYER_REGEN_DISABLED", function()
-	fighting = true
-	MarksChanged()
-end)
-
 Z:On("PLAYER_REGEN_ENABLED", function()
-	fighting = false
 	for b in pairs(waiting) do
 		waiting[b] = nil
 		Z:Try("conteneurs d'auras", Rebuild, b)
 	end
-	MarksChanged()
 end)
-
--- Restriction du jeu (match JcJ, boss) qui commence ou finit
-Z:On("ADDON_RESTRICTION_STATE_CHANGED", function() MarksChanged() end)
-
--- Le groupe change en plein combat : un même nom d'unité peut désigner un autre joueur. Ses repères (mana, porteur)
--- ne sont plus sûrs : cachés jusqu'à la fin du combat, puis revus.
-Z:On("GROUP_ROSTER_UPDATE", function() -- tout de suite : le combat se lit au moment du changement (rien hors combat)
-	if not InCombatLockdown() then return end
-	for _, b in ipairs(Z.buttons or {}) do
-		if b.markList and #b.markList > 0 then
-			b.marksStale = true
-			waiting[b] = true
-			if b.boxes then Visibility(b) end
-		end
-	end
-end)
-
--- Hors combat, après une relecture du panneau des buffs (Buffs.lua) : un porteur, un réglage de « Mes buffs » ou un
--- joueur a pu changer. Chaque case revoit ses repères (rien n'est refait si rien n'a changé).
-function Z.RecheckBuffMarks()
-	if InCombatLockdown() then return end
-	for _, b in ipairs(Z.buttons or {}) do
-		if b.boxes then Rebuild(b) end
-	end
-end
 
 -- Le joueur de la case change : les conteneurs le suivent (SetUnit est permis en combat)
 function Z.BindAuraBoxes(b)
@@ -972,16 +766,6 @@ function Z.BindAuraBoxes(b)
 				-- refusé : ne jamais montrer les auras de l'ancien joueur
 				b.boxesShown, b.boxesSig = false, nil
 				waiting[b] = true
-			end
-		end
-		-- les repères des buffs dépendent du joueur (mana, porteur) : revus hors combat, en attente en combat
-		if b.unit ~= b.markUnit then
-			b.markUnit = b.unit
-			if InCombatLockdown() then
-				b.marksStale = true
-				waiting[b] = true
-			elseif b.boxesSig then
-				Rebuild(b)
 			end
 		end
 	end

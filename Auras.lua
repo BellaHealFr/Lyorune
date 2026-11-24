@@ -440,38 +440,23 @@ function Z.BigIcon(b)
 	return b.bigIcon
 end
 
--- Place du buff manquant : coin bas gauche, après le carré de coin (x, y, taille). Les repères dessinés par le jeu
--- (Containers.lua) partent du même point, vers la droite.
+-- Place du buff à reposer : coin bas gauche, après le carré de coin (x, y, taille), puis vers la droite
 function Z.BuffMarkPlace(b)
 	local dx, dy = Z.Offset("buff")
 	return 2 + Z.CornerShift(b, "BOTTOMLEFT") + dx, 2 + dy, Z.ElementSize("buff", Z.IconSize())
 end
 
--- Icône numéro « index » des buffs manquants lus par Lyorune, après « skip » places de la rangée (les repères dessinés
--- par le jeu, Containers.lua, viennent d'abord)
-function Z.BuffIcon(b, index, skip)
+-- Icône numéro « index » des buffs à reposer (gris à bord rouge)
+function Z.BuffIcon(b, index)
 	local x, y, size = Z.BuffMarkPlace(b)
 	b.buffList = b.buffList or {}
-	local icon = GetIcon(b, b.buffList, index or 1, "BOTTOMLEFT", x + (skip or 0) * (size + 2), y, 1, size)
+	local icon = GetIcon(b, b.buffList, index or 1, "BOTTOMLEFT", x, y, 1, size)
 	b.buffIcon = b.buffList[1]
 	return icon
 end
 
 function Z.HideBuffIcons(b, from)
 	for index = from or 1, #(b.buffList or {}) do b.buffList[index]:Hide() end
-end
-
--- Repère numéro « index » d'un buff de ma liste quand le jeu cache les buffs : gris à bord rouge, sous le conteneur
--- du jeu qui dessine le buff par-dessus quand il est là (Containers.lua)
-function Z.BuffMark(b, index, texture)
-	local x, y, size = Z.BuffMarkPlace(b)
-	b.markIcons = b.markIcons or {}
-	local icon = GetIcon(b, b.markIcons, index, "BOTTOMLEFT", x, y, 1, size)
-	icon:SetFrameLevel(b.over:GetFrameLevel() + 1)
-	icon.texture:SetTexture(texture)
-	icon.texture:SetDesaturated(true)
-	icon.border:SetColor(1, 0.2, 0.2, 1)
-	return icon
 end
 
 local function ShowCorner(square, unit, aura)
@@ -943,6 +928,10 @@ local function FindMissingBuffs(b, unit)
 	local me = UnitIsUnit(unit, "player")
 	if issecret(me) then me = false end
 	local missing, key, soonest = {}, Z.buffGeneration .. "|", math.huge
+	local okGuid, guid = pcall(UnitGUID, unit)
+	if not okGuid or issecret(guid) then guid = nil end
+	-- pour la case, en combat aussi (C31, Due) ; guid : le même joueur après un changement de groupe en combat
+	local watch = { unit = unit, deaths = Z.BuffDeaths(unit), guid = guid }
 	for _, check in ipairs(Z.buffChecks) do
 		if Concerns(check, unit, me) then
 			local left, choice, fromMemory = -math.huge, nil, false -- secondes avant de le proposer à nouveau (absent : jamais assez)
@@ -1003,6 +992,10 @@ local function FindMissingBuffs(b, unit)
 					if memory then left, remembered = math.max(left, memory), true end
 				end
 			end
+			if choice or not check.blessing then -- (aucune bénédiction à poser : rien à reposer non plus)
+				watch[#watch + 1] = { check = check, names = check.names, own = own, at = now + left,
+					icon = choice and choice.icon or check.icon }
+			end
 			if left <= 0 then
 				local spell = choice and choice.name or check.spell
 				missing[#missing + 1] = { check = check, spell = spell, icon = choice and choice.icon or check.icon }
@@ -1013,7 +1006,8 @@ local function FindMissingBuffs(b, unit)
 		end
 	end
 	Recheck(b, soonest)
-	if #missing > 0 then return missing, key end
+	if #missing > 0 then return missing, key, watch end
+	return nil, nil, watch
 end
 
 -- Mes buffs uniques (Bouclier de terre...) sur ce joueur, hors combat seulement. Rend trois listes « nom,nom » (ou
@@ -1330,45 +1324,160 @@ UpdateAuras = function(b)
 	return UpdateWithReading(b)
 end
 
--- Buffs manquants et mes buffs uniques, hors combat. Le panneau des buffs manquants (Buffs.lua) lit
--- b.missingBuffs (toutes les absences) ; b.missingBuff est la première. Sur la case, une seule rangée (C21, C22) :
--- les repères dessinés par le jeu (Containers.lua), puis, en gris, chaque absence qu'ils ne montrent pas (arme,
--- sort sans numéro connu, ou tout, quand le jeu ne dessine rien).
+-- Porteur de chaque buff unique (Z.UniqueBearer, Buffs.lua), cherché une fois par image pour toutes les cases
+local bearers, bearersAt = {}, nil
+local function Bearer(check)
+	local now = GetTime()
+	if bearersAt ~= now then bearers, bearersAt = {}, now end
+	if bearers[check.id] == nil then bearers[check.id] = Z.UniqueBearer and Z.UniqueBearer(check) or false end
+	return bearers[check.id] or nil
+end
+
+local function Listed(list, name)
+	return list ~= nil and ("," .. list .. ","):find("," .. name .. ",", 1, true) ~= nil
+end
+
+-- Mes buffs uniques suivis dont ce joueur est le porteur (Bouclier de terre sur le tank...) : ajoutés aux buffs
+-- suivis de la case, à reposer s'il ne l'a pas ou s'il passe sous le seuil ; jamais celui d'un autre joueur (C30)
+-- Mon buff unique posé sur une autre case : le panneau ne propose rien (UniqueRows, Buffs.lua), la case non plus
+local function PlacedElsewhere(unit, name)
+	for _, other in ipairs(Z.buttons or {}) do
+		if other.unit and other.unit ~= unit and not other.extra and Listed(other.myUniques, name) then return true end
+	end
+	return false
+end
+
+local function WatchUniques(watch, unit, uniques, others)
+	if not Z.db.buffPanel or unit:find("pet", 1, true) then return end -- (FindMyUniques ne lit rien sans le panneau)
+	local now, margin = GetTime(), Z.db.buffRenew
+	for _, check in ipairs(Z.uniqueChecks or {}) do
+		local bearer = Z.BuffWatched(check) and Bearer(check)
+		local same = bearer and UnitIsUnit(unit, bearer)
+		if same and not issecret(same) and not Listed(others, check.name) and not PlacedElsewhere(unit, check.name) then
+			-- posé : hors combat, la lecture relit la case sous le seuil ; en combat, la fin retenue si sa durée est sûre
+			local left = -math.huge
+			if Listed(uniques, check.name) then left = Z.BuffMemoryLeft(unit, check.name, true, now, margin, true) or math.huge end
+			watch[#watch + 1] = { check = check, names = { [check.name] = true }, own = true, at = now + left, icon = check.icon }
+		end
+	end
+end
+
+-- Buffs de la case à reposer maintenant (C31, demande de l'auteur : un buff posé ne se montre jamais, il revient en
+-- gris quand il faut le reposer). Hors combat, la lecture vient d'en décider (b.buffWatch : l'heure où chaque buff
+-- suivi est à reposer). En combat, le jeu cache les buffs : la même heure, prolongée par mes sorts réussis en combat
+-- (BuffMemory.lua), effacée à la mort du joueur ; un buff dissipé en combat se voit à la fin du combat (limite
+-- acceptée par l'auteur). Réglages : « missingBuffs » partout ; en combat, « pvpBuffs » en champ de bataille et
+-- « combatBuffs » ailleurs.
+local function Due(b, unit, enemy)
+	local db, watch = Z.db, b.buffWatch
+	if enemy or b.status or not db.missingBuffs or not watch or watch.unit ~= unit or watch.stale then return nil end
+	local combat = InCombatLockdown()
+	if combat then
+		if b.extra then return nil end -- cible, focalisation : le joueur visé peut changer sans prévenir
+		if Z.PvPKind and Z.PvPKind() then
+			if not db.pvpBuffs then return nil end
+		elseif not db.combatBuffs then
+			return nil
+		end
+	end
+	local now, margin = GetTime(), db.buffRenew
+	local forgot = combat and Z.BuffDeaths(unit) ~= watch.deaths -- mort depuis la lecture
+	local due, soonest = {}, math.huge
+	for _, entry in ipairs(watch) do
+		local left = (forgot and not entry.check.weapon) and -math.huge or entry.at - now -- (l'arme reste enchantée)
+		if combat then
+			for name in pairs(entry.names) do
+				local memory = Z.BuffMemoryLeft(unit, name, entry.own, now, margin)
+				if memory then left = math.max(left, memory) end
+			end
+		end
+		if left <= 0 then due[#due + 1] = entry else soonest = math.min(soonest, left) end
+	end
+	if combat then Recheck(b, soonest) end -- hors combat, la lecture a déjà pris rendez-vous
+	return due
+end
+
+-- Le panneau des buffs manquants (Buffs.lua) lit b.missingBuffs (toutes les absences, hors combat) ; b.missingBuff
+-- est la première. Sur la case, une seule rangée : les buffs à reposer, en gris à bord rouge (Due).
 UpdateBuffs = function(b, unit, enemy)
-	local db = Z.db
-	local list, key
-	if not enemy then list, key = FindMissingBuffs(b, unit) end
+	local list, key, watch
+	if not enemy then list, key, watch = FindMissingBuffs(b, unit) end
 	local uniques, renew, others
 	if not enemy then uniques, renew, others = FindMyUniques(b, unit) end
 	local changed = StoreBuffs(b, list, key, uniques, renew, others)
 	if changed then Z:QueueBuffPanel() end
-	local shown = 0
-	if list and db.missingBuffs then
-		local marked, skip = {}, 0
-		if Z.BuffMarksShown(b) then
-			for _, entry in ipairs(b.markList or {}) do marked[entry.key] = true end
-			skip = #(b.markList or {})
+	-- gardé tel quel en combat. Gardé aussi pour un joueur déjà en combat (rien ne se lit sur lui : Z.BuffFighting) ou
+	-- mort (relevé en combat, Due voit sa mort) ; ailleurs, sa lecture le remplace.
+	if not InCombatLockdown() then
+		if Z.BuffFighting and Z.BuffFighting(unit) then
+			b.buffWatch = b.buffWatch or { unit = unit, stale = true } -- (aucune lecture sûre : rien à montrer)
+		elseif watch or not b.status then
+			if watch then WatchUniques(watch, unit, uniques, others) end
+			b.buffWatch = watch
 		end
+	end
+	local shown = 0
+	local due = Due(b, unit, enemy)
+	if due then
 		-- jamais au-delà du bord droit de la case : autant d'icônes que sa largeur en laisse (HealKit en fixe 3)
 		local x, _, size = Z.BuffMarkPlace(b)
 		local width = b.GetWidth and b:GetWidth() or 0
 		local fit = (issecret(width) or width <= 0) and math.huge or math.max(1, math.floor((width - x) / (size + 2)))
-		for _, missing in ipairs(list) do
-			if not marked["buff" .. missing.check.id] and skip + shown < fit then
-				shown = shown + 1
-				local icon = Z.BuffIcon(b, shown, skip)
-				-- un seul sort de groupe le posera (bandeau, ligne « Groupe N ») : son icône, pour le voir sur la case
-				icon.texture:SetTexture(Z.GroupCover and Z.GroupCover(unit, missing.check) or missing.icon)
-				icon.texture:SetDesaturated(true)
-				icon.border:SetColor(1, 0.2, 0.2, 1)
-				icon.cooldown:Clear()
-				icon.count:SetText("")
-				icon:Show()
-			end
+		for _, entry in ipairs(due) do
+			if shown >= fit then break end
+			shown = shown + 1
+			local icon = Z.BuffIcon(b, shown)
+			-- un seul sort de groupe le posera (bandeau, ligne « Groupe N ») : son icône, pour le voir sur la case
+			icon.texture:SetTexture(Z.GroupCover and Z.GroupCover(unit, entry.check) or entry.icon)
+			icon.texture:SetDesaturated(true)
+			icon.border:SetColor(1, 0.2, 0.2, 1)
+			icon.cooldown:Clear()
+			icon.count:SetText("")
+			icon:Show()
 		end
 	end
 	Z.HideBuffIcons(b, shown + 1)
-	if changed and Z.RaiseBuffMarks then Z.RaiseBuffMarks(b) end
+end
+
+-- Une restriction du jeu change (boss, match) : chaque case revoit ses buffs à reposer
+local function AllBuffs()
+	for _, b in ipairs(Z.buttons or {}) do
+		if b.unit then Z.QueueAuras(b) end
+	end
+end
+Z:On("ADDON_RESTRICTION_STATE_CHANGED", AllBuffs) -- (entrée et sortie de combat : Frames.lua relit déjà les cases)
+
+-- Le groupe change en plein combat : un même nom d'unité peut désigner un autre joueur. S'il n'est plus le même (ou
+-- si le jeu ne le dit pas), rien sur sa case jusqu'à la fin du combat, puis tout se relit.
+Z:On("GROUP_ROSTER_UPDATE", function() -- tout de suite : le combat se lit au moment du changement
+	if not InCombatLockdown() then return end
+	for _, b in ipairs(Z.buttons or {}) do
+		local watch = b.buffWatch
+		if watch and not watch.stale then
+			local ok, guid = pcall(UnitGUID, b.unit)
+			if not (ok and guid and watch.guid and not issecret(guid) and guid == watch.guid) then
+				watch.stale = true
+				Z.QueueAuras(b)
+			end
+		end
+	end
+end)
+
+-- Hors combat, après une relecture du panneau des buffs (Buffs.lua) : le porteur d'un buff unique a pu changer
+-- (joueur choisi, tank, mort). Seulement s'il a changé, chaque case se relit.
+local bearerKey
+function Z.RecheckBearers()
+	if InCombatLockdown() or #(Z.uniqueChecks or {}) == 0 then return end
+	local parts = {}
+	for _, check in ipairs(Z.uniqueChecks) do
+		local bearer = Z.BuffWatched(check) and Bearer(check)
+		parts[#parts + 1] = tostring(bearer and Z.UnitPinName(bearer))
+	end
+	local now = table.concat(parts, ",")
+	if now ~= bearerKey then
+		bearerKey = now
+		AllBuffs()
+	end
 end
 
 ----------------------------------------------------------------------------------------------------

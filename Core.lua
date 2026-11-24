@@ -107,8 +107,8 @@ Z.defaults = {
 	showDefensives = true,     -- gros défensifs posés par n'importe qui (Z.defensives, Data.lua) : leur icône sur la case
 	lowHealth = true, lowHealthAt = 25,
 	missingBuffs = true,       -- buff de groupe manquant (hors combat)
-	combatBuffs = true,        -- en combat (et boss hors combat), le jeu cache les buffs : mes buffs dessinés par le jeu, gris s'ils manquent (Containers.lua)
-	pvpBuffs = true,           -- même chose en champ de bataille et en arène ; là, seul ce réglage décide (Z.BuffMarksOn)
+	combatBuffs = true,        -- en combat, le jeu cache les buffs : mes buffs à reposer, d'après la mémoire, en gris (Auras.lua, Due)
+	pvpBuffs = true,           -- même chose en combat en champ de bataille et en arène ; là, seul ce réglage décide (Auras.lua, Due)
 	buffPanel = true,          -- panneau des buffs manquants, cliquable (hors combat, Buffs.lua), buffs uniques compris
 	combatKey = true,          -- en combat, la touche du prochain buff relance mon buff unique sur son porteur (Buffs.lua)
 	buffPlace = "FRAMES",      -- où : collé sous les cadres, à la forme des cases (départ), ou fenêtre posée où l'on veut
@@ -165,7 +165,7 @@ Z.defaults = {
 
 	-- Les amis de Lyorune
 	notebook = true,           -- tenir « Votre carnet » : mes soins, résurrections et buffs réussis, par personnage (Tally.lua)
-	tallyExit = true,          -- bilan de la soirée dans la discussion en sortant d'un donjon ou d'un raid (Tally.lua)
+	tallyExit = true,          -- bilan du jour dans la discussion en sortant d'un donjon ou d'un raid (Tally.lua)
 
 	-- Listes personnelles (noms de sorts)
 	extraTracked = {},         -- mes sorts à suivre en plus
