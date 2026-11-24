@@ -9573,10 +9573,10 @@ step("1.45.0 : Les amis de Lyorune (chiffres, carnet, mot de l'auteur, mur de re
     Z.db.notebook = false Z:RefreshAlerts()
     assert(notebook.since:GetText():find("Carnet éteint", 1, true), "carnet eteint : page pas a jour")
     Z.db.notebook = true Z:RefreshAlerts()
-    assert(notebook.since:GetText():find("Depuis le", 1, true), "carnet rallume : page pas a jour")
+    assert(notebook.since:GetText():find("En tout depuis le", 1, true), "carnet rallume : page pas a jour")
     for _, key in ipairs({ "mises à jour", "téléchargements", "sur le Discord", "Soins lancés", "Buffs posés",
       "Discord de Lyorune (Ctrl+C) :", "Chiffres du %s (GitHub et CurseForge), mis à jour à chaque version de Lyorune.",
-      "Depuis le %s, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches.",
+      "En tout depuis le %s, ce soir depuis votre connexion, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches.",
       "Carnet éteint : plus rien n'est compté, vos chiffres sont gardés.", "Votre nom ici ?" }) do
       assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
     end
@@ -10301,6 +10301,104 @@ step("C26 : familiers en colonne a part, en face de leur maitre, plus petits ; c
   assert(UNIT_WATCH[pet2], "confiee au jeu a la fin du combat")
   Z.db.pets, Z.db.horizontal, Z.db.layout, RAID = saved.pets, saved.horizontal, saved.layout, saved.raid
   Z:Refresh()
+end)
+
+step("1.47.0 : Me montrer, nouveautes pas encore vues, bilan du donjon et de la soiree", function()
+  local old = { notebook = Z.db.notebook, exit = Z.db.tallyExit, instance = INSTANCE, kind = INSTANCE_TYPE, class = Z.class, seen = Z.db.newsSeen }
+  local ok, err = pcall(function()
+    -- chaque reglage de Z.changeShows : une version connue, une ligne qui existe, un reglage qui a sa ligne
+    local versions, keys = {}, Z:OptionKeys()
+    for _, entry in ipairs(Z.changes) do versions[entry.version] = entry end
+    for version, shows in pairs(Z.changeShows) do
+      local entry = versions[version]
+      assert(entry, "Me montrer : version inconnue " .. version)
+      for section, list in pairs(shows) do
+        assert(entry[section], "Me montrer : rubrique inconnue " .. version .. " " .. section)
+        for i, key in pairs(list) do
+          assert(entry[section][i], ("Me montrer : %s %s, pas de ligne %d"):format(version, section, i))
+          assert(key == false or keys[key], "Me montrer : reglage sans ligne dans les options : " .. tostring(key))
+        end
+      end
+    end
+    local text = Z:NewsText()
+    assert(text:find("|Hlyorune:show:pets|h", 1, true) and text:find("[Me montrer]", 1, true), "lien Me montrer absent")
+    assert(not text:find("lyorune:show:false", 1, true), "lien vers rien")
+    -- un clic sur le lien ouvre les options sur le reglage
+    Z:ShowNews()
+    local news = _G.LyoruneNews
+    local content
+    for _, child in ipairs({ news:GetChildren() }) do
+      for _, inner in ipairs({ child:GetChildren() }) do if inner._links then content = inner end end
+    end
+    assert(content and content:GetScript("OnHyperlinkClick"), "liens des nouveautes non actifs")
+    local w = Z:OptionsWindow()
+    if w and w:IsShown() then w:Hide() end
+    content:Run("OnHyperlinkClick", "lyorune:show:showDpsRole", "[Me montrer]", "LeftButton")
+    w = Z:OptionsWindow()
+    assert(w:IsShown() and Z:OptionChapter() == Z.TabOfSetting("showDpsRole"), "Me montrer : mauvais chapitre " .. tostring(Z:OptionChapter()))
+    assert(w.found and w.found.key == "showDpsRole", "Me montrer : reglage pas mis en lumiere")
+    assert(Z:GoToOption("cleInconnue") == false, "reglage inconnu")
+    -- bilan de la soiree : compte avec le carnet, garde au /reload, efface a la connexion
+    Z.class = "PRIEST" Z:BuildData()
+    Z.db.notebook, Z.db.tallyExit = true, true Z:RefreshAlerts()
+    FireEvent("PLAYER_ENTERING_WORLD", true, false)
+    assert(Z.char.tonight == nil and Z.TonightLine() == nil, "connexion : soiree pas remise a zero")
+    local total = Z.Tally().heals
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-soir", 2061)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-soir2", 2006)
+    assert(Z.Tonight().heals == 1 and Z.Tonight().res == 1 and Z.Tally().heals == total + 1, "soiree : chiffres")
+    FireEvent("PLAYER_ENTERING_WORLD", false, true)
+    assert(Z.Tonight().heals == 1, "soiree perdue au /reload")
+    -- entrer dans un donjon, y soigner, mourir (rien en sortant mort), revenir, sortir vivant : une ligne
+    INSTANCE, INSTANCE_TYPE, INSTANCE_NAME = true, "party", "Donjon 1"
+    FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    assert(Z.char.outing and Z.char.outing.name == "Donjon 1" and Z.char.outing.heals == 1, "entree du donjon pas notee")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-donjon", 2061)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "cast-donjon2", 2061)
+    local n = #PRINTED
+    DEAD = true
+    INSTANCE, INSTANCE_TYPE = false, "none" FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    assert(#PRINTED == n and Z.char.outing, "sorti mort : bilan donne a tort")
+    DEAD = false
+    INSTANCE, INSTANCE_TYPE = true, "party" FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    FireEvent("PLAYER_ENTERING_WORLD", false, true) -- /reload dans le donjon
+    assert(Z.char.outing.heals == 1, "retour au meme donjon : ses chiffres repartis de zero")
+    INSTANCE, INSTANCE_TYPE = false, "none" FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    local said = PRINTED[n + 1] or ""
+    assert(#PRINTED == n + 1 and said:find("Donjon 1 (1 min) : 2 soins, 0 résurrections, 0 buffs.", 1, true)
+      and said:find("Bilan de la soirée : 3 soins, 1 résurrections, 0 buffs.", 1, true), "bilan en sortie : " .. said)
+    assert(Z.char.outing == nil, "donjon pas oublie a la sortie")
+    INSTANCE_NAME = nil
+    -- interrupteur eteint, ou sortie d'un champ de bataille : rien
+    Z.db.tallyExit = false
+    INSTANCE, INSTANCE_TYPE = true, "raid" FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    INSTANCE, INSTANCE_TYPE = false, "none" FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    Z.db.tallyExit = true
+    INSTANCE, INSTANCE_TYPE = true, "pvp" FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    INSTANCE, INSTANCE_TYPE = false, "none" FireEvent("PLAYER_ENTERING_WORLD", false, false)
+    assert(#PRINTED == n + 1, "bilan donne a tort")
+    -- la page des amis : colonne Ce soir
+    local notebook = OptionPart("tonightRows")
+    notebook:Update()
+    assert(notebook.tonightRows.heals:GetText() == "3" and notebook.tonightRows.res:GetText() == "1", "colonne Ce soir")
+    -- nouveautes pas encore vues : une rune d'or sur les versions sorties depuis la derniere lecture
+    Z.db.newsSeen = "1.46.4"
+    text = Z:NewsText()
+    local first, second = text:match("Lyorune 1%.46%.5[^%c]*"), text:match("Lyorune 1%.46%.4[^%c]*")
+    assert(Z.version == "1.46.5" or Z.VersionNumber(Z.version) > Z.VersionNumber("1.46.4"), "version")
+    assert(first:find("Nouveau pour vous", 1, true) and not second:find("Nouveau pour vous", 1, true), "rune des nouveautes : " .. first)
+    Z:ShowNews() news:Hide() news:Run("OnHide")
+    assert(Z.db.newsSeen == Z.version and not Z:NewsText():find("Nouveau pour vous", 1, true), "nouveautes lues : rune restee")
+    for _, key in ipairs({ "En tout", "Ce soir", "Me montrer", "Nouveau pour vous", "%s soins, %s résurrections, %s buffs",
+      "Bilan de la soirée : %s.", "%s (%d min) : %s.",
+      "Mène au réglage de cette nouveauté dans les options." }) do
+      assert(Z.translations.enUS[key], "sans traduction anglaise : " .. key)
+    end
+  end)
+  Z.db.notebook, Z.db.tallyExit, INSTANCE, INSTANCE_TYPE, Z.class = old.notebook, old.exit, old.instance, old.kind, old.class
+  Z.db.newsSeen, DEAD, INSTANCE_NAME = old.seen, false, nil
+  Z:BuildData() Z:RefreshAlerts()
+  assert(ok, err)
 end)
 
 step("aucune variable globale imprevue", function()

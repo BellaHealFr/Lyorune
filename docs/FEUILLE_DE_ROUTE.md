@@ -1228,9 +1228,19 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
     HealKit), essai en jeu (« tout est ok »), publication de la 1.46.5.
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
-- [ ] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options.
-- [ ] Bilan de la soirée : carnet de la session ou du donjon (soins, résurrections, buffs), à côté du carnet total
-  de la 1.45.0 (Tally.lua) ; moment et forme à décider avec l'auteur.
+Décisions de l'auteur (24 novembre 2026) : bilan depuis la connexion ; colonne « Ce soir » dans le carnet et une
+ligne dans la discussion en sortant d'un donjon ou d'un raid (avec son interrupteur) ; « Me montrer » sur toutes
+les versions. Rien de tel chez HealKit, HealBot ni VuhDo.
+- [x] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options (lien dans le texte
+  des nouveautés, `Z.changeShows` dans Changes.lua, `Z:GoToOption` dans Options.lua).
+- [x] Bilan de la soirée : colonne « Ce soir » à côté du total (Tally.lua, `LyoruneCharDB.tonight`, remis à zéro à
+  la connexion, gardé au /reload), ligne en sortie de donjon ou de raid (réglage `tallyExit`, allumé, avec le carnet).
+- [x] Faire mieux (demande de l'auteur, après recherche dans les addons installés et sur le web) : la ligne de
+  sortie donne aussi le donjon quitté (nom, durée, ses chiffres), rien en sortant mort (wipe) ; les versions pas
+  encore lues portent une rune d'or « Nouveau pour vous » (`newsSeen`).
+- [x] Relecture medium faite (2 bugs corrigés : fenêtre des nouveautés rangée à côté des options, rien au wipe ;
+  2 optimisations), 131 étapes.
+- [ ] Essai en jeu (lien cliquable, rune, ligne de sortie), feu vert, publication de la 1.47.0.
 
 ## Étape 34 : canal des soigneurs, en français et en anglais
 Demande de l'auteur (23 novembre 2026), placée après les étapes 32 et 33 (son choix). Idée : un canal écrit réservé

@@ -1124,26 +1124,112 @@ Z.changes = {
 	},
 }
 
+-- « Me montrer » : la nouveauté qui a un réglage mène à lui dans les options (Z:GoToOption).
+-- Par version, puis par rubrique : le réglage de chaque ligne, dans l'ordre des lignes (false : pas de réglage).
+-- Une clé qui n'a plus de ligne dans les options est simplement ignorée. Tenu à la main, vérifié par les tests.
+Z.changeShows = {
+	["1.46.5"] = { improved = { "pets" } },
+	["1.46.1"] = { added = { "showDpsRole" } },
+	["1.46.0"] = { added = { "totemPanel", "showClassIcon" } },
+	["1.45.0"] = { added = { "notebook" } },
+	["1.44.0"] = { improved = { "cooldownShare" } },
+	["1.43.0"] = { added = { "debuffCountdown", false, "dispelIcon" } },
+	["1.42.1"] = { added = { "groupCooldowns", "cooldownShare" } },
+	["1.42.0"] = { added = { "cooldownPanel", "channelMark" }, improved = { "clickTooltip" } },
+	["1.41.0"] = { added = { false, "showName" } },
+	["1.40.0"] = { added = { "absorbText" } },
+	["1.39.0"] = { added = { false, "enemyGuard" } },
+	["1.38.1"] = { improved = { "rankChoice", "rankAdapt" } },
+	["1.37.1"] = { improved = { false, "combatBuffs" } },
+	["1.36.0"] = { added = { "combatBuffs", "combatKey" } },
+	["1.34.0"] = { added = { "buffPanel" } },
+	["1.33.7"] = { improved = { false, "buffRenew" } },
+	["1.33.1"] = { improved = { "buffGroupAt" } },
+	["1.32.0"] = { added = { "assignMark" } },
+	["1.31.0"] = { added = { "healthyFade", "clickStats" } },
+	["1.30.0"] = { added = { "logoAnimation" }, improved = { "fiveSecondRule" } },
+	["1.29.0"] = { added = { "dispelCount", false, "drinkHealers", "manaEdge", "fiveSecondRule" } },
+	["1.28.0"] = { added = { "showDefensives", "showControls" } },
+	["1.25.0"] = { added = { "lowManaHealers", "absorbStyle" }, improved = { "hotCount" } },
+	["1.24.0"] = { added = { "regenAlert" } },
+	["1.23.13"] = { added = { "manaAlert" } },
+	["1.23.12"] = { improved = { "powerHeight" } },
+	["1.23.0"] = { added = { false, "autoProfile" } },
+	["1.22.0"] = { added = { false, "castIndicator" } },
+	["1.21.0"] = { added = { "trinketButtons", false, "clickConflictAlert" } },
+	["1.20.0"] = { added = { "showPinned", "pingCells", "showLeader" } },
+	["1.19.0"] = { added = { "farHint", "losHint" } },
+	["1.18.0"] = { added = { "perfMode" } },
+	["1.17.0"] = { added = { "resSync" }, improved = { "syncEnabled" } },
+	["1.16.0"] = { added = { "buffPanel" } },
+	["1.15.0"] = { added = { "layout", "sortOrder", "keepGroupPlace" } },
+	["1.14.0"] = { added = { false, "autoProfile", "showTarget" } },
+	["1.12.0"] = { added = { "scale" } },
+	["1.11.0"] = { added = { "showHots", false, "threatBar", "manaPercent" } },
+	["1.10.0"] = { added = { "manaColor", "windowTheme", false, "reduceMotion", "magicEffects" } },
+	["1.9.0"] = { added = { "shape", "corners", "groupPanel" }, improved = { "classIntensity" } },
+	["1.8.0"] = { added = { "privateAuras", "showHealAbsorb", "showSummonPhase", "showTooltip", "importantGlow" } },
+	["1.7.0"] = { added = { false, "lockMode" }, improved = { "manaBars" } },
+	["1.6.0"] = { added = { false, false, false, "clicksPerSpec" } },
+	["1.5.1"] = { added = { "actionBarMacros" } },
+	["1.4.2"] = { added = { "visibility" } },
+	["1.4.0"] = { added = { false, "minimapButton", false, "showRunes" } },
+	["1.3.0"] = { improved = { false, false, "errorNotice" } },
+	["1.2.0"] = { added = { false, "showTanks", "lowHealth", false, false, false, "highContrast", false, false, "versionNotice" } },
+}
+
 -- Rubriques, dans l'ordre d'affichage
 Z.changeSections = { { "added", "Nouveau" }, { "improved", "Amélioré" }, { "fixed", "Corrigé" } }
 
 local window
 
+-- Première rune de l'atlas (128 x 64 pixels, runes de 16), en or, dans le texte
+local NEW_RUNE = "|TInterface\\AddOns\\Lyorune\\Media\\Runes:14:14:0:0:128:64:0:16:0:16:255:210:77|t"
+
+-- Le réglage d'une ligne des nouveautés, s'il a encore sa ligne dans les options
+function Z.ChangeShow(version, section, index)
+	local shows = Z.changeShows[version]
+	local key = shows and shows[section] and shows[section][index]
+	if key and Z.TabOfSetting and Z.TabOfSetting(key) then return key end
+end
+
 function Z:NewsText()
 	local L = Z.L
 	local lines = {}
+	local link = " |Hlyorune:show:%s|h|cff" .. Z.UI.Hex("accent") .. "[" .. L["Me montrer"] .. "]|r|h"
+	-- versions sorties depuis la dernière lecture de cette fenêtre : une rune d'or et « Nouveau pour vous »
+	local seen = Z.db.newsSeen and Z.VersionNumber(Z.db.newsSeen)
+	local fresh = "  " .. NEW_RUNE .. " |cffffd24d" .. L["Nouveau pour vous"] .. "|r"
 	for _, entry in ipairs(Z.changes) do
 		lines[#lines + 1] = "|cff" .. Z.UI.Hex("accent") .. "Lyorune " .. entry.version .. "|r  |cff" .. Z.UI.Hex("dim") .. entry.date .. "|r"
+			.. ((seen and Z.VersionNumber(entry.version) > seen) and fresh or "")
 		for _, section in ipairs(Z.changeSections) do
 			local notes = entry[section[1]]
 			if notes and #notes > 0 then
 				lines[#lines + 1] = "  |cffffd24d" .. L[section[2]] .. "|r"
-				for _, note in ipairs(notes) do lines[#lines + 1] = "    - " .. L[note] end
+				for i, note in ipairs(notes) do
+					local key = Z.ChangeShow(entry.version, section[1], i)
+					lines[#lines + 1] = "    - " .. L[note] .. (key and link:format(key) or "")
+				end
 			end
 		end
 		lines[#lines + 1] = ""
 	end
 	return table.concat(lines, "\n")
+end
+
+-- « Me montrer » : le lien mène au réglage dans les options, ouvertes à côté de cette fenêtre
+local function LinkClick(_, data)
+	local key = type(data) == "string" and data:match("^lyorune:show:(.+)$")
+	if key and Z:GoToOption(key) and window and window:IsShown() then
+		Z.UI.PlaceBeside(window) -- options ouvertes par le lien : cette fenêtre se range à côté, sans cacher le réglage
+	end
+end
+
+local function LinkEnter(self)
+	GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+	GameTooltip:SetText(Z.L["Mène au réglage de cette nouveauté dans les options."], 1, 1, 1, 1, true)
+	GameTooltip:Show()
 end
 
 function Z:ShowNews()
@@ -1163,6 +1249,11 @@ function Z:ShowNews()
 		end)
 		local content = CreateFrame("Frame", nil, scroll)
 		content:SetSize(520, 10)
+		content:EnableMouse(true) -- la molette reste au cadre qui défile
+		content:SetHyperlinksEnabled(true) -- liens « Me montrer » du texte
+		content:SetScript("OnHyperlinkClick", LinkClick)
+		content:SetScript("OnHyperlinkEnter", LinkEnter)
+		content:SetScript("OnHyperlinkLeave", function() GameTooltip:Hide() end)
 		scroll:SetScrollChild(content)
 		window.text = UI.Label(content, 12)
 		window.text:SetPoint("TOPLEFT")
@@ -1170,6 +1261,7 @@ function Z:ShowNews()
 		window.text:SetJustifyH("LEFT")
 		window.text:SetSpacing(4)
 		window.content, window.scroll = content, scroll
+		window:HookScript("OnHide", function() Z.db.newsSeen = Z.version end) -- lue : plus rien de nouveau pour vous
 	end
 	-- Relu à chaque appel (couleurs du thème en cours), depuis le haut ; ouverte, elle passe devant
 	window.text:SetText(Z:NewsText())

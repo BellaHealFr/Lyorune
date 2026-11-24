@@ -2346,15 +2346,7 @@ end
 ----------------------------------------------------------------------------------------------------
 local DISCORD = "discord.gg/uRaEPTGePu"
 
--- 12345 -> "12 345"
-local function Grouped(n)
-	local text = tostring(math.floor(tonumber(n) or 0))
-	repeat
-		local done
-		text, done = text:gsub("^(%d+)(%d%d%d)", "%1 %2")
-	until done == 0
-	return text
-end
+local Grouped = Z.Grouped -- 12345 -> "12 345" (Tally.lua)
 
 -- "2026-11-23" -> "23/11/2026"
 local function Day(iso)
@@ -2417,37 +2409,50 @@ local function FriendsNumbers(page, width)
 	return box
 end
 
--- Votre carnet : trois chiffres, depuis quand, et la remise à zéro
+-- Votre carnet : trois chiffres en tout et ce soir (depuis la connexion), depuis quand, et la remise à zéro
 local TALLY_LINES = { { "heals", "Soins lancés" }, { "res", "Résurrections" }, { "buffs", "Buffs posés" } }
 local TALLY_H = 22
+local TALLY_ROWS = #TALLY_LINES + 1 -- les titres des deux colonnes, puis une ligne par chiffre
 
 local function NotebookBox(page, width)
 	local box = CreateFrame("Frame", nil, page)
-	box:SetSize(width, #TALLY_LINES * TALLY_H + 52)
-	box.tallyRows = {}
+	box:SetSize(width, TALLY_ROWS * TALLY_H + 52)
+	box.tallyRows, box.tonightRows = {}, {}
+	for x, title in pairs({ [200] = "En tout", [300] = "Ce soir" }) do
+		local head = UI.Label(box, 11, nil, "dim")
+		head:SetPoint("TOPLEFT", x, 0)
+		head:SetText(L[title])
+	end
 	for i, line in ipairs(TALLY_LINES) do
 		local name = UI.Label(box, 12)
-		name:SetPoint("TOPLEFT", 4, -(i - 1) * TALLY_H)
+		name:SetPoint("TOPLEFT", 4, -i * TALLY_H)
 		name:SetText(L[line[2]])
 		local value = UI.Label(box, 13, nil, "accent")
-		value:SetPoint("TOPLEFT", 200, -(i - 1) * TALLY_H)
+		value:SetPoint("TOPLEFT", 200, -i * TALLY_H)
 		box.tallyRows[line[1]] = value
+		local tonight = UI.Label(box, 13, nil, "accent")
+		tonight:SetPoint("TOPLEFT", 300, -i * TALLY_H)
+		box.tonightRows[line[1]] = tonight
 	end
 	box.since = UI.Label(box, 11, nil, "dim")
-	box.since:SetPoint("TOPLEFT", 4, -#TALLY_LINES * TALLY_H - 2)
+	box.since:SetPoint("TOPLEFT", 4, -TALLY_ROWS * TALLY_H - 2)
 	box.since:SetWidth(width - 4)
 	box.since:SetJustifyH("LEFT")
 	box.reset = ArmedButton(box, "Remettre mon carnet à zéro", "Cliquez encore pour confirmer", 240, function()
 		Z.ResetTally()
 		box:Update()
 	end)
-	box.reset:SetPoint("TOPLEFT", 0, -#TALLY_LINES * TALLY_H - 24)
+	box.reset:SetPoint("TOPLEFT", 0, -TALLY_ROWS * TALLY_H - 24)
 	Register(page, L["Remettre mon carnet à zéro"], box.reset)
 	box.Update = function(self)
-		local tally = Z.Tally()
-		for key, value in pairs(self.tallyRows) do value:SetText(Grouped(tally[key])) end
+		local tally, tonight = Z.Tally(), Z.Tonight()
+		for _, line in ipairs(TALLY_LINES) do
+			local key = line[1]
+			self.tallyRows[key]:SetText(Grouped(tally[key]))
+			self.tonightRows[key]:SetText(Grouped(tonight[key]))
+		end
 		self.since:SetText(Z.db.notebook
-			and L["Depuis le %s, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."]:format(Day(tally.since))
+			and L["En tout depuis le %s, ce soir depuis votre connexion, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."]:format(Day(tally.since))
 			or L["Carnet éteint : plus rien n'est compté, vos chiffres sont gardés."])
 		self:SetAlpha(Z.db.notebook and 1 or 0.6)
 	end
@@ -2858,6 +2863,7 @@ local function Chapters()
 			} },
 			{ "Votre carnet", {
 				{ "check", "notebook", "Tenir mon carnet", "Compte vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent : cases, barres, macros, touches. Les dissipations ne comptent pas. Rien n'est envoyé : le carnet reste sur votre ordinateur.", desc = "Vos soins, résurrections et buffs réussis, par personnage." },
+				{ "check", "tallyExit", "Bilan en sortant d'un donjon", "En sortant d'un donjon ou d'un raid, une ligne dans la discussion donne son nom, sa durée et vos soins, résurrections et buffs dedans, puis ceux de la soirée (depuis votre connexion). Rien quand vous sortez mort, pour revenir après un wipe.", dep = { "notebook", true } },
 				{ "custom", NotebookBox },
 			} },
 			{ "Un mot de BellaDroode", {
@@ -3602,6 +3608,17 @@ function Z:ToggleOptions(chapter)
 	else
 		UI.Reopen(window)
 	end
+end
+
+-- Ouvre les options sur un réglage, par sa clé (« Me montrer » des nouveautés) : son chapitre, la ligne mise en
+-- lumière. Faux si le réglage n'a pas de ligne dans les options.
+function Z:GoToOption(key)
+	if not window then Build() end
+	local index = ChapterIndex(Z.TabOfSetting(key) or "")
+	if not index then return false end
+	UI.Reopen(window)
+	GoToSetting(key, index)
+	return true
 end
 
 -- Pour les tests : les icônes des macros de barre, une case de clic

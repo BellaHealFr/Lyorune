@@ -165,6 +165,7 @@ Z.defaults = {
 
 	-- Les amis de Lyorune
 	notebook = true,           -- tenir « Votre carnet » : mes soins, résurrections et buffs réussis, par personnage (Tally.lua)
+	tallyExit = true,          -- bilan de la soirée dans la discussion en sortant d'un donjon ou d'un raid (Tally.lua)
 
 	-- Listes personnelles (noms de sorts)
 	extraTracked = {},         -- mes sorts à suivre en plus
@@ -263,7 +264,7 @@ Z.notInProfile = {
 	castOnDown = true, newSpellAlert = true, actionBarMacros = true, autoRes = true, externalClicks = true,
 	clicks = true, hoverKeys = true, clicksPerSpec = true, macros = true, macroAutoTarget = true,
 	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
-	rankChoice = true, rankAdapt = true, clickVariants = true, enemyGuard = true, notebook = true,
+	rankChoice = true, rankAdapt = true, clickVariants = true, enemyGuard = true, notebook = true, tallyExit = true,
 	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
 	assignMark = true, assignGroups = true, assignPlayers = true, assignFade = true, assignAccept = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
@@ -565,6 +566,7 @@ Z:On("PLAYER_LOGIN", function()
 	elseif Z.db.lastVersion ~= Z.version and Z.db.showNews then
 		C_Timer.After(4, function() Z:ShowNews() end)
 	end
+	if Z.db.newsSeen == nil then Z.db.newsSeen = Z.db.lastVersion or Z.version end -- avant la 1.47.0 : la dernière version lancée
 	Z.db.lastVersion = Z.version
 
 	-- Cohabitation : Lyorune ne modifie ni ne masque les cadres des autres addons. On prévient une seule fois.

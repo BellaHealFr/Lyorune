@@ -528,9 +528,10 @@ Z.translations.enUS = {
 			.. "Les boutons « 5 », « 10 », « 25 » et « 40 » ouvrent le mode test."] =
 		"The |cff33dd88preview cell|r follows every setting live, with a fake group below it.\n\nThe \"5\", \"10\", \"25\" and \"40\" buttons open test mode.",
 	["Un réglage introuvable ? Tapez un mot dans la |cff33dd88recherche|r : un clic sur un résultat vous y mène.\n\n"
-			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés et relance ce tutoriel. "
-			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur."] =
-		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings and restarts this tutorial. At the very bottom, |cff33dd88Friends of Lyorune|r: Lyorune in numbers and your healer's notebook.",
+			.. "L'|cff33dd88Accueil|r, en haut de la barre, liste vos réglages changés, relance ce tutoriel et ouvre les nouveautés, "
+			.. "où |cff33dd88Me montrer|r mène au réglage de chacune. "
+			.. "Tout en bas, |cff33dd88Les amis de Lyorune|r : Lyorune en chiffres et votre carnet de soigneur, en tout et ce soir."] =
+		"Cannot find a setting? Type a word in the |cff33dd88search|r box: clicking a result takes you there.\n\n|cff33dd88Home|r, at the top of the sidebar, lists your changed settings, restarts this tutorial and opens the news, where |cff33dd88Show me|r takes you to each feature's setting. At the very bottom, |cff33dd88Friends of Lyorune|r: Lyorune in numbers and your healer's notebook, in total and tonight.",
 	["Vous savez l'essentiel. Bon soin !\n\nAstuce : avant un combat important, vérifiez le chapitre Sorts et raccourcis. "
 			.. "Les changements de clics et de taille demandés en combat s'appliquent dès qu'il se termine.\n\n"
 			.. "Le bouton Lyorune au bord de la mini-carte ouvre les options (clic gauche) ou le mode test (clic droit). "
@@ -1282,7 +1283,17 @@ Z.translations.enUS = {
 	["Résurrections"] = "Resurrections",
 	["Buffs posés"] = "Buffs cast",
 	["Remettre mon carnet à zéro"] = "Reset my notebook",
-	["Depuis le %s, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."] = "Since %s, for this character. All your successful casts count: cells, bars, macros and keys.",
+	["En tout depuis le %s, ce soir depuis votre connexion, pour ce personnage. Tous vos sorts réussis comptent : cases, barres, macros et touches."] = "In total since %s, tonight since you logged in, for this character. All your successful casts count: cells, bars, macros and keys.",
+	["En tout"] = "In total",
+	["Ce soir"] = "Tonight",
+	["Bilan en sortant d'un donjon"] = "Summary when leaving a dungeon",
+	["En sortant d'un donjon ou d'un raid, une ligne dans la discussion donne son nom, sa durée et vos soins, résurrections et buffs dedans, puis ceux de la soirée (depuis votre connexion). Rien quand vous sortez mort, pour revenir après un wipe."] = "When you leave a dungeon or a raid, a chat line gives its name, how long you stayed and your heals, resurrections and buffs inside, then tonight's (since you logged in). Nothing when you leave dead, to run back after a wipe.",
+	["%s soins, %s résurrections, %s buffs"] = "%s heals, %s resurrections, %s buffs",
+	["Bilan de la soirée : %s."] = "Tonight's summary: %s.",
+	["%s (%d min) : %s."] = "%s (%d min): %s.",
+	["Nouveau pour vous"] = "New for you",
+	["Me montrer"] = "Show me",
+	["Mène au réglage de cette nouveauté dans les options."] = "Takes you to this feature's setting in the options.",
 	["Carnet éteint : plus rien n'est compté, vos chiffres sont gardés."] = "Notebook off: nothing is counted any more, your numbers are kept.",
 	["Un mot de BellaDroode"] = "A word from BellaDroode",
 	["Soigner, c'est le plus beau rôle de Warcraft. C'est voir une barre de vie plonger et la relever d'un geste, tenir tout un raid debout quand le boss frappe fort, sentir le groupe avancer parce que vous êtes là. J'aime ce jeu de tout mon cœur, et j'ai créé Lyorune pour que chaque soigneur vive ces instants pleinement, les yeux sur ses alliés et non sur ses cadres. Merci à vous qui le faites vivre, qui proposez des idées et signalez les bugs : chaque version vous doit un peu. Bons soins, et que la Lumière, la nature ou les esprits guident vos mains !"] = "Healing is the finest role in Warcraft. It is watching a health bar plunge and lifting it back with a single gesture, keeping a whole raid standing when the boss hits hard, feeling the group move forward because you are there. I love this game with all my heart, and I made Lyorune so every healer can live these moments to the full, eyes on their allies and not on their frames. Thank you for bringing it to life, sharing ideas and reporting bugs: every version owes you a little. Happy healing, and may the Light, nature or the spirits guide your hands!",

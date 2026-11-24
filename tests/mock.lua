@@ -24,6 +24,7 @@ local function new(kind, name, parent)
 end
 
 function Obj:SetScript(n, f) self._scripts[n] = f end
+function Obj:SetHyperlinksEnabled(on) self._links = on end
 function Obj:GetScript(n) return self._scripts[n] end
 function Obj:HookScript(n, f)
 	local old = self._scripts[n]
@@ -292,6 +293,7 @@ function IsInGroup() return GROUPED end
 function IsInRaid() return RAID or false end
 INSTANCE_TYPE = "none"
 function IsInInstance() return INSTANCE, INSTANCE_TYPE end
+function GetInstanceInfo() return INSTANCE_NAME or "Donjon d'essai", INSTANCE_TYPE end
 function GetNumGroupMembers() return 5 end
 function GetRealZoneText() return "Hurlevent" end
 function GetBuildInfo() return "1.60.1", "70938", "Nov 1 2026", INTERFACE or 16001 end

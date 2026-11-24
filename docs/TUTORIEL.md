@@ -52,7 +52,7 @@ Tapez `/lyorune` (ou cliquez sur le bouton de Lyorune au bord de la mini-carte).
 
 - **Profil actif** : le profil en cours et comment il a été choisi, avec le bouton « Changer de profil » ;
 - **Vos réglages changés** : tous vos réglages qui ne sont plus comme à l'installation. Un clic sur un nom vous y emmène ; un clic sur sa rune d'or le rétablit ;
-- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus ; si vos cadres sont cachés (« En combat seulement », ou seul sans votre propre cadre), elle ouvre le faux groupe du mode test pour vous montrer les cases, puis le referme. Échap ou la croix arrêtent la visite à tout moment, et la fenêtre revient de la même façon. Une fenêtre ouverte à côté des options (Mes macros, Placement, Signaler un bug...) est fermée au départ de la visite ; en ouvrir une pendant la visite l'arrête, et les options restent sur la page où vous êtes. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
+- **Découvrir** : « Lancer le tutoriel », « Assistant de départ » et « Nouveautés de Lyorune ». Dans les nouveautés, « Me montrer » au bout d'une ligne ouvre les options sur son réglage, mis en lumière. La visite ferme la fenêtre le temps de montrer les cases, présente ensuite la fenêtre zone par zone (barre latérale, page du chapitre, case témoin, recherche), puis vous rend la fenêtre sur le chapitre où vous étiez. Ses cartes se posent à côté de vos cadres, jamais dessus ; si vos cadres sont cachés (« En combat seulement », ou seul sans votre propre cadre), elle ouvre le faux groupe du mode test pour vous montrer les cases, puis le referme. Échap ou la croix arrêtent la visite à tout moment, et la fenêtre revient de la même façon. Une fenêtre ouverte à côté des options (Mes macros, Placement, Signaler un bug...) est fermée au départ de la visite ; en ouvrir une pendant la visite l'arrête, et les options restent sur la page où vous êtes. L'assistant ferme aussi la fenêtre le temps de ses trois questions et vous la rend sur l'Accueil.
 
 Au bas du chapitre Fenêtre et aide, « Lire une case » rappelle ce que veulent dire les couleurs principales d'une case, et « Commandes » liste les commandes `/lyorune`.
 
@@ -454,7 +454,7 @@ Elle ne sert à rien d'autre qu'au plaisir des yeux. Pour la retirer, coupez « 
 Le dernier chapitre de la fenêtre d'options, en bas de la barre de gauche. Vous y trouvez :
 
 - **Lyorune en chiffres** : le nombre de mises à jour, de téléchargements (GitHub et CurseForge) et de membres du Discord. Un addon n'a pas accès à internet : ces chiffres sont ceux du jour où votre version a été publiée, et la date est écrite dessous. Le lien du Discord se copie avec Ctrl+C.
-- **Votre carnet** : vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent (cases, barres, macros, touches). Les dissipations ne comptent pas. Le carnet reste sur votre ordinateur : rien n'est envoyé. « Tenir mon carnet » l'arrête (vos chiffres sont gardés) ; « Remettre mon carnet à zéro » demande un second clic.
+- **Votre carnet** : vos soins, vos résurrections et vos buffs réussis, pour chaque personnage, d'où qu'ils partent (cases, barres, macros, touches). Les dissipations ne comptent pas. Le carnet reste sur votre ordinateur : rien n'est envoyé. Deux colonnes : « En tout » et « Ce soir », depuis votre connexion (gardée après un /reload). « Bilan en sortant d'un donjon » (allumé au départ) écrit dans la discussion, en sortant d'un donjon ou d'un raid, une ligne avec son nom, sa durée, vos chiffres dedans puis ceux de la soirée (rien si vous sortez mort, pour revenir après un wipe). Dans les nouveautés, les versions sorties depuis votre dernière lecture portent une rune d'or « Nouveau pour vous ». « Tenir mon carnet » l'arrête (vos chiffres sont gardés) ; « Remettre mon carnet à zéro » demande un second clic.
 - **Un mot de l'auteur**, et le **mur de remerciements** : les joueurs qui font grandir Lyorune (leur nom à la couleur de leur classe, avec leur mode de jeu), en proposant des améliorations, en signalant des bugs régulièrement pour le rendre le plus parfait possible, ou en le faisant connaître autour d'eux. Vous en êtes ? Dites-le sur le Discord ou sur GitHub : un nom n'y figure qu'avec l'accord de son joueur.
 
 ## 16. Un problème ?
@@ -500,7 +500,7 @@ Cette liste se retrouve en jeu : chapitre Fenêtre et aide, « Commandes ».
 | `/lyorune annuler` | Revenir à la configuration d'avant le dernier import |
 | `/lyorune mesure` | Mesurer les performances (hors combat) |
 | `/lyorune bug` | Signaler un problème |
-| `/lyorune nouveautes` | Voir les nouveautés de la version |
+| `/lyorune nouveautes` | Voir les nouveautés, avec « Me montrer » pour aller au réglage |
 
 ## Les raccourcis du jeu
 

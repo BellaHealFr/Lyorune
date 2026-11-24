@@ -53,7 +53,7 @@ Type `/lyorune` (or click Lyorune's button on the edge of the minimap). The wind
 
 - **Active profile**: the current profile and how it was chosen, with the "Change profile" button;
 - **Your changed settings**: all your settings that are no longer as installed. Click a name to go there; click its golden rune to reset it;
-- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them; if your frames are hidden ("In combat only", or solo without your own frame), it opens the fake group of the test mode to show you the cells, then closes it. Escape or the close button stop the tour at any time, and the window comes back the same way. A window open next to the options (My macros, Placement, Report a bug...) is closed when the tour starts; opening one during the tour stops it, and the options stay on the page you are on. The setup assistant also closes the window during its three questions and gives it back on the Home page.
+- **Discover**: "Start the tutorial", "Setup assistant" and "What's new in Lyorune". In the news, "Show me" at the end of a line opens the options on its setting, highlighted. The tour closes the window while it shows the cells, then presents the window area by area (sidebar, chapter page, preview cell, search), and gives the window back on the chapter you were in. Its cards sit next to your frames, never on top of them; if your frames are hidden ("In combat only", or solo without your own frame), it opens the fake group of the test mode to show you the cells, then closes it. Escape or the close button stop the tour at any time, and the window comes back the same way. A window open next to the options (My macros, Placement, Report a bug...) is closed when the tour starts; opening one during the tour stops it, and the options stay on the page you are on. The setup assistant also closes the window during its three questions and gives it back on the Home page.
 
 At the bottom of the Window and help chapter, "Reading a cell" recalls what the main colours of a cell mean, and "Commands" lists the `/lyorune` commands.
 
@@ -453,7 +453,7 @@ It is there for the pleasure of the eyes only. To remove it, turn off "Runic ins
 The last chapter of the options window, at the bottom of the left sidebar. You will find:
 
 - **Lyorune in numbers**: the number of updates, downloads (GitHub and CurseForge) and Discord members. An addon has no internet access: these numbers are those of the day your version was published, and the date is written below. The Discord link can be copied with Ctrl+C.
-- **Your notebook**: your successful heals, resurrections and buffs, for each character, wherever they come from (cells, bars, macros, keys). Dispels do not count. The notebook stays on your computer: nothing is sent. "Keep my notebook" stops it (your numbers are kept); "Reset my notebook" asks for a second click.
+- **Your notebook**: your successful heals, resurrections and buffs, for each character, wherever they come from (cells, bars, macros, keys). Dispels do not count. The notebook stays on your computer: nothing is sent. Two columns: "In total" and "Tonight", since you logged in (kept after a /reload). "Summary when leaving a dungeon" (on by default) writes a chat line when you leave a dungeon or a raid: its name, how long you stayed, your numbers inside, then tonight's (nothing if you leave dead, to run back after a wipe). In the news, versions released since you last read them wear a golden rune "New for you". "Keep my notebook" stops it (your numbers are kept); "Reset my notebook" asks for a second click.
 - **A word from the author**, and the **thank you wall**: players who help Lyorune grow (their name in their class colour, with how they play), by suggesting improvements, by reporting bugs regularly to make it as polished as possible, or by telling others about it. Is that you? Say so on Discord or GitHub: a name only appears with its player's consent.
 
 ## 16. A problem?
@@ -497,7 +497,7 @@ This list is also in game: Window and help chapter, "Commands".
 | `/lyorune undo` | Go back to the configuration from before the last import |
 | `/lyorune measure` | Measure performance (out of combat) |
 | `/lyorune bug` | Report a problem |
-| `/lyorune nouveautes` | See what is new in this version |
+| `/lyorune nouveautes` | See what is new, with "Show me" to reach the setting |
 
 ## Game key bindings
 
