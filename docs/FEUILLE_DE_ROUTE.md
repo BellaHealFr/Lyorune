@@ -1192,6 +1192,14 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
   - [x] C22 : rangée de la case, buff posé qui disparaît, buff perdu en gris ; forme et interrupteur décidés avec
     l'auteur ; place dans les quatre formes de case et dans l'éditeur de placement.
   - [x] Recherche : HealKit, PallyPower, VuhDo, HealBot (installés), comparaison dans les fiches C20 et C22.
+- [ ] **32 c bis (avec la 1.46.3), étude complète des buffs de HealKit** (demande de l'auteur, 24 novembre 2026 :
+  « HealKit gère à la perfection les buffs manquants », lire son code en profondeur et pas seulement par
+  recherches). Lire en entier `BuffHelper.lua` et `BuffsTab.lua` de HealKit (installé), puis comparer point par
+  point avec Lyorune (Auras.lua, Buffs.lua, BuffMemory.lua, Containers.lua) : quand un buff compte comme manquant
+  (rang, buff d'un autre, camp de Forever, fin proche, fin secrète), mémoire et relectures, buffs uniques et
+  porteur, familiers, joueurs en combat ou hors de portée, version de groupe (lien avec 32 d), bouton et touche,
+  coût en performance. Écrire la comparaison dans `CORRECTIONS.md` (fiche C30), présenter à l'auteur les écarts et
+  ce que Lyorune fera mieux, à sa façon, sans rien copier ; corriger avant de publier la 1.46.3.
 - [ ] **32 d, C19** : version de groupe en priorité. Déjà dans le bandeau (`Z.BuffRows`, `buffGroupAt`), pas
   sur la case ; ne compter que les joueurs que le sort de groupe touche sur Forever (groupe, portée : vérifier avec
   HealKit, PallyPower, VuhDo) ; réglage plus facile à trouver (aujourd'hui dans les réglages fins).
