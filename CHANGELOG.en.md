@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.4] - 2026-11-24
+
+### Fixed
+
+- Missing buffs, group version: only players within the spell's range count for the "Group N" line (a player too far away keeps their own line), their frames show the group version's icon, and the "Group spell from" setting is always visible, under "My buffs".
+
 ## [1.46.3] - 2026-11-24
 
 ### Fixed
@@ -907,6 +913,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4
 [1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3
 [1.46.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.1...v1.46.2
 [1.46.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.0...v1.46.1

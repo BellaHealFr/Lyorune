@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.46.4", date = "2026-11-24",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Buffs manquants, version de groupe : seuls les joueurs à portée du sort comptent pour la ligne « Groupe N » (un joueur trop loin garde sa propre ligne), leurs cases montrent l'icône de la version de groupe, et le réglage « Sort de groupe dès » est toujours visible, sous « Mes buffs ».",
+		},
+	},
+	{
 		version = "1.46.3", date = "2026-11-24",
 		added = {
 		},

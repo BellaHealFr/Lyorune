@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.46.4] - 2026-11-24
+
+### Corrigé
+
+- Buffs manquants, version de groupe : seuls les joueurs à portée du sort comptent pour la ligne « Groupe N » (un joueur trop loin garde sa propre ligne), leurs cases montrent l'icône de la version de groupe, et le réglage « Sort de groupe dès » est toujours visible, sous « Mes buffs ».
+
 ## [1.46.3] - 2026-11-24
 
 ### Corrigé
@@ -907,6 +913,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.46.4]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.3...v1.46.4
 [1.46.3]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.2...v1.46.3
 [1.46.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.1...v1.46.2
 [1.46.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.46.0...v1.46.1
