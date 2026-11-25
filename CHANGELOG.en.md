@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.50.1] - 2026-11-25
+
+### Fixed
+
+- No more 'action blocked' error when a player joins the group or raid during combat: their frame appears right away instead of after combat.
+
 ## [1.50.0] - 2026-11-24
 
 ### Added
@@ -970,6 +976,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.50.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.0...v1.50.1
 [1.50.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0
 [1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1

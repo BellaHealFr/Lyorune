@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.50.1] - 2026-11-25
+
+### Corrigé
+
+- Plus d'« action bloquée » quand un joueur rejoint le groupe ou le raid pendant un combat : sa case apparaît tout de suite, au lieu d'attendre la fin du combat.
+
 ## [1.50.0] - 2026-11-24
 
 ### Ajouté
@@ -970,6 +976,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.50.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.0...v1.50.1
 [1.50.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0
 [1.48.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.0...v1.48.1

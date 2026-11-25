@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.50.1", date = "2026-11-25",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Plus d'« action bloquée » quand un joueur rejoint le groupe ou le raid pendant un combat : sa case apparaît tout de suite, au lieu d'attendre la fin du combat.",
+		},
+	},
+	{
 		version = "1.50.0", date = "2026-11-24",
 		added = {
 			"Canal des soigneurs, en français et en anglais : sur la page « Les amis de Lyorune », deux cases (éteintes au départ) font rejoindre le canal du jeu LyoruneFR ou LyoruneEN, ouvert à tous quelle que soit la langue de votre jeu, pour échanger entre soigneurs sur vos façons de jouer, vos spécialisations, vos astuces et vos difficultés. Lyorune vous donne le numéro à taper et n'y écrit jamais à votre place ; chaque faction a son canal.",
