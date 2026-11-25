@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.50.2] - 2026-11-25
+
+### Corrigé
+
+- Buffs manquants : le panneau et les repères gris des cases sont de nouveau cochés, une seule fois, pour ceux qui les avaient décochés sans le vouloir (ils semblaient ne plus marcher en instance). Les cases cachées ne suivent plus les joueurs du groupe pour rien, et /lyorune buffs compte toujours la case visible.
+
 ## [1.50.1] - 2026-11-25
 
 ### Corrigé
@@ -976,6 +982,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.50.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.1...v1.50.2
 [1.50.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.0...v1.50.1
 [1.50.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0

@@ -1743,7 +1743,17 @@ local function PrepareCells(h, count)
 		if hidden then h:Show() end -- cadre caché : il les crée en s'affichant
 	end)
 	h:SetAttribute("startingIndex", 1) -- toujours, même après une erreur : sinon le cadre resterait vide
-	if hidden then h:Hide() end
+	if hidden then
+		h:Hide()
+		-- cadre caché : ses cases gardaient les joueurs du groupe et écoutaient leurs événements pour rien ;
+		-- le jeu leur redonne un joueur quand le cadre apparaît
+		local index, child = 1, h:GetAttribute("child1")
+		while child do
+			child:SetAttribute("unit", nil)
+			index = index + 1
+			child = h:GetAttribute("child" .. index)
+		end
+	end
 	if not ok then error(err, 0) end
 	return not hidden
 end

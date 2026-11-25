@@ -11103,6 +11103,7 @@ step("1.50.1 : cases creees d'avance hors combat (joueur arrive en combat : acti
         fake[#fake + 1] = { h, i }
         made = made + 1
       end
+      h:GetAttribute("child" .. i):SetAttribute("unit", "party1") -- le jeu y range les joueurs du groupe
     end
   end
   local headers = {}
@@ -11137,6 +11138,16 @@ step("1.50.1 : cases creees d'avance hors combat (joueur arrive en combat : acti
       assert((h:GetAttribute("startingIndex") or 1) == 1, h.def.key .. " : liste pas revenue au premier joueur")
     end
     assert(not Z.headers[2]:IsShown(), "cadre de raid montre hors raid pour preparer ses cases")
+    -- cadre cache : ses cases ne gardent aucun joueur (elles ecouteraient ses evenements pour rien)
+    for _, h in ipairs(headers) do
+      if not h:IsShown() then
+        local i = 1
+        while h:GetAttribute("child" .. i) do
+          assert(h:GetAttribute("child" .. i):GetAttribute("unit") ~= "party1", h.def.key .. " : case cachee avec un joueur")
+          i = i + 1
+        end
+      end
+    end
     made = 0
     Z:Refresh()
     assert(made == 0, "cases recreees : " .. made)
@@ -11153,6 +11164,33 @@ step("1.50.1 : cases creees d'avance hors combat (joueur arrive en combat : acti
   Z.db.layout, Z.db.showTanks = old.layout, old.tanks
   Z:Refresh()
   assert(ok, err)
+end)
+
+step("1.50.2 : buffs manquants recoches une fois, choix suivant garde, diagnostic sur la case visible", function()
+  local savedDB, savedChar, version = LyoruneDB, LyoruneCharDB, Z.version
+  local fine, why = pcall(function()
+    local db = { lastVersion = "1.50.1", buffPanel = false, missingBuffs = false }
+    LyoruneDB = db
+    Z.version = "1.50.2" FireEvent("ADDON_LOADED", "Lyorune")
+    assert(db.buffPanel == true and db.missingBuffs == true, "1.50.1 : buffs manquants pas recoches")
+    db.lastVersion, db.buffPanel = "1.50.2", false FireEvent("ADDON_LOADED", "Lyorune")
+    assert(db.buffPanel == false, "choix du joueur ecrase apres la 1.50.2")
+  end)
+  Z.version = version
+  LyoruneDB, LyoruneCharDB = savedDB, savedChar
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(fine, why)
+  -- une case cachee qui porte le meme joueur ne prend pas la place de la case visible dans /lyorune buffs
+  local visible
+  for _, b in ipairs(Z.buttons) do if b.unit and not b.extra and b:IsVisible() then visible = b break end end
+  assert(visible, "aucune case visible pour l'essai")
+  local before = Z.BuffDiagnostic()[2]
+  local ghost = { unit = visible.unit, IsVisible = function() return false end }
+  table.insert(Z.buttons, 1, ghost)
+  local ok, lines = pcall(Z.BuffDiagnostic)
+  table.remove(Z.buttons, 1)
+  assert(ok, lines)
+  assert(lines[2] == before, "case cachee comptee a la place de la visible : " .. lines[2])
 end)
 
 step("aucune variable globale imprevue", function()

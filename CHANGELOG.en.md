@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.50.2] - 2026-11-25
+
+### Fixed
+
+- Missing buffs: the panel and the gray marks on cells are switched back on, once, for players who had turned them off by mistake (they seemed to stop working in instances). Hidden cells no longer follow group members for nothing, and /lyorune buffs always counts the visible cell.
+
 ## [1.50.1] - 2026-11-25
 
 ### Fixed
@@ -976,6 +982,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.50.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.1...v1.50.2
 [1.50.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.0...v1.50.1
 [1.50.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.48.1...v1.49.0

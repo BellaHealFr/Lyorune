@@ -5,7 +5,7 @@
 local ADDON, Z = ...
 _G.Lyorune = Z
 
-Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.50.1"
+Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.50.2"
 Z.class = select(2, UnitClass("player"))
 
 -- En combat, le client Forever rend certaines valeurs « secrètes » (vie, auras...) :
@@ -515,6 +515,11 @@ local function Migrate(db)
 	-- 1.49.0 : nouvelles places d'origine des éléments de la case (C34). Les éléments déplacés ou agrandis gardent
 	-- leur place à l'écran, une seule fois, à la connexion (Z.MigratePlacement, Placement.lua : il faut les cases).
 	if last and last < 14900 and now >= 14900 then Z.placementPending = true end
+	-- 1.50.2 : les buffs manquants (panneau et repères des cases) reviennent cochés, une seule fois (demande de
+	-- l'auteur : décochés sans le vouloir, ils semblaient ne plus marcher en instance). Un choix fait ensuite est gardé.
+	if last and last < 15002 and now >= 15002 then
+		db.buffPanel, db.missingBuffs = nil, nil
+	end
 	-- 1.49.0 : les placements ne suivent plus les profils (un par personnage). Au passage, ceux d'un profil qui
 	-- diffèrent des placements en cours sont gardés sous « Profil : nom », à copier dans l'éditeur ; puis la copie
 	-- de chaque profil s'efface.

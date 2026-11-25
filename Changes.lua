@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.50.2", date = "2026-11-25",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Buffs manquants : le panneau et les repères gris des cases sont de nouveau cochés, une seule fois, pour ceux qui les avaient décochés sans le vouloir (ils semblaient ne plus marcher en instance). Les cases cachées ne suivent plus les joueurs du groupe pour rien, et /lyorune buffs compte toujours la case visible.",
+		},
+	},
+	{
 		version = "1.50.1", date = "2026-11-25",
 		added = {
 		},

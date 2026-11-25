@@ -406,11 +406,14 @@ function Z.BuffDiagnostic()
 	local lines = { L["état : buffs cachés %s, restriction %s, match JcJ %s, partie %s, en combat %s."]:format(YesNo(secret),
 		YesNo(Z.AurasRestricted()), YesNo(Z.InPvPMatch and Z.InPvPMatch()), match, YesNo(InCombatLockdown())) }
 	local n = { players = 0, missing = 0, dead = 0, fighting = 0, away = 0, refused = 0, secret = 0, restricted = 0, name = 0, hidden = 0, ends = 0 }
-	local done = {}
+	-- une case par joueur : la visible si elle existe (une case cachée peut porter le même joueur)
+	local cells = {}
 	for _, b in ipairs(Z.buttons or {}) do
 		local unit = b.unit
-		if unit and not b.extra and not done[unit] and UnitExists(unit) then
-			done[unit] = true
+		if unit and not b.extra and (not cells[unit] or (b:IsVisible() and not cells[unit]:IsVisible())) then cells[unit] = b end
+	end
+	for unit, b in pairs(cells) do
+		if UnitExists(unit) then
 			n.players = n.players + 1
 			local name = UnitName(unit)
 			if not name or issecret(name) then n.name = n.name + 1 end
