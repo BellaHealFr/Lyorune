@@ -15,6 +15,8 @@
 <p align="center">
 <a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><strong>Télécharger</strong></a> ·
 <a href="https://www.curseforge.com/wow/addons/lyorune-healing">CurseForge</a> ·
+<a href="https://addons.wago.io/addons/lyorune">Wago</a> ·
+<a href="https://www.wowinterface.com/downloads/info27323-Lyorune.html">WoWInterface</a> ·
 <a href="https://bellahealfr.github.io/Lyorune/">Site</a> ·
 <a href="docs/TUTORIEL.md">Guide du joueur</a> ·
 <a href="docs/SIGNALER_UN_BUG.md">Signaler un bug</a> ·
@@ -84,7 +86,7 @@ En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction a
 
 ## Installation
 
-1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest) ou sur [CurseForge](https://www.curseforge.com/wow/addons/lyorune-healing) (projet « Lyorune Healing », mis à jour en même temps). Ce sont les deux seules sources officielles (voir [SECURITY.md](SECURITY.md)). Avec l'application CurseForge, les mises à jour s'installent toutes seules.
+1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest), sur [CurseForge](https://www.curseforge.com/wow/addons/lyorune-healing) (projet « Lyorune Healing »), sur [Wago](https://addons.wago.io/addons/lyorune) ou sur [WoWInterface](https://www.wowinterface.com/downloads/info27323-Lyorune.html), tous mis à jour en même temps. Ce sont les quatre seules sources officielles (voir [SECURITY.md](SECURITY.md)). Avec l'application CurseForge ou Wago, les mises à jour s'installent toutes seules.
 2. Décompressez l'archive dans `World of Warcraft\_forever_\Interface\AddOns\`. Vous devez obtenir un dossier `Lyorune`.
 3. Lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion, et c'est parti.
 
