@@ -1415,15 +1415,10 @@ local function CanMove()
 	return check and _G[check]() or false
 end
 
-local function Members(h)
-	local count, index = 0, 1
+-- Le jeu montre toujours ses cases à la suite, de la première à la dernière occupée : la première suffit
+local function Occupied(h)
 	local child = h:GetAttribute("child1")
-	while child do
-		if child:IsShown() then count = count + 1 end
-		index = index + 1
-		child = h:GetAttribute("child" .. index)
-	end
-	return count
+	return child ~= nil and child:IsShown()
 end
 
 -- Étiquette d'un cadre : visible si l'option est cochée, ou le temps de déplacer les cadres
@@ -1431,7 +1426,7 @@ local function UpdateHandle(h)
 	local handle = h.handle
 	local movable = CanMove()
 	local wanted = (db.showGroupLabels or movable) and h.labelText ~= nil
-	local occupied = Members(h) > 0
+	local occupied = Occupied(h)
 	if wanted and not h.def.always then wanted = occupied end
 	handle:SetShown(wanted)
 	h.panel:SetShown(db.groupPanel and occupied)
@@ -1656,7 +1651,8 @@ local function HeaderAttributes(h, width, height, petWidth, petHeight, grid, per
 	h:SetAttribute("z-petwidth", petWidth) -- case du familier en face de son maître (cadre « Groupe », CONFIG_SNIPPET)
 	h:SetAttribute("z-petheight", petHeight)
 	h:SetAttribute("z-petgap", Z.PetGap())
-	h:SetAttribute("maxColumns", math.ceil(40 / perColumn))
+	-- « Groupe » ne montre jamais plus de 5 joueurs : pas de colonnes en trop, donc pas de cases en trop
+	h:SetAttribute("maxColumns", math.ceil((def.key == "main" and 5 or 40) / perColumn))
 	if def.key == "main" then
 		if db.layout == "ROLE" then -- le rôle d'abord ; « par classe » devient alors « par nom » dans chaque rôle
 			ApplySort(h, "ASSIGNEDROLE", db.roleOrder .. ",NONE")
@@ -1723,6 +1719,33 @@ local function HeaderAttributes(h, width, height, petWidth, petHeight, grid, per
 	end
 	h:SetAttribute("unitsPerColumn", perColumn) -- 5 par groupe, ou la taille choisie en grille
 	return enabled
+end
+
+-- Nombre de cases qu'un cadre peut avoir à montrer dans la disposition choisie. Le jeu crée une case quand un joueur
+-- arrive ; en combat, cette création est refusée (« action bloquée ») et le joueur reste sans case jusqu'à la fin du
+-- combat. Toutes ces cases sont donc créées d'avance, hors combat : 5 pour « Groupe » et pour un groupe de raid, une
+-- par nom épinglé, un raid entier pour la grille, un rôle, les tanks et les familiers.
+local function CellsNeeded(def, grid, roles)
+	if def.key == "main" or (def.raid and not grid and not roles) then return 5 end
+	if def.key == "pinned" then return #Z:PinnedList() end
+	return MAX_RAID_MEMBERS or 40
+end
+
+-- Crée d'avance les cases d'un cadre visible ou caché : le jeu en prépare autant que de places quand la liste des
+-- joueurs commence avant le premier (startingIndex négatif), puis le cadre revient à la normale. Rien n'est noté :
+-- si l'interface était masquée (Alt+Z) ou si le jeu a refusé, les cases manquent encore et le prochain réglage
+-- recommence. Renvoie true si le cadre visible vient d'être replacé.
+local function PrepareCells(h, count)
+	if count < 1 or InCombatLockdown() or h:GetAttribute("child" .. count) then return end
+	local hidden = not h:IsShown()
+	local ok, err = pcall(function()
+		h:SetAttribute("startingIndex", 1 - count) -- cadre visible : le jeu crée les cases tout de suite
+		if hidden then h:Show() end -- cadre caché : il les crée en s'affichant
+	end)
+	h:SetAttribute("startingIndex", 1) -- toujours, même après une erreur : sinon le cadre resterait vide
+	if hidden then h:Hide() end
+	if not ok then error(err, 0) end
+	return not hidden
 end
 
 -- Disposition de tous les cadres (C17). Un cadre de groupe du jeu replace toutes ses cases à chaque réglage
@@ -1807,6 +1830,12 @@ local function ApplyLayout()
 		h.handle:SetPoint("BOTTOMLEFT", h, "TOPLEFT", 0, db.groupPanel and PANEL_OUTSET + 2 or 2)
 
 		if enabled and def.raid then lastRaid = h end
+		local replaced = false
+		if enabled and not def.extra then
+			Z:Try("cases d'avance du cadre " .. tostring(def.key), function()
+				replaced = PrepareCells(h, CellsNeeded(def, grid, roles))
+			end)
+		end
 		if enabled then
 			local rule = VisibilityRule(def)
 			RegisterStateDriver(h, "visibility", rule)
@@ -1817,7 +1846,7 @@ local function ApplyLayout()
 		end
 		-- Le seul replacement : un cadre qui vient d'apparaître s'est déjà replacé en s'affichant (le jeu le fait seul),
 		-- un cadre caché se replacera quand il apparaîtra
-		if wasShown and h:IsVisible() then h:SetAttribute("z-layout", layoutWave) end
+		if wasShown and not replaced and h:IsVisible() then h:SetAttribute("z-layout", layoutWave) end
 		h:SetAlpha(db.frameAlpha / 100)
 		h:SetScale(db.scale / 100) -- échelle générale : cases, icônes et étiquette grandissent ensemble
 	end

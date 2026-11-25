@@ -9888,9 +9888,15 @@ step("C17 : raid de 40 qui change, cadres replaces une fois, cases toujours plac
   -- reglage change tant que le cadre est visible, sauf pendant _ignore ; replacement aussi quand il apparait.
   local old = { raid = RAID, members = MEMBERS, layout = Z.db.layout, shrink = Z.db.autoShrink, after = C_Timer.After,
     refresh = Z.Refresh }
-  local updates, whole = 0, {}
+  local updates, whole, fake = 0, {}, {}
   local function Update(h)
     updates = updates + 1
+    for i = 1, 1 - (h:GetAttribute("startingIndex") or 1) do -- cases creees d'avance (1.50.1), comme le jeu
+      if not h:GetAttribute("child" .. i) then
+        h:SetAttribute("child" .. i, CreateFrame("Button", nil, h))
+        fake[#fake + 1] = { h, i }
+      end
+    end
     if h.def.raid and RAID and not h:GetAttribute("groupFilter") and not h:GetAttribute("roleFilter")
       and not h:GetAttribute("nameList") then whole[h.def.raid] = true end -- tout le raid dans un seul cadre
     local i = 1
@@ -9985,6 +9991,7 @@ step("C17 : raid de 40 qui change, cadres replaces une fois, cases toujours plac
   C_Timer.After, Z.Refresh = old.after, old.refresh
   RAID, MEMBERS, Z.db.layout, Z.db.autoShrink = old.raid, old.members, old.layout, old.shrink
   for _, h in ipairs(raidHeaders) do h:SetScript("OnAttributeChanged", nil) end
+  for _, f in ipairs(fake) do f[1]:GetAttribute("child" .. f[2]):Hide() f[1]:SetAttribute("child" .. f[2], nil) end
   Z:Refresh()
   assert(ok, err)
 end)
@@ -11074,6 +11081,78 @@ step("1.50.0 : canal des soigneurs (eteint au depart, rejoint, nom de secours, q
   w:Hide()
   db.channelFR, db.channelLocks, CHANNELS, CHANNEL_CALLS = false, {}, {}, {}
   char.channels = {}
+end)
+
+step("1.50.1 : cases creees d'avance hors combat (joueur arrive en combat : action bloquee par le jeu)", function()
+  -- Le jeu cree des cases d'avance quand la liste commence avant le premier joueur (startingIndex negatif), avec le
+  -- calcul de SecureGroupHeaders.lua (ici sans aucun joueur) : min(unitsPerColumn * colonnes, places), colonnes
+  -- limitees par maxColumns. En combat, cette creation est refusee : tout doit etre pret avant.
+  local old = { layout = Z.db.layout, tanks = Z.db.showTanks }
+  local active, refuse, made, fake = true, false, 0, {}
+  local function Update(h)
+    if not active then return end
+    local places = 1 - (h:GetAttribute("startingIndex") or 1)
+    if places < 1 then return end
+    if refuse then error("refus du jeu") end
+    local perColumn = h:GetAttribute("unitsPerColumn") or places
+    local columns = math.min(math.ceil(places / perColumn), h:GetAttribute("maxColumns") or 1)
+    for i = 1, math.min(perColumn * columns, places) do
+      if not h:GetAttribute("child" .. i) then
+        assert(not InCombatLockdown(), "case creee en combat")
+        h:SetAttribute("child" .. i, CreateFrame("Button", nil, h))
+        fake[#fake + 1] = { h, i }
+        made = made + 1
+      end
+    end
+  end
+  local headers = {}
+  for _, h in ipairs(Z.headers) do
+    if not h.def.extra then
+      headers[#headers + 1] = h
+      h:SetScript("OnAttributeChanged", function(self, name)
+        if name == "_ignore" or name:find("^child") or self:GetAttribute("_ignore") then return end
+        if self:IsVisible() then Update(self) end
+      end)
+      h:HookScript("OnShow", Update)
+    end
+  end
+  local function Count(h)
+    local n = 0
+    while h:GetAttribute("child" .. (n + 1)) do n = n + 1 end
+    return n
+  end
+  local ok, err = pcall(function()
+    Z.db.layout, Z.db.showTanks = "GROUP", true
+    -- le jeu refuse (ou interface masquee) : le cadre revient au premier joueur, et le reglage suivant recommence
+    refuse = true
+    Z:Refresh()
+    refuse = false
+    for _, h in ipairs(headers) do
+      assert((h:GetAttribute("startingIndex") or 1) == 1, h.def.key .. " : liste pas revenue apres un refus")
+    end
+    Z:Refresh()
+    for _, h in ipairs(headers) do
+      local want = (h.def.key == "main" or h.def.raid) and 5 or h.def.key == "tanks" and 40 or 0
+      assert(Count(h) >= want, h.def.key .. " : " .. Count(h) .. " cases pour " .. want)
+      assert((h:GetAttribute("startingIndex") or 1) == 1, h.def.key .. " : liste pas revenue au premier joueur")
+    end
+    assert(not Z.headers[2]:IsShown(), "cadre de raid montre hors raid pour preparer ses cases")
+    made = 0
+    Z:Refresh()
+    assert(made == 0, "cases recreees : " .. made)
+    Z.db.layout = "GRID"
+    Z:Refresh()
+    assert(Count(Z.headers[2]) >= 40, "grille : " .. Count(Z.headers[2]) .. " cases")
+    Z.db.layout = "ROLE"
+    Z:Refresh()
+    for i = 2, 5 do assert(Count(Z.headers[i]) >= 40, "par role : cadre " .. i .. " avec " .. Count(Z.headers[i]) .. " cases") end
+  end)
+  active = false
+  for _, h in ipairs(headers) do h:SetScript("OnAttributeChanged", nil) end
+  for _, f in ipairs(fake) do f[1]:GetAttribute("child" .. f[2]):Hide() f[1]:SetAttribute("child" .. f[2], nil) end
+  Z.db.layout, Z.db.showTanks = old.layout, old.tanks
+  Z:Refresh()
+  assert(ok, err)
 end)
 
 step("aucune variable globale imprevue", function()
