@@ -7,6 +7,7 @@
 ## X-Website: https://github.com/BellaHealFr/Lyorune
 ## X-Curse-Project-ID: 1815533
 ## X-Wago-ID: rNkg3ONa
+## X-WoWI-ID: 27323
 ## Version: 1.50.1
 ## IconTexture: Interface\AddOns\Lyorune\Media\Logo
 ## Category-frFR: Portraits d'unités
