@@ -33,6 +33,9 @@ Lyorune suit les [versions sémantiques](https://semver.org/lang/fr/) : `MAJEUR.
    La traduction est rangée dans `Locales/enUS.lua` (nouveautés affichées en jeu) et sert au journal anglais
    `CHANGELOG.en.md` et à la partie anglaise des notes de publication. Si vous l'oubliez, la commande liste les
    changements sans traduction : ajoutez-les dans `Locales/enUS.lua`, puis relancez `python outils/publier.py`.
+
+   La commande met aussi à jour le total des téléchargements GitHub affiché par le badge des README
+   (`docs/badges/telechargements.json`).
 3. Essayer la version en jeu (`outils\installer.bat`, puis `/reload`).
 4. Enregistrer et étiqueter :
 

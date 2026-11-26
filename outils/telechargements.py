@@ -13,9 +13,15 @@ DEPOT = 'BellaHealFr/Lyorune'
 
 def releases():
     """Versions publiées sur GitHub, avec le nombre de téléchargements de leurs archives (erreur si GitHub ne répond pas)."""
-    url = 'https://api.github.com/repos/%s/releases?per_page=100' % DEPOT
-    request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'lyorune-stats'})
-    return json.load(urllib.request.urlopen(request, timeout=20))
+    liste, page = [], 1
+    while True:  # GitHub donne au plus 100 versions par page
+        url = 'https://api.github.com/repos/%s/releases?per_page=100&page=%d' % (DEPOT, page)
+        request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'lyorune-stats'})
+        morceau = json.load(urllib.request.urlopen(request, timeout=20))
+        liste += morceau
+        if len(morceau) < 100:
+            return liste
+        page += 1
 
 
 def total():

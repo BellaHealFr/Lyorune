@@ -32,6 +32,7 @@ import datetime, io, os, re, subprocess, sys, zipfile
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 DEPOT = 'https://github.com/BellaHealFr/Lyorune'
+BADGE = 'docs/badges/telechargements.json'  # badge des README
 PREMIERE_PUBLIEE = (1, 4, 0)  # première version qui existe sur GitHub (les précédentes n'ont pas d'étiquette)
 RUBRIQUES = [('added', '--nouveau', 'Ajouté'), ('improved', '--ameliore', 'Amélioré'), ('fixed', '--corrige', 'Corrigé')]
 RUBRIQUES_EN = {'added': 'Added', 'improved': 'Improved', 'fixed': 'Fixed'}
@@ -178,6 +179,13 @@ def thank_names():
     return friends
 
 
+def write_badge(total):
+    """Chiffre du badge « téléchargements » des README, lu par shields.io (une seule petite lecture, toujours rapide)."""
+    import json
+    write(BADGE, json.dumps({'schemaVersion': 1, 'label': 'téléchargements', 'message': str(total), 'color': 'd4a94e'},
+                            ensure_ascii=False) + '\n')
+
+
 def write_about(curseforge=None):
     """Réécrit About.lua : chiffres du jour (ou les anciens si internet ne répond pas) et noms de remerciements."""
     if os.path.join(ROOT, 'outils') not in sys.path:
@@ -205,6 +213,7 @@ def write_about(curseforge=None):
             print('Nombre illisible (%r) : ancien chiffre CurseForge gardé.' % typed)
         curseforge = int(typed) if typed.isdigit() else None
     numbers['curseforge'] = old_about('curseforge') if curseforge is None else curseforge
+    write_badge(numbers['github'])
     noms = thank_names()
     names = ''.join('\t\t{ name = %s, class = %s, mode = %s },\n' % (lua_string(f['name']), lua_string(f['class']), lua_string(f['mode']))
                     for f in noms)
