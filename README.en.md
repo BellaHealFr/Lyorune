@@ -5,7 +5,7 @@
 <p align="center"><em>The light that guides every healer</em></p>
 
 <p align="center">
-<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><img src="https://img.shields.io/github/v/release/BellaHealFr/Lyorune?label=version&color=d4a94e" alt="Version"></a>
+<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FBellaHealFr%2FLyorune%2Fmain%2Fdocs%2Fbadges%2Fversion.json" alt="Version"></a>
 <a href="https://github.com/BellaHealFr/Lyorune/releases"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FBellaHealFr%2FLyorune%2Fmain%2Fdocs%2Fbadges%2Ftelechargements.json&label=downloads" alt="Downloads"></a>
 <a href="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml"><img src="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
 <img src="https://img.shields.io/badge/WoW%20Forever-interface%2016001-1e90ff" alt="Game">
