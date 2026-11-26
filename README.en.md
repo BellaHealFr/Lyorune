@@ -70,6 +70,15 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 
 Lyorune never changes the game's frames or other addons' frames: it runs alongside ElvUI, Clique and your other interface addons.
 
+## What makes Lyorune special
+
+- **Paladins who get along.** Paladins who have Lyorune never cast another paladin's blessing again: each one casts their own, no discussion needed.
+- **Your mana announcements, even when mana is hidden.** On WoW Forever, mana is hidden from addons; Lyorune still announces your low mana and your mana restored.
+- **A healer's notebook.** Your successful heals, resurrections and buffs, per character, with a summary when leaving a dungeon. It stays on your computer.
+- **A healers' channel.** In French and in English, where healers talk about how they play and their specialisations, if you wish.
+- **Ready in a minute.** No dependency to install, a built-in tutorial from your first login, and a test mode to try everything without a group.
+- **Alongside your interface.** Lyorune never touches a frame that is not its own: it works with ElvUI and Clique.
+
 ## The runes of Lyorune
 
 At the bottom of the options window, a line of golden runes lights up from time to time, from left to right.
