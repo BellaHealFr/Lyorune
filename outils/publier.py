@@ -214,7 +214,8 @@ def write_about(curseforge=None):
             print('Nombre illisible (%r) : ancien chiffre CurseForge gardé.' % typed)
         curseforge = int(typed) if typed.isdigit() else None
     numbers['curseforge'] = old_about('curseforge') if curseforge is None else curseforge
-    write_badge('telechargements', 'téléchargements', str(numbers['github']))
+    write_badge('telechargements', 'téléchargements', '{:,}'.format(numbers['github']).replace(',', ' '))  # 12 458
+    write_badge('downloads', 'downloads', '{:,}'.format(numbers['github']))  # 12,458 (README anglais)
     noms = thank_names()
     names = ''.join('\t\t{ name = %s, class = %s, mode = %s },\n' % (lua_string(f['name']), lua_string(f['class']), lua_string(f['mode']))
                     for f in noms)
