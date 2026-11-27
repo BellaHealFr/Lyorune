@@ -179,7 +179,7 @@ local steps = {
 			.. "« Placer les éléments de la case... » (chapitre Disposition) les déplace, règle leur taille, et les affiche ou les masque d'une case à cocher (un élément masqué laisse sa place aux autres) ; chaque personnage garde ses placements, et peut copier ceux d'un autre. "
 			.. "Les petits carrés de couleur dans les coins : les sorts que vous y avez placés (chapitre Mes soins). "
 			.. "Une icône grise au bout de vos soins : un sort que vous ne pouvez pas encore relancer sur lui (Âme affaiblie, Longanimité), avec ses secondes. "
-			.. "Âme affaiblie et Longanimité se voient aussi dans tous les modes, quelle que soit votre classe (liste « Toujours montrés », chapitre Affaiblissements). "
+			.. "Âme affaiblie et Longanimité se voient aussi en « Utiles » et « Ceux que je dissipe », quelle que soit votre classe (liste « Toujours montrés », chapitre Affaiblissements). "
 			.. "Ces icônes sont dessinées par le jeu : elles restent visibles en plein combat.\n\n"
 			.. "|cffffd140Contour doré|r : un affaiblissement important (boss, ou votre liste, toujours en tête de la rangée). "
 			.. "Liseré |cff73ccffbleu|r : un gros défensif posé sur lui ; liseré |cffff4d33rouge|r au centre : il est étourdi, apeuré ou métamorphosé. "

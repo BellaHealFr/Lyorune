@@ -171,9 +171,7 @@ local function Wanted()
 	for id in pairs(Z.ignoredDebuffs) do ignored[id] = true end
 	for name in pairs(db.ignoredNames) do AddIds(ignored, name) end
 	-- un sort de départ de « Toujours montrés » décoché : plus montré du tout (Âme affaiblie, Longanimité)
-	for id in pairs(Z.shownDefault) do
-		if db.shownDebuffs[id] == false then ignored[id] = true end
-	end
+	for id in pairs(Z.ShownOff()) do ignored[id] = true end
 	-- Affaiblissement qui bloque un de mes sorts : au bout de mes soins, il quitte la rangée des affaiblissements
 	local lockouts = {}
 	if Z.ShowsLockouts() then

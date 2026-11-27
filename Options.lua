@@ -691,9 +691,9 @@ function Z.ShownIdFromText(text)
 	if type(info) == "table" and type(info.spellID) == "number" then return info.spellID end
 end
 
--- Une entrée répond-elle à la recherche (déjà passée par Plain) ? Nom sans accents, ou numéro
+-- Une entrée répond-elle à la recherche (déjà passée par Plain) ? Nom sans accents (entry.plain), ou numéro
 local function ShownMatch(entry, search)
-	return search == "" or Plain(entry.name):find(search, 1, true) ~= nil or tostring(entry.id):find(search, 1, true) ~= nil
+	return search == "" or entry.plain:find(search, 1, true) ~= nil or tostring(entry.id):find(search, 1, true) ~= nil
 end
 
 -- Ce que la liste propose, filtré par la recherche : { { id, name, on }, ... }, cochés d'abord, puis par nom
@@ -708,7 +708,7 @@ function Z.ShownCatalog(search)
 	local list = {}
 	for id in pairs(ids) do
 		local name = C_Spell.GetSpellName(id)
-		local entry = name and { id = id, name = name, on = Z.ShownOn(id) }
+		local entry = name and { id = id, name = name, plain = Plain(name), on = Z.ShownOn(id) }
 		if entry and ShownMatch(entry, search) then list[#list + 1] = entry end
 	end
 	table.sort(list, function(x, y)
@@ -792,9 +792,7 @@ local function ShownList(title, hint)
 		Placeholder(edit, "Chercher ou ajouter...")
 		edit.onLink = function(link)
 			Add(link)
-			edit:SetText("")
-			box.search = nil
-			box:Update()
+			edit:SetText("") -- vide aussi la recherche (OnTextChanged)
 		end
 		edit:HookScript("OnEditFocusGained", function(self)
 			WatchLinks()
@@ -2904,8 +2902,8 @@ local function Chapters()
 			{ "Icônes", {
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
 				{ "check", "debuffCountdown", "Secondes restantes", "Sur les icônes d'affaiblissements, celle du contrôle subi et la grande icône des affaiblissements importants : les secondes restantes, écrites par le jeu, même en combat. Vous voyez s'il faut dissiper ou attendre la fin.", desc = "Dissiper tout de suite, ou attendre la fin ?" },
-				{ "seg", "debuffMode", "Affaiblissements affichés", "Tous : tout ce que porte le joueur. Utiles : ceux que le jeu montre sur ses propres cadres de raid, rien de plus de 5 minutes (Déserteur, Épuisement) ; un affaiblissement de boss plus long reste dans la grande icône. Ceux que je dissipe : seulement ce que vous pouvez retirer. Dans les trois cas, ceux de vos listes « À mettre en avant » et « Toujours montrés » passent en tête (en « Tous », ceux de « Toujours montrés » à partir de 3 affaiblissements, sinon parmi les autres).", desc = "Tous, Utiles, ou seulement ceux que je dissipe.", dep = { "showDebuffs", true } },
-				ShownList("Toujours montrés", "Montrés dans les trois modes, même s'ils ne se dissipent pas, en combat aussi, sans son ni contour. Au départ : Âme affaiblie et Longanimité, pour savoir qu'un bouclier ou une bulle ne peut pas être relancé. Le bouton ouvre la liste : cochez ceux à montrer, elle propose aussi ceux déjà vus sur votre groupe. Tapez un nom ou un numéro pour filtrer la liste ; Entrée, ou Maj-clic sur un sort, pour en ajouter un."),
+				{ "seg", "debuffMode", "Affaiblissements affichés", "Tous : tout ce que porte le joueur. Utiles : ceux que le jeu montre sur ses propres cadres de raid, rien de plus de 5 minutes (Déserteur, Épuisement) ; un affaiblissement de boss plus long reste dans la grande icône. Ceux que je dissipe : seulement ce que vous pouvez retirer. Dans les trois cas, ceux de vos listes « À mettre en avant » et « Toujours montrés » passent en tête (en « Tous », ceux de « Toujours montrés » quand « Nombre d'affaiblissements » vaut 3 ou plus, sinon parmi les autres).", desc = "Tous, Utiles, ou seulement ceux que je dissipe.", dep = { "showDebuffs", true } },
+				ShownList("Toujours montrés", "Montrés dans les trois modes (en « Tous », parmi les autres si « Nombre d'affaiblissements » vaut moins de 3), même s'ils ne se dissipent pas, en combat aussi, sans son ni contour. Au départ : Âme affaiblie et Longanimité, pour savoir qu'un bouclier ou une bulle ne peut pas être relancé. Le bouton ouvre la liste : cochez ceux à montrer, elle propose aussi ceux déjà vus sur votre groupe. Tapez un nom ou un numéro pour filtrer la liste ; Entrée, ou Maj-clic sur un sort, pour en ajouter un."),
 				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher, sauf s'ils sont dans « À mettre en avant » ou cochés dans « Toujours montrés ». Un nom, un numéro, ou Maj-clic sur un sort."),
 				{ "step", "dispelCount", "Affaiblissements à dissiper", desc = "Montrés avant les autres, le plus important d'abord.", dep = { "showDebuffs", true } },
 				{ "step", "debuffCount", "Nombre d'affaiblissements", fine = true, dep = { "showDebuffs", true } },

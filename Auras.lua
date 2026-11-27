@@ -716,7 +716,7 @@ end
 local function IsIgnored(aura)
 	if InList(Z.db.importantNames, aura) or IsShown(aura) then return false end
 	local id = aura.spellId
-	if id and not issecret(id) and (Z.ignoredDebuffs[id] or (Z.shownDefault[id] and Z.db.shownDebuffs[id] == false)) then
+	if id and not issecret(id) and (Z.ignoredDebuffs[id] or Z.ShownOff()[id]) then
 		return true
 	end
 	return InList(Z.db.ignoredNames, aura)

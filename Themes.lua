@@ -128,8 +128,19 @@ function Z.ShownIds()
 	if Z.ShowsLockouts() then
 		for id in pairs(Z.lockoutIds) do set[id] = nil end
 	end
-	Z.shownCache = set
+	-- sorts de départ décochés : plus montrés du tout (Containers.lua, Auras.lua)
+	local off = {}
+	for id in pairs(Z.shownDefault) do
+		if chosen[id] == false then off[id] = true end
+	end
+	Z.shownCache, Z.shownOffCache = set, off
 	return set
+end
+
+-- Les sorts de départ décochés, gardés avec Z.ShownIds
+function Z.ShownOff()
+	if not Z.shownCache then Z.ShownIds() end
+	return Z.shownOffCache
 end
 
 -- Une place pour eux en tête de la rangée : en « Utiles » et « Ceux que je dissipe » (sans elle, le mode les
