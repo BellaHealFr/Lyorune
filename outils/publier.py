@@ -32,7 +32,6 @@ import datetime, io, os, re, subprocess, sys, zipfile
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 DEPOT = 'https://github.com/BellaHealFr/Lyorune'
-BADGES = 'docs/badges/'  # chiffres des badges des README, lus par shields.io
 PREMIERE_PUBLIEE = (1, 4, 0)  # première version qui existe sur GitHub (les précédentes n'ont pas d'étiquette)
 RUBRIQUES = [('added', '--nouveau', 'Ajouté'), ('improved', '--ameliore', 'Amélioré'), ('fixed', '--corrige', 'Corrigé')]
 RUBRIQUES_EN = {'added': 'Added', 'improved': 'Improved', 'fixed': 'Fixed'}
@@ -179,14 +178,6 @@ def thank_names():
     return friends
 
 
-def write_badge(name, label, message):
-    """Badge des README (version, téléchargements) lu par shields.io : une seule petite lecture, toujours rapide,
-    au lieu de faire interroger GitHub par shields.io (trop lent avec beaucoup de versions, le badge s'affichait cassé)."""
-    import json
-    write(BADGES + name + '.json', json.dumps({'schemaVersion': 1, 'label': label, 'message': message, 'color': 'd4a94e'},
-                                              ensure_ascii=False) + '\n')
-
-
 def write_about(curseforge=None):
     """Réécrit About.lua : chiffres du jour (ou les anciens si internet ne répond pas) et noms de remerciements."""
     if os.path.join(ROOT, 'outils') not in sys.path:
@@ -214,8 +205,6 @@ def write_about(curseforge=None):
             print('Nombre illisible (%r) : ancien chiffre CurseForge gardé.' % typed)
         curseforge = int(typed) if typed.isdigit() else None
     numbers['curseforge'] = old_about('curseforge') if curseforge is None else curseforge
-    write_badge('telechargements', 'téléchargements', '{:,}'.format(numbers['github']).replace(',', ' '))  # 12 458
-    write_badge('downloads', 'downloads', '{:,}'.format(numbers['github']))  # 12,458 (README anglais)
     noms = thank_names()
     names = ''.join('\t\t{ name = %s, class = %s, mode = %s },\n' % (lua_string(f['name']), lua_string(f['class']), lua_string(f['mode']))
                     for f in noms)
@@ -391,7 +380,6 @@ def main():
         version, notes, english = parse(args)
         run_tests()
         set_version(version, notes)
-        write_badge('version', 'version', 'v' + version)
         add_translations(english)
         write_about(curseforge)
     run_tests()
