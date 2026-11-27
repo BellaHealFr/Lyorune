@@ -9,15 +9,18 @@
 # dans cette liste les versions dont l'interface est celle du .toc (rien d'autre : pas de version Retail affichée),
 # puis envoie l'archive avec le numéro de l'addon (## X-WoWI-ID du .toc).
 # Le jeton vient de la variable WOWI_API_TOKEN (secret du dépôt) ; sans jeton, rien n'est envoyé.
+# L'envoi passe par curl, comme l'outil d'empaquetage : l'en-tête « x-api-token » part tel quel (Python le
+# réécrivait « X-api-token », et WoWInterface répondait « You must be authenticated »).
 # Code de sortie : 0 envoyé (ou rien à faire sans jeton), 1 refusé ou impossible.
 
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
-import uuid
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VERSIONS_URL = 'https://api.wowinterface.com/addons/compatible.json'
@@ -46,21 +49,6 @@ def compatible(interfaces):
     return ','.join(dict.fromkeys(found))  # sans doublon, dans l'ordre de la liste
 
 
-def multipart(fields, file_field, file_path):
-    boundary = uuid.uuid4().hex
-    parts = []
-    for name, value in fields.items():
-        parts.append(('--%s\r\nContent-Disposition: form-data; name="%s"\r\n\r\n' % (boundary, name)).encode('utf-8'))
-        parts.append(value.encode('utf-8') + b'\r\n')
-    with open(file_path, 'rb') as f:
-        data = f.read()
-    parts.append(('--%s\r\nContent-Disposition: form-data; name="%s"; filename="%s"\r\n'
-                  'Content-Type: application/zip\r\n\r\n' % (boundary, file_field, os.path.basename(file_path))).encode('utf-8'))
-    parts.append(data + b'\r\n')
-    parts.append(('--%s--\r\n' % boundary).encode('utf-8'))
-    return b''.join(parts), 'multipart/form-data; boundary=' + boundary
-
-
 def main(argv):
     if len(argv) < 3:
         print('Usage : python outils/wowinterface.py vX.Y.Z archive.zip [notes.md]')
@@ -86,20 +74,24 @@ def main(argv):
     if not games:
         print('WoWInterface : aucune version du jeu pour l\'interface %s dans %s.' % (', '.join(interfaces), VERSIONS_URL))
         return 1
-    fields = {'id': addon, 'version': tag.lstrip('v'), 'compatible': games}
+    args = ['curl', '-sS', '--retry', '3', '--retry-delay', '10', '-w', '%{http_code}', '-H', 'x-api-token: ' + token,
+            '-F', 'id=' + addon, '-F', 'version=' + tag.lstrip('v'), '-F', 'compatible=' + games]
     if os.path.isfile(notes_path):
-        fields['changelog'] = read(notes_path)
-    body, kind = multipart(fields, 'updatefile', archive)
-    request = urllib.request.Request(UPLOAD_URL, data=body, method='POST', headers={
-        'User-Agent': AGENT, 'x-api-token': token, 'Content-Type': kind})
+        args += ['-F', 'changelog=<' + notes_path]
+    args += ['-F', 'updatefile=@' + archive, UPLOAD_URL]
     print('WoWInterface : envoi de %s (%s), addon %s.' % (os.path.basename(archive), games, addon))
+    with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as result:
+        answer_path = result.name
     try:
-        with urllib.request.urlopen(request, timeout=120) as answer:
-            code, text = answer.status, answer.read().decode('utf-8', 'replace')
-    except urllib.error.HTTPError as error:
-        code, text = error.code, error.read().decode('utf-8', 'replace')
-    except (urllib.error.URLError, OSError) as error:
+        done = subprocess.run(args[:1] + ['-o', answer_path] + args[1:], capture_output=True, text=True, timeout=300)
+    except (OSError, subprocess.TimeoutExpired) as error:
         print('WoWInterface : envoi impossible (%s).' % error)
+        return 1
+    text = read(answer_path) if os.path.isfile(answer_path) else ''
+    os.remove(answer_path)
+    code = int(done.stdout.strip()[-3:]) if done.stdout.strip()[-3:].isdigit() else 0
+    if done.returncode != 0 and not code:
+        print('WoWInterface : envoi impossible (curl %d). %s' % (done.returncode, done.stderr.strip()[:300]))
         return 1
     if code == 202:
         print('WoWInterface : envoyé (202).')
