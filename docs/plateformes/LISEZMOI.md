@@ -16,6 +16,9 @@ d'en-tête (`<!-- ... -->` ou les lignes au-dessus de « à coller ci-dessous »
 pointent vers `docs/FONCTIONNALITES.md` et `docs/FEATURES.en.md` sur `main` ; les images pointent vers des fichiers
 déjà présents sur `main`.
 
+**Captures à venir :** clic-soin en action, raid à 40, JcJ, les 5 thèmes (liste dans
+`docs/images/captures/LISEZMOI.md`). Les ajouter dans les trois textes, après « Les options », quand elles existent.
+
 ## CurseForge
 
 1. https://authors.curseforge.com, projet « Lyorune Healing ».

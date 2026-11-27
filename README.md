@@ -59,8 +59,6 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 
 **[All features in detail](docs/FEATURES.en.md)**
 
-Lyorune never changes the game's frames or other addons' frames: it runs alongside ElvUI, Clique and your other interface addons.
-
 <!-- captures:debut -->
 ## Screenshots
 
@@ -92,6 +90,8 @@ Lyorune never changes the game's frames or other addons' frames: it runs alongsi
 2. Unzip it into `World of Warcraft\_forever_\Interface\AddOns\`. You should get a `Lyorune` folder.
 3. Start the game. A one-minute tutorial opens on first login, and off you go.
 
+To update, replace the `Lyorune` folder with the one from the new version. Your settings are kept.
+
 ## Getting started
 
 No group at hand? Type `/lyorune test`: a fake group appears, with its wounded players and debuffs, so you can try your clicks and tune the look at your own pace.
@@ -101,8 +101,9 @@ No group at hand? Type `/lyorune test`: a fake group appears, with its wounded p
 | `/lyorune` | Open the options |
 | `/lyorune test` | Show or hide the fake group |
 | `/lyorune tuto` | Restart the tutorial |
-| `/lyorune verrou` | Lock or unlock the frames' position |
+| `/lyorune lock` | Lock or unlock the frames' position |
 | `/lyorune bug` | Report a problem |
+| `/lyorune news` | See what's new, with "Show me" to go to the setting |
 
 The full player guide is in [docs/GUIDE.en.md](docs/GUIDE.en.md). In game, everything is in English when your game is: options, guided tour, news and chat messages.
 
@@ -146,7 +147,12 @@ They come from the game's rules, which hide some information from addons in comb
 
 ## Compatibility
 
-World of Warcraft: Forever, interface 16001. Languages: French and English. No dependency.
+| | |
+|---|---|
+| Game | World of Warcraft: Forever, interface 16001 |
+| Languages | English, French |
+| Dependencies | None. LibSharedMedia is used if present, to offer your textures. |
+| Other addons | Works with ElvUI, Clique and other group frames: Lyorune never touches a frame that is not its own. |
 
 ## Documentation
 

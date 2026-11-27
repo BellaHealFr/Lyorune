@@ -46,15 +46,13 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 
 ## Screenshots
 
-![Lyorune's cells: health, mana, heals and role at a glance](https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/cases.jpg)
+![Lyorune frames: health, mana, heals and role at a glance](https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/cases.jpg)
 
-*Lyorune's cells: health, mana, heals and role at a glance*
+*Lyorune frames: health, mana, heals and role at a glance*
 
 ![The options: every setting has its checkbox](https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/options.png)
 
 *The options: every setting has its checkbox*
-
-<!-- TODO: screenshot to add (click-casting in action, 40-player raid, PvP, the 5 themes) -->
 
 ## Installation
 
@@ -146,8 +144,6 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 ![Les options : chaque réglage a sa case à cocher](https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/options.png)
 
 *Les options : chaque réglage a sa case à cocher*
-
-<!-- TODO: capture à ajouter (clic-soin en action, raid à 40, JcJ, les 5 thèmes) -->
 
 ## Installation
 

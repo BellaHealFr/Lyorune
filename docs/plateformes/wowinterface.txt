@@ -50,8 +50,6 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 [img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/options.png[/img]
 [i]Les options : chaque réglage a sa case à cocher[/i]
 
-[TODO: capture à ajouter (clic-soin en action, raid à 40, JcJ, les 5 thèmes)]
-
 [size=4][b]Installation[/b][/size]
 [list=1]
 [*]Avec l'application CurseForge ou Wago, Lyorune s'installe et se met à jour tout seul.
@@ -139,12 +137,10 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 [size=4][b]Screenshots[/b][/size]
 
 [img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/cases.jpg[/img]
-[i]Lyorune's cells: health, mana, heals and role at a glance[/i]
+[i]Lyorune frames: health, mana, heals and role at a glance[/i]
 
 [img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/options.png[/img]
 [i]The options: every setting has its checkbox[/i]
-
-[TODO: screenshot to add (click-casting in action, 40-player raid, PvP, the 5 themes)]
 
 [size=4][b]Installation[/b][/size]
 [list=1]

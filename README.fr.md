@@ -52,8 +52,6 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 
 **[Toutes les fonctionnalités en détail](docs/FONCTIONNALITES.md)**
 
-Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à côté d'ElvUI, de Clique ou de vos autres addons d'interface.
-
 <!-- captures:debut -->
 ## En images
 

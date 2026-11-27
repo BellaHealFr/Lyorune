@@ -1,6 +1,6 @@
 # Captures du jeu
 
-Deposez ici les captures prises en jeu, avec les noms attendus par `outils/captures.py`, puis lancez `python outils/captures.py`.
+Déposez ici les captures prises en jeu, avec les noms attendus par `outils/captures.py`, puis lancez `python outils/captures.py`.
 
 Ce sont toujours de vraies captures du jeu, prises par l'auteur : aucune image inventée ou retouchée pour montrer
 ce que l'addon ne fait pas.
@@ -16,7 +16,7 @@ ce que l'addon ne fait pas.
 ## À faire
 
 Format : `.jpg` (ou `.png` pour une fenêtre d'options), 1600 pixels de large au plus (`outils/captures.py` réduit
-les images plus larges). Interface du jeu en français pour les README, ou deux versions si vous le voulez.
+les images plus larges). Une capture par langue si vous le voulez (`README.md` en anglais, `README.fr.md` en français).
 
 | Fichier | Contenu | Conseil | Affichage |
 |---|---|---|---|
