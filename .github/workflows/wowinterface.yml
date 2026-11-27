@@ -1,0 +1,38 @@
+# Renvoie sur WoWInterface une version déjà publiée sur GitHub (envoi refusé ou oublié), sans rien republier ailleurs.
+# Lancée à la main : onglet Actions, « WoWInterface », numéro de version (par exemple v1.51.0).
+# L'archive est reprise de la page de la version sur GitHub (Lyorune-vX.Y.Z-forever.zip).
+name: WoWInterface
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version déjà publiée, par exemple v1.51.0"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  wowinterface:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Notes de la version
+        run: python outils/publier.py --notes "$VERSION"
+        env:
+          PYTHONIOENCODING: utf-8
+          VERSION: ${{ inputs.version }}
+      - name: Archive de la version
+        run: gh release download "$VERSION" --pattern "Lyorune-$VERSION-forever.zip" --dir .release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+      - name: Envoi sur WoWInterface
+        run: python outils/wowinterface.py "$VERSION" ".release/Lyorune-$VERSION-forever.zip"
+        env:
+          PYTHONIOENCODING: utf-8
+          VERSION: ${{ inputs.version }}
+          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
