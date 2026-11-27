@@ -62,8 +62,8 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 
 | Ce que vous voyez | Ce que cela veut dire |
 |---|---|
-| Vert clair au bout de la barre | Des soins sont déjà en route |
-| Bande claire en bas de la barre | Il a un bouclier (au choix, chapitre Vie et portée, « Place du bouclier » : à la suite de la vie, comme les cadres du jeu, avec un trait lumineux au bout quand le bouclier dépasse la vie manquante) |
+| Vert clair au bout de la barre | Des soins sont déjà en route ; sur une barre verte (chasseur, moine, ou vie presque pleine en « Vie restante »), cette part est plus pâle pour rester visible |
+| Bande claire en bas de la barre | Il a un bouclier (au choix, chapitre Vie et portée, « Place du bouclier » : à la suite de la vie, rayé comme les cadres du jeu, avec un trait lumineux au bout quand le bouclier dépasse la vie manquante) |
 | Petit chiffre « +1,2k » à la couleur du bouclier | Ce qui reste à absorber, tous boucliers comptés, même en combat ; il s'efface quand le dernier bouclier est cassé ou fini (« Chiffre du bouclier », chapitre Vie et portée, éteint au départ) |
 | Une boisson en bas à gauche | Ce soigneur est à court de mana (seuil au choix dans le chapitre Vie et portée, « Mana basse des soigneurs ») : marche en combat, même quand le jeu cache la mana |
 | Une deuxième boisson juste à droite, qui se vide | Ce soigneur est en train de boire (« Soigneur qui boit », même partie) : attendez qu'il ait fini avant d'avancer |

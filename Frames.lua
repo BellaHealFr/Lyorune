@@ -50,9 +50,10 @@ local function SetLayer(bar, sub) bar:GetStatusBarTexture():SetDrawLayer("ARTWOR
 
 -- Soins en route sur une barre verte : la teinte de contraste du thème, sinon le vert du soin se fond dans
 -- celui de la vie. Couleur lisible (classe, camp, mode test) : jamais une valeur secrète.
+local incomingTheme -- thème courant, gardé par BuildCurves à chaque Refresh
 local function IsGreen(r, g, bl) return g - math.max(r, bl) >= 0.15 end
 function Z.IncomingColor(r, g, bl)
-	local theme = Z:Theme()
+	local theme = incomingTheme or Z:Theme()
 	return IsGreen(r, g, bl) and theme.incomingOnGreen or theme.incoming -- (thème sans contraste : couleur normale)
 end
 local rangeAlpha = 0.35
@@ -70,7 +71,7 @@ local function ColorCurve(step, points)
 end
 
 local healthCurve, hideWhenFullCurve, lowHealthCurve, lowManaCurve, healCalculator
-local incomingCurve, incomingTheme -- couleur des soins en route selon la vie, en mode « Vie restante » (BuildCurves)
+local incomingCurve -- couleur des soins en route selon la vie, en mode « Vie restante » (BuildCurves)
 local healthyCurve, healthyDeficitCurve -- joueur en bonne santé estompé (réglage healthyFade, BuildCurves)
 
 -- Joueur en bonne santé estompé (réglage healthyFade, éteint au départ) : au-dessus du seuil, la vie, la mana, le

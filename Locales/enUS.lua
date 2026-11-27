@@ -503,7 +503,8 @@ Z.translations.enUS = {
 	["La |cff%steinte claire|r au bout de la vie montre les soins déjà en route."] =
 		"The |cff%slight tint|r at the end of the health shows heals already on their way.",
 	["La |cff%sbande claire|r en bas de la case est un bouclier."] = "The |cff%slight strip|r at the bottom of the cell is a shield.",
-	["La |cff%spart claire|r qui prolonge la vie est un bouclier."] = "The |cff%slight part|r extending the health is a shield.",
+	["La |cff%spart rayée|r qui prolonge la vie est un bouclier."] = "The |cff%sstriped part|r extending the health is a shield.",
+	["Sur une barre verte, elle pâlit pour rester visible."] = "On a green bar, it turns paler to stay visible.",
 	["Après un sort payé en mana, un trait fin sur votre case se vide en 5 secondes : ensuite, votre mana repart."] = "After a spell paid with mana, a thin line on your cell empties in 5 seconds: then your mana comes back.",
 	["Le bord de l'écran bleuit quand votre mana baisse."] = "The edge of the screen turns blue when your mana runs low.",
 	["Une boisson près de la mana d'un soigneur : il boit."] = "A drink next to a healer's mana: they are drinking.",

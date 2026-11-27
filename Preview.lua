@@ -45,7 +45,7 @@ local function Fill(cell, index, sample)
 			cell.name:SetTextColor(r, g, b)
 		end
 		cell.hp:SetStatusBarColor(br, bg, bb)
-		cell.incoming:SetStatusBarColor(unpack(Z.IncomingColor(br, bg, bb))) -- teinte de contraste sur une barre verte
+		if db.showIncoming then cell.incoming:SetStatusBarColor(unpack(Z.IncomingColor(br, bg, bb))) end -- contraste sur une barre verte
 		cell.text:SetTextColor(1, 1, 1)
 		if db.text == "DEFICIT" then
 			cell.text:SetText(health < 100 and ("-" .. (100 - health) * 40) or "")

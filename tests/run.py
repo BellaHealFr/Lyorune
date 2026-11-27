@@ -4460,7 +4460,7 @@ step("refonte 1.26.0, lot 6c septies c : corrections de Tutorial.lua et Runes.lu
   Z.db.highContrast = false Z.db.theme = "HEROIC" Z.db.absorbStyle = "FOLLOW" Z:Refresh()
   card.back:Run("OnClick") Go(1)
   body = card.body:GetText()
-  assert(body:find("|cff" .. Hex(Z:Theme().absorb) .. "part claire", 1, true) and body:find("prolonge", 1, true), body)
+  assert(body:find("|cff" .. Hex(Z:Theme().absorb) .. "part rayée", 1, true) and body:find("prolonge", 1, true), body)
   card.close:Run("OnClick")
   Z.db.absorbStyle = saved.absorbStyle Z.db.theme = saved.theme Z.db.highContrast = saved.highContrast Z:Refresh()
 

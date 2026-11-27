@@ -124,9 +124,10 @@ local steps = {
 			local text = L["La barre colorée est la vie du joueur : plus elle est courte, plus il est blessé."]
 			if db.showIncoming then
 				text = text .. "\n\n" .. L["La |cff%steinte claire|r au bout de la vie montre les soins déjà en route."]:format(Hex(theme.incoming))
+					.. " " .. L["Sur une barre verte, elle pâlit pour rester visible."]
 			end
 			if db.showAbsorb then
-				local shield = db.absorbStyle == "FOLLOW" and "La |cff%spart claire|r qui prolonge la vie est un bouclier."
+				local shield = db.absorbStyle == "FOLLOW" and "La |cff%spart rayée|r qui prolonge la vie est un bouclier."
 					or "La |cff%sbande claire|r en bas de la case est un bouclier."
 				text = text .. (db.showIncoming and " " or "\n\n") .. L[shield]:format(Hex(theme.absorb))
 				if db.absorbText then text = text .. " " .. L["Son petit chiffre dit ce qui reste à absorber, même en combat."] end

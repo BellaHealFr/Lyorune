@@ -50,7 +50,7 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 | | |
 |:-:|---|
 | <img src="docs/images/runes/s.png" alt="" width="40"> | **Heal with one click** : every click casts the spell and rank of your choice, no targeting. |
-| <img src="docs/images/runes/u.png" alt="" width="40"> | **Everything at a glance** : health, incoming heals, shields, mana, threat and range, even in combat. |
+| <img src="docs/images/runes/u.png" alt="" width="40"> | **Everything at a glance** : health, incoming heals, shields, mana, threat and range, even in combat; the bars glide smoothly. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dispel without searching** : the frame lights up when you can remove a debuff. |
 | <img src="docs/images/runes/r.png" alt="" width="40"> | **Resurrect with the same click** : on a dead player, your heal click casts your resurrection. |
 | <img src="docs/images/runes/g.png" alt="" width="40"> | **Your style** : five themes, four cell shapes, every element placed as you like. |

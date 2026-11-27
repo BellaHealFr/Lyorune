@@ -257,14 +257,13 @@ local function Values(...)
 	return #parts > 0 and table.concat(parts, ", ") or "rien"
 end
 
--- Une ligne par vérification ; une erreur du jeu est écrite au lieu de tout arrêter
-local function Check(Add, label, fn)
-	local result = { pcall(fn) }
-	if result[1] then Add(label .. " : " .. Values(unpack(result, 2))) else Add(label .. " : erreur (" .. tostring(result[2]) .. ")") end
+-- Une ligne par vérification ; une erreur du jeu est écrite au lieu de tout arrêter.
+-- Le nombre de réponses est compté (select) : un nil au milieu ne cache pas les suivantes.
+local function Answer(Add, label, ok, ...)
+	if ok then Add(label .. " : " .. Values(...)) else Add(label .. " : erreur (" .. tostring((...)) .. ")") end
 end
-
-local function Exists(name)
-	return _G[name] ~= nil and "oui" or "absente"
+local function Check(Add, label, fn)
+	Answer(Add, label, pcall(fn))
 end
 
 local function DescribeIncoming(Add, unit)
@@ -320,7 +319,8 @@ local function DescribeHeals(Add, moment)
 	Check(Add, "auras secrètes", function() return C_Secrets.ShouldAurasBeSecret() end)
 	DescribeIncoming(Add, "player")
 	if UnitExists("target") then DescribeIncoming(Add, "target") end
-	DescribeAuras(Add)
+	local ok, err = pcall(DescribeAuras, Add) -- une aura inattendue n'empêche pas de décrire l'incantation
+	if not ok then Add("mes auras : erreur (" .. tostring(err) .. ")") end
 	DescribeCast(Add)
 	Add("C_DurationUtil.CreateDuration : " .. (C_DurationUtil and C_DurationUtil.CreateDuration and "oui" or "absente"))
 	Check(Add, "durée fabriquée de 10 s (SetTimeFromStart, reste)", function()
@@ -331,8 +331,10 @@ local function DescribeHeals(Add, moment)
 	end)
 	local bar = Z.buttons and Z.buttons[1] and Z.buttons[1].incoming
 	Add("SetTimerDuration sur une barre : " .. (bar and (bar.SetTimerDuration and "oui" or "absente") or "aucune case"))
-	Add("GetUnitTotalModifiedMaxHealthPercent : " .. Exists("GetUnitTotalModifiedMaxHealthPercent"))
-	Check(Add, "vie max réduite (joueur)", function() return GetUnitTotalModifiedMaxHealthPercent("player") end)
+	Check(Add, "vie max réduite (GetUnitTotalModifiedMaxHealthPercent, joueur)", function()
+		if not GetUnitTotalModifiedMaxHealthPercent then return "absente" end
+		return GetUnitTotalModifiedMaxHealthPercent("player")
+	end)
 end
 
 local function RunHeals(moment)
