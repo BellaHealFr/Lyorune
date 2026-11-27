@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.51.0", date = "2026-11-27",
+		added = {
+			"Liste « Toujours montrés » : Âme affaiblie et Longanimité visibles pour toutes les classes, aussi en « Utiles » et « Ceux que je dissipe », avec une liste déroulante à cocher qui propose les affaiblissements vus sur le groupe.",
+		},
+		improved = {
+		},
+		fixed = {
+			"La bénédiction supérieure d'un autre paladin est reconnue : la simple n'est plus proposée par-dessus.",
+		},
+	},
+	{
 		version = "1.50.2", date = "2026-11-25",
 		added = {
 		},

@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.51.0] - 2026-11-27
+
+### Added
+
+- "Always shown" list: Weakened Soul and Forbearance visible for every class, also in "Useful" and "Those I dispel", with a drop-down checklist offering the debuffs seen on your group.
+
+### Fixed
+
+- Another paladin's greater blessing is recognised: the simple one is no longer offered on top of it.
+
 ## [1.50.2] - 2026-11-25
 
 ### Fixed
@@ -982,6 +992,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.51.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.2...v1.51.0
 [1.50.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.1...v1.50.2
 [1.50.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.0...v1.50.1
 [1.50.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.49.0...v1.50.0
