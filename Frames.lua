@@ -2042,6 +2042,7 @@ function Z.RefreshAssign()
 end
 
 function Z:Refresh()
+	Z.shownCache = nil -- affaiblissements « Toujours montrés » relus (Themes.lua)
 	-- Thème des fenêtres en premier : il ne dépend pas des cases, une erreur plus bas ne doit pas l'empêcher
 	if Z.UI.SkinChanged() then Z:Try("thème des fenêtres", Z.UI.ApplySkin) end
 	Z.ForgetPlacementRanges() -- bornes du placement : la taille, la forme ou le thème ont pu changer

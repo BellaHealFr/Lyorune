@@ -5997,6 +5997,7 @@ step("etape 22, lot 4 : raccourcis du jeu (Bindings.xml, cadres masques, prochai
 end)
 
 step("etape 23, lot 1 : jusqu'a 3 affaiblissements a dissiper par case (conteneurs, ancien affichage, rangee, exemple)", function()
+  Z.db.shownDebuffs = { [6788] = false, [25771] = false } Z.shownCache = nil -- (Toujours montres : essayes a part, 1.51.0)
   local oldCreate = CreateFrame
   local form = {}
   for _, key in ipairs({ "shape", "width", "height", "fontSize", "powerHeight", "dispelCount", "debuffCount", "debuffMode",
@@ -6122,6 +6123,7 @@ step("etape 23, lot 1 : jusqu'a 3 affaiblissements a dissiper par case (conteneu
     assert(cell.debuffs[2] and cell.debuffs[2]:IsShown(), "case temoin : deux a dissiper")
   end, debug.traceback)
   finish()
+  Z.db.shownDebuffs = {} Z.shownCache = nil
   assert(ok, err)
 end)
 
@@ -8189,7 +8191,7 @@ step("1.37.0 : qui buffe qui : groupes a buffer, benediction par joueur, autre p
     raid = RAID, grouped = GROUPED, leader = LEADER, assists = ASSISTS, names = GROUP_NAMES, members = MEMBERS }
   local ok, err = pcall(function()
     local extra = { [19740] = "Bénédiction de puissance", [19742] = "Bénédiction de sagesse", [20217] = "Bénédiction des rois",
-      [25780] = "Fureur vertueuse" }
+      [25780] = "Fureur vertueuse", [25782] = "Bénédiction de puissance supérieure" }
     C_Spell.GetSpellName = function(id) return extra[id] or old.name(id) end
     C_SpellBook.IsSpellKnown = function(id) return extra[id] ~= nil or old.known(id) end
     C_Timer.After = function(s, f) if s < 1 then f() end end
@@ -8236,6 +8238,11 @@ step("1.37.0 : qui buffe qui : groupes a buffer, benediction par joueur, autre p
     AURAS["HELPFUL|PLAYER"] = {}
     Update()
     assert(Spell(other, 19740) == "Bénédiction des rois", "benediction d'un autre paladin reprise : " .. tostring(Spell(other, 19740)))
+    -- (1.51.0) sa version superieure compte pour la simple : jamais Puissance par-dessus
+    AURAS["HELPFUL"] = { { name = "Bénédiction de puissance supérieure", icon = 1, auraInstanceID = 41, spellId = 25782 } }
+    Update()
+    assert(Spell(other, 19740) == "Bénédiction des rois", "benediction superieure d'un autre paladin ignoree : " .. tostring(Spell(other, 19740)))
+    AURAS["HELPFUL"] = { { name = "Bénédiction de puissance", icon = 1, auraInstanceID = 41, spellId = 19740 } }
     AURAS["HELPFUL"][2] = { name = "Bénédiction des rois", icon = 2, auraInstanceID = 42, spellId = 20217 }
     Update()
     assert(Spell(other, 19740) == nil, "guerrier : toutes prises, encore une proposee : " .. tostring(Spell(other, 19740)))
@@ -9357,7 +9364,7 @@ step("1.43.0 : secondes des affaiblissements, Longanimite au bout des soins du p
     C_Spell.GetSpellName = function(id) if id == 25771 then return "Longanimité" end return old.name(id) end
     Z.class = "PALADIN" Z:BuildData()
     assert(Z.lockoutIds[25771] and Z.ShowsLockouts(), "Longanimite non suivie pour le paladin")
-    assert(Z.ignoredDebuffs[25771], "Longanimite sortie des ignores")
+    assert(not Z.ignoredDebuffs[25771], "Longanimite encore ignoree (1.51.0 : montree a toutes les classes)")
     Z.class = "PRIEST" Z:BuildData()
     assert(not Z.lockoutIds[25771] and Z.lockoutIds[6788], "pretre : Ame affaiblie seulement")
 
@@ -9460,6 +9467,7 @@ step("1.43.0 : secondes des affaiblissements, Longanimite au bout des soins du p
 end)
 
 step("1.43.1 : mode Utiles des affaiblissements, liste a mettre en avant en tete, liens de sorts et etat", function()
+  Z.db.shownDebuffs = { [6788] = false, [25771] = false } Z.shownCache = nil -- (Toujours montres : essayes a part, 1.51.0)
   local old = { create = CreateFrame, auraIds = Z.db.auraIds, important = Z.db.importantNames, ignored = Z.db.ignoredNames }
   local form = {}
   for _, key in ipairs({ "debuffMode", "dispelCount", "debuffCount", "showDebuffs", "showDispel", "bossDebuffs",
@@ -9595,6 +9603,7 @@ step("1.43.1 : mode Utiles des affaiblissements, liste a mettre en avant en tete
   Z.db.auraIds, Z.db.importantNames, Z.db.ignoredNames = old.auraIds, old.important, old.ignored
   AURAS = {}
   Z:BuildData() Z:Refresh() RunUpdates()
+  Z.db.shownDebuffs = {} Z.shownCache = nil
   assert(ok, err)
 end)
 
@@ -11193,6 +11202,137 @@ step("1.50.2 : buffs manquants recoches une fois, choix suivant garde, diagnosti
   assert(lines[2] == before, "case cachee comptee a la place de la visible : " .. lines[2])
 end)
 
+step("1.51.0 : affaiblissements Toujours montres (Ame affaiblie et Longanimite pour toutes les classes, liste, recherche)", function()
+  local old = { create = CreateFrame, class = Z.class, name = C_Spell.GetSpellName, anchor = AnchorUtil, sort = AuraContainerSortMethod,
+    util = AuraUtil, policy = CustomAuraContainerAuraProcessingPolicy }
+  local saved = { shown = Z.db.shownDebuffs, seen = Z.db.debuffsSeen, important = Z.db.importantNames, ignored = Z.db.ignoredNames }
+  local form = {}
+  for _, key in ipairs({ "debuffMode", "dispelCount", "debuffCount", "showDebuffs", "showHots", "showLockouts", "showDispel" }) do
+    form[key] = Z.db[key]
+  end
+  local made = {}
+  local ok, err = xpcall(function()
+    C_Spell.GetSpellName = function(id)
+      if id == 25771 then return "Longanimité" end
+      if id == 31337 then return "Mal de mer" end
+      return old.name(id)
+    end
+    Z.db.shownDebuffs, Z.db.debuffsSeen, Z.db.importantNames, Z.db.ignoredNames = {}, {}, {}, {}
+    Z.db.showDebuffs, Z.db.showDispel = true, false
+    -- 1. Donnees : Longanimite n'est plus ignoree ; le depart vaut pour toutes les classes, par numero
+    assert(not Z.ignoredDebuffs[25771], "Longanimite encore ignoree")
+    Z.class = "DRUID" Z:BuildData() Z:Refresh()
+    assert(Z.ShownIds()[6788] and Z.ShownIds()[25771], "depart absent pour un druide")
+    -- 2. Places : une en tete hors de Tous ; Utiles jamais plus long que Tous
+    Z.db.dispelCount, Z.db.debuffCount = 2, 3
+    Z.db.debuffMode = "ALL" assert(Z.DebuffSlots() == 4, "places (Tous)")
+    Z.db.debuffMode = "USEFUL" assert(Z.DebuffSlots() == 4, "places (Utiles)")
+    Z.db.debuffMode = "DISPEL" assert(Z.DebuffSlots() == 3, "places (Ceux que je dissipe)")
+
+    -- 3. Ancien affichage, druide : Ame affaiblie montree dans les trois modes
+    local b = Z.buttons[1]
+    AURAS = {}
+    local soul = { name = "Âme affaiblie", icon = 66, auraInstanceID = 91, spellId = 6788, duration = 15 }
+    local burn = { name = "Brûlure", icon = 3, auraInstanceID = 92, spellId = 9001, duration = 12 }
+    AURAS["HARMFUL"] = { burn, soul }
+    local function icons()
+      local list = {}
+      for i = 1, #b.debuffs do if b.debuffs[i]:IsShown() then list[#list + 1] = b.debuffs[i].texture._tex end end
+      return table.concat(list, ",")
+    end
+    Z.db.debuffMode = "ALL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "66,3", "Tous : " .. icons())
+    Z.db.debuffMode = "USEFUL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "66,3", "Utiles : " .. icons())
+    Z.db.debuffMode = "DISPEL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "66", "Ceux que je dissipe : " .. icons())
+    -- decochee : plus montree ; recochee : redevient le depart (rien de garde)
+    Z.SetShown(6788, false) Z.UpdateAurasNow(b)
+    assert(Z.db.shownDebuffs[6788] == false and not Z.ShownOn(6788) and icons() == "", "decochee : " .. icons())
+    Z.db.debuffMode = "ALL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "3", "decochee : encore montree en Tous : " .. icons())
+    Z.db.debuffMode = "DISPEL"
+    Z.SetShown(6788, true) Z.UpdateAurasNow(b)
+    assert(Z.db.shownDebuffs[6788] == nil and Z.ShownOn(6788) and icons() == "66", "recochee : " .. icons())
+    -- gagne sur A ignorer
+    Z.db.ignoredNames = { ["6788"] = true } Z.db.debuffMode = "ALL" Z:Refresh() Z.UpdateAurasNow(b)
+    assert(icons() == "66,3", "A ignorer gagne : " .. icons())
+    Z.db.ignoredNames = {}
+    -- pretre : au bout de ses soins (Z.lockouts), jamais deux fois
+    Z.db.showHots, Z.db.showLockouts = true, true
+    Z.class = "PRIEST" Z:BuildData() Z:Refresh()
+    assert(not Z.ShownIds()[6788] and Z.ShownIds()[25771], "pretre : Ame affaiblie deux fois")
+    Z.class = "DRUID" Z:BuildData() Z:Refresh()
+    AURAS = {}
+
+    -- 4. Vus sur le groupe, liste, recherche dans la langue du jeu ou par numero, resume sous le bouton
+    assert(Z.db.debuffsSeen[9001] and Z.db.debuffsSeen[6788], "ancien affichage : vus non retenus")
+    Z.db.debuffsSeen = {}
+    Z.NoteSeenDebuffs({ { name = "Mal de mer", spellId = 31337 }, { name = MakeSecret(), spellId = MakeSecret() } })
+    assert(Z.db.debuffsSeen[31337] and next(Z.db.debuffsSeen, next(Z.db.debuffsSeen)) == nil, "vus : secret retenu")
+    local list = Z.ShownCatalog("")
+    assert(#list == 3 and list[1].on and list[2].on and list[3].id == 31337 and not list[3].on, "liste : cochees d'abord")
+    assert(#Z.ShownCatalog("MER") == 1 and #Z.ShownCatalog("6788") == 1 and #Z.ShownCatalog("rien") == 0, "recherche")
+    assert(#Z.ShownCatalog("ame") == 1 and #Z.ShownCatalog("âme") == 1 and #Z.ShownCatalog("longanimite") == 1, "recherche sans accents")
+    assert(Z.ShownIdFromText("Mal de mer") == 31337 and Z.ShownIdFromText("6788") == 6788
+      and Z.ShownIdFromText("|cff71d5ff|Hspell:31337:0|h[Mal de mer]|h|r") == 31337, "ajout par nom, numero ou lien")
+    assert(Z.ShownIdFromText("mal de mer") == 31337, "ajout par nom en minuscules")
+    assert(Z.ShownIdFromText("Nom inconnu") == nil and Z.ShownIdFromText("999999") == nil, "ajout d'un inconnu")
+    assert(Z.ShownSummary() == "Longanimité, Âme affaiblie" or Z.ShownSummary() == "Âme affaiblie, Longanimité", "resume : " .. Z.ShownSummary())
+    Z.SetShown(31337, true)
+    assert(Z.db.shownDebuffs[31337] == true and Z.ShownIds()[31337], "coche non gardee par numero")
+    Z.SetShown(31337, false)
+    assert(Z.db.shownDebuffs[31337] == false and #Z.ShownCatalog("") == 3, "decoche : sort de la liste")
+
+    -- 5. Conteneurs du jeu : groupe de tete en Utiles, ecarte des autres ; parmi les autres en Tous
+    local groups = {}
+    CreateFrame = function(kind, fname, parent, template)
+      local f = old.create(kind, fname, parent, template)
+      if kind ~= "AuraContainer" then return f end
+      function f:AddAuraGroup(key, filter, options)
+        groups[key] = { candidates = options.candidateFilters, max = options.maxFrameCount }
+      end
+      function f:AddAuraSlot() return old.create("Button", nil, self) end
+      function f:SetAuraProcessingPolicy() end
+      function f:SetEnabled() end
+      function f:SetUnit() end
+      function f:UpdateAllAuras() end
+      return f
+    end
+    AuraContainerSortMethod = { Default = 0 }
+    AnchorUtil = { FlowDirection = { Right = 1, Left = 2, Up = 3, Down = 4 }, FlowLayoutAxis = { Horizontal = 1, Vertical = 2 } }
+    AuraUtil = { AuraUpdateChangedType = { Debuff = 7 } }
+    CustomAuraContainerAuraProcessingPolicy = { ProcessAura = 2 }
+    Enum.CustomAuraButtonDispelTypeTextureStyle = { PreserveAsset = 1, Icon = 3 }
+    Z.db.debuffMode = "USEFUL"
+    local c = CreateFrame("Button", "LyoruneHeaderUnitButton451", Z.header)
+    Z.header:InitButton(c:GetName())
+    made[#made + 1] = c
+    c:SetAttribute("unit", "player")
+    Z:Refresh()
+    local row, others = groups.listedRow, groups.others
+    assert(row and row.max == 1 and row.candidates.includeSpellIDs[6788] and row.candidates.includeSpellIDs[25771], "groupe de tete")
+    assert(others and others.max == 1 and others.candidates.excludeSpellIDs[6788], "doublon dans les autres")
+    groups = {}
+    Z.db.debuffMode = "ALL" Z:Refresh()
+    assert(groups.listedRow and groups.listedRow.candidates.includeSpellIDs[6788] and groups.others.candidates.excludeSpellIDs[6788],
+      "Tous : pas en tete")
+    -- decochee : ignoree partout (pas meme parmi les autres)
+    Z.db.shownDebuffs[6788] = false groups = {} Z:Refresh()
+    assert(not groups.listedRow.candidates.includeSpellIDs[6788] and groups.others.candidates.excludeSpellIDs[6788], "decochee montree")
+    Z.db.shownDebuffs[6788] = nil
+  end, debug.traceback)
+  CreateFrame = old.create
+  AnchorUtil, AuraContainerSortMethod, AuraUtil, CustomAuraContainerAuraProcessingPolicy = old.anchor, old.sort, old.util, old.policy
+  for _, c in ipairs(made) do c:Hide() c:SetAttribute("unit", nil) end
+  C_Spell.GetSpellName = old.name
+  for key, value in pairs(form) do Z.db[key] = value end
+  Z.db.shownDebuffs, Z.db.debuffsSeen, Z.db.importantNames, Z.db.ignoredNames = saved.shown, saved.seen, saved.important, saved.ignored
+  Z.class = old.class
+  AURAS = {}
+  Z:BuildData() Z:Refresh() RunUpdates()
+  assert(ok, err)
+end)
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

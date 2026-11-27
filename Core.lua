@@ -176,6 +176,7 @@ Z.defaults = {
 	extraTracked = {},         -- mes sorts à suivre en plus
 	ignoredNames = {},         -- affaiblissements à ne jamais afficher
 	importantNames = {},       -- affaiblissements à afficher en grand
+	shownDebuffs = {},         -- affaiblissements « Toujours montrés », par numéro : vrai coché, faux décoché (Z.shownDebuffs, Data.lua)
 
 	-- Alertes
 	manaAlert = true, manaThreshold = 20, manaText = "Mana faible : {mana} % ! Laissez-moi boire.",
@@ -271,7 +272,7 @@ Z.notInProfile = {
 	clickTrinkets = true, clickConflictAlert = true, trinketButtons = true, clickStats = true,
 	rankChoice = true, rankAdapt = true, clickVariants = true, enemyGuard = true, notebook = true, tallyExit = true,
 	channelFR = true, channelEN = true, channelLocks = true,
-	extraTracked = true, ignoredNames = true, importantNames = true, pinned = true,
+	extraTracked = true, ignoredNames = true, importantNames = true, shownDebuffs = true, pinned = true,
 	assignMark = true, assignGroups = true, assignPlayers = true, assignFade = true, assignAccept = true,
 	manaAlert = true, manaThreshold = true, manaText = true, regenAlert = true, regenThreshold = true, regenText = true,
 	resAlert = true, resText = true, alertChannel = true, soundDispel = true, soundMana = true,

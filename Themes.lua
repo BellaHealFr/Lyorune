@@ -107,8 +107,44 @@ function Z.DispelCount()
 	return math.max(limits[1], math.min(limits[2], math.floor(tonumber(Z.db.dispelCount) or limits[1])))
 end
 
+-- Affaiblissements « Toujours montrés » : ceux de Data.lua que je n'ai pas décochés et ceux que j'ai cochés, avec
+-- tous leurs rangs, par numéro (le jeu les trouve aussi en combat). Sans le sort bloqué de ma classe, déjà montré
+-- au bout de mes soins. Gardés jusqu'au prochain Z:Refresh ou changement de sorts : lus à chaque relecture d'aura.
+function Z.ShownIds()
+	if Z.shownCache then return Z.shownCache end
+	local set, chosen = {}, Z.db.shownDebuffs or {}
+	local function Add(id) -- un numéro inconnu du jeu est ignoré (comme dans Data.lua)
+		local name = Z.SpellName(id)
+		if not name then return end
+		set[id] = true
+		for rank in pairs(Z.rankIds and Z.rankIds[name] or {}) do set[rank] = true end
+	end
+	for _, id in ipairs(Z.shownDebuffs) do
+		if chosen[id] ~= false then Add(id) end
+	end
+	for id, on in pairs(chosen) do
+		if on == true and type(id) == "number" then Add(id) end
+	end
+	if Z.ShowsLockouts() then
+		for id in pairs(Z.lockoutIds) do set[id] = nil end
+	end
+	Z.shownCache = set
+	return set
+end
+
+-- Une place pour eux en tête de la rangée : en « Utiles » et « Ceux que je dissipe » (sans elle, le mode les
+-- écarterait), et en « Tous » quand la rangée montre au moins 3 affaiblissements (prise sur les autres). Avec moins,
+-- en « Tous », ils restent parmi les autres : la rangée de départ, réglée pour chaque forme (C34), ne change pas.
+function Z.ShownPlace()
+	if next(Z.ShownIds()) == nil then return 0 end
+	if Z.db.debuffMode == "ALL" and Z.db.debuffCount < 3 then return 0 end
+	return 1
+end
+
 -- Places de la rangée des affaiblissements : ceux de ma liste « À mettre en avant » (deux au plus, quel que soit
--- le mode), ceux à dissiper, puis les autres (« Tous » et « Utiles ») ; « Ceux que je dissipe » : rien de plus.
+-- le mode) et la place des « Toujours montrés », ceux à dissiper, puis les autres (« Tous » et « Utiles ») ;
+-- « Ceux que je dissipe » : rien de plus. En « Tous » et « Utiles », la place des « Toujours montrés » est prise
+-- sur les autres s'il leur en reste au moins une (la rangée garde sa longueur), sinon elle s'ajoute (« Utiles »).
 -- Avec les conteneurs du jeu, seul un nom reconnu par son numéro compte (sinon le jeu ne peut pas le montrer).
 -- Un sort bloqué (Âme affaiblie) ne compte jamais : il est montré au bout de mes soins.
 local LISTED_MAX = 2
@@ -119,8 +155,10 @@ function Z.DebuffPlaces()
 		local known = Z.KnownAuraIds and Z.KnownAuraIds(name, true)
 		if known or (known == nil and not boxes) then listed = listed + 1 end
 	end
+	local shown = Z.ShownPlace()
 	local others = Z.db.debuffMode ~= "DISPEL" and Z.db.debuffCount - 1 or 0
-	return listed, Z.DispelCount(), others
+	if others > 1 then others = others - shown end -- (« Ceux que je dissipe » : aucune autre place)
+	return listed + shown, Z.DispelCount(), others
 end
 
 function Z.DebuffSlots()

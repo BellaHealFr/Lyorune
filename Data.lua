@@ -87,6 +87,8 @@ Z.spellRanks = {
 	[21849] = { 21850 },                                                       -- Don du fauve
 	[467]   = { 782, 1075, 8914, 9756, 9910 },                                 -- Épines
 	[1459]  = { 1460, 1461, 10156, 10157 },                                    -- Intelligence des arcanes
+	[25782] = { 25916 },                                                       -- Bénédiction de puissance supérieure
+	[25894] = { 25918 },                                                       -- Bénédiction de sagesse supérieure
 }
 
 -- Actions proposées à toutes les classes, en plus des sorts (C18) : les clics de départ prennent le clic gauche et
@@ -221,7 +223,9 @@ Z.raidBuffs = {
 		{ 18137, self = true, racial = true }, -- Garde de l'ombre (sort de race)
 	},
 	PALADIN = {
-		{ blessing = { 19740, 19742, 20217, 20911 } }, -- Bénédictions de puissance, de sagesse, des rois, du sanctuaire
+		{ blessing = { 19740, 19742, 20217, 20911 }, -- Bénédictions de puissance, de sagesse, des rois, du sanctuaire
+		  greater = { 25782, 25894, 25898, 25899 } }, -- leurs versions supérieures, dans le même ordre : celle d'un autre
+		                                -- paladin vaut la simple (jamais proposée par-dessus) ; une absente du jeu est ignorée
 		{ 25780, self = true },         -- Fureur vertueuse
 		{ aura = { 465, 19746, 7294, 20218, 19876, 19888, 19891 }, self = true }, -- Auras : dévotion, concentration,
 		                                -- châtiment, sainteté, résistance à l'ombre, au givre, au feu (listées par HealBot)
@@ -300,6 +304,16 @@ Z.lockouts = {
 }
 Z.LOCKOUT_COUNT = 1 -- affaiblissements de ce genre montrés au plus sur une case
 
+-- Affaiblissements « Toujours montrés » au départ, à toutes les classes et dans les trois modes de « Affaiblissements
+-- affichés » : utiles à un soigneur sans être dissipables. Le joueur peut les décocher, ou en cocher d'autres
+-- (Z.db.shownDebuffs, par numéro). Sa propre classe les voit au bout de ses soins (Z.lockouts), jamais deux fois.
+Z.shownDebuffs = {
+	6788,  -- Âme affaiblie : pas de nouveau Mot de pouvoir : Bouclier, quel que soit le prêtre
+	25771, -- Longanimité : pas de nouvelle Bulle ni de Bénédiction de protection
+}
+Z.shownDefault = {}
+for _, id in ipairs(Z.shownDebuffs) do Z.shownDefault[id] = true end
+
 -- Boisson : un soigneur qui boit le montre sur sa case, à côté de sa mana basse (réglage « drinkHealers »).
 -- Les numéros des boissons du jeu (eau de chaque niveau, eau invoquée) ; ceux dont le nom, lu dans le jeu,
 -- n'est pas celui du premier sont ignorés (Z:BuildData).
@@ -307,11 +321,9 @@ Z.LOCKOUT_COUNT = 1 -- affaiblissements de ce genre montrés au plus sur une cas
 Z.drinkSpells = { 430, 431, 432, 1133, 1135, 1137, 10250, 22734, 24355, 25696, 26261, 26402, 26473, 26475, 29007,
 	446714, 468767, 1330734 }
 
--- Affaiblissements sans intérêt pour un soigneur, jamais dans la rangée des affaiblissements (Longanimité reste
--- montrée au paladin, au bout de ses soins : Z.lockouts)
+-- Affaiblissements sans intérêt pour un soigneur, jamais dans la rangée des affaiblissements
 Z.ignoredDebuffs = {
 	[11196] = true, -- Bandé récemment
-	[25771] = true, -- Longanimité
 	[15007] = true, -- Mal de résurrection
 	[26013] = true, -- Déserteur
 }
@@ -346,7 +358,7 @@ end
 -- Tous les numéros d'une ligne de Z.raidBuffs ; le premier désigne la ligne (réglage « buffWatch »)
 function Z.BuffIds(entry)
 	local ids = {}
-	for _, list in ipairs({ entry.blessing or {}, entry.weapon or {}, entry.aura or {}, entry, entry.any or {} }) do
+	for _, list in ipairs({ entry.blessing or {}, entry.weapon or {}, entry.aura or {}, entry, entry.any or {}, entry.greater or {} }) do
 		for _, id in ipairs(list) do ids[#ids + 1] = id end
 	end
 	return ids
@@ -372,6 +384,14 @@ function Z.BuffCheck(entry)
 			if not entry.blessing then Z.choiceIds[id] = check.id end -- le dernier lancé sera proposé (Z.LastChoice)
 		end
 		if #check.choices == 0 then return end
+		-- version supérieure posée : elle compte pour la simple (Auras.lua, bénédictions d'un autre paladin)
+		for i, id in ipairs(entry.greater or {}) do
+			local greater, simple = Z.SpellName(id), choices[i] and Z.SpellName(choices[i])
+			if greater and simple then
+				check.covers = check.covers or {}
+				check.covers[greater] = simple
+			end
+		end
 		check.blessing, check.weapon, check.aura = entry.blessing ~= nil, entry.weapon ~= nil, entry.aura ~= nil
 		check.spell, check.icon = check.choices[1].name, check.choices[1].icon
 		return check
@@ -462,6 +482,7 @@ function Z:BuildData()
 		if name then Z.resNames[name] = true end
 	end
 
+	Z.shownCache = nil -- les rangs des affaiblissements « Toujours montrés » suivent les sorts (Themes.lua)
 	Z.buffChecks = {}
 	Z.weaponIds = {} -- enchantements d'arme : ma case se relit quand l'arme change (Auras.lua)
 	Z.choiceIds = {} -- arme ou aura lancée -> sa ligne de buff (Z.char.lastChoice)

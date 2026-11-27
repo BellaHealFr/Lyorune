@@ -170,6 +170,10 @@ local function Wanted()
 	local ignored = {}
 	for id in pairs(Z.ignoredDebuffs) do ignored[id] = true end
 	for name in pairs(db.ignoredNames) do AddIds(ignored, name) end
+	-- un sort de départ de « Toujours montrés » décoché : plus montré du tout (Âme affaiblie, Longanimité)
+	for id in pairs(Z.shownDefault) do
+		if db.shownDebuffs[id] == false then ignored[id] = true end
+	end
 	-- Affaiblissement qui bloque un de mes sorts : au bout de mes soins, il quitte la rangée des affaiblissements
 	local lockouts = {}
 	if Z.ShowsLockouts() then
@@ -186,6 +190,13 @@ local function Wanted()
 			ignored[id] = nil
 			listed[id] = true
 		end
+	end
+	-- « Toujours montrés » (sans le sort bloqué, Z.ShownIds) : gagnent aussi sur « À ignorer » ; avec leur place
+	-- (Z.ShownPlace), ils rejoignent le groupe de tête, sinon ils restent parmi les autres (« Tous »)
+	local shownRow = Z.ShownPlace() > 0
+	for id in pairs(Z.ShownIds()) do
+		ignored[id] = nil
+		if shownRow then listed[id] = true end
 	end
 	-- Rangée des affaiblissements : ma liste a son propre groupe en tête, les autres groupes l'écartent (aucun doublon)
 	for id in pairs(ignored) do rowIgnored[id] = true end

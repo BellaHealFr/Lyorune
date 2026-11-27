@@ -705,11 +705,20 @@ local function InList(list, aura)
 	return id and not issecret(id) and list[tostring(id)] and true or false
 end
 
--- Ma liste « À mettre en avant » gagne sur « À ignorer »
-local function IsIgnored(aura)
-	if InList(Z.db.importantNames, aura) then return false end
+-- « Toujours montré » (Z.ShownIds, par numéro : lisible hors combat seulement dans cet affichage)
+local function IsShown(aura)
 	local id = aura.spellId
-	if id and not issecret(id) and Z.ignoredDebuffs[id] then return true end
+	return id ~= nil and not issecret(id) and Z.ShownIds()[id] == true
+end
+
+-- Mes listes « À mettre en avant » et « Toujours montrés » gagnent sur « À ignorer » ; un sort de départ de
+-- « Toujours montrés » décoché est ignoré
+local function IsIgnored(aura)
+	if InList(Z.db.importantNames, aura) or IsShown(aura) then return false end
+	local id = aura.spellId
+	if id and not issecret(id) and (Z.ignoredDebuffs[id] or (Z.shownDefault[id] and Z.db.shownDebuffs[id] == false)) then
+		return true
+	end
 	return InList(Z.db.ignoredNames, aura)
 end
 
@@ -966,12 +975,13 @@ local function FindMissingBuffs(b, unit)
 				for name in pairs(check.names) do left = math.max(left, mine[name] or -math.huge) end
 				left, fromMemory = EndFromMemory(b, unit, check, own, left, endHidden, now, margin)
 				if check.blessing then
-					-- bénédictions qu'un autre paladin lui a posées : jamais reprises, la suivante de sa ligne est proposée
+					-- bénédictions qu'un autre paladin lui a posées : jamais reprises, la suivante de sa ligne est proposée ;
+					-- une version supérieure compte pour la simple (check.covers, Data.lua)
 					local taken
 					for name in pairs(check.names) do
 						if present[name] and not mine[name] then
 							taken = taken or {}
-							taken[name] = true
+							taken[check.covers and check.covers[name] or name] = true
 						end
 					end
 					choice = Z.BlessingFor(check, unit, taken)
@@ -1139,6 +1149,7 @@ local function UpdateWithReading(b)
 	end
 	-- Âme affaiblie (posée par n'importe qui) : au bout de mes soins, assombrie
 	local harmful = not enemy and Auras(unit, "HARMFUL", 8)
+	if harmful then Z.NoteSeenDebuffs(harmful) end -- vus sur le groupe : proposés dans « Toujours montrés »
 	local lockouts = not enemy and harmful and Z.ShowsLockouts()
 	if lockouts then
 		local placed = 0
@@ -1212,11 +1223,11 @@ local function UpdateWithReading(b)
 			local id = aura.auraInstanceID
 			return id and not issecret(id) and first[id]
 		end
-		local listedShown = 0
+		local listedShown, shownRow = 0, Z.ShownPlace() > 0
 		for i = 1, #harmful do
 			if listedShown >= listedMax then break end
 			local aura = harmful[i]
-			if InList(Z.db.importantNames, aura) and not (lockouts and IsLockout(aura)) then
+			if (InList(Z.db.importantNames, aura) or (shownRow and IsShown(aura))) and not (lockouts and IsLockout(aura)) then
 				listedShown = listedShown + 1
 				Put(aura)
 			end
@@ -1297,6 +1308,32 @@ local function Learn(list)
 	for i = 1, #list do Z.LearnAuraId(list[i].name, list[i].spellId) end
 end
 
+-- Affaiblissements vus sur le groupe, lisibles (hors combat) : la liste « Toujours montrés » les propose à cocher.
+-- Par numéro seulement (le nom vient du jeu, dans la langue du client), 200 au plus : la liste ne grossit plus.
+local SEEN_MAX = 200
+local seenTable, seenCount -- compte refait si la table change (réglages remis à zéro)
+local function NoteSeenDebuffs(list)
+	if not list or #list == 0 then return end
+	local seen = Z.db.debuffsSeen
+	if seen and seenTable ~= seen then
+		seenTable, seenCount = seen, 0
+		for _ in pairs(seen) do seenCount = seenCount + 1 end
+	end
+	for i = 1, #list do
+		local id = list[i].spellId
+		if type(id) == "number" and not issecret(id) and not (seen and seen[id]) then
+			if not seen then
+				seen = {}
+				Z.db.debuffsSeen = seen
+				seenTable, seenCount = seen, 0
+			end
+			if seenCount >= SEEN_MAX then return end
+			seen[id], seenCount = true, seenCount + 1
+		end
+	end
+end
+Z.NoteSeenDebuffs = NoteSeenDebuffs -- pour les tests
+
 local function UpdateWithBoxes(b)
 	local unit, db = b.unit, Z.db
 	local enemy = b.extra and UnitCanAttack("player", unit)
@@ -1306,6 +1343,7 @@ local function UpdateWithBoxes(b)
 		Learn(Auras(unit, "HELPFUL|PLAYER", 16))
 		local harmful = Auras(unit, "HARMFUL", 8)
 		Learn(harmful)
+		NoteSeenDebuffs(harmful)
 		local dispellable = db.showDispel and Auras(unit, Z.DISPEL_MINE, 1)
 		local hasDispel = dispellable and dispellable[1] ~= nil or false
 		if hasDispel and not b.dispelHeard then DispelSound() end

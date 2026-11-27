@@ -562,6 +562,7 @@ local function WatchLinks()
 	local function OnLink(link)
 		local edit = linkTarget
 		if not (edit and edit:IsVisible() and edit:HasFocus() and Z.SpellFromLink(link)) then return end
+		if edit.onLink then edit.onLink(link) return end -- liste par numéros (« Toujours montrés »)
 		Z.AddToList(edit.listKey, link, edit.clean)
 		RefreshShownPages()
 	end
@@ -653,6 +654,187 @@ local function ImportantStatus(name)
 		return { text = L["Reconnu par son numéro : le jeu le trouve aussi en combat."] }
 	end
 	return { dim = true, text = L["Pas encore reconnu : il sera appris la première fois qu'il est vu hors combat. Ou tapez son numéro, ou faites Maj-clic sur le sort."] }
+end
+
+
+-- Coché ? Mon choix, sinon le départ de Data.lua
+function Z.ShownOn(id)
+	local chosen = Z.db.shownDebuffs[id]
+	if chosen ~= nil then return chosen end
+	return Z.shownDefault[id] == true
+end
+
+-- Un sort de départ recoché redevient « départ » ; décoché, il est ignoré (Containers.lua, Auras.lua). Un autre
+-- décoché reste dans la liste, décoché.
+function Z.SetShown(id, on)
+	if Z.shownDefault[id] and on then Z.db.shownDebuffs[id] = nil else Z.db.shownDebuffs[id] = on and true or false end
+	Z:Refresh()
+	RefreshShownPages() -- la liste, son résumé et « Annuler mes changements »
+end
+
+-- Numéro d'un texte tapé : lien de sort, numéro connu du jeu, nom (affaiblissement déjà vu, sans tenir compte des
+-- accents ni des majuscules ; numéro retenu hors combat ; sort du jeu), nil sinon
+function Z.ShownIdFromText(text)
+	if type(text) ~= "string" or text == "" then return end
+	local _, linked = Z.SpellFromLink(text)
+	if linked then return linked end
+	local number = tonumber(text)
+	if number then return C_Spell.GetSpellName(number) and number or nil end
+	local wanted = Plain(text)
+	for id in pairs(Z.db.debuffsSeen or {}) do
+		local name = C_Spell.GetSpellName(id)
+		if name and Plain(name) == wanted then return id end
+	end
+	local learned = Z.db.auraIds and Z.db.auraIds[text]
+	if type(learned) == "table" and next(learned) then return (next(learned)) end
+	local info = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(text)
+	if type(info) == "table" and type(info.spellID) == "number" then return info.spellID end
+end
+
+-- Une entrée répond-elle à la recherche (déjà passée par Plain) ? Nom sans accents, ou numéro
+local function ShownMatch(entry, search)
+	return search == "" or Plain(entry.name):find(search, 1, true) ~= nil or tostring(entry.id):find(search, 1, true) ~= nil
+end
+
+-- Ce que la liste propose, filtré par la recherche : { { id, name, on }, ... }, cochés d'abord, puis par nom
+function Z.ShownCatalog(search)
+	local ids = {}
+	for id in pairs(Z.shownDefault) do ids[id] = true end
+	for id in pairs(Z.db.shownDebuffs) do
+		if type(id) == "number" then ids[id] = true end
+	end
+	for id in pairs(Z.db.debuffsSeen or {}) do ids[id] = true end
+	search = Plain(search)
+	local list = {}
+	for id in pairs(ids) do
+		local name = C_Spell.GetSpellName(id)
+		local entry = name and { id = id, name = name, on = Z.ShownOn(id) }
+		if entry and ShownMatch(entry, search) then list[#list + 1] = entry end
+	end
+	table.sort(list, function(x, y)
+		if x.on ~= y.on then return x.on end
+		if x.name ~= y.name then return x.name < y.name end
+		return x.id < y.id
+	end)
+	return list
+end
+
+-- « Toujours montrés » : un bouton ouvre la liste déroulante du jeu, une case à cocher par affaiblissement (ceux de
+-- départ, ceux que j'ai ajoutés, ceux vus sur le groupe hors combat), le menu reste ouvert pour en cocher plusieurs.
+-- Le champ à côté filtre ce menu (nom dans la langue du jeu, ou numéro) et ajoute un affaiblissement jamais vu (nom,
+-- numéro ou Maj-clic sur un sort, puis Entrée). Tout est gardé par numéro : rien ne change avec la langue.
+local SHOWN_MENU_H = 20 * 20 -- hauteur du menu avant qu'il défile
+local SHOWN_SUMMARY = 4      -- noms cochés écrits sous le bouton, les autres comptés
+
+-- Une ligne du menu : icône, nom donné par le jeu, numéro en gris
+local function ShownText(entry)
+	local icon = C_Spell.GetSpellTexture(entry.id)
+	return (icon and "|T" .. icon .. ":14|t " or "") .. entry.name .. "  |cff808080" .. L["n° %d"]:format(entry.id) .. "|r"
+end
+
+-- Ce qui est coché, en clair sous le bouton (« Âme affaiblie, Longanimité ») ; list : le catalogue complet, s'il
+-- est déjà fait
+function Z.ShownSummary(list)
+	local names, count = {}, 0
+	for _, entry in ipairs(list or Z.ShownCatalog("")) do
+		if not entry.on then break end -- les cochés viennent d'abord
+		count = count + 1
+		if count <= SHOWN_SUMMARY then names[#names + 1] = entry.name end
+	end
+	if count == 0 then return L["Aucun de coché."] end
+	local text = table.concat(names, ", ")
+	if count > SHOWN_SUMMARY then text = text .. " " .. L["et %d autres"]:format(count - SHOWN_SUMMARY) end
+	return text
+end
+
+local function ShownMenu(box)
+	if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
+	local list = Z.ShownCatalog(box.search)
+	MenuUtil.CreateContextMenu(box.choose, function(_, root)
+		if root.SetScrollMode then root:SetScrollMode(SHOWN_MENU_H) end
+		root:CreateTitle(box.search and box.search ~= "" and L["Affaiblissements contenant « %s »"]:format(box.search)
+			or L["Toujours montrés"])
+		if #list == 0 then
+			root:CreateTitle(L["Aucun affaiblissement trouvé. Tapez son nom exact ou son numéro, puis Entrée."])
+			return
+		end
+		for _, entry in ipairs(list) do
+			root:CreateCheckbox(ShownText(entry), function(id) return Z.ShownOn(id) end, function(id)
+				Z.SetShown(id, not Z.ShownOn(id))
+			end, entry.id)
+		end
+	end)
+end
+
+local function ShownList(title, hint)
+	return { "custom", function(page, width)
+		local box = CreateFrame("Frame", nil, page)
+		box:SetSize(width, 60)
+		box.label = UI.Label(box, 12)
+		box.label:SetPoint("TOPLEFT", 0, -5)
+		box.label:SetText(L[title])
+		box.hint = UI.Label(box, 11, nil, "dim")
+		box.hint:SetPoint("TOPLEFT", 0, -28)
+		box.hint:SetWidth(width)
+		box.hint:SetJustifyH("LEFT")
+		box.hint:SetText(L[hint])
+		local function Add(text)
+			if text == "" then return end
+			local id = Z.ShownIdFromText(text)
+			if id then
+				Z.SetShown(id, true)
+			else
+				Z:Print(L["Affaiblissement inconnu du jeu : tapez son nom exact ou son numéro, ou faites Maj-clic sur le sort."])
+			end
+		end
+		local edit = UI.Edit(box, 210, Add)
+		edit:SetPoint("TOPRIGHT")
+		Placeholder(edit, "Chercher ou ajouter...")
+		edit.onLink = function(link)
+			Add(link)
+			edit:SetText("")
+			box.search = nil
+			box:Update()
+		end
+		edit:HookScript("OnEditFocusGained", function(self)
+			WatchLinks()
+			linkTarget = self
+		end)
+		edit:HookScript("OnTextChanged", function(self)
+			box.search = self:GetText()
+			box:Update()
+		end)
+		edit:HookScript("OnEnterPressed", function(self)
+			self:SetText("")
+		end)
+		box.edit = edit
+		box.choose = UI.Button(box, "", 230, 22, function() ShownMenu(box) end)
+		box.summary = UI.Label(box, 11, nil, "dim")
+		box.summary:SetJustifyH("LEFT")
+		box.Update = function(self)
+			local top = 28 + math.ceil(self.hint:GetStringHeight()) + 8
+			-- un seul catalogue : le résumé et le compte des trouvés en sortent
+			local all, search = Z.ShownCatalog(""), Plain(self.search)
+			local count = 0
+			for _, entry in ipairs(all) do
+				if ShownMatch(entry, search) then count = count + 1 end
+			end
+			local filtered = search ~= ""
+			self.choose.label:SetText(filtered and L["Choisir parmi %d trouvés..."]:format(count)
+				or L["Choisir parmi %d affaiblissements..."]:format(count))
+			self.choose:ClearAllPoints()
+			self.choose:SetPoint("TOPLEFT", 0, -top)
+			self.summary:ClearAllPoints()
+			self.summary:SetPoint("LEFT", self.choose, "RIGHT", 10, 0)
+			self.summary:SetWidth(math.max(60, width - 240))
+			self.summary:SetText(Z.ShownSummary(all))
+			Fit(self, top + 26)
+		end
+		box:SetScript("OnShow", box.Update)
+		box:Update()
+		Register(page, L[title], box, L[hint]).list = "shownDebuffs"
+		return box
+	end, dep = { "showDebuffs", true } }
 end
 
 -- Épingler ma cible : sous la liste des joueurs épinglés
@@ -2722,8 +2904,9 @@ local function Chapters()
 			{ "Icônes", {
 				{ "check", "showDebuffs", "Icônes des affaiblissements" },
 				{ "check", "debuffCountdown", "Secondes restantes", "Sur les icônes d'affaiblissements, celle du contrôle subi et la grande icône des affaiblissements importants : les secondes restantes, écrites par le jeu, même en combat. Vous voyez s'il faut dissiper ou attendre la fin.", desc = "Dissiper tout de suite, ou attendre la fin ?" },
-				{ "seg", "debuffMode", "Affaiblissements affichés", "Tous : tout ce que porte le joueur. Utiles : ceux que le jeu montre sur ses propres cadres de raid, rien de plus de 5 minutes (Déserteur, Épuisement) ; un affaiblissement de boss plus long reste dans la grande icône. Ceux que je dissipe : seulement ce que vous pouvez retirer. Dans les trois cas, ceux de votre liste « À mettre en avant » passent en tête.", desc = "Tous, Utiles, ou seulement ceux que je dissipe.", dep = { "showDebuffs", true } },
-				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher, sauf s'ils sont dans « À mettre en avant ». Un nom, un numéro, ou Maj-clic sur un sort."),
+				{ "seg", "debuffMode", "Affaiblissements affichés", "Tous : tout ce que porte le joueur. Utiles : ceux que le jeu montre sur ses propres cadres de raid, rien de plus de 5 minutes (Déserteur, Épuisement) ; un affaiblissement de boss plus long reste dans la grande icône. Ceux que je dissipe : seulement ce que vous pouvez retirer. Dans les trois cas, ceux de vos listes « À mettre en avant » et « Toujours montrés » passent en tête (en « Tous », ceux de « Toujours montrés » à partir de 3 affaiblissements, sinon parmi les autres).", desc = "Tous, Utiles, ou seulement ceux que je dissipe.", dep = { "showDebuffs", true } },
+				ShownList("Toujours montrés", "Montrés dans les trois modes, même s'ils ne se dissipent pas, en combat aussi, sans son ni contour. Au départ : Âme affaiblie et Longanimité, pour savoir qu'un bouclier ou une bulle ne peut pas être relancé. Le bouton ouvre la liste : cochez ceux à montrer, elle propose aussi ceux déjà vus sur votre groupe. Tapez un nom ou un numéro pour filtrer la liste ; Entrée, ou Maj-clic sur un sort, pour en ajouter un."),
+				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher, sauf s'ils sont dans « À mettre en avant » ou cochés dans « Toujours montrés ». Un nom, un numéro, ou Maj-clic sur un sort."),
 				{ "step", "dispelCount", "Affaiblissements à dissiper", desc = "Montrés avant les autres, le plus important d'abord.", dep = { "showDebuffs", true } },
 				{ "step", "debuffCount", "Nombre d'affaiblissements", fine = true, dep = { "showDebuffs", true } },
 			} },
