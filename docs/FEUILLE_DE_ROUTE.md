@@ -72,6 +72,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 33 quater | 1.49.0 | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | Publiée (v1.49.0) |
 | 34 | 1.50.0 | Canal des soigneurs : canaux du jeu « LyoruneFR » et « LyoruneEN », rejoints sur une case de la page « Les amis de Lyorune », éteints au départ | Publiée (v1.50.0) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
+| 36 | 1.53.0 à 1.56.0 | Soins vivants : barres fluides, mon soin en direct pendant l'incantation, soins sur la durée sur la barre | En cours (plan validé) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
@@ -1270,6 +1271,27 @@ builds de talents et votent pour les meilleurs.
   Règles propres à l'échange (demande de l'auteur, 23 novembre 2026) : à établir pendant la 35 a et à faire
   valider par l'auteur avant tout codage (au minimum : interrupteur, rien envoyé sans action du joueur).
 - [ ] 35 b, codage selon la décision de l'auteur.
+
+## Étape 36 : soins vivants (1.53.0 à 1.56.0)
+Demande de l'auteur (27 novembre 2026) : les soins en route se voient sur le moment puis plus rien ; il veut les
+soins sur la durée sur la barre, une animation des soins bien plus propre et plus de confort pour les joueurs. Plan
+validé le 27 novembre 2026, une version par sous-étape, sur la branche `soins-vivants`, fusionnée dans `main` après
+l'essai en jeu. Aucune boucle permanente ajoutée, chaque nouveauté a son interrupteur.
+- [ ] Vérification en jeu : commande `/lyorune soins` qui dit ce que le client permet (seuil de dépassement des
+  soins, durées fabriquées, nombres d'une aura hors combat, durée de l'incantation, vie max réduite).
+- [ ] 36 a (1.53.0), barres fluides et lisibles : soins en route, bouclier et absorption de soins animés comme la vie
+  (plus de trou quand le soin tombe) ; contraste automatique des soins en route sur une barre verte ; bouclier « à la
+  suite de la vie » aux rayures du jeu ; relief léger réglable ; empilement des segments prêt pour la suite.
+- [ ] 36 b (1.54.0), mon soin en direct : mon soin et celui des autres en deux segments (« les miens / tous ») ; mon
+  segment se remplit au rythme de mon incantation ; alerte de gaspillage sur 2 niveaux qui teinte mon soin (ambre,
+  cuivre) pour annuler à temps ; couleur que la case aura après le soin ; chiffre du soin en route ; éclat bref quand
+  le soin tombe.
+- [ ] 36 c (1.55.0), soins sur la durée sur la barre : segment qui se vide tout seul, durée réelle de l'aura quand le
+  jeu la donne (fin sur dissipation, consommation, mort), sinon durée tirée du lancement ; montant appris par rang
+  hors combat ; liste et intervalle dans `Data.lua` ; couleur de la barre fine du sort ; relance qui glisse ; fin
+  signalée dans les 3 dernières secondes. Ordre sur la barre : vie, mon soin, les autres, soins sur la durée, bouclier.
+- [ ] 36 d (1.56.0, selon la vérification) : vie max réduite au bout de la barre ; soins sur la durée des autres
+  joueurs de Lyorune par la synchronisation.
 
 ## Fin d'une étape
 1. Tests hors jeu : `python tests/run.py .`, avec une étape de test pour chaque fonction nouvelle.
