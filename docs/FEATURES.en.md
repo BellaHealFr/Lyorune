@@ -115,6 +115,7 @@ everything up step by step, see the [player guide](GUIDE.en.md).
 - Your buff groups in a raid.
 - The blessing for each kind of player.
 - And paladins never cast another paladin's blessing again (agreement between those who have Lyorune).
+- Another paladin's greater blessing is recognized: the single one is not offered on top of it.
 - The leader can also assign buffs.
 
 ## Dispel without searching
@@ -128,6 +129,11 @@ everything up step by step, see the [player guide](GUIDE.en.md).
   - all;
   - only the useful ones (those the game shows on its raid frames, without Deserter or Exhaustion);
   - or none.
+- "Always shown": debuffs that matter to a healer, even if they cannot be dispelled, shown in all three modes, in
+  combat too, without sound or glow. At first, for every class: Weakened Soul and Forbearance.
+  - A drop-down list to check, which also offers the debuffs already seen on your group.
+  - A field to filter the list by name or number; Enter, or Shift-click on a spell, adds one never seen.
+  - Names are those of your game, in English or in French: your choices stay the same if you change language.
 - Those from your "Highlight" list always first (Shift-click a spell to add it), and Lyorune tells you whether it
   recognizes them in combat.
 

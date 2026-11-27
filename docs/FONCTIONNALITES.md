@@ -116,6 +116,7 @@ tout régler pas à pas, voyez le [guide du joueur](TUTORIEL.md).
 - Vos groupes à buffer en raid.
 - La bénédiction de chaque type de joueur.
 - Et les paladins ne reprennent jamais la bénédiction d'un autre (entente entre ceux qui ont Lyorune).
+- La bénédiction supérieure d'un autre paladin est reconnue : la simple n'est pas proposée par-dessus.
 - Le chef peut aussi répartir les buffs.
 
 ## Dissiper sans chercher
@@ -131,6 +132,13 @@ tout régler pas à pas, voyez le [guide du joueur](TUTORIEL.md).
   - tous ;
   - seulement les utiles (ceux que le jeu montre sur ses cadres de raid, sans Déserteur ni Épuisement) ;
   - ou aucun.
+- Les « Toujours montrés » : les affaiblissements utiles à un soigneur, même s'ils ne se dissipent pas, montrés dans
+  les trois modes, en combat aussi, sans son ni contour. Au départ, pour toutes les classes : Âme affaiblie et
+  Longanimité.
+  - Une liste déroulante à cocher, qui propose aussi les affaiblissements déjà vus sur votre groupe.
+  - Un champ pour filtrer la liste par nom ou numéro ; Entrée, ou Maj-clic sur un sort, en ajoute un jamais vu.
+  - Les noms sont ceux de votre jeu, en français ou en anglais : vos choix restent les mêmes si vous changez de
+    langue.
 - Ceux de votre liste « À mettre en avant » toujours en tête (Maj-clic sur un sort pour l'y ajouter), et Lyorune vous
   dit s'il les reconnaît en combat.
 
