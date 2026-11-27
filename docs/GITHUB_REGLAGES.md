@@ -10,7 +10,7 @@ Une phrase, 160 caractères au plus. GitHub n'accepte qu'une description : chois
 
 | Langue | Texte | Longueur |
 |---|---|---|
-| Anglais (conseillé) | Healing frames for WoW Forever: click-casting at the rank you choose, missing buffs, dispels, healer mana. Every feature optional, in English and French. | 153 |
+| Anglais (en ligne depuis le 27 novembre 2026) | Healing frames for WoW Forever: click-casting at the rank you choose, missing buffs, dispels, healer mana. Every feature optional, in English and French. | 153 |
 | Français | Cadres de soin pour WoW Forever : clic-soin au rang choisi, buffs manquants, dissipation, mana des soigneurs. Tout se coche, en français et en anglais. | 151 |
 
 Le détail des fonctions, dont les nouveautés de chaque version (en 1.51.0 : affaiblissements « Toujours montrés »,
@@ -39,13 +39,13 @@ GitHub accepte 20 topics au plus. Liste retenue, qui décrit les fonctions de l'
 | `unit-frames` | déjà posé, catégorie du Hub WowUp |
 | `click-casting` | déjà posé |
 | `buffs-debuffs` | déjà posé, catégorie du Hub WowUp |
-| `wow-forever-addon` | à ajouter |
-| `combat` | à ajouter, catégorie du Hub WowUp |
-| `priest` | à ajouter, classe (Hub WowUp) |
-| `paladin` | à ajouter, classe (Hub WowUp) |
-| `shaman` | à ajouter, classe (Hub WowUp) |
-| `druid` | à ajouter, classe (Hub WowUp) |
-| `healing-frames` | à retirer (utilisé par aucun autre dépôt, il ne rapporte aucune visite) |
+| `wow-forever-addon` | posé |
+| `combat` | posé, catégorie du Hub WowUp |
+| `priest` | posé, classe (Hub WowUp) |
+| `paladin` | posé, classe (Hub WowUp) |
+| `shaman` | posé, classe (Hub WowUp) |
+| `druid` | posé, classe (Hub WowUp) |
+| `healing-frames` | retiré (utilisé par aucun autre dépôt, il ne rapportait aucune visite) |
 
 Total : 20.
 
