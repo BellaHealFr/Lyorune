@@ -8,6 +8,7 @@
 --   shade      : relief de la barre (ombre en bas, lumière en haut), 0 = aucun
 --   incoming   : couleur des soins en route, incomingOnGreen : la même sur une barre de vie verte (contraste)
 --   absorb     : couleur du bouclier
+--   hot        : couleur de mes soins sur la durée (ce qui reste), le prochain coup en plus franc
 
 local _, Z = ...
 local WHITE = "Interface\\Buttons\\WHITE8X8"
@@ -20,6 +21,7 @@ Z.themes = {
 		shade = { 0, 0 },
 		incoming = { 0.20, 1.00, 0.85, 0.50 }, absorb = { 0.30, 0.90, 1.00, 1 },
 		incomingOnGreen = { 0.85, 1.00, 1.00, 0.65 },
+		hot = { 0.55, 0.95, 0.30, 0.40 },
 	},
 	{
 		id = "PURE", name = "Épuré", -- moderne : aplat avec un léger relief
@@ -28,6 +30,7 @@ Z.themes = {
 		shade = { 0.28, 0.10 },
 		incoming = { 0.45, 1.00, 0.60, 0.42 }, absorb = { 0.55, 0.85, 1.00, 0.95 },
 		incomingOnGreen = { 0.88, 1.00, 0.92, 0.60 },
+		hot = { 0.35, 0.85, 0.85, 0.36 },
 	},
 	{
 		id = "GLASS", name = "Verre", -- brillant et translucide
@@ -36,6 +39,7 @@ Z.themes = {
 		shade = { 0.45, 0.28 },
 		incoming = { 0.60, 1.00, 0.80, 0.42 }, absorb = { 0.75, 0.90, 1.00, 0.95 },
 		incomingOnGreen = { 0.92, 1.00, 0.96, 0.56 },
+		hot = { 0.50, 0.90, 0.95, 0.36 },
 	},
 	{
 		id = "CLASSIC", name = "Classique", -- l'allure des cadres de raid du jeu
@@ -44,6 +48,7 @@ Z.themes = {
 		shade = { 0.10, 0 },
 		incoming = { 0.40, 0.95, 0.45, 0.45 }, absorb = { 0.80, 0.90, 1.00, 0.90 },
 		incomingOnGreen = { 0.90, 1.00, 0.85, 0.60 },
+		hot = { 0.35, 0.80, 0.75, 0.40 },
 	},
 	{
 		id = "HEROIC", name = "Héroïque", -- purement MMO : barres texturées, bordure dorée
@@ -52,6 +57,7 @@ Z.themes = {
 		shade = { 0.30, 0.06 },
 		incoming = { 0.55, 1.00, 0.40, 0.45 }, absorb = { 1.00, 0.92, 0.60, 0.95 },
 		incomingOnGreen = { 1.00, 0.95, 0.70, 0.60 },
+		hot = { 0.40, 0.85, 0.75, 0.40 },
 	},
 }
 
@@ -63,6 +69,7 @@ local contrast = {
 	shade = { 0, 0 },
 	incoming = { 0.20, 1.00, 0.20, 0.85 }, absorb = { 1.00, 1.00, 0.20, 1 },
 	incomingOnGreen = { 1.00, 1.00, 1.00, 0.95 },
+	hot = { 0.20, 0.85, 1.00, 0.70 },
 }
 
 function Z:Theme()

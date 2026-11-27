@@ -46,8 +46,9 @@ local smoothing      -- SMOOTH ou nil selon l'option
 -- venir (mon soin séparé de celui des autres, soins sur la durée). Le relief du thème (b.shade) passe sur tout.
 -- Les segments qui se suivent (mon soin, celui des autres, soins sur la durée) ne se recouvrent jamais : même couche.
 -- Au-dessus de mon soin : la teinte du gaspillage (ambre puis cuivre), et tout en haut le voile de l'incantation.
-local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, overheal = 2, overhealMore = 3, absorb = 4, stripes = 5,
-	healAbsorb = 6, castFill = 7, landing = 7 }
+-- Le prochain coup de mes soins sur la durée, plus franc, se pose sur le début de leur segment.
+local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, hotNext = 2, overheal = 2, overhealMore = 3, absorb = 4,
+	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7 }
 -- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.70 }, { 0.86, 0.45, 0.20, 0.75 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
@@ -229,7 +230,18 @@ local function UpdateIncoming(b, max)
 	end
 end
 
+-- Mes soins sur la durée (Hots.lua) : montants connus de Lyorune, lisibles ; seule la vie max est secrète
+local function UpdateHots(b, max)
+	if not b.hot:IsShown() then return end
+	local left, soon = Z.HotAmounts(b.unit)
+	b.hot:SetMinMaxValues(0, max)
+	b.hot:SetValue(left, smoothing)
+	b.hotNext:SetMinMaxValues(0, max)
+	b.hotNext:SetValue(soon, smoothing)
+end
+
 local function UpdatePrediction(b)
+	UpdateHots(b, UnitHealthMax(b.unit))
 	if not (db.showIncoming or db.showAbsorb or db.showHealAbsorb) then return end
 	local unit = b.unit
 	local max = UnitHealthMax(unit)
@@ -662,7 +674,7 @@ local function UpdateTarget(b)
 end
 
 -- Barres animées (réglage smooth) : posées d'un coup à leur valeur, quand la case change de joueur
-local SNAPPED = { "hp", "incoming", "incomingOthers", "absorb", "healAbsorb" }
+local SNAPPED = { "hp", "incoming", "incomingOthers", "hot", "hotNext", "absorb", "healAbsorb" }
 local function SnapBars(b)
 	-- joueur pas encore connu du jeu (UpdateAll n'a rien posé) : rien à sauter, on attend le prochain affichage
 	local known = b.unit and UnitExists(b.unit)
@@ -962,6 +974,22 @@ local function Style(b)
 	b.landingFlash:Stop()
 	b.landing:SetAlpha(0)
 	b.incomingSwitch:SetShown(db.showIncoming and db.incomingText)
+	-- Mes soins sur la durée, à la suite des soins en route (ou de la vie s'ils sont coupés)
+	local afterIncoming = b.incomingOthers:IsShown() and b.incomingOthers:GetStatusBarTexture()
+		or db.showIncoming and b.incoming:GetStatusBarTexture() or b.hp:GetStatusBarTexture()
+	local hotColor = theme.hot or theme.incoming
+	for _, bar in ipairs({ b.hot, b.hotNext }) do
+		bar:SetStatusBarTexture(texture)
+		bar:SetWidth(width - 2 * inset)
+		bar:SetShown(db.hotPrediction)
+	end
+	SetLayer(b.hot, LAYER.hot)
+	SetLayer(b.hotNext, LAYER.hotNext)
+	b.hot:SetStatusBarColor(hotColor[1], hotColor[2], hotColor[3], hotColor[4] or 1)
+	b.hotNext:SetStatusBarColor(hotColor[1], hotColor[2], hotColor[3], math.min(1, (hotColor[4] or 1) * 1.9))
+	b.hot:ClearAllPoints()
+	b.hot:SetPoint("TOPLEFT", afterIncoming, "TOPRIGHT")
+	b.hot:SetPoint("BOTTOMLEFT", afterIncoming, "BOTTOMRIGHT")
 	b.absorb:SetStatusBarTexture(UI.WHITE)
 	SetLayer(b.absorb, LAYER.absorb)
 	local follow = db.absorbStyle == "FOLLOW"
@@ -973,9 +1001,8 @@ local function Style(b)
 	b.absorb:SetShown(db.showAbsorb)
 	b.absorb:ClearAllPoints()
 	if follow then
-		-- À la suite des soins en route (ou de la vie s'ils sont coupés), comme les cadres du jeu
-		local after = b.incomingOthers:IsShown() and b.incomingOthers:GetStatusBarTexture()
-			or db.showIncoming and b.incoming:GetStatusBarTexture() or b.hp:GetStatusBarTexture()
+		-- À la suite des soins en route et de mes soins sur la durée (ou de la vie), comme les cadres du jeu
+		local after = db.hotPrediction and b.hot:GetStatusBarTexture() or afterIncoming
 		b.absorb:SetPoint("TOPLEFT", after, "TOPRIGHT")
 		b.absorb:SetPoint("BOTTOMLEFT", after, "BOTTOMRIGHT")
 		b.absorb:SetWidth(width - 2 * inset)
@@ -1129,6 +1156,18 @@ function Z.BuildVisuals(b)
 	others:SetStatusBarTexture(UI.WHITE)
 	others:Hide()
 	b.incomingOthers = others
+	-- Mes soins sur la durée (hotPrediction) : ce qui reste à rendre, à la suite des soins en route (accroché dans
+	-- Style), et par-dessus son début ce que rendent les prochains coups, plus franc
+	local hot = CreateFrame("StatusBar", nil, hp)
+	hot:SetStatusBarTexture(UI.WHITE)
+	hot:Hide()
+	b.hot = hot
+	local hotNext = CreateFrame("StatusBar", nil, hp)
+	hotNext:SetPoint("TOPLEFT", hot, "TOPLEFT")
+	hotNext:SetPoint("BOTTOMLEFT", hot, "BOTTOMLEFT")
+	hotNext:SetStatusBarTexture(UI.WHITE)
+	hotNext:Hide()
+	b.hotNext = hotNext
 	-- Alerte de gaspillage : deux teintes posées sur mon soin, allumées par un booléen du jeu
 	b.overheal = incoming:CreateTexture(nil, "ARTWORK", nil, LAYER.overheal)
 	b.overheal:SetColorTexture(unpack(OVERHEAL_COLOR))
@@ -2311,6 +2350,7 @@ function Z:Refresh()
 	if Z.RefreshPlacement then Z:RefreshPlacement() end
 	if Z.QueueBuffPanel then Z:QueueBuffPanel() end
 	if Z.RefreshCastIndicator then Z:RefreshCastIndicator() end
+	if Z.RefreshHotPrediction then Z:RefreshHotPrediction() end
 	if Z.RefreshCooldowns then Z:RefreshCooldowns() end
 	if Z.RefreshTotems then Z:RefreshTotems() end
 	if Z.RefreshGroupCooldowns then Z:RefreshGroupCooldowns() end
@@ -2369,6 +2409,13 @@ function Z:CreateFrames()
 		end
 	end
 	local updateAll = ForVisible(UpdateAll)
+	-- Un de mes soins sur la durée posé, relu, tombé d'un coup ou fini (Hots.lua) : les cases de ce joueur seulement
+	function Z.RedrawHots(key)
+		if not db.hotPrediction then return end
+		for _, b in ipairs(buttons) do
+			if b.unit and b:IsVisible() and Z.PlayerKey(b.unit) == key then UpdateHots(b, UnitHealthMax(b.unit)) end
+		end
+	end
 	local lastFactor = ShrinkFactor()
 	-- Le groupe change (C17) : les cases visibles sont redessinées une fois par image ; la taille des cases (option)
 	-- n'est revue qu'une fois le groupe stable, pour ne pas tout refaire à chaque joueur qui entre.

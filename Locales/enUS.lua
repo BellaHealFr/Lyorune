@@ -1420,4 +1420,7 @@ Z.translations.enUS = {
 	["Le montant des soins en route, même en combat."] = "The amount of incoming heals, even in combat.",
 	["Éclat quand mon soin arrive"] = "Flash when my heal lands",
 	["Quand votre incantation réussit, votre soin en route s'éclaire un court instant sur le joueur soigné : vous voyez où le soin est tombé. Pas en « Tous ensemble »."] = "When your cast succeeds, your incoming heal lights up for a moment on the healed player: you see where the heal landed. Not in \"All together\".",
+	["Mes soins sur la durée sur la barre"] = "My heals over time on the bar",
+	["Ce que vos soins sur la durée vont encore rendre (Rénovation, Récupération, Rétablissement, Remous, Pénitence), à la suite des soins en route, dans une teinte à part. Sa partie plus franche, au début, c'est le prochain coup ; le segment descend à chaque coup et glisse quand vous relancez le sort. Le montant est lu sur le sort et réappris chaque fois que vous le lancez hors combat (équipement changé compris)."] = "What your heals over time will still restore (Renew, Rejuvenation, Regrowth, Riptide, Penance), after the incoming heals, in a tint of their own. Its brighter start is the next tick; the segment goes down with each tick and slides when you cast the spell again. The amount is read from the spell and learned again each time you cast it out of combat (changed gear included).",
+	["Ce que vos soins sur la durée vont encore rendre, même en combat."] = "What your heals over time will still restore, even in combat.",
 }

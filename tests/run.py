@@ -11758,11 +11758,17 @@ step("36 c, lot 7 : mes soins sur la duree retenus (cible, montant appris par ra
     assert(list and #list == 1 and list[1].total == 45 and list[1].duration == 15 and list[1].ticks == 5, "soin sur moi d'apres la description")
     assert(Z.char.hotAmounts[139].from == "texte", "source du montant")
     -- l'aura posée, lue hors combat : sa durée et ses nombres (un soin par coup) passent avant la description
+    -- relancé avant sa fin : rien d'appris (le jeu peut y reporter ce qui restait : 19 s, 6 coups)
+    AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", spellId = 139, auraInstanceID = 5, duration = 19, expirationTime = NOW + 19, points = { 50 } } }
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "", "c2a", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c2a", 139)
+    assert(Z.char.hotAmounts[139].from == "texte" and Z.char.hotAmounts[139].duration == 15 and Z.MyHots("player")[1].duration == 15, "relance : duree reportee apprise")
+    NOW = NOW + 16
     AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", spellId = 139, auraInstanceID = 5, duration = 15, expirationTime = NOW + 15, points = { 50 } } }
     FireEvent("UNIT_SPELLCAST_SENT", "player", "", "c2", 139)
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c2", 139)
     list = Z.MyHots("player")
-    assert(#list == 1 and list[1].total == 250 and Z.char.hotAmounts[139].from == "aura", "relance : montant de l'aura, un seul soin retenu")
+    assert(#list == 1 and list[1].total == 250 and Z.char.hotAmounts[139].from == "aura", "pose neuve : montant de l'aura, un seul soin retenu")
     -- un autre sort réussi (numéro d'incantation différent) ne compte pas
     FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "c3", 139)
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c4", 139)
@@ -11824,6 +11830,81 @@ step("36 c, lot 7 : mes soins sur la duree retenus (cible, montant appris par ra
   NOW, AURAS, C_Spell.GetSpellDescription, Z.char.hotAmounts = saved.now, saved.auras, saved.desc, saved.amounts
   Z.buttons[1].unit, Z.db.clickStats, C_Spell.GetSpellName = saved.unit, saved.stats, saved.name
   Z.buffGeneration = (Z.buffGeneration or 0) + 1
+  assert(ok, err)
+end)
+
+step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain coup, coups, relance, fin, interrupteur)", function()
+  local b = Z.buttons[1]
+  local saved = { now = NOW, auras = AURAS, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts, unit = b.unit,
+    shown = b._shown, name = C_Spell.GetSpellName, style = Z.db.absorbStyle, on = Z.db.hotPrediction, stats = Z.db.clickStats }
+  local ok, err = pcall(function()
+    NOW = NOW + 2000 AURAS = {} Z.db.clickStats = false
+    C_Spell.GetSpellDescription = function() return "" end
+    Z.char.hotAmounts = { [139] = { total = 250, duration = 15, from = "aura" } }
+    b.unit = "player" b:Show()
+    Z.db.hotPrediction, Z.db.absorbStyle = true, "FOLLOW" Z:Refresh()
+    assert(b.hot:IsShown() and b.hotNext:IsShown(), "segment absent")
+    assert(b.absorb._points.TOPLEFT[2] == b.hot:GetStatusBarTexture(), "le bouclier ne suit pas mes soins sur la duree")
+    assert(b.hot._points.TOPLEFT[2] == b.incomingOthers:GetStatusBarTexture(), "mes soins sur la duree pas apres ceux des autres")
+    local function cast(guid, id)
+      FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", guid, id)
+      FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", guid, id)
+    end
+    -- Rénovation : 5 coups de 50 toutes les 3 s, rien de tombé au lancement
+    cast("h1", 139)
+    assert(b.hot:GetValue() == 250 and b.hotNext:GetValue() == 50, "reste " .. tostring(b.hot:GetValue()))
+    local left, soon = Z.HotAmounts("player")
+    assert(left == 250 and soon == 50, "montants")
+    -- un minuteur par coup, juste après chacun (le faux client les lance aussitôt : délais notés)
+    local after, delays = C_Timer.After, {}
+    C_Timer.After = function(d, f) delays[#delays + 1] = d end
+    cast("h0", 139)
+    C_Timer.After = after
+    assert(math.abs(delays[1] - 3.05) < 1e-6, "premier coup a " .. tostring(delays[1]))
+    -- un coup tombé : le minuteur redessine, le segment descend d'un coup
+    NOW = NOW + 3.05 Z.RedrawHots("player")
+    assert(b.hot:GetValue() == 200 and b.hotNext:GetValue() == 50, "apres un coup " .. tostring(b.hot:GetValue()))
+    NOW = NOW + 12 Z.RedrawHots("player")
+    assert(b.hot:GetValue() == 0 and b.hotNext:GetValue() == 0, "apres le dernier coup")
+    -- relance : tout le soin, de nouveau
+    cast("h2", 139) NOW = NOW + 4 cast("h3", 139)
+    assert(b.hot:GetValue() == 250, "relance")
+    -- montant inconnu : rien d'inventé
+    Z.char.hotAmounts = {}
+    local getName = C_Spell.GetSpellName
+    C_Spell.GetSpellName = function(id) if id == 402174 then return "Pénitence" end return getName(id) end
+    Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    cast("h4", 402174)
+    assert(b.hot:GetValue() == 250, "soin au montant inconnu compte")
+    -- Pénitence : 3 coups de 100, le premier dès le début ; coupée, plus rien n'arrive
+    Z.char.hotAmounts = { [402174] = { total = 300, duration = 2, from = "texte" } }
+    delays = {} C_Timer.After = function(d, f) delays[#delays + 1] = d end
+    cast("h5", 402174)
+    C_Timer.After = after
+    assert(math.abs(delays[1] - 1.05) < 1e-6, "Penitence : 2e coup a " .. tostring(delays[1]))
+    cast("h5", 402174)
+    assert(b.hot:GetValue() == 450 and b.hotNext:GetValue() == 150, "Penitence " .. tostring(b.hot:GetValue()))
+    NOW = NOW + 0.5 FireEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+    assert(b.hot:GetValue() == 250, "Penitence coupee encore sur la barre")
+    C_Spell.GetSpellName = getName Z.buffGeneration = Z.buffGeneration + 1
+    -- mort : plus rien
+    Z.ForgetBuffs("player")
+    assert(b.hot:GetValue() == 0, "soin garde apres la mort")
+    -- éteint : segment caché, plus rien d'écouté ni de retenu
+    Z.char.hotAmounts = { [139] = { total = 250, duration = 15, from = "aura" } }
+    cast("h6", 139)
+    Z.db.hotPrediction = false Z:Refresh()
+    assert(not b.hot:IsShown() and Z.MyHots("player") == nil, "interrupteur : soin garde")
+    cast("h7", 139)
+    assert(Z.MyHots("player") == nil, "interrupteur : encore a l'ecoute")
+    Z.db.absorbStyle = "BAND" Z:Refresh()
+    assert(b.absorb._points.BOTTOMLEFT, "bande du bouclier")
+  end)
+  NOW, AURAS, C_Spell.GetSpellDescription, Z.char.hotAmounts = saved.now, saved.auras, saved.desc, saved.amounts
+  b.unit, b._shown, C_Spell.GetSpellName, Z.db.clickStats = saved.unit, saved.shown, saved.name, saved.stats
+  Z.db.absorbStyle, Z.db.hotPrediction = saved.style, saved.on
+  Z.buffGeneration = (Z.buffGeneration or 0) + 1
+  Z:Refresh()
   assert(ok, err)
 end)
 

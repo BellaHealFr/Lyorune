@@ -7,7 +7,8 @@
 --   lancement hors combat (équipement changé : rien à effacer). Trois sources, de la plus sûre à la moins sûre :
 --   la bulle d'aide du buff posé (soins en plus compris), les nombres de l'aura, la description du sort.
 --   Jusqu'à quand : la vraie durée de l'aura quand elle se lit, sinon celle apprise, sinon celle de Data.lua.
--- Aucune boucle : deux événements sur moi seulement, et une lecture de l'aura juste après le lancement.
+-- Aucune boucle : trois événements sur moi seulement, une lecture de l'aura juste après le lancement, et un
+-- minuteur par coup de soin, qui redessine la barre de ce seul joueur (Z.RedrawHots, Frames.lua).
 -- Un soin oublié vaut mieux qu'un soin inventé : sans cible sûre ni montant connu, rien n'est retenu.
 
 local _, Z = ...
@@ -15,6 +16,7 @@ local issecret = Z.IsSecret
 
 local SENT_WINDOW = 10 -- un sort annoncé (UNIT_SPELLCAST_SENT) qui réussit plus tard ne compte plus (incantation)
 local READ_DELAY = 0.3 -- l'aura est posée un peu après la réussite du sort
+local TICK_LAG = 0.05  -- le segment descend juste après le coup, quand la vie l'a reçu
 
 local spells, builtFor -- spells[numéro de n'importe quel rang] = { entry = ligne de Z.hotSpells, name = nom }
 local active = {}      -- active[joueur][numéro du premier rang] = soin en cours (voir Remember)
@@ -104,6 +106,21 @@ local function Ticks(entry, duration)
 	if entry.every and duration then return math.max(1, math.floor(duration / entry.every + 0.5)) end
 end
 
+-- Premier coup : une canalisation frappe dès son début, un soin régulier après un intervalle
+local function First(hot)
+	return hot.entry.kind == "channel" and 0 or hot.entry.every
+end
+
+-- Moment du coup n° k (1 : le premier)
+local function TickTime(hot, k)
+	return hot.start + First(hot) + (k - 1) * hot.entry.every
+end
+
+-- Coups déjà tombés à cet instant (0 à ticks)
+local function Done(hot, now)
+	return math.max(0, math.min(hot.ticks, math.floor((now - hot.start - First(hot)) / hot.entry.every) + 1))
+end
+
 -- La description du sort, en secours (chargée à la demande par le jeu : vide la première fois, parfois)
 local function FromDescription(id, entry)
 	if Learned(id) then return end
@@ -116,9 +133,13 @@ local function FromDescription(id, entry)
 	Learn(id, total, seconds or entry.duration, "texte")
 end
 
+local Restart -- (plus bas : redessin et minuteur des coups)
+
 -- Mon aura posée, lue hors combat : sa vraie durée, sa fin, la bulle d'aide puis ses nombres
+-- Un soin relancé avant sa fin n'apprend rien : le jeu peut y reporter ce qui restait (durée plus longue, plus de
+-- coups), ce n'est pas la valeur d'une pose neuve.
 local function ReadAura(hot)
-	if InCombatLockdown() or Z.AurasHidden() then return end
+	if hot.refreshed or InCombatLockdown() or Z.AurasHidden() then return end
 	local unit = hot.unit
 	local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
 	if not ok or type(list) ~= "table" or issecret(list) then return end
@@ -153,6 +174,7 @@ local function ReadAura(hot)
 				if known then known.duration = hot.duration end
 			end
 			hot.ticks = Ticks(hot.entry, hot.duration)
+			Restart(hot) -- vraie durée, vrai début, vrai montant : la barre et les coups suivent
 			return
 		end
 	end
@@ -161,6 +183,33 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Mes lancements
 ----------------------------------------------------------------------------------------------------
+
+-- La barre de vie de ce joueur se redessine (cases affichées seulement, Z.RedrawHots dans Frames.lua)
+local function Changed(key)
+	if Z.RedrawHots then Z.RedrawHots(key) end
+end
+
+local function Current(hot)
+	local mine = active[hot.key]
+	return mine and mine[hot.base] == hot
+end
+
+-- Un minuteur par coup, du coup k au dernier : après chacun, la barre descend d'un coup. Un soin relancé, relu ou
+-- oublié arrête la suite (numéro de chaîne). Jamais plus de minuteurs que de coups : pas de boucle.
+local function Schedule(hot, k, chain)
+	if k > hot.ticks then return end
+	C_Timer.After(math.max(0, TickTime(hot, k) - GetTime()) + TICK_LAG, function()
+		if hot.chain ~= chain or not Current(hot) then return end
+		Schedule(hot, k + 1, chain) -- (d'abord : une erreur de dessin n'arrête pas les coups suivants)
+		Z:Try("soins sur la durée", Changed, hot.key)
+	end)
+end
+
+function Restart(hot)
+	hot.chain = (hot.chain or 0) + 1
+	if hot.ticks and hot.entry.every and hot.total then Schedule(hot, Done(hot, GetTime()) + 1, hot.chain) end
+	Changed(hot.key)
+end
 
 -- Un de mes soins sur la durée vient de réussir sur ce joueur : { id, base, entry, unit, guid, start, duration,
 -- ticks, total } (total nil : montant encore inconnu, durée nil : inconnue). Un nouveau lancement du même sort
@@ -171,11 +220,14 @@ local function Remember(unit, id, spell)
 	local known = Learned(id)
 	local duration = known and known.duration or entry.duration
 	local key = Z.PlayerKey(unit)
-	local hot = { id = id, base = entry.id, entry = entry, unit = unit, start = GetTime(), duration = duration,
+	local hot = { id = id, base = entry.id, entry = entry, unit = unit, key = key, start = GetTime(), duration = duration,
 		ticks = Ticks(entry, duration), total = known and known.total }
 	active[key] = active[key] or {}
+	local before = active[key][entry.id]
+	hot.refreshed = before and before.duration and hot.start < before.start + before.duration or nil
 	active[key][entry.id] = hot
 	if entry.kind == "channel" then channel = hot end
+	Restart(hot) -- (une relance remplace l'ancien : son minuteur s'arrête, le segment glisse à sa nouvelle taille)
 	-- l'aura ne se lit que hors combat (ReadAura) : pas de minuteur en combat
 	if not InCombatLockdown() then C_Timer.After(READ_DELAY, function() Z:Try("soins sur la durée", ReadAura, hot) end) end
 end
@@ -183,27 +235,53 @@ end
 -- Mes soins sur la durée en cours sur ce joueur (liste, ou nil). Un soin dont la durée est passée est oublié ;
 -- un soin dont la durée reste inconnue (ni Data.lua, ni appris, ni lu sur l'aura) aussi : sans fin connue, il
 -- resterait sur la barre pour toujours.
-function Z.MyHots(unit)
+local function Alive(unit, now)
 	local key = Z.PlayerKey(unit)
 	local mine = active[key]
 	if not mine then return nil end
-	local now, list = GetTime(), nil
 	for base, hot in pairs(mine) do
 		if not hot.duration then
 			if now > hot.start + READ_DELAY + 1 then mine[base] = nil end
 		elseif now >= hot.start + hot.duration then mine[base] = nil
-		else
-			list = list or {}
-			list[#list + 1] = hot
 		end
 	end
-	if not next(mine) then active[key] = nil end
+	if not next(mine) then active[key] = nil return nil end
+	return mine
+end
+
+function Z.MyHots(unit)
+	local mine = Alive(unit, GetTime())
+	if not mine then return nil end
+	local list = {}
+	for _, hot in pairs(mine) do list[#list + 1] = hot end
 	return list
 end
 
 -- Un joueur mort perd mes soins (appelé par Z.ForgetBuffs, BuffMemory.lua)
 function Z.ForgetHots(unit)
-	active[Z.PlayerKey(unit)] = nil
+	local key = Z.PlayerKey(unit)
+	if not active[key] then return end
+	active[key] = nil
+	Changed(key)
+end
+
+-- Ce que mes soins sur la durée vont encore rendre à ce joueur, et ce qu'en rendent les prochains coups (un par
+-- soin). Montants appris, jamais secrets ; un soin au montant encore inconnu ne compte pas. Rend reste, prochains.
+function Z.HotAmounts(unit)
+	local now = GetTime()
+	local mine = Alive(unit, now)
+	if not mine then return 0, 0 end
+	local left, soon = 0, 0
+	for _, hot in pairs(mine) do
+		if hot.total and hot.ticks and hot.ticks > 0 and hot.entry.every then
+			local remaining = hot.ticks - Done(hot, now)
+			if remaining > 0 then
+				local each = hot.total / hot.ticks
+				left, soon = left + each * remaining, soon + each
+			end
+		end
+	end
+	return left, soon
 end
 
 local castFrame = CreateFrame("Frame")
@@ -214,7 +292,10 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			local hot = channel
 			channel = nil
 			local now = GetTime()
-			if hot and hot.duration and now < hot.start + hot.duration then hot.duration = now - hot.start end
+			if hot and hot.duration and now < hot.start + hot.duration then
+				hot.duration = now - hot.start
+				Changed(hot.key)
+			end
 		elseif event == "UNIT_SPELLCAST_SENT" then
 			local _, target, guid, id = ...
 			local spell = SpellOf(id)
@@ -232,10 +313,20 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 	end, ...)
 end)
 
--- (le réglage hotPrediction, qui coupera l'écoute, vient avec le dessin sur la barre de vie)
-castFrame:RegisterUnitEvent("UNIT_SPELLCAST_SENT", "player")
-castFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
-castFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+-- Réglage hotPrediction (appelé par Z:Refresh) : éteint, Lyorune n'écoute plus rien et oublie mes soins
+local listening = false
+function Z:RefreshHotPrediction()
+	if (Z.db.hotPrediction or false) == listening then return end
+	listening = Z.db.hotPrediction or false
+	if listening then
+		castFrame:RegisterUnitEvent("UNIT_SPELLCAST_SENT", "player")
+		castFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+		castFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+	else
+		castFrame:UnregisterAllEvents()
+		active, sent, channel = {}, nil, nil
+	end
+end
 
 -- /lyorune soins : ce que Lyorune a appris et retient
 function Z.HotReport()
