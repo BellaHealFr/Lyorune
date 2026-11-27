@@ -12,6 +12,7 @@
 <a href="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml"><img src="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
 <img src="https://img.shields.io/badge/WoW%20Forever-interface%2016001-1e90ff" alt="Jeu">
 <img src="https://img.shields.io/badge/licence-tous%20droits%20r%C3%A9serv%C3%A9s-lightgrey" alt="Licence">
+<a href="https://discord.gg/uRaEPTGePu"><img src="https://raw.githubusercontent.com/BellaHealFr/Lyorune/badges/discord.svg" alt="Discord"></a>
 </p>
 
 <p align="center">

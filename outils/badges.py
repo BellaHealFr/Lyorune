@@ -1,5 +1,5 @@
 # Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
-# Dessine les badges des README et de la page de profil (version, téléchargements GitHub), en images SVG.
+# Dessine les badges des README et de la page de profil (version, téléchargements GitHub, Discord), en images SVG.
 #
 #   python outils/badges.py DOSSIER
 #
@@ -12,7 +12,7 @@ from xml.sax.saxutils import escape
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import telechargements
 
-OR, BLEU, VERT, GRIS = '#d4a94e', '#1e90ff', '#3fb950', '#555'
+OR, BLEU, VERT, GRIS, DISCORD = '#d4a94e', '#1e90ff', '#3fb950', '#555', '#5865f2'
 
 
 def largeur(texte):
@@ -60,6 +60,9 @@ def main():
     ecrire(dossier, 'version', svg('version', version, OR))
     ecrire(dossier, 'telechargements', svg('téléchargements', fr, OR))
     ecrire(dossier, 'downloads', svg('downloads', en, OR))
+    # Bouton Discord (le lien est dans les README), sans nombre de membres
+    ecrire(dossier, 'discord', svg('Discord', 'rejoindre', DISCORD))
+    ecrire(dossier, 'discord-en', svg('Discord', 'join', DISCORD))
     # Page de profil : sans étiquette, en couleur
     ecrire(dossier, 'profil-version', svg('', version, BLEU))
     ecrire(dossier, 'profil-telechargements', svg('', fr, VERT))
