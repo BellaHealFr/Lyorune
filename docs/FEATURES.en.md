@@ -89,6 +89,7 @@ everything up step by step, see the [player guide](GUIDE.en.md).
 - Range in three levels.
 - Group leader (never on top of the role icon).
 - Class and DPS icons if you wish.
+- Druid role from talents, not from their form (Restoration: healer, Balance: DPS), shared with other players who use Lyorune; `/lyorune role` tells what Lyorune knows.
 
 ### Casting and cooldowns
 

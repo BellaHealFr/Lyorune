@@ -90,6 +90,7 @@ tout régler pas à pas, voyez le [guide du joueur](TUTORIEL.md).
 - Portée en trois paliers.
 - Chef de groupe (jamais sur l'icône de rôle).
 - Icônes de classe et des DPS au choix.
+- Rôle du druide d'après ses talents, pas d'après sa forme (Restauration : soigneur, Équilibre : DPS), partagé avec les autres joueurs qui ont Lyorune ; `/lyorune role` dit ce que Lyorune sait.
 
 ### Incantation et recharges
 

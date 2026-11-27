@@ -14,7 +14,7 @@ Une phrase, 160 caractères au plus. GitHub n'accepte qu'une description : chois
 | Français | Cadres de soin pour WoW Forever : clic-soin au rang choisi, buffs manquants, dissipation, mana des soigneurs. Tout se coche, en français et en anglais. | 151 |
 
 Le détail des fonctions, dont les nouveautés de chaque version (en 1.51.0 : affaiblissements « Toujours montrés »,
-Âme affaiblie et Longanimité, et leur liste à cocher), va dans le README et dans
+Âme affaiblie et Longanimité, et leur liste à cocher ; en 1.51.1 : rôle du druide d'après ses talents), va dans le README et dans
 [FEATURES.en.md](FEATURES.en.md) / [FONCTIONNALITES.md](FONCTIONNALITES.md), plus dans la description.
 
 En ligne de commande : `gh repo edit BellaHealFr/Lyorune --description "..."`.

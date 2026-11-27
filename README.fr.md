@@ -71,6 +71,7 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 ## Ce qui rend Lyorune particulier
 
 - **Des paladins qui s'entendent.** Les paladins qui ont Lyorune ne reprennent jamais la bénédiction d'un autre : chacun pose la sienne, sans en discuter.
+- **Des druides à leur vrai rôle.** Un druide Restauration reste soigneur et un druide Équilibre reste DPS, même en forme de félin ou d'ours : Lyorune lit le rôle dans les talents et le partage avec les autres joueurs qui ont Lyorune.
 - **Vos annonces de mana, même quand la mana est cachée.** Sur WoW Forever, la mana est cachée aux addons ; Lyorune annonce quand même votre mana faible et votre mana remontée.
 - **Un carnet de soigneur.** Vos soins, résurrections et buffs réussis, par personnage, avec un bilan en sortant d'un donjon. Il reste sur votre ordinateur.
 - **Un canal des soigneurs.** En français et en anglais, pour échanger entre soigneurs sur vos façons de jouer et vos spécialisations, si vous le voulez.

@@ -38,6 +38,7 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 ## What makes Lyorune special
 
 - **Paladins who get along.** Paladins who have Lyorune never cast another paladin's blessing again: each one casts their own, no discussion needed.
+- **Druids in their true role.** A Restoration druid stays a healer and a Balance druid stays DPS, even in cat or bear form: Lyorune reads the role from the talents and shares it with other players who use Lyorune.
 - **Your mana announcements, even when mana is hidden.** On WoW Forever, mana is hidden from addons; Lyorune still announces your low mana and your mana restored.
 - **A healer's notebook.** Your successful heals, resurrections and buffs, per character, with a summary when leaving a dungeon. It stays on your computer.
 - **A healers' channel.** In French and in English, where healers talk about how they play and their specialisations, if you wish.
@@ -129,6 +130,7 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 ## Ce qui rend Lyorune particulier
 
 - **Des paladins qui s'entendent.** Les paladins qui ont Lyorune ne reprennent jamais la bénédiction d'un autre : chacun pose la sienne, sans en discuter.
+- **Des druides à leur vrai rôle.** Un druide Restauration reste soigneur et un druide Équilibre reste DPS, même en forme de félin ou d'ours : Lyorune lit le rôle dans les talents et le partage avec les autres joueurs qui ont Lyorune.
 - **Vos annonces de mana, même quand la mana est cachée.** Sur WoW Forever, la mana est cachée aux addons ; Lyorune annonce quand même votre mana faible et votre mana remontée.
 - **Un carnet de soigneur.** Vos soins, résurrections et buffs réussis, par personnage, avec un bilan en sortant d'un donjon. Il reste sur votre ordinateur.
 - **Un canal des soigneurs.** En français et en anglais, pour échanger entre soigneurs sur vos façons de jouer et vos spécialisations, si vous le voulez.

@@ -78,6 +78,7 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 ## What makes Lyorune special
 
 - **Paladins who get along.** Paladins who have Lyorune never cast another paladin's blessing again: each one casts their own, no discussion needed.
+- **Druids in their true role.** A Restoration druid stays a healer and a Balance druid stays DPS, even in cat or bear form: Lyorune reads the role from the talents and shares it with other players who use Lyorune.
 - **Your mana announcements, even when mana is hidden.** On WoW Forever, mana is hidden from addons; Lyorune still announces your low mana and your mana restored.
 - **A healer's notebook.** Your successful heals, resurrections and buffs, per character, with a summary when leaving a dungeon. It stays on your computer.
 - **A healers' channel.** In French and in English, where healers talk about how they play and their specialisations, if you wish.
