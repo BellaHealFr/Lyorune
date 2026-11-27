@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.51.1] - 2026-11-27
+
+### Fixed
+
+- Druid: the role icon no longer stays on DPS or tank after shifting into cat or bear form. The role comes from the talent tree with the most points (Restoration: healer, Balance: DPS) and is shared with other players who use Lyorune. Setting "Druid role from talents" in Players, check it with the /lyorune role command.
+- No more error while reading frame positions when the game keeps an element's visibility secret.
+
 ## [1.51.0] - 2026-11-27
 
 ### Added
@@ -992,6 +999,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.51.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.2...v1.51.0
 [1.50.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.1...v1.50.2
 [1.50.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.0...v1.50.1

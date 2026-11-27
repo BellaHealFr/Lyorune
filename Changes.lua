@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.51.1", date = "2026-11-27",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Druide : l'icône de rôle ne reste plus en DPS ou en tank après un passage en forme de félin ou d'ours. Le rôle vient de l'arbre de talents le plus rempli (Restauration : soigneur, Équilibre : DPS) et passe aux autres joueurs qui ont Lyorune. Réglage « Rôle du druide d'après ses talents » dans Joueurs, essai avec la commande /lyorune role.",
+			"Plus d'erreur au relevé de la position des cadres quand le jeu garde secrète la visibilité d'un élément.",
+		},
+	},
+	{
 		version = "1.51.0", date = "2026-11-27",
 		added = {
 			"Liste « Toujours montrés » : Âme affaiblie et Longanimité visibles pour toutes les classes, aussi en « Utiles » et « Ceux que je dissipe », avec une liste déroulante à cocher qui propose les affaiblissements vus sur le groupe.",

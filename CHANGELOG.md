@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.51.1] - 2026-11-27
+
+### Corrigé
+
+- Druide : l'icône de rôle ne reste plus en DPS ou en tank après un passage en forme de félin ou d'ours. Le rôle vient de l'arbre de talents le plus rempli (Restauration : soigneur, Équilibre : DPS) et passe aux autres joueurs qui ont Lyorune. Réglage « Rôle du druide d'après ses talents » dans Joueurs, essai avec la commande /lyorune role.
+- Plus d'erreur au relevé de la position des cadres quand le jeu garde secrète la visibilité d'un élément.
+
 ## [1.51.0] - 2026-11-27
 
 ### Ajouté
@@ -992,6 +999,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.51.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.2...v1.51.0
 [1.50.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.1...v1.50.2
 [1.50.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.0...v1.50.1
