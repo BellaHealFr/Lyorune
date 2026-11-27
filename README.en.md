@@ -42,17 +42,6 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 </tr>
 </table>
 
-<!-- captures:debut -->
-## Screenshots
-
-<table>
-<tr>
-<td width="50%" align="center"><img src="docs/images/captures/cases.jpg" alt="Lyorune frames: health, mana, heals and role at a glance"><br><em>Lyorune frames: health, mana, heals and role at a glance</em></td>
-<td width="50%" align="center"><img src="docs/images/captures/options.png" alt="The options: every setting has its checkbox"><br><em>The options: every setting has its checkbox</em></td>
-</tr>
-</table>
-<!-- captures:fin -->
-
 ## What Lyorune does for you
 
 | | |
@@ -70,6 +59,17 @@ Easy to set up, light in combat, pleasant to look at. I made it for everyone who
 
 Lyorune never changes the game's frames or other addons' frames: it runs alongside ElvUI, Clique and your other interface addons.
 
+<!-- captures:debut -->
+## Screenshots
+
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/images/captures/cases.jpg" alt="Lyorune frames: health, mana, heals and role at a glance"><br><em>Lyorune frames: health, mana, heals and role at a glance</em></td>
+<td width="50%" align="center"><img src="docs/images/captures/options.png" alt="The options: every setting has its checkbox"><br><em>The options: every setting has its checkbox</em></td>
+</tr>
+</table>
+<!-- captures:fin -->
+
 ## What makes Lyorune special
 
 - **Paladins who get along.** Paladins who have Lyorune never cast another paladin's blessing again: each one casts their own, no discussion needed.
@@ -79,25 +79,9 @@ Lyorune never changes the game's frames or other addons' frames: it runs alongsi
 - **Ready in a minute.** No dependency to install, a built-in tutorial from your first login, and a test mode to try everything without a group.
 - **Alongside your interface.** Lyorune never touches a frame that is not its own: it works with ElvUI and Clique.
 
-## The runes of Lyorune
-
-At the bottom of the options window, a line of golden runes lights up from time to time, from left to right.
-
-<p align="center"><img src="docs/images/runes.png" alt="The runic inscription of Lyorune" width="100%"></p>
-
-**What they say:**
-
-> *"Whomsoever takes up this blade shall wield power eternal."*
-
-It is the inscription carved on Frostmourne's dais, the one Muradin reads to Arthas in Warcraft III. Everyone who grew up with Warcraft remembers it: the moment everything changes.
-
-**How to read them:** each rune stands for one letter of the sentence. They are the runes of the Elder Futhark, a very real alphabet used almost two thousand years ago. The sounds "th" and "ng" are written with a single rune.
-
-In game, hover the runes: they light up and their translation appears. If they distract you, a checkbox removes them (Window and help chapter).
-
 ## Installation
 
-1. Download the latest version from the [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest) page, from [CurseForge](https://www.curseforge.com/wow/addons/lyorune-healing) (project "Lyorune Healing"), from [Wago](https://addons.wago.io/addons/lyorune) or from [WoWInterface](https://www.wowinterface.com/downloads/info27323-Lyorune.html), all updated at the same time. These are the only four official sources (see [SECURITY.md](SECURITY.md)). With the CurseForge or Wago app, updates install on their own.
+1. Download the latest version from the [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest) page, from [CurseForge](https://www.curseforge.com/wow/addons/lyorune-healing) (project "Lyorune Healing"), from [Wago](https://addons.wago.io/addons/lyorune) or from [WoWInterface](https://www.wowinterface.com/downloads/info27323-Lyorune.html), all updated at the same time. These are the only four official sources (see [SECURITY.md](SECURITY.md)). With the CurseForge or Wago app, updates install on their own. Lyorune can also be installed and updated with an addon manager such as WowUp; the four official pages remain the reference sources.
 2. Unzip it into `World of Warcraft\_forever_\Interface\AddOns\`. You should get a `Lyorune` folder.
 3. Start the game. A one-minute tutorial opens on first login, and off you go.
 
@@ -115,11 +99,43 @@ No group at hand? Type `/lyorune test`: a fake group appears, with its wounded p
 
 The full player guide is in [docs/GUIDE.en.md](docs/GUIDE.en.md). In game, everything is in English when your game is: options, guided tour, news and chat messages.
 
+## Frequently asked questions
+
+**My clicks don't cast anything.**
+Check that "Let Clique or the game handle clicks" is unchecked (Spells and bindings chapter, fine settings of the Behaviour part): when checked, it turns Lyorune's clicks off. A click without a spell keeps its usual role: target the player or open their menu.
+
+**The game's click casting uses the same click as Lyorune.**
+If it uses the same combination, it may go first. Lyorune tells you once in the chat, and the line turns orange in the Spells and bindings chapter: change the combination on one side or the other. Lyorune never changes the game's bindings.
+
+**One of my spells is not offered.**
+Type `/lyorune spells`: Lyorune writes in the chat the spells it offers, the spells of your class that are missing and why (not learned, other specialization, passive), and those it leaves out. An offensive spell is never offered.
+
+**Mana is hidden from addons on WoW Forever: do the mana announcements work?**
+Yes. The low mana and mana restored announcements still go out on their own: the threshold is estimated from your spell costs, and the recovery measured while you drink. The blue low mana edge is computed by the game itself: it works in combat, even when mana is hidden.
+
+**My announcement goes to the group instead of /say.**
+Outside dungeons and raids, the game does not let an addon write in /say on its own: the announcement then goes to the group channel.
+
+**I can't move my frames.**
+They never move in combat. Out of combat, `/lyorune lock` unlocks them (or set "Moving the frames", Layout chapter), then drag the "Group" label. `/lyorune reset` moves them back to the centre of the screen.
+
+**The game slows down in a big raid.**
+Turn on "Performance mode" (Window and help chapter, fine settings of the Help part): range is then checked only once per second, and nothing disappears from your cells. `/lyorune measure`, out of combat, shows the time Lyorune takes for 5, 25 and 40 players.
+
 ## Something wrong? Tell me
 
 Every report makes Lyorune better for everyone. In game, type `/lyorune bug`, answer the three questions, copy the report (Ctrl+C) and paste it into the [English bug form](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml). Issues written in English are welcome. A step by step guide is in [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md#reporting-a-bug-english).
 
 An idea, a wish? The [idea form](https://github.com/BellaHealFr/Lyorune/issues/new?template=idee_en.yml) is there for that.
+
+## Known limitations
+
+They come from the game's rules, which hide some information from addons in combat:
+
+- Frames cannot be moved in combat, and a scale change waits for the end of combat.
+- A buff dispelled in the middle of combat shows at the end of combat (except your single-target buff, seen at once).
+- If the group changes in the middle of combat, your buffs to cast again are cleared from the cells until the end of combat, while Lyorune finds out again who is who.
+- In battlegrounds and during a boss, buffs cast by another player stay unknown: a buff Lyorune knows nothing about is offered to you, better once too often than never.
 
 ## Compatibility
 
@@ -130,8 +146,20 @@ World of Warcraft: Forever, interface 16001. Languages: French and English. No d
 | Document | For whom |
 |---|---|
 | [Player guide](docs/GUIDE.en.md) | Using and tuning Lyorune |
+| [All features](docs/FEATURES.en.md) | Everything Lyorune does, in detail |
 | [Reporting a bug](docs/SIGNALER_UN_BUG.md#reporting-a-bug-english) | Step by step, no technical knowledge needed |
 | [Changelog](CHANGELOG.en.md) | What changes in each version |
+
+## Contributing
+
+Bug reports and ideas are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) (written in French; issues in English are welcome).
+
+The project is tested outside the game on every change:
+
+```
+pip install lupa
+python tests/run.py .
+```
 
 ## Who am I?
 
@@ -146,6 +174,22 @@ If Lyorune travels with you in dungeons or raids, a star at the top of this page
 I play in the guild **La Taverne Nocturne**: a relaxed, French-speaking PvE guild that raids after 10 pm (Paris time). *When the world falls asleep, our adventures begin.*
 
 On our [Discord server](https://discord.gg/uRaEPTGePu), you can find me to chat, play together or talk about Lyorune: a section is dedicated to it.
+
+## The runes of Lyorune
+
+At the bottom of the options window, a line of golden runes lights up from time to time, from left to right.
+
+<p align="center"><img src="docs/images/runes.png" alt="The runic inscription of Lyorune" width="100%"></p>
+
+**What they say:**
+
+> *"Whomsoever takes up this blade shall wield power eternal."*
+
+It is the inscription carved on Frostmourne's dais, the one Muradin reads to Arthas in Warcraft III. Everyone who grew up with Warcraft remembers it: the moment everything changes.
+
+**How to read them:** each rune stands for one letter of the sentence. They are the runes of the Elder Futhark, a very real alphabet used almost two thousand years ago. The sounds "th" and "ng" are written with a single rune.
+
+In game, hover the runes: they light up and their translation appears. If they distract you, a checkbox removes them (Window and help chapter).
 
 ## License
 

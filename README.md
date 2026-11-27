@@ -35,17 +35,6 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 
 <p align="center"><img src="docs/images/piliers.png" alt="Soignez avec précision, protégez vos alliés, anticipez chaque menace, devenez indispensable" width="100%"></p>
 
-<!-- captures:debut -->
-## En images
-
-<table>
-<tr>
-<td width="50%" align="center"><img src="docs/images/captures/cases.jpg" alt="Les cases de Lyorune : vie, mana, soins et rôle d'un coup d'œil"><br><em>Les cases de Lyorune : vie, mana, soins et rôle d'un coup d'œil</em></td>
-<td width="50%" align="center"><img src="docs/images/captures/options.png" alt="Les options : chaque réglage a sa case à cocher"><br><em>Les options : chaque réglage a sa case à cocher</em></td>
-</tr>
-</table>
-<!-- captures:fin -->
-
 ## Ce que Lyorune fait pour vous
 
 | | |
@@ -63,6 +52,17 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 
 Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à côté d'ElvUI, de Clique ou de vos autres addons d'interface.
 
+<!-- captures:debut -->
+## En images
+
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/images/captures/cases.jpg" alt="Les cases de Lyorune : vie, mana, soins et rôle d'un coup d'œil"><br><em>Les cases de Lyorune : vie, mana, soins et rôle d'un coup d'œil</em></td>
+<td width="50%" align="center"><img src="docs/images/captures/options.png" alt="Les options : chaque réglage a sa case à cocher"><br><em>Les options : chaque réglage a sa case à cocher</em></td>
+</tr>
+</table>
+<!-- captures:fin -->
+
 ## Ce qui rend Lyorune particulier
 
 - **Des paladins qui s'entendent.** Les paladins qui ont Lyorune ne reprennent jamais la bénédiction d'un autre : chacun pose la sienne, sans en discuter.
@@ -72,27 +72,9 @@ Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à c�
 - **Prêt en une minute.** Aucune dépendance à installer, un tutoriel intégré dès la première connexion, et un mode test pour tout essayer sans groupe.
 - **À côté de votre interface.** Lyorune ne touche à aucun cadre qui n'est pas le sien : il fonctionne avec ElvUI et Clique.
 
-## Les runes de Lyorune
-
-Au bas de la fenêtre d'options, une ligne de runes dorées s'illumine de temps en temps, de gauche à droite.
-
-<p align="center"><img src="docs/images/runes.png" alt="L'inscription runique de Lyorune" width="100%"></p>
-
-**Ce qu'elles disent :**
-
-> *« Quiconque s'emparera de cette lame détiendra un pouvoir éternel. »*
->
-> En version originale : *"Whomsoever takes up this blade shall wield power eternal."*
-
-C'est l'inscription gravée sur le socle de Deuillegivre, celle que Muradin déchiffre pour Arthas dans Warcraft III. Tous ceux qui ont grandi avec Warcraft s'en souviennent : c'est l'instant où tout bascule.
-
-**Comment les lire :** chaque rune vaut une lettre de la phrase anglaise. Ce sont les runes de l'ancien futhark, un alphabet bien réel, utilisé il y a près de deux mille ans. Les sons « th » et « ng » s'écrivent d'une seule rune.
-
-En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (chapitre Fenêtre et aide).
-
 ## Installation
 
-1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest), sur [CurseForge](https://www.curseforge.com/wow/addons/lyorune-healing) (projet « Lyorune Healing »), sur [Wago](https://addons.wago.io/addons/lyorune) ou sur [WoWInterface](https://www.wowinterface.com/downloads/info27323-Lyorune.html), tous mis à jour en même temps. Ce sont les quatre seules sources officielles (voir [SECURITY.md](SECURITY.md)). Avec l'application CurseForge ou Wago, les mises à jour s'installent toutes seules.
+1. Téléchargez la dernière version sur la page [Releases](https://github.com/BellaHealFr/Lyorune/releases/latest), sur [CurseForge](https://www.curseforge.com/wow/addons/lyorune-healing) (projet « Lyorune Healing »), sur [Wago](https://addons.wago.io/addons/lyorune) ou sur [WoWInterface](https://www.wowinterface.com/downloads/info27323-Lyorune.html), tous mis à jour en même temps. Ce sont les quatre seules sources officielles (voir [SECURITY.md](SECURITY.md)). Avec l'application CurseForge ou Wago, les mises à jour s'installent toutes seules. Lyorune peut aussi être installé et mis à jour avec un gestionnaire d'addons comme WowUp ; les quatre pages officielles restent les sources de référence.
 2. Décompressez l'archive dans `World of Warcraft\_forever_\Interface\AddOns\`. Vous devez obtenir un dossier `Lyorune`.
 3. Lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion, et c'est parti.
 
@@ -113,6 +95,29 @@ Pas de groupe sous la main ? Tapez `/lyorune test` : un faux groupe apparaît, a
 
 Le guide complet pour les joueurs est dans [docs/TUTORIEL.md](docs/TUTORIEL.md).
 
+## Questions fréquentes
+
+**Mes clics ne lancent aucun sort.**
+Vérifiez que « Laisser Clique ou le jeu gérer les clics » est décoché (chapitre Sorts et raccourcis, réglages fins de la partie Comportement) : coché, il coupe les clics de Lyorune. Un clic sans sort garde son rôle habituel : cibler le joueur ou ouvrir son menu.
+
+**Le « clic pour lancer » du jeu prend le même clic que Lyorune.**
+S'il utilise la même combinaison, il peut passer avant. Lyorune vous le dit une fois dans la discussion, et la ligne apparaît en orange dans le chapitre Sorts et raccourcis : changez la combinaison d'un côté ou de l'autre. Lyorune ne modifie jamais les raccourcis du jeu.
+
+**Un de mes sorts n'est pas proposé.**
+Tapez `/lyorune sorts` : Lyorune écrit dans la discussion les sorts qu'il propose, ceux de votre classe qui manquent et pourquoi (pas appris, autre spécialisation, passif), et ceux qu'il écarte. Un sort offensif n'est jamais proposé.
+
+**La mana est cachée aux addons sur WoW Forever : les annonces de mana marchent-elles ?**
+Oui. Les annonces de mana faible et de mana remontée partent quand même toutes seules : le seuil est approché par le coût de vos sorts, et la remontée mesurée pendant que vous buvez. Le liseré bleu de mana basse est calculé par le jeu lui-même : il marche en combat, même quand la mana est cachée.
+
+**Mon annonce part dans le groupe au lieu de /dire.**
+Hors des donjons et des raids, le jeu interdit à un addon d'écrire en /dire tout seul : l'annonce part alors dans le canal du groupe.
+
+**Je n'arrive pas à déplacer mes cadres.**
+Ils ne se déplacent jamais en combat. Hors combat, `/lyorune verrou` les libère (ou réglez « Déplacement des cadres », chapitre Disposition), puis faites glisser l'étiquette « Groupe ». `/lyorune reset` les remet au centre de l'écran.
+
+**Le jeu ralentit en grand raid.**
+Allumez « Mode performance » (chapitre Fenêtre et aide, réglages fins de la partie Aide) : la portée n'est plus revue qu'une fois par seconde, et rien ne disparaît de vos cases. `/lyorune mesure`, hors combat, montre le temps pris par Lyorune pour 5, 25 et 40 joueurs.
+
 ## Un souci ? Dites-le-moi
 
 Chaque signalement rend Lyorune meilleur pour tout le monde. En jeu, tapez `/lyorune bug`, répondez aux trois questions, copiez le rapport (Ctrl+C) et collez-le dans le [formulaire de signalement](https://github.com/BellaHealFr/Lyorune/issues/new?template=bug.yml). Pour un défaut d'affichage, joignez une capture d'écran.
@@ -120,6 +125,15 @@ Chaque signalement rend Lyorune meilleur pour tout le monde. En jeu, tapez `/lyo
 Première fois sur GitHub ? Le pas à pas est dans [docs/SIGNALER_UN_BUG.md](docs/SIGNALER_UN_BUG.md) : trois minutes, sans connaissance technique.
 
 Une idée, une envie ? Le [formulaire d'idée](https://github.com/BellaHealFr/Lyorune/issues/new?template=idee.yml) est là pour ça.
+
+## Limites connues
+
+Elles viennent des règles du jeu, qui cachent certaines informations aux addons en combat :
+
+- Les cadres ne se déplacent pas en combat, et un changement d'échelle attend la fin du combat.
+- Un buff dissipé en plein combat se voit à la fin du combat (sauf votre buff unique, vu tout de suite).
+- Si le groupe change en plein combat, vos buffs à reposer s'effacent des cases jusqu'à la fin du combat, le temps que Lyorune sache de nouveau qui est qui.
+- En champ de bataille et pendant un boss, les buffs posés par un autre joueur restent inconnus : un buff dont Lyorune ne sait rien vous est proposé, mieux vaut une fois de trop que jamais.
 
 ## Compatibilité
 
@@ -135,6 +149,7 @@ Une idée, une envie ? Le [formulaire d'idée](https://github.com/BellaHealFr/Ly
 | Document | Pour qui |
 |---|---|
 | [Guide du joueur](docs/TUTORIEL.md) | Utiliser et régler Lyorune ([English](docs/GUIDE.en.md)) |
+| [Toutes les fonctionnalités](docs/FONCTIONNALITES.md) | Le détail de tout ce que fait Lyorune |
 | [Signaler un bug](docs/SIGNALER_UN_BUG.md) | Le pas à pas, sans connaissance technique |
 | [Journal des versions](CHANGELOG.md) | Ce qui change à chaque version ([English](CHANGELOG.en.md)) |
 | [Feuille de route](docs/FEUILLE_DE_ROUTE.md) | Ce qui est prévu |
@@ -167,6 +182,24 @@ Si Lyorune vous accompagne en donjon ou en raid, une étoile en haut de cette pa
 Je joue au sein de la guilde **La Taverne Nocturne** : une guilde PvE détendue et francophone, qui part en raid après 22h. *Quand le monde s'endort, nos aventures commencent.*
 
 Sur notre [serveur Discord](https://discord.gg/uRaEPTGePu), vous pouvez me retrouver pour discuter, jouer ensemble ou parler de Lyorune : une section lui est consacrée.
+
+## Les runes de Lyorune
+
+Au bas de la fenêtre d'options, une ligne de runes dorées s'illumine de temps en temps, de gauche à droite.
+
+<p align="center"><img src="docs/images/runes.png" alt="L'inscription runique de Lyorune" width="100%"></p>
+
+**Ce qu'elles disent :**
+
+> *« Quiconque s'emparera de cette lame détiendra un pouvoir éternel. »*
+>
+> En version originale : *"Whomsoever takes up this blade shall wield power eternal."*
+
+C'est l'inscription gravée sur le socle de Deuillegivre, celle que Muradin déchiffre pour Arthas dans Warcraft III. Tous ceux qui ont grandi avec Warcraft s'en souviennent : c'est l'instant où tout bascule.
+
+**Comment les lire :** chaque rune vaut une lettre de la phrase anglaise. Ce sont les runes de l'ancien futhark, un alphabet bien réel, utilisé il y a près de deux mille ans. Les sons « th » et « ng » s'écrivent d'une seule rune.
+
+En jeu, passez la souris sur les runes : elles s'éclairent et leur traduction apparaît. Et si elles vous distraient, une case à cocher les retire (chapitre Fenêtre et aide).
 
 ## Licence
 
