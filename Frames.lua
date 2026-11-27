@@ -47,7 +47,7 @@ local smoothing      -- SMOOTH ou nil selon l'option
 -- Les segments qui se suivent (mon soin, celui des autres, soins sur la durée) ne se recouvrent jamais : même couche.
 -- Au-dessus de mon soin : la teinte du gaspillage (ambre puis cuivre), et tout en haut le voile de l'incantation.
 local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, overheal = 2, overhealMore = 3, absorb = 4, stripes = 5,
-	healAbsorb = 6, castFill = 7 }
+	healAbsorb = 6, castFill = 7, landing = 7 }
 -- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.85 }, { 0.86, 0.45, 0.20, 0.90 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
@@ -160,15 +160,23 @@ local function ClassColor(unit, extra, pet)
 	return Z.ClassColor(class)
 end
 
--- Chiffre du bouclier (réglage absorbText) : le total de tous les boucliers posés, secret, écrit par le jeu.
+-- Petits chiffres (bouclier : absorbText, soins en route : incomingText) : montant secret, écrit par le jeu.
 -- Pour ne pas afficher « +0 » sans rien comparer, le texte est rangé dans un cadre qui le coupe, accroché au
--- remplissage d'une barre de 0 à 1 : le moindre bouclier la remplit, zéro la laisse vide et le texte disparaît.
+-- remplissage d'une barre de 0 à 1 : le moindre montant la remplit, zéro la laisse vide et le texte disparaît.
+local function SetSmallText(switch, text, amount)
+	if amount == nil then return end
+	switch:SetValue(amount)
+	text:SetFormattedText("+%s", AbbreviateNumbers(amount))
+end
+
 local function UpdateAbsorbText(b, absorbs)
 	local total = healCalculator.GetTotalDamageAbsorbs and healCalculator:GetTotalDamageAbsorbs() or absorbs
-	if total == nil then return end
-	b.absorbSwitch:SetValue(total)
-	b.absorbText:SetFormattedText("+%s", AbbreviateNumbers(total))
+	SetSmallText(b.absorbSwitch, b.absorbText, total)
 end
+
+-- Éclat à l'arrivée de mon soin (healLanding) : la barre de l'éclat garde mon soin en route, figée le temps de
+-- l'éclat (PlayLanding), pour qu'il reste visible pendant que le soin passe dans la vie.
+local landingFrozen = false
 
 -- Soins en route, bouclier, et absorption de soins : montants calculés par le jeu, lisibles en combat.
 -- Les soins en route : tous, le mien, ceux des autres, et « ça dépasse la vie qui manque » (booléen secret).
@@ -180,6 +188,18 @@ local function UpdateIncoming(b, max)
 	if b.incomingOthers:IsShown() then
 		b.incomingOthers:SetMinMaxValues(0, max)
 		b.incomingOthers:SetValue(others, smoothing)
+	end
+	-- Chiffre : ce que montrent les segments (le mien seul, ou tous)
+	if b.incomingSwitch:IsShown() then
+		if db.incomingSplit == "MINE" then
+			SetSmallText(b.incomingSwitch, b.incomingText, mine)
+		else
+			SetSmallText(b.incomingSwitch, b.incomingText, all)
+		end
+	end
+	if b.landing:IsShown() and not landingFrozen then
+		b.landing:SetMinMaxValues(0, max)
+		b.landing:SetValue(mine)
 	end
 	-- Gaspillage : aucun test sur la valeur, le booléen du jeu est branché sur l'opacité de la teinte
 	if b.overheal:IsShown() then
@@ -819,23 +839,23 @@ end
 -- Le marqueur et l'icône centrale suivent aussi l'éditeur de placement. Les places d'origine viennent de
 -- Z.AuraRows (Themes.lua), lue aussi par Placement.lua (Origins) qui borne les décalages au bord de la case.
 -- Largeur du nom et du texte de vie : Z.TextWidth, qui les fait rétrécir quand ils sont poussés vers un bord.
--- Chiffre du bouclier (absorbText) : sur la ligne du texte de vie, dont il suit le décalage de l'éditeur de
--- placement. Barre et Bandeau : au bout du texte de vie, qui recule d'autant ; Tuile et Carré : en bas à droite.
-local function AbsorbSize()
+-- Petits chiffres (bouclier : absorbText, soins en route : incomingText) : sur la ligne du texte de vie, dont ils
+-- suivent le décalage de l'éditeur de placement. Barre et Bandeau : au bout du texte de vie, qui recule d'autant ;
+-- Tuile et Carré : en bas à droite. Le chiffre des soins se met à gauche de celui du bouclier (shift).
+local function SmallTextSize()
 	local size = math.max(7, db.fontSize + (Z:Theme().fontBonus or 0) - 2)
 	return math.floor(size * 3.4), size + 4
 end
 
-local function PlaceAbsorbText(b, inline)
-	local switch = b.absorbSwitch
-	local width, height = AbsorbSize()
+local function PlaceSmallText(b, switch, inline, shift)
+	local width, height = SmallTextSize()
 	local dx, dy = Z.Offset("text")
 	switch:ClearAllPoints()
 	switch:SetSize(width, height)
 	if inline then
-		switch:SetPoint("RIGHT", b.hp, "RIGHT", b.rows.textX + dx, dy)
+		switch:SetPoint("RIGHT", b.hp, "RIGHT", b.rows.textX + dx + shift, dy)
 	else
-		switch:SetPoint("BOTTOMRIGHT", b.hp, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT"), 2 + dy)
+		switch:SetPoint("BOTTOMRIGHT", b.hp, "BOTTOMRIGHT", -2 - Z.CornerShift(b, "BOTTOMRIGHT") + shift, 2 + dy)
 	end
 end
 
@@ -866,13 +886,15 @@ end
 
 local function PlaceTexts(b)
 	local shield = db.showAbsorb and db.absorbText
+	local heal = db.showIncoming and db.incomingText
 	local inline = Z:Shape().inline
 	local homes = b.rows.homes
+	local step = SmallTextSize() + 2
 	PlaceHome(b, b.role, "role", homes.role)
 	PlaceHome(b, b.class, "class", homes.class)
 	PlaceHome(b, b.name, "name", homes.name)
-	-- Barre, Bandeau : le chiffre de vie recule devant celui du bouclier
-	PlaceHome(b, b.text, "text", homes.text, (inline and shield) and -(AbsorbSize() + 2) or 0)
+	-- Barre, Bandeau : le chiffre de vie recule devant ceux du bouclier et des soins
+	PlaceHome(b, b.text, "text", homes.text, inline and -((shield and step or 0) + (heal and step or 0)) or 0)
 	b.name:SetJustifyH(inline and "LEFT" or "CENTER")
 	b.text:SetJustifyH(inline and "RIGHT" or "CENTER")
 	b.name:SetWidth(Z.TextWidth("name"))
@@ -880,7 +902,13 @@ local function PlaceTexts(b)
 	Place(b.marker, "marker", "CENTER", b.over, "TOP", 0, -1)
 	PlaceHome(b, b.center, "center", homes.center)
 	PlaceHome(b, b.lowMana, "lowMana", homes.lowMana)
-	if shield then PlaceAbsorbText(b, inline) end
+	if shield then PlaceSmallText(b, b.absorbSwitch, inline, 0) end
+	if heal then PlaceSmallText(b, b.incomingSwitch, inline, shield and -step or 0) end
+end
+
+local function StyleSmallText(text, theme, c)
+	text:SetFont(theme.font, (select(2, SmallTextSize())) - 4, theme.flags)
+	text:SetTextColor(c[1] + (1 - c[1]) * 0.4, c[2] + (1 - c[2]) * 0.4, c[3] + (1 - c[3]) * 0.4)
 end
 
 local function Style(b)
@@ -914,6 +942,12 @@ local function Style(b)
 	b.overhealMore:SetAlpha(0)
 	b.castFill:SetShown(db.showIncoming and db.castFill)
 	b.castFill:SetAlpha(0) -- (une case cachée pendant mon incantation ne garde pas le voile)
+	-- (pas en « Tous ensemble » : le bout du segment y porte aussi les soins des autres, l'éclat tomberait à côté)
+	b.landing:SetShown(db.showIncoming and db.healLanding and db.incomingSplit ~= "ALL")
+	b.landing:SetWidth(width - 2 * inset)
+	b.landingFlash:Stop()
+	b.landing:SetAlpha(0)
+	b.incomingSwitch:SetShown(db.showIncoming and db.incomingText)
 	b.absorb:SetStatusBarTexture(UI.WHITE)
 	SetLayer(b.absorb, LAYER.absorb)
 	local follow = db.absorbStyle == "FOLLOW"
@@ -974,12 +1008,9 @@ local function Style(b)
 	b.name:SetFont(theme.font, size, theme.flags)
 	b.name:SetShown(db.showName) -- réglage « Nom du joueur » (vraies cases, mode test, case témoin)
 	b.text:SetFont(theme.font, size - 1, theme.flags)
-	if db.showAbsorb and db.absorbText then
-		-- Couleur du bouclier du thème, éclaircie pour rester lisible sur la vie
-		local shield = theme.absorb
-		b.absorbText:SetFont(theme.font, (select(2, AbsorbSize())) - 4, theme.flags)
-		b.absorbText:SetTextColor(shield[1] + (1 - shield[1]) * 0.4, shield[2] + (1 - shield[2]) * 0.4, shield[3] + (1 - shield[3]) * 0.4)
-	end
+	-- Petits chiffres : couleur du bouclier ou des soins en route du thème, éclaircie pour rester lisible sur la vie
+	if db.showAbsorb and db.absorbText then StyleSmallText(b.absorbText, theme, theme.absorb) end
+	if db.showIncoming and db.incomingText then StyleSmallText(b.incomingText, theme, theme.incoming) end
 
 	local icon = b.isPet and math.max(10, math.floor(height * 0.30 + 0.5)) or Z.IconSize()
 	b.iconSize = icon
@@ -1037,6 +1068,27 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Habillage d'une case : barres, textes, icônes, bordures. Sert aussi aux fausses cases du mode test.
 ----------------------------------------------------------------------------------------------------
+-- Petit chiffre : barre de 0 à 1 invisible ; le cadre qui coupe le texte s'arrête au bout de son remplissage
+-- (SetSmallText). Montant nul : remplissage nul, texte coupé en entier.
+local function SmallText(parent)
+	local switch = CreateFrame("StatusBar", nil, parent)
+	switch:SetSize(30, 14)
+	switch:SetStatusBarTexture(UI.WHITE)
+	switch:SetStatusBarColor(0, 0, 0, 0)
+	switch:SetMinMaxValues(0, 1)
+	switch:SetValue(0)
+	switch:Hide()
+	local clip = CreateFrame("Frame", nil, switch)
+	clip:SetPoint("TOPLEFT")
+	clip:SetPoint("BOTTOMRIGHT", switch:GetStatusBarTexture(), "BOTTOMRIGHT")
+	clip:SetClipsChildren(true)
+	local text = UI.Text(clip, 9)
+	text:SetAllPoints(switch)
+	text:SetJustifyH("RIGHT")
+	text:SetWordWrap(false)
+	return switch, text
+end
+
 function Z.BuildVisuals(b)
 	b.bg = UI.Tex(b, "BACKGROUND", 0.07, 0.07, 0.09, 1)
 	b.bg:SetAllPoints()
@@ -1079,6 +1131,26 @@ function Z.BuildVisuals(b)
 	fill:SetStatusBarColor(1, 1, 1, 0.45)
 	fill:SetAlpha(0) -- visible seulement pendant mon incantation
 	b.castFill = fill
+	-- Éclat à l'arrivée de mon soin (healLanding) : mon soin, compté depuis le bout de mon segment vers la gauche.
+	-- Quand le soin arrive, la vie avance d'autant et mon segment se vide : ce bout ne bouge pas, l'éclat reste
+	-- sur la part de vie que le soin vient de rendre. Joué sur toutes les cases : sans mon soin, largeur nulle.
+	local landing = CreateFrame("StatusBar", nil, hp)
+	landing:SetPoint("TOPRIGHT", incoming:GetStatusBarTexture(), "TOPRIGHT")
+	landing:SetPoint("BOTTOMRIGHT", incoming:GetStatusBarTexture(), "BOTTOMRIGHT")
+	landing:SetReverseFill(true)
+	landing:SetStatusBarTexture(UI.WHITE)
+	landing:GetStatusBarTexture():SetDrawLayer("ARTWORK", LAYER.landing)
+	landing:SetStatusBarColor(1, 1, 1, 0.75)
+	landing:SetMinMaxValues(0, 1)
+	landing:SetValue(0)
+	landing:SetAlpha(0)
+	local flash = landing:CreateAnimationGroup()
+	local fade = flash:CreateAnimation("Alpha")
+	fade:SetFromAlpha(1)
+	fade:SetToAlpha(0)
+	fade:SetDuration(0.4)
+	flash:SetScript("OnFinished", function() landing:SetAlpha(0) end)
+	b.landing, b.landingFlash = landing, flash
 
 	-- Absorption de soins : la part de vie qu'un affaiblissement « mange », au bout de la vie, vers la gauche
 	local healAbsorb = CreateFrame("StatusBar", nil, hp)
@@ -1178,24 +1250,9 @@ function Z.BuildVisuals(b)
 	b.text:SetPoint("BOTTOM", hp, "BOTTOM", 0, 4)
 	b.text:SetWordWrap(false)
 
-	-- Chiffre du bouclier : barre de 0 à 1 invisible ; le cadre qui coupe le texte s'arrête au bout de son
-	-- remplissage (UpdateAbsorbText). Aucun bouclier : remplissage nul, texte coupé en entier.
-	local switch = CreateFrame("StatusBar", nil, top)
-	switch:SetSize(30, 14)
-	switch:SetStatusBarTexture(UI.WHITE)
-	switch:SetStatusBarColor(0, 0, 0, 0)
-	switch:SetMinMaxValues(0, 1)
-	switch:SetValue(0)
-	switch:Hide()
-	local clip = CreateFrame("Frame", nil, switch)
-	clip:SetPoint("TOPLEFT")
-	clip:SetPoint("BOTTOMRIGHT", switch:GetStatusBarTexture(), "BOTTOMRIGHT")
-	clip:SetClipsChildren(true)
-	b.absorbText = UI.Text(clip, 9)
-	b.absorbText:SetAllPoints(switch)
-	b.absorbText:SetJustifyH("RIGHT")
-	b.absorbText:SetWordWrap(false)
-	b.absorbSwitch = switch
+	-- Petits chiffres du bouclier et des soins en route (SetSmallText)
+	b.absorbSwitch, b.absorbText = SmallText(top)
+	b.incomingSwitch, b.incomingText = SmallText(top)
 
 	b.role = top:CreateTexture(nil, "ARTWORK")
 	b.role:SetPoint("TOPRIGHT", -2, -2)
@@ -2378,13 +2435,34 @@ function Z:CreateFrames()
 		castDuration = nil
 		castFillAll()
 	end
+	-- Éclat à l'arrivée de mon soin (healLanding) : mon sort réussit, l'éclat part sur toutes les cases (seule celle
+	-- de ma cible a mon soin en route, donc une largeur). La barre reste figée le temps de l'éclat.
+	local function PlayLanding(b)
+		if b.landing:IsShown() then b.landingFlash:Play() end
+	end
+	local playLandingAll = ForVisible(PlayLanding)
+	local landingCount = 0
+	local refreshLandingAll = ForVisible(UpdatePrediction)
+	local function landingStart()
+		if not (db.showIncoming and db.healLanding) then return end
+		landingCount = landingCount + 1
+		local count = landingCount
+		landingFrozen = true
+		playLandingAll()
+		C_Timer.After(0.45, function() -- (le dernier sort) : les barres reprennent mon soin du moment
+			if count ~= landingCount then return end
+			landingFrozen = false
+			refreshLandingAll()
+		end)
+	end
 	local casts = CreateFrame("Frame") -- mes incantations seulement, pas celles de tout le raid
 	for _, event in ipairs({ "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_STOP",
 		"UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_CHANNEL_STOP",
-		"UNIT_SPELLCAST_CHANNEL_UPDATE", "UNIT_SPELLCAST_DELAYED" }) do
+		"UNIT_SPELLCAST_CHANNEL_UPDATE", "UNIT_SPELLCAST_DELAYED", "UNIT_SPELLCAST_SUCCEEDED" }) do
 		pcall(casts.RegisterUnitEvent, casts, event, "player")
 	end
 	casts:SetScript("OnEvent", function(_, event, unit)
+		if event == "UNIT_SPELLCAST_SUCCEEDED" then return Z:Try(event, landingStart) end
 		if event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then -- canalisation retardée : le trait suit
 			if channelCell then Z:Try(event, ChannelStarted, true) end
 			return

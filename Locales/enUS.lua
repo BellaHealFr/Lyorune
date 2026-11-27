@@ -1410,4 +1410,9 @@ Z.translations.enUS = {
 	["Votre soin en route change de teinte s'il va être perdu."] = "Your incoming heal changes tint if it is going to be wasted.",
 	["Mon soin se remplit pendant l'incantation"] = "My heal fills up while casting",
 	["Pendant que vous incantez, un voile clair remplit votre soin en route de gauche à droite : plein, le soin arrive. Il s'arrête si l'incantation est interrompue."] = "While you cast, a light veil fills your incoming heal from left to right: once full, the heal lands. It stops if the cast is interrupted.",
+	["Chiffre des soins en route"] = "Incoming heal amount",
+	["Le montant des soins en route, en petit à leur couleur : « +2,1k ». Les miens seulement si « Soins en route de qui » est sur « Les miens », sinon tous. Écrit par le jeu, il marche en combat et s'efface quand plus rien n'arrive. Il suit le texte de vie dans l'éditeur de placement."] = "The amount of incoming heals, small and in their colour: \"+2.1k\". Only yours if \"Whose incoming heals\" is set to \"Mine\", otherwise all of them. Written by the game, it works in combat and disappears when nothing more is on its way. It follows the health text in the layout editor.",
+	["Le montant des soins en route, même en combat."] = "The amount of incoming heals, even in combat.",
+	["Éclat quand mon soin arrive"] = "Flash when my heal lands",
+	["Quand votre incantation réussit, votre soin en route s'éclaire un court instant sur le joueur soigné : vous voyez où le soin est tombé. Pas en « Tous ensemble »."] = "When your cast succeeds, your incoming heal lights up for a moment on the healed player: you see where the heal landed. Not in \"All together\".",
 }

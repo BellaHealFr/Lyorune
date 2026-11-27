@@ -11607,6 +11607,63 @@ step("36 b, lot 4 : mon soin et celui des autres, alerte de gaspillage, voile de
   assert(ok, err)
 end)
 
+step("36 b, lot 5 : chiffre des soins en route, eclat a l'arrivee de mon soin", function()
+  local b = CreateFrame("Button", "LyoruneHeaderUnitButton362", Z.header)
+  Z.header:InitButton(b:GetName())
+  local old = { split = Z.db.incomingSplit, text = Z.db.incomingText, landing = Z.db.healLanding, shape = Z.db.shape,
+    absorb = Z.db.absorbText, incoming = Z.db.showIncoming, after = C_Timer.After }
+  local ok, err = pcall(function()
+    assert(Z.defaults.incomingText == false and Z.defaults.healLanding == true, "valeurs de depart")
+    b:SetAttribute("unit", "party1")
+    -- chiffre : eteint au depart, puis le total (separes, tous ensemble) ou le mien (les miens)
+    Z.db.incomingSplit = "SPLIT" Z:Refresh()
+    assert(not b.incomingSwitch:IsShown(), "chiffre affiche alors qu'il est eteint")
+    Z.db.incomingText = true Z:Refresh()
+    Z.cellUpdates.prediction(b)
+    assert(b.incomingSwitch:IsShown() and b.incomingText:GetText() == "+10" and b.incomingSwitch:GetValue() == 10, "chiffre : tous")
+    Z.db.incomingSplit = "MINE" Z:Refresh()
+    Z.cellUpdates.prediction(b)
+    assert(b.incomingText:GetText() == "+5", "chiffre : les miens")
+    -- Barre : a gauche du chiffre du bouclier, le texte de vie recule des deux
+    Z.db.shape, Z.db.absorbText = "BAR", true Z:Refresh()
+    assert(b.incomingSwitch._point[4] < b.absorbSwitch._point[4], "chiffre des soins pas a gauche du bouclier")
+    Z.db.showIncoming = false Z:Refresh()
+    assert(not b.incomingSwitch:IsShown() and not b.landing:IsShown(), "chiffre ou eclat sans soins en route")
+    Z.db.showIncoming = true Z:Refresh()
+    -- eclat : mon soin garde par la barre de l'eclat, figee pendant l'eclat
+    local later = {}
+    C_Timer.After = function(_, f) later[#later + 1] = f end
+    Z.cellUpdates.prediction(b)
+    assert(b.landing:IsShown() and b.landing._value == 5, "eclat : mon soin")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    assert(b.landingFlash:IsPlaying(), "eclat non joue")
+    b.landing._value = 7
+    Z.cellUpdates.prediction(b)
+    assert(b.landing._value == 7, "barre de l'eclat non figee")
+    for _, f in ipairs(later) do f() end
+    assert(b.landing._value == 5, "barre de l'eclat non relue a la fin de l'eclat")
+    -- tous ensemble : pas d'eclat (le bout du segment porte aussi les soins des autres)
+    Z.db.incomingSplit = "ALL" Z:Refresh()
+    assert(not b.landing:IsShown(), "eclat en tous ensemble")
+    Z.db.incomingSplit = "MINE" Z:Refresh()
+    -- coupe : ni eclat ni barre
+    Z.db.healLanding = false Z:Refresh()
+    b.landingFlash:Stop()
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    assert(not b.landing:IsShown() and not b.landingFlash:IsPlaying(), "eclat malgre le reglage coupe")
+    local labels = table.concat(Z:OptionLabels(), "|")
+    for _, label in ipairs({ "Chiffre des soins en route", "Éclat quand mon soin arrive" }) do
+      assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+    end
+  end)
+  C_Timer.After = old.after
+  Z.db.incomingSplit, Z.db.incomingText, Z.db.healLanding, Z.db.shape, Z.db.absorbText = old.split, old.text, old.landing, old.shape, old.absorb
+  Z.db.showIncoming = old.incoming
+  b:SetAttribute("unit", nil)
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("36 a, fouille : nouveau joueur dans une case, barres posees d'un coup ; rayures du bouclier posees", function()
   local b = CreateFrame("Button", "LyoruneHeaderUnitButton362", Z.header)
   Z.header:InitButton(b:GetName())

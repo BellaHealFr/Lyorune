@@ -75,6 +75,12 @@ local function Fill(cell, index, sample)
 		cell.incomingOthers:SetMinMaxValues(0, 100)
 		cell.incomingOthers:SetValue(db.incomingSplit == "SPLIT" and others or 0)
 	end
+	-- Chiffre des soins en route (incomingText) : ce que montrent les segments
+	if cell.incomingSwitch then
+		local amount = healed and (db.incomingSplit == "MINE" and 9 or 9 + others) or 0
+		cell.incomingSwitch:SetValue(amount > 0 and 1 or 0)
+		cell.incomingText:SetText(amount > 0 and ("+" .. AbbreviateNumbers(amount * 40)) or "")
+	end
 	cell.absorb:SetMinMaxValues(0, 100)
 	local shield = (not dead and (sample or index % 5 == 2)) and (sample and 18 or 30) or 0
 	cell.absorb:SetValue(shield)
