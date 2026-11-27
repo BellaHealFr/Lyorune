@@ -63,6 +63,11 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Ce que vous voyez | Ce que cela veut dire |
 |---|---|
 | Vert clair au bout de la barre | Des soins sont déjà en route ; sur une barre verte (chasseur, moine, ou vie presque pleine en « Vie restante »), cette part est plus pâle pour rester visible |
+| Votre soin, puis une part plus pâle | « Soins en route de qui » (chapitre Vie et portée) : Séparés, votre soin au bout de la vie puis celui des autres soigneurs ; Les miens, seulement les vôtres ; Tous ensemble, une seule couleur. Marche en combat |
+| Un voile clair qui remplit votre soin | Vous incantez : plein, le soin arrive ; il s'efface si l'incantation est interrompue (« Mon soin se remplit pendant l'incantation », réglages fins ; pas en « Tous ensemble ») |
+| Votre soin en ambre, ou en cuivre | Alerte de gaspillage : les soins en route dépassent la vie qui manque (ambre), ou la dépassent de plus d'un quart de la vie (cuivre). Calculé par le jeu, même en combat |
+| Petit chiffre « +2,1k » à la couleur des soins | Le montant des soins en route (les vôtres seulement en « Les miens »), même en combat ; vide quand rien n'arrive (« Chiffre des soins en route », éteint au départ) |
+| Bref éclat blanc sur votre soin | Votre incantation vient de réussir : il montre le joueur soigné (« Éclat quand mon soin arrive », réglages fins ; pas en « Tous ensemble ») |
 | Bande claire en bas de la barre | Il a un bouclier (au choix, chapitre Vie et portée, « Place du bouclier » : à la suite de la vie, rayé comme les cadres du jeu, avec un trait lumineux au bout quand le bouclier dépasse la vie manquante) |
 | Petit chiffre « +1,2k » à la couleur du bouclier | Ce qui reste à absorber, tous boucliers comptés, même en combat ; il s'efface quand le dernier bouclier est cassé ou fini (« Chiffre du bouclier », chapitre Vie et portée, éteint au départ) |
 | Une boisson en bas à gauche | Ce soigneur est à court de mana (seuil au choix dans le chapitre Vie et portée, « Mana basse des soigneurs ») : marche en combat, même quand le jeu cache la mana |
@@ -316,7 +321,7 @@ Les fenêtres des macros, du placement des éléments, du rapport de bug, du jou
 
 Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Rien n'est obligatoire. Vous pouvez par exemple n'afficher que les affaiblissements que vous pouvez dissiper.
 
-- **Vie et portée** : soins en route, bouclier et son chiffre (éteint au départ), liseré de vie basse, en combat seulement et jamais sur les familiers (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
+- **Vie et portée** : soins en route (de qui, alerte de gaspillage, leur chiffre éteint au départ ; voile pendant l'incantation et éclat à l'arrivée dans les réglages fins), bouclier et son chiffre (éteint au départ), liseré de vie basse, en combat seulement et jamais sur les familiers (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale, vos recharges et celles du groupe, vos totems, le trait de canalisation.
 - **Affaiblissements** : dissipation et image du type, icônes et leurs secondes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
 - **Joueurs** : nom du joueur, icône de rôle, icône des DPS (épée, éteinte au départ), rôle du druide d'après ses talents (réglage fin, allumé au départ), icône de classe (éteinte au départ), marqueur de raid, chef de groupe, gros défensifs, icône au centre de la case (appel, résurrection, hors de vue, invocation, très loin), invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.

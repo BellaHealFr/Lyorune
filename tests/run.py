@@ -11557,7 +11557,7 @@ step("36 b, lot 4 : mon soin et celui des autres, alerte de gaspillage, voile de
   local b = CreateFrame("Button", "LyoruneHeaderUnitButton361", Z.header)
   Z.header:InitButton(b:GetName())
   local old = { split = Z.db.incomingSplit, warn = Z.db.overhealWarn, fill = Z.db.castFill, style = Z.db.absorbStyle,
-    dur = UnitCastingDuration, dir = Enum.StatusBarTimerDirection }
+    dur = UnitCastingDuration, dir = Enum.StatusBarTimerDirection, info = UnitCastingInfo }
   local ok, err = pcall(function()
     b:SetAttribute("unit", "party1")
     -- separes : le mien (5), puis ceux des autres (5), le bouclier a la suite des autres
@@ -11584,8 +11584,15 @@ step("36 b, lot 4 : mon soin et celui des autres, alerte de gaspillage, voile de
     rawset(_G, "UnitCastingDuration", function() return "duree" end)
     b.castFill.SetTimerDuration = function(self, d) self._timer = d end
     Z.db.castFill = true Z:Refresh()
+    assert(not b.castFill:IsShown(), "voile en tous ensemble")
+    Z.db.incomingSplit = "SPLIT" Z:Refresh()
     FireEvent("UNIT_SPELLCAST_START", "player")
     assert(b.castFill._timer == "duree" and b.castFill:GetAlpha() == 1, "voile non lance")
+    -- un clic de plus, refuse pendant l'incantation : FAILED, mais l'incantation continue, le voile reste
+    rawset(_G, "UnitCastingInfo", function() return "Soin" end)
+    FireEvent("UNIT_SPELLCAST_FAILED", "player")
+    rawset(_G, "UnitCastingInfo", old.info)
+    assert(b.castFill:GetAlpha() == 1, "voile efface par un sort refuse pendant l'incantation")
     FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
     assert(b.castFill:GetAlpha() == 0, "voile reste apres l'interruption")
     Z.db.castFill = false Z:Refresh()
@@ -11635,8 +11642,13 @@ step("36 b, lot 5 : chiffre des soins en route, eclat a l'arrivee de mon soin", 
     C_Timer.After = function(_, f) later[#later + 1] = f end
     Z.cellUpdates.prediction(b)
     assert(b.landing:IsShown() and b.landing._value == 5, "eclat : mon soin")
-    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    -- un sort lance pendant l'incantation (bijou) : pas d'eclat ; l'incantation elle-meme : eclat
+    FireEvent("UNIT_SPELLCAST_START", "player", "incantation-1")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "bijou-2")
+    assert(not b.landingFlash:IsPlaying(), "eclat sur un autre sort que mon incantation")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "incantation-1")
     assert(b.landingFlash:IsPlaying(), "eclat non joue")
+    FireEvent("UNIT_SPELLCAST_STOP", "player")
     b.landing._value = 7
     Z.cellUpdates.prediction(b)
     assert(b.landing._value == 7, "barre de l'eclat non figee")

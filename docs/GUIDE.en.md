@@ -63,8 +63,13 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 
 | What you see | What it means |
 |---|---|
-| Light green at the end of the bar | Heals are already on their way |
-| Light strip at the bottom of the bar | They have a shield (your choice, Health and range chapter, "Shield position": following the health, like the game's frames, with a bright line at the end when the shield exceeds the missing health) |
+| Light green at the end of the bar | Heals are already on their way; on a green bar (hunter, monk, or almost full health with "Remaining health"), this part is paler to stay visible |
+| Your heal, then a paler part | "Whose incoming heals" (Health and range chapter): Separate, your heal at the end of the health then other healers' heals; Mine, only yours; All together, a single colour. Works in combat |
+| A light veil filling your heal | You are casting: once full, the heal lands; it disappears if the cast is interrupted ("My heal fills up while casting", fine settings; not with "All together") |
+| Your heal in amber, or copper | Overheal warning: incoming heals exceed the missing health (amber), or exceed it by more than a quarter of the health (copper). Worked out by the game, even in combat |
+| Small "+2.1k" number in the heal colour | The amount of incoming heals (only yours with "Mine"), even in combat; empty when nothing is coming ("Incoming heal amount", off at first) |
+| Short white flash on your heal | Your cast just succeeded: it shows the healed player ("Flash when my heal lands", fine settings; not with "All together") |
+| Light strip at the bottom of the bar | They have a shield (your choice, Health and range chapter, "Shield position": following the health, striped like the game's frames, with a bright line at the end when the shield exceeds the missing health) |
 | Small "+1.2k" number in the shield color | What is left to absorb, every shield counted, even in combat; it disappears when the last shield breaks or ends ("Shield amount", Health and range chapter, off at first) |
 | A drink at the bottom left | This healer is low on mana (threshold of your choice in the Health and range chapter, "Healers' low mana"): works in combat, even when the game hides mana |
 | A second drink just to the right, draining | This healer is drinking ("Healer drinking", same part): wait until they are done before moving on |
@@ -317,7 +322,7 @@ The macros, element placement, bug report, error log, news and performance windo
 
 Every element of the cell has its switch, filed according to what it shows. Nothing is mandatory. You can, for example, only show the debuffs you can dispel.
 
-- **Health and range**: incoming heals, shield and its amount (off at first), low health edge, in combat only and never on pets (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
+- **Health and range**: incoming heals (whose, overheal warning, their amount off at first; veil while casting and flash when it lands in the fine settings), shield and its amount (off at first), low health edge, in combat only and never on pets (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
 - **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown, your cooldowns and the group's, your totems, the channel line.
 - **Debuffs**: dispelling and type picture, icons and their seconds, important debuffs, crowd-controlled player, boss private auras.
 - **Players**: player name, role icon, DPS icon (sword, off at first), druid role from talents (fine setting, on at first), class icon (off at first), raid marker, group leader, big defensives, icon in the middle of the cell (ready check, resurrection, out of sight, summon, very far away), summon and phase, threat, missing buffs, my players (healer assignments), tooltip.

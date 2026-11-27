@@ -125,6 +125,14 @@ local steps = {
 			if db.showIncoming then
 				text = text .. "\n\n" .. L["La |cff%steinte claire|r au bout de la vie montre les soins déjà en route."]:format(Hex(theme.incoming))
 					.. " " .. L["Sur une barre verte, elle pâlit pour rester visible."]
+				-- Soins vivants (36 b) : seulement ce qui est allumé, en peu de mots
+				local live = {}
+				if db.incomingSplit == "SPLIT" then live[#live + 1] = L["Votre soin vient d'abord, celui des autres soigneurs ensuite, plus pâle."] end
+				if db.castFill and db.incomingSplit ~= "ALL" then live[#live + 1] = L["Pendant votre incantation, un voile le remplit : plein, le soin arrive."] end
+				if db.overhealWarn then live[#live + 1] = L["Ambre puis cuivre : trop de soins arrivent, une partie sera perdue."] end
+				if db.incomingText then live[#live + 1] = L["Son chiffre « +2,1k » dit combien arrive."] end
+				if db.healLanding and db.incomingSplit ~= "ALL" then live[#live + 1] = L["Un bref éclat montre où votre soin vient de tomber."] end
+				if #live > 0 then text = text .. " " .. table.concat(live, " ") end
 			end
 			if db.showAbsorb then
 				local shield = db.absorbStyle == "FOLLOW" and "La |cff%spart rayée|r qui prolonge la vie est un bouclier."

@@ -46,9 +46,7 @@ local function Fill(cell, index, sample)
 		end
 		cell.hp:SetStatusBarColor(br, bg, bb)
 		if db.showIncoming then -- teinte de contraste sur une barre verte ; ceux des autres plus pâles
-			local c = Z.IncomingColor(br, bg, bb)
-			cell.incoming:SetStatusBarColor(c[1], c[2], c[3], c[4])
-			if cell.incomingOthers then cell.incomingOthers:SetStatusBarColor(c[1], c[2], c[3], (c[4] or 1) * Z.OTHERS_ALPHA) end
+			Z.SetIncomingColor(cell, Z.IncomingColor(br, bg, bb))
 		end
 		cell.text:SetTextColor(1, 1, 1)
 		if db.text == "DEFICIT" then

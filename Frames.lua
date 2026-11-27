@@ -52,6 +52,11 @@ local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, overheal = 2, ove
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.85 }, { 0.86, 0.45, 0.20, 0.90 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
 Z.OTHERS_ALPHA = OTHERS_ALPHA -- (le mode test aussi)
+-- Teinte des soins en route d'une case : le mien, puis ceux des autres plus pâles (cases et mode test)
+function Z.SetIncomingColor(cell, c)
+	cell.incoming:SetStatusBarColor(c[1], c[2], c[3], c[4])
+	if cell.incomingOthers then cell.incomingOthers:SetStatusBarColor(c[1], c[2], c[3], (c[4] or 1) * OTHERS_ALPHA) end
+end
 local SHIELD_ATLAS = "RaidFrame-Shield-Overlay" -- rayures du bouclier des cadres du jeu
 local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- les mêmes, en image (client sans l'atlas)
 local function SetLayer(bar, sub) bar:GetStatusBarTexture():SetDrawLayer("ARTWORK", sub) end
@@ -219,7 +224,7 @@ local function UpdatePrediction(b)
 	local max = UnitHealthMax(unit)
 	if healCalculator.ResetPredictedValues then healCalculator:ResetPredictedValues() end -- rien de la case précédente
 	UnitGetDetailedHealPrediction(unit, "player", healCalculator)
-	UpdateIncoming(b, max)
+	if db.showIncoming then UpdateIncoming(b, max) end
 	b.absorb:SetMinMaxValues(0, max)
 	local absorbs, clamped = healCalculator:GetDamageAbsorbs()
 	b.absorb:SetValue(absorbs, smoothing)
@@ -269,9 +274,7 @@ local function UpdateState(b)
 		if db.color == "CLASS" then
 			b.hp:SetStatusBarColor(r, g, bl)
 			if db.showIncoming then
-				local c = Z.IncomingColor(r, g, bl)
-				b.incoming:SetStatusBarColor(c[1], c[2], c[3], c[4])
-				if b.incomingOthers:IsShown() then b.incomingOthers:SetStatusBarColor(c[1], c[2], c[3], (c[4] or 1) * OTHERS_ALPHA) end
+				Z.SetIncomingColor(b, Z.IncomingColor(r, g, bl))
 			end
 			b.name:SetTextColor(1, 1, 1)
 		else
@@ -940,9 +943,9 @@ local function Style(b)
 	b.overhealMore:SetShown(warn and overCalculator ~= nil)
 	b.overheal:SetAlpha(0)
 	b.overhealMore:SetAlpha(0)
-	b.castFill:SetShown(db.showIncoming and db.castFill)
+	-- (voile et éclat pas en « Tous ensemble » : le segment y porte aussi les soins des autres, sur toutes les cases)
+	b.castFill:SetShown(db.showIncoming and db.castFill and db.incomingSplit ~= "ALL")
 	b.castFill:SetAlpha(0) -- (une case cachée pendant mon incantation ne garde pas le voile)
-	-- (pas en « Tous ensemble » : le bout du segment y porte aussi les soins des autres, l'éclat tomberait à côté)
 	b.landing:SetShown(db.showIncoming and db.healLanding and db.incomingSplit ~= "ALL")
 	b.landing:SetWidth(width - 2 * inset)
 	b.landingFlash:Stop()
@@ -2442,9 +2445,21 @@ function Z:CreateFrames()
 	end
 	local playLandingAll = ForVisible(PlayLanding)
 	local landingCount = 0
-	local refreshLandingAll = ForVisible(UpdatePrediction)
-	local function landingStart()
-		if not (db.showIncoming and db.healLanding) then return end
+	local function UpdateLanding(b)
+		if not b.landing:IsShown() then return end
+		if healCalculator.ResetPredictedValues then healCalculator:ResetPredictedValues() end
+		UnitGetDetailedHealPrediction(b.unit, "player", healCalculator)
+		b.landing:SetMinMaxValues(0, UnitHealthMax(b.unit))
+		b.landing:SetValue(select(2, healCalculator:GetIncomingHeals()))
+	end
+	local refreshLandingAll = ForVisible(UpdateLanding)
+	-- Seulement l'incantation qui réussit (même numéro qu'à son début) : pas un bijou ni un sort instantané lancé
+	-- pendant elle. Un numéro secret ne se compare pas : l'éclat part alors comme avant.
+	local castGUID
+	local function landingStart(guid)
+		if not (db.showIncoming and db.healLanding) or castGUID == nil then return end
+		if not (issecret(guid) or issecret(castGUID)) and guid ~= castGUID then return end
+		castGUID = nil
 		landingCount = landingCount + 1
 		local count = landingCount
 		landingFrozen = true
@@ -2461,14 +2476,24 @@ function Z:CreateFrames()
 		"UNIT_SPELLCAST_CHANNEL_UPDATE", "UNIT_SPELLCAST_DELAYED", "UNIT_SPELLCAST_SUCCEEDED" }) do
 		pcall(casts.RegisterUnitEvent, casts, event, "player")
 	end
-	casts:SetScript("OnEvent", function(_, event, unit)
-		if event == "UNIT_SPELLCAST_SUCCEEDED" then return Z:Try(event, landingStart) end
+	-- Un sort refusé pendant une incantation (clic répété) envoie aussi FAILED : l'incantation continue
+	local function StillCasting()
+		local name = UnitCastingInfo and UnitCastingInfo("player")
+		return issecret(name) or name ~= nil
+	end
+	casts:SetScript("OnEvent", function(_, event, unit, guid)
+		if event == "UNIT_SPELLCAST_SUCCEEDED" then return Z:Try(event, landingStart, guid) end
+		if event == "UNIT_SPELLCAST_START" then castGUID = guid end
 		if event == "UNIT_SPELLCAST_CHANNEL_UPDATE" then -- canalisation retardée : le trait suit
 			if channelCell then Z:Try(event, ChannelStarted, true) end
 			return
 		end
 		if event == "UNIT_SPELLCAST_DELAYED" then return Z:Try(event, castFillStart) end -- incantation repoussée
-		if event == "UNIT_SPELLCAST_START" then Z:Try(event, castFillStart) else Z:Try(event, castFillStop) end
+		if event == "UNIT_SPELLCAST_START" then
+			Z:Try(event, castFillStart)
+		elseif not (event == "UNIT_SPELLCAST_FAILED" and StillCasting()) then
+			Z:Try(event, castFillStop)
+		end
 		if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
 			Z:Try(event, CastStarted, unit)
 			if event == "UNIT_SPELLCAST_CHANNEL_START" then Z:Try(event, ChannelStarted) end
