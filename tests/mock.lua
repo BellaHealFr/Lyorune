@@ -76,7 +76,7 @@ function Obj:SetText(t) self._text = t end
 function Obj:SetFormattedText(f, ...) self._text = string.format(f, ...) end
 function Obj:GetText() return self._text or "" end
 function Obj:GetPoint() return "CENTER", nil, "CENTER", 0, 0 end
-function Obj:GetIncomingHeals() return 10, 5, 5, false end
+function Obj:GetIncomingHeals() if SECRET then return MakeSecret(10), MakeSecret(5), MakeSecret(5), MakeSecret(false) end return 10, 5, 5, false end
 function Obj:GetDamageAbsorbs() return 3, false end
 function Obj:GetTotalDamageAbsorbs() if ABSORB_TOTAL == nil then return 4 end return ABSORB_TOTAL end
 function Obj:GetRGB() return 1, 1, 1 end
@@ -96,7 +96,11 @@ function Obj:SetCountdownFont(name) self._countdownFont = name end
 function Obj:SetTexture(t) self._tex = t end
 function Obj:SetAlpha(a) self._alpha = a end
 function Obj:SetMinMaxValues(lo, hi) self._min, self._max = lo, hi end
-function Obj:SetValue(v, smoothing) self._value, self._smoothing = v, smoothing end
+function Obj:SetValue(v, smoothing)
+	-- comme le jeu : la 2e valeur (l'animation) ne peut jamais être secrète
+	if issecretvalue and issecretvalue(smoothing) then error("SetValue : valeur secrete en 2e argument", 2) end
+	self._value, self._smoothing = v, smoothing
+end
 function Obj:SetDrawLayer(layer, sub) self._layer, self._sublevel = layer, sub end
 function Obj:SetToTargetValue() self._snapped = true end
 function Obj:GetValue() return self._value end

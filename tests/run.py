@@ -11654,6 +11654,15 @@ step("36 b, lot 5 : chiffre des soins en route, eclat a l'arrivee de mon soin", 
     assert(b.landing._value == 7, "barre de l'eclat non figee")
     for _, f in ipairs(later) do f() end
     assert(b.landing._value == 5, "barre de l'eclat non relue a la fin de l'eclat")
+    -- en combat : la relecture ne passe qu'une valeur (le jeu refuse une valeur secrete en 2e argument)
+    later = {}
+    FireEvent("UNIT_SPELLCAST_START", "player", "incantation-3")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "incantation-3")
+    FireEvent("UNIT_SPELLCAST_STOP", "player")
+    SECRET = true
+    local done, why = pcall(function() for _, f in ipairs(later) do f() end end)
+    SECRET = false
+    assert(done, "relecture de l'eclat en combat : " .. tostring(why))
     -- tous ensemble : pas d'eclat (le bout du segment porte aussi les soins des autres)
     Z.db.incomingSplit = "ALL" Z:Refresh()
     assert(not b.landing:IsShown(), "eclat en tous ensemble")

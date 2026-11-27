@@ -49,7 +49,7 @@ local smoothing      -- SMOOTH ou nil selon l'option
 local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, overheal = 2, overhealMore = 3, absorb = 4, stripes = 5,
 	healAbsorb = 6, castFill = 7, landing = 7 }
 -- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
-local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.85 }, { 0.86, 0.45, 0.20, 0.90 }
+local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.70 }, { 0.86, 0.45, 0.20, 0.75 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
 Z.OTHERS_ALPHA = OTHERS_ALPHA -- (le mode test aussi)
 -- Teinte des soins en route d'une case : le mien, puis ceux des autres plus pâles (cases et mode test)
@@ -59,7 +59,18 @@ function Z.SetIncomingColor(cell, c)
 end
 local SHIELD_ATLAS = "RaidFrame-Shield-Overlay" -- rayures du bouclier des cadres du jeu
 local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- les mêmes, en image (client sans l'atlas)
-local function SetLayer(bar, sub) bar:GetStatusBarTexture():SetDrawLayer("ARTWORK", sub) end
+-- Remplissage au demi-pixel près : sans le calage sur les pixels de l'écran, une barre étroite (mon soin en route,
+-- son voile) avance d'un mouvement continu au lieu de petits sauts d'un pixel
+local function Unsnap(tex)
+	if tex.SetSnapToPixelGrid then tex:SetSnapToPixelGrid(false) end
+	if tex.SetTexelSnappingBias then tex:SetTexelSnappingBias(0) end
+end
+Z.Unsnap = Unsnap
+local function SetLayer(bar, sub)
+	local tex = bar:GetStatusBarTexture()
+	tex:SetDrawLayer("ARTWORK", sub)
+	Unsnap(tex)
+end
 
 -- Soins en route sur une barre verte : la teinte de contraste du thème, sinon le vert du soin se fond dans
 -- celui de la vie. Couleur lisible (classe, camp, mode test) : jamais une valeur secrète.
@@ -1125,13 +1136,15 @@ function Z.BuildVisuals(b)
 	b.overhealMore = incoming:CreateTexture(nil, "ARTWORK", nil, LAYER.overhealMore)
 	b.overhealMore:SetColorTexture(unpack(OVERHEAL_MORE_COLOR))
 	b.overhealMore:SetAllPoints(incoming:GetStatusBarTexture())
+	Unsnap(b.overheal)
+	Unsnap(b.overhealMore)
 	-- Voile de mon incantation : se remplit sur mon soin, au rythme du jeu (aucune boucle, SetTimerDuration).
 	-- Lancé sur toutes les cases : là où je ne soigne pas, mon soin a une largeur nulle et le voile ne se voit pas.
 	local fill = CreateFrame("StatusBar", nil, hp)
 	fill:SetAllPoints(incoming:GetStatusBarTexture())
 	fill:SetStatusBarTexture(UI.WHITE)
-	fill:GetStatusBarTexture():SetDrawLayer("ARTWORK", LAYER.castFill)
-	fill:SetStatusBarColor(1, 1, 1, 0.45)
+	SetLayer(fill, LAYER.castFill)
+	fill:SetStatusBarColor(1, 1, 1, 0.30)
 	fill:SetAlpha(0) -- visible seulement pendant mon incantation
 	b.castFill = fill
 	-- Éclat à l'arrivée de mon soin (healLanding) : mon soin, compté depuis le bout de mon segment vers la gauche.
@@ -1142,16 +1155,23 @@ function Z.BuildVisuals(b)
 	landing:SetPoint("BOTTOMRIGHT", incoming:GetStatusBarTexture(), "BOTTOMRIGHT")
 	landing:SetReverseFill(true)
 	landing:SetStatusBarTexture(UI.WHITE)
-	landing:GetStatusBarTexture():SetDrawLayer("ARTWORK", LAYER.landing)
-	landing:SetStatusBarColor(1, 1, 1, 0.75)
+	SetLayer(landing, LAYER.landing)
+	landing:SetStatusBarColor(1, 1, 1, 0.95)
 	landing:SetMinMaxValues(0, 1)
 	landing:SetValue(0)
 	landing:SetAlpha(0)
+	-- (allumé un court instant, puis effacé doucement : un éclat trop bref passait inaperçu en jeu)
 	local flash = landing:CreateAnimationGroup()
+	local hold = flash:CreateAnimation("Alpha")
+	hold:SetFromAlpha(1)
+	hold:SetToAlpha(1)
+	hold:SetDuration(0.25)
+	hold:SetOrder(1)
 	local fade = flash:CreateAnimation("Alpha")
 	fade:SetFromAlpha(1)
 	fade:SetToAlpha(0)
-	fade:SetDuration(0.4)
+	fade:SetDuration(0.6)
+	fade:SetOrder(2)
 	flash:SetScript("OnFinished", function() landing:SetAlpha(0) end)
 	b.landing, b.landingFlash = landing, flash
 
@@ -1182,6 +1202,7 @@ function Z.BuildVisuals(b)
 		if stripes.SetVertTile then stripes:SetVertTile(true) end
 	end
 	stripes:SetAllPoints(absorb:GetStatusBarTexture())
+	Unsnap(stripes)
 	stripes:Hide()
 	b.stripes = stripes
 	-- Bouclier plus grand que la vie manquante : trait lumineux au bout de la vie (style « à la suite de la vie »)
@@ -2441,7 +2462,7 @@ function Z:CreateFrames()
 	-- Éclat à l'arrivée de mon soin (healLanding) : mon sort réussit, l'éclat part sur toutes les cases (seule celle
 	-- de ma cible a mon soin en route, donc une largeur). La barre reste figée le temps de l'éclat.
 	local function PlayLanding(b)
-		if b.landing:IsShown() then b.landingFlash:Play() end
+		if b.landing:IsShown() then b.landingFlash:Stop() b.landingFlash:Play() end -- (un 2e soin relance l'éclat)
 	end
 	local playLandingAll = ForVisible(PlayLanding)
 	local landingCount = 0
@@ -2450,7 +2471,7 @@ function Z:CreateFrames()
 		if healCalculator.ResetPredictedValues then healCalculator:ResetPredictedValues() end
 		UnitGetDetailedHealPrediction(b.unit, "player", healCalculator)
 		b.landing:SetMinMaxValues(0, UnitHealthMax(b.unit))
-		b.landing:SetValue(select(2, healCalculator:GetIncomingHeals()))
+		b.landing:SetValue((select(2, healCalculator:GetIncomingHeals()))) -- (une seule valeur : le jeu refuse une valeur secrète en 2e argument)
 	end
 	local refreshLandingAll = ForVisible(UpdateLanding)
 	-- Seulement l'incantation qui réussit (même numéro qu'à son début) : pas un bijou ni un sort instantané lancé
@@ -2464,7 +2485,7 @@ function Z:CreateFrames()
 		local count = landingCount
 		landingFrozen = true
 		playLandingAll()
-		C_Timer.After(0.45, function() -- (le dernier sort) : les barres reprennent mon soin du moment
+		C_Timer.After(0.9, function() -- (le dernier sort) : les barres reprennent mon soin du moment
 			if count ~= landingCount then return end
 			landingFrozen = false
 			refreshLandingAll()

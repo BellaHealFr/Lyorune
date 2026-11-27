@@ -35,6 +35,7 @@ end
 local function BuildBar()
 	bar = CreateFrame("StatusBar", "LyoruneCastBar", UIParent)
 	bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+	Z.Unsnap(bar:GetStatusBarTexture()) -- avance d'un mouvement continu (Frames.lua)
 	bar:SetFrameStrata("MEDIUM")
 	bar.bg = UI.Tex(bar, "BACKGROUND", 0, 0, 0, 0.55)
 	bar.bg:SetPoint("TOPLEFT", -1, 1)
