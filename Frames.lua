@@ -44,7 +44,14 @@ local smoothing      -- SMOOTH ou nil selon l'option
 -- Ordre de dessin des segments dans la barre de vie. Elle rogne ses enfants : le jeu y ignore alors l'ordre des
 -- cadres, seules comptent les couches (sous-niveaux d'ARTWORK). Des places restent libres pour les segments à
 -- venir (mon soin séparé de celui des autres, soins sur la durée). Le relief du thème (b.shade) passe sur tout.
-local LAYER = { health = 0, incoming = 1, others = 2, hot = 3, absorb = 4, stripes = 5, healAbsorb = 6 }
+-- Les segments qui se suivent (mon soin, celui des autres, soins sur la durée) ne se recouvrent jamais : même couche.
+-- Au-dessus de mon soin : la teinte du gaspillage (ambre puis cuivre), et tout en haut le voile de l'incantation.
+local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, overheal = 2, overhealMore = 3, absorb = 4, stripes = 5,
+	healAbsorb = 6, castFill = 7 }
+-- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
+local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.85 }, { 0.86, 0.45, 0.20, 0.90 }
+local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
+Z.OTHERS_ALPHA = OTHERS_ALPHA -- (le mode test aussi)
 local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- rayures du bouclier des cadres du jeu
 local function SetLayer(bar, sub) bar:GetStatusBarTexture():SetDrawLayer("ARTWORK", sub) end
 
@@ -71,7 +78,8 @@ local function ColorCurve(step, points)
 end
 
 local healthCurve, hideWhenFullCurve, lowHealthCurve, lowManaCurve, healCalculator
-local incomingCurve -- couleur des soins en route selon la vie, en mode « Vie restante » (BuildCurves)
+local overCalculator -- alerte de gaspillage, second niveau : les soins en route dépassent la vie de plus de 25 %
+local incomingCurve, othersCurve -- couleur des soins en route (le mien, ceux des autres) en « Vie restante » (BuildCurves)
 local healthyCurve, healthyDeficitCurve -- joueur en bonne santé estompé (réglage healthyFade, BuildCurves)
 
 -- Joueur en bonne santé estompé (réglage healthyFade, éteint au départ) : au-dessus du seuil, la vie, la mana, le
@@ -161,14 +169,36 @@ local function UpdateAbsorbText(b, absorbs)
 	b.absorbText:SetFormattedText("+%s", AbbreviateNumbers(total))
 end
 
--- Soins en route, bouclier, et absorption de soins : trois montants calculés par le jeu, lisibles en combat
+-- Soins en route, bouclier, et absorption de soins : montants calculés par le jeu, lisibles en combat.
+-- Les soins en route : tous, le mien, ceux des autres, et « ça dépasse la vie qui manque » (booléen secret).
+local function UpdateIncoming(b, max)
+	local all, mine, others, over = healCalculator:GetIncomingHeals()
+	b.incoming:SetMinMaxValues(0, max)
+	-- (un « a and b or c » testerait la valeur, secrète en combat : deux appels distincts)
+	if db.incomingSplit == "ALL" then b.incoming:SetValue(all, smoothing) else b.incoming:SetValue(mine, smoothing) end
+	if b.incomingOthers:IsShown() then
+		b.incomingOthers:SetMinMaxValues(0, max)
+		b.incomingOthers:SetValue(others, smoothing)
+	end
+	-- Gaspillage : aucun test sur la valeur, le booléen du jeu est branché sur l'opacité de la teinte
+	if b.overheal:IsShown() then
+		if over ~= nil then b.overheal:SetAlphaFromBoolean(over, 1, 0) else b.overheal:SetAlpha(0) end
+		if b.overhealMore:IsShown() then
+			if overCalculator.ResetPredictedValues then overCalculator:ResetPredictedValues() end
+			UnitGetDetailedHealPrediction(b.unit, "player", overCalculator)
+			local overMore = select(4, overCalculator:GetIncomingHeals())
+			if overMore ~= nil then b.overhealMore:SetAlphaFromBoolean(overMore, 1, 0) else b.overhealMore:SetAlpha(0) end
+		end
+	end
+end
+
 local function UpdatePrediction(b)
 	if not (db.showIncoming or db.showAbsorb or db.showHealAbsorb) then return end
 	local unit = b.unit
 	local max = UnitHealthMax(unit)
+	if healCalculator.ResetPredictedValues then healCalculator:ResetPredictedValues() end -- rien de la case précédente
 	UnitGetDetailedHealPrediction(unit, "player", healCalculator)
-	b.incoming:SetMinMaxValues(0, max)
-	b.incoming:SetValue((healCalculator:GetIncomingHeals()), smoothing)
+	UpdateIncoming(b, max)
 	b.absorb:SetMinMaxValues(0, max)
 	local absorbs, clamped = healCalculator:GetDamageAbsorbs()
 	b.absorb:SetValue(absorbs, smoothing)
@@ -217,7 +247,11 @@ local function UpdateState(b)
 		b.text:SetTextColor(1, 1, 1)
 		if db.color == "CLASS" then
 			b.hp:SetStatusBarColor(r, g, bl)
-			if db.showIncoming then b.incoming:SetStatusBarColor(unpack(Z.IncomingColor(r, g, bl))) end
+			if db.showIncoming then
+				local c = Z.IncomingColor(r, g, bl)
+				b.incoming:SetStatusBarColor(c[1], c[2], c[3], c[4])
+				if b.incomingOthers:IsShown() then b.incomingOthers:SetStatusBarColor(c[1], c[2], c[3], (c[4] or 1) * OTHERS_ALPHA) end
+			end
 			b.name:SetTextColor(1, 1, 1)
 		else
 			b.name:SetTextColor(r, g, bl)
@@ -256,7 +290,10 @@ local function UpdateHealth(b)
 	if not b.status then
 		if db.color == "HEALTH" then
 			hp:SetStatusBarColor(UnitHealthPercent(unit, true, healthCurve):GetRGB())
-			if db.showIncoming then b.incoming:SetStatusBarColor(UnitHealthPercent(unit, true, incomingCurve):GetRGBA()) end
+			if db.showIncoming then
+				b.incoming:SetStatusBarColor(UnitHealthPercent(unit, true, incomingCurve):GetRGBA())
+				if b.incomingOthers:IsShown() then b.incomingOthers:SetStatusBarColor(UnitHealthPercent(unit, true, othersCurve):GetRGBA()) end
+			end
 		end
 		UpdateLow(b)
 		local fade = db.healthyFade and not b.hovered
@@ -838,6 +875,22 @@ local function Style(b)
 	b.incoming:SetStatusBarColor(unpack(theme.incoming)) -- teinte de contraste sur une barre verte : UpdateState, UpdateHealth
 	b.incoming:SetWidth(width - 2 * inset)
 	b.incoming:SetShown(db.showIncoming)
+	-- Soins des autres, à la suite du mien, plus pâles (réglage incomingSplit)
+	b.incomingOthers:SetStatusBarTexture(texture)
+	SetLayer(b.incomingOthers, LAYER.others)
+	local c = theme.incoming
+	b.incomingOthers:SetStatusBarColor(c[1], c[2], c[3], (c[4] or 1) * OTHERS_ALPHA)
+	b.incomingOthers:SetWidth(width - 2 * inset)
+	b.incomingOthers:SetShown(db.showIncoming and db.incomingSplit == "SPLIT")
+	b.incomingOthers:SetValue(0)
+	-- Alerte de gaspillage et voile de l'incantation, sur mon soin
+	local warn = db.showIncoming and db.overhealWarn and b.overheal.SetAlphaFromBoolean ~= nil
+	b.overheal:SetShown(warn)
+	b.overhealMore:SetShown(warn and overCalculator ~= nil)
+	b.overheal:SetAlpha(0)
+	b.overhealMore:SetAlpha(0)
+	b.castFill:SetShown(db.showIncoming and db.castFill)
+	b.castFill:SetAlpha(0) -- (une case cachée pendant mon incantation ne garde pas le voile)
 	b.absorb:SetStatusBarTexture(UI.WHITE)
 	SetLayer(b.absorb, LAYER.absorb)
 	local follow = db.absorbStyle == "FOLLOW"
@@ -850,7 +903,8 @@ local function Style(b)
 	b.absorb:ClearAllPoints()
 	if follow then
 		-- À la suite des soins en route (ou de la vie s'ils sont coupés), comme les cadres du jeu
-		local after = db.showIncoming and b.incoming:GetStatusBarTexture() or b.hp:GetStatusBarTexture()
+		local after = b.incomingOthers:IsShown() and b.incomingOthers:GetStatusBarTexture()
+			or db.showIncoming and b.incoming:GetStatusBarTexture() or b.hp:GetStatusBarTexture()
 		b.absorb:SetPoint("TOPLEFT", after, "TOPRIGHT")
 		b.absorb:SetPoint("BOTTOMLEFT", after, "BOTTOMRIGHT")
 		b.absorb:SetWidth(width - 2 * inset)
@@ -977,7 +1031,31 @@ function Z.BuildVisuals(b)
 	local incoming = CreateFrame("StatusBar", nil, hp)
 	incoming:SetPoint("TOPLEFT", hp:GetStatusBarTexture(), "TOPRIGHT")
 	incoming:SetPoint("BOTTOMLEFT", hp:GetStatusBarTexture(), "BOTTOMRIGHT")
+	incoming:SetStatusBarTexture(UI.WHITE) -- la texture doit exister avant d'y accrocher la suite
 	b.incoming = incoming
+	-- Ceux des autres soigneurs, à la suite du mien (réglage incomingSplit)
+	local others = CreateFrame("StatusBar", nil, hp)
+	others:SetPoint("TOPLEFT", incoming:GetStatusBarTexture(), "TOPRIGHT")
+	others:SetPoint("BOTTOMLEFT", incoming:GetStatusBarTexture(), "BOTTOMRIGHT")
+	others:SetStatusBarTexture(UI.WHITE)
+	others:Hide()
+	b.incomingOthers = others
+	-- Alerte de gaspillage : deux teintes posées sur mon soin, allumées par un booléen du jeu
+	b.overheal = incoming:CreateTexture(nil, "ARTWORK", nil, LAYER.overheal)
+	b.overheal:SetColorTexture(unpack(OVERHEAL_COLOR))
+	b.overheal:SetAllPoints(incoming:GetStatusBarTexture())
+	b.overhealMore = incoming:CreateTexture(nil, "ARTWORK", nil, LAYER.overhealMore)
+	b.overhealMore:SetColorTexture(unpack(OVERHEAL_MORE_COLOR))
+	b.overhealMore:SetAllPoints(incoming:GetStatusBarTexture())
+	-- Voile de mon incantation : se remplit sur mon soin, au rythme du jeu (aucune boucle, SetTimerDuration).
+	-- Lancé sur toutes les cases : là où je ne soigne pas, mon soin a une largeur nulle et le voile ne se voit pas.
+	local fill = CreateFrame("StatusBar", nil, hp)
+	fill:SetAllPoints(incoming:GetStatusBarTexture())
+	fill:SetStatusBarTexture(UI.WHITE)
+	fill:GetStatusBarTexture():SetDrawLayer("ARTWORK", LAYER.castFill)
+	fill:SetStatusBarColor(1, 1, 1, 0.45)
+	fill:SetAlpha(0) -- visible seulement pendant mon incantation
+	b.castFill = fill
 
 	-- Absorption de soins : la part de vie qu'un affaiblissement « mange », au bout de la vie, vers la gauche
 	local healAbsorb = CreateFrame("StatusBar", nil, hp)
@@ -1912,12 +1990,15 @@ local function BuildCurves()
 		incomingTheme = theme
 		local normal = theme.incoming
 		local onGreen = theme.incomingOnGreen or normal
-		incomingCurve = ColorCurve(false, {
-			0.0, normal[1], normal[2], normal[3], normal[4] or 1,
-			0.65, normal[1], normal[2], normal[3], normal[4] or 1,
-			0.75, onGreen[1], onGreen[2], onGreen[3], onGreen[4] or 1,
-			1.0, onGreen[1], onGreen[2], onGreen[3], onGreen[4] or 1,
-		})
+		local function Curve(alpha)
+			return ColorCurve(false, {
+				0.0, normal[1], normal[2], normal[3], (normal[4] or 1) * alpha,
+				0.65, normal[1], normal[2], normal[3], (normal[4] or 1) * alpha,
+				0.75, onGreen[1], onGreen[2], onGreen[3], (onGreen[4] or 1) * alpha,
+				1.0, onGreen[1], onGreen[2], onGreen[3], (onGreen[4] or 1) * alpha,
+			})
+		end
+		incomingCurve, othersCurve = Curve(1), Curve(OTHERS_ALPHA)
 	end
 	hideWhenFullCurve = hideWhenFullCurve or ColorCurve(true, {
 		0.0, 1, 1, 1, 1,
@@ -2131,6 +2212,16 @@ function Z:CreateFrames()
 	if healCalculator.SetHealAbsorbClampMode and Enum.UnitHealAbsorbClampMode then
 		healCalculator:SetHealAbsorbClampMode(Enum.UnitHealAbsorbClampMode.CurrentHealth) -- jamais plus que la vie
 	end
+	-- Alerte de gaspillage : le premier calculateur dit « dépasse la vie qui manque » ; le second, réglé sur 125 %,
+	-- dit « la dépasse de plus d'un quart de la vie ». Sans la fonction du jeu, seul le premier niveau reste.
+	if healCalculator.SetIncomingHealOverflowPercent then
+		healCalculator:SetIncomingHealOverflowPercent(1.0)
+		overCalculator = CreateUnitHealPredictionCalculator()
+		if overCalculator.SetIncomingHealClampMode and Enum.UnitIncomingHealClampMode then
+			overCalculator:SetIncomingHealClampMode(Enum.UnitIncomingHealClampMode.MissingHealth)
+		end
+		overCalculator:SetIncomingHealOverflowPercent(1.25)
+	end
 	BuildCurves() -- refait maintenant que le calculateur existe : il prend la limite du bouclier (réglage absorbStyle)
 
 	for _, def in ipairs(frameDefs) do CreateHeader(def) end
@@ -2234,10 +2325,34 @@ function Z:CreateFrames()
 
 	-- Soin refusé car hors de vue : message d'erreur du jeu, et mes incantations pour le relier au bon clic
 	Z:On("UI_ERROR_MESSAGE", OnGameError)
+	-- Voile de mon incantation sur mon soin en route (réglage castFill) : la durée vient du jeu, qui anime la barre.
+	-- Fin, échec ou interruption : le voile s'efface (opacité nulle) ; il repart de zéro à l'incantation suivante.
+	local castDuration
+	local function CastFill(b)
+		if not b.castFill:IsShown() then return end
+		if castDuration and b.castFill.SetTimerDuration then
+			b.castFill:SetTimerDuration(castDuration, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
+			b.castFill:SetAlpha(1)
+		else
+			b.castFill:SetAlpha(0)
+		end
+	end
+	local castFillAll = ForVisible(CastFill)
+	local function castFillStart()
+		if not (db.showIncoming and db.castFill and UnitCastingDuration and Enum.StatusBarTimerDirection
+			and Enum.StatusBarInterpolation) then return end
+		castDuration = UnitCastingDuration("player")
+		castFillAll()
+	end
+	local function castFillStop()
+		if not castDuration then return end
+		castDuration = nil
+		castFillAll()
+	end
 	local casts = CreateFrame("Frame") -- mes incantations seulement, pas celles de tout le raid
 	for _, event in ipairs({ "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_STOP",
 		"UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_CHANNEL_STOP",
-		"UNIT_SPELLCAST_CHANNEL_UPDATE" }) do
+		"UNIT_SPELLCAST_CHANNEL_UPDATE", "UNIT_SPELLCAST_DELAYED" }) do
 		pcall(casts.RegisterUnitEvent, casts, event, "player")
 	end
 	casts:SetScript("OnEvent", function(_, event, unit)
@@ -2245,6 +2360,8 @@ function Z:CreateFrames()
 			if channelCell then Z:Try(event, ChannelStarted, true) end
 			return
 		end
+		if event == "UNIT_SPELLCAST_DELAYED" then return Z:Try(event, castFillStart) end -- incantation repoussée
+		if event == "UNIT_SPELLCAST_START" then Z:Try(event, castFillStart) else Z:Try(event, castFillStop) end
 		if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
 			Z:Try(event, CastStarted, unit)
 			if event == "UNIT_SPELLCAST_CHANNEL_START" then Z:Try(event, ChannelStarted) end

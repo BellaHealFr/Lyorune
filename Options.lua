@@ -2837,6 +2837,9 @@ local function Chapters()
 		{ name = "Vie et portée", rune = 16, old = { "Indicateurs" }, intro = "Ce que la barre de vie et la barre de mana vous disent.", sections = {
 			{ "Vie", {
 				{ "check", "showIncoming", "Soins en route", desc = "La part de vie que les soins en cours vont rendre." },
+				{ "seg", "incomingSplit", "Soins en route de qui", nil, "Séparés : votre soin au bout de la vie, puis celui des autres soigneurs, plus pâle. Les miens : seulement les vôtres. Tous ensemble : une seule couleur.", dep = { "showIncoming", true } },
+				{ "check", "overhealWarn", "Alerte de gaspillage", "Votre soin en route devient ambre quand les soins en route dépassent la vie qui manque, cuivre quand ils la dépassent de plus d'un quart de la vie. Calculé par le jeu, marche en combat.", desc = "Votre soin en route change de teinte s'il va être perdu.", dep = { "showIncoming", true } },
+				{ "check", "castFill", "Mon soin se remplit pendant l'incantation", "Pendant que vous incantez, un voile clair remplit votre soin en route de gauche à droite : plein, le soin arrive. Il s'arrête si l'incantation est interrompue.", fine = true, dep = { "showIncoming", true } },
 				{ "check", "showAbsorb", "Bouclier d'absorption" },
 				{ "seg", "absorbStyle", "Place du bouclier", nil, "Bande en bas : un trait fin sous la vie. À la suite de la vie : comme les cadres du jeu, le bouclier prolonge la vie, et un trait lumineux s'allume au bout quand il dépasse la vie manquante.", dep = { "showAbsorb", true } },
 				{ "check", "absorbText", "Chiffre du bouclier", "Ce qui reste à absorber, tous boucliers comptés (le vôtre, celui d'un autre prêtre ou d'un paladin, Barrière de glace...), en petit à la couleur du bouclier : « +1,2k ». Écrit par le jeu, il marche en combat. Il s'efface quand le dernier bouclier est cassé ou fini. Il suit le texte de vie dans l'éditeur de placement.", desc = "Ce qui reste à absorber, même en combat.", dep = { "showAbsorb", true } },

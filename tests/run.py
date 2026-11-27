@@ -11553,6 +11553,60 @@ step("36 a : soins en route, bouclier et absorption animes, ordre des couches, c
   assert(ok, err)
 end)
 
+step("36 b, lot 4 : mon soin et celui des autres, alerte de gaspillage, voile de mon incantation", function()
+  local b = CreateFrame("Button", "LyoruneHeaderUnitButton361", Z.header)
+  Z.header:InitButton(b:GetName())
+  local old = { split = Z.db.incomingSplit, warn = Z.db.overhealWarn, fill = Z.db.castFill, style = Z.db.absorbStyle,
+    dur = UnitCastingDuration, dir = Enum.StatusBarTimerDirection }
+  local ok, err = pcall(function()
+    b:SetAttribute("unit", "party1")
+    -- separes : le mien (5), puis ceux des autres (5), le bouclier a la suite des autres
+    Z.db.incomingSplit, Z.db.absorbStyle = "SPLIT", "FOLLOW" Z:Refresh()
+    Z.cellUpdates.prediction(b)
+    assert(b.incoming._value == 5 and b.incomingOthers:IsShown() and b.incomingOthers._value == 5, "separes : valeurs")
+    assert(b.incomingOthers._barColor[4] < b.incoming._barColor[4], "ceux des autres pas plus pales")
+    -- les miens seulement : pas de segment des autres
+    Z.db.incomingSplit = "MINE" Z:Refresh()
+    Z.cellUpdates.prediction(b)
+    assert(b.incoming._value == 5 and not b.incomingOthers:IsShown(), "les miens")
+    -- tous ensemble : un seul segment, le total
+    Z.db.incomingSplit = "ALL" Z:Refresh()
+    Z.cellUpdates.prediction(b)
+    assert(b.incoming._value == 10 and not b.incomingOthers:IsShown(), "tous ensemble")
+    -- alerte de gaspillage : teintes posees sur mon soin, coupees avec le reglage
+    Z.db.overhealWarn = true Z:Refresh()
+    assert(b.overheal:IsShown() and b.overheal._sublevel > b.incoming:GetStatusBarTexture()._sublevel, "teinte de gaspillage")
+    Z.cellUpdates.prediction(b) -- booleen du jeu branche sur l'opacite, sans erreur
+    Z.db.overhealWarn = false Z:Refresh()
+    assert(not b.overheal:IsShown() and not b.overhealMore:IsShown(), "alerte malgre le reglage coupe")
+    -- voile : lance a mon incantation avec la duree du jeu, efface a la fin
+    Enum.StatusBarTimerDirection = { ElapsedTime = 0, RemainingTime = 1 }
+    rawset(_G, "UnitCastingDuration", function() return "duree" end)
+    b.castFill.SetTimerDuration = function(self, d) self._timer = d end
+    Z.db.castFill = true Z:Refresh()
+    FireEvent("UNIT_SPELLCAST_START", "player")
+    assert(b.castFill._timer == "duree" and b.castFill:GetAlpha() == 1, "voile non lance")
+    FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
+    assert(b.castFill:GetAlpha() == 0, "voile reste apres l'interruption")
+    Z.db.castFill = false Z:Refresh()
+    b.castFill._timer = nil
+    FireEvent("UNIT_SPELLCAST_START", "player")
+    assert(b.castFill._timer == nil and not b.castFill:IsShown(), "voile malgre le reglage coupe")
+    FireEvent("UNIT_SPELLCAST_STOP", "player")
+    -- options : les trois reglages, dans la recherche
+    local labels = table.concat(Z:OptionLabels(), "|")
+    for _, label in ipairs({ "Soins en route de qui", "Alerte de gaspillage", "Mon soin se remplit pendant l'incantation" }) do
+      assert(labels:find(label, 1, true), "absent de la recherche : " .. label)
+    end
+  end)
+  Z.db.incomingSplit, Z.db.overhealWarn, Z.db.castFill, Z.db.absorbStyle = old.split, old.warn, old.fill, old.style
+  rawset(_G, "UnitCastingDuration", old.dur) Enum.StatusBarTimerDirection = old.dir
+  b.castFill.SetTimerDuration = nil
+  b:SetAttribute("unit", nil)
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

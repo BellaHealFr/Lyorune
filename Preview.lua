@@ -45,7 +45,11 @@ local function Fill(cell, index, sample)
 			cell.name:SetTextColor(r, g, b)
 		end
 		cell.hp:SetStatusBarColor(br, bg, bb)
-		if db.showIncoming then cell.incoming:SetStatusBarColor(unpack(Z.IncomingColor(br, bg, bb))) end -- contraste sur une barre verte
+		if db.showIncoming then -- teinte de contraste sur une barre verte ; ceux des autres plus pâles
+			local c = Z.IncomingColor(br, bg, bb)
+			cell.incoming:SetStatusBarColor(c[1], c[2], c[3], c[4])
+			if cell.incomingOthers then cell.incomingOthers:SetStatusBarColor(c[1], c[2], c[3], (c[4] or 1) * Z.OTHERS_ALPHA) end
+		end
 		cell.text:SetTextColor(1, 1, 1)
 		if db.text == "DEFICIT" then
 			cell.text:SetText(health < 100 and ("-" .. (100 - health) * 40) or "")
@@ -63,7 +67,14 @@ local function Fill(cell, index, sample)
 
 	-- Soins en route et bouclier sur quelques joueurs blessés
 	cell.incoming:SetMinMaxValues(0, 100)
-	cell.incoming:SetValue((not dead and health < 90 and index % 2 == 0) and 15 or 0)
+	-- soins en route : le mien, puis celui d'un autre soigneur sur une case sur quatre (réglage incomingSplit)
+	local healed = not dead and health < 90 and index % 2 == 0
+	local others = healed and index % 4 == 0 and db.incomingSplit ~= "MINE" and 6 or 0
+	cell.incoming:SetValue(healed and (db.incomingSplit == "ALL" and 9 + others or 9) or 0)
+	if cell.incomingOthers then
+		cell.incomingOthers:SetMinMaxValues(0, 100)
+		cell.incomingOthers:SetValue(db.incomingSplit == "SPLIT" and others or 0)
+	end
 	cell.absorb:SetMinMaxValues(0, 100)
 	local shield = (not dead and (sample or index % 5 == 2)) and (sample and 18 or 30) or 0
 	cell.absorb:SetValue(shield)

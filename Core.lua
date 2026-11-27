@@ -76,6 +76,9 @@ Z.defaults = {
 
 	-- Indicateurs (chacun peut être coupé)
 	showIncoming = true,       -- soins en route
+	incomingSplit = "SPLIT",   -- soins en route de qui : le mien puis ceux des autres (plus pâles), les miens seulement, ou tous ensemble
+	castFill = true,           -- mon soin en route se remplit au rythme de mon incantation
+	overhealWarn = true,       -- alerte de gaspillage : mon soin en route ambre s'il dépasse la vie max, cuivre au-delà de 25 %
 	showAbsorb = true,         -- bouclier
 	absorbStyle = "BAND",      -- place du bouclier : bande en bas de la case, ou à la suite de la vie (comme les cadres du jeu)
 	absorbText = false,        -- chiffre du bouclier : ce qui reste à absorber (« +1,2k »), même en combat
@@ -233,6 +236,7 @@ Z.choices = {
 	manaEdge = { { 0, "Non" }, { 10, "Sous 10 %" }, { 20, "Sous 20 %" }, { 30, "Sous 30 %" }, { 40, "Sous 40 %" } },
 	lowManaHealers = { { 0, "Non" }, { 10, "Sous 10 %" }, { 20, "Sous 20 %" }, { 30, "Sous 30 %" }, { 40, "Sous 40 %" } },
 	absorbStyle = { { "BAND", "Bande en bas" }, { "FOLLOW", "À la suite de la vie" } },
+	incomingSplit = { { "SPLIT", "Séparés" }, { "MINE", "Les miens" }, { "ALL", "Tous ensemble" } },
 	shape = { { "BAR", "Barre" }, { "TILE", "Tuile" }, { "SQUARE", "Carré" }, { "BANNER", "Bandeau" } },
 	corners = { { "SHARP", "Droits" }, { "ROUND", "Arrondis" } },
 	classIntensity = { { "NATURAL", "Naturelles" }, { "VIVID", "Vives" } },
