@@ -64,6 +64,11 @@ Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à c�
 </tr>
 </table>
 <!-- captures:fin -->
+<!-- TODO: GIF clic-soin en action (5-10 s) -->
+<!-- TODO: raid à 40 -->
+<!-- TODO: JcJ -->
+<!-- TODO: les 5 thèmes -->
+<!-- Ces emplacements restent hors des lignes captures:debut / captures:fin, que outils/captures.py réécrit. Voir docs/images/captures/LISEZMOI.md. -->
 
 ## Ce qui rend Lyorune particulier
 
