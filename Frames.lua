@@ -40,6 +40,21 @@ end
 local PING_TEMPLATE = PingableType_UnitFrameMixin and ",PingableUnitFrameTemplate" or ""
 local SMOOTH = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.ExponentialEaseOut
 local smoothing      -- SMOOTH ou nil selon l'option
+
+-- Ordre de dessin des segments dans la barre de vie. Elle rogne ses enfants : le jeu y ignore alors l'ordre des
+-- cadres, seules comptent les couches (sous-niveaux d'ARTWORK). Des places restent libres pour les segments à
+-- venir (mon soin séparé de celui des autres, soins sur la durée). Le relief du thème (b.shade) passe sur tout.
+local LAYER = { health = 0, incoming = 1, others = 2, hot = 3, absorb = 4, stripes = 5, healAbsorb = 6 }
+local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- rayures du bouclier des cadres du jeu
+local function SetLayer(bar, sub) bar:GetStatusBarTexture():SetDrawLayer("ARTWORK", sub) end
+
+-- Soins en route sur une barre verte : la teinte de contraste du thème, sinon le vert du soin se fond dans
+-- celui de la vie. Couleur lisible (classe, camp, mode test) : jamais une valeur secrète.
+local function IsGreen(r, g, bl) return g - math.max(r, bl) >= 0.15 end
+function Z.IncomingColor(r, g, bl)
+	local theme = Z:Theme()
+	return IsGreen(r, g, bl) and theme.incomingOnGreen or theme.incoming -- (thème sans contraste : couleur normale)
+end
 local rangeAlpha = 0.35
 
 ----------------------------------------------------------------------------------------------------
@@ -55,6 +70,7 @@ local function ColorCurve(step, points)
 end
 
 local healthCurve, hideWhenFullCurve, lowHealthCurve, lowManaCurve, healCalculator
+local incomingCurve, incomingTheme -- couleur des soins en route selon la vie, en mode « Vie restante » (BuildCurves)
 local healthyCurve, healthyDeficitCurve -- joueur en bonne santé estompé (réglage healthyFade, BuildCurves)
 
 -- Joueur en bonne santé estompé (réglage healthyFade, éteint au départ) : au-dessus du seuil, la vie, la mana, le
@@ -151,16 +167,16 @@ local function UpdatePrediction(b)
 	local max = UnitHealthMax(unit)
 	UnitGetDetailedHealPrediction(unit, "player", healCalculator)
 	b.incoming:SetMinMaxValues(0, max)
-	b.incoming:SetValue((healCalculator:GetIncomingHeals()))
+	b.incoming:SetValue((healCalculator:GetIncomingHeals()), smoothing)
 	b.absorb:SetMinMaxValues(0, max)
 	local absorbs, clamped = healCalculator:GetDamageAbsorbs()
-	b.absorb:SetValue(absorbs)
+	b.absorb:SetValue(absorbs, smoothing)
 	-- Bouclier plus grand que la vie manquante : le jeu le dit par un booléen (secret), branché sur l'opacité
 	if b.overAbsorb:IsShown() and clamped ~= nil then b.overAbsorb:SetAlphaFromBoolean(clamped, 1, 0) end
 	if b.absorbSwitch:IsShown() then UpdateAbsorbText(b, absorbs) end
 	if healCalculator.GetHealAbsorbs then
 		b.healAbsorb:SetMinMaxValues(0, max)
-		b.healAbsorb:SetValue((healCalculator:GetHealAbsorbs()))
+		b.healAbsorb:SetValue((healCalculator:GetHealAbsorbs()), smoothing)
 	end
 end
 
@@ -200,6 +216,7 @@ local function UpdateState(b)
 		b.text:SetTextColor(1, 1, 1)
 		if db.color == "CLASS" then
 			b.hp:SetStatusBarColor(r, g, bl)
+			if db.showIncoming then b.incoming:SetStatusBarColor(unpack(Z.IncomingColor(r, g, bl))) end
 			b.name:SetTextColor(1, 1, 1)
 		else
 			b.name:SetTextColor(r, g, bl)
@@ -238,6 +255,7 @@ local function UpdateHealth(b)
 	if not b.status then
 		if db.color == "HEALTH" then
 			hp:SetStatusBarColor(UnitHealthPercent(unit, true, healthCurve):GetRGB())
+			if db.showIncoming then b.incoming:SetStatusBarColor(UnitHealthPercent(unit, true, incomingCurve):GetRGBA()) end
 		end
 		UpdateLow(b)
 		local fade = db.healthyFade and not b.hovered
@@ -813,14 +831,20 @@ local function Style(b)
 	local inset = UI.Inset(theme.borderSize, rounded)
 	LayoutBars(b)
 	b.hp:SetStatusBarTexture(texture)
+	SetLayer(b.hp, LAYER.health)
 	b.incoming:SetStatusBarTexture(texture)
-	b.incoming:SetStatusBarColor(unpack(theme.incoming))
+	SetLayer(b.incoming, LAYER.incoming)
+	b.incoming:SetStatusBarColor(unpack(theme.incoming)) -- teinte de contraste sur une barre verte : UpdateState, UpdateHealth
 	b.incoming:SetWidth(width - 2 * inset)
 	b.incoming:SetShown(db.showIncoming)
 	b.absorb:SetStatusBarTexture(UI.WHITE)
+	SetLayer(b.absorb, LAYER.absorb)
 	local follow = db.absorbStyle == "FOLLOW"
 	local shield = theme.absorb
-	b.absorb:SetStatusBarColor(shield[1], shield[2], shield[3], (shield[4] or 1) * (follow and 0.7 or 1))
+	b.absorb:SetStatusBarColor(shield[1], shield[2], shield[3], (shield[4] or 1) * (follow and 0.45 or 1))
+	-- à la suite de la vie : les rayures du bouclier du jeu, en mosaïque sur ce fond (jamais étirées)
+	b.stripes:SetVertexColor(shield[1], shield[2], shield[3], shield[4] or 1)
+	b.stripes:SetShown(db.showAbsorb and follow)
 	b.absorb:SetShown(db.showAbsorb)
 	b.absorb:ClearAllPoints()
 	if follow then
@@ -838,6 +862,7 @@ local function Style(b)
 	b.overAbsorb:SetAlpha(0)
 	b.absorbSwitch:SetShown(db.showAbsorb and db.absorbText)
 	b.healAbsorb:SetStatusBarTexture(texture)
+	SetLayer(b.healAbsorb, LAYER.healAbsorb)
 	b.healAbsorb:SetStatusBarColor(unpack(theme.healAbsorb or HEAL_ABSORB_COLOR))
 	b.healAbsorb:SetWidth(width - 2 * inset)
 	b.healAbsorb:SetShown(db.showHealAbsorb)
@@ -965,7 +990,17 @@ function Z.BuildVisuals(b)
 	absorb:SetPoint("BOTTOMLEFT")
 	absorb:SetPoint("BOTTOMRIGHT")
 	absorb:SetHeight(3)
+	absorb:SetStatusBarTexture(UI.WHITE) -- la texture doit exister avant d'y poser les rayures
 	b.absorb = absorb
+	-- Rayures du bouclier : une texture en mosaïque calée sur le remplissage, le jeu la répète à sa taille
+	-- (aucun calcul sur la largeur, qui suit une valeur secrète)
+	local stripes = absorb:CreateTexture(nil, "ARTWORK", nil, LAYER.stripes)
+	stripes:SetTexture(SHIELD_STRIPES, "REPEAT", "REPEAT")
+	if stripes.SetHorizTile then stripes:SetHorizTile(true) end
+	if stripes.SetVertTile then stripes:SetVertTile(true) end
+	stripes:SetAllPoints(absorb:GetStatusBarTexture())
+	stripes:Hide()
+	b.stripes = stripes
 	-- Bouclier plus grand que la vie manquante : trait lumineux au bout de la vie (style « à la suite de la vie »)
 	local overAbsorb = hp:CreateTexture(nil, "OVERLAY")
 	if not pcall(overAbsorb.SetAtlas, overAbsorb, "RaidFrame-Shield-Overshield") then
@@ -1869,6 +1904,20 @@ local function BuildCurves()
 		0.5, 0.95, 0.80, 0.20, 1,
 		1.0, 0.25, 0.80, 0.35, 1,
 	})
+	-- Soins en route en mode « Vie restante » : teinte de contraste là où la courbe de vie est verte (au-dessus
+	-- d'environ 70 %), refaite seulement quand le thème change
+	local theme = Z:Theme()
+	if theme ~= incomingTheme then
+		incomingTheme = theme
+		local normal = theme.incoming
+		local onGreen = theme.incomingOnGreen or normal
+		incomingCurve = ColorCurve(false, {
+			0.0, normal[1], normal[2], normal[3], normal[4] or 1,
+			0.65, normal[1], normal[2], normal[3], normal[4] or 1,
+			0.75, onGreen[1], onGreen[2], onGreen[3], onGreen[4] or 1,
+			1.0, onGreen[1], onGreen[2], onGreen[3], onGreen[4] or 1,
+		})
+	end
 	hideWhenFullCurve = hideWhenFullCurve or ColorCurve(true, {
 		0.0, 1, 1, 1, 1,
 		1.0, 1, 1, 1, 0,

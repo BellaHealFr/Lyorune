@@ -11510,6 +11510,49 @@ step("36 lot 1 : /lyorune soins decrit les soins sans rien changer, et une incan
   assert(ok, err)
 end)
 
+step("36 a : soins en route, bouclier et absorption animes, ordre des couches, contraste sur barre verte, rayures", function()
+  local b = CreateFrame("Button", "LyoruneHeaderUnitButton360", Z.header)
+  Z.header:InitButton(b:GetName())
+  local old = { color = Z.db.color, smooth = Z.db.smooth, style = Z.db.absorbStyle, class = UnitClass, cc = C_ClassColor.GetClassColor }
+  local ok, err = pcall(function()
+    b:SetAttribute("unit", "party1")
+    Z.db.smooth = true Z:Refresh()
+    Z.cellUpdates.prediction(b)
+    local SMOOTH = Enum.StatusBarInterpolation.ExponentialEaseOut
+    assert(b.incoming._smoothing == SMOOTH and b.absorb._smoothing == SMOOTH and b.healAbsorb._smoothing == SMOOTH,
+      "soins en route, bouclier ou absorption non animes")
+    Z.db.smooth = false Z:Refresh()
+    Z.cellUpdates.prediction(b)
+    assert(b.incoming._smoothing == nil and b.absorb._smoothing == nil, "anime malgre le reglage coupe")
+    -- ordre de dessin : vie, soins en route, bouclier, rayures, absorption de soins
+    local function sub(bar) return bar:GetStatusBarTexture()._sublevel end
+    assert(sub(b.hp) < sub(b.incoming) and sub(b.incoming) < sub(b.absorb) and sub(b.absorb) < b.stripes._sublevel
+      and b.stripes._sublevel < sub(b.healAbsorb), "ordre des couches de la barre de vie")
+    -- couleur de classe : soins en route en teinte de contraste sur une classe verte seulement
+    local theme = Z:Theme()
+    Z.db.color = "CLASS" Z:Refresh()
+    assert(b.incoming._barColor[1] == theme.incoming[1] and b.incoming._barColor[4] == theme.incoming[4], "pretre : couleur normale")
+    rawset(_G, "UnitClass", function() return "Chasseur", "HUNTER" end)
+    C_ClassColor.GetClassColor = function() return { r = 0.67, g = 0.83, b = 0.45 } end
+    Z:Refresh()
+    assert(b.incoming._barColor[1] == theme.incomingOnGreen[1], "chasseur : pas de teinte de contraste")
+    for _, t in ipairs(Z.themes) do assert(t.incomingOnGreen, t.id .. " sans teinte de contraste") end
+    -- vie restante : couleur donnee par une courbe du jeu
+    Z.db.color = "HEALTH" Z:Refresh()
+    assert(b.incoming._barColor[4] ~= nil, "vie restante : couleur des soins en route non posee")
+    -- bouclier : rayures a la suite de la vie seulement
+    Z.db.absorbStyle = "FOLLOW" Z:Refresh()
+    assert(b.stripes:IsShown(), "rayures absentes a la suite de la vie")
+    Z.db.absorbStyle = "BAND" Z:Refresh()
+    assert(not b.stripes:IsShown(), "rayures sur la bande")
+  end)
+  Z.db.color, Z.db.smooth, Z.db.absorbStyle = old.color, old.smooth, old.style
+  rawset(_G, "UnitClass", old.class) C_ClassColor.GetClassColor = old.cc
+  b:SetAttribute("unit", nil)
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

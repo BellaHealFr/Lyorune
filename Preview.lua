@@ -37,13 +37,15 @@ local function Fill(cell, index, sample)
 		cell.text:SetText(L["Mort"])
 		cell.text:SetTextColor(0.95, 0.35, 0.35)
 	else
+		local br, bg, bb = r, g, b -- couleur de la barre : classe, ou vie restante
 		if db.color == "CLASS" then
-			cell.hp:SetStatusBarColor(r, g, b)
 			cell.name:SetTextColor(1, 1, 1)
 		else
-			cell.hp:SetStatusBarColor(1 - health / 100, health / 100 * 0.8, 0.2)
+			br, bg, bb = 1 - health / 100, health / 100 * 0.8, 0.2
 			cell.name:SetTextColor(r, g, b)
 		end
+		cell.hp:SetStatusBarColor(br, bg, bb)
+		cell.incoming:SetStatusBarColor(unpack(Z.IncomingColor(br, bg, bb))) -- teinte de contraste sur une barre verte
 		cell.text:SetTextColor(1, 1, 1)
 		if db.text == "DEFICIT" then
 			cell.text:SetText(health < 100 and ("-" .. (100 - health) * 40) or "")

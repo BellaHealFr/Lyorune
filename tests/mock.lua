@@ -48,7 +48,7 @@ function Obj:RegisterEvent(e)
 end
 function Obj:RegisterUnitEvent(e, u) self._events[e] = u end
 function Obj:UnregisterAllEvents() self._events = {} end
-function Obj:CreateTexture() return new("Texture", nil, self) end
+function Obj:CreateTexture(_, layer, _, sub) local t = new("Texture", nil, self) t._layer, t._sublevel = layer, sub return t end
 function Obj:CreateFontString() return new("FontString", nil, self) end
 function Obj:CreateAnimationGroup() return new("AnimationGroup", nil, self) end
 function Obj:CreateAnimation() return new("Animation", nil, self) end
@@ -97,6 +97,7 @@ function Obj:SetTexture(t) self._tex = t end
 function Obj:SetAlpha(a) self._alpha = a end
 function Obj:SetMinMaxValues(lo, hi) self._min, self._max = lo, hi end
 function Obj:SetValue(v, smoothing) self._value, self._smoothing = v, smoothing end
+function Obj:SetDrawLayer(layer, sub) self._layer, self._sublevel = layer, sub end
 function Obj:GetValue() return self._value end
 function Obj:GetAlpha() return self._alpha or 1 end
 function Obj:SetFrameStrata(strata) self._strata = strata end

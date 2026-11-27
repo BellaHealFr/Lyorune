@@ -6,7 +6,8 @@
 --   bg         : couleur de fond (la vie manquante), rouge, vert, bleu, opacité
 --   border     : couleur de la bordure, borderSize : son épaisseur
 --   shade      : relief de la barre (ombre en bas, lumière en haut), 0 = aucun
---   incoming   : couleur des soins en route, absorb : couleur du bouclier
+--   incoming   : couleur des soins en route, incomingOnGreen : la même sur une barre de vie verte (contraste)
+--   absorb     : couleur du bouclier
 
 local _, Z = ...
 local WHITE = "Interface\\Buttons\\WHITE8X8"
@@ -18,6 +19,7 @@ Z.themes = {
 		bg = { 0.02, 0.02, 0.04, 0.96 }, border = { 0, 0, 0 }, borderSize = 1,
 		shade = { 0, 0 },
 		incoming = { 0.20, 1.00, 0.85, 0.65 }, absorb = { 0.30, 0.90, 1.00, 1 },
+		incomingOnGreen = { 0.85, 1.00, 1.00, 0.80 },
 	},
 	{
 		id = "PURE", name = "Épuré", -- moderne : aplat avec un léger relief
@@ -25,6 +27,7 @@ Z.themes = {
 		bg = { 0.07, 0.07, 0.09, 1 }, border = { 0, 0, 0 }, borderSize = 1,
 		shade = { 0.28, 0.10 },
 		incoming = { 0.45, 1.00, 0.60, 0.55 }, absorb = { 0.55, 0.85, 1.00, 0.95 },
+		incomingOnGreen = { 0.88, 1.00, 0.92, 0.75 },
 	},
 	{
 		id = "GLASS", name = "Verre", -- brillant et translucide
@@ -32,6 +35,7 @@ Z.themes = {
 		bg = { 0.10, 0.12, 0.18, 0.70 }, border = { 0.30, 0.36, 0.50 }, borderSize = 1,
 		shade = { 0.45, 0.28 },
 		incoming = { 0.60, 1.00, 0.80, 0.55 }, absorb = { 0.75, 0.90, 1.00, 0.95 },
+		incomingOnGreen = { 0.92, 1.00, 0.96, 0.70 },
 	},
 	{
 		id = "CLASSIC", name = "Classique", -- l'allure des cadres de raid du jeu
@@ -39,6 +43,7 @@ Z.themes = {
 		bg = { 0.10, 0.10, 0.10, 1 }, border = { 0.35, 0.35, 0.35 }, borderSize = 1,
 		shade = { 0.10, 0 },
 		incoming = { 0.40, 0.95, 0.45, 0.60 }, absorb = { 0.80, 0.90, 1.00, 0.90 },
+		incomingOnGreen = { 0.90, 1.00, 0.85, 0.75 },
 	},
 	{
 		id = "HEROIC", name = "Héroïque", -- purement MMO : barres texturées, bordure dorée
@@ -46,6 +51,7 @@ Z.themes = {
 		bg = { 0.12, 0.08, 0.05, 1 }, border = { 0.78, 0.62, 0.26 }, borderSize = 2,
 		shade = { 0.30, 0.06 },
 		incoming = { 0.55, 1.00, 0.40, 0.60 }, absorb = { 1.00, 0.92, 0.60, 0.95 },
+		incomingOnGreen = { 1.00, 0.95, 0.70, 0.75 },
 	},
 }
 
@@ -56,6 +62,7 @@ local contrast = {
 	bg = { 0, 0, 0, 1 }, border = { 1, 1, 1 }, borderSize = 1,
 	shade = { 0, 0 },
 	incoming = { 0.20, 1.00, 0.20, 0.85 }, absorb = { 1.00, 1.00, 0.20, 1 },
+	incomingOnGreen = { 1.00, 1.00, 1.00, 0.95 },
 }
 
 function Z:Theme()
