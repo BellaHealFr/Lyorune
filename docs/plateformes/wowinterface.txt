@@ -1,0 +1,192 @@
+WoWInterface : texte à coller dans « Description » (format BBCode). Mode d'emploi : LISEZMOI.md.
+Ne collez pas ces lignes d'en-tête : copiez à partir de la ligne [center].
+Résumé (160 caractères au plus) :
+  FR (138) : Cadres de soin pour WoW Forever : clic-soin au rang choisi, buffs manquants, dissipation et mana des soigneurs, en français et en anglais.
+  EN (132) : Healing frames for WoW Forever: click-casting at the rank you choose, missing buffs, dispels and healer mana, in English and French.
+==================== à coller ci-dessous ====================
+
+[center][img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/logo.png[/img]
+
+[size=5][b]Lyorune : des cadres de soin pour World of Warcraft: Forever[/b][/size]
+
+[i]La lumière qui guide chaque soigneur.[/i][/center]
+
+[img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/banniere.jpg[/img]
+
+Lyorune, ce sont des cadres de soin pour World of Warcraft: Forever : tout votre groupe sous les yeux, tous vos sorts sous les doigts.
+
+Vous cliquez, ça soigne. Le reste du temps, vous profitez du donjon, de vos amis et du voyage.
+
+Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour tous ceux qui aiment veiller sur les autres.
+
+[size=4][b]Ce que Lyorune fait pour vous[/b][/size]
+[list]
+[*][b]Soigner d'un clic[/b] : chaque clic lance le sort et le rang de votre choix, sans cibler.
+[*][b]Tout voir d'un coup d'œil[/b] : vie, soins en route, boucliers, mana, menace et portée, même en combat.
+[*][b]Dissiper sans chercher[/b] : la case se colore quand vous pouvez retirer un affaiblissement.
+[*][b]Relever sans changer de touche[/b] : sur un joueur mort, votre clic de soin lance votre résurrection.
+[*][b]À votre goût[/b] : cinq thèmes, quatre formes de case, chaque élément placé à votre idée.
+[*][b]Mode test[/b] : un faux groupe de 5 à 40 joueurs pour tout régler tranquillement.
+[*][b]Facile à régler[/b] : douze chapitres et une case témoin qui montre chaque réglage en direct.
+[*][b]Rien n'est obligatoire[/b] : chaque élément a sa case à cocher.
+[/list]
+[url=https://github.com/BellaHealFr/Lyorune/blob/main/docs/FONCTIONNALITES.md]Toutes les fonctionnalités en détail[/url]
+
+[size=4][b]Ce qui rend Lyorune particulier[/b][/size]
+[list]
+[*][b]Des paladins qui s'entendent.[/b] Les paladins qui ont Lyorune ne reprennent jamais la bénédiction d'un autre : chacun pose la sienne, sans en discuter.
+[*][b]Vos annonces de mana, même quand la mana est cachée.[/b] Sur WoW Forever, la mana est cachée aux addons ; Lyorune annonce quand même votre mana faible et votre mana remontée.
+[*][b]Un carnet de soigneur.[/b] Vos soins, résurrections et buffs réussis, par personnage, avec un bilan en sortant d'un donjon. Il reste sur votre ordinateur.
+[*][b]Un canal des soigneurs.[/b] En français et en anglais, pour échanger entre soigneurs sur vos façons de jouer et vos spécialisations, si vous le voulez.
+[*][b]Prêt en une minute.[/b] Aucune dépendance à installer, un tutoriel intégré dès la première connexion, et un mode test pour tout essayer sans groupe.
+[*][b]À côté de votre interface.[/b] Lyorune ne touche à aucun cadre qui n'est pas le sien : il fonctionne avec ElvUI et Clique.
+[/list]
+
+[size=4][b]En images[/b][/size]
+
+[img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/cases.jpg[/img]
+[i]Les cases de Lyorune : vie, mana, soins et rôle d'un coup d'œil[/i]
+
+[img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/options.png[/img]
+[i]Les options : chaque réglage a sa case à cocher[/i]
+
+[TODO: capture à ajouter (clic-soin en action, raid à 40, JcJ, les 5 thèmes)]
+
+[size=4][b]Installation[/b][/size]
+[list=1]
+[*]Avec l'application CurseForge ou Wago, Lyorune s'installe et se met à jour tout seul.
+[*]À la main : décompressez l'archive dans World of Warcraft\_forever_\Interface\AddOns\. Vous devez obtenir un dossier Lyorune. Vos réglages sont conservés à chaque mise à jour.
+[*]Lancez le jeu : un tutoriel d'une minute s'ouvre à la première connexion.
+[/list]
+
+[size=4][b]Commandes principales[/b][/size]
+[list]
+[*][b]/lyorune[/b] : ouvrir les options
+[*][b]/lyorune test[/b] : afficher ou masquer le faux groupe
+[*][b]/lyorune tuto[/b] : relancer le tutoriel
+[*][b]/lyorune bug[/b] : signaler un problème
+[/list]
+
+[size=4][b]Compatibilité[/b][/size]
+[list]
+[*]Jeu : World of Warcraft: Forever, interface 16001.
+[*]Langues : français et anglais.
+[*]Dépendances : aucune. LibSharedMedia est utilisé s'il est présent, pour proposer vos textures.
+[*]Autres addons : compatible avec ElvUI et Clique. Lyorune ne touche à aucun cadre qui n'est pas le sien.
+[/list]
+
+[size=4][b]Liens[/b][/size]
+[list]
+[*][url=https://github.com/BellaHealFr/Lyorune]Code source sur GitHub[/url]
+[*][url=https://github.com/BellaHealFr/Lyorune/blob/main/docs/TUTORIEL.md]Guide du joueur[/url]
+[*][url=https://github.com/BellaHealFr/Lyorune/issues/new?template=bug.yml]Signaler un bug[/url]
+[*][url=https://discord.gg/uRaEPTGePu]Discord (La Taverne Nocturne, section Lyorune)[/url]
+[*][url=https://bellahealfr.github.io/Lyorune/]Site[/url]
+[/list]
+
+[size=4][b]Sources officielles[/b][/size]
+Lyorune n'est publié que sur quatre pages, mises à jour en même temps : toute autre adresse peut contenir une copie modifiée (voir SECURITY.md).
+[list]
+[*][url=https://github.com/BellaHealFr/Lyorune/releases/latest]GitHub[/url]
+[*][url=https://www.curseforge.com/wow/addons/lyorune-healing]CurseForge[/url]
+[*][url=https://addons.wago.io/addons/lyorune]Wago[/url]
+[*][url=https://www.wowinterface.com/downloads/info27323-Lyorune.html]WoWInterface[/url]
+[/list]
+Sur CurseForge, le projet s'appelle « Lyorune Healing » ; en jeu, le dossier et le nom de l'addon restent Lyorune.
+
+[size=4][b]Licence[/b][/size]
+Copyright © 2026 BellaDroode, tous droits réservés : vous pouvez utiliser Lyorune et le partager gratuitement tel quel, sans le modifier, le renommer ni le vendre.
+
+--------------------------------------------------
+
+[center][img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/logo.png[/img]
+
+[size=5][b]Lyorune: healing frames for World of Warcraft: Forever[/b][/size]
+
+[i]The light that guides every healer.[/i][/center]
+
+[img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/banniere.jpg[/img]
+
+Lyorune is a set of healing frames for World of Warcraft: Forever: your whole group in front of your eyes, all your spells under your fingers.
+
+You click, it heals. The rest of the time, you enjoy the dungeon, your friends and the journey.
+
+Easy to set up, light in combat, pleasant to look at. I made it for everyone who loves looking after others.
+
+[size=4][b]What Lyorune does for you[/b][/size]
+[list]
+[*][b]Heal with one click[/b]: every click casts the spell and rank of your choice, no targeting.
+[*][b]Everything at a glance[/b]: health, incoming heals, shields, mana, threat and range, even in combat.
+[*][b]Dispel without searching[/b]: the frame lights up when you can remove a debuff.
+[*][b]Resurrect with the same click[/b]: on a dead player, your heal click casts your resurrection.
+[*][b]Your style[/b]: five themes, four cell shapes, every element placed as you like.
+[*][b]Test mode[/b]: a fake group of 5 to 40 players to tune everything in peace.
+[*][b]Easy to set up[/b]: twelve chapters and a preview cell showing every setting live.
+[*][b]Nothing is mandatory[/b]: every element has its checkbox.
+[/list]
+[url=https://github.com/BellaHealFr/Lyorune/blob/main/docs/FEATURES.en.md]All features in detail[/url]
+
+[size=4][b]What makes Lyorune special[/b][/size]
+[list]
+[*][b]Paladins who get along.[/b] Paladins who have Lyorune never cast another paladin's blessing again: each one casts their own, no discussion needed.
+[*][b]Your mana announcements, even when mana is hidden.[/b] On WoW Forever, mana is hidden from addons; Lyorune still announces your low mana and your mana restored.
+[*][b]A healer's notebook.[/b] Your successful heals, resurrections and buffs, per character, with a summary when leaving a dungeon. It stays on your computer.
+[*][b]A healers' channel.[/b] In French and in English, where healers talk about how they play and their specialisations, if you wish.
+[*][b]Ready in a minute.[/b] No dependency to install, a built-in tutorial from your first login, and a test mode to try everything without a group.
+[*][b]Alongside your interface.[/b] Lyorune never touches a frame that is not its own: it works with ElvUI and Clique.
+[/list]
+
+[size=4][b]Screenshots[/b][/size]
+
+[img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/cases.jpg[/img]
+[i]Lyorune's cells: health, mana, heals and role at a glance[/i]
+
+[img]https://raw.githubusercontent.com/BellaHealFr/Lyorune/main/docs/images/captures/options.png[/img]
+[i]The options: every setting has its checkbox[/i]
+
+[TODO: screenshot to add (click-casting in action, 40-player raid, PvP, the 5 themes)]
+
+[size=4][b]Installation[/b][/size]
+[list=1]
+[*]With the CurseForge or Wago app, Lyorune installs and updates on its own.
+[*]By hand: unzip the archive into World of Warcraft\_forever_\Interface\AddOns\. You should get a Lyorune folder. Your settings are kept on every update.
+[*]Start the game: a one-minute tutorial opens on first login.
+[/list]
+
+[size=4][b]Main commands[/b][/size]
+[list]
+[*][b]/lyorune[/b]: open the options
+[*][b]/lyorune test[/b]: show or hide the fake group
+[*][b]/lyorune tuto[/b]: restart the tutorial
+[*][b]/lyorune bug[/b]: report a problem
+[/list]
+
+[size=4][b]Compatibility[/b][/size]
+[list]
+[*]Game: World of Warcraft: Forever, interface 16001.
+[*]Languages: English and French.
+[*]Dependencies: none. LibSharedMedia is used if present, to offer your textures.
+[*]Other addons: works with ElvUI and Clique. Lyorune never touches a frame that is not its own.
+[/list]
+
+[size=4][b]Links[/b][/size]
+[list]
+[*][url=https://github.com/BellaHealFr/Lyorune]Source code on GitHub[/url]
+[*][url=https://github.com/BellaHealFr/Lyorune/blob/main/docs/GUIDE.en.md]Player guide[/url]
+[*][url=https://github.com/BellaHealFr/Lyorune/issues/new?template=bug_en.yml]Report a bug[/url]
+[*][url=https://discord.gg/uRaEPTGePu]Discord (La Taverne Nocturne, Lyorune section)[/url]
+[*][url=https://bellahealfr.github.io/Lyorune/en/]Website[/url]
+[/list]
+
+[size=4][b]Official sources[/b][/size]
+Lyorune is only published on four pages, updated at the same time: any other address may hold a modified copy (see SECURITY.md).
+[list]
+[*][url=https://github.com/BellaHealFr/Lyorune/releases/latest]GitHub[/url]
+[*][url=https://www.curseforge.com/wow/addons/lyorune-healing]CurseForge[/url]
+[*][url=https://addons.wago.io/addons/lyorune]Wago[/url]
+[*][url=https://www.wowinterface.com/downloads/info27323-Lyorune.html]WoWInterface[/url]
+[/list]
+On CurseForge, the project is called "Lyorune Healing"; in game, the folder and the addon name stay Lyorune.
+
+[size=4][b]License[/b][/size]
+Copyright © 2026 BellaDroode, all rights reserved: you may use Lyorune and share it for free as is, without modifying, renaming or selling it.
