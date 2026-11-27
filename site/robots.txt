@@ -1,5 +1,0 @@
-# Lyorune : tous les robots sont les bienvenus, moteurs de recherche et assistants compris.
-User-agent: *
-Allow: /
-
-Sitemap: https://bellahealfr.github.io/Lyorune/sitemap.xml

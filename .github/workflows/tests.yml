@@ -16,3 +16,6 @@ jobs:
       - run: python tests/run.py .
         env:
           PYTHONIOENCODING: utf-8
+      - run: python tests/site.py
+        env:
+          PYTHONIOENCODING: utf-8

@@ -1,0 +1,30 @@
+{
+  "_": "Codes de partage de la galerie du site. Chacun reprend un profil prêt à l'emploi du jeu (Z.presets, Share.lua) ; le banc de test (tests/run.py) importe chaque code et vérifie chaque réglage.",
+  "profils": [
+    {
+      "id": "donjon",
+      "reglages": { "autoShrink": false, "fontSize": 12, "height": 50, "hotStyle": "ICONS", "layout": "GROUP", "spacing": 4, "text": "DEFICIT", "width": 110 },
+      "demo": { "joueurs": 5, "taille": 100, "rangement": "GROUP", "contraste": false }
+    },
+    {
+      "id": "raid",
+      "reglages": { "autoShrink": true, "fontSize": 10, "height": 38, "hotStyle": "ICONS", "layout": "GROUP", "spacing": 2, "text": "DEFICIT", "width": 80 },
+      "demo": { "joueurs": 40, "taille": 80, "rangement": "GROUP", "contraste": false }
+    },
+    {
+      "id": "compact",
+      "reglages": { "autoShrink": false, "fontSize": 9, "height": 30, "hotStyle": "ICONS", "layout": "GROUP", "spacing": 2, "text": "NONE", "width": 64 },
+      "demo": { "joueurs": 20, "taille": 70, "rangement": "GROUP", "contraste": false }
+    },
+    {
+      "id": "lisible",
+      "reglages": { "autoShrink": false, "fontSize": 14, "height": 60, "hotStyle": "ICONS", "layout": "ROLE", "spacing": 4, "text": "PERCENT", "width": 130 },
+      "demo": { "joueurs": 5, "taille": 130, "rangement": "ROLE", "contraste": false }
+    },
+    {
+      "id": "contraste",
+      "reglages": { "highContrast": true },
+      "demo": { "joueurs": 5, "taille": 100, "rangement": "GROUP", "contraste": true }
+    }
+  ]
+}

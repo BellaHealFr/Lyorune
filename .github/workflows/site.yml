@@ -1,7 +1,6 @@
-# Publie la page de présentation de Lyorune (dossier site/) sur GitHub Pages.
-# Les images sont reprises de docs/images, pour n'en garder qu'un exemplaire dans le dépôt.
-# La version (Lyorune.toc) et la date du jour remplacent __VERSION__ et __DATE__ (données pour les moteurs de recherche) ;
-# __BUILD__ (numéro du commit) force les navigateurs à recharger la feuille de style et les animations.
+# Publie la page de présentation de Lyorune sur GitHub Pages.
+# outils/site.py fabrique la page à partir de site/src (textes français et anglais, gabarit, style, script),
+# des images de docs/images, de la version (Lyorune.toc), des thèmes (Themes.lua) et des CHANGELOG.
 name: Site
 on:
   push:
@@ -10,6 +9,10 @@ on:
       - "site/**"
       - "docs/images/**"
       - "Lyorune.toc"
+      - "Themes.lua"
+      - "CHANGELOG.md"
+      - "CHANGELOG.en.md"
+      - "outils/site.py"
       - ".github/workflows/site.yml"
   workflow_dispatch:
 
@@ -30,18 +33,11 @@ jobs:
       url: ${{ steps.deploiement.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
-      - name: Assemblage de la page
-        run: |
-          mkdir -p public
-          cp -r site/. public/
-          mkdir -p public/images
-          cp docs/images/*.png public/images/
-          cp -r docs/images/runes docs/images/piliers docs/images/captures public/images/
-          rm -f public/images/captures/*.md
-          touch public/.nojekyll
-          version=$(grep -oP '## Version: \K\S+' Lyorune.toc)
-          date=$(date -u +%Y-%m-%d)
-          grep -rl -e __VERSION__ -e __DATE__ -e __BUILD__ public --include='*.html' --include='*.xml' --include='*.txt'             | xargs sed -i "s/__VERSION__/$version/g; s/__DATE__/$date/g; s/__BUILD__/${GITHUB_SHA::8}/g"
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Fabrication de la page
+        run: python outils/site.py github public
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v5
         with:

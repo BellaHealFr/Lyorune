@@ -1,0 +1,259 @@
+{
+  "lang": "en",
+  "locale": "en_US",
+  "chemin": "en/",
+  "langue_nom": "English",
+  "autre_lien": "Français",
+  "meta": {
+    "title": "Lyorune: healing frames addon for WoW Forever (click casting, raid frames)",
+    "description": "Lyorune is a free healing frames addon for World of Warcraft: Forever: one-click healing, hover keys, dispels, incoming heals, range, missing buffs, profiles and themes. Priest, druid, paladin, shaman.",
+    "keywords": "Lyorune, World of Warcraft, World of Warcraft: Forever, WoW Forever, WoW, WoW addon, World of Warcraft addon, healing frames, heal frames, raid frames, party frames, group frames, click casting, healer, healer addon, dungeon, raid, PvP, battleground, arena, Clique, ElvUI, dispel, priest, druid, paladin, shaman",
+    "og_title": "Lyorune, healing frames for WoW Forever",
+    "og_description": "The light that guides every healer. A free healing frames addon for World of Warcraft: Forever.",
+    "og_alt": "Lyorune, healing frames for World of Warcraft: Forever"
+  },
+  "nav": {
+    "aller": "Skip to content",
+    "demo": "Demo",
+    "fonctions": "Features",
+    "profils": "Profiles",
+    "installation": "Install",
+    "faq": "FAQ",
+    "menu": "Main navigation"
+  },
+  "hero": {
+    "devise": "The light that guides every healer",
+    "accroche": "The tank who survives by a miracle. The heal that lands at the very last second, and the whole group breathing again. <strong>Those are the moments we play healers for.</strong> Lyorune is a set of healing frames for <strong>World of Warcraft: Forever</strong>: your whole group in front of your eyes, all your spells under your fingers.",
+    "telecharger": "Get Lyorune",
+    "auto": "Updates itself with the app",
+    "manuel": "Direct download",
+    "version": "Version <span data-version>{version}</span>, released <time data-date datetime=\"{date_iso}\">{date}</time>",
+    "infos": "Free · Interface 16001 · English and French · No dependencies",
+    "groupe_alt": "Five Lyorune healing frames in the middle of a fight",
+    "guide": "Player guide",
+    "guide_url": "https://github.com/BellaHealFr/Lyorune/blob/main/docs/GUIDE.en.md"
+  },
+  "plateformes": {
+    "curseforge": "CurseForge",
+    "wago": "Wago",
+    "wowinterface": "WoWInterface",
+    "github": "GitHub",
+    "github_note": "the latest release archive"
+  },
+  "demo": {
+    "titre": "Try it right here",
+    "intro": "A made-up group, mid-fight. Click a frame to heal that player. If they carry a debuff you can dispel, the click removes it first; if they are down, the same click brings them back.",
+    "aide": "Keyboard: Tab moves from frame to frame, Enter acts. Touch: tap the frame.",
+    "honnete": "In game, every mouse button, alone or with Shift, Ctrl, Alt, casts the spell you picked for it. Here one click does it all, to keep the demo simple.",
+    "theme": "Theme",
+    "joueurs": "Players",
+    "taille": "Size",
+    "transparence": "Opacity",
+    "rangement": "Sorting",
+    "par_groupe": "By group",
+    "par_role": "By role",
+    "contraste": "High contrast",
+    "pause": "Pause",
+    "reprendre": "Resume",
+    "zero": "New fight",
+    "groupe": "Group {n}",
+    "mort": "Dead",
+    "loin": "Out of range",
+    "compteur": "Heals: {s} · Dispels: {d} · Brought back: {r}",
+    "aria_groupe": "Demo group",
+    "aria_case": "{nom}, {classe}, {vie}% health",
+    "aria_mort": "{nom}, {classe}, dead",
+    "aria_dissip": ", {type} to dispel",
+    "fait_soin": "{nom} gets a heal.",
+    "fait_dissip": "{type} removed from {nom}.",
+    "fait_releve": "{nom} is back on their feet.",
+    "themes": { "NEON": "Neon", "PURE": "Clean", "GLASS": "Glass", "CLASSIC": "Classic", "HEROIC": "Heroic" },
+    "types": { "magic": "Magic", "curse": "Curse", "disease": "Disease", "poison": "Poison" },
+    "classes": { "WARRIOR": "Warrior", "PALADIN": "Paladin", "HUNTER": "Hunter", "ROGUE": "Rogue", "PRIEST": "Priest", "SHAMAN": "Shaman", "MAGE": "Mage", "WARLOCK": "Warlock", "DRUID": "Druid" },
+    "sans_script": "The demo needs JavaScript. The screenshots below show the real frames."
+  },
+  "video": {
+    "titre": "In game",
+    "legende": "The options window: on the right, the preview cell follows every setting live, above the test mode's fake group.",
+    "alt": "Lyorune in game: the options window, its preview cell and a fake group in test mode"
+  },
+  "coup": {
+    "titre": "Everything at a glance",
+    "intro": "One frame, blown up, exactly as Lyorune draws it. Hover or tap a number.",
+    "nom": "Yops",
+    "pins": [
+      { "titre": "Your heals over time", "texte": "Renew, Rejuvenation, Riptide: your heals over time sit in the top left corner, visible mid-fight, with Weakened Soul and Forbearance in grey at the end of the row." },
+      { "titre": "Role", "texte": "Tank, healer or damage. A druid's role comes from their talents, not their form." },
+      { "titre": "Incoming heals", "texte": "The health your heals and other healers' heals are about to restore, in a lighter shade at the end of the bar." },
+      { "titre": "Shield", "texte": "Power Word: Shield and other absorbs, with what is left to absorb, even in combat." },
+      { "titre": "Dispel", "texte": "The frame lights up when you can remove the debuff: blue for magic, purple for curses, brown for diseases, green for poisons. Up to 3 per frame, the most important first, with their seconds left." },
+      { "titre": "Boss auras", "texte": "Some boss debuffs are hidden from addons: the game draws them itself on the frame, wherever you choose." },
+      { "titre": "Threat", "texte": "A line along the top of the health bar: yellow when the player is building threat, orange when the monster is about to turn on them, red once it is hitting them. There is a threat border too." },
+      { "titre": "Range", "texte": "Three levels, in dungeons and raids too: in healing range, close (frame faded), far away (about 100 yards or more: faded further, with footprints in the middle)." },
+      { "titre": "Five second rule", "texte": "On your own frame, after a spell that costs mana, a line counts down the 5 seconds before your mana starts coming back." }
+    ]
+  },
+  "phares": {
+    "titre": "What Lyorune does for you",
+    "intro": "Four features you will not want to give up, then everything else. Each one has its own checkbox.",
+    "rarete": "Legendary",
+    "lien": "Binds to account",
+    "utiliser": "Use:",
+    "items": [
+      { "nom": "The Healing Click", "type": "Main Hand", "texte": "Every mouse button, alone or with Shift, Ctrl, Alt, casts the spell of your choice on a player's frame, at the rank you want. A trinket can fire with it, and no heal ever goes to an enemy.", "saveur": "\"No more targeting.\"" },
+      { "nom": "The Fake Group", "type": "Quest Item", "texte": "Type /lyorune test: a group of 5 to 40 players shows up, wounded and debuffed, so you can try your clicks and tune everything without bothering anyone.", "saveur": "\"Nobody dies for real.\"" },
+      { "nom": "The Five Outfits", "type": "Tabard", "texte": "Neon, Clean, Glass, Classic, Heroic, plus a high contrast mode. Four frame shapes, and every element placed, resized or hidden the way you like, for each of your characters.", "saveur": "\"Your frames, your way.\"" },
+      { "nom": "The Shared Code", "type": "Scroll", "texte": "One profile per group size, battleground and specialization, applied on its own. Your setup goes to a friend as a code, or straight through the game.", "saveur": "\"Copying someone's settings by hand? Never again.\"" }
+    ]
+  },
+  "liste": {
+    "titre": "And also",
+    "items": [
+      { "rune": "t", "titre": "Hover keys", "texte": "A keyboard key, an extra mouse button or the wheel casts a spell on the frame under your mouse." },
+      { "rune": "d", "titre": "Dispel without searching", "texte": "The type's picture joins the colour, and each icon's border takes its type's colour. The \"Always shown\" list keeps Weakened Soul and Forbearance in sight." },
+      { "rune": "r", "titre": "Resurrect with the same click", "texte": "On a dead player, your heal click casts your resurrection spell." },
+      { "rune": "h", "titre": "Healer assignments", "texte": "/lyorune assign: the leader hands players to each healer, and a gold line marks yours for everyone who has Lyorune. Buffs can be assigned too." },
+      { "rune": "b", "titre": "Missing buffs", "texte": "Out of combat, the next buff to cast shows in a thin strip under your frames, and one click casts it. On each frame, only your own buffs to cast again, in grey." },
+      { "rune": "a", "titre": "Announcements", "texte": "Low mana, mana restored, resurrection, in your own words. They go out even while the game hides mana." },
+      { "rune": "k", "titre": "Game key bindings", "texte": "In the game's key bindings, keys of your choice open the options, hide the frames, cast the next buff or start test mode." },
+      { "rune": "y", "titre": "Macros on your bars", "texte": "Write a macro once, then put it on a click or drag it onto one of the game's action bars." },
+      { "rune": "f", "titre": "A clear options window", "texte": "Twelve chapters, a preview cell that shows every setting live, a golden rune on what you changed and a search that finds everything." },
+      { "rune": "w", "titre": "Friends of Lyorune", "texte": "Your healer's notebook with today's summary, and the healers' channel in French and in English, if you want to join." }
+    ],
+    "elvui": "Lyorune never changes the game's frames or any other addon's: it runs alongside ElvUI, Clique and your other interface addons.",
+    "tout": "Every feature",
+    "tout_url": "https://github.com/BellaHealFr/Lyorune/blob/main/docs/FEATURES.en.md"
+  },
+  "profils": {
+    "titre": "Ready-made profiles",
+    "intro": "The game's four ready-made profiles, plus high contrast mode, as codes to paste. Copy a code, then in game: Profiles and sharing chapter, paste it (Ctrl+V) and click Import. Only these settings change, your frames stay where they are, and /lyorune undo takes you back.",
+    "copier": "Copy code",
+    "copie": "Copied",
+    "essayer": "See it in the demo",
+    "code": "Sharing code",
+    "items": {
+      "donjon": { "nom": "Dungeon (5 players)", "pour": "Five players, wide frames that are easy to read.", "reglages": ["Frames 110 by 50", "Text size 12, spacing 4", "Missing health, heals as icons", "Sorted by group"] },
+      "raid": { "nom": "Raid", "pour": "Up to 40 players without covering the screen.", "reglages": ["Frames 80 by 38", "Text size 10, spacing 2", "Missing health, heals as icons", "Shrink cells in large raids"] },
+      "compact": { "nom": "Compact", "pour": "As little room as possible, the colour says it all.", "reglages": ["Frames 64 by 30", "Text size 9, spacing 2", "No health text", "Sorted by group"] },
+      "lisible": { "nom": "Large and readable", "pour": "Big frames, sorted by role.", "reglages": ["Frames 130 by 60", "Text size 14, spacing 4", "Health as a percentage", "Sorted by role"] },
+      "contraste": { "nom": "High contrast", "pour": "Black background, white border, bigger outlined text.", "reglages": ["High contrast mode", "Nothing else changes"] }
+    }
+  },
+  "voies": {
+    "titre": "The four paths of healing",
+    "intro": "Druid, paladin, priest or shaman: Lyorune recognizes your class and adapts to your spells.",
+    "items": [
+      { "classe": "druide", "nom": "Druid", "texte": "Rejuvenation, Regrowth, Wild Growth: your heals over time show on every frame. Curses and poisons stand out at a glance." },
+      { "classe": "paladin", "nom": "Paladin", "texte": "Blessings of Protection and Sacrifice tracked, Cleanse on magic, diseases and poisons. Your Light always arrives in time." },
+      { "classe": "pretre", "nom": "Priest", "texte": "Renew, Power Word: Shield, Prayer of Healing: shields and heals visible on the frame. Magic and diseases dispelled with one click." },
+      { "classe": "chaman", "nom": "Shaman", "texte": "Riptide, and Earth Shield on the tank, recalled by the buff panel. Diseases and poisons spotted in an instant." }
+    ]
+  },
+  "pourquoi": {
+    "titre": "Why Lyorune",
+    "intro": "What it does well, and what the game will not let it do.",
+    "forces_titre": "What it does well",
+    "forces": [
+      "<strong>Light.</strong> Lyorune reacts to what happens to each player, when it happens. Nothing loops in the background; only range is checked, twice a second.",
+      "<strong>Built for WoW Forever.</strong> In combat the game hides a lot from addons. Lyorune works with what the game agrees to show, or draws itself, instead of guessing.",
+      "<strong>Click casting included.</strong> Nothing else to install to cast your spells with one click.",
+      "<strong>Hands off everything else.</strong> No frame of the game or of another addon is changed or hidden.",
+      "<strong>Nothing is mandatory.</strong> Every feature has its own checkbox: keep what helps you."
+    ],
+    "limites_titre": "What the game does not allow",
+    "limites": [
+      "The combat log is closed to addons: the healer's notebook counts your successful heals, not the health they restored.",
+      "In combat, health and auras are hidden values. Some displays are therefore drawn by the game, its own way, like boss debuffs.",
+      "Mana is hidden, even out of combat: the low mana announcement works from an estimate (the cost of your spells), not an exact number.",
+      "During a boss fight or a PvP match, the game blocks messages between addons: announcing a resurrection in progress waits until the fight is over."
+    ]
+  },
+  "runes": {
+    "titre": "The runes of Lyorune",
+    "intro": "At the bottom of the options window, a line of golden runes lights up from time to time.",
+    "alt": "The runic inscription of Lyorune",
+    "citation": "\"Whomsoever takes up this blade shall wield power eternal.\"",
+    "source": "The inscription on Frostmourne's dais, in Warcraft III.",
+    "texte": "Each rune stands for one letter of the sentence, in Elder Futhark. In game, hover the runes: they light up and their translation appears. Here too.",
+    "phrase": "WHOMSOEVER TAKES UP THIS BLADE SHALL WIELD POWER ETERNAL"
+  },
+  "nouveautes": {
+    "titre": "What's new",
+    "intro": "The last three releases, straight from the changelog.",
+    "journal": "Full changelog",
+    "journal_url": "https://github.com/BellaHealFr/Lyorune/blob/main/CHANGELOG.en.md",
+    "fichier": "CHANGELOG.en.md",
+    "le": ""
+  },
+  "installation": {
+    "titre": "Install",
+    "intro": "Three steps, and a one-minute tutorial welcomes you in game.",
+    "etapes": [
+      "Download the latest version from <a href=\"https://www.curseforge.com/wow/addons/lyorune-healing\">CurseForge</a>, <a href=\"https://addons.wago.io/addons/lyorune\">Wago</a>, <a href=\"https://www.wowinterface.com/downloads/info27323-Lyorune.html\">WoWInterface</a> or the GitHub <a href=\"https://github.com/BellaHealFr/Lyorune/releases/latest\">Releases</a> page, the only four official sources.",
+      "Unzip it into <code>World of Warcraft\\_forever_\\Interface\\AddOns\\</code>. You should end up with a <code>Lyorune</code> folder. With the CurseForge or Wago app, there is nothing to do: the app takes care of it.",
+      "Start the game. No group at hand? Type <code>/lyorune test</code> to try your clicks on a fake group."
+    ],
+    "commandes_titre": "Commands",
+    "commande": "Command",
+    "effet": "What it does",
+    "commandes": [
+      ["/lyorune", "Open the options"],
+      ["/lyorune test", "Show or hide the fake group"],
+      ["/lyorune tuto", "Restart the tutorial"],
+      ["/lyorune lock", "Lock or unlock the frames' position"],
+      ["/lyorune assign", "Assign players to healers"],
+      ["/lyorune spells", "The spells on offer, and why one is missing"],
+      ["/lyorune news", "See what's new"],
+      ["/lyorune undo", "Go back to your setup from before an import"],
+      ["/lyorune bug", "Report a problem"]
+    ]
+  },
+  "faq": {
+    "titre": "Frequently asked questions",
+    "items": [
+      ["What is Lyorune?", "Lyorune is a free healing frames addon for World of Warcraft: Forever. It shows your whole group or raid and casts your heals with one click on a player's frame."],
+      ["Which healing addon should I use on WoW Forever?", "Lyorune is made for World of Warcraft: Forever (interface 16001). It is light, copes with the values the game hides in combat, and suits priests, druids, paladins and shamans."],
+      ["Is Lyorune free?", "Yes. Lyorune is free and can be downloaded from CurseForge (project Lyorune Healing), Wago, WoWInterface or its GitHub Releases page, its only four official sources."],
+      ["Does Lyorune work with ElvUI or Clique?", "Yes. Lyorune never changes the game's frames or any other addon's. It runs alongside ElvUI, Clique and other interface addons. If you prefer Clique or the game's own click casting, one checkbox turns Lyorune's clicks off."],
+      ["How do I install Lyorune?", "The easiest way: the CurseForge or Wago app, which also installs updates. Otherwise, download the archive, unzip it into World of Warcraft\\_forever_\\Interface\\AddOns\\ and start the game. A one-minute tutorial opens on first login."],
+      ["A spell is missing from the list, why?", "Type /lyorune spells: Lyorune lists the spells it offers, the ones from your class that are missing and why (not learned, other specialization, passive). An offensive spell is never offered."]
+    ]
+  },
+  "auteur": {
+    "titre": "Who am I?",
+    "texte": [
+      "I am <strong>BellaDroode</strong>, and I am in love with World of Warcraft: a magical world where loneliness has no place. Behind every health bar I see a companion, and healing means watching over them.",
+      "I play in the guild <strong>La Taverne Nocturne</strong>, a relaxed French-speaking PvE guild. Find me on our <a href=\"https://discord.gg/uRaEPTGePu\">Discord server</a> to chat, play together or talk about Lyorune."
+    ],
+    "bug": "Report a bug or suggest an idea",
+    "discord": "Join the Discord"
+  },
+  "presse": {
+    "titre": "Press kit",
+    "intro": "Making a video, an article or a stream about Lyorune? Everything is here, no need to ask me first.",
+    "archive": "The whole kit (.zip archive)",
+    "fichiers": "File by file",
+    "logo": "Logo (PNG, 256 by 256)",
+    "banniere": "Banner (JPG)",
+    "cases": "The frames (JPG)",
+    "options": "The options window (PNG)",
+    "piliers": "The four pillars (PNG)",
+    "runes": "The runic inscription (PNG)",
+    "textes": "Short and long descriptions, English and French (TXT)",
+    "court_titre": "Short description",
+    "court": "Lyorune is a free healing frames addon for World of Warcraft: Forever. One-click healing, dispels, incoming heals, missing buffs: your whole group in front of your eyes, all your spells under your fingers.",
+    "long_titre": "Long description",
+    "long": "Lyorune is a free healing frames addon for World of Warcraft: Forever, written by BellaDroode, a healer in the guild La Taverne Nocturne. Every mouse button casts the spell of your choice on a player's frame; the frame shows health, incoming heals, shields, mana, what to dispel and range, even while the game hides those values in combat. Five themes, four frame shapes, a fake group of 5 to 40 players to tune everything, and profiles you can share as a code. Lyorune is light, in English and French, and never changes the game's frames or any other addon's. It is available on CurseForge, Wago, WoWInterface and GitHub."
+  },
+  "pied": {
+    "code": "Source code",
+    "journal": "Changelog",
+    "securite": "Security",
+    "licence": "License",
+    "droits": "Copyright © 2026 BellaDroode. All rights reserved.",
+    "marques": "World of Warcraft and Blizzard Entertainment are trademarks of Blizzard Entertainment, Inc. Lyorune is an independent project.",
+    "compteur": "Visits counted by GoatCounter, without cookies or personal data.",
+    "visites_un": "unique visitor since the site opened",
+    "visites": "unique visitors since the site opened"
+  }
+}

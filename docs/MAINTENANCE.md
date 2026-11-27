@@ -106,6 +106,8 @@ Outils :
 | `python outils/etiquettes.py` | Crée sur GitHub les étiquettes de `.github/labels.yml` |
 | `python outils/telechargements.py` | Téléchargements par version sur GitHub |
 | `python outils/verifier_api.py` | Compare les fonctions du jeu utilisées par Lyorune à celles de VuhDo, ElvUI et Decursive installés |
+| `python outils/site.py github` (ou `cloudflare`) | Fabrique le site de présentation (voir `docs/DEPLOIEMENT.md`) ; `python tests/site.py` le vérifie |
+| `python outils/images_partage.py` | Redessine les images de partage du site (1200 sur 630, une par langue) |
 | `outils\tester.bat`, `outils\installer.bat` | Tests, copie dans le dossier AddOns |
 | `.github/workflows/` | Tests à chaque envoi sur GitHub, publication à chaque étiquette `v1.3.0` |
 

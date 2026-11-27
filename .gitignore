@@ -2,6 +2,10 @@
 dist/
 RELEASE.md
 
+# Produits par outils/site.py (le circuit Site les fabrique lui-même)
+dist-github/
+dist-cloudflare/
+
 # Python
 __pycache__/
 *.pyc

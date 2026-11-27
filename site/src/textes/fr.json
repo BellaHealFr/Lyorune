@@ -1,0 +1,259 @@
+{
+  "lang": "fr",
+  "locale": "fr_FR",
+  "chemin": "",
+  "langue_nom": "Français",
+  "autre_lien": "English",
+  "meta": {
+    "title": "Lyorune : addon de cadres de soin pour WoW Forever (clic-soin, heal frames)",
+    "description": "Lyorune, addon gratuit de cadres de soin pour World of Warcraft: Forever : soin d'un clic, touches au survol, dissipation, soins en route, portée, buffs manquants, profils et thèmes. Prêtre, druide, paladin, chaman.",
+    "keywords": "Lyorune, World of Warcraft, World of Warcraft: Forever, WoW Forever, WoW, addon WoW, add-on World of Warcraft, cadres de soin, heal frames, raid frames, cadres de raid, cadres de groupe, clic-soin, click casting, soigneur, healer, addon soigneur, donjon, raid, JcJ, champ de bataille, arène, Clique, ElvUI, dissipation, prêtre, druide, paladin, chaman",
+    "og_title": "Lyorune, cadres de soin pour WoW Forever",
+    "og_description": "La lumière qui guide chaque soigneur. Addon gratuit de cadres de soin pour World of Warcraft: Forever.",
+    "og_alt": "Lyorune, cadres de soin pour World of Warcraft: Forever"
+  },
+  "nav": {
+    "aller": "Aller au contenu",
+    "demo": "Démo",
+    "fonctions": "Fonctions",
+    "profils": "Profils",
+    "installation": "Installation",
+    "faq": "Questions",
+    "menu": "Navigation principale"
+  },
+  "hero": {
+    "devise": "La lumière qui guide chaque soigneur",
+    "accroche": "Le tank qui tient par miracle. Le soin qui part à la dernière seconde, et tout le groupe qui respire. <strong>C'est pour ces moments-là qu'on joue soigneur.</strong> Lyorune, ce sont des cadres de soin pour <strong>World of Warcraft: Forever</strong> : tout votre groupe sous les yeux, tous vos sorts sous les doigts.",
+    "telecharger": "Télécharger Lyorune",
+    "auto": "Mises à jour toutes seules avec l'application",
+    "manuel": "Téléchargement direct",
+    "version": "Version <span data-version>{version}</span>, publiée le <time data-date datetime=\"{date_iso}\">{date}</time>",
+    "infos": "Gratuit · Interface 16001 · Français et anglais · Aucune dépendance",
+    "groupe_alt": "Cinq cases de soin de Lyorune en plein combat",
+    "guide": "Guide du joueur",
+    "guide_url": "https://github.com/BellaHealFr/Lyorune/blob/main/docs/TUTORIEL.md"
+  },
+  "plateformes": {
+    "curseforge": "CurseForge",
+    "wago": "Wago",
+    "wowinterface": "WoWInterface",
+    "github": "GitHub",
+    "github_note": "l'archive de la dernière version"
+  },
+  "demo": {
+    "titre": "Réglez-le en direct",
+    "intro": "Un groupe imaginaire, en plein combat. Cliquez sur une case pour soigner le joueur. S'il porte un affaiblissement que vous pouvez dissiper, le clic le retire d'abord ; s'il est tombé, le même clic le relève.",
+    "aide": "Au clavier : Tab pour passer d'une case à l'autre, Entrée pour agir. Au doigt : touchez la case.",
+    "honnete": "Dans le jeu, chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort que vous avez choisi. Ici, un seul clic fait tout, pour que la démo reste simple.",
+    "theme": "Thème",
+    "joueurs": "Joueurs",
+    "taille": "Taille",
+    "transparence": "Transparence",
+    "rangement": "Rangement",
+    "par_groupe": "Par groupe",
+    "par_role": "Par rôle",
+    "contraste": "Contraste élevé",
+    "pause": "Pause",
+    "reprendre": "Reprendre",
+    "zero": "Nouveau combat",
+    "groupe": "Groupe {n}",
+    "mort": "Mort",
+    "loin": "Hors de portée",
+    "compteur": "Soins : {s} · Dissipations : {d} · Relevés : {r}",
+    "aria_groupe": "Groupe de démonstration",
+    "aria_case": "{nom}, {classe}, {vie} % de vie",
+    "aria_mort": "{nom}, {classe}, mort",
+    "aria_dissip": ", {type} à dissiper",
+    "fait_soin": "{nom} reçoit un soin.",
+    "fait_dissip": "{type} retirée de {nom}.",
+    "fait_releve": "{nom} est relevé.",
+    "themes": { "NEON": "Néon", "PURE": "Épuré", "GLASS": "Verre", "CLASSIC": "Classique", "HEROIC": "Héroïque" },
+    "types": { "magic": "Magie", "curse": "Malédiction", "disease": "Maladie", "poison": "Poison" },
+    "classes": { "WARRIOR": "Guerrier", "PALADIN": "Paladin", "HUNTER": "Chasseur", "ROGUE": "Voleur", "PRIEST": "Prêtre", "SHAMAN": "Chaman", "MAGE": "Mage", "WARLOCK": "Démoniste", "DRUID": "Druide" },
+    "sans_script": "La démo a besoin de JavaScript. Les captures plus bas montrent les vraies cases."
+  },
+  "video": {
+    "titre": "En jeu",
+    "legende": "La fenêtre d'options (ici en anglais) : à droite, la case témoin suit chaque réglage en direct, au-dessus du faux groupe du mode test.",
+    "alt": "Lyorune en jeu : la fenêtre d'options, sa case témoin et un faux groupe en mode test"
+  },
+  "coup": {
+    "titre": "Tout voir d'un coup d'œil",
+    "intro": "Une case agrandie, telle que Lyorune la dessine. Survolez ou touchez un numéro.",
+    "nom": "Yops",
+    "pins": [
+      { "titre": "Vos soins sur la durée", "texte": "Rénovation, Récupération, Remous : vos soins sur la durée s'affichent en haut à gauche, visibles en plein combat, avec Âme affaiblie et Longanimité en gris au bout de la rangée." },
+      { "titre": "Rôle", "texte": "Tank, soigneur ou DPS. Le rôle du druide vient de ses talents, pas de sa forme." },
+      { "titre": "Soins en route", "texte": "La part de vie que vos soins et ceux des autres soigneurs vont rendre, en clair au bout de la barre." },
+      { "titre": "Bouclier", "texte": "Mot de pouvoir : Bouclier et les autres absorptions, avec ce qui reste à absorber, même en combat." },
+      { "titre": "Dissipation", "texte": "La case se colore quand vous pouvez retirer l'affaiblissement : bleu pour la magie, violet pour la malédiction, brun pour la maladie, vert pour le poison. Jusqu'à 3 par case, le plus important d'abord, avec leurs secondes." },
+      { "titre": "Auras des boss", "texte": "Certains affaiblissements de boss sont cachés aux addons : le jeu les dessine lui-même sur la case, à la place que vous choisissez." },
+      { "titre": "Menace", "texte": "Un trait en haut de la barre de vie : jaune quand le joueur prend de la menace, orange quand le monstre va se tourner vers lui, rouge quand le monstre s'en prend à lui. Une bordure de menace existe aussi." },
+      { "titre": "Portée", "texte": "Trois paliers, même en donjon et en raid : à portée de soin, proche (case estompée), très loin (plus de 100 mètres environ : case encore plus estompée, empreintes au centre)." },
+      { "titre": "Règle des 5 secondes", "texte": "Sur votre propre case, après un sort payé en mana, un trait compte les 5 secondes avant que votre mana reparte." }
+    ]
+  },
+  "phares": {
+    "titre": "Ce que Lyorune fait pour vous",
+    "intro": "Quatre fonctions qu'on ne quitte plus, puis tout le reste. Chacune a sa case à cocher.",
+    "rarete": "Légendaire",
+    "lien": "Lié au compte",
+    "utiliser": "Utiliser :",
+    "items": [
+      { "nom": "Le clic qui soigne", "type": "Main droite", "texte": "Chaque bouton de souris, seul ou avec Maj, Ctrl, Alt, lance le sort de votre choix sur la case d'un joueur, au rang que vous voulez. Un bijou peut partir avec, et aucun soin ne part sur un ennemi.", "saveur": "« Plus besoin de cibler. »" },
+      { "nom": "Le faux groupe", "type": "Objet de quête", "texte": "Tapez /lyorune test : un groupe de 5 à 40 joueurs apparaît, avec ses blessés et ses affaiblissements, pour essayer vos clics et tout régler sans déranger personne.", "saveur": "« Personne ne meurt pour de vrai. »" },
+      { "nom": "Les cinq habits", "type": "Tabard", "texte": "Néon, Épuré, Verre, Classique, Héroïque, et un mode contraste élevé. Quatre formes de case, chaque élément placé, agrandi ou masqué à votre idée, pour chacun de vos personnages.", "saveur": "« Vos cases, à votre goût. »" },
+      { "nom": "Le code partagé", "type": "Parchemin", "texte": "Un profil par taille de groupe, champ de bataille et spécialisation, appliqué tout seul. Votre configuration part chez un ami par un code ou directement en jeu.", "saveur": "« Recopier les réglages d'un autre ? Plus jamais. »" }
+    ]
+  },
+  "liste": {
+    "titre": "Et aussi",
+    "items": [
+      { "rune": "t", "titre": "Touches au survol", "texte": "Une touche du clavier, un bouton de souris supplémentaire ou la molette lance un sort sur la case survolée." },
+      { "rune": "d", "titre": "Dissiper sans chercher", "texte": "L'image du type s'ajoute à la couleur, et le liseré de chaque icône prend la couleur de son type. Les « Toujours montrés » gardent Âme affaiblie et Longanimité en vue." },
+      { "rune": "r", "titre": "Relever sans changer de touche", "texte": "Sur un joueur mort, votre clic de soin lance votre résurrection." },
+      { "rune": "h", "titre": "Répartir entre soigneurs", "texte": "/lyorune repartir : le chef confie des joueurs à chaque soigneur, et un trait doré marque les vôtres chez tous ceux qui ont Lyorune. Les buffs se répartissent aussi." },
+      { "rune": "b", "titre": "Buffs manquants", "texte": "Hors combat, le prochain buff à poser s'affiche dans un bandeau fin sous vos cadres, et un clic le pose. Sur chaque case, seulement vos buffs à reposer, en gris." },
+      { "rune": "a", "titre": "Annonces", "texte": "Mana faible, mana remontée, résurrection, avec vos propres textes. Elles partent même quand le jeu cache la mana." },
+      { "rune": "k", "titre": "Raccourcis du jeu", "texte": "Dans les raccourcis du jeu, des touches au choix ouvrent les options, masquent les cadres, posent le prochain buff ou lancent le mode test." },
+      { "rune": "y", "titre": "Macros sur vos barres", "texte": "Vos macros s'écrivent une fois, puis se posent sur un clic ou se glissent dans une barre de sorts du jeu." },
+      { "rune": "f", "titre": "Une fenêtre claire", "texte": "Douze chapitres, une case témoin qui montre chaque réglage en direct, une rune d'or sur ce que vous avez changé et une recherche qui retrouve tout." },
+      { "rune": "w", "titre": "Les amis de Lyorune", "texte": "Votre carnet de soigneur avec le bilan du jour, et le canal des soigneurs en français et en anglais, à rejoindre si vous le voulez." }
+    ],
+    "elvui": "Lyorune ne modifie aucun cadre du jeu ni des autres addons : il fonctionne à côté d'ElvUI, de Clique ou de vos autres addons d'interface.",
+    "tout": "Toutes les fonctionnalités",
+    "tout_url": "https://github.com/BellaHealFr/Lyorune/blob/main/docs/FONCTIONNALITES.md"
+  },
+  "profils": {
+    "titre": "Profils prêts à l'emploi",
+    "intro": "Les quatre profils prêts à l'emploi du jeu, et le mode contraste élevé, en codes à coller. Copiez un code, puis en jeu : chapitre Profils et partage, collez-le (Ctrl+V) et cliquez sur Importer. Seuls ces réglages changent, votre position à l'écran est conservée, et /lyorune annuler revient en arrière.",
+    "copier": "Copier le code",
+    "copie": "Code copié",
+    "essayer": "Voir dans la démo",
+    "code": "Code de partage",
+    "items": {
+      "donjon": { "nom": "Donjon (5 joueurs)", "pour": "Cinq joueurs, des cases larges et lisibles.", "reglages": ["Cases de 110 sur 50", "Texte de 12, espacement de 4", "Vie manquante, soins en icônes", "Rangement par groupe"] },
+      "raid": { "nom": "Raid", "pour": "Jusqu'à 40 joueurs sans couvrir l'écran.", "reglages": ["Cases de 80 sur 38", "Texte de 10, espacement de 2", "Vie manquante, soins en icônes", "Cases réduites en grand raid"] },
+      "compact": { "nom": "Compact", "pour": "Le moins de place possible, la couleur dit tout.", "reglages": ["Cases de 64 sur 30", "Texte de 9, espacement de 2", "Aucun texte de vie", "Rangement par groupe"] },
+      "lisible": { "nom": "Grand et lisible", "pour": "De grandes cases, rangées par rôle.", "reglages": ["Cases de 130 sur 60", "Texte de 14, espacement de 4", "Vie en pourcentage", "Rangement par rôle"] },
+      "contraste": { "nom": "Contraste élevé", "pour": "Fond noir, bordure blanche, texte plus gros avec contour.", "reglages": ["Mode contraste élevé", "Rien d'autre ne change"] }
+    }
+  },
+  "voies": {
+    "titre": "Les quatre voies du soin",
+    "intro": "Druide, paladin, prêtre ou chaman : Lyorune reconnaît votre classe et s'adapte à vos sorts.",
+    "items": [
+      { "classe": "druide", "nom": "Druide", "texte": "Récupération, Rétablissement, Croissance sauvage : vos soins sur la durée s'affichent sur chaque case. Malédictions et poisons se voient d'un coup d'œil." },
+      { "classe": "paladin", "nom": "Paladin", "texte": "Bénédictions de protection et de sacrifice suivies, Épuration sur la magie, les maladies et les poisons. Votre Lumière arrive toujours à temps." },
+      { "classe": "pretre", "nom": "Prêtre", "texte": "Rénovation, Mot de pouvoir : Bouclier, Prière de guérison : boucliers et soins visibles sur la case. Magie et maladies dissipées d'un clic." },
+      { "classe": "chaman", "nom": "Chaman", "texte": "Remous, et Bouclier de terre sur le tank rappelé par le panneau des buffs. Maladies et poisons repérés en un instant." }
+    ]
+  },
+  "pourquoi": {
+    "titre": "Pourquoi Lyorune",
+    "intro": "Ce qu'il fait bien, et ce que le jeu l'empêche de faire.",
+    "forces_titre": "Ce qu'il fait bien",
+    "forces": [
+      "<strong>Léger.</strong> Lyorune réagit à ce qui arrive à chaque joueur, au moment où ça arrive. Aucune boucle ne tourne en permanence ; seule la portée est revue deux fois par seconde.",
+      "<strong>Fait pour WoW Forever.</strong> En combat, le jeu cache beaucoup de valeurs aux addons. Lyorune s'appuie sur ce que le jeu accepte de montrer ou de dessiner lui-même, au lieu de deviner.",
+      "<strong>Le clic-soin est dedans.</strong> Rien d'autre à installer pour lancer vos sorts d'un clic.",
+      "<strong>Il ne touche à rien d'autre.</strong> Aucun cadre du jeu ni d'un autre addon n'est modifié ou caché.",
+      "<strong>Rien n'est obligatoire.</strong> Chaque fonction a sa case à cocher : vous gardez ce qui vous sert."
+    ],
+    "limites_titre": "Ce que le jeu ne permet pas",
+    "limites": [
+      "Le journal de combat est fermé aux addons : le carnet de soigneur compte vos soins réussis, pas les points de vie rendus.",
+      "En combat, la vie et les auras sont des valeurs cachées. Certains affichages sont donc dessinés par le jeu, à sa façon, comme les affaiblissements de boss.",
+      "La mana est cachée, même hors combat : l'annonce de mana faible part d'une estimation (le coût de vos sorts), pas d'un chiffre exact.",
+      "Pendant un combat de boss ou un match JcJ, le jeu bloque les messages entre addons : l'annonce d'une résurrection en cours attend la fin du combat."
+    ]
+  },
+  "runes": {
+    "titre": "Les runes de Lyorune",
+    "intro": "Au bas de la fenêtre d'options, une ligne de runes dorées s'illumine de temps en temps.",
+    "alt": "L'inscription runique de Lyorune",
+    "citation": "« Quiconque s'emparera de cette lame détiendra un pouvoir éternel. »",
+    "source": "L'inscription du socle de Deuillegivre, dans Warcraft III.",
+    "texte": "Chaque rune vaut une lettre de la phrase anglaise, en ancien futhark. En jeu, passez la souris dessus : elles s'éclairent et leur traduction apparaît. Ici aussi.",
+    "phrase": "WHOMSOEVER TAKES UP THIS BLADE SHALL WIELD POWER ETERNAL"
+  },
+  "nouveautes": {
+    "titre": "Nouveautés",
+    "intro": "Les trois dernières versions, tirées du journal des versions.",
+    "journal": "Tout le journal des versions",
+    "journal_url": "https://github.com/BellaHealFr/Lyorune/blob/main/CHANGELOG.md",
+    "fichier": "CHANGELOG.md",
+    "le": "le"
+  },
+  "installation": {
+    "titre": "Installation",
+    "intro": "Trois étapes, et un tutoriel d'une minute vous accueille en jeu.",
+    "etapes": [
+      "Téléchargez la dernière version sur <a href=\"https://www.curseforge.com/wow/addons/lyorune-healing\">CurseForge</a>, sur <a href=\"https://addons.wago.io/addons/lyorune\">Wago</a>, sur <a href=\"https://www.wowinterface.com/downloads/info27323-Lyorune.html\">WoWInterface</a> ou sur la page <a href=\"https://github.com/BellaHealFr/Lyorune/releases/latest\">Releases</a> de GitHub, les quatre seules sources officielles.",
+      "Décompressez l'archive dans <code>World of Warcraft\\_forever_\\Interface\\AddOns\\</code>. Vous devez obtenir un dossier <code>Lyorune</code>. Avec l'application CurseForge ou Wago, rien à faire : elle s'en charge.",
+      "Lancez le jeu. Pas de groupe sous la main ? Tapez <code>/lyorune test</code> pour essayer vos clics sur un faux groupe."
+    ],
+    "commandes_titre": "Commandes",
+    "commande": "Commande",
+    "effet": "Effet",
+    "commandes": [
+      ["/lyorune", "Ouvrir les options"],
+      ["/lyorune test", "Afficher ou masquer le faux groupe"],
+      ["/lyorune tuto", "Relancer le tutoriel"],
+      ["/lyorune verrou", "Verrouiller ou libérer la position des cadres"],
+      ["/lyorune repartir", "Répartir les joueurs entre soigneurs"],
+      ["/lyorune sorts", "Les sorts proposés, et pourquoi un sort manque"],
+      ["/lyorune nouveautes", "Voir les nouveautés"],
+      ["/lyorune annuler", "Revenir à la configuration d'avant un import"],
+      ["/lyorune bug", "Signaler un problème"]
+    ]
+  },
+  "faq": {
+    "titre": "Questions fréquentes",
+    "items": [
+      ["Qu'est-ce que Lyorune ?", "Lyorune est un addon gratuit de cadres de soin pour World of Warcraft: Forever. Il affiche tout le groupe ou le raid et lance vos sorts de soin d'un clic sur la case d'un joueur."],
+      ["Quel addon de soin utiliser sur WoW Forever ?", "Lyorune est fait pour World of Warcraft: Forever (interface 16001). Il est léger, tient compte des valeurs cachées en combat et convient au prêtre, au druide, au paladin et au chaman."],
+      ["Lyorune est-il gratuit ?", "Oui. Lyorune est gratuit et se télécharge sur CurseForge (projet Lyorune Healing), sur Wago, sur WoWInterface ou sur la page Releases de GitHub, ses quatre seules sources officielles."],
+      ["Lyorune fonctionne-t-il avec ElvUI ou Clique ?", "Oui. Lyorune ne modifie aucun cadre du jeu ni des autres addons. Il fonctionne à côté d'ElvUI, de Clique et des autres addons d'interface. Si vous préférez Clique ou le clic-soin du jeu, une case à cocher coupe les clics de Lyorune."],
+      ["Comment installer Lyorune ?", "Le plus simple : l'application CurseForge ou Wago, qui installe aussi les mises à jour. Sinon, téléchargez l'archive, décompressez-la dans World of Warcraft\\_forever_\\Interface\\AddOns\\ et lancez le jeu. Un tutoriel d'une minute s'ouvre à la première connexion."],
+      ["Un sort manque dans la liste, pourquoi ?", "Tapez /lyorune sorts : Lyorune écrit les sorts qu'il propose, ceux de votre classe qui manquent et pourquoi (pas appris, autre spécialisation, passif). Un sort offensif n'est jamais proposé."]
+    ]
+  },
+  "auteur": {
+    "titre": "Qui suis-je ?",
+    "texte": [
+      "Moi, c'est <strong>BellaDroode</strong>. Je suis un amoureux de World of Warcraft : un monde magique où la solitude n'a pas sa place. Derrière chaque barre de vie, je vois un compagnon de route, et soigner, c'est veiller sur lui.",
+      "Je joue au sein de la guilde <strong>La Taverne Nocturne</strong>, une guilde PvE détendue et francophone. Retrouvez-moi sur notre <a href=\"https://discord.gg/uRaEPTGePu\">serveur Discord</a> pour discuter, jouer ensemble ou parler de Lyorune."
+    ],
+    "bug": "Signaler un bug ou proposer une idée",
+    "discord": "Rejoindre le Discord"
+  },
+  "presse": {
+    "titre": "Kit presse",
+    "intro": "Vous faites une vidéo, un article ou un stream sur Lyorune ? Tout est ici, sans avoir à me demander.",
+    "archive": "Tout le kit (archive .zip)",
+    "fichiers": "Fichier par fichier",
+    "logo": "Logo (PNG, 256 sur 256)",
+    "banniere": "Bannière (JPG)",
+    "cases": "Les cases (JPG)",
+    "options": "La fenêtre d'options (PNG)",
+    "piliers": "Les quatre piliers (PNG)",
+    "runes": "L'inscription runique (PNG)",
+    "textes": "Textes de présentation, français et anglais (TXT)",
+    "court_titre": "Présentation courte",
+    "court": "Lyorune est un addon gratuit de cadres de soin pour World of Warcraft: Forever. Soin d'un clic, dissipation, soins en route, buffs manquants : tout votre groupe sous les yeux, tous vos sorts sous les doigts.",
+    "long_titre": "Présentation longue",
+    "long": "Lyorune est un addon gratuit de cadres de soin pour World of Warcraft: Forever, écrit par BellaDroode, soigneur de la guilde La Taverne Nocturne. Chaque bouton de souris lance le sort de votre choix sur la case d'un joueur ; la case montre la vie, les soins en route, les boucliers, la mana, ce qu'il faut dissiper et la portée, même quand le jeu cache ces valeurs en combat. Cinq thèmes, quatre formes de case, un faux groupe de 5 à 40 joueurs pour tout régler, des profils qui se partagent par un code. Lyorune est léger, en français et en anglais, et ne modifie aucun cadre du jeu ni d'un autre addon. Il se télécharge sur CurseForge, Wago, WoWInterface et GitHub."
+  },
+  "pied": {
+    "code": "Code source",
+    "journal": "Journal des versions",
+    "securite": "Sécurité",
+    "licence": "Licence",
+    "droits": "Copyright © 2026 BellaDroode. Tous droits réservés.",
+    "marques": "World of Warcraft et Blizzard Entertainment sont des marques de Blizzard Entertainment, Inc. Lyorune est un projet indépendant.",
+    "compteur": "Visites comptées par GoatCounter, sans cookie et sans donnée personnelle.",
+    "visites_un": "visiteur unique depuis l'ouverture du site",
+    "visites": "visiteurs uniques depuis l'ouverture du site"
+  }
+}

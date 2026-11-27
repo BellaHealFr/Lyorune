@@ -11459,6 +11459,45 @@ table.sort(miss)
 print("globales absentes du faux client : " .. table.concat(miss, ", "))
 '''
 rt.execute(scenario)
+# Site de présentation : chaque code de la galerie de profils (site/src/profils.json) est importé comme en jeu,
+# et chacun de ses réglages doit arriver tel quel (un code refusé ou incomplet ne doit jamais être publié).
+import importlib.util, json
+_spec = importlib.util.spec_from_file_location('site_lyorune', os.path.join(addon, 'outils', 'site.py'))
+_site = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_site)
+def _lua(v):
+    return ('true' if v else 'false') if isinstance(v, bool) else (repr(v) if isinstance(v, (int, float)) else '"%s"' % v)
+_profils = json.loads(read(os.path.join(addon, 'site', 'src', 'profils.json')))['profils']
+rt.execute('SITE_PROFILS = {' + ','.join(
+    '{ id = "%s", code = "%s", attendu = { %s } }' % (p['id'], _site.code_partage(p['reglages']),
+    ', '.join('%s = %s' % (k, _lua(v)) for k, v in p['reglages'].items())) for p in _profils) + '}')
+rt.execute(r'''
+local Z = NS
+local ok, err = pcall(function()
+  for _, p in ipairs(SITE_PROFILS) do
+    local reussi, message = Z:Import(p.code)
+    assert(reussi, p.id .. " : " .. tostring(message))
+    local n = 0
+    for cle, valeur in pairs(p.attendu) do
+      n = n + 1
+      assert(Z.db[cle] == valeur, p.id .. " : " .. cle .. " = " .. tostring(Z.db[cle]))
+    end
+    assert(tonumber(message:match("%d+")) == n, p.id .. " : " .. message)
+    -- les quatre premiers recopient un profil prêt à l'emploi du jeu (Z.presets) : ils doivent rester identiques
+    local jeu = ({ donjon = "DUNGEON", raid = "RAID", compact = "COMPACT", lisible = "LARGE" })[p.id]
+    if jeu then
+      for _, preset in ipairs(Z.presets) do
+        if preset[1] == jeu then
+          for cle, valeur in pairs(preset[3]) do assert(p.attendu[cle] == valeur, p.id .. " : " .. cle .. " differe du jeu") end
+          for cle, valeur in pairs(p.attendu) do assert(preset[3][cle] == valeur, p.id .. " : " .. cle .. " absent du jeu") end
+        end
+      end
+    end
+    Z:UndoImport()
+  end
+end)
+print((ok and "OK    " or "ERREUR ") .. "site : codes de la galerie de profils importes comme en jeu" .. (ok and "" or (" : " .. tostring(err))))
+if not ok then FAILED = true end
+''')
 for line in rt.eval('PRINTED').values():
     if line.startswith(('OK', 'ERREUR', 'globales')):
         print(' ', line)
