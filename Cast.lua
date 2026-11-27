@@ -42,6 +42,23 @@ local function BuildBar()
 	bar:Hide()
 end
 
+-- Bord droit d'un cadre, familiers collés à droite compris quand l'un d'eux est affiché (C46 : la place réservée
+-- aux familiers ne compte pas s'il n'y en a aucun)
+local function RightEdge(h, r)
+	if not (h.petRoom and h.petRoom > 0) then return r end
+	local i, cell = 1, h:GetAttribute("child1")
+	while cell do
+		local pet = cell.petCell
+		if pet and pet:IsVisible() then
+			local pr = pet:GetRight()
+			if pr and not issecret(pr) and pr > r then r = pr end
+		end
+		i = i + 1
+		cell = h:GetAttribute("child" .. i)
+	end
+	return r
+end
+
 -- Bas, gauche et droite des cadres de groupe affichés (cadre principal et cadres de raid)
 local function PlaceBar()
 	local uiScale = UIParent:GetEffectiveScale()
@@ -49,9 +66,9 @@ local function PlaceBar()
 	for _, h in ipairs(Z.headers or {}) do
 		if h.def and h.def.pos == "pos" and h:IsVisible() then
 			local l, r, b = h:GetLeft(), h:GetRight(), h:GetBottom()
-			if l and r and b and not issecret(l) and r > l then
+			if l and r and b and not issecret(l) and not issecret(r) and r > l then
 				local ratio = h:GetEffectiveScale() / uiScale
-				l, r, b = l * ratio, (r + (h.petRoom or 0)) * ratio, b * ratio -- familiers collés à droite compris
+				l, r, b = l * ratio, RightEdge(h, r) * ratio, b * ratio
 				left = left and math.min(left, l) or l
 				right = right and math.max(right, r) or r
 				bottom = bottom and math.min(bottom, b) or b

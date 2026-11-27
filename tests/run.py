@@ -2422,6 +2422,25 @@ step("etape 16 : buffs uniques, temps de recharge global", function()
   FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
   assert(not bar:IsShown() or bar._barColor[1] == 0.9, "incantation interrompue toujours affichee")
   for _, f in ipairs(later) do f() end later = {}
+  -- C46 : la place des familiers ne compte que si l'un d'eux est affiche
+  local oldHeaders = Z.headers
+  local pet = { IsVisible = function() return false end, GetRight = function() return 260 end }
+  local cell = { petCell = pet }
+  local h = { def = { pos = "pos" }, petRoom = 60,
+    IsVisible = function() return true end, GetEffectiveScale = function() return 1 end,
+    GetLeft = function() return 100 end, GetRight = function() return 200 end, GetBottom = function() return 50 end,
+    GetAttribute = function(_, k) if k == "child1" then return cell end end }
+  Z.headers = { h }
+  UnitCastingInfo = function() return "Soins", "", 1, NOW * 1000, NOW * 1000 + 2500 end
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  assert(bar._w == 100, "barre plus large que les cadres sans familier (C46)")
+  pet.IsVisible = function() return true end
+  FireEvent("UNIT_SPELLCAST_START", "player")
+  assert(bar._w == 160, "barre sans la place du familier affiche")
+  Z.headers = oldHeaders
+  UnitCastingInfo = function() end
+  FireEvent("UNIT_SPELLCAST_STOP", "player")
+  for _, f in ipairs(later) do f() end later = {}
   -- anneau autour du curseur
   UnitCastingInfo = function() return "Soins", "", 1, NOW * 1000, NOW * 1000 + 2500 end
   Z.db.castIndicator = "RING" Z:Refresh()
