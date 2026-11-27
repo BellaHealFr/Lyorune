@@ -73,6 +73,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 34 | 1.50.0 | Canal des soigneurs : canaux du jeu « LyoruneFR » et « LyoruneEN », rejoints sur une case de la page « Les amis de Lyorune », éteints au départ | Publiée (v1.50.0) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
 | 36 | 1.53.0 à 1.56.0 | Soins vivants : barres fluides, mon soin en direct pendant l'incantation, soins sur la durée sur la barre | En cours (plan validé) |
+| 37 | à fixer | Relevés vivants : rez en cours, rez reçu avec le temps qu'il reste pour accepter, coche à l'arrivée ; invocation proposée, acceptée ou refusée avec son temps ; images du jeu | À faire (après l'étape 36) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
 
