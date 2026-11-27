@@ -684,6 +684,7 @@ function Z.Command(msg)
 	if msg == "bug" then return Z:ShowBug() end
 	if msg == "position" then return Z:DiagnosePosition() end
 	if msg == "auras" then return Z.DiagnoseAuras() end
+	if msg == "soins" or msg == "heals" then return Z:DiagnoseHeals() end
 	if not Z.header then return end -- Lyorune n'a pas pu démarrer : seuls le journal et le diagnostic répondent
 	if msg == "tuto" or msg == "tutoriel" or msg == "aide" then
 		Z:StartTutorial()

@@ -1,5 +1,5 @@
 -- Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
--- Lyorune - Bug.lua : signaler un bug à l'auteur, et diagnostic de position et de distance (/lyorune position).
+-- Lyorune - Bug.lua : signaler un bug à l'auteur, et diagnostics de position (/lyorune position) et de soins (/lyorune soins).
 --
 -- Un addon ne peut rien envoyer sur internet. /lyorune bug pose donc trois questions et prépare un rapport
 -- compact que le joueur copie (Ctrl+C) et colle à l'adresse indiquée. Aucune fenêtre ne s'ouvre toute seule.
@@ -232,4 +232,130 @@ function Z:DiagnosePosition()
 	table.insert(db.positionDiag, 1, table.concat(lines, " || "))
 	while #db.positionDiag > 12 do table.remove(db.positionDiag) end
 	for _, line in ipairs(lines) do Z:Print(line) end
+end
+
+----------------------------------------------------------------------------------------------------
+-- /lyorune soins : ce que le client donne pour dessiner les soins sur la barre de vie (soins en route,
+-- soins sur la durée, incantation, vie max réduite). Ne change rien : il décrit, et le résultat va aussi
+-- au journal (lu hors du jeu par outils/erreurs.py). Après la commande, la prochaine incantation du joueur
+-- est décrite une fois toute seule (pendant qu'elle est en route), puis l'écoute s'arrête.
+----------------------------------------------------------------------------------------------------
+local function Value(value)
+	if Z.IsSecret(value) then return "secret" end
+	if type(value) == "number" then return ("%.4g"):format(value) end
+	if type(value) == "table" then
+		local parts = {}
+		for i, v in ipairs(value) do parts[i] = Value(v) end
+		return "{" .. table.concat(parts, ", ") .. "}"
+	end
+	return tostring(value)
+end
+
+local function Values(...)
+	local parts = {}
+	for i = 1, select("#", ...) do parts[i] = Value((select(i, ...))) end
+	return #parts > 0 and table.concat(parts, ", ") or "rien"
+end
+
+-- Une ligne par vérification ; une erreur du jeu est écrite au lieu de tout arrêter
+local function Check(Add, label, fn)
+	local result = { pcall(fn) }
+	if result[1] then Add(label .. " : " .. Values(unpack(result, 2))) else Add(label .. " : erreur (" .. tostring(result[2]) .. ")") end
+end
+
+local function Exists(name)
+	return _G[name] ~= nil and "oui" or "absente"
+end
+
+local function DescribeIncoming(Add, unit)
+	if not (CreateUnitHealPredictionCalculator and UnitGetDetailedHealPrediction) then
+		Add("calculateur de soins en route absent de ce client") return
+	end
+	for _, overflow in ipairs({ false, 1.0, 1.25 }) do
+		local calc = CreateUnitHealPredictionCalculator()
+		local label = "soins en route sur " .. unit
+		if overflow then
+			if not calc.SetIncomingHealOverflowPercent then Add("SetIncomingHealOverflowPercent absente") return end
+			calc:SetIncomingHealOverflowPercent(overflow)
+			label = label .. (" (dépassement %d %%)"):format(overflow * 100)
+		end
+		Check(Add, label, function()
+			UnitGetDetailedHealPrediction(unit, "player", calc)
+			return calc:GetIncomingHeals()
+		end)
+	end
+	Check(Add, "UnitGetIncomingHeals " .. unit .. " (tous, les miens)", function()
+		return UnitGetIncomingHeals(unit), UnitGetIncomingHeals(unit, "player")
+	end)
+end
+
+local function DescribeAuras(Add)
+	local list = C_UnitAuras and C_UnitAuras.GetUnitAuras and C_UnitAuras.GetUnitAuras("player", "HELPFUL|PLAYER")
+	if Z.IsSecret(list) then Add("mes auras sur moi : liste secrète") return end
+	if type(list) ~= "table" then Add("mes auras sur moi : " .. type(list)) return end
+	Add(("mes auras sur moi : %d"):format(#list))
+	for i = 1, math.min(#list, 6) do
+		local aura = list[i]
+		if Z.IsSecret(aura) then Add("  aura secrète") else
+			Add(("  %s, sort %s, durée %s, fin %s, nombres %s"):format(Value(aura.name), Value(aura.spellId),
+				Value(aura.duration), Value(aura.expirationTime), Value(aura.points)))
+		end
+	end
+end
+
+local function DescribeCast(Add)
+	Check(Add, "incantation (nom, début, fin, sort)", function()
+		local name, _, _, startMS, endMS, _, _, _, spellID = UnitCastingInfo("player")
+		return name, startMS, endMS, spellID
+	end)
+	Check(Add, "UnitCastingDuration", function()
+		local duration = UnitCastingDuration and UnitCastingDuration("player")
+		if duration == nil then return UnitCastingDuration and "rien" or "absente" end
+		return type(duration), duration.GetRemainingDuration and duration:GetRemainingDuration()
+	end)
+end
+
+local function DescribeHeals(Add, moment)
+	Add(("%s | %s | %s"):format(date("%Y-%m-%d %H:%M:%S"), moment, InCombatLockdown() and "en combat" or "hors combat"))
+	Check(Add, "auras secrètes", function() return C_Secrets.ShouldAurasBeSecret() end)
+	DescribeIncoming(Add, "player")
+	if UnitExists("target") then DescribeIncoming(Add, "target") end
+	DescribeAuras(Add)
+	DescribeCast(Add)
+	Add("C_DurationUtil.CreateDuration : " .. (C_DurationUtil and C_DurationUtil.CreateDuration and "oui" or "absente"))
+	Check(Add, "durée fabriquée de 10 s (SetTimeFromStart, reste)", function()
+		local duration = C_DurationUtil.CreateDuration()
+		if not duration.SetTimeFromStart then return "SetTimeFromStart absente" end
+		duration:SetTimeFromStart(GetTime(), 10)
+		return "oui", duration.GetRemainingDuration and duration:GetRemainingDuration()
+	end)
+	local bar = Z.buttons and Z.buttons[1] and Z.buttons[1].incoming
+	Add("SetTimerDuration sur une barre : " .. (bar and (bar.SetTimerDuration and "oui" or "absente") or "aucune case"))
+	Add("GetUnitTotalModifiedMaxHealthPercent : " .. Exists("GetUnitTotalModifiedMaxHealthPercent"))
+	Check(Add, "vie max réduite (joueur)", function() return GetUnitTotalModifiedMaxHealthPercent("player") end)
+end
+
+local function RunHeals(moment)
+	local lines = {}
+	-- une ligne devenue secrète (valeur du jeu mêlée au texte) est remplacée : rien ne doit planter
+	local ok, err = pcall(DescribeHeals, function(text) lines[#lines + 1] = Z.IsSecret(text) and "(ligne secrète)" or tostring(text) end, moment)
+	if not ok then lines[#lines + 1] = "diagnostic interrompu : " .. tostring(err) end
+	for _, text in ipairs(lines) do Z:Print(text) end
+	Z:Log("Diagnostic soins", table.concat(lines, " | "), "")
+end
+
+-- Écoute d'une seule incantation : créée à la demande, arrêtée dès la première (ou au bout d'une minute)
+local castWatch, watchCount = nil, 0
+function Z:DiagnoseHeals()
+	RunHeals("maintenant")
+	watchCount = watchCount + 1
+	local count = watchCount
+	castWatch = castWatch or CreateFrame("Frame")
+	castWatch:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
+	castWatch:SetScript("OnEvent", function(self)
+		self:UnregisterAllEvents()
+		C_Timer.After(0.3, function() RunHeals("pendant l'incantation") end) -- le soin doit être parti en route
+	end)
+	C_Timer.After(60, function() if count == watchCount then castWatch:UnregisterAllEvents() end end)
+	Z:Print(Z.L["Lancez un soin dans la minute : il sera décrit pendant son incantation."])
 end

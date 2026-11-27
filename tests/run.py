@@ -11477,6 +11477,36 @@ step("C48 : Remous suivi sous son numero de Forever, tous ses rangs, ancien nume
   end)
   C_Spell.GetSpellName, Z.class = old.name, old.class
   Z:BuildData()
+step("36 lot 1 : /lyorune soins decrit les soins sans rien changer, et une incantation une seule fois", function()
+  local Z = NS
+  local old = { after = C_Timer.After, secrets = C_Secrets }
+  local later = {}
+  C_Timer.After = function(_, f) later[#later + 1] = f end
+  rawset(_G, "C_Secrets", { ShouldAurasBeSecret = function() return MakeSecret() end })
+  local ok, err = pcall(function()
+    local before = #(Z.db.errors or {})
+    Z.Command("soins")
+    local log = Z.db.errors[1]
+    assert(#Z.db.errors > before and log.kind == "Diagnostic soins", "diagnostic absent du journal")
+    assert(not log.message:find("interrompu", 1, true), "diagnostic interrompu : " .. log.message)
+    assert(log.message:find("auras secrètes : secret", 1, true), "valeur secrete mal decrite")
+    assert(log.message:find("soins en route sur player", 1, true), "soins en route absents")
+    -- une incantation : decrite une fois, puis l'ecoute s'arrete
+    FireEvent("UNIT_SPELLCAST_START", "player")
+    assert(#later == 2, "description de l'incantation non prevue")
+    later[2]()
+    assert(Z.db.errors[1].message:find("pendant l'incantation", 1, true), "incantation non decrite")
+    local n = #Z.db.errors
+    FireEvent("UNIT_SPELLCAST_START", "player")
+    assert(#later == 2, "ecoute non arretee apres la premiere incantation")
+    -- deux commandes de suite : l'attente de la premiere n'arrete pas l'ecoute de la seconde
+    Z.Command("soins") later[1]()
+    FireEvent("UNIT_SPELLCAST_START", "player")
+    assert(#later == 4, "seconde ecoute arretee par la premiere attente")
+    later[3]()
+  end)
+  C_Timer.After = old.after
+  rawset(_G, "C_Secrets", old.secrets)
   assert(ok, err)
 end)
 
