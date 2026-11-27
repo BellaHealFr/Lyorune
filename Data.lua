@@ -45,7 +45,7 @@ Z.trackedSpells = {
 	PRIEST  = { 139, 17, 431622, 401859, 6346, 552, 10060 }, -- Rénovation, Mot de pouvoir : Bouclier, Égide divine, Prière de guérison, Gardien de peur, Abolir maladie, Infusion de puissance
 	DRUID   = { 774, 8936, 408120, 2893, 29166 },      -- Récupération, Rétablissement, Croissance sauvage, Abolir le poison, Innervation
 	PALADIN = { 1022, 6940, 1044, 19752, 1310911, 1328548 }, -- Bénédictions de protection, de sacrifice, de liberté, Intervention divine, Veille de la Lumière, Serment de lumière (sorts de WoW Forever)
-	SHAMAN  = { 22419, 408514 },                       -- Remous, Bouclier de terre
+	SHAMAN  = { 408521, 408514 },                      -- Remous (talent de Forever), Bouclier de terre
 }
 
 -- Boucliers d'absorption parmi mes sorts suivis : avec le chiffre du bouclier (absorbText), l'ancien affichage
@@ -63,6 +63,7 @@ Z.spellRanks = {
 	[8936] = { 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 },              -- Rétablissement
 	[1022] = { 5599, 10278 },                                                  -- Bénédiction de protection
 	[6940] = { 20729 },                                                        -- Bénédiction de sacrifice
+	[408521] = { 1239242, 1239243, 22419 },                                   -- Remous : rangs 2 et 3, ancien numéro
 	[29166] = { 456195 },                                                      -- Innervation (variante trouvée dans le jeu)
 	[1310911] = { 1310909, 1311593, 1311597 },                                 -- Veille de la Lumière : le buff laissé, rangs 1 à 3
 	-- Buffs de Z.raidBuffs et Z.uniqueBuffs : le jeu les dessine en combat sur les cases (Containers.lua, repères
@@ -131,7 +132,7 @@ Z.clickDefaults = {
 		["1"] = { 331 },                   -- Vague de soins
 		["shift-1"] = { 8004 },            -- Vague de soins inférieurs
 		["2"] = { 1064 },                  -- Salve de guérison
-		["shift-2"] = { 22419 },           -- Remous
+		["shift-2"] = { 408521, 22419 },   -- Remous
 		["ctrl-1"] = { 408514 },           -- Bouclier de terre
 		["3"] = { 526 },                   -- Guérison du poison
 		["shift-3"] = { 2870 },            -- Guérison des maladies

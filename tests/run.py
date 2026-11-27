@@ -11457,6 +11457,29 @@ step("C43 et C44 : role du druide d'apres ses talents (forme ignoree, synchronis
   assert(ok, err)
 end)
 
+step("C48 : Remous suivi sous son numero de Forever, tous ses rangs, ancien numero garde s'il existe", function()
+  local function has(list, id) for _, v in ipairs(list or {}) do if v == id then return true end end end
+  assert(Z.trackedSpells.SHAMAN[1] == 408521, "Remous non suivi sous 408521")
+  local ranks = Z.spellRanks[408521]
+  assert(has(ranks, 1239242) and has(ranks, 1239243) and has(ranks, 22419), "rangs de Remous incomplets")
+  assert(Z.clickDefaults.SHAMAN["shift-2"][1] == 408521, "clic de Remous sur l'ancien numero")
+  -- noms lus dans le jeu : un numero au nom different est ignore, l'ancien numero absent ne casse rien
+  local old = { class = Z.class, name = C_Spell.GetSpellName }
+  local ok, err = pcall(function()
+    local names = { [408521] = "Remous", [1239242] = "Remous", [1239243] = "Remous" }
+    C_Spell.GetSpellName = function(id) return names[id] or old.name(id) end
+    Z.class = "SHAMAN" Z:BuildData()
+    local set = Z.rankIds["Remous"]
+    assert(Z.trackedNames["Remous"], "Remous absent des sorts suivis")
+    assert(set and set[408521] and set[1239242] and set[1239243] and not set[22419], "rangs de Remous mal lus")
+    names[22419] = "Remous" Z:BuildData()
+    assert(Z.rankIds["Remous"][22419], "ancien numero de Remous non garde quand il existe")
+  end)
+  C_Spell.GetSpellName, Z.class = old.name, old.class
+  Z:BuildData()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
