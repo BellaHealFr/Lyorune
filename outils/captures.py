@@ -1,5 +1,5 @@
 # Lyorune (c) 2026 BellaDroode. Tous droits réservés, voir LICENSE.
-# Range les captures d'écran dans la page du projet (README.md et README.en.md).
+# Range les captures d'écran dans la page du projet (README.fr.md et README.md).
 #
 #   pip install pillow
 #   python outils/captures.py
@@ -83,8 +83,8 @@ def main():
         if trouve:
             reduire(trouve)
             presentes.append((trouve, francais, anglais))
-    ecrire('README.md', galerie(presentes, 'fr'))
-    ecrire('README.en.md', galerie(presentes, 'en'))
+    ecrire('README.fr.md', galerie(presentes, 'fr'))
+    ecrire('README.md', galerie(presentes, 'en'))
     print('%d capture(s) affichée(s) sur %d attendues.' % (len(presentes), len(CAPTURES)))
     manquantes = [nom for nom, _, _ in CAPTURES if not fichier(nom)]
     if manquantes:

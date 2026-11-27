@@ -1,6 +1,6 @@
 # Toutes les fonctionnalités de Lyorune
 
-Le détail de tout ce que Lyorune fait pour vous. Le résumé est dans le [README](../README.md) ; pour apprendre à
+Le détail de tout ce que Lyorune fait pour vous. Le résumé est dans le [README](../README.fr.md) ; pour apprendre à
 tout régler pas à pas, voyez le [guide du joueur](TUTORIEL.md).
 
 [English](FEATURES.en.md)

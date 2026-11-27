@@ -1330,7 +1330,7 @@ builds de talents et votent pour les meilleurs.
    Visite guidée courte : compléter une carte existante d'une ligne plutôt qu'ajouter une carte ; elle ne doit
    jamais devenir longue au point de lasser.
 3. Description de ce que sait faire l'addon, tenue à jour : `## Notes` du `Lyorune.toc` (français et anglais),
-   `README.md` et `README.en.md`, description du dépôt GitHub (`gh repo edit --description`).
+   `README.md` (anglais) et `README.fr.md`, description du dépôt GitHub (`gh repo edit --description`).
 4. Cases cochées et état de l'étape mis à jour ci-dessus.
 5. Publication : `python outils/publier.py X.Y.Z --nouveau "..." --en "..."`, avec le numéro de chaque demande
    (`(#12)`) dans le texte du changement.

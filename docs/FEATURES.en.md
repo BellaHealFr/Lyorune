@@ -1,6 +1,6 @@
 # All Lyorune features
 
-Everything Lyorune does for you, in detail. The summary is in the [README](../README.en.md); to learn how to set
+Everything Lyorune does for you, in detail. The summary is in the [README](../README.md); to learn how to set
 everything up step by step, see the [player guide](GUIDE.en.md).
 
 [Français](FONCTIONNALITES.md)

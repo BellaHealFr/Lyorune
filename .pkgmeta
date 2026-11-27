@@ -15,7 +15,7 @@ ignore:
   - .editorconfig
   - .gitattributes
   - README.md
-  - README.en.md
+  - README.fr.md
   - CONTRIBUTING.md
   - CODE_OF_CONDUCT.md
   - SECURITY.md

@@ -165,7 +165,7 @@ Ce que voient les joueurs sur CurseForge : la description bilingue, et pour chaq
 
 1. Choisir le nom définitif (voir ci-dessus) et l'appliquer partout.
 2. Créer le logo 400 × 400 et faire trois captures d'écran en jeu : cases en groupe, options, mode test.
-3. Créer le compte CurseForge et le projet : nom, résumé et description en anglais (le texte de `README.en.md` sert
+3. Créer le compte CurseForge et le projet : nom, résumé et description en anglais (le texte de `README.md`, en anglais, sert
    de base), catégories « Unit Frames » et « Healer », licence personnalisée avec le texte de `LICENSE`.
 4. Envoyer à la main l'archive de `dist/` pour la première version, avec la variante Forever et les notes de version.
 5. Attendre la validation. Corriger si la modération demande des changements.
