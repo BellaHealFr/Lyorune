@@ -23,12 +23,14 @@ local mine = {}   -- mine[joueur][nom du buff] = fin : mes buffs (bénédictions
 local readable = {} -- readable[numéro] = vrai / faux : le jeu le laisse lisible maintenant (vidé à chaque restriction)
 local deaths = {} -- deaths[joueur] = nombre de morts vues depuis le chargement
 
--- Le joueur, par son identifiant (sinon l'unité, quand l'identifiant est secret)
+-- Le joueur, par son identifiant (sinon l'unité, quand l'identifiant est secret). Aussi pour mes soins sur la
+-- durée (Hots.lua).
 local function Key(unit)
 	local ok, guid = pcall(UnitGUID, unit)
 	if ok and guid and not issecret(guid) then return guid end
 	return unit
 end
+Z.PlayerKey = Key
 
 -- Durée lue une fois sur une aura lisible (nil : jamais lue)
 local function Learned(name)
@@ -169,6 +171,7 @@ function Z.ForgetBuffs(unit)
 	local key = Key(unit)
 	seen[key], mine[key], deaths[key] = nil, nil, (deaths[key] or 0) + 1
 	if Z.ForgetAside then Z.ForgetAside(unit) end -- refus du jeu oublié aussi (Buffs.lua, C30)
+	if Z.ForgetHots then Z.ForgetHots(unit) end -- mes soins sur la durée aussi (Hots.lua)
 end
 
 -- Nombre de morts de ce joueur : une mort après une lecture efface, en combat, les buffs lus avant (Auras.lua, C31)
@@ -240,6 +243,17 @@ local function UnitNamed(target)
 	end
 end
 
+-- Qui reçoit mon sort annoncé par le jeu (UNIT_SPELLCAST_SENT, au moment at) : le joueur nommé, sinon le dernier
+-- clic sur ce buff (Buffs.lua), sinon la case cliquée à ce moment (Frames.lua, seulement avec at : à appeler à la
+-- réussite du sort, la case cliquée n'est notée qu'après le lancement), sinon moi quand le jeu ne donne aucune
+-- cible (sort sur soi). nil : cible nommée mais illisible (secrète), sans clic pour la retrouver.
+-- Partagé avec mes soins sur la durée (Hots.lua).
+function Z.CastReceiver(target, name, at)
+	local unit = UnitNamed(target) or (Z.LastBuffTry and Z.LastBuffTry(name)) or (at and Z.ClickedUnit and Z.ClickedUnit(at))
+	if unit then return unit end
+	if target == nil or (not issecret(target) and target == "") then return "player" end
+end
+
 local sent -- le dernier buff de ma liste annoncé : { name, unit, guid, at }
 
 local function SpellName(id)
@@ -258,8 +272,8 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			local name = SpellName(id)
 			local check = name and Watched(name)
 			if not check then sent = nil return end
-			-- sans nom de cible : le dernier clic sur un buff (Buffs.lua), sinon moi (sort sur soi, version de groupe)
-			local unit = UnitNamed(target) or (Z.LastBuffTry and Z.LastBuffTry(name)) or "player"
+			-- sans nom de cible lisible : le dernier clic sur ce buff, sinon moi (sort sur soi, version de groupe)
+			local unit = Z.CastReceiver(target, name) or "player"
 			sent = { name = name, unit = unit, guid = guid, at = GetTime() }
 		else
 			local _, guid, id = ...

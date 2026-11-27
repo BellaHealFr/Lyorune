@@ -1393,6 +1393,15 @@ local function NoteClick(b, button)
 	if db.clickStats then Z:Try("compte des clics", Z.CountClick, Z, button) end -- statistiques de mes clics (Clicks.lua)
 end
 
+-- Joueur de la case cliquée dans la même image que ce moment (GetTime ne change pas pendant une image), ou à peine
+-- avant : qui reçoit le sort annoncé par le jeu à ce moment (Z.CastReceiver, BuffMemory.lua). Un clic plus tard
+-- (pendant l'incantation) ou plus ancien (un clic de ciblage avant une macro) ne compte pas.
+local SAME_CLICK = 0.1
+function Z.ClickedUnit(at)
+	local ago = at - clickedAt
+	if clicked and clicked.unit and ago >= 0 and ago <= SAME_CLICK then return clicked.unit end
+end
+
 -- Mes incantations : celle qui part juste après un clic sur une case est liée à cette case
 local function CastStarted(unit)
 	if unit == "player" and clicked then casting = GetTime() - clickedAt <= CLICK_WINDOW end

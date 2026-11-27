@@ -13,6 +13,7 @@ Pour la personne qui corrige ou fait évoluer Lyorune. Aucune connaissance préa
 | `Themes.lua` | Les 5 thèmes, un bloc de réglages par thème |
 | `Frames.lua` | Les cases des joueurs : vie, soins entrants, bouclier, portée, rôle, bordures |
 | `Auras.lua` | Soins sur la durée, affaiblissements, signalement des dissipations |
+| `Hots.lua` | Mémoire de mes soins sur la durée lancés (cible, montant appris par rang, durée), pour la barre de vie |
 | `Clicks.lua` | Clic-soin : traduction des clics en attributs de bouton sécurisé |
 | `Alerts.lua` | Annonces : mana faible, mana remontée, résurrection |
 | `Share.lua` | Export et import de la configuration (code texte) |

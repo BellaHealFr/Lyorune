@@ -33,6 +33,7 @@ Containers.xml
 Containers.lua
 Buffs.lua
 BuffMemory.lua
+Hots.lua
 Cast.lua
 Cooldowns.lua
 Totems.lua

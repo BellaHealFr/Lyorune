@@ -11707,6 +11707,126 @@ step("36 a, fouille : nouveau joueur dans une case, barres posees d'un coup ; ra
   assert(ok, err)
 end)
 
+step("C48 : Remous suivi sous son numero de Forever, tous ses rangs, ancien numero garde s'il existe", function()
+  local function has(list, id) for _, v in ipairs(list or {}) do if v == id then return true end end end
+  assert(Z.trackedSpells.SHAMAN[1] == 408521, "Remous non suivi sous 408521")
+  local ranks = Z.spellRanks[408521]
+  assert(has(ranks, 1239242) and has(ranks, 1239243) and has(ranks, 22419), "rangs de Remous incomplets")
+  assert(Z.clickDefaults.SHAMAN["shift-2"][1] == 408521, "clic de Remous sur l'ancien numero")
+  -- noms lus dans le jeu : un numero au nom different est ignore, l'ancien numero absent ne casse rien
+  local old = { class = Z.class, name = C_Spell.GetSpellName }
+  local ok, err = pcall(function()
+    local names = { [408521] = "Remous", [1239242] = "Remous", [1239243] = "Remous" }
+    C_Spell.GetSpellName = function(id) return names[id] or old.name(id) end
+    Z.class = "SHAMAN" Z:BuildData()
+    local set = Z.rankIds["Remous"]
+    assert(Z.trackedNames["Remous"], "Remous absent des sorts suivis")
+    assert(set and set[408521] and set[1239242] and set[1239243] and not set[22419], "rangs de Remous mal lus")
+    names[22419] = "Remous" Z:BuildData()
+    assert(Z.rankIds["Remous"][22419], "ancien numero de Remous non garde quand il existe")
+  end)
+  C_Spell.GetSpellName, Z.class = old.name, old.class
+  Z:BuildData()
+  assert(ok, err)
+end)
+
+step("36 c, lot 7 : mes soins sur la duree retenus (cible, montant appris par rang, duree)", function()
+  -- lecture des textes du jeu
+  local T = Z.HotFromText
+  local function is(text, every, duration, total, seconds)
+    local a, b = T(text, every, duration)
+    assert(a == total and b == seconds, ("%s -> %s, %s"):format(tostring(text), tostring(a), tostring(b)))
+  end
+  is("Rend 45 points de vie en 15 sec.", 3, 15, 45, 15)
+  is("Soigne une cible alliée de 93 à 107 points de vie et de 98 points de vie supplémentaires en 21 sec.", 3, 21, 98, 21)
+  is("Rend 45 points de vie toutes les 3 sec pendant 15 sec.", 3, nil, 225, 15)
+  is("Heals 45 damage every 3 seconds.", 3, 12, 180, 12)
+  is("Heals 45 damage every 3 seconds.", 3, nil, nil, nil)
+  is("Rend 1 234 points de vie en 15 sec.", 3, 15, 1234, 15)
+  is("Rend 1\194\160234 points de vie en 15 sec.", 3, 15, 1234, 15)
+  is("", 3, 15, nil, nil) is(nil, 3, 15, nil, nil) is(MakeSecret(), 3, 15, nil, nil)
+  assert(Z.hotSpells.PRIEST[1].id == 139 and Z.hotSpells.DRUID[2].kind == "after", "liste des soins sur la duree")
+  local saved = { now = NOW, auras = AURAS, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts,
+    unit = Z.buttons[1].unit, stats = Z.db.clickStats, name = C_Spell.GetSpellName }
+  local ok, err = pcall(function()
+    NOW = NOW + 1000 Z.char.hotAmounts = nil Z.db.clickStats = false
+    AURAS = {} C_Spell.GetSpellDescription = function() return "Rend 45 points de vie en 15 sec." end
+    -- sur moi (nommé), montant lu dans la description faute d'aura
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "c1", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c1", 139)
+    local list = Z.MyHots("player")
+    assert(list and #list == 1 and list[1].total == 45 and list[1].duration == 15 and list[1].ticks == 5, "soin sur moi d'apres la description")
+    assert(Z.char.hotAmounts[139].from == "texte", "source du montant")
+    -- l'aura posée, lue hors combat : sa durée et ses nombres (un soin par coup) passent avant la description
+    AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", spellId = 139, auraInstanceID = 5, duration = 15, expirationTime = NOW + 15, points = { 50 } } }
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "", "c2", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c2", 139)
+    list = Z.MyHots("player")
+    assert(#list == 1 and list[1].total == 250 and Z.char.hotAmounts[139].from == "aura", "relance : montant de l'aura, un seul soin retenu")
+    -- un autre sort réussi (numéro d'incantation différent) ne compte pas
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "c3", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c4", 139)
+    assert(Z.MyHots("player")[1].start == NOW, "numero d'incantation")
+    -- cible secrète sans clic : rien d'inventé ; avec un clic sur une case juste avant : ce joueur
+    local b = Z.buttons[1] b.unit = "party1"
+    NOW = NOW + 5
+    FireEvent("UNIT_SPELLCAST_SENT", "player", MakeSecret(), "c5", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c5", 139)
+    assert(Z.MyHots("party1") == nil, "soin invente sur une cible secrete")
+    NOW = NOW + 1
+    b:Run("OnClick", "LeftButton")
+    FireEvent("UNIT_SPELLCAST_SENT", "player", MakeSecret(), "c6", 139)
+    NOW = NOW + 0.2
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c6", 139)
+    assert(Z.MyHots("party1") and Z.MyHots("party1")[1].total == 250, "soin sur la case cliquee")
+    -- un clic plus tard (pendant l'incantation) ne compte pas
+    FireEvent("UNIT_SPELLCAST_SENT", "player", MakeSecret(), "c7", 139)
+    NOW = NOW + 0.2 b.unit = "party2" b:Run("OnClick", "LeftButton")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c7", 139)
+    assert(Z.MyHots("party2") == nil, "clic pendant l'incantation pris pour la cible")
+    -- un sort qui n'est pas un soin sur la durée : rien
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "c8", 2061)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c8", 2061)
+    assert(#Z.MyHots("player") == 1, "soin direct retenu comme soin sur la duree")
+    -- clic de ciblage plus ancien qu'une image avant le sort (macro) : pas la cible
+    b.unit = "party3" b:Run("OnClick", "LeftButton") NOW = NOW + 0.3
+    FireEvent("UNIT_SPELLCAST_SENT", "player", MakeSecret(), "c9", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c9", 139)
+    assert(Z.MyHots("party3") == nil, "clic de ciblage ancien pris pour la cible")
+    -- durée inconnue (Prière de guérison, rien de lu) : oubliée aussitôt la lecture passée, jamais pour toujours
+    local getName = C_Spell.GetSpellName
+    C_Spell.GetSpellName = function(id) if id == 402174 then return "Pénitence" end return getName(id) end
+    Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    C_Spell.GetSpellDescription = function() return "" end
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "c10", 401859)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c10", 401859)
+    NOW = NOW + 2
+    local left = Z.MyHots("player") or {}
+    for _, hot in ipairs(left) do assert(hot.base ~= 401859, "soin sans duree garde") end
+    -- Pénitence : 3 coups en 2 s, coupée après 0,5 s : sa durée s'arrête là
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "c11", 402174)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c11", 402174)
+    local pen
+    for _, hot in ipairs(Z.MyHots("player")) do if hot.base == 402174 then pen = hot end end
+    assert(pen and pen.ticks == 3 and pen.duration == 2, "Penitence retenue")
+    NOW = NOW + 0.5 FireEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+    assert(pen.duration == 0.5, "Penitence coupee")
+    C_Spell.GetSpellName = getName Z.buffGeneration = Z.buffGeneration + 1
+    -- /lyorune soins : montant appris écrit
+    local report = table.concat(Z.HotReport(), " | ")
+    assert(report:find("Rénovation : 139 : 250 en 15 s %(aura%)"), report)
+    -- mort : oublié ; fin de la durée : oublié
+    Z.ForgetBuffs("party1")
+    assert(Z.MyHots("party1") == nil, "soin garde apres la mort")
+    NOW = NOW + 16
+    assert(Z.MyHots("player") == nil, "soin garde apres sa fin")
+  end)
+  NOW, AURAS, C_Spell.GetSpellDescription, Z.char.hotAmounts = saved.now, saved.auras, saved.desc, saved.amounts
+  Z.buttons[1].unit, Z.db.clickStats, C_Spell.GetSpellName = saved.unit, saved.stats, saved.name
+  Z.buffGeneration = (Z.buffGeneration or 0) + 1
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

@@ -335,6 +335,7 @@ local function DescribeHeals(Add, moment)
 		if not GetUnitTotalModifiedMaxHealthPercent then return "absente" end
 		return GetUnitTotalModifiedMaxHealthPercent("player")
 	end)
+	for _, line in ipairs(Z.HotReport()) do Add(line) end -- montants appris de mes soins sur la durée (Hots.lua)
 end
 
 local function RunHeals(moment)

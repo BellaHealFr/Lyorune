@@ -19,6 +19,7 @@
 --  11. Z.cooldownSpells.MACLASSE : ses gros sorts à recharge, montrés dans « Mes recharges » même sans raccourci
 --  12. Z.groupCooldowns.MACLASSE : ceux que ses alliés voient dans « Recharges du groupe » (s'il a Lyorune)
 --  13. Z.totemSlots.MACLASSE : les noms de ses emplacements de totems, si elle en pose (« Mes totems »)
+--  14. Z.hotSpells.MACLASSE : ses soins sur la durée, montrés sur la barre de vie de leur cible
 -- MACLASSE est le nom interne de la classe en majuscules (PRIEST, DRUID...), affiché par /lyorune erreurs.
 -- Toutes ces tables sont facultatives : une classe absente fonctionne quand même (cadres, clics choisis
 -- à la main dans les options, dissipation signalée par le jeu). Aucun autre fichier n'est à modifier.
@@ -48,6 +49,33 @@ Z.trackedSpells = {
 	SHAMAN  = { 408521, 408514 },                      -- Remous (talent de Forever), Bouclier de terre
 }
 
+-- Mes soins sur la durée, dessinés sur la barre de vie de leur cible (étape 36 c, réglage hotPrediction) :
+--   id      : premier rang (les autres rangs : Z.spellRanks, vérifiés par leur nom)
+--   every   : secondes entre deux soins ; duration : durée connue (la vraie durée, lue sur l'aura, passe avant)
+--   kind    : "hot"     soin régulier sur une cible
+--             "after"   part sur la durée d'un sort qui soigne aussi tout de suite (Rétablissement)
+--             "channel" coups d'une canalisation, le premier tout de suite (ticks : nombre de coups ; also : numéros
+--                       de la canalisation, distincts de ceux du lancement sur WoW Forever)
+--             "pending" soin qui attend que son porteur soit touché, puis saute (moment inconnu)
+--             "group"   plusieurs cibles : seule celle que je vise est sûre
+-- Montant appris par rang, hors combat (Hots.lua). Une classe absente de cette table n'a rien sur la barre.
+Z.hotSpells = {
+	PRIEST = {
+		{ id = 139, every = 3, duration = 15, kind = "hot" },               -- Rénovation
+		{ id = 402174, every = 1, duration = 2, ticks = 3, kind = "channel", -- Pénitence (talent de Forever)
+			also = { 402261, 402277, 1240732, 1240733, 1240734, 1240736, 1316992, 1316994 } },
+		{ id = 401859, kind = "pending" },                                  -- Prière de guérison (talent de Forever)
+	},
+	DRUID = {
+		{ id = 774, every = 3, duration = 12, kind = "hot" },               -- Récupération
+		{ id = 8936, every = 3, duration = 21, kind = "after" },            -- Rétablissement
+		{ id = 408120, kind = "group" },                                    -- Croissance sauvage (talent de Forever)
+	},
+	SHAMAN = {
+		{ id = 408521, every = 3, kind = "hot" },                           -- Remous (talent de Forever) : durée lue sur l'aura
+	},
+}
+
 -- Boucliers d'absorption parmi mes sorts suivis : avec le chiffre du bouclier (absorbText), l'ancien affichage
 -- des icônes (Auras.lua) écrit sur l'icône ce qui reste à absorber, quand le jeu laisse lire l'aura. Tous rangs.
 Z.absorbSpells = { 17, 431622 }                       -- Mot de pouvoir : Bouclier, Égide divine
@@ -65,6 +93,9 @@ Z.spellRanks = {
 	[6940] = { 20729 },                                                        -- Bénédiction de sacrifice
 	[408521] = { 1239242, 1239243, 22419 },                                   -- Remous : rangs 2 et 3, ancien numéro
 	[29166] = { 456195 },                                                      -- Innervation (variante trouvée dans le jeu)
+	[401859] = { 1240826, 1240827 },                                           -- Prière de guérison : rangs 2 et 3
+	[408120] = { 1238214, 1238215 },                                           -- Croissance sauvage : rangs 2 et 3
+	[402174] = { 1240720, 1240721, 1316995 },                                  -- Pénitence (lancement) : rangs 2 à 4
 	[1310911] = { 1310909, 1311593, 1311597 },                                 -- Veille de la Lumière : le buff laissé, rangs 1 à 3
 	-- Buffs de Z.raidBuffs et Z.uniqueBuffs : le jeu les dessine en combat sur les cases (Containers.lua, repères
 	-- des buffs), seulement aux numéros donnés. Vérifiés hors jeu (addons portés sur Forever).
