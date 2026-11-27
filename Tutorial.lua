@@ -149,6 +149,10 @@ local steps = {
 			if #mana > 0 then text = text .. "\n\n" .. table.concat(mana, " ") end
 			text = text .. "\n\n" .. (db.showClassIcon and L["La petite image près du nom : la classe du joueur."]
 				or L["La classe de chacun en image ? « Icône de classe », chapitre Joueurs."])
+			local _, myClass = UnitClass("player")
+			if db.talentRole and Z.talentRoles[myClass or ""] then -- (C43)
+				text = text .. " " .. L["Votre icône de rôle suit vos talents, pas votre forme : en Restauration, vous restez soigneur même en félin ou en ours."]
+			end
 			return text
 		end,
 		target = Cell,

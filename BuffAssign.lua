@@ -112,7 +112,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Ligne de la grille d'un joueur : son rôle (tank, soigneur), sinon sa classe ; nil si rien n'est lisible
 function Z.BlessingSlot(unit)
-	local role = UnitGroupRolesAssigned(unit)
+	local role = Z.UnitRole(unit) -- (C43 : druide d'après ses talents)
 	if not issecret(role) and role == "TANK" then return role end
 	-- (un soigneur a toujours de la mana : un rôle de soigneur sur une classe sans mana est une erreur du groupe)
 	if not issecret(role) and role == "HEALER" and Z.UsesMana(unit) then return role end

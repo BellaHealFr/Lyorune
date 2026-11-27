@@ -11333,6 +11333,111 @@ step("1.51.0 : affaiblissements Toujours montres (Ame affaiblie et Longanimite p
   Z:BuildData() Z:Refresh() RunUpdates()
   assert(ok, err)
 end)
+step("C43 et C44 : role du druide d'apres ses talents (forme ignoree, synchronisation), releve avec visibilite secrete", function()
+  local old = { now = NOW, class = UnitClass, roles = UnitGroupRolesAssigned, ct = rawget(_G, "C_ClassTalents"), tr = rawget(_G, "C_Traits"), grouped = GROUPED, opt = Z.db.talentRole }
+  local b = Z.buttons[1]
+  local ok, err = pcall(function()
+    assert(Z.defaults.talentRole == true, "eteint au depart")
+    local spent = { [11328] = 0, [11347] = 5, [11340] = 31 }
+    rawset(_G, "UnitClass", function() return "Druide", "DRUID" end)
+    rawset(_G, "C_ClassTalents", { GetActiveConfigID = function() return 7 end })
+    rawset(_G, "C_Traits", {
+      GetConfigInfo = function(id) assert(id == 7) return { treeIDs = { 42 } } end,
+      GetGroupDisplayInfoByTreeID = function(tree) assert(tree == 42) return { { groupID = 11328 }, { groupID = 11347 }, { groupID = 11340 } } end,
+      GetGroupCurrencyInfo = function(_, ids) return { { currencyInfos = { { spent = spent[ids[1]] } } } } end,
+    })
+    local game = "DAMAGER" -- le jeu : « DPS » depuis le passage en felin
+    rawset(_G, "UnitGroupRolesAssigned", function() return game end)
+    GROUPED = true
+    local n = #ADDON_SENT
+    FireEvent("TRAIT_CONFIG_UPDATED", 7)
+    assert(Z.UnitRole("player") == "HEALER", "druide Restauration : " .. tostring(Z.UnitRole("player")))
+    assert(#ADDON_SENT == n + 1 and ADDON_SENT[#ADDON_SENT].text == "T:H", "role non annonce au groupe")
+    FireEvent("PLAYER_TALENT_UPDATE") assert(#ADDON_SENT == n + 1, "annonce repetee sans changement")
+    -- icone de la case : soigneur malgre le role du jeu
+    b.role.SetAtlas = function(self, atlas) self._atlas = atlas end
+    Z:Refresh()
+    if b.unit == "player" then assert(b.role:IsShown() and b.role._atlas == "roleicon-tiny-healer", "icone : " .. tostring(b.role._atlas)) end
+    -- interrupteur coupe : le role du jeu
+    Z.db.talentRole = false
+    assert(Z.UnitRole("player") == "DAMAGER", "interrupteur sans effet")
+    Z.db.talentRole = true
+    -- Farouche : le role du jeu, qui suit la forme (ours : tank)
+    spent[11347], spent[11340] = 40, 0 game = "TANK"
+    FireEvent("TRAIT_CONFIG_UPDATED", 7)
+    assert(Z.UnitRole("player") == "TANK" and ADDON_SENT[#ADDON_SENT].text == "T:-", "Farouche : role du jeu")
+    -- Equilibre : DPS meme en ours
+    spent[11347], spent[11328] = 0, 30
+    FireEvent("TRAIT_CONFIG_UPDATED", 7)
+    assert(Z.UnitRole("player") == "DAMAGER" and ADDON_SENT[#ADDON_SENT].text == "T:D", "Equilibre")
+    -- un autre druide du groupe qui a Lyorune ; un inconnu ou un message mal forme ne change rien
+    GROUP_NAMES.party1 = "Ami"
+    game = "DAMAGER"
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "T:H", "PARTY", "Ami")
+    assert(Z.UnitRole("party1") == "HEALER", "role annonce ignore")
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "T:H", "PARTY", "Etranger")
+    GROUP_NAMES.party2 = "Etranger" assert(Z.UnitRole("party2") == "DAMAGER", "role d'un joueur hors du groupe") GROUP_NAMES.party2 = nil
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "T:X", "PARTY", "Ami") assert(Z.UnitRole("party1") == "HEALER", "message mal forme lu")
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "T:-", "PARTY", "Ami") assert(Z.UnitRole("party1") == "DAMAGER", "retour au role du jeu")
+    -- joueur parti : son role est oublie (il peut revenir avec d'autres talents, ou sans Lyorune)
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "T:H", "PARTY", "Ami") assert(Z.UnitRole("party1") == "HEALER")
+    GROUP_NAMES.party1 = nil FireEvent("GROUP_ROSTER_UPDATE") GROUP_NAMES.party1 = "Ami"
+    assert(Z.UnitRole("party1") == "DAMAGER", "role d'un joueur parti garde")
+    -- en combat : lecture remise a la sortie du combat ; points illisibles : le role connu reste
+    COMBAT = true spent[11328], spent[11340] = 0, 30
+    FireEvent("TRAIT_CONFIG_UPDATED", 7) assert(Z.UnitRole("player") == "DAMAGER", "talents lus en combat")
+    COMBAT = false FireEvent("PLAYER_REGEN_ENABLED")
+    assert(Z.UnitRole("player") == "HEALER" and ADDON_SENT[#ADDON_SENT].text == "T:H", "lecture apres le combat")
+    spent[11340] = MakeSecret() n = #ADDON_SENT
+    FireEvent("TRAIT_CONFIG_UPDATED", 7)
+    assert(Z.UnitRole("player") == "HEALER" and #ADDON_SENT == n, "points illisibles : role perdu")
+    Z:RoleCommand()
+    spent[11340], spent[11328] = 0, 30 FireEvent("TRAIT_CONFIG_UPDATED", 7)
+    assert(Z.UnitRole("player") == "DAMAGER")
+    -- nouveau venu : il recoit mon role avec ma version
+    n = #ADDON_SENT NOW = NOW + 10 -- (une annonce groupee par 3 secondes au plus)
+    GROUP_NAMES.party3 = "Neuf"
+    FireEvent("CHAT_MSG_ADDON", "Lyorune", "V:" .. Z.version, "PARTY", "Neuf")
+    local sent = false
+    for i = n + 1, #ADDON_SENT do if ADDON_SENT[i].text == "T:D" then sent = true end end
+    assert(sent, "nouveau venu sans mon role")
+    -- rafale de nouveaux venus (arrivee dans un raid) : une seule annonce
+    n = #ADDON_SENT Z.AnnounceTalentRole(true) Z.AnnounceTalentRole(true)
+    assert(#ADDON_SENT == n, "annonces en rafale")
+    GROUP_NAMES.party1, GROUP_NAMES.party3 = nil, nil
+    -- role du jeu secret : rien
+    rawset(_G, "UnitGroupRolesAssigned", function() return MakeSecret() end)
+    assert(Z.UnitRole("party4") == nil, "role secret")
+    Z:RoleCommand()
+    -- autre classe : jamais de role tire des talents, rien d'annonce
+    rawset(_G, "UnitClass", old.class)
+    n = #ADDON_SENT
+    FireEvent("TRAIT_CONFIG_UPDATED", 7)
+    rawset(_G, "UnitGroupRolesAssigned", function() return "TANK" end)
+    assert(Z.UnitRole("player") == "TANK" and #ADDON_SENT == n, "pretre : role du jeu")
+    Z:RoleCommand()
+    assert(Z.translations.enUS["Rôle du druide d'après ses talents"] and Z.translations.enUS["aucun"], "sans traduction anglaise")
+    -- C44 : une couche dont la visibilite est secrete est decrite, sans erreur
+    local layer = CreateFrame("Frame"):CreateTexture()
+    b.GetSize, b.IsVisible = function() return 100, 40 end, function() return true end -- (le faux client n'a ni taille ni affichage)
+    layer.GetSize = function() return 100, 40 end
+    layer.IsVisible = function() return MakeSecret() end
+    layer.IsObjectType = function(_, kind) return kind == "Texture" end
+    b.GetRegions = function() return layer end
+    Z.header:SetAttribute("child1", b)
+    Z.db.frameStateDiag = nil Z:DiagnoseFrames()
+    assert(table.concat(Z.db.frameStateDiag, " "):find("couche", 1, true), "couche a visibilite secrete absente du releve")
+  end)
+  rawset(_G, "UnitClass", old.class) rawset(_G, "UnitGroupRolesAssigned", old.roles)
+  rawset(_G, "C_ClassTalents", old.ct) rawset(_G, "C_Traits", old.tr)
+  GROUPED, Z.db.talentRole, NOW = old.grouped, old.opt, old.now
+  b.role.SetAtlas, b.GetRegions, b.GetSize, b.IsVisible = nil, nil, nil, nil
+  Z.header:SetAttribute("child1", nil) Z.db.frameStateDiag = nil
+  FireEvent("TRAIT_CONFIG_UPDATED", 7)
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

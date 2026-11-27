@@ -93,6 +93,7 @@ Chaque joueur de votre groupe a une case. La barre colorée est sa vie : plus el
 | Icône de résurrection au centre | Quelqu'un est en train de le relever |
 | Icône d'invocation au centre | Une invocation lui est proposée, ou il l'a acceptée ou refusée |
 | Icône de phase au centre | Il est dans une autre phase : il semble proche, mais vos sorts ne l'atteignent pas |
+| Icône de rôle d'un druide | Sur WoW Forever, le jeu change le rôle d'un druide selon sa forme (ours : tank, félin : DPS) et ne le remet pas ensuite. Lyorune montre plutôt le rôle de ses talents : un druide Restauration reste soigneur, un druide Équilibre reste DPS ; un druide Farouche garde le rôle du jeu. Le vôtre est lu dans vos talents, celui des autres druides arrive par la synchronisation s'ils ont Lyorune (sinon, le rôle du jeu). Réglage « Rôle du druide d'après ses talents », chapitre Joueurs. Le rangement « par rôle » reste celui du jeu. `/lyorune role` dit ce que Lyorune sait de votre rôle |
 | Couronne près de l'icône de rôle | C'est le chef du groupe (un petit drapeau : un assistant du raid). Elle ne se pose jamais sur l'icône de rôle : si vous l'avez poussée dessus dans l'éditeur de placement, elle revient juste à côté chez un tank ou un soigneur |
 
 Les couleurs principales sont rappelées en jeu : chapitre Fenêtre et aide, « Lire une case ».
@@ -318,7 +319,7 @@ Chaque élément de la case a son interrupteur, rangé selon ce qu'il montre. Ri
 - **Vie et portée** : soins en route, bouclier et son chiffre (éteint au départ), liseré de vie basse, en combat seulement et jamais sur les familiers (son seuil dans les réglages fins), absorption de soins, joueurs en bonne santé estompés (éteint au départ, leur seuil dans les réglages fins), barre de mana, mana basse des soigneurs, et les deux indices de portée ci-dessous.
 - **Mes soins** : vos soins sur la durée, les coins de la case, vos sorts suivis, la recharge globale, vos recharges et celles du groupe, vos totems, le trait de canalisation.
 - **Affaiblissements** : dissipation et image du type, icônes et leurs secondes, affaiblissements importants, joueur sous contrôle, auras privées des boss.
-- **Joueurs** : nom du joueur, icône de rôle, icône des DPS (épée, éteinte au départ), icône de classe (éteinte au départ), marqueur de raid, chef de groupe, gros défensifs, icône au centre de la case (appel, résurrection, hors de vue, invocation, très loin), invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
+- **Joueurs** : nom du joueur, icône de rôle, icône des DPS (épée, éteinte au départ), rôle du druide d'après ses talents (réglage fin, allumé au départ), icône de classe (éteinte au départ), marqueur de raid, chef de groupe, gros défensifs, icône au centre de la case (appel, résurrection, hors de vue, invocation, très loin), invocation et phase, menace, buffs manquants, mes joueurs (répartition entre soigneurs), infobulle.
 
 ### La portée (chapitre Vie et portée)
 
@@ -500,6 +501,7 @@ Cette liste se retrouve en jeu : chapitre Fenêtre et aide, « Commandes ».
 | `/lyorune repartir buffs` | Répartir les buffs : groupes et bénédictions (chef ou assistant) |
 | `/lyorune sorts` | Les sorts proposés dans Sorts et raccourcis, et pourquoi un sort manque |
 | `/lyorune buffs` | Pour chacun de vos buffs : lisible ici ou caché par le jeu, et sa durée connue ; pourquoi un joueur manque au panneau ; vos groupes buffés et les bénédictions annoncées par les autres paladins |
+| `/lyorune role` | Votre rôle : celui du jeu, celui tiré de vos talents (druide) et celui que montre Lyorune |
 | `/lyorune groupe` | Joueurs du groupe qui ont Lyorune |
 | `/lyorune annuler` | Revenir à la configuration d'avant le dernier import |
 | `/lyorune mesure` | Mesurer les performances (hors combat) |

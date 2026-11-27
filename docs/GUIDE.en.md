@@ -94,6 +94,7 @@ Every player in your group has a frame. The coloured bar is their health: the sh
 | Resurrection icon in the centre | Someone is resurrecting them |
 | Summon icon in the centre | A summon is offered to them, or they accepted or declined it |
 | Phase icon in the centre | They are in another phase: they seem close, but your spells cannot reach them |
+| A druid's role icon | On WoW Forever, the game changes a druid's role with their form (bear: tank, cat: DPS) and does not set it back afterwards. Lyorune shows the role of their talents instead: a Restoration druid stays a healer, a Balance druid stays DPS; a Feral druid keeps the game's role. Yours is read from your talents, other druids' roles come through syncing if they have Lyorune (otherwise, the game's role). Setting "Druid role from talents", Players chapter. Sorting "by role" stays the game's. `/lyorune role` tells what Lyorune knows about your role |
 | Crown next to the role icon | They lead the group (a small flag: a raid assistant). It never sits on the role icon: if you pushed it there in the element editor, it comes back right beside it on a tank or a healer |
 
 The main colours are recalled in game: Window and help chapter, "Reading a cell".
@@ -319,7 +320,7 @@ Every element of the cell has its switch, filed according to what it shows. Noth
 - **Health and range**: incoming heals, shield and its amount (off at first), low health edge, in combat only and never on pets (its threshold in the fine settings), heal absorb, healthy players faded (off by default, its threshold in the fine settings), mana bar, healers' low mana, and the two range hints below.
 - **My heals**: your heals over time, the cell corners, your tracked spells, the global cooldown, your cooldowns and the group's, your totems, the channel line.
 - **Debuffs**: dispelling and type picture, icons and their seconds, important debuffs, crowd-controlled player, boss private auras.
-- **Players**: player name, role icon, DPS icon (sword, off at first), class icon (off at first), raid marker, group leader, big defensives, icon in the middle of the cell (ready check, resurrection, out of sight, summon, very far away), summon and phase, threat, missing buffs, my players (healer assignments), tooltip.
+- **Players**: player name, role icon, DPS icon (sword, off at first), druid role from talents (fine setting, on at first), class icon (off at first), raid marker, group leader, big defensives, icon in the middle of the cell (ready check, resurrection, out of sight, summon, very far away), summon and phase, threat, missing buffs, my players (healer assignments), tooltip.
 
 ### Range (Health and range chapter)
 
@@ -497,6 +498,7 @@ This list is also in game: Window and help chapter, "Commands".
 | `/lyorune assign buffs` | Assign buffs: groups and blessings (leader or assistant) |
 | `/lyorune spells` | The spells offered in Spells and bindings, and why a spell is missing |
 | `/lyorune buffs` | For each of your buffs: readable here or hidden by the game, and its known duration; why a player is missing from the panel; your buffed groups and the blessings announced by other paladins |
+| `/lyorune role` | Your role: the game's, the one from your talents (druid) and the one Lyorune shows |
 | `/lyorune group` | Group players who have Lyorune |
 | `/lyorune undo` | Go back to the configuration from before the last import |
 | `/lyorune measure` | Measure performance (out of combat) |

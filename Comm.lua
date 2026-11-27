@@ -17,6 +17,7 @@
 --   A:...             une part de la répartition entre soigneurs (format dans Assign.lua)
 --   P:... et B:...    bénédictions annoncées, répartition des buffs (formats dans BuffAssign.lua)
 --   K:...             recharges des gros sorts (format dans GroupCooldowns.lua)
+--   T:H, T:D, T:T, T:- mon rôle tiré des talents (druide, format dans Roles.lua)
 
 local _, Z = ...
 local issecret = Z.IsSecret
@@ -105,6 +106,8 @@ local function GroupKeys()
 	return keys
 end
 
+Z.CommGroupKeys = GroupKeys -- (Roles.lua : oublier les rôles des joueurs partis)
+
 local function InGroup(sender)
 	return GroupKeys()[Key(sender)] ~= nil
 end
@@ -142,6 +145,7 @@ local function AnnounceVersion()
 	if not Enabled() or not IsInGroup() or GetTime() - lastAnnounce < 60 then return end
 	lastAnnounce, lastReply = GetTime(), GetTime()
 	SendGroup("V:" .. Z.version)
+	if Z.AnnounceTalentRole then Z.AnnounceTalentRole(true) end -- mon rôle tiré des talents (Roles.lua)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -340,6 +344,7 @@ local function OnVersion(version, sender)
 		if not known and Z.AssignNewMember then Z.AssignNewMember(sender) end -- il reçoit la répartition en cours
 		if not known and Z.BuffAssignNewMember then Z.BuffAssignNewMember(sender) end -- mes bénédictions, la répartition des buffs
 		if not known and Z.CooldownNewMember then Z.CooldownNewMember() end -- mes recharges
+		if not known and Z.AnnounceTalentRole then Z.AnnounceTalentRole(true) end -- mon rôle tiré des talents
 		if not known and GetTime() - lastReply >= REPLY_DELAY then
 			lastReply = GetTime()
 			SendGroup("V:" .. Z.version)
@@ -420,6 +425,12 @@ local function OnMessage(prefix, text, _, sender)
 
 	local buffs = text:match("^B:(.+)$")
 	if buffs then return Z.BuffAssignReceive(buffs, sender) end -- BuffAssign.lua
+
+	local talentRole = text:match("^T:([HDT%-])$")
+	if talentRole then
+		if InGroup(sender) then Z.TalentRoleReceive(talentRole, sender) end -- Roles.lua
+		return
+	end
 
 	local cooldowns = text:match("^K:(.+)$")
 	if cooldowns then return Z.GroupCooldownReceive(cooldowns, sender) end -- GroupCooldowns.lua

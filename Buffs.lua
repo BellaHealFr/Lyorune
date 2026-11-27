@@ -409,7 +409,7 @@ function Z.UniqueBearer(check)
 			if name then
 				local isMe = UnitIsUnit(unit, "player")
 				if issecret(isMe) then isMe = false end
-				local role = UnitGroupRolesAssigned(unit)
+				local role = Z.UnitRole(unit) -- (C43)
 				if mode == "NAME" and name == chosen then found = found or unit end
 				if isMe then me = me or unit end
 				if not issecret(role) and role == "TANK" then tank = tank or unit end
@@ -440,7 +440,7 @@ local function UniqueRows(result)
 				for spell in (b.renewUniques or ""):gmatch("[^,]+") do renewOn[spell] = renewOn[spell] or player end
 				if b.otherUniques then others[name] = b.otherUniques end
 				members[name] = members[name] or player
-				local role = UnitGroupRolesAssigned(unit)
+				local role = Z.UnitRole(unit) -- (C43)
 				if not issecret(role) and role == "TANK" then tank = tank or player end
 				local isMe = UnitIsUnit(unit, "player")
 				if not issecret(isMe) and isMe then me = me or player end

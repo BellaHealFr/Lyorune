@@ -188,6 +188,14 @@ Z.classRes = {
 	DRUID = { 1237950, combat = 20484 },
 }
 
+-- Rôle tiré des talents (C43, Roles.lua) : groupe de talents le plus rempli (numéro C_Traits du jeu) -> rôle.
+-- Sur Forever, le jeu change le rôle du druide selon sa forme et ne le remet pas en forme normale.
+-- Un groupe absent (Combat farouche : ours tank ou félin DPS) garde le rôle donné par le jeu, qui suit la forme.
+-- Une classe absente garde toujours le rôle du jeu. Ajouter une classe : une ligne de plus.
+Z.talentRoles = {
+	DRUID = { [11328] = "DAMAGER", [11340] = "HEALER" }, -- Équilibre, Restauration
+}
+
 -- Ressource de la classe quand ce n'est pas la mana : numéro et nom du jeu (Enum.PowerType). Sert au mode test,
 -- et sur les vraies cases quand le jeu garde la ressource secrète et qu'aucune n'est encore connue.
 Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2, "FOCUS" } }

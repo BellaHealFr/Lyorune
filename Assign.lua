@@ -405,8 +405,7 @@ local HEALING_CLASSES = { PRIEST = true, PALADIN = true, DRUID = true, SHAMAN = 
 local function Roster()
 	local healers, tanks, groups, byClass = {}, {}, {}, {}
 	for key, member in pairs(Members()) do
-		local role = UnitGroupRolesAssigned(member.unit)
-		if issecret(role) then role = nil end
+		local role = Z.UnitRole(member.unit) -- (C43 : druide d'après ses talents ; nil si secret)
 		local entry = { key = key, name = member.name, unit = member.unit }
 		if role == "HEALER" then healers[#healers + 1] = entry end
 		if role == "TANK" then tanks[#tanks + 1] = entry end

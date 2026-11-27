@@ -83,6 +83,7 @@ Z.defaults = {
 	showName = true,           -- nom du joueur sur la case
 	showRole = true,           -- icône de rôle
 	showDpsRole = false,       -- icône de rôle aussi pour les DPS (C25, éteinte au départ)
+	talentRole = true,         -- rôle du druide d'après ses talents, pas d'après sa forme (C43, Roles.lua)
 	showClassIcon = false,     -- icône de classe sur la case (éteinte au départ), placée par l'éditeur de placement
 	showMarker = true,         -- marqueur de raid
 	showLeader = true,         -- couronne du chef de groupe, drapeau des assistants en raid
@@ -710,6 +711,8 @@ function Z.Command(msg)
 		Z:SpellsCommand()
 	elseif msg == "buffs" then
 		Z:BuffsCommand()
+	elseif msg == "role" or msg == "rôle" then
+		Z:RoleCommand()
 	elseif msg == "groupe" or msg == "group" then
 		Z:PrintSyncMembers()
 	elseif msg == "annuler" or msg == "undo" then

@@ -402,8 +402,7 @@ end
 -- ressource change (UNIT_DISPLAYPOWER : druide en forme d'ours ou de félin, véhicule).
 local function UpdateRole(b)
 	local unit = b.unit
-	local role = UnitGroupRolesAssigned(unit)
-	if issecret(role) then role = nil end
+	local role = Z.UnitRole(unit) -- le rôle du jeu, ou celui des talents du druide (C43, Roles.lua) ; nil si secret
 	local had = b.role:IsShown()
 	if db.showRole and role == "TANK" then
 		b.role:SetAtlas("roleicon-tiny-tank")
@@ -1960,7 +1959,7 @@ local function BigLayers(b, lines)
 			local okSize, w, h = pcall(region.GetSize, region)
 			if not okSize or issecret(w) or issecret(h) or not w or w * h < W * H / 2 then return end
 			local okShown, visible = pcall(region.IsVisible, region)
-			if not okShown or not visible then return end
+			if not okShown or (not issecret(visible) and not visible) then return end -- secrète : décrite quand même (C44)
 			local _, r, g, bl, a = pcall(region.GetVertexColor, region)
 			local _, alpha = pcall(region.GetEffectiveAlpha, region)
 			local _, layer = pcall(region.GetDrawLayer, region)
@@ -2123,6 +2122,7 @@ function Z:CreateFrames()
 	end)
 	Z:On("PLAYER_ENTERING_WORLD", updateAll)
 	Z:On("PLAYER_ROLES_ASSIGNED", ForVisible(UpdateRole))
+	Z.RefreshRoles = ForVisible(UpdateRole) -- rôle tiré des talents, le mien ou annoncé par un druide (Roles.lua)
 	Z:On("PARTY_LEADER_CHANGED", ForVisible(UpdateLeader))
 	Z:On("PLAYER_TARGET_CHANGED", ForVisible(UpdateTarget))
 	-- Cases cible et focalisation : leur unité change de personne sans que la case se cache ni s'affiche
