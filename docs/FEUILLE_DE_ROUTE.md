@@ -180,7 +180,7 @@ Flèche de direction abandonnée (décision de l'auteur, 17 novembre 2026) : le 
 autres joueurs en donjon ni en raid. Ces deux indices marchent partout, même en combat.
 
 ## Étapes 14 à 18 : idées retenues par l'auteur (17 novembre 2026)
-Choisies après une comparaison avec VuhDo, HealBot et les addons de soin récents : on prend l'idée, jamais le code.
+Choisies par l'auteur parmi les demandes des soigneurs : rien n'est repris d'un autre addon.
 Les points marqués « à vérifier » se décident avec l'auteur avant tout codage.
 
 ## Étape 14 : joueurs épinglés, signal, chef de groupe (1.20.0)
@@ -193,8 +193,8 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
 
 ## Étape 15 : clics plus sûrs (1.21.0)
 - [x] Avertir quand un raccourci du « clic pour lancer » du jeu prend la même combinaison qu'un clic de Lyorune
-- [x] Bijou dans un clic (emplacement 13 ou 14 avant le sort) et clic « arrêter l'incantation » ; vérifié dans
-  HealBot porté sur Forever (`/use 13` dans la macro de ses boutons sécurisés), à confirmer par un essai en combat
+- [x] Bijou dans un clic (emplacement 13 ou 14 avant le sort) et clic « arrêter l'incantation » ; `/use 13` dans la
+  macro d'un bouton sécurisé (forme déjà utilisée sur ce client), à confirmer par un essai en combat
 
 ## Étape 16 : buffs uniques, temps de recharge global (1.22.0)
 - [x] Buffs à ne poser que sur une personne (Bouclier de terre, Épines ; Guide de lumière n'existe pas sur Forever) :
@@ -316,7 +316,7 @@ taille en pixels (un seul réglage), l'éditeur de placement les déplace seulem
   Bandeau (C9), corrigés ; puis « tout est ok ». Publiée le 21 novembre 2026
 
 ## Étapes 22 et 23 : idées retenues par l'auteur (21 novembre 2026)
-Choisies après une comparaison avec les addons de soin portés sur WoW Forever : on prend l'idée, jamais le code.
+Choisies par l'auteur parmi les demandes des soigneurs : rien n'est repris d'un autre addon.
 Les points marqués « à vérifier » se décident avec l'auteur avant tout codage. Chaque fonction a son interrupteur.
 
 ## Étape 22 : rangs, défensifs, contrôles, raccourcis (1.28.0)
@@ -341,7 +341,7 @@ Les points marqués « à vérifier » se décident avec l'auteur avant tout cod
     petit addon d'essai local jamais publié (`essais/LyoruneEssai`) : niveaux des rangs, règle des 10 niveaux,
     filtre des contrôles, listes de sorts sur un allié (affaiblissements et buffs), recherche des numéros des
     défensifs et des rangs des buffs. L'essai vérifie aussi la liste « À mettre en avant », déjà publiée : une
-    liste de numéros ne trouverait pas les affaiblissements d'un allié (signalé dans HealKit).
+    liste de numéros ne trouverait pas les affaiblissements d'un allié.
   - Touche du prochain buff : poser `useOnKeyDown` sur les lignes du panneau (comme C11) et vider les lignes
     cachées, pour qu'une touche ne lance jamais un ancien buff. Afficher ou masquer les cadres : hors combat.
   - Résultat de l'essai en jeu (21 novembre 2026, druide niveau 22, build 1.60.1.71037) : le niveau
@@ -508,9 +508,8 @@ jeu si « Incantation sur soi automatique » gêne les clics.
   combat » et « joueurs en bonne santé estompés » existent), vérification de « Incantation sur soi automatique ».
 
 ## Étapes 24 et 25 : idées retenues par l'auteur (21 novembre 2026)
-Choisies après une recherche des demandes des joueurs (forums Blizzard, demandes de Cell, Grid2 et FrameSort,
-feuille de route de HealKit et ses 98 idées de joueurs, pages de DandersFrames et des addons de Forever) : des idées
-qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais le code. Les points marqués
+Choisies après une recherche des demandes des joueurs (forums Blizzard, pages d'addons) : des idées neuves, à la
+façon de Lyorune. Rien n'est repris d'un autre addon. Les points marqués
 « à vérifier » se décident avec l'auteur avant tout codage. Chaque fonction a son interrupteur.
 
 ## Étape 24 : joueurs en bonne santé estompés, statistiques de mes clics (1.31.0)
@@ -567,7 +566,7 @@ qu'aucun addon de cadres ne propose sous cette forme. On prend l'idée, jamais l
     Map) et évènement `ADDON_RESTRICTION_STATE_CHANGED`, envoyé avant le blocage et après sa levée : on sait quand
     renvoyer, sans boucle. `SendAddonMessage` rend un code (`Enum.SendAddonMessageResult` : 0 réussi, 3 et 8
     freiné, 11 bloqué) : Comm.lua ne lisait que l'erreur Lua, un envoi freiné passait pour réussi (à corriger).
-    `CHAT_MSG_ADDON` n'a aucun champ secret. Fonctionnement étudié dans PallyPower (porté sur Forever) : chef et
+    `CHAT_MSG_ADDON` n'a aucun champ secret. Règle retenue : chef et
     assistants seuls, droits vérifiés par celui qui reçoit, application directe sans fenêtre.
   - **Décidé avec l'auteur (21 novembre 2026)** :
     - Qui envoie : le chef et les assistants. Celui qui reçoit vérifie lui-même que l'expéditeur l'est.
@@ -612,8 +611,8 @@ Idée : avant une grosse technique de boss, les cases s'éclairent ou affichent 
 
 ## Étapes 25 bis à 29 : plan correctif (validé par l'auteur le 22 novembre 2026)
 Retour d'un joueur prêtre (1.31.0), JcJ délaissé, buffs manquants qui ne se jouent pas pareil en JcJ et en JcE.
-Analyse faite pour les quatre classes de soigneurs (prêtre, paladin, druide, chaman), en regardant d'abord HealKit
-et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, jamais leur code.
+Analyse faite pour les quatre classes de soigneurs (prêtre, paladin, druide, chaman), d'après ce que le jeu
+permet ; rien n'est repris d'un autre addon.
 - **Ordre** : les bugs d'abord, puis buffs, sorts, affaiblissements, éditeur et JcJ.
 - **Petites mises à jour (demande de l'auteur)** : une version par lot ou par paire de petits lots, publiée dès
   qu'elle est codée et vérifiée hors jeu (tests, code du jeu, voie de repli sûre si une valeur est secrète).
@@ -636,8 +635,8 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
 ## Étape 26 : buffs (1.33.0 à 1.37.0)
 - [x] 26 a (1.33.0) : buffs complets du prêtre (Robustesse, Esprit divin, Protection contre l'Ombre et leurs
   prières, Feu intérieur sur soi seulement), du paladin, du chaman et du druide, toutes les absences d'un joueur ;
-  ma liste de buffs, une pour le JcE et une pour le JcJ. Fait le 22 novembre 2026, vérifié hors jeu (numéros lus
-  dans HealKit 1.15.0, PallyPower et VuhDo portés sur Forever ; un sort inconnu est ignoré). Décidé (carte
+  ma liste de buffs, une pour le JcE et une pour le JcJ. Fait le 22 novembre 2026, vérifié hors jeu (numéros
+  vérifiés dans des addons portés sur Forever ; un sort inconnu est ignoré). Décidé (carte
   blanche) : repères `self`, `mana` (classes absentes de `Z.classPower` : le chasseur de Forever a de la
   focalisation), `any`, `blessing` (une bénédiction de moi, filtre `HELPFUL|PLAYER` ; Rois au tank et au chasseur,
   Sagesse aux joueurs à mana, Puissance aux autres, `Z.blessingFor`), `weapon` (`GetWeaponEnchantInfo`, le dernier
@@ -652,8 +651,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   plus), leur taille réglée, leur thème, leur texture et leurs angles. Première ligne = ce que lance la touche
   « prochain buff », jusqu'à 3 suivants cliquables, « + N autres » ; disparaît quand tout est posé et en combat ;
   replacé seulement quand les cadres changent (pas de boucle) ; joueur hors de portée passé en fin de liste.
-  Réglage « Emplacement : avec les cadres (départ) / où vous voulez » (la fenêtre actuelle). Idée vue chez HealKit
-  (un bouton d'une case sous les cadres, un seul buff visible, replacé deux fois par seconde) : faire mieux.
+  Réglage « Emplacement : avec les cadres (départ) / où vous voulez » (la fenêtre actuelle).
   **Aussi en priorité haute (demande de l'auteur, 22 novembre 2026)** : tous les buffs de ma classe posables à
   la main dans « Sorts et raccourcis » (clic, touche au survol, macro), avec l'icône du grimoire. Aujourd'hui
   la liste des sorts (`Z:KnownSpells`, Clicks.lua) ne garde que les sorts « utilisables sur un allié »
@@ -690,55 +688,41 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   situation (seul, groupe sans tank, raid, donjon, champ de bataille, joueur choisi absent, buff fini sur un autre
   joueur) ; vérifier que le panneau se relit à chaque fois que le buff disparaît (connexion, rechargement,
   changement de zone, mort) ; et le cas d'un joueur seul dont la propre case serait masquée.
-  **Lot 1 fait le 22 novembre 2026 (1.33.7, vérifié hors jeu, comparé à HealKit, HealBot et VuhDo)** : version
+  **Lot 1 fait le 22 novembre 2026 (1.33.7, vérifié hors jeu)** : version
   simple et de groupe cochées à part (`Z.GroupWanted`, `Z.BuffFollowed`) ; sans composant, version de groupe
-  écartée (`C_Spell.IsSpellUsable`, comme HealKit) ; « Mes buffs » aligné ; `buffRefresh` à 2 avec migration, plafonné
-  au quart de la durée du buff (`Until`, Auras.lua ; HealKit : même plafond, VuhDo : 3 min ou 25 %) ; buff à une
+  écartée (`C_Spell.IsSpellUsable`) ; « Mes buffs » aligné ; `buffRefresh` à 2 avec migration, plafonné
+  au quart de la durée du buff (`Until`, Auras.lua) ; buff à une
   personne jamais sur un mort ou un déconnecté, panneau relu au changement d'état (Frames.lua) ; test par classe et
   par situation (seul, sans tank, raid, donjon, champ de bataille, joueur choisi absent, buff fini, zone, mort).
   Aussi (accord de l'auteur) : seul avec « Mon cadre quand je suis seul » décoché, ma fiche (`Z.hiddenSelf`,
-  `Z.SelfHidden`, Auras.lua) remplace ma case cachée (VuhDo et HealKit me comptent toujours ; HealBot me perd).
+  `Z.SelfHidden`, Auras.lua) remplace ma case cachée.
   **Reste** : le bloc sous les cadres (1.34.0), « Sorts et raccourcis » et `/lyorune sorts`.
   **Fait en 1.34.0 (bloc sous les cadres)** : `buffPlace` (« Avec les cadres » au départ / « Où vous voulez » =
   l'ancienne fenêtre), allure par forme dans `Z.shapes[...].buffs` (`LINE`, `TWO`, `ICON`), première case = la
   touche « prochain buff », 3 suivantes, « + N autres », accroché au point de départ des cadres (suit un
-  déplacement), au-dessus si la place manque. Analyse des trois addons : HealKit (un bouton d'une case, replacé
-  deux fois par seconde, un seul buff, portée du sort lue par `UnitDistanceSquared` et `C_Spell.IsSpellInRange`
-  car `UnitInRange` est secret sur Forever même hors combat, joueurs en combat et hors de vue écartés, cible
-  ratée mise de côté un moment), VuhDo (fenêtre libre de pastilles par buff, couleur selon l'état, compteur et
-  temps restant le plus court), HealBot (pas de fenêtre : couleur de barre, message et son). Repris à notre
-  façon : portée du sort et hors de vue (en fin de liste, estompés), joueurs en combat laissés de côté.
+  déplacement), au-dessus si la place manque. Joueur hors de portée du sort (`UnitDistanceSquared`,
+  `C_Spell.IsSpellInRange` : `UnitInRange` est secret sur Forever même hors combat) ou hors de vue : en fin de
+  liste, estompé ; joueurs en combat laissés de côté.
   **Faits aussi en 1.34.0 (accord de l'auteur)** : buff que je viens de lancer écarté 4 s, confirmé par
-  `UNIT_SPELLCAST_SUCCEEDED` (idée de PallyPower) ; case d'exemple quand le chapitre Joueurs est ouvert et que
-  rien n'est à poser, sans sort (idée de HealKit). **Idées notées pour plus tard** : joueur sur qui le sort vient
-  d'échouer mis de côté (HealKit) ; temps restant du buff le plus court et compteur par buff (VuhDo).
-  Recherche élargie à tout le dossier d'addons (demande de l'auteur) : PallyPower (garde quelques secondes en
-  mémoire le joueur qu'il vient de buffer, pour ne pas le reproposer avant que le jeu ait posé l'aura ; temps
-  restant coloré du vert au rouge), ArcAuras (`UI/AD_MissingBuffs.lua` : icônes des buffs manquants dessinées par
-  le jeu, **visibles en combat** : piste directe pour la 26 b bis), Details_RaidCheck (liste de contrôle du raid :
-  flacons, nourriture, rien de cliquable).
+  `UNIT_SPELLCAST_SUCCEEDED` ; case d'exemple quand le chapitre Joueurs est ouvert et que
+  rien n'est à poser, sans sort. **Idées notées pour plus tard** : joueur sur qui le sort vient d'échouer
+  mis de côté ; temps restant du buff le plus court et compteur par buff ; temps restant coloré du vert au rouge ;
+  icônes des buffs manquants dessinées par le jeu, **visibles en combat** (piste pour la 26 b bis).
   **Fait en 1.34.1 (Sorts et raccourcis, accord de l'auteur le 22 novembre 2026)** : la liste propose les sorts que
   le jeu dit utilisables sur un allié **et** tous les sorts de ma classe connus de Data.lua (`Z:ClassSpellNames` :
   buffs simples et de groupe, sur moi, à une personne, auras, armes, dissipations, résurrections, sorts suivis,
   clics de départ) et la nouvelle liste `Z.groupHeals` (soins sans cible : Nova sacrée, Prière de soins, Prière du
   désespoir, Tranquillité, Totem guérisseur, Totem de vague de mana). Jamais un sort offensif, ni passif ; autre
   spécialisation écartée (choix de l'auteur), mais expliquée par `/lyorune sorts` (`Z:SpellReport` : proposés,
-  absents avec leur raison, écartés). Bibliothèque de macros : même liste (`Z:KnownSpells`). Comparaison : HealKit
-  (tout le grimoire sauf les sorts qui ne font que blesser, donc Cri psychique et métiers aussi, exceptions à la
-  main pour Nova sacrée et Pénitence), HealBot (ses listes par classe, autre spécialisation sautée), VuhDo (nom tapé
-  à la main), ArcAuras (grimoire sans passifs ni autre spécialisation) ; aucun ne dit pourquoi un sort manque.
+  absents avec leur raison, écartés). Bibliothèque de macros : même liste (`Z:KnownSpells`).
   Test par classe (prêtre, paladin, chaman, druide).
   **Aussi en 1.34.1 (demandes de l'auteur pendant la session, 22 novembre 2026)** : icône du bloc divisée par 2
-  (« bien trop grosse », au moins 14 pixels) ; une seule case au lieu de la première et de 3 suivantes, comme le
-  bouton de HealKit : elle passe au buff suivant après chaque sort, « + N » dans son coin, rien en dessous.
+  (« bien trop grosse », au moins 14 pixels) ; une seule case au lieu de la première et de 3 suivantes :
+  elle passe au buff suivant après chaque sort, « + N » dans son coin, rien en dessous.
 - [x] 26 b (1.35.0), **faite le 22 novembre 2026** (accord de l'auteur sur la proposition : « Oui, tout »).
-  **Comparaison** : HealKit (`BuffHelper.lua`) : en champ de bataille et en arène seulement (`IsInInstance`), chaque
-  buff lancé depuis son bouton compte pendant sa durée (vue hors JcJ, table, sinon 5 min), par identifiant, confirmé
-  par la réussite, oublié à la mort, gardé au /reload ; buffs vus avant d'entrer reportés ; arrêt pendant un boss ;
-  relecture deux fois par seconde. VuhDo : `C_Secrets.ShouldSpellAuraBeSecret` buff par buff, rien pour les buffs
-  cachés. HealBot : saute toute aura secrète. Code du jeu (`SecretPredicatesDocumentation`) : un sort peut être
-  marqué « jamais secret », prioritaire sur les restrictions. Option du jeu `addonPvPMatchRestrictionsForced`
-  (vue dans Leatrix, VuhDo) : restrictions JcJ partout, pour essayer sans champ de bataille.
+  Code du jeu (`SecretPredicatesDocumentation`) : un sort peut être marqué « jamais secret », prioritaire sur les
+  restrictions. Option du jeu `addonPvPMatchRestrictionsForced` : restrictions JcJ partout, pour essayer sans champ
+  de bataille.
   **Fait (BuffMemory.lua)** : buff lisible lu partout (`Z.BuffReadable`, tous les numéros de la ligne) ; dernier
   état lu de chaque joueur (`Z.NoteBuffs`) et photo à l'état `Activating` des restrictions JcJ et
   boss ; mes sorts réussis retenus par identifiant (`UNIT_SPELLCAST_SENT` donne la cible : clic de case, panneau,
@@ -746,13 +730,12 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   nom), sinon 10 min ; oubli à la mort (Frames.lua) ; mémoire gardée au /reload (`Z.char.buffMemory`, contrôle de
   l'heure) ; un buff inconnu compte comme absent ; aucune boucle (rendez-vous par case, Auras.lua) ; message une
   fois par match ou clé, ligne dans l'infobulle, `/lyorune buffs`. Écart avec la proposition : pas de table de
-  durées dans Data.lua (impossible à vérifier hors jeu sans reprendre celle de HealKit) : durées apprises seules.
+  durées dans Data.lua (impossible à vérifier hors jeu) : durées apprises seules.
   **À vérifier en jeu** : buffs « jamais secrets » sur Forever (`/lyorune buffs` en champ de bataille), cible de
   `UNIT_SPELLCAST_SENT` lisible en JcJ, photo prise avant les portes.
   Texte d'origine de l'étape : faire apparaître les
-  buffs manquants partout (champ de bataille, arène, raid, donjon, instance). **Commencer par étudier comment
-  HealKit y arrive** (BuffHelper.lua : mémoire des sorts lancés `castMemory`, `bounced`, `inEncounter`, lecture des
-  auras secrètes), puis HealBot, VuhDo et le reste du dossier, et présenter la comparaison à l'auteur.
+  buffs manquants partout (champ de bataille, arène, raid, donjon, instance). **Commencer par étudier ce que
+  le jeu permet** (mémoire des sorts lancés, combat de boss, auras secrètes) et présenter la piste à l'auteur.
   Détail du plan validé, champ de bataille et arène. **Bug signalé par des joueurs (22 novembre
   2026)** : les buffs manquants ne fonctionnent pas en champ de bataille. Cause connue (analyse 1a, B2) : pendant
   un match JcJ, le jeu rend les noms des buffs secrets, même hors combat ; Lyorune s'arrête au premier nom secret,
@@ -764,17 +747,11 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   cimetière, buff posé pendant le match.
 - [x] 26 b bis (1.36.0), **faite le 22 novembre 2026** (choix de l'auteur : aspect « couleur / gris » ; touche du buff
   unique et repères aussi en champ de bataille : options recommandées retenues).
-  **Comparaison** : HealKit (`BuffHelper.lua`) : rien en combat, repères cachés et bouton retiré au début du
-  combat. HealBot (`HealBot_CombatAuras.lua`) : conteneurs du jeu pour ses soins sur la durée et les
-  affaiblissements, aucun buff manquant. VuhDo (`VuhDoBuffWatchContainers.lua`, `VuhDoAuraContainerOverlays.lua`) :
-  un conteneur par buff et par case (`HELPFUL`, tous les numéros, 1 bouton) sur une couleur « manquant », option
-  « en combat ». ArcAuras (`AD_MissingBuffs.lua`) : icône grise sous le bouton du jeu ; rangs trouvés en parcourant
-  tous les sorts du client (lourd).
-  **Fait (mieux que VuhDo)** : un seul conteneur de plus par case (`buffs`, Containers.lua), une place fixe par buff
+  **Fait** : un seul conteneur de plus par case (`buffs`, Containers.lua), une place fixe par buff
   de « Mes buffs » qui concerne ce joueur (`Z.BuffConcerns`, décidé hors combat), repère gris à bord rouge dessous
   (`Z.BuffMark`, Auras.lua) : couleur = posé, gris = manquant. Montré quand le jeu cache les buffs (combat, champ de
   bataille, arène : `Z.BuffMarksOn`), donc aussi la vérité en JcJ, même pour le buff d'un autre.
-  Tous les rangs écrits dans `Z.spellRanks` (Data.lua, vérifiés avec HealKit, PallyPower, VuhDo, WhatsTraining,
+  Tous les rangs écrits dans `Z.spellRanks` (Data.lua, vérifiés dans des addons portés sur Forever,
   revérifiés par leur nom au chargement : `check.auraIds`). Bénédictions, auras et buffs uniques : seulement les
   miens (`HELPFUL|PLAYER`) ; buff unique seulement sur la case de son porteur (`Z.UniqueBearer`, Buffs.lua). Joueur
   changé en combat (unité ou `GROUP_ROSTER_UPDATE`) : repères cachés jusqu'à la fin du combat. Touche « prochain
@@ -789,7 +766,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   unique sur son porteur », préparé hors combat. À vérifier avec l'auteur avant codage : ordre de dessin et
   opacité, conteneur vide invisible, numéros de tous les rangs, coût en raid de 40.
 - [x] 26 c bis (1.37.1), **priorité haute, avant toute autre étape** : bloc des buffs manquants en bandeau fin (demande de l'auteur après essai : trop haut, pas
-  assez clair ; modèle : le bouton de HealKit). Décidé : même disposition pour les quatre formes, hauteur qui suit
+  assez clair). Décidé : même disposition pour les quatre formes, hauteur qui suit
   la taille du texte, largeur d'une case (au moins 110), icône de toute la hauteur, trait, ligne 1 le joueur, ligne 2
   « +N autres » ou le nom court du sort en gris ; nom complet dans l'infobulle.
   Aussi (retour d'un joueur) : deux interrupteurs « En combat » et « En champ de bataille et en arène » à la place
@@ -803,11 +780,6 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
     1.34.0 et 1.36.0 adaptés (107 étapes), tutoriel, guide anglais, visite (carte « C'est parti »), Notes, README.
 - [x] 26 c (1.37.0) : qui buff qui (mes groupes, bénédictions par classe, à partir de la répartition de la
   1.32.0), synchronisation des paladins, guide et visite.
-  Comparaison (22 novembre 2026) : HealKit choisit une bénédiction par ligne (Tank, Soigneur, chaque classe, moi),
-  sans aucune entente entre paladins ; HealBot et VuhDo donnent une cible par buff (moi, groupe, raid, mêlée,
-  distance, soigneurs, tanks), sans synchronisation ; PallyPower a une grille paladins × classes, des exceptions
-  par joueur, une répartition automatique, envoyée par le chef ou les assistants (un paladin peut autoriser les
-  autres à le régler). Aucun ne s'adapte seul aux bénédictions déjà posées par un autre paladin.
   **Décidé avec l'auteur (22 novembre 2026)**, les quatre choix recommandés :
   - Mes groupes à buffer : réglage à part (8 boutons dans Mes buffs, tous allumés au départ, comptent en raid
     seulement), bouton « Comme mes soins » qui recopie les groupes de soin de la 1.32.0.
@@ -830,9 +802,8 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
 ## Étape 27 : sorts (1.38.0 à 1.42.1)
 - [x] 27 a (1.38.0) : rang choisi sur chaque raccourci (liste avec niveau et coût, rang glissé gardé, codes de
   partage, macros des barres, statistiques).
-  Recherche (22 novembre 2026) : HealKit (`Bindings.lua`, `Config.lua`) ne voit les rangs bas que si l'option du
-  grimoire qui montre tous les rangs est cochée (menu des réglages du grimoire de Forever,
-  `SetupAllRanksCheckbox`), et baisse lui-même un rang fixe trop fort pour un joueur de bas niveau, case par case.
+  Recherche (22 novembre 2026) : les rangs bas ne se voient que si l'option du grimoire qui montre tous les rangs
+  est cochée (menu des réglages du grimoire de Forever, `SetupAllRanksCheckbox`).
   Choix de l'auteur (les trois recommandés) : clic = le plus haut, **clic droit** = liste des rangs ; rangs cachés
   par le grimoire : la liste le dit (rien à écrire par classe) ; rang fixe sur un joueur de trop bas niveau :
   accepté, le guide conseille « le plus haut ».
@@ -855,9 +826,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
 - [x] 27 b (1.39.0) : variantes d'un raccourci (sur un ennemi, en JcJ, hors combat) ; garde « aucun soin sur un
   ennemi ». Choix de l'auteur (22 novembre 2026, les trois recommandés) : la variante « selon le rôle » part en
   1.39.1 (27 b bis) ; garde allumée au départ ; variantes en sous-lignes ajoutées par un « + » au bout de la ligne.
-  Comparaison : HealKit passe chaque raccourci utilisé sur un bouton ennemi (`harmbutton` du modèle sécurisé du
-  jeu), sans sort ennemi le clic ne fait rien ; HealBot a des jeux de raccourcis « Ennemi » à part ; VuhDo écrit des
-  macros `[harm]`. Aucun n'a de variante JcJ ni hors combat sur la même ligne. Lyorune : `clickVariants[jeu][id] =
+  Lyorune : `clickVariants[jeu][id] =
   { enemy, pvp, ooc }` (Clicks.lua, comme les bijoux : suit le déplacement, le retrait, la copie de spécialisation,
   le partage `v.CLASSE.id.sorte`, la sauvegarde avant import) ; sur un ennemi, `shift-harmbutton1` mène au bouton
   `zxshift1` (touches : `*harmbutton-zh1` vers `zxh1`), la garde `enemyGuard` mène à `zxnone` (aucune action) ;
@@ -870,8 +839,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   avec Maj) ; variante JcJ à l'entrée d'un champ de bataille ; variante hors combat avec un rang choisi.
 - [x] 27 b bis (1.39.1) : variante « sur un tank ». Choix de l'auteur (22 novembre 2026, les deux recommandés) :
   tank seulement (pas de variante soigneur) ; dans les groupes mélangés, variante posée aussi hors combat selon le
-  rôle. Comparaison : HealKit adapte le rang au niveau, jamais au rôle (deux raccourcis pour « gros » et
-  « économe ») ; HealBot a un cadre des tanks mais aucun sort selon le rôle ; VuhDo n'a qu'une garde. Lyorune :
+  rôle. Lyorune :
   sorte `tank` dans `Z.variantKinds` (Clicks.lua), deux versions des raccourcis (`sets.base`, `sets.tank`) et une
   liste de rangs par version (`rankLists`) ; `SetOf` : cadre trié sur le rôle par le jeu (`roleFilter`, cadre
   « Tanks », cadres par rôle en raid) = version de son rôle, juste en combat (`PushHeaders` : chaque en-tête recopie
@@ -891,9 +859,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   buff 1310909, 1311593, 1311597) et Serment de lumière (1328548) pour le paladin. Mon bouclier : reste écrit sur
   son icône dans l'ancien affichage quand `points` se lit (`ShieldLeft`, Auras.lua, `Z.absorbSpells`) ; les
   icônes des conteneurs du jeu sont des objets protégés : décompte seul, le chiffre de la case dit ce qui reste.
-  Comparaison : HealKit (aucun chiffre ; barre de 0 à 1 pour ses avertissements), HealBot (chiffre seulement non
-  secret : absent en combat), VuhDo (total en mode secret, « 0 » compris ; reste par bouclier via le journal de
-  combat, fermé sur Forever). À essayer en jeu : chiffre en combat, « 0 » bien caché (essai n° 3), effet réel de
+  Reste par bouclier impossible : le journal de combat est fermé sur Forever. À essayer en jeu : chiffre en combat, « 0 » bien caché (essai n° 3), effet réel de
   Veille de la Lumière et d'Égide divine sur Forever (essai n° 5).
 - [x] 27 d (1.42.0) : « Mes recharges » ; Pénitence (trait de canalisation si le jeu ne la prédit pas).
   Fait (23 novembre 2026), d'après le plan décidé (27 d bis, points 1, 2, 4, 6) et S3 de `PLAN-CORRECTIF.md`.
@@ -937,7 +903,7 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   Tests : étape 1.42.1. **À essayer en jeu** (deux joueurs avec Lyorune) : état reçu en rejoignant le groupe,
   sort lancé et prêt, /reload, combat de boss (titre, mise à jour à la fin), secondes du jeu sur les noms.
   **Demande de l'auteur (23 novembre 2026)** : suivre ses propres temps de recharge et ceux des joueurs groupés,
-  activable, propre, mieux que les autres addons. Recherche faite le 23 novembre 2026 dans tous les addons du jeu
+  activable et propre. Recherche faite le 23 novembre 2026 dans tous les addons du jeu
   et ceux téléchargés pour étude (`Desktop\Adone heal\Forever`), et dans le code du jeu (branche `forever`).
   **Ce que permet le jeu**
   - Mes recharges : `C_Spell.GetSpellCooldown` donne un début et une durée **secrets en combat** (rencontre, match
@@ -952,16 +918,8 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
   - Messages entre addons : bloqués pendant la restriction « Chat » (combat de boss, match JcJ) ;
     `C_ChatInfo.InChatMessagingLockdown`, déjà géré par Comm.lua (messages gardés jusqu'à la fin). Un message ne
     peut contenir aucune valeur secrète.
-  **Ce que font les autres**
-  - Details (bibliothèque LibOpenRaid, fournie avec) : chaque joueur relit ses recharges toutes les 3 secondes et
-    les envoie au groupe ; il lit des chiffres secrets en combat sur Forever, ne tient pas compte du blocage des
-    messages, et sa liste Forever reprend des sorts du jeu moderne absents de Forever (Bombe psychique,
-    Maléfice...).
-  - VuhPlus (WotLK) : recharges du raid par le journal de combat, fermé sur Forever.
-  - ArcAuras, Decursive, Aptechka : seulement les miennes, par l'objet durée du jeu (balayage, jamais de chiffres
-    en combat). HealBot : les miennes dans l'infobulle, dernière valeur gardée en combat (fausse pour une recharge
-    lancée en combat), une partie coupée sur Midnight. HealKit : seulement Gardien de peur prêt ou non. VuhDo :
-    Prompte guérison prête ou non. Grid2 : un indicateur masqué pendant une recharge, hors restriction.
+  **Limites du jeu** : journal de combat fermé sur Forever, messages entre addons bloqués pendant un combat de
+  boss, chiffres des recharges secrets en combat (seul l'objet durée du jeu les dessine, en balayage).
   **Plan décidé (choix de l'auteur, les quatre recommandés)**
   1. **Un panneau sous les cadres**, collé comme le bandeau des buffs : « Mes recharges » en haut, « Groupe »
      dessous, rangé par sort (« Renaissance : Lyra prête, Tom 4:10 »). Trois interrupteurs : « Mes recharges » et
@@ -981,15 +939,12 @@ et HealBot, puis les autres addons de soin : l'idée et ce que le jeu permet, ja
      dernier état connu, marqué « avant le boss », et se remet à jour à la fin. Un joueur sans Lyorune n'apparaît
      pas (la ligne d'aide le dit). Essai en jeu : `C_Secrets.GetSpellCastSecrecy` sur les sorts de la liste ; un
      sort « jamais secret » serait suivi même sans Lyorune.
-  6. **Mieux que les autres** : marche en combat pour mes sorts, aucune lecture toutes les 3 secondes, aucun chiffre
+  6. **Points forts** : marche en combat pour mes sorts, aucune lecture toutes les 3 secondes, aucun chiffre
      secret envoyé, blocage des messages pris en compte, liste vérifiée sur Forever.
 
 ## Étape 28 : affaiblissements (1.43.0 et 1.43.1)
 Choix de l'auteur (23 novembre 2026, les quatre recommandés) : deux versions ; secondes allumées au départ ; icône
-du type en élément à part avec liseré coloré ; Longanimité comme Âme affaiblie. Recherche : HealKit 1.15 (une case
-« secondes sur toutes les icônes », éteinte, police partagée ; liseré teinté par type), HealBot Forever (Âme
-affaiblie à part, sans secondes ; tri « UnitFrameDebuff »), VuhDo Forever (style « Icon » du jeu proposé, tri par
-expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche en combat.
+du type en élément à part avec liseré coloré ; Longanimité comme Âme affaiblie.
 - [x] 28 (1.43.0) : **secondes restantes** (`debuffCountdown`, allumé, chapitre Affaiblissements, partie Icônes) sur
   les icônes d'affaiblissements, le contrôle subi et la grande icône (`Numbers`, `StyleIcon`, `PlaceBig`,
   Containers.lua ; `ShowAura(..., numbers)`, Auras.lua). **Longanimité** (25771) au bout des soins du paladin
@@ -1005,7 +960,7 @@ expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche e
 - [x] 28 bis (1.43.1) : mode « Utiles » (D1 de `PLAN-CORRECTIF.md`) et liste « À mettre en avant » qui dit si elle
   marche en combat, accepte un lien de sort et gagne sur « À ignorer » (D4). Choix de l'auteur (23 novembre 2026, les
   deux recommandés) : « Utiles » = choix du jeu comme pour ses cadres de raid (politique `ProcessAura`, candidat
-  `processedAuraType` « affaiblissement », méthode de HealKit, faite pour Forever) et rien de plus de 5 minutes
+  `processedAuraType` « affaiblissement ») et rien de plus de 5 minutes
   (`maxDuration`), la durée seule si le client n'a pas la politique ; ma liste en tête de la rangée dans les trois
   modes (`Z.DebuffPlaces`, Themes.lua : une place de plus quand la liste n'est pas vide). `debuffMode` : « Tous »,
   « Utiles », « Ceux que je dissipe » (`USEFUL` ajouté, `DISPEL` gardé). Conteneurs (Containers.lua) : groupe
@@ -1013,9 +968,8 @@ expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche e
   rangée (`Z.UsefulPolicy`). Ancien affichage (Auras.lua) : `InList` (nom ou numéro tapé), `Useful` (durée lisible
   de 5 min au plus, secrète = montrée). Options : lien de sort par Maj-clic (`Z.SpellFromLink`, `Z.AddToList`,
   crochet sur `ChatFrameUtil.InsertLink`), numéro retenu (`Z.RememberAuraId`), nom gris tant qu'il n'est pas
-  reconnu (`Z.KnownAuraIds`, infobulle). Recherche : HealKit (onlyDispellable, rangée « Important » triée par le
-  jeu, 5 min au plus), HealBot et ElvUI (`RAID_IN_COMBAT`, non prouvé sur Forever), VuhDo (filtres au choix) ;
-  aucun ne dit si une liste marche en combat. Tests : étape 1.43.1.
+  reconnu (`Z.KnownAuraIds`, infobulle). Filtre `RAID_IN_COMBAT` écarté (non
+  prouvé sur Forever). Tests : étape 1.43.1.
 
 ## Étape 29 : éditeur de placement et JcJ (1.41.0 et 1.44.0)
 - [x] 29 a (1.41.0, avancée en priorité par l'auteur le 22 novembre 2026) : **afficher ou masquer chaque élément de la case**, dans les deux sens (précision de l'auteur,
@@ -1051,7 +1005,7 @@ expiration). Aucun ne montre Longanimité ni ne dit si une liste suivie marche e
 - [x] 29 b (1.44.0) : ligne « Match JcJ » dans l'infobulle et le panneau, aides de la synchronisation, cadre
   « Arène » seulement si Forever a des arènes.
   Fait (23 novembre 2026), choix de l'auteur (les deux recommandés) : aucune trace d'arène JcJ sur WoW Forever
-  (seul l'objet « Arena Master » de l'arène de Gurubashi, HealKit ne prévoit que des champs de bataille) : pas de
+  (seul l'objet « Arena Master » de l'arène de Gurubashi) : pas de
   cadre Arène, profil « Arène » retiré (`Z.profileSizes`, `Z.SituationLabel`, Share.lua ; grille des profils,
   Options.lua ; anciennes règles `ARENA` effacées dans `Migrate`), « arène » retiré des textes ; une arène
   ouverte un jour compterait comme un champ de bataille (`Z.PvPKind`). Infobulle d'une case en match :
@@ -1090,8 +1044,8 @@ BuffReminders) ; la 1.35.0 ne marche pas en jeu.
   cache les buffs (`Fighting`). Toutes les cases relues quand la restriction devient active. Le panneau reste
   caché quand je suis en combat (boutons du jeu verrouillés) : les repères dessinés par le jeu (`pvpBuffs`)
   prennent le relais. Tests : étape 1.44.1.
-- [ ] 30 b : **corriger** selon les mesures, d'abord comparer HealKit, HealBot, VuhDo puis le reste du dossier
-  (règle de l'auteur). Pistes : en match, le panneau s'appuie sur la mémoire seule et présume le buff absent à
+- [ ] 30 b : **corriger** selon les mesures.
+  Pistes : en match, le panneau s'appuie sur la mémoire seule et présume le buff absent à
   l'entrée et après une mort jusqu'à ce que je le pose (« inconnu = absent ») ; photo prise au bon moment
   (préparation, `PVP_MATCH_STATE_CHANGED`) si les auras y sont encore lisibles ; joueurs en combat ou au nom
   secret plus écartés à tort en JcJ ; repères dessinés par le jeu sur les cases (seule vérité pour les buffs
@@ -1106,9 +1060,7 @@ mur vide avec une invitation, à relire par l'auteur avant la publication.
   chaque publication (service public cfwidget, numéro du .toc) au lieu d'être tapé, demande de l'auteur.
   Règle du mur (auteur, même jour) : proposer des améliorations, signaler des bugs régulièrement, ou faire
   connaître Lyorune ; toujours avec l'accord du joueur. Dite sous le mur, dans les guides et `outils/amis.txt`.
-- Comparaison : HealKit (onglet « À propos », page « Merci », `AboutData.lua` écrit à chaque publication, carnet
-  `Ledger.lua` qui ne compte que les sorts lancés depuis ses propres cases) ; HealBot et VuhDo : aucune page de
-  remerciements ni carnet. Lyorune fait mieux : le carnet compte tous mes sorts réussis, d'où qu'ils partent
+- Le carnet compte tous mes sorts réussis, d'où qu'ils partent
   (cases, barres, macros, touches), rangés par nom (tous les rangs) ; le nombre de mises à jour vient de
   `Changes.lua` (rien à écrire) ; aucun texte ni icône repris, runes de Lyorune.
 - [x] `About.lua` (nouveau, écrit par `outils/publier.py`) : date, téléchargements GitHub (même lecture que
@@ -1132,19 +1084,17 @@ mur vide avec une invitation, à relire par l'auteur avant la publication.
 
 ## Étape 32 : totems du chaman, icône de classe (1.46.0)
 Idées en réserve d'avant le plan correctif, retenues par l'auteur le 23 novembre 2026. Avant tout codage :
-regarder HealKit, HealBot, VuhDo puis tout le dossier d'addons (règle de l'auteur), et décider avec l'auteur les
+décider avec l'auteur les
 points techniques (totems : ce que le jeu dit des totems d'un chaman sur Forever, `GetTotemInfo` pour les miens,
 auras laissées par les totems sur les joueurs, secret ou non en combat).
 Règle de l'auteur (23 novembre 2026), valable pour cette étape et toutes les suivantes : chaque nouveauté a son
 interrupteur, le joueur choisit de l'avoir ou non. Les totems sont **éteints au départ**. Les étapes 34 (canal) et
 35 (builds) auront en plus leurs propres règles, à établir et proposer à l'auteur pendant leur recherche (34 a, 35 a).
-Comparaison (23 novembre 2026). HealBot et HealKit : aucun affichage de totems. VuhDo : mes totems comme « buff
-à surveiller » (`GetTotemInfo` 1 à 4, chaque valeur peut être secrète). ElvUI (oUF et TotemTracker) : une icône
-par emplacement, temps par `GetTotemDuration(slot)` + `SetCooldownFromDurationObject` quand la durée est secrète,
-présence par `SetAlphaFromBoolean`, événement `PLAYER_TOTEM_UPDATE`. ArcAuras : 4 emplacements sur Forever (Feu,
-Terre, Eau, Air), nom et sort secrets en combat. Aucun ne montre les joueurs touchés par un totem : il faudrait
-lire leurs auras, secrètes en combat. Icône de classe : VuhDo (`UI-Classes-Circles` + `CLASS_ICON_TCOORDS`),
-HealKit et oUF (atlas `classicon-<classe>`, vérifié par `C_Texture.GetAtlasInfo`).
+Ce que permet le jeu (23 novembre 2026) : 4 emplacements de totem sur Forever (Feu, Terre, Eau, Air), `GetTotemInfo`
+(chaque valeur peut être secrète), temps par `GetTotemDuration(slot)` + `SetCooldownFromDurationObject` quand la
+durée est secrète, présence par `SetAlphaFromBoolean`, événement `PLAYER_TOTEM_UPDATE`. Les joueurs touchés par un
+totem resteraient inconnus : il faudrait lire leurs auras, secrètes en combat. Icône de classe : atlas
+`classicon-<classe>` (vérifié par `C_Texture.GetAtlasInfo`).
 Décision de l'auteur (23 novembre 2026) : mes totems sous les cadres ; icône de classe éteinte au départ.
 - [x] Totems du chaman (éteints au départ, interrupteur) : une rangée de mes 4 totems (Feu, Terre, Eau, Air)
   collée sous les cadres, temps qui tourne même en combat, seulement pour un chaman.
@@ -1159,18 +1109,17 @@ Décision de l'auteur (23 novembre 2026) : mes totems sous les cadres ; icône d
 ## Étapes 32 a à 32 d : plan correctif, retour d'un joueur (C17 à C22)
 Retour d'un joueur transmis par l'auteur le 23 novembre 2026 (fiches C17 à C22 de `CORRECTIONS.md`, local).
 Décision de l'auteur : ces corrections passent avant l'étape 33 ; on revient au plan ensuite. Une étape par
-session. Méthode demandée par le joueur, pour chaque étape : chercher les addons qui font la même chose et
-marchent sur WoW Forever (HealBot, VuhDo, Grid2, Clique, Cell, oUF d'ElvUI, PallyPower, etc.), les télécharger si
-besoin dans `essais/`, comparer avec Lyorune, présenter à l'auteur la cause et la correction proposée, puis
-corriger à notre façon, sans rien copier, et nommer les addons de référence dans la fiche.
+session. Méthode demandée par le joueur, pour chaque étape : vérifier dans le code du jeu et dans les addons
+portés sur WoW Forever ce que le jeu permet, présenter à l'auteur la cause et la correction proposée, puis
+corriger à notre façon, sans rien copier ; le détail reste dans la fiche (locale).
 - [x] **32 a (1.46.1), C17, critique** (publiée le 24 novembre 2026, avec C23, C24 et l'icône des DPS, C25) : interface qui gèle et cases perdues quand le groupe change (JcJ, raid
   de 20 à 40, donjon). Causes probables (lecture du code) : les en-têtes de groupe du jeu replacent toutes leurs
   cases à chaque attribut changé ; `ApplyLayout` (Frames.lua) et `PushHeaders` (Clicks.lua) en posent des
   dizaines d'affilée sans `_ignore` (ElvUI le pose) ; `ApplyLayout` vide d'abord la position de toutes les cases,
   qui restent perdues si la suite s'arrête ; changement de profil automatique et réduction des cases relancent tout
   quand le palier du groupe change ; une dizaine d'écouteurs de `GROUP_ROSTER_UPDATE` sans regroupement.
-  - [x] Recherche : code du jeu (`SecureGroupHeaders.lua`, dépôt public de l'interface), ElvUI, HealKit, VuhDo,
-    HealBot (installés). Grid2 et Cell pas nécessaires : le code du jeu tranche.
+  - [x] Recherche : code du jeu (`SecureGroupHeaders.lua`, dépôt public de l'interface), confirmé
+    dans les addons installés : le code du jeu tranche.
   - [x] Présenter à l'auteur la cause et la correction (fiche C17), accord avant de coder (24 novembre 2026).
   - [x] `_ignore` pendant toute configuration d'un en-tête, un seul replacement à la fin ; plus de position vidée
     à la main ; `ApplyLayout` sous `Z:Try`.
@@ -1181,7 +1130,7 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
     placées, temps mesuré), fait ; essai en jeu en champ de bataille et en raid, à faire par l'auteur.
 - [x] **32 b, C18** : cibler un joueur ou soi-même. Pas un bug du ciblage : les clics de départ prennent clic
   gauche et clic droit, seule une combinaison laissée libre ciblait encore sans que rien ne le dise, et « Cibler »
-  restait caché dans la fenêtre des sorts. Comme HealKit : Alt + clic gauche cible, Alt + clic droit ouvre le menu,
+  restait caché dans la fenêtre des sorts. Désormais : Alt + clic gauche cible, Alt + clic droit ouvre le menu,
   dans la liste des clics, au premier lancement et à la mise à jour (combinaison libre chez Lyorune et dans le clic
   pour lancer du jeu, message à la connexion). Carte « Soigner d'un clic », texte d'aide, tutoriel et guide anglais
   disent comment cibler et renvoient aux raccourcis du jeu (« Cibler soi-même »). Essayée en jeu par l'auteur, publiée en 1.46.2.
@@ -1194,46 +1143,44 @@ corriger à notre façon, sans rien copier, et nommer les addons de référence 
     premier (Auras.lua, `b.missingBuff`), en s'appuyant sur ce que fait déjà le chemin des conteneurs.
   - [x] C22 : rangée de la case, buff posé qui disparaît, buff perdu en gris ; forme et interrupteur décidés avec
     l'auteur ; place dans les quatre formes de case et dans l'éditeur de placement.
-  - [x] Recherche : HealKit, PallyPower, VuhDo, HealBot (installés), comparaison dans les fiches C20 et C22.
-- [ ] **32 c bis (avec la 1.46.3), étude complète des buffs de HealKit** (demande de l'auteur, 24 novembre 2026 :
-  « HealKit gère à la perfection les buffs manquants », lire son code en profondeur et pas seulement par
-  recherches). Lire en entier `BuffHelper.lua` et `BuffsTab.lua` de HealKit (installé), puis comparer point par
-  point avec Lyorune (Auras.lua, Buffs.lua, BuffMemory.lua, Containers.lua) : quand un buff compte comme manquant
+  - [x] Recherche faite, notes dans les fiches C20 et C22.
+- [ ] **32 c bis (avec la 1.46.3), étude complète des buffs manquants** (demande de l'auteur, 24 novembre 2026).
+  Revoir point par point Lyorune (Auras.lua, Buffs.lua, BuffMemory.lua, Containers.lua) : quand un buff compte comme manquant
   (rang, buff d'un autre, camp de Forever, fin proche, fin secrète), mémoire et relectures, buffs uniques et
   porteur, familiers, joueurs en combat ou hors de portée, version de groupe (lien avec 32 d), bouton et touche,
-  coût en performance. Écrire la comparaison dans `CORRECTIONS.md` (fiche C30), présenter à l'auteur les écarts et
-  ce que Lyorune fera mieux, à sa façon, sans rien copier ; corriger avant de publier la 1.46.3.
-  - [x] Lecture complète et comparaison faites (24 novembre 2026) : 13 écarts, fiche C30.
+  coût en performance. Écrire l'étude dans `CORRECTIONS.md` (fiche C30), présenter à l'auteur les écarts et
+  les corrections ; corriger avant de publier la 1.46.3.
+  - [x] Étude faite (24 novembre 2026) : 13 écarts, fiche C30.
   - [x] Corrections (carte blanche de l'auteur) : mise de côté après un refus du jeu, rang adapté au niveau, buff
     d'un autre jamais remplacé, buffs uniques renouvelés sur leur porteur, arme, mort, moi d'abord, mana du
     chasseur. Plus tard : rang plus faible porté, durées en champ de bataille, cible hors du groupe.
 - [x] **32 d, C19** (publiée en 1.46.4 le 24 novembre 2026) : version de groupe en priorité. Déjà dans le bandeau (`Z.BuffRows`, `buffGroupAt`), pas
-  sur la case ; ne compter que les joueurs que le sort de groupe touche sur Forever (groupe, portée : vérifier avec
-  HealKit, PallyPower, VuhDo) ; réglage plus facile à trouver (aujourd'hui dans les réglages fins).
+  sur la case ; ne compter que les joueurs que le sort de groupe touche sur Forever (groupe,
+  portée) ; réglage plus facile à trouver (aujourd'hui dans les réglages fins).
 - **Questions en attente pour le joueur** (par l'auteur) : sa version de Lyorune ; ses fichiers
   `Logs\General.log` et `SavedVariables\Lyorune.lua` ; pour C17, profil automatique allumé ou non, disposition
   (groupes, rôles, grille) ; pour C18, touche ou clic, quelle case, combat ou non, autre addon de clic.
 
 - [x] **32 e, C26** (publiée en 1.46.5 le 24 novembre 2026) : cadres des familiers et des tanks séparés. Demande de l'auteur (24 novembre 2026) : leur
-  fonctionnement actuel ne lui plaît pas. Regarder comment HealKit gère familiers et tanks, puis VuhDo et HealBot,
-  et faire mieux, à notre façon, sans rien copier.
+  fonctionnement actuel ne lui plaît pas. Les revoir,
+  à notre façon.
   - [x] Demander à l'auteur ce qui le gêne précisément : cadres à placer à la main, familier sans son maître.
   - [x] Lire le fonctionnement actuel de Lyorune (cadres à part des tanks et des familiers).
-  - [x] Piste de l'auteur (capture de HealKit) : le familier en petite case collée à droite de son maître, sur la
+  - [x] Piste de l'auteur : le familier en petite case collée à droite de son maître, sur la
     même ligne, au lieu d'un cadre détaché.
-  - [x] Recherche : HealKit, VuhDo, HealBot (installés), en groupe et en raid de 10 à 40 joueurs (familiers, tanks,
-    place, groupe qui change, combat), comparaison écrite dans la fiche C26 (faite le 24 novembre 2026).
+  - [x] Recherche : en groupe et en raid de 10 à 40 joueurs (familiers, tanks,
+    place, groupe qui change, combat), notes dans la fiche C26 (faite le 24 novembre 2026).
   - [x] Présenter la cause et la proposition à l'auteur, accord avant de coder (boutons sécurisés : relecture high).
-    Choix de l'auteur (24 novembre 2026) : le principe de HealKit (petite case collée au maître, colonne à part en
-    raid), interrupteur gardé, cases des familiers plus petites que celles des joueurs ; cadre des tanks inchangé.
+    Choix de l'auteur (24 novembre 2026) : petite case collée au maître, colonne à part en
+    raid, interrupteur gardé, cases des familiers plus petites que celles des joueurs ; cadre des tanks inchangé.
   - [x] Codée (Pets.xml, Frames.lua), 130 étapes, relecture high faite (5 bugs corrigés, 1 optimisation).
-  - [x] Revue deux fois à la demande de l'auteur (taille et place, puis le raid après étude approfondie de
-    HealKit), essai en jeu (« tout est ok »), publication de la 1.46.5.
+  - [x] Revue deux fois à la demande de l'auteur (taille et place, puis le raid après étude
+    approfondie), essai en jeu (« tout est ok »), publication de la 1.46.5.
 
 ## Étape 33 : « Me montrer » dans les nouveautés, bilan de la soirée (1.47.0)
 Décisions de l'auteur (24 novembre 2026) : bilan depuis la connexion ; colonne « Ce soir » dans le carnet et une
 ligne dans la discussion en sortant d'un donjon ou d'un raid (avec son interrupteur) ; « Me montrer » sur toutes
-les versions. Rien de tel chez HealKit, HealBot ni VuhDo.
+les versions.
 - [x] « Me montrer » : chaque nouveauté qui a un réglage mène à lui dans la fenêtre d'options (lien dans le texte
   des nouveautés, `Z.changeShows` dans Changes.lua, `Z:GoToOption` dans Options.lua).
 - [x] Bilan de la soirée : colonne « Ce soir » à côté du total (Tally.lua, `LyoruneCharDB.tonight`, remis à zéro à
@@ -1246,9 +1193,9 @@ les versions. Rien de tel chez HealKit, HealBot ni VuhDo.
 - [ ] Essai en jeu (lien cliquable, rune, ligne de sortie), feu vert, publication de la 1.47.0.
 
 ## Étape 33 bis (PRIORITÉ HAUTE) : buff posé caché, de retour en gris quand il faut le reposer
-Demande de l'auteur (24 novembre 2026), en JcE et en JcJ, avant l'étape 34. Étude de HealKit et plan complet dans
+Demande de l'auteur (24 novembre 2026), en JcE et en JcJ, avant l'étape 34. Étude et plan complet dans
 `CORRECTIONS.md` (fiche C31).
-- [x] Étude du code de HealKit (repères seulement pour les manquants, seuil, rien en combat, mémoire en champ de
+- [x] Étude des pistes (repères seulement pour les manquants, seuil, rien en combat, mémoire en champ de
   bataille) et de l'affichage actuel de Lyorune (conteneur du jeu : posé en couleur).
 - [x] Décision de l'auteur (24 novembre 2026) : en combat, repères gris tirés de la mémoire, jamais le buff posé.
 - [x] Codage (24 novembre 2026) : conteneur « buffs » du jeu supprimé (Containers.lua) ; hors combat, la lecture
@@ -1262,7 +1209,7 @@ Demande de l'auteur (24 novembre 2026), en JcE et en JcJ, avant l'étape 34. Ét
 - [x] Essai en jeu de l'auteur (« tout est ok », 24 novembre 2026), publiée avec l'étape 33 en 1.47.0.
 
 ## Étape 33 ter (PRIORITÉ ABSOLUE, avant toute autre étape) : vie basse sans clignotement, soins à charges en temps réel
-Demandes de l'auteur (24 novembre 2026), après la 1.47.0. Étude de HealKit, VuhDo et HealBot dans les fiches C32 et
+Demandes de l'auteur (24 novembre 2026), après la 1.47.0. Étude dans les fiches C32 et
 C33 de `CORRECTIONS.md`.
 - [x] Étude et décisions de l'auteur (liseré fixe, en combat seulement ; place en temps réel sur le porteur).
 - [x] C32 : voile qui bat remplacé par un liseré rouge fixe sous `lowHealthAt`, seulement en combat (cases, mode
@@ -1277,9 +1224,9 @@ C33 de `CORRECTIONS.md`.
 
 ## Étape 33 quater (PRIORITAIRE, juste après la 33 ter) : placement des icônes par défaut, placements par personnage
 Demande de l'auteur (24 novembre 2026), fiche C34 de `CORRECTIONS.md`.
-- [x] Étude en profondeur (demande de l'auteur) : lire le code de HealKit, VuhDo et HealBot pour leurs places, tailles et
+- [x] Étude en profondeur (demande de l'auteur) : places, tailles et
   ancrages d'icônes par défaut et leur adaptation à la taille des cases ; où sont rangés les placements aujourd'hui.
-- [x] Proposition à l'auteur, nettement meilleure que HealKit, VuhDo et HealBot (quatre formes, ce qu'elle fait mieux
+- [x] Proposition à l'auteur, (quatre formes,
   point par point), décision avant tout codage (carte blanche, 24 novembre 2026).
 - [x] Nouveaux défauts adaptés à la forme et à la taille, sans toucher aux éléments déplacés par le joueur (lot 1 :
   nouvelles places, rien ne se couvre ; lot 2 : passage des placements enregistrés au pixel près).
