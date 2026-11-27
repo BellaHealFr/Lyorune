@@ -98,6 +98,7 @@ function Obj:SetAlpha(a) self._alpha = a end
 function Obj:SetMinMaxValues(lo, hi) self._min, self._max = lo, hi end
 function Obj:SetValue(v, smoothing) self._value, self._smoothing = v, smoothing end
 function Obj:SetDrawLayer(layer, sub) self._layer, self._sublevel = layer, sub end
+function Obj:SetToTargetValue() self._snapped = true end
 function Obj:GetValue() return self._value end
 function Obj:GetAlpha() return self._alpha or 1 end
 function Obj:SetFrameStrata(strata) self._strata = strata end

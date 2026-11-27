@@ -52,7 +52,8 @@ local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, overheal = 2, ove
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.85 }, { 0.86, 0.45, 0.20, 0.90 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
 Z.OTHERS_ALPHA = OTHERS_ALPHA -- (le mode test aussi)
-local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- rayures du bouclier des cadres du jeu
+local SHIELD_ATLAS = "RaidFrame-Shield-Overlay" -- rayures du bouclier des cadres du jeu
+local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- les mêmes, en image (client sans l'atlas)
 local function SetLayer(bar, sub) bar:GetStatusBarTexture():SetDrawLayer("ARTWORK", sub) end
 
 -- Soins en route sur une barre verte : la teinte de contraste du thème, sinon le vert du soin se fond dans
@@ -626,6 +627,19 @@ local function UpdateTarget(b)
 	b.selected:SetAlphaFromBoolean(UnitIsUnit(b.unit, "target"), 1, 0)
 end
 
+-- Barres animées (réglage smooth) : posées d'un coup à leur valeur, quand la case change de joueur
+local SNAPPED = { "hp", "incoming", "incomingOthers", "absorb", "healAbsorb" }
+local function SnapBars(b)
+	-- joueur pas encore connu du jeu (UpdateAll n'a rien posé) : rien à sauter, on attend le prochain affichage
+	local known = b.unit and UnitExists(b.unit)
+	if issecret(known) or not known then return end
+	b.snapPending = nil
+	for _, key in ipairs(SNAPPED) do
+		local bar = b[key]
+		if bar.SetToTargetValue then bar:SetToTargetValue() end
+	end
+end
+
 local function UpdateAll(b)
 	if not b.unit or not UnitExists(b.unit) then return end
 	UpdateName(b)
@@ -641,6 +655,12 @@ local function UpdateAll(b)
 	UpdateTarget(b)
 	UpdateAssign(b)
 	Z.QueueAuras(b)
+end
+
+-- Case affichée : tout est relu ; si elle a changé de joueur pendant qu'elle était cachée, ses barres sautent
+local function ShownAgain(b)
+	UpdateAll(b)
+	if b.snapPending then SnapBars(b) end
 end
 
 -- Les mises à jour d'une case, pour la mesure des performances (Perf.lua) : le vrai code, chronométré
@@ -700,7 +720,10 @@ local function OnAttributeChanged(b, name, value)
 	b.lowMana:Hide()
 	if value and (not b.owner or b:IsShown()) then -- un familier collé caché n'écoute rien (PetShown)
 		for event in pairs(unitEvents) do b:RegisterUnitEvent(event, value) end
-		if b:IsVisible() then UpdateAll(b) end
+		-- nouveau joueur : ses barres d'emblée, sans glisser depuis celles du joueur d'avant. Le jeu cache souvent la
+		-- case pendant ce changement : le saut se fait alors à son affichage (ShownAgain).
+		b.snapPending = true
+		if b:IsVisible() then UpdateAll(b) SnapBars(b) end
 	end
 	Z.AnchorPrivateAuras(b) -- les auras privées suivent le joueur de la case
 	Z.BindAuraBoxes(b) -- les conteneurs d'auras du jeu aussi (Containers.lua)
@@ -1074,9 +1097,15 @@ function Z.BuildVisuals(b)
 	-- Rayures du bouclier : une texture en mosaïque calée sur le remplissage, le jeu la répète à sa taille
 	-- (aucun calcul sur la largeur, qui suit une valeur secrète)
 	local stripes = absorb:CreateTexture(nil, "ARTWORK", nil, LAYER.stripes)
-	stripes:SetTexture(SHIELD_STRIPES, "REPEAT", "REPEAT")
-	if stripes.SetHorizTile then stripes:SetHorizTile(true) end
-	if stripes.SetVertTile then stripes:SetVertTile(true) end
+	-- L'atlas du jeu en mosaïque, à son échelle (comme le bouclier des cadres du jeu) ; sinon l'image d'origine répétée
+	local wrap = TextureKitConstants and TextureKitConstants.AddressModeWrap
+	local atlas = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(SHIELD_ATLAS)
+	if not (atlas and SetTextureWithAddressModeOptions and wrap and pcall(SetTextureWithAddressModeOptions, stripes,
+		SHIELD_ATLAS, TextureKitConstants.IgnoreAtlasSize, wrap, wrap)) then
+		stripes:SetTexture(SHIELD_STRIPES, "REPEAT", "REPEAT")
+		if stripes.SetHorizTile then stripes:SetHorizTile(true) end
+		if stripes.SetVertTile then stripes:SetVertTile(true) end
+	end
 	stripes:SetAllPoints(absorb:GetStatusBarTexture())
 	stripes:Hide()
 	b.stripes = stripes
@@ -1421,7 +1450,7 @@ local function InitButton(h, name)
 		b:HookScript("OnShow", PetShown)
 		b:HookScript("OnHide", PetHidden)
 	end
-	b:HookScript("OnShow", UpdateAll)
+	b:HookScript("OnShow", ShownAgain)
 	b:HookScript("OnShow", MembersChanged)
 	b:HookScript("OnHide", MembersChanged)
 	b:HookScript("OnEnter", OnEnter)

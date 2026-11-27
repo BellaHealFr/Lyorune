@@ -11607,6 +11607,28 @@ step("36 b, lot 4 : mon soin et celui des autres, alerte de gaspillage, voile de
   assert(ok, err)
 end)
 
+step("36 a, fouille : nouveau joueur dans une case, barres posees d'un coup ; rayures du bouclier posees", function()
+  local b = CreateFrame("Button", "LyoruneHeaderUnitButton362", Z.header)
+  Z.header:InitButton(b:GetName())
+  local ok, err = pcall(function()
+    local keys = { "hp", "incoming", "incomingOthers", "absorb", "healAbsorb" }
+    -- comme le jeu : case cachee, joueur change, puis case montree
+    b:Hide()
+    for _, key in ipairs(keys) do b[key]._snapped = nil end
+    b:SetAttribute("unit", "party2")
+    b:Show()
+    for _, key in ipairs(keys) do assert(b[key]._snapped, key .. " glisse depuis le joueur precedent") end
+    -- reaffichee pour le meme joueur : elle glisse normalement
+    b.hp._snapped = nil b:Hide() b:Show()
+    assert(not b.hp._snapped, "saut a chaque affichage")
+    -- case deja visible : saut immediat
+    b.hp._snapped = nil b:SetAttribute("unit", "party3")
+    assert(b.hp._snapped, "case visible : pas de saut")
+  end)
+  b:SetAttribute("unit", nil)
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,
