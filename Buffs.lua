@@ -26,7 +26,7 @@ local cooldownAt       -- fin de recharge d'un buff unique déjà attendue (Uniq
 -- Buff que je viens de lancer : ce joueur n'est plus proposé pour ce buff pendant quelques secondes, le temps que
 -- le jeu pose l'aura et que sa case la relise (sinon la touche, pressée de nouveau, le relancerait sur lui). Le
 -- clic note le joueur et le sort ; seul le sort réussi (UNIT_SPELLCAST_SUCCEEDED) l'écarte : un sort raté, hors
--- de portée ou interrompu n'écarte personne. Idée vue chez PallyPower, faite à notre façon.
+-- de portée ou interrompu n'écarte personne.
 local RECENT = 4
 local recent = {} -- recent["unité|sort"] = fin de la mise de côté
 local tried       -- le dernier clic : { unit, spell, at }
@@ -744,7 +744,7 @@ end
 ----------------------------------------------------------------------------------------------------
 -- Bloc collé aux cadres (« Emplacement : avec les cadres », le départ). Sous la case la plus basse des cadres
 -- du groupe, aligné sur la première colonne, à l'échelle et à l'écart des cases ; au-dessus quand la place
--- manque en bas de l'écran. Une seule case (demande de l'auteur, 22 novembre 2026, idée vue chez HealKit) : le
+-- manque en bas de l'écran. Une seule case (demande de l'auteur, 22 novembre 2026) : le
 -- prochain buff, celui que lance aussi la touche « prochain buff » ; après chaque sort, la case passe au suivant.
 -- Bandeau fin (1.37.1, choix de l'auteur) : même disposition pour Barre, Tuile, Carré et Bandeau. Hauteur tirée
 -- de la taille du texte (deux lignes), largeur exacte d'une case (1.40.1, C13 : mesurée sur une vraie case, donc
@@ -1071,7 +1071,7 @@ local function ShowWindow(list)
 	if not panel:IsShown() then panel:Show() end
 end
 
--- Exemple (idée vue chez HealKit) : options ouvertes sur le chapitre Joueurs, où se règlent les buffs, et rien à
+-- Exemple : options ouvertes sur le chapitre Joueurs, où se règlent les buffs, et rien à
 -- poser : une case d'exemple montre où et à quoi ressembleront les buffs manquants. Elle ne lance rien.
 local function SampleList()
 	local window = Z.OptionsWindow and Z:OptionsWindow()

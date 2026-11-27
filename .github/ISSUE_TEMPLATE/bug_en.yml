@@ -50,7 +50,7 @@ body:
     id: addons
     attributes:
       label: Other interface addons
-      placeholder: "Example: ElvUI, Clique, VuhDo"
+      placeholder: "Example: ElvUI, Clique"
   - type: checkboxes
     id: checks
     attributes:

@@ -881,7 +881,7 @@ end
 -- Ce buff de ma liste concerne-t-il ce joueur ? (sur moi seulement, joueurs à mana, jamais un familier, en raid
 -- seulement mes groupes à buffer : BuffAssign.lua)
 local function Concerns(check, unit, me)
-	-- un familier n'est jamais proposé (C28, demande de l'auteur ; HealKit et VuhDo les écartent aussi) : la
+	-- un familier n'est jamais proposé (C28, demande de l'auteur) : la
 	-- version de groupe le couvre de toute façon
 	if unit:find("pet", 1, true) then return false end
 	if check.self and not me then return false end
@@ -894,8 +894,7 @@ Z.BuffConcerns = Concerns -- aussi pour les repères des buffs dessinés par le 
 -- Buffs de ma liste que ce joueur n'a pas, tous, dans l'ordre de Data.lua : { { check, spell, icon }, ... }, et
 -- une clé qui les résume. Hors combat seulement. Un buff qui finit dans moins de « buffRenew » secondes
 -- compte comme absent (au plus le quart de sa durée, Until). Heure de fin cachée par le jeu (donjon, même hors
--- combat, C20) : la mémoire de mes sorts dit quand il finit ; rien de su, il compte comme présent (HealKit et VuhDo
--- s'arrêtent là).
+-- combat, C20) : la mémoire de mes sorts dit quand il finit ; rien de su, il compte comme présent.
 -- Là où le jeu cache les buffs même hors combat (champ de bataille, arène) : un buff qui reste
 -- lisible se lit, les autres viennent de la mémoire (BuffMemory.lua), et un buff inconnu compte comme absent.
 -- Une lecture refusée par le jeu (match JcJ) compte comme une liste cachée, pas comme « rien ne manque ».
@@ -1501,7 +1500,7 @@ UpdateBuffs = function(b, unit, enemy)
 	local shown = places
 	local due = Due(b, unit, enemy)
 	if due then
-		-- jamais au-delà du bord droit de la case : autant d'icônes que sa largeur en laisse (HealKit en fixe 3)
+		-- jamais au-delà du bord droit de la case : autant d'icônes que sa largeur en laisse
 		local x, _, size = Z.BuffMarkPlace(b)
 		local width = b.GetWidth and b:GetWidth() or 0
 		local fit = (issecret(width) or width <= 0) and math.huge or math.max(1, math.floor((width - x) / (size + 2)))
@@ -1590,12 +1589,11 @@ end
 -- Mon personnage quand ma case est cachée (seul, « Mon cadre quand je suis seul » décoché) : le panneau des buffs lit
 -- les cases, il ne me verrait plus. Une petite fiche lue comme une case (mêmes règles, FindMissingBuffs et
 -- FindMyUniques), seulement dans ce cas, sur mes propres événements : rien de plus à lire en groupe ni en raid.
--- (VuhDo et HealKit partent d'une liste d'unités qui me contient toujours ; HealBot lit ses cases et me perd.)
 local hiddenSelf = { unit = "player", hiddenSelf = true }
 Z.hiddenSelf = hiddenSelf
 
 -- Seul, sans ma case ? En groupe, ma case est toujours là (le jeu la montre dans le groupe et le raid) ; seul,
--- elle porte l'unité « player ». Aucune valeur secrète lue (UnitIsUnit peut l'être en instance, d'après HealKit).
+-- elle porte l'unité « player ». Aucune valeur secrète lue (UnitIsUnit peut l'être en instance).
 function Z.SelfHidden()
 	if IsInGroup() then return false end
 	for _, b in ipairs(Z.buttons or {}) do

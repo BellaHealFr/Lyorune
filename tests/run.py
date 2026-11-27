@@ -2865,7 +2865,7 @@ step("1.24.1 : mana basse des soigneurs, bouclier a la suite de la vie", functio
   assert(ok, err)
 end)
 
-step("C7 : barre de ressource selon la classe (rage, energie, forme du druide), comme HealBot et VuhDo", function()
+step("C7 : barre de ressource selon la classe (rage, energie, forme du druide)", function()
   local b = CreateFrame("Button", "LyoruneHeaderUnitButton94", Z.header)
   Z.header:InitButton(b:GetName())
   local oldRole, oldBars = UnitGroupRolesAssigned, Z.db.manaBars
@@ -7481,8 +7481,8 @@ step("1.33.7 : version simple et de groupe cochees a part, Mes buffs aligne, buf
       DEAD = false FireEvent("UNIT_FLAGS", me.unit) RunUpdates()
       assert(Unique(spell), class .. " : apres la mort, panneau non relu")
     end
-    -- 5. Seul avec « Mon cadre quand je suis seul » decoche : aucune case, ma fiche prend le relais (comme VuhDo et
-    -- HealKit, qui me comptent toujours) ; en groupe, rien de plus
+    -- 5. Seul avec « Mon cadre quand je suis seul » decoche : aucune case, ma fiche prend le relais ;
+    -- en groupe, rien de plus
     Z.class = "DRUID" Z:BuildData() Z.char.buffTarget = {}
     local grouped = GROUPED
     GROUPED = false
@@ -7537,7 +7537,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
     assert(#list >= 1, "aucun buff manquant pour l'essai")
     assert(block and block:IsShown(), "bloc absent alors que des buffs manquent")
     assert(not (panel and panel:IsShown()), "fenetre ouverte en plus du bloc")
-    -- une seule case (1.34.1, comme HealKit) = ce que lance la touche ; « + N » dans son coin
+    -- une seule case (1.34.1) = ce que lance la touche ; « + N » dans son coin
     local tile = LyoruneBuffsTile1
     assert(tile:GetAttribute("type1") == "spell" and tile:GetAttribute("spell1") == list[1].spell
       and tile:GetAttribute("unit") == list[1].unit, "premiere case mal reglee")
@@ -7553,7 +7553,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
     assert(block:GetHeight() == tile:GetHeight(), "bloc plus haut que sa case : rien ne doit apparaitre dessous")
 
     tile:Run("OnEnter") tile:Run("OnLeave")
-    -- 1.37.1 : bandeau fin, meme disposition pour les quatre formes (choix de l'auteur, modele : le bouton de HealKit)
+    -- 1.37.1 : bandeau fin, meme disposition pour les quatre formes (choix de l'auteur)
     local L = Z.L
     for _, id in ipairs({ "BAR", "TILE", "SQUARE", "BANNER" }) do
       assert(Z.shapes[id].buffs == nil, id .. " : allure des buffs par forme devenue inutile")
@@ -7641,7 +7641,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
     for b in pairs(patched) do b.GetBottom = function() return 5 end end
     Z:UpdateBuffPanel()
     assert(block.where == "ABOVE" and block._points.BOTTOMLEFT, "pas de place en bas : au-dessus des cadres")
-    -- comme HealKit, mais par ses cases : accroche au point de depart des cadres, il les suit pendant un deplacement
+    -- par ses cases : accroche au point de depart des cadres, il les suit pendant un deplacement
     for b in pairs(patched) do b.GetBottom = function() return 300 end end
     Z.anchor.GetLeft, Z.anchor.GetTop = function() return 90 end, function() return 480 end
     Z:UpdateBuffPanel()
@@ -7688,7 +7688,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
     assert(not block:IsShown() and Z:BuffPanel():IsShown(), "ou vous voulez : la fenetre")
     Z.db.buffPlace = "FRAMES" Z:UpdateBuffPanel()
     assert(block:IsShown() and not Z:BuffPanel():IsShown(), "retour avec les cadres")
-    -- buff que je viens de lancer : plus propose quelques secondes, le temps que l'aura arrive (vu chez PallyPower)
+    -- buff que je viens de lancer : plus propose quelques secondes, le temps que l'aura arrive
     local oldName, now = C_Spell.GetSpellName, NOW
     local e = Z.BuffRows()[1]
     local function Proposed()
@@ -7710,7 +7710,7 @@ step("1.34.0 / 1.37.1 / 1.40.1 : buffs manquants colles sous les cadres, en band
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "guid", 999999)
     assert(Proposed(), "clic trop ancien : ecarte a tort")
     C_Spell.GetSpellName, NOW = oldName, now
-    -- exemple (vu chez HealKit) : rien a poser, options ouvertes sur le chapitre Joueurs
+    -- exemple : rien a poser, options ouvertes sur le chapitre Joueurs
     local oldRows = Z.BuffRows
     Z.BuffRows = function() return {} end
     Z:UpdateBuffPanel()
@@ -10241,7 +10241,7 @@ step("C20 a C22 : seuil en secondes, fin cachee en donjon, une seule rangee de b
   assert(ok, err)
 end)
 
-step("C30 : buffs d'apres l'etude de HealKit (refus du jeu, buff d'un autre, buffs uniques, arme, mort, moi d'abord, mana)", function()
+step("C30 : buffs (refus du jeu, buff d'un autre, buffs uniques, arme, mort, moi d'abord, mana)", function()
   local old = { isUnit = UnitIsUnit, after = C_Timer.After, class = Z.class, renew = Z.db.buffRenew, name = C_Spell.GetSpellName,
     known = C_SpellBook.IsSpellKnown, unitClass = UnitClass, byName = C_UnitAuras.GetAuraDataBySpellName,
     panel = Z.db.buffPanel, place = Z.db.buffPlace, groupAt = Z.db.buffGroupAt }

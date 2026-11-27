@@ -66,7 +66,7 @@ Z.spellRanks = {
 	[29166] = { 456195 },                                                      -- Innervation (variante trouvée dans le jeu)
 	[1310911] = { 1310909, 1311593, 1311597 },                                 -- Veille de la Lumière : le buff laissé, rangs 1 à 3
 	-- Buffs de Z.raidBuffs et Z.uniqueBuffs : le jeu les dessine en combat sur les cases (Containers.lua, repères
-	-- des buffs), seulement aux numéros donnés. Vérifiés hors jeu (HealKit, PallyPower, VuhDo, WhatsTraining).
+	-- des buffs), seulement aux numéros donnés. Vérifiés hors jeu (addons portés sur Forever).
 	[1243]  = { 1244, 1245, 2791, 10937, 10938 },                              -- Mot de pouvoir : Robustesse
 	[21562] = { 21564 },                                                       -- Prière de robustesse
 	[14752] = { 14818, 14819, 27841 },                                         -- Esprit divin
@@ -144,7 +144,7 @@ Z.clickDefaults = {
 
 -- Soins sans cible (de zone, sur soi, totems) : le jeu ne les dit pas « utilisables sur un allié », mais
 -- « Sorts et raccourcis » les propose quand même (Z:KnownSpells), comme tous les sorts de ma classe listés
--- dans ce fichier. Numéros vérifiés hors jeu (HealKit, HealBot et VuhDo portés sur Forever) ; un sort que je
+-- dans ce fichier. Numéros vérifiés hors jeu (addons portés sur Forever) ; un sort que je
 -- ne connais pas n'est pas proposé.
 Z.groupHeals = {
 	PRIEST = { 15237, 596, 13908 },     -- Nova sacrée, Prière de soins, Prière du désespoir
@@ -155,7 +155,7 @@ Z.groupHeals = {
 -- Gros sorts à recharge (« Mes recharges », Cooldowns.lua) : montrés dès qu'ils sont connus, même sans raccourci.
 -- Les sorts de mes raccourcis dont la recharge dépasse la recharge globale s'y ajoutent tout seuls : cette liste
 -- ne sert qu'aux sorts qu'on lance d'une barre (Innervation, Rapidité de la nature...). Numéros vérifiés hors jeu
--- (HealKit, HealBot, VuhDo et ArcAuras portés sur Forever) ; un sort inconnu ou sans recharge n'apparaît pas.
+-- (addons portés sur Forever) ; un sort inconnu ou sans recharge n'apparaît pas.
 Z.cooldownSpells = {
 	PRIEST  = { 402261, 401859, 6346, 10060, 14751, 13908 }, -- Pénitence, Prière de guérison, Gardien de peur, Infusion de puissance, Focalisation intérieure, Prière du désespoir
 	DRUID   = { 18562, 408120, 29166, 17116, 20484, 740 },   -- Prompte guérison, Croissance sauvage, Innervation, Rapidité de la nature, Renaissance, Tranquillité
@@ -174,7 +174,7 @@ Z.groupCooldowns = {
 }
 
 -- Emplacements de totems (« Mes totems », Totems.lua) : un nom par emplacement du jeu (GetTotemInfo 1, 2...), dans
--- l'ordre de la rangée. Vérifié hors jeu (ArcAuras porté sur Forever) : 1 Feu, 2 Terre, 3 Eau, 4 Air.
+-- l'ordre de la rangée. Vérifié hors jeu (addon porté sur Forever) : 1 Feu, 2 Terre, 3 Eau, 4 Air.
 Z.totemSlots = {
 	SHAMAN = { "Feu", "Terre", "Eau", "Air" },
 }
@@ -212,15 +212,15 @@ Z.classPower = { WARRIOR = { 1, "RAGE" }, ROGUE = { 3, "ENERGY" }, HUNTER = { 2,
 --   weapon = { id }      enchantement de mon arme principale (le jeu le dit à part, pas dans les auras) : le
 --                        dernier que j'ai lancé, sinon le premier connu de la liste
 --   aura = { id }        auras du paladin : une des miennes suffit ; la dernière lancée, sinon la première connue
---   Un sort passif sur ce client (Augure de clarté, d'après HealKit) n'est jamais proposé (Z.IsPassive).
+--   Un sort passif sur ce client (Augure de clarté) n'est jamais proposé (Z.IsPassive).
 --   racial = true       sort de race : absent de « Mes buffs » si mon personnage ne l'a pas
 --   La version de groupe a sa propre ligne dans « Mes buffs » (réglage buffWatch[son numéro]) : décochée, le
 --   panneau ne propose que la version simple, joueur par joueur (aucun composant dépensé) ; seule cochée, des
 --   lignes « Groupe N » seulement (sans composant : la version simple, sinon rien ne pourrait être lancé).
 --   pve = false, pvp = false : décoché au départ dans « Mes buffs » (options), en JcE ou en JcJ. Aucun buff ne
 --                        l'est aujourd'hui : tous sont actifs au départ (demande de l'auteur, 22 novembre 2026)
--- Le premier numéro de la ligne la désigne dans le réglage « buffWatch ». Numéros vérifiés hors jeu (HealKit,
--- PallyPower et VuhDo portés sur Forever) ; un sort que je ne connais pas est ignoré (Z.Knows).
+-- Le premier numéro de la ligne la désigne dans le réglage « buffWatch ». Numéros vérifiés hors jeu (addons
+-- portés sur Forever) ; un sort que je ne connais pas est ignoré (Z.Knows).
 Z.raidBuffs = {
 	PRIEST = {
 		{ 1243, 21562 },                -- Mot de pouvoir : Robustesse, Prière de robustesse
@@ -236,7 +236,7 @@ Z.raidBuffs = {
 		                                -- paladin vaut la simple (jamais proposée par-dessus) ; une absente du jeu est ignorée
 		{ 25780, self = true },         -- Fureur vertueuse
 		{ aura = { 465, 19746, 7294, 20218, 19876, 19888, 19891 }, self = true }, -- Auras : dévotion, concentration,
-		                                -- châtiment, sainteté, résistance à l'ombre, au givre, au feu (listées par HealBot)
+		                                -- châtiment, sainteté, résistance à l'ombre, au givre, au feu
 	},
 	SHAMAN = {
 		{ 408510, any = { 324 }, self = true },        -- Bouclier d'eau, ou Bouclier de foudre

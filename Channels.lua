@@ -27,7 +27,7 @@ local NAMES = 3          -- LyoruneFR, LyoruneFR2, LyoruneFR3
 local LOCK_FOR = 86400   -- un nom refusé est passé un jour
 local SETTLE = 5         -- secondes laissées au jeu pour remettre ses canaux après l'entrée dans le monde
 local ANSWER = 10        -- secondes d'attente d'une réponse du jeu à une demande
-local RENUMBER = 3       -- d'autres addons renumérotent les canaux juste après une arrivée (ArcAuras_Finds range
+local RENUMBER = 3       -- d'autres addons renumérotent les canaux juste après une arrivée (l'un d'eux range
                          -- son canal caché en dernier au bout de 2 s) : le numéro est donné après ce délai
 
 -- Noms de chaque langue, dans l'ordre, et la recherche inverse : « lyoruneen2 » -> { "EN", "LyoruneEN2" }

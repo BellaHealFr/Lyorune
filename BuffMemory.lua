@@ -9,8 +9,7 @@
 -- Le tout par identifiant de joueur (en champ de bataille, l'ordre du raid change sans cesse), oublié à la mort
 -- (au cimetière, le buff est proposé de nouveau) et gardé après un /reload. Un buff inconnu compte comme absent :
 -- mieux vaut le proposer une fois de trop que jamais. Aucune boucle : Auras.lua relit une case à la fin d'un buff.
--- (HealKit retient ses sorts en champ de bataille et en arène seulement ; VuhDo lit seulement les buffs lisibles ;
--- HealBot ne lit rien de secret. Lyorune réunit les trois idées, à sa façon, partout où le jeu cache les buffs.)
+-- Valable partout où le jeu cache les buffs.
 
 local _, Z = ...
 local issecret = Z.IsSecret
