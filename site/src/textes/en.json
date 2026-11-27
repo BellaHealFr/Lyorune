@@ -213,6 +213,8 @@
     "items": [
       ["What is Lyorune?", "Lyorune is a free healing frames addon for World of Warcraft: Forever. It shows your whole group or raid and casts your heals with one click on a player's frame."],
       ["Which healing addon should I use on WoW Forever?", "Lyorune is made for World of Warcraft: Forever (interface 16001). It is light, copes with the values the game hides in combat, and suits priests, druids, paladins and shamans."],
+      ["Does click casting work on WoW Forever?", "Yes, Lyorune has its own. Every mouse button, alone or with Shift, Ctrl or Alt, casts the spell you picked on a player's frame, at the highest rank or the rank you choose. A keyboard key or the mouse wheel can also heal the frame under your cursor."],
+      ["Can Lyorune handle a 40-player raid?", "Yes. Frames follow your group from 5 to 40 players, sorted by group or by role, and a profile per group size kicks in on its own. Test mode shows a fake 40-player raid so you can set everything up out of combat."],
       ["Is Lyorune free?", "Yes. Lyorune is free and can be downloaded from CurseForge (project Lyorune Healing), Wago, WoWInterface or its GitHub Releases page, its only four official sources."],
       ["Does Lyorune work with ElvUI or Clique?", "Yes. Lyorune never changes the game's frames or any other addon's. It runs alongside ElvUI, Clique and other interface addons. If you prefer Clique or the game's own click casting, one checkbox turns Lyorune's clicks off."],
       ["How do I install Lyorune?", "The easiest way: the CurseForge or Wago app, which also installs updates. Otherwise, download the archive, unzip it into World of Warcraft\\_forever_\\Interface\\AddOns\\ and start the game. A one-minute tutorial opens on first login."],

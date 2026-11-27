@@ -14,12 +14,18 @@ IMAGES = os.path.join(ICI, 'docs', 'images')
 
 # Une cible = une adresse. La principale porte le canonical : l'autre pointe vers elle pour ne pas lui faire
 # concurrence dans les moteurs de recherche (à inverser le jour où le domaine Cloudflare devient l'adresse
-# principale : passer « principale » de l'une à l'autre).
+# principale : passer « principale » de l'une à l'autre). La copie renvoie aussi ses hreflang vers la principale
+# et n'a pas de sitemap : un moteur ne doit y voir que les adresses canoniques (docs/SEO.md).
+# google et bing : codes de vérification de Google Search Console et de Bing Webmaster Tools (vides : aucune balise).
+# indexnow : clé IndexNow de la cible (vide : aucun fichier clé), envoyée par le circuit Site à chaque publication.
 CIBLES = {
     'github': {
         'url': 'https://bellahealfr.github.io/Lyorune/',
         'principale': True,
         'goatcounter': 'lyorune',
+        'google': os.environ.get('VERIFICATION_GOOGLE', ''),
+        'bing': os.environ.get('VERIFICATION_BING', ''),
+        'indexnow': '3c053e4309250389b82c6b5a699ee94e',
     },
     'cloudflare': {
         # TODO domaine Cloudflare : à donner par SITE_URL_CLOUDFLARE (jamais affiché sur la page)
@@ -27,6 +33,9 @@ CIBLES = {
         'principale': False,
         # identifiant GoatCounter propre à cette cible (vide : aucun compteur)
         'goatcounter': os.environ.get('GOATCOUNTER_CLOUDFLARE', ''),
+        'google': os.environ.get('VERIFICATION_GOOGLE_CLOUDFLARE', ''),
+        'bing': os.environ.get('VERIFICATION_BING_CLOUDFLARE', ''),
+        'indexnow': os.environ.get('INDEXNOW_CLOUDFLARE', ''),
     },
 }
 LANGUES = ('fr', 'en')
@@ -487,7 +496,8 @@ def page(t, autre, cible, commun):
     v = {
         'lang': lang, 'titre': html.escape(t['meta']['title']), 'description': attr(t['meta']['description']),
         'keywords': attr(t['meta']['keywords']), 'canonique': c['canonique'],
-        'url_fr': url, 'url_en': url + 'en/', 'url': url,
+        'url_fr': principale_url, 'url_en': principale_url + 'en/', 'url': url,
+        'verification': verification(cible),
         'locale': t['locale'], 'locale_autre': autre['locale'],
         'og_titre': attr(t['meta']['og_title']), 'og_description': attr(t['meta']['og_description']),
         'og_alt': attr(t['meta']['og_alt']), 'image_partage': url + 'images/partage-%s.png' % lang,
@@ -523,6 +533,11 @@ def page(t, autre, cible, commun):
     if manquants:
         raise SystemExit('Gabarit : valeurs manquantes ' + ', '.join(sorted(manquants)))
     return re.sub(r'\{\{(\w+)\}\}', lambda m: str(v[m.group(1)]), gabarit)
+
+
+def verification(cible):
+    balises = [('google-site-verification', cible['google']), ('msvalidate.01', cible['bing'])]
+    return ''.join('<meta name="%s" content="%s">\n' % (n, attr(code)) for n, code in balises if code)
 
 
 def page_404(textes, cible, commun):
@@ -611,7 +626,8 @@ def fabriquer(nom, sortie=None):
     # garde-fou : seul un dossier vide ou une ancienne sortie de ce script est vidé, jamais le dépôt ni ses sources
     if os.path.commonpath([sortie, ICI]) == sortie or os.path.commonpath([sortie, SRC]) == SRC:
         raise SystemExit('Dossier de sortie refusé : ' + sortie)
-    if os.path.isdir(sortie) and os.listdir(sortie) and not os.path.exists(os.path.join(sortie, 'sitemap.xml')):
+    ancienne = all(os.path.exists(os.path.join(sortie, f)) for f in ('robots.txt', 'llms.txt', '404.html'))
+    if os.path.isdir(sortie) and os.listdir(sortie) and not ancienne:
         raise SystemExit('Dossier de sortie refusé (ni vide ni ancienne sortie du site) : ' + sortie)
     os.makedirs(sortie, exist_ok=True)
     for f in os.listdir(sortie):  # vidé, pas supprimé : un serveur local peut s'y trouver
@@ -642,8 +658,17 @@ def fabriquer(nom, sortie=None):
         t, autre = textes[lang], textes['en' if lang == 'fr' else 'fr']
         ecrire(os.path.join(sortie, t['chemin'], 'index.html'), page(t, autre, cible, commun))
     ecrire(os.path.join(sortie, '404.html'), page_404(textes, cible, commun))
-    ecrire(os.path.join(sortie, 'sitemap.xml'), sitemap(cible, date_iso))
-    ecrire(os.path.join(sortie, 'robots.txt'), 'User-agent: *\nAllow: /\n\nSitemap: %ssitemap.xml\n' % cible['url'])
+    # tous les robots entrent, ceux des moteurs comme ceux des IA (choix expliqué dans docs/SEO.md)
+    robots = 'User-agent: *\nAllow: /\n'
+    if cible['principale']:
+        ecrire(os.path.join(sortie, 'sitemap.xml'), sitemap(cible, date_iso))
+        robots += '\nSitemap: %ssitemap.xml\n' % cible['url']
+    ecrire(os.path.join(sortie, 'robots.txt'), robots)
+    if cible['indexnow']:
+        # la clé sert de nom de fichier : seulement le format accepté par IndexNow, jamais un chemin
+        if not re.fullmatch(r'[A-Za-z0-9-]{8,128}', cible['indexnow']):
+            raise SystemExit('Clé IndexNow refusée (8 à 128 lettres, chiffres ou tirets) : ' + cible['indexnow'])
+        ecrire(os.path.join(sortie, cible['indexnow'] + '.txt'), cible['indexnow'])
     ecrire(os.path.join(sortie, 'llms.txt'), lire('site', 'src', 'llms.txt').replace('{{url}}', cible['url']).replace('{{version}}', commun['version']))
     presse(sortie, textes)
     if nom == 'github':

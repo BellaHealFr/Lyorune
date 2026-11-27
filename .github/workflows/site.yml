@@ -38,6 +38,10 @@ jobs:
           python-version: "3.12"
       - name: Fabrication de la page
         run: python outils/site.py github public
+        env:
+          # codes de vérification de Google Search Console et de Bing (variables du dépôt, vides : aucune balise)
+          VERIFICATION_GOOGLE: ${{ vars.VERIFICATION_GOOGLE }}
+          VERIFICATION_BING: ${{ vars.VERIFICATION_BING }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -47,3 +51,21 @@ jobs:
         run: sleep 20
       - id: deploiement
         uses: actions/deploy-pages@v5
+      # IndexNow prévient Bing et les autres moteurs qui le suivent que les deux pages ont changé. Le fichier clé est
+      # dans /Lyorune/ (pas à la racine du domaine) : keyLocation est donc obligatoire. Un refus ne bloque rien.
+      - name: IndexNow
+        continue-on-error: true
+        run: |
+          python - <<'FIN'
+          import importlib.util, json, urllib.request
+          spec = importlib.util.spec_from_file_location('site', 'outils/site.py')
+          site = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(site)
+          cible = site.CIBLES['github']
+          url, cle = cible['url'], cible['indexnow']
+          corps = {'host': url.split('/')[2], 'key': cle, 'keyLocation': url + cle + '.txt',
+                   'urlList': [url, url + 'en/']}
+          requete = urllib.request.Request('https://api.indexnow.org/indexnow', json.dumps(corps).encode(),
+                                           {'Content-Type': 'application/json; charset=utf-8'})
+          print('IndexNow :', urllib.request.urlopen(requete, timeout=30).status)
+          FIN

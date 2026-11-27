@@ -108,14 +108,15 @@ def verifier(nom, dossier):
     for texte, lang, chemin in ((fr, 'fr', ''), (en, 'en', 'en/')):
         if '<link rel="canonical" href="%s%s">' % (principale, chemin) not in texte:
             erreurs.append('canonical %s' % lang)
-        for h, adresse in (('fr', url), ('en', url + 'en/'), ('x-default', url + 'en/')):
+        # hreflang vers les adresses canoniques, comme le canonical (sinon les deux signaux se contredisent)
+        for h, adresse in (('fr', principale), ('en', principale + 'en/'), ('x-default', principale + 'en/')):
             if '<link rel="alternate" hreflang="%s" href="%s">' % (h, adresse) not in texte:
                 erreurs.append('hreflang %s absent ou faux (%s)' % (h, lang))
         if 'images/partage-%s.png' % lang not in texte:
             erreurs.append('image de partage %s' % lang)
-        # aucune adresse de l'autre cible, sauf le canonical (et og:url, son double) et les données structurées,
-        # qui désignent la page principale
-        reste = re.sub(r'<link rel="canonical"[^>]*>|<meta property="og:url"[^>]*>', '', texte)
+        # aucune adresse de l'autre cible, sauf le canonical (et og:url, son double), les hreflang et les données
+        # structurées, qui désignent la page principale
+        reste = re.sub(r'<link rel="canonical"[^>]*>|<meta property="og:url"[^>]*>|<link rel="alternate" hreflang[^>]*>', '', texte)
         reste = re.sub(r'<script type="application/ld\+json">.*?</script>', '', reste, flags=re.S)
         if autre in reste:
             erreurs.append('adresse de l\'autre cible dans la page %s' % lang)
@@ -124,10 +125,25 @@ def verifier(nom, dossier):
     if sections(fr) != sections(en):
         erreurs.append('sections différentes entre le français et l\'anglais')
     for f in ('sitemap.xml', 'robots.txt', 'llms.txt'):
-        if autre in open(os.path.join(dossier, f), encoding='utf-8').read():
+        if os.path.exists(os.path.join(dossier, f)) and autre in open(os.path.join(dossier, f), encoding='utf-8').read():
             erreurs.append('adresse de l\'autre cible dans %s' % f)
-    if url not in open(os.path.join(dossier, 'sitemap.xml'), encoding='utf-8').read():
-        erreurs.append('sitemap sans sa propre adresse')
+    robots = open(os.path.join(dossier, 'robots.txt'), encoding='utf-8').read()
+    if 'Disallow' in robots:
+        erreurs.append('robots.txt bloque un robot')
+    c = site.CIBLES[nom]
+    if c['principale']:
+        if url not in open(os.path.join(dossier, 'sitemap.xml'), encoding='utf-8').read():
+            erreurs.append('sitemap sans sa propre adresse')
+    elif os.path.exists(os.path.join(dossier, 'sitemap.xml')) or 'Sitemap:' in robots:
+        erreurs.append('sitemap sur la copie (ses adresses ne sont pas canoniques)')
+    # vérification Search Console et Bing : une balise par code donné, aucune sinon
+    for code, balise in ((c['google'], 'google-site-verification'), (c['bing'], 'msvalidate.01')):
+        if bool(code) != (balise in fr and balise in en):
+            erreurs.append('balise %s' % balise)
+    cle = c['indexnow']
+    fichier = os.path.join(dossier, cle + '.txt')
+    if cle and (not os.path.exists(fichier) or open(fichier, encoding='utf-8').read() != cle):
+        erreurs.append('fichier clé IndexNow')
     etape('%s : canonical, hreflang, parité des langues, aucune adresse de l\'autre cible' % nom, erreurs)
 
     erreurs = []

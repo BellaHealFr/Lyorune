@@ -129,30 +129,38 @@ Déjà en place : le dépôt GitHub pointe vers le site et porte les bons sujets
 de WoW Forever (le blog de CurseForge en publie une, des sites de guides de jeu aussi) ; la vidéo du lot 14 sur
 YouTube, avec le lien du site dans sa description.
 
-## Ce qui change sur le site (lot 15b)
+## Ce qui a changé sur le site (lot 15b, 27 novembre 2026)
 
-1. Cible Cloudflare : hreflang et sitemap vers les adresses de la cible principale, comme le canonical.
-2. FAQ : deux ou trois questions écrites comme un joueur les tape (« Quel addon de soin pour WoW Forever ? »,
-   « Le clic-soin marche-t-il sur WoW Forever ? », « Lyorune marche-t-il avec ElvUI ? »), en français et en anglais,
-   réponses vérifiées dans le code.
-3. Titres et descriptions : « WoW Forever » et « healing frames » en clair dans les deux langues ; descriptions des
-   plateformes (`docs/plateformes/`) relues avec la liste du point 7.
-4. Données structurées : garder SoftwareApplication et FAQPage, sans note ni avis inventés.
-5. Emplacement pour la balise de vérification de Google Search Console et de Bing (un réglage par cible, vide tant
-   que l'auteur ne l'a pas donné).
-6. IndexNow (facultatif) : un fichier clé dans `/Lyorune/` et un envoi par le circuit Site à chaque publication,
-   avec `keyLocation` (indispensable sur un site de projet GitHub Pages).
+1. **Copie Cloudflare** : ses hreflang pointent vers les adresses principales, comme son canonical, et elle n'a plus
+   de sitemap (seules les adresses canoniques doivent y figurer). Le test du site le vérifie.
+2. **FAQ** : deux questions de joueur en plus, dans les deux langues (« Le clic-soin marche-t-il sur WoW Forever ? »,
+   « Lyorune tient-il un raid de 40 ? »), réponses vérifiées dans `docs/FONCTIONNALITES.md`. La question sur ElvUI
+   et Clique existait déjà.
+3. **Titres et descriptions** : rien à changer, « WoW Forever », « healing frames », « click casting » et
+   « raid frames » y sont déjà, comme dans les résumés des plateformes, qui renvoient tous vers le site.
+4. **Données structurées** : SoftwareApplication et FAQPage gardées telles quelles, sans note ni avis.
+5. **Vérification** : une balise par code donné (`VERIFICATION_GOOGLE`, `VERIFICATION_BING`, variables du dépôt
+   lues par le circuit Site ; mêmes noms suivis de `_CLOUDFLARE` pour l'autre cible). Sans code, aucune balise.
+6. **IndexNow** : choisi (gratuit, sans compte, utile pour Bing qui alimente Copilot). Fichier clé publié dans
+   `/Lyorune/`, envoi des deux pages par le circuit Site après chaque publication, avec `keyLocation`.
+7. **Robots** : tous laissés entrer, y compris ceux qui servent à entraîner les IA. Un modèle qui a lu la page
+   connaît Lyorune même sans faire de recherche, ce qui sert un addon gratuit qui veut être connu. Le test du site
+   refuse toute ligne `Disallow`.
+
+Non retenu : créer un dépôt `BellaHealFr.github.io` pour avoir un `robots.txt` à la racine. Envoyer le sitemap à la
+main dans les deux outils suffit, et le domaine Cloudflare réglera la question.
 
 ## À faire par l'auteur
 
 - [ ] **Google Search Console** : ajouter une propriété « préfixe d'URL » `https://bellahealfr.github.io/Lyorune/`
-  (une propriété « domaine » est impossible sur github.io), vérifier par balise HTML (me donner le code), puis
-  envoyer `https://bellahealfr.github.io/Lyorune/sitemap.xml`.
-- [ ] **Bing Webmaster Tools** : importer le site depuis Search Console (ou vérifier par balise), envoyer le même
-  sitemap, puis suivre le rapport « AI Performance » qui montre les citations dans Copilot.
-- [ ] Choisir : robots d'entraînement des IA laissés entrer (conseil : oui) ou bloqués.
-- [ ] Choisir : IndexNow, oui ou non.
-- [ ] Mettre le lien du site sur les pages CurseForge, Wago et WoWInterface si ce n'est pas déjà fait.
+  (une propriété « domaine » est impossible sur github.io). Choisir la vérification par balise HTML, copier
+  seulement le code (la valeur de `content`) dans une variable du dépôt `VERIFICATION_GOOGLE` (Settings, Secrets and
+  variables, Actions, onglet Variables), relancer le circuit Site, cliquer sur « Valider », puis envoyer
+  `https://bellahealfr.github.io/Lyorune/sitemap.xml`.
+- [ ] **Bing Webmaster Tools** : importer le site depuis Search Console (le plus simple, aucune balise à ajouter),
+  vérifier que le sitemap y est, puis suivre le rapport « AI Performance » qui montre les citations dans Copilot.
+- [ ] Après quelques semaines : lire les requêtes réelles dans Search Console et ajuster les mots du point 7.
 - [ ] Proposer Lyorune aux guides et listes d'addons de WoW Forever, et en parler sur le Discord et les forums de
   joueurs (une présence réelle, jamais de faux messages).
-- [ ] Le jour du domaine Cloudflare : il est servi à la racine, son `robots.txt` et son `llms.txt` seront lus.
+- [ ] Le jour du domaine Cloudflare : il est servi à la racine, son `robots.txt` et son `llms.txt` seront lus ;
+  donner aussi une clé `INDEXNOW_CLOUDFLARE` (voir `docs/DEPLOIEMENT.md`).

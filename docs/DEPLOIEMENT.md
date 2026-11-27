@@ -105,9 +105,26 @@ la cible Cloudflare n'a aucun compteur.
 
 Deux sites identiques se feraient concurrence. Une seule adresse est donc **principale** (réglage `principale` dans
 `CIBLES`, `outils/site.py`) : l'autre garde tout son contenu mais indique la principale comme adresse de référence
-(balise canonical et `og:url`). Aujourd'hui, la principale est GitHub Pages : c'est la seule adresse qui existe.
+(balise canonical et `og:url`), ses liens entre langues (hreflang) pointent aussi vers la principale, et elle n'a
+pas de sitemap. Aujourd'hui, la principale est GitHub Pages : c'est la seule adresse qui existe.
 Le jour où le domaine Cloudflare devient l'adresse à faire connaître, passez `principale` de l'une à l'autre et
 republiez les deux.
+
+### Google Search Console et Bing Webmaster Tools
+
+Le détail est dans `docs/SEO.md` (« À faire par l'auteur »). Les codes de vérification se donnent par variable, une
+par cible, et ne servent qu'à ajouter la balise dans les deux pages : `VERIFICATION_GOOGLE` et `VERIFICATION_BING`
+pour GitHub Pages (variables du dépôt : Settings, Secrets and variables, Actions, onglet Variables ; le circuit
+Site les lit),
+`VERIFICATION_GOOGLE_CLOUDFLARE` et `VERIFICATION_BING_CLOUDFLARE` pour Cloudflare. Sans code, aucune balise.
+
+### IndexNow
+
+À chaque publication, le circuit Site prévient les moteurs qui suivent IndexNow (dont Bing) que les deux pages ont
+changé. La clé est dans `CIBLES` (`indexnow`) ; le fichier qui la prouve est publié à côté des pages. Un refus du
+service ne bloque pas la publication. Pour Cloudflare, donnez une clé par `INDEXNOW_CLOUDFLARE` le jour du domaine
+(32 caractères de 0 à 9 et de a à f) : le fichier clé sera publié, mais l'envoi reste à brancher avec la
+publication Cloudflare, qui ne passe pas par le circuit Site. Inutile tant que Cloudflare n'est pas la principale.
 
 ## Ce qui reste à fournir
 
