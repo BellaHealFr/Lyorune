@@ -5,8 +5,8 @@
 <p align="center"><em>La lumière qui guide chaque soigneur</em></p>
 
 <p align="center">
-<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FBellaHealFr%2FLyorune%2Fbadges%2Fversion.json" alt="Version"></a>
-<a href="https://github.com/BellaHealFr/Lyorune/releases"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FBellaHealFr%2FLyorune%2Fbadges%2Ftelechargements.json&label=t%C3%A9l%C3%A9chargements" alt="Téléchargements"></a>
+<a href="https://github.com/BellaHealFr/Lyorune/releases/latest"><img src="https://raw.githubusercontent.com/BellaHealFr/Lyorune/badges/version.svg" alt="Version"></a>
+<a href="https://github.com/BellaHealFr/Lyorune/releases"><img src="https://raw.githubusercontent.com/BellaHealFr/Lyorune/badges/telechargements.svg" alt="Téléchargements"></a>
 <a href="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml"><img src="https://github.com/BellaHealFr/Lyorune/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
 <img src="https://img.shields.io/badge/WoW%20Forever-interface%2016001-1e90ff" alt="Jeu">
 <img src="https://img.shields.io/badge/licence-tous%20droits%20r%C3%A9serv%C3%A9s-lightgrey" alt="Licence">

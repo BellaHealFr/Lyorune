@@ -1,5 +1,5 @@
-# Chiffres des badges (version, téléchargements GitHub) : recalculés toutes les heures et après chaque publication,
-# rangés sur la branche « badges », que lisent les README et la page de profil par shields.io.
+# Badges (version, téléchargements GitHub), en images SVG : redessinés toutes les heures et après chaque publication,
+# rangés sur la branche « badges », que les README et la page de profil affichent directement (raw.githubusercontent.com).
 # La branche ne garde qu'un seul commit, réécrit seulement quand un chiffre change : l'historique de main reste propre.
 name: Badges
 on:
@@ -37,7 +37,7 @@ jobs:
           cd "$RUNNER_TEMP/badges"
           if git -C "$GITHUB_WORKSPACE" fetch -q origin badges 2>/dev/null; then
             same=1
-            for f in *.json; do
+            for f in *; do
               git -C "$GITHUB_WORKSPACE" show "FETCH_HEAD:$f" 2>/dev/null | cmp -s - "$f" || same=0
             done
             if [ "$same" = 1 ]; then echo "Rien n'a changé."; exit 0; fi
