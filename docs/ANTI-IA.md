@@ -88,5 +88,7 @@ Relu à l'écran (bureau et téléphone, captures du navigateur) :
     ou non ;
   - les noms du groupe de la démo : le premier groupe reprend ceux de vos captures (Bella, Yops, Traqueuse, Orion,
     Azuriel), les 35 autres sont inventés ;
-  - le texte anglais, écrit pour des joueurs anglophones : une relecture par un joueur anglophone reste conseillée,
-    surtout pour les noms des quatre fonctions phares.
+  - le texte anglais a été relu le 27 novembre 2026 : orthographe britannique comme l'anglais de l'addon
+    (« colour », « recognises », mais « specialization », terme du jeu), noms de sorts et de réglages du jeu, tournures
+    traduites reprises. Un avis de joueur anglophone reste le bienvenu, surtout sur les noms des quatre fonctions
+    phares.

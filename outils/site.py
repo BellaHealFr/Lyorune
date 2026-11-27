@@ -545,7 +545,7 @@ def page_404(textes, cible, commun):
   <p>Cette page est trop loin pour être soignée : elle n'existe pas, ou elle a changé d'adresse.</p>
   <p><a class="plateforme principale" href="{base}">Revenir au groupe</a></p>
   <h2 lang="en">Out of range</h2>
-  <p lang="en">This page is too far away to be healed: it does not exist, or it has moved.</p>
+  <p lang="en">This page is out of healing range: it doesn't exist, or it has moved.</p>
   <p lang="en"><a class="plateforme" href="{base}en/">Back to the group</a></p>
 </main>
 </body>
