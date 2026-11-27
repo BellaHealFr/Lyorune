@@ -6,7 +6,7 @@
 # GitHub compte chaque téléchargement d'une archive publiée dans « Releases ». Les copies du dépôt
 # (git clone) et les téléchargements faits sur CurseForge ou Wago ne sont pas comptés ici : ces
 # plateformes affichent leurs propres chiffres sur la page du projet.
-import json, sys, urllib.request
+import json, os, sys, urllib.request
 
 DEPOT = 'BellaHealFr/Lyorune'
 
@@ -16,7 +16,10 @@ def releases():
     liste, page = [], 1
     while True:  # GitHub donne au plus 100 versions par page
         url = 'https://api.github.com/repos/%s/releases?per_page=100&page=%d' % (DEPOT, page)
-        request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'lyorune-stats'})
+        headers = {'Accept': 'application/vnd.github+json', 'User-Agent': 'lyorune-stats'}
+        if os.environ.get('GITHUB_TOKEN'):  # circuit des badges : limite d'appels plus large
+            headers['Authorization'] = 'Bearer ' + os.environ['GITHUB_TOKEN']
+        request = urllib.request.Request(url, headers=headers)
         morceau = json.load(urllib.request.urlopen(request, timeout=20))
         liste += morceau
         if len(morceau) < 100:
