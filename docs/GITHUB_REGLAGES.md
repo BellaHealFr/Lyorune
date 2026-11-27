@@ -5,7 +5,7 @@ Réglages à faire à la main sur https://github.com/BellaHealFr/Lyorune (roue d
 
 ## Description « About »
 
-Une phrase, 160 caractères au plus. GitHub n'accepte qu'une description : choisissez la langue de la page d'accueil
+Une phrase courte (GitHub accepte 350 caractères, mais les aperçus coupent bien avant). GitHub n'accepte qu'une description : choisissez la langue de la page d'accueil
 (le README s'ouvre en anglais).
 
 | Langue | Texte | Longueur |
