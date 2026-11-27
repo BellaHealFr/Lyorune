@@ -10,7 +10,7 @@ Ce fichier ne change rien : chaque proposition attend l'accord de l'auteur.
 - Dans le zip, le dossier de l'addon à la racine.
 - Un seul `Addon.toc`, ou un fichier TOC par version du jeu (`Addon_Forever.toc` pour WoW Forever). Le Hub lit le
   TOC pour savoir quelles versions du jeu une release prend en charge.
-- Facultatif : le `release.json` de l'outil d'empaquetage BigWigs, que le Hub lit pour savoir quel zip va avec quelle
+- Facultatif : le `release.json` de l'outil d'empaquetage, que le Hub lit pour savoir quel zip va avec quelle
   version du jeu.
 - Pour une installation par l'adresse GitHub, WowUp cherche pour WoW Forever un zip dont le nom finit par `-forever`.
 - Icône : l'image de prévisualisation sociale du dépôt. Captures : le dossier `.previews` de la branche étiquetée.
@@ -22,7 +22,7 @@ Ce fichier ne change rien : chaque proposition attend l'accord de l'auteur.
 
 | Point | État | Détail |
 |---|---|---|
-| Release étiquetée avec un zip | conforme | `v1.51.0` : `Lyorune-v1.51.0-forever.zip`, fait par la publication automatique (`.github/workflows/publication.yml`, outil BigWigs) |
+| Release étiquetée avec un zip | conforme | `v1.51.0` : `Lyorune-v1.51.0-forever.zip`, fait par la publication automatique (`.github/workflows/publication.yml`) |
 | Dossier à la racine du zip | conforme | un seul dossier `Lyorune/`, avec `Lyorune.toc` dedans, aucun fichier à côté |
 | Nom de zip en `-forever` | conforme | `Lyorune-v1.51.0-forever.zip` |
 | `release.json` | conforme | joint à la release : `"flavor": "forever"`, `"interface": 16001` |

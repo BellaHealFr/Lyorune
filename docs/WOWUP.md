@@ -37,7 +37,7 @@ charge par le Hub pour Lyorune.
 > Bonjour ! Je suis BellaDroode, l'auteur de **Lyorune**, des cadres de soin pour **WoW Forever** (interface 16001).
 > Dépôt : https://github.com/BellaHealFr/Lyorune
 > Chaque version est une release GitHub étiquetée (par exemple `v1.51.0`) avec une archive `Lyorune-vX.Y.Z-forever.zip`
-> (dossier `Lyorune/` à la racine) et le `release.json` de l'outil d'empaquetage BigWigs (`flavor: forever`).
+> (dossier `Lyorune/` à la racine) et le `release.json` de l'outil d'empaquetage (`flavor: forever`).
 > Les topics, l'image de partage et le dossier `.previews` sont en place.
 > Pourriez-vous l'ajouter au Hub, ou me dire ce qui manque ? Et le Hub prend-il bien en charge le client WoW Forever
 > pour cet addon ? Merci !
@@ -47,7 +47,7 @@ charge par le Hub pour Lyorune.
 > Hi! I'm BellaDroode, the author of **Lyorune**, healing frames for **WoW Forever** (interface 16001).
 > Repository: https://github.com/BellaHealFr/Lyorune
 > Every version is a tagged GitHub release (for example `v1.51.0`) with a `Lyorune-vX.Y.Z-forever.zip` archive
-> (`Lyorune/` folder at the root) and the BigWigs packager's `release.json` (`flavor: forever`).
+> (`Lyorune/` folder at the root) and the packager's `release.json` (`flavor: forever`).
 > Topics, social preview image and `.previews` folder are in place.
 > Could you add it to the Hub, or tell me what is missing? And does the Hub support the WoW Forever client for this
 > addon? Thank you!
