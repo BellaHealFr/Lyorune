@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.55.1", date = "2026-11-28",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Placements par personnage : sur WoW Forever, deux personnages au même prénom ont maintenant chacun les leurs (le nom de famille compte).",
+		},
+	},
+	{
 		version = "1.55.0", date = "2026-11-28",
 		added = {
 			"Vos soins sur la durée sur la barre : ce qu'ils vont encore rendre, le prochain coup plus franc, la descente à chaque coup, même en combat (Rénovation, Récupération, Rétablissement, Remous, Pénitence, Croissance sauvage).",

@@ -1436,4 +1436,5 @@ Z.translations.enUS = {
 	["Vos soins sur la durée sur la barre : ce qu'ils vont encore rendre, le prochain coup plus franc, la descente à chaque coup, même en combat (Rénovation, Récupération, Rétablissement, Remous, Pénitence, Croissance sauvage)."] = "Your heals over time on the bar: what they will still restore, the next tick brighter, going down at each tick, even in combat (Renew, Rejuvenation, Regrowth, Riptide, Penance, Wild Growth).",
 	["Votre Prière de guérison en attente sur le joueur qui la porte, suivie quand elle saute."] = "Your pending Prayer of Mending on the player carrying it, followed when it jumps.",
 	["Alerte de gaspillage : la part qui sera perdue se voit aussi sur la fin de la vie, même à pleine vie."] = "Overheal warning: the part that will be wasted also shows on the end of the health, even at full health.",
+	["Placements par personnage : sur WoW Forever, deux personnages au même prénom ont maintenant chacun les leurs (le nom de famille compte)."] = "Per-character placements: on WoW Forever, two characters with the same first name now each keep their own (the surname counts).",
 }
