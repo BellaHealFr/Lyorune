@@ -12132,6 +12132,40 @@ step("36 c, lot 8 b : Priere de guerison en attente (suivie quand elle saute), C
   assert(ok, err)
 end)
 
+step("36 c, lot 8 c : part perdue sur la fin de la vie, depuis le bord droit, rognee a la vie", function()
+  local b = CreateFrame("Button", "LyoruneHeaderUnitButton368", Z.header)
+  Z.header:InitButton(b:GetName())
+  local old = { warn = Z.db.overhealWarn, show = Z.db.showIncoming, split = Z.db.incomingSplit }
+  local ok, err = pcall(function()
+    b:SetAttribute("unit", "party1")
+    Z.db.showIncoming, Z.db.overhealWarn, Z.db.incomingSplit = true, true, "MINE" Z:Refresh()
+    -- cadre rogne au bout de la vie, barre inversee de toute la largeur, posee sur la vie (jamais sous elle)
+    assert(b.lost:IsShown() and b.lost:GetParent() == b.lostClip, "part perdue absente")
+    local corner = b.lostClip._points and b.lostClip._points.BOTTOMRIGHT
+    assert(corner and corner[2] == b.hp:GetStatusBarTexture(), "cadre pas rogne au bout de la vie")
+    assert(b.lost._all == b.hp, "barre pas de toute la largeur")
+    local tex = b.lost:GetStatusBarTexture()
+    assert(tex._sublevel > b.hp:GetStatusBarTexture()._sublevel, "part perdue sous la vie")
+    assert(b.lostMore._sublevel > tex._sublevel and b.lostMore._all == tex, "cuivre mal pose")
+    -- tous les soins en route (pas les miens seuls), meme en combat
+    Z.cellUpdates.prediction(b)
+    assert(b.lost._value == 10, "part perdue : pas tous les soins en route")
+    SECRET = true COMBAT = true
+    Z.cellUpdates.prediction(b)
+    SECRET = false COMBAT = false
+    -- coupee avec l'alerte, ou sans les soins en route ; posee d'un coup au changement de joueur
+    Z.db.overhealWarn = false Z:Refresh()
+    assert(not b.lost:IsShown(), "part perdue malgre l'alerte coupee")
+    Z.db.overhealWarn, Z.db.showIncoming = true, false Z:Refresh()
+    assert(not b.lost:IsShown(), "part perdue sans les soins en route")
+  end)
+  SECRET = false COMBAT = false
+  Z.db.overhealWarn, Z.db.showIncoming, Z.db.incomingSplit = old.warn, old.show, old.split
+  Z:Refresh()
+  b:SetAttribute("unit", nil)
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

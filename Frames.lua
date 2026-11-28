@@ -47,8 +47,9 @@ local smoothing      -- SMOOTH ou nil selon l'option
 -- Les segments qui se suivent (mon soin, celui des autres, soins sur la durée) ne se recouvrent jamais : même couche.
 -- Au-dessus de mon soin : la teinte du gaspillage (ambre puis cuivre), et tout en haut le voile de l'incantation.
 -- Le prochain coup de mes soins sur la durée, plus franc, se pose sur le début de leur segment.
+-- La part perdue se pose sur la fin de la vie (jamais sur un segment), sous le bouclier en bande et l'absorption.
 local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, hotNext = 2, pending = 1, overheal = 2, overhealMore = 3, absorb = 4,
-	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7 }
+	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7, lost = 2, lostMore = 3 }
 -- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.70 }, { 0.86, 0.45, 0.20, 0.75 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
@@ -98,6 +99,7 @@ end
 
 local healthCurve, hideWhenFullCurve, lowHealthCurve, lowManaCurve, healCalculator
 local overCalculator -- alerte de gaspillage, second niveau : les soins en route dépassent la vie de plus de 25 %
+local lostCalculator -- part perdue : les soins en route bornés à la vie max (pas à la vie qui manque)
 local incomingCurve, othersCurve -- couleur des soins en route (le mien, ceux des autres) en « Vie restante » (BuildCurves)
 local healthyCurve, healthyDeficitCurve -- joueur en bonne santé estompé (réglage healthyFade, BuildCurves)
 
@@ -226,7 +228,21 @@ local function UpdateIncoming(b, max)
 			if overCalculator.ResetPredictedValues then overCalculator:ResetPredictedValues() end
 			UnitGetDetailedHealPrediction(b.unit, "player", overCalculator)
 			local overMore = select(4, overCalculator:GetIncomingHeals())
-			if overMore ~= nil then b.overhealMore:SetAlphaFromBoolean(overMore, 1, 0) else b.overhealMore:SetAlpha(0) end
+			-- (le cuivre de la part perdue aussi : lostCalculator n'existe jamais sans overCalculator)
+			if overMore ~= nil then
+				b.overhealMore:SetAlphaFromBoolean(overMore, 1, 0)
+				b.lostMore:SetAlphaFromBoolean(overMore, 1, 0)
+			else
+				b.overhealMore:SetAlpha(0)
+				b.lostMore:SetAlpha(0)
+			end
+		end
+		-- Part perdue : tous les soins en route, bornés à la vie max, depuis le bord droit (rognés à la vie)
+		if b.lost:IsShown() then
+			if lostCalculator.ResetPredictedValues then lostCalculator:ResetPredictedValues() end
+			UnitGetDetailedHealPrediction(b.unit, "player", lostCalculator)
+			b.lost:SetMinMaxValues(0, max)
+			b.lost:SetValue((lostCalculator:GetIncomingHeals()), smoothing)
 		end
 	end
 end
@@ -685,7 +701,7 @@ local function UpdateTarget(b)
 end
 
 -- Barres animées (réglage smooth) : posées d'un coup à leur valeur, quand la case change de joueur
-local SNAPPED = { "hp", "incoming", "incomingOthers", "hot", "hotNext", "pending", "absorb", "healAbsorb" }
+local SNAPPED = { "hp", "incoming", "incomingOthers", "hot", "hotNext", "pending", "absorb", "healAbsorb", "lost" }
 local function SnapBars(b)
 	-- joueur pas encore connu du jeu (UpdateAll n'a rien posé) : rien à sauter, on attend le prochain affichage
 	local known = b.unit and UnitExists(b.unit)
@@ -980,6 +996,9 @@ local function Style(b)
 	b.overhealMore:SetShown(warn and overCalculator ~= nil)
 	b.overheal:SetAlpha(0)
 	b.overhealMore:SetAlpha(0)
+	b.lost:SetShown(warn and lostCalculator ~= nil)
+	b.lost:SetValue(0)
+	b.lostMore:SetAlpha(0)
 	-- (voile et éclat pas en « Tous ensemble » : le segment y porte aussi les soins des autres, sur toutes les cases)
 	b.castFill:SetShown(db.showIncoming and db.castFill and db.incomingSplit ~= "ALL")
 	b.castFill:SetAlpha(0) -- (une case cachée pendant mon incantation ne garde pas le voile)
@@ -1217,6 +1236,26 @@ function Z.BuildVisuals(b)
 	b.overhealMore:SetAllPoints(incoming:GetStatusBarTexture())
 	Unsnap(b.overheal)
 	Unsnap(b.overhealMore)
+	-- Part perdue (même réglage) : les soins en route comptés depuis le bord droit de la barre vers la gauche, dans un
+	-- cadre rogné au bout de la vie. Seule reste visible la part qui recouvre la vie : exactement ce qui sera perdu,
+	-- même à pleine vie, sans aucun calcul (le jeu place les bords, les montants restent secrets).
+	local lostClip = CreateFrame("Frame", nil, hp)
+	lostClip:SetPoint("TOPLEFT")
+	lostClip:SetPoint("BOTTOMRIGHT", hp:GetStatusBarTexture(), "BOTTOMRIGHT")
+	lostClip:SetClipsChildren(true)
+	local lost = CreateFrame("StatusBar", nil, lostClip)
+	lost:SetAllPoints(hp)
+	lost:SetReverseFill(true)
+	lost:SetStatusBarTexture(UI.WHITE)
+	SetLayer(lost, LAYER.lost)
+	lost:SetStatusBarColor(unpack(OVERHEAL_COLOR))
+	lost:SetMinMaxValues(0, 1)
+	lost:SetValue(0)
+	b.lost, b.lostClip = lost, lostClip
+	b.lostMore = lost:CreateTexture(nil, "ARTWORK", nil, LAYER.lostMore) -- cuivre au-delà d'un quart de la vie
+	b.lostMore:SetColorTexture(unpack(OVERHEAL_MORE_COLOR))
+	b.lostMore:SetAllPoints(lost:GetStatusBarTexture())
+	Unsnap(b.lostMore)
 	-- Voile de mon incantation : se remplit sur mon soin, au rythme du jeu (aucune boucle, SetTimerDuration).
 	-- Lancé sur toutes les cases : là où je ne soigne pas, mon soin a une largeur nulle et le voile ne se voit pas.
 	local fill = CreateFrame("StatusBar", nil, hp)
@@ -2420,6 +2459,11 @@ function Z:CreateFrames()
 			overCalculator:SetIncomingHealClampMode(Enum.UnitIncomingHealClampMode.MissingHealth)
 		end
 		overCalculator:SetIncomingHealOverflowPercent(1.25)
+		if healCalculator.SetIncomingHealClampMode and Enum.UnitIncomingHealClampMode and Enum.UnitIncomingHealClampMode.MaximumHealth then
+			lostCalculator = CreateUnitHealPredictionCalculator()
+			lostCalculator:SetIncomingHealClampMode(Enum.UnitIncomingHealClampMode.MaximumHealth)
+			lostCalculator:SetIncomingHealOverflowPercent(1.0)
+		end
 	end
 	BuildCurves() -- refait maintenant que le calculateur existe : il prend la limite du bouclier (réglage absorbStyle)
 
