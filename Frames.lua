@@ -64,7 +64,7 @@ local SHIELD_ATLAS = "RaidFrame-Shield-Overlay" -- rayures du bouclier des cadre
 local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- les mêmes, en image (client sans l'atlas)
 -- Part perdue : rayures ambre (cuivre au-delà d'un quart) sur un voile sombre, visibles sur toutes les couleurs de
 -- barre (l'ambre seul se fond dans l'orange du druide)
-local LOST_VEIL = { 0, 0, 0, 0.45 }
+local LOST_VEIL = { 0, 0, 0, 0.55 }
 local LOST_COLOR, LOST_MORE_COLOR = { 1.00, 0.78, 0.25, 1 }, { 1.00, 0.45, 0.15, 1 }
 -- Remplissage au demi-pixel près : sans le calage sur les pixels de l'écran, une barre étroite (mon soin en route,
 -- son voile) avance d'un mouvement continu au lieu de petits sauts d'un pixel
@@ -95,8 +95,8 @@ local function Stripes(bar, sub)
 	return tex
 end
 -- Un morceau de la part perdue : une barre remplie depuis le bord droit, de la taille de « area » (vie, ou mana), dans
--- un cadre rogné au bout de la vie ; voile sombre, rayures ambre, rayures cuivre allumées par un booléen du jeu.
--- Tous les morceaux d'une case : b.lostBars et b.lostMores.
+-- un cadre rogné au bout de la vie ; voile sombre, rayures ambre et trait ambre là où la perte commence, rayures et
+-- trait cuivre allumés par un booléen du jeu. Tous les morceaux d'une case : b.lostBars, et leur cuivre b.lostMores.
 local function LostBar(b, clip, area)
 	local bar = CreateFrame("StatusBar", nil, clip)
 	bar:SetAllPoints(area)
@@ -106,12 +106,27 @@ local function LostBar(b, clip, area)
 	bar:SetStatusBarColor(unpack(LOST_VEIL))
 	bar:SetMinMaxValues(0, 1)
 	bar:SetValue(0)
-	Stripes(bar, LAYER.lostStripes):SetVertexColor(unpack(LOST_COLOR))
-	local more = Stripes(bar, LAYER.lostMore)
-	more:SetVertexColor(unpack(LOST_MORE_COLOR))
-	more:SetAlpha(0)
 	b.lostBars, b.lostMores = b.lostBars or {}, b.lostMores or {}
-	b.lostBars[#b.lostBars + 1], b.lostMores[#b.lostMores + 1] = bar, more
+	b.lostBars[#b.lostBars + 1] = bar
+	local fill = bar:GetStatusBarTexture()
+	for _, copper in ipairs({ false, true }) do
+		local color, sub = copper and LOST_MORE_COLOR or LOST_COLOR, copper and LAYER.lostMore or LAYER.lostStripes
+		-- (rayures du jeu passées en gris : sinon leur bleu pâle écrase la teinte)
+		local stripes = Stripes(bar, sub)
+		if stripes.SetDesaturated then stripes:SetDesaturated(true) end
+		stripes:SetVertexColor(unpack(color))
+		local edge = bar:CreateTexture(nil, "ARTWORK", nil, sub)
+		edge:SetColorTexture(unpack(color))
+		edge:SetPoint("TOPLEFT", fill, "TOPLEFT")
+		edge:SetPoint("BOTTOMLEFT", fill, "BOTTOMLEFT")
+		edge:SetWidth(2)
+		if copper then
+			stripes:SetAlpha(0)
+			edge:SetAlpha(0)
+			b.lostMores[#b.lostMores + 1] = stripes
+			b.lostMores[#b.lostMores + 1] = edge
+		end
+	end
 	return bar
 end
 
@@ -1039,11 +1054,11 @@ local function Style(b)
 	b.overhealMore:SetShown(warn and overCalculator ~= nil)
 	b.overheal:SetAlpha(0)
 	b.overhealMore:SetAlpha(0)
-	for i, bar in ipairs(b.lostBars) do
+	for _, bar in ipairs(b.lostBars) do
 		bar:SetShown(warn and lostCalculator ~= nil)
 		bar:SetValue(0)
-		b.lostMores[i]:SetAlpha(0)
 	end
+	for _, more in ipairs(b.lostMores) do more:SetAlpha(0) end
 	-- (voile et éclat pas en « Tous ensemble » : le segment y porte aussi les soins des autres, sur toutes les cases)
 	b.castFill:SetShown(db.showIncoming and db.castFill and db.incomingSplit ~= "ALL")
 	b.castFill:SetAlpha(0) -- (une case cachée pendant mon incantation ne garde pas le voile)

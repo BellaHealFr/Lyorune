@@ -12297,7 +12297,7 @@ step("36 c, lot 8 c : part perdue sur la fin de la vie, depuis le bord droit, ro
     assert(more._sublevel > tex._sublevel and more._all == tex, "cuivre mal pose")
     -- lot 9 (essai en jeu) : voile sombre et rayures (l'ambre seul se fondait dans l'orange du druide), et un second
     -- morceau sur la mana, rogne au meme bout de la vie, jusqu'en bas de la mana
-    assert(#b.lostBars == 2 and #b.lostMores == 2, "part perdue sur la mana absente")
+    assert(#b.lostBars == 2 and #b.lostMores == 4, "part perdue sur la mana absente (ou cuivre incomplet)")
     local low = b.lostBars[2]
     assert(low:GetParent() == b.lostLow and b.lostLow:GetParent() == b.power, "part perdue sur la mana mal placee")
     local lowCorner = b.lostLow._points and b.lostLow._points.TOPRIGHT
