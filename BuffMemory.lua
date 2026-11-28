@@ -232,15 +232,50 @@ local function Remember(target, name)
 	Z:QueueBuffPanel()
 end
 
--- Joueur d'après le nom donné par le jeu (UNIT_SPELLCAST_SENT, parfois avec le royaume) : sa case
+-- Le nom annoncé par le jeu (UNIT_SPELLCAST_SENT) est-il celui du joueur de cette unité ? Sur WoW Forever, les
+-- personnages ont un prénom et un nom de famille : UnitName les rend à part (le second résultat, ailleurs le
+-- royaume), parfois joints par un tiret, et l'annonce dit « Prénom Nom » ; ailleurs, l'annonce peut porter le
+-- royaume (« Nom-Royaume »). Comparés sans espaces ni tirets. Rend 2 : nom complet identique ; 1 : le jeu ne rend
+-- que le prénom et l'annonce commence par lui (à garder seulement s'il est seul) ; 0 : non.
+local function Compact(text) return (text:gsub("[%-%s]+", "")) end
+local function NameMatch(target, unit)
+	if issecret(target) or type(target) ~= "string" or target == "" then return 0 end
+	local first, second = UnitName(unit)
+	if issecret(first) or issecret(second) or type(first) ~= "string" or first == "" then return 0 end
+	if type(second) ~= "string" then second = "" end
+	if Compact(target) == Compact(first .. second) then return 2 end
+	-- un seul des deux noms connu : l'annonce plus longue que le prénom rendu, ou l'annonce au prénom seul
+	if second == "" and target:match("^([^%-%s]+)[%-%s]") == first then return 1 end
+	if target == first then return 1 end
+	return 0
+end
+Z.NameMatch = NameMatch
+
+-- Joueur d'après le nom donné par le jeu : moi, sinon sa case (nom complet d'abord ; un seul nom connu : seulement
+-- si personne d'autre ne peut le porter, ma cible, ma focalisation et le joueur survolé compris, même sans case)
 local function UnitNamed(target)
-	if not target or issecret(target) or target == "" then return nil end
-	local short = target:match("^[^-]+") or target
-	local function Same(name) return name and not issecret(name) and (name == target or name == short) end
-	if Same(UnitName("player")) then return "player" end
-	for _, b in ipairs(Z.buttons or {}) do
-		if b.unit and not b.extra and Same(UnitName(b.unit)) then return b.unit end
+	if issecret(target) or type(target) ~= "string" or target == "" then return nil end
+	local loose, looseKey, many
+	local function Check(unit, onlyCount)
+		local found = NameMatch(target, unit)
+		if found == 2 and not onlyCount then return true end
+		if found > 0 then
+			local key = Key(unit)
+			if looseKey and looseKey ~= key then many = true end
+			if not onlyCount then loose = loose or unit end
+			looseKey = looseKey or key
+		end
 	end
+	if Check("player") then return "player" end
+	for _, b in ipairs(Z.buttons or {}) do
+		if b.unit and not b.extra and Check(b.unit) then return b.unit end
+	end
+	if not loose then return nil end
+	for _, unit in ipairs({ "target", "focus", "mouseover" }) do
+		local exists = UnitExists(unit)
+		if not issecret(exists) and exists then Check(unit, true) end
+	end
+	if not many then return loose end
 end
 
 -- Qui reçoit mon sort annoncé par le jeu (UNIT_SPELLCAST_SENT, au moment at) : le joueur nommé, sinon le dernier

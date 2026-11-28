@@ -11937,6 +11937,44 @@ step("36 c, lot 9 : cible annoncee sans case (ennemi en cible) : le joueur ou mo
   assert(ok, err)
 end)
 
+step("36 c, lot 9 : noms de WoW Forever (prenom et nom de famille a part), annonce au nom complet", function()
+  local unitName, unit = UnitName, Z.buttons[1].unit
+  local names = {}
+  rawset(_G, "UnitName", function(u) local n = names[u] if n then return n[1], n[2] end return unitName(u) end)
+  local ok, err = pcall(function()
+    local M = Z.NameMatch
+    names.player = { "Bella", "Droode" }
+    assert(M("Bella Droode", "player") == 2 and M("Bella-Droode", "player") == 2, "nom complet")
+    assert(M("Bella Pala", "player") == 0 and M("Bella", "player") == 1, "autre nom de famille, ou annonce au prenom seul")
+    names.player = { "Bella-Droode", nil }
+    assert(M("Bella Droode", "player") == 2, "prenom et nom joints par un tiret")
+    names.player = { "Bella", "" }
+    assert(M("Bella Droode", "player") == 1 and M("Bellatrix Droode", "player") == 0, "prenom seul connu")
+    names.party1 = { "Thrall", "Sulfuron" }
+    assert(M("Thrall-Sulfuron", "party1") == 2 and M("Thrall-Hyjal", "party1") == 0, "royaume")
+    assert(M(MakeSecret(), "player") == 0, "annonce secrete")
+    names.party1 = { MakeSecret(), nil }
+    assert(M("Bella Droode", "party1") == 0, "nom secret")
+    -- qui reçoit : moi au nom complet ; prénom seul : seulement si personne d'autre ne le porte
+    Z.buttons[1].unit = "party1"
+    names.player, names.party1 = { "Bella", "Droode" }, { "Bella", "Pala" }
+    assert(Z.CastReceiver("Bella Droode", "x") == "player" and Z.CastReceiver("Bella Pala", "x") == "party1", "nom complet")
+    names.player, names.party1 = { "Bella", "" }, { "Jaina", "" }
+    assert(Z.CastReceiver("Bella Droode", "x") == "player", "prenom seul, le seul")
+    names.party1 = { "Bella", "" }
+    assert(Z.CastReceiver("Bella Droode", "x") == nil, "deux Bella : rien d'invente")
+    -- une autre Bella sans case, en cible : rien d'inventé non plus
+    names.party1 = { "Jaina", "" } names.target = { "Bella", "Smith" }
+    local exists = UnitExists
+    rawset(_G, "UnitExists", function(u) if u == "target" then return true end return exists(u) end)
+    local ok2, receiver = pcall(Z.CastReceiver, "Bella Smith", "x")
+    rawset(_G, "UnitExists", exists)
+    assert(ok2 and receiver == nil, "une Bella en cible prise pour moi")
+  end)
+  rawset(_G, "UnitName", unitName) Z.buttons[1].unit = unit
+  assert(ok, err)
+end)
+
 step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain coup, coups, relance, fin, interrupteur)", function()
   local b = Z.buttons[1]
   local saved = { now = NOW, auras = AURAS, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts, unit = b.unit,

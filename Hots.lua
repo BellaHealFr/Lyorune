@@ -501,17 +501,14 @@ end
 
 -- Cible annoncée sans case ni clic : ma cible, quand le jeu dit qu'elle ne peut pas être aidée (un ennemi, un PNJ
 -- qu'on ne soigne pas) ; le jeu lance alors mon soin sur moi. Lisible même en combat. Le nom annoncé doit être le
--- sien, royaume compris quand l'annonce en porte un. Vu à l'annonce et à la réussite. Rend "player" ou nil.
+-- sien (Z.NameMatch : nom de famille ou royaume compris). Vu à l'annonce et à la réussite. Rend "player" ou nil.
 local function OnUnhelpable(target)
 	if not UnitCanAssist or issecret(target) or type(target) ~= "string" or target == "" then return nil end
 	local helpable = UnitCanAssist("player", "target")
 	if issecret(helpable) or helpable then return nil end
-	local name, realm = UnitName("target")
-	if issecret(name) or issecret(realm) or type(name) ~= "string" then return nil end
-	if not target:find("-", 1, true) then return target == name and "player" or nil end
-	if type(realm) ~= "string" or realm == "" then realm = GetRealmName and GetRealmName() end
-	if issecret(realm) or type(realm) ~= "string" then return nil end
-	return target == name .. "-" .. realm:gsub("%s", "") and "player" or nil
+	-- son nom complet ; un seul nom connu : seulement l'annonce « Nom-Royaume » (jamais un prénom partagé)
+	local found = Z.NameMatch(target, "target")
+	if found == 2 or found == 1 and target:find("-", 1, true) and not target:find(" ", 1, true) then return "player" end
 end
 
 -- Sinon (cible illisible, sans clic) : le joueur sur qui mon aura de ce sort vient d'arriver, quand les auras se
@@ -655,6 +652,12 @@ function Z.HotReport()
 	lines[#lines + 1] = ("mes sorts entendus : écoute %s, %d annoncés, %d réussis, dernier annoncé %s (soin sur la durée : %s), cible %s")
 		:format(listening and "oui" or "non", heard.sent, heard.done, issecret(heard.id) and "secret" or heard.id and tostring(heard.id) or "aucun",
 			SpellOf(heard.id) and "oui" or "non", Named(heard.target))
+	local function Shown(value) return issecret(value) and "secret" or ("%s « %s »"):format(type(value), tostring(value)) end
+	local first, second = UnitName("player")
+	local full = GetUnitName and GetUnitName("player", true)
+	local short, realm = UnitFullName and UnitFullName("player")
+	lines[#lines + 1] = ("mon nom pour le jeu : UnitName %s / %s, GetUnitName %s, UnitFullName %s / %s")
+		:format(Shown(first), Shown(second), Shown(full), Shown(short), Shown(realm))
 	if last then
 		local target = Named(last.target)
 		local unit = last.unit
