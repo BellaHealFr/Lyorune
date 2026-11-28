@@ -11799,7 +11799,12 @@ step("36 c, lot 7 : mes soins sur la duree retenus (cible, montant appris par ra
     FireEvent("UNIT_SPELLCAST_SENT", "player", MakeSecret(), "c9", 139)
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c9", 139)
     assert(Z.MyHots("party3") == nil, "clic de ciblage ancien pris pour la cible")
-    -- durée inconnue (Prière de guérison, rien de lu) : oubliée aussitôt la lecture passée, jamais pour toujours
+    -- durée inconnue (Prière de guérison sans sa durée de Data.lua, rien de lu) : oubliée aussitôt la lecture
+    -- passée, jamais pour toujours
+    local prayerEntry
+    for _, entry in ipairs(Z.hotSpells.PRIEST) do if entry.id == 401859 then prayerEntry = entry end end
+    local prayerDuration = prayerEntry.duration
+    prayerEntry.duration = nil
     local getName = C_Spell.GetSpellName
     C_Spell.GetSpellName = function(id) if id == 402174 then return "Pénitence" end return getName(id) end
     Z.buffGeneration = (Z.buffGeneration or 0) + 1
@@ -11808,6 +11813,7 @@ step("36 c, lot 7 : mes soins sur la duree retenus (cible, montant appris par ra
     FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "c10", 401859)
     NOW = NOW + 2
     local left = Z.MyHots("player") or {}
+    prayerEntry.duration = prayerDuration
     for _, hot in ipairs(left) do assert(hot.base ~= 401859, "soin sans duree garde") end
     -- Pénitence : 3 coups en 2 s, coupée après 0,5 s : sa durée s'arrête là
     FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "c11", 402174)
@@ -11844,7 +11850,8 @@ step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain 
     b.unit = "player" b:Show()
     Z.db.hotPrediction, Z.db.absorbStyle = true, "FOLLOW" Z:Refresh()
     assert(b.hot:IsShown() and b.hotNext:IsShown(), "segment absent")
-    assert(b.absorb._points.TOPLEFT[2] == b.hot:GetStatusBarTexture(), "le bouclier ne suit pas mes soins sur la duree")
+    assert(b.absorb._points.TOPLEFT[2] == b.pending:GetStatusBarTexture(), "le bouclier ne suit pas mes soins sur la duree")
+    assert(b.pending._points.TOPLEFT[2] == b.hot:GetStatusBarTexture(), "soin en attente pas apres mes soins sur la duree")
     assert(b.hot._points.TOPLEFT[2] == b.incomingOthers:GetStatusBarTexture(), "mes soins sur la duree pas apres ceux des autres")
     local function cast(guid, id)
       FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", guid, id)
@@ -11998,6 +12005,127 @@ step("36 c, lot 8 bis : fin sur dissipation et Prompte guerison, 3 dernieres sec
   b.unit, b._shown, C_Spell.GetSpellName, Z.db.clickStats = saved.unit, saved.shown, saved.name, saved.stats
   UnitIsVisible, Z.class, COMBAT = saved.visible, saved.class, saved.combat
   Z.ForgetHots("player")
+  Z.db.hotPrediction = saved.on
+  Z.buffGeneration = (Z.buffGeneration or 0) + 1
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("36 c, lot 8 b : Priere de guerison en attente (suivie quand elle saute), Croissance sauvage sur chaque joueur touche", function()
+  local b = Z.buttons[1]
+  local saved = { now = NOW, auras = AURAS, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts, unit = b.unit,
+    shown = b._shown, name = C_Spell.GetSpellName, on = Z.db.hotPrediction, pending = Z.db.hotPending, stats = Z.db.clickStats,
+    class = Z.class, combat = COMBAT, same = UnitIsUnit, get = C_UnitAuras.GetAuraDataByAuraInstanceID, style = Z.db.absorbStyle }
+  local ok, err = pcall(function()
+    -- le soin d'un sort qui attend : le plus grand nombre qui n'est pas une durée, pas les sauts ni les mètres
+    local amount, seconds = Z.PendingFromText("Rend 1 234 points de vie la prochaine fois que la cible subit des dégâts, puis saute jusqu'à 5 fois vers un allié à moins de 20 mètres. Dure 30 sec.")
+    assert(amount == 1234 and seconds == 30, "texte de Priere de guerison : " .. tostring(amount) .. " " .. tostring(seconds))
+    assert(Z.PendingFromText("Dure 30 sec.") == nil, "une duree prise pour un soin")
+    NOW = NOW + 4000 AURAS = {} Z.db.clickStats = false COMBAT = false
+    C_Spell.GetSpellDescription = function() return "" end
+    local names = { [401859] = "Prière de guérison", [408120] = "Croissance sauvage" }
+    local getName = C_Spell.GetSpellName
+    C_Spell.GetSpellName = function(id) return names[id] or getName(id) end
+    Z.class = "PRIEST" Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    UnitIsUnit = function(a, c) return a == c end
+    C_UnitAuras.GetAuraDataByAuraInstanceID = nil
+    Z.char.hotAmounts = { [401859] = { total = 800, duration = 30, from = "texte" } }
+    b.unit = "player" b:Show()
+    Z.db.hotPrediction, Z.db.hotPending, Z.db.absorbStyle = true, true, "FOLLOW" Z:Refresh()
+    Z.ForgetHots("player") Z.ForgetHots("party1")
+    local function cast(guid, id)
+      FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", guid, id)
+      FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", guid, id)
+    end
+    local function landed(unit, id, instance, source)
+      Z.CheckHots(unit, { addedAuras = { { spellId = id, auraInstanceID = instance, duration = 30, expirationTime = NOW + 30, sourceUnit = source or "player" } } })
+    end
+    local function on(unit, base)
+      for _, hot in ipairs(Z.MyHots(unit) or {}) do if hot.base == base then return hot end end
+    end
+    -- posée sur moi : le soin attend, à part, sans rien sur le segment des soins sur la durée
+    cast("p1", 401859)
+    assert(b.pending:IsShown() and b.pending:GetValue() == 800 and b.hot:GetValue() == 0, "en attente " .. tostring(b.pending:GetValue()))
+    local left, soon, ending, waiting = Z.HotAmounts("player")
+    assert(left == 0 and soon == 0 and waiting == 800, "montants du soin en attente")
+    -- son aura arrive sur moi : la même pose, relue (pas un second soin)
+    landed("player", 401859, 70)
+    assert(#Z.MyHots("player") == 1 and on("player", 401859).seen and on("player", 401859).instance == 70, "pose relue")
+    -- le même joueur dans deux cases (cible, focalisation) : la même aura, une seule pose
+    local posed = on("player", 401859)
+    landed("player", 401859, 70)
+    assert(on("player", 401859) == posed, "aura vue par deux cases retenue deux fois")
+    -- elle saute : son aura lisible arrive sur un autre joueur, l'ancien porteur ne l'a plus
+    NOW = NOW + 2
+    landed("party1", 401859, 77)
+    assert(on("party1", 401859) and Z.MyHots("player") == nil and b.pending:GetValue() == 0, "pas suivie quand elle saute")
+    -- la réussite de mon sort arrive en retard, après un saut rapide : elle reste chez son nouveau porteur
+    Z.ForgetHots("party1") NOW = NOW + 2
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "p0", 401859)
+    landed("player", 401859, 71) NOW = NOW + 0.3 landed("party1", 401859, 77)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "p0", 401859)
+    assert(on("party1", 401859) and Z.MyHots("player") == nil, "reussite en retard : ramenee sur l'ancien porteur")
+    -- celle d'un autre prêtre ne déplace rien
+    landed("party2", 401859, 78, "party3")
+    assert(on("party1", 401859) and Z.MyHots("party2") == nil, "Priere d'un autre pretre prise pour la mienne")
+    -- en combat : gardée tant que son porteur n'a rien perdu, ou que son numéro dit qu'elle est là
+    COMBAT = true NOW = NOW + 1
+    Z.CheckHots("party1", { addedAuras = {} })
+    assert(on("party1", 401859), "oubliee sans aura partie")
+    C_UnitAuras.GetAuraDataByAuraInstanceID = function(unit, id) if id == 77 then return { auraInstanceID = 77 } end end
+    Z.CheckHots("party1", { removedAuraInstanceIDs = { 9 } })
+    assert(on("party1", 401859), "oubliee alors que son numero dit qu'elle est la")
+    C_UnitAuras.GetAuraDataByAuraInstanceID = function() return MakeSecret() end
+    Z.CheckHots("party1", { removedAuraInstanceIDs = { 9 } })
+    assert(on("party1", 401859), "oubliee sur une reponse secrete (qui prouve qu'elle est la)")
+    C_UnitAuras.GetAuraDataByAuraInstanceID = function() return nil end
+    Z.CheckHots("party1", { removedAuraInstanceIDs = { 77 } })
+    assert(Z.MyHots("party1") == nil, "gardee apres son depart en combat")
+    -- en combat, sans numéro lisible : oubliée dès que son porteur a pu la perdre (rien d'inventé)
+    C_UnitAuras.GetAuraDataByAuraInstanceID = nil
+    cast("p2", 401859) NOW = NOW + 1
+    Z.CheckHots("player", MakeSecret())
+    assert(Z.MyHots("player") == nil, "gardee sur une mise a jour illisible")
+    COMBAT = false
+    -- pas sautée : effacée à sa fin
+    cast("p3", 401859) NOW = NOW + 31
+    assert(Z.MyHots("player") == nil and (select(4, Z.HotAmounts("player"))) == 0, "gardee apres sa fin")
+    -- interrupteur : rien en attente sur la barre, le bouclier suit de nouveau mes soins sur la durée
+    Z.db.hotPending = false Z:Refresh()
+    assert(not b.pending:IsShown() and b.absorb._points.TOPLEFT[2] == b.hot:GetStatusBarTexture(), "interrupteur du soin en attente")
+    Z.db.hotPending = true Z:Refresh()
+    -- Croissance sauvage : ma cible, puis chaque joueur dont mon aura arrivée se lit
+    Z.class = "DRUID" Z.buffGeneration = Z.buffGeneration + 1
+    Z.char.hotAmounts = { [408120] = { total = 70, duration = 7, from = "texte" } }
+    cast("g1", 408120)
+    local grow = on("player", 408120)
+    assert(grow and grow.ticks == 7 and b.hot:GetValue() == 70, "Croissance sauvage sur ma cible")
+    Z.CheckHots("party1", { addedAuras = { { spellId = 408120, auraInstanceID = 80, duration = 7, expirationTime = NOW + 7, sourceUnit = "player" } } })
+    Z.CheckHots("player", { addedAuras = { { spellId = 408120, auraInstanceID = 81, duration = 7, expirationTime = NOW + 7, sourceUnit = "player" } } })
+    assert(on("party1", 408120) and on("party1", 408120).total == 70, "Croissance sauvage absente d'un autre joueur touche")
+    assert(on("player", 408120) == grow and grow.seen, "ma cible comptee deux fois")
+    Z.CheckHots("party2", { addedAuras = { { spellId = 408120, auraInstanceID = 82, duration = 7, expirationTime = NOW + 7, sourceUnit = "party3" } } })
+    assert(Z.MyHots("party2") == nil, "Croissance sauvage d'un autre druide prise pour la mienne")
+    Z.CheckHots("party2", { addedAuras = { { spellId = 408120, auraInstanceID = MakeSecret(), sourceUnit = MakeSecret() } } })
+    assert(Z.MyHots("party2") == nil, "aura au lanceur et au numero secrets prise pour la mienne")
+    -- aura arrivée avant la réussite de mon sort : la même pose, pas relancée
+    NOW = NOW + 20
+    Z.CheckHots("player", { addedAuras = { { spellId = 408120, auraInstanceID = 84, duration = 7, expirationTime = NOW + 7, sourceUnit = "player" } } })
+    local first = on("player", 408120)
+    cast("g2", 408120)
+    assert(on("player", 408120) == first, "aura arrivee avant le sort : pose comptee deux fois")
+    -- réglage éteint : aucune arrivée retenue
+    Z.db.hotPrediction = false Z:Refresh()
+    Z.CheckHots("party1", { addedAuras = { { spellId = 408120, auraInstanceID = 85, duration = 7, expirationTime = NOW + 7, sourceUnit = "player" } } })
+    assert(Z.MyHots("party1") == nil, "arrivee retenue reglage eteint")
+    C_Spell.GetSpellName = getName
+  end)
+  NOW, AURAS, C_Spell.GetSpellDescription, Z.char.hotAmounts = saved.now, saved.auras, saved.desc, saved.amounts
+  b.unit, b._shown, C_Spell.GetSpellName, Z.db.clickStats = saved.unit, saved.shown, saved.name, saved.stats
+  Z.class, COMBAT, UnitIsUnit, C_UnitAuras.GetAuraDataByAuraInstanceID = saved.class, saved.combat, saved.same, saved.get
+  Z.db.hotPrediction, Z.db.hotPending, Z.db.absorbStyle = true, saved.pending, saved.style
+  Z:Refresh()
+  Z.ForgetHots("player") Z.ForgetHots("party1")
   Z.db.hotPrediction = saved.on
   Z.buffGeneration = (Z.buffGeneration or 0) + 1
   Z:Refresh()

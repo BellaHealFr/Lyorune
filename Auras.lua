@@ -813,9 +813,9 @@ local function TipWeaponLeft()
 	end
 end
 
--- Ce buff vient-il de moi ? Le lanceur lisible d'abord, sinon le filtre « mes auras » du jeu ; rien de sûr : oui
--- (le buff est traité comme avant, repris sous le seuil)
-local function FromMe(unit, aura)
+-- Cette aura vient-elle de moi ? Le lanceur lisible d'abord, sinon le filtre « mes auras » du jeu. Rend vrai,
+-- faux, ou nil quand rien n'est sûr (aussi pour mes soins sur la durée, Hots.lua).
+function Z.AuraFromMe(unit, aura)
 	local source = aura.sourceUnit
 	if source and not issecret(source) then
 		local same = UnitIsUnit(source, "player")
@@ -826,8 +826,10 @@ local function FromMe(unit, aura)
 		local ok, out = pcall(IsFilteredOut, unit, id, "HELPFUL|PLAYER")
 		if ok and not issecret(out) and out ~= nil then return out == false end
 	end
-	return true
+	return nil
 end
+-- (rien de sûr : le buff est traité comme venant de moi, comme avant, repris sous le seuil)
+local function FromMe(unit, aura) return Z.AuraFromMe(unit, aura) ~= false end
 
 -- Mon enchantement d'arme principale : secondes restantes (0 : aucun ; inconnu : toujours là). Sans arme en main
 -- principale, rien à enchanter. Sur Forever, le jeu peut répondre « aucun » avec Croque-roc posé (C30) : l'infobulle

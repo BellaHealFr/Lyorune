@@ -82,6 +82,7 @@ Z.defaults = {
 	incomingText = false,      -- chiffre des soins en route (« +2,1k »), même en combat
 	healLanding = true,        -- éclat bref sur mon soin en route quand mon incantation réussit
 	hotPrediction = true,      -- ce que mes soins sur la durée vont encore rendre, sur la barre de vie (Hots.lua)
+	hotPending = true,         -- ma Prière de guérison sur la barre de son porteur, « en attente » (Hots.lua)
 	showAbsorb = true,         -- bouclier
 	absorbStyle = "BAND",      -- place du bouclier : bande en bas de la case, ou à la suite de la vie (comme les cadres du jeu)
 	absorbText = false,        -- chiffre du bouclier : ce qui reste à absorber (« +1,2k »), même en combat

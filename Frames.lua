@@ -47,11 +47,12 @@ local smoothing      -- SMOOTH ou nil selon l'option
 -- Les segments qui se suivent (mon soin, celui des autres, soins sur la durée) ne se recouvrent jamais : même couche.
 -- Au-dessus de mon soin : la teinte du gaspillage (ambre puis cuivre), et tout en haut le voile de l'incantation.
 -- Le prochain coup de mes soins sur la durée, plus franc, se pose sur le début de leur segment.
-local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, hotNext = 2, overheal = 2, overhealMore = 3, absorb = 4,
+local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, hotNext = 2, pending = 1, overheal = 2, overhealMore = 3, absorb = 4,
 	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7 }
 -- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.70 }, { 0.86, 0.45, 0.20, 0.75 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
+local PENDING_FILL = 0.35 -- soin en attente : la teinte de mes soins sur la durée, à peine remplie
 Z.OTHERS_ALPHA = OTHERS_ALPHA -- (le mode test aussi)
 -- Teinte des soins en route d'une case : le mien, puis ceux des autres plus pâles (cases et mode test)
 function Z.SetIncomingColor(cell, c)
@@ -231,11 +232,16 @@ local function UpdateIncoming(b, max)
 end
 
 -- Mes soins sur la durée (Hots.lua) : montants connus de Lyorune, lisibles ; seule la vie max est secrète.
--- Éclairci quand l'un d'eux vit ses 3 dernières secondes (à relancer).
+-- Éclairci quand l'un d'eux vit ses 3 dernières secondes (à relancer). Ensuite, à part, le soin qui attend que le
+-- joueur soit touché (Prière de guérison, hotPending).
 local HOT_ENDING_ALPHA = 0.45
 local function UpdateHots(b, max)
 	if not b.hot:IsShown() then return end
-	local left, soon, ending = Z.HotAmounts(b.unit)
+	local left, soon, ending, waiting = Z.HotAmounts(b.unit)
+	if b.pending:IsShown() then
+		b.pending:SetMinMaxValues(0, max)
+		b.pending:SetValue(waiting, smoothing)
+	end
 	local alpha = ending and HOT_ENDING_ALPHA or 1
 	b.hot:SetAlpha(alpha)
 	b.hotNext:SetAlpha(alpha)
@@ -679,7 +685,7 @@ local function UpdateTarget(b)
 end
 
 -- Barres animées (réglage smooth) : posées d'un coup à leur valeur, quand la case change de joueur
-local SNAPPED = { "hp", "incoming", "incomingOthers", "hot", "hotNext", "absorb", "healAbsorb" }
+local SNAPPED = { "hp", "incoming", "incomingOthers", "hot", "hotNext", "pending", "absorb", "healAbsorb" }
 local function SnapBars(b)
 	-- joueur pas encore connu du jeu (UpdateAll n'a rien posé) : rien à sauter, on attend le prochain affichage
 	local known = b.unit and UnitExists(b.unit)
@@ -998,6 +1004,15 @@ local function Style(b)
 	b.hot:ClearAllPoints()
 	b.hot:SetPoint("TOPLEFT", afterIncoming, "TOPRIGHT")
 	b.hot:SetPoint("BOTTOMLEFT", afterIncoming, "BOTTOMRIGHT")
+	-- en attente (Prière de guérison) : la même teinte, à peine remplie et bordée en haut et en bas
+	b.pending:SetStatusBarTexture(texture)
+	b.pending:SetWidth(width - 2 * inset)
+	b.pending:SetShown(db.hotPrediction and db.hotPending)
+	SetLayer(b.pending, LAYER.pending)
+	b.pending:SetStatusBarColor(hotColor[1], hotColor[2], hotColor[3], (hotColor[4] or 1) * PENDING_FILL)
+	for _, edge in ipairs(b.pendingEdges) do
+		edge:SetColorTexture(hotColor[1], hotColor[2], hotColor[3], math.min(1, (hotColor[4] or 1) * 1.9))
+	end
 	b.absorb:SetStatusBarTexture(UI.WHITE)
 	SetLayer(b.absorb, LAYER.absorb)
 	local follow = db.absorbStyle == "FOLLOW"
@@ -1010,7 +1025,8 @@ local function Style(b)
 	b.absorb:ClearAllPoints()
 	if follow then
 		-- À la suite des soins en route et de mes soins sur la durée (ou de la vie), comme les cadres du jeu
-		local after = db.hotPrediction and b.hot:GetStatusBarTexture() or afterIncoming
+		local after = b.pending:IsShown() and b.pending:GetStatusBarTexture()
+			or db.hotPrediction and b.hot:GetStatusBarTexture() or afterIncoming
 		b.absorb:SetPoint("TOPLEFT", after, "TOPRIGHT")
 		b.absorb:SetPoint("BOTTOMLEFT", after, "BOTTOMRIGHT")
 		b.absorb:SetWidth(width - 2 * inset)
@@ -1176,6 +1192,22 @@ function Z.BuildVisuals(b)
 	hotNext:SetStatusBarTexture(UI.WHITE)
 	hotNext:Hide()
 	b.hotNext = hotNext
+	-- Mon soin qui attend que le joueur soit touché (hotPending), à la suite des précédents : un cadre clair
+	local pending = CreateFrame("StatusBar", nil, hp)
+	pending:SetPoint("TOPLEFT", hot:GetStatusBarTexture(), "TOPRIGHT")
+	pending:SetPoint("BOTTOMLEFT", hot:GetStatusBarTexture(), "BOTTOMRIGHT")
+	pending:SetStatusBarTexture(UI.WHITE)
+	pending:Hide()
+	b.pending = pending
+	b.pendingEdges = {}
+	for _, side in ipairs({ "TOP", "BOTTOM" }) do
+		local edge = pending:CreateTexture(nil, "OVERLAY")
+		edge:SetPoint(side .. "LEFT", pending:GetStatusBarTexture(), side .. "LEFT")
+		edge:SetPoint(side .. "RIGHT", pending:GetStatusBarTexture(), side .. "RIGHT")
+		edge:SetHeight(1)
+		Unsnap(edge)
+		b.pendingEdges[#b.pendingEdges + 1] = edge
+	end
 	-- Alerte de gaspillage : deux teintes posées sur mon soin, allumées par un booléen du jeu
 	b.overheal = incoming:CreateTexture(nil, "ARTWORK", nil, LAYER.overheal)
 	b.overheal:SetColorTexture(unpack(OVERHEAL_COLOR))
