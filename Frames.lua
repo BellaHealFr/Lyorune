@@ -106,56 +106,79 @@ function Z.LostReport(b)
 			i, tostring(bar:IsShown()), tostring(bar:IsVisible()), N(bar:GetEffectiveAlpha()), N(bar:GetFrameLevel()),
 			N(owner:GetFrameLevel()), N(mask:GetWidth()), N(mask:GetHeight()), N(bar:GetWidth()), N(bar:GetHeight()),
 			N(bar:GetValue()), tostring(fill and fill:IsShown()))
+		local hot = b.lostHots and b.lostHots[i]
+		if hot then
+			parts[#parts + 1] = ("morceau %d, soins sur la durée : montré %s, valeur %s, largeur %s"):format(
+				i, tostring(hot:IsShown()), N(hot:GetValue()), N(hot:GetWidth()))
+		end
 	end
 	return parts
 end
 
 -- Un morceau de la part perdue : une barre remplie depuis le bord droit, de la taille de « area » (vie, ou mana),
+-- suivie à gauche de celle de mes soins sur la durée (b.lostHots),
 -- enfant de « owner », coupée au bout de la vie par un masque de la barre elle-même (un masque ne coupe que les
 -- textures de son cadre), du bas gauche de « area » au coin « corner » du remplissage de la vie ; voile sombre,
 -- rayures ambre et trait ambre là où la perte commence, rayures et trait cuivre allumés par un booléen du jeu. Tous
 -- les morceaux d'une case : b.lostBars, et leur cuivre b.lostMores.
 -- Un masque, pas un cadre qui rogne : un cadre rogné dont un bord suit une valeur secrète (le bout de la vie) cesse de
 -- s'afficher en contenu restreint (essai en jeu du 28/11/2026 : invisible, bien que montré, visible et opaque).
-local function LostBar(b, owner, area, corner)
-	local bar = CreateFrame("StatusBar", nil, owner)
+local function LostMask(b, bar, area, corner)
 	local mask = bar:CreateMaskTexture()
 	mask:SetTexture(UI.WHITE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE", "NEAREST")
 	mask:SetPoint("BOTTOMLEFT", area, "BOTTOMLEFT")
 	mask:SetPoint("TOPRIGHT", b.hp:GetStatusBarTexture(), corner)
 	Unsnap(mask)
 	bar.mask = mask
-	bar:SetAllPoints(area)
+	return mask
+end
+-- Voile, rayures ambre (et cuivre si copper : rendues pour b.lostMores) d'une barre de la part perdue, masqués
+local function LostLook(bar, mask, copper)
 	bar:SetReverseFill(true)
 	bar:SetStatusBarTexture(UI.WHITE)
 	SetLayer(bar, LAYER.lost)
 	bar:SetStatusBarColor(unpack(LOST_VEIL))
 	bar:SetMinMaxValues(0, 1)
 	bar:SetValue(0)
-	b.lostBars, b.lostMores = b.lostBars or {}, b.lostMores or {}
-	b.lostBars[#b.lostBars + 1] = bar
-	local fill = bar:GetStatusBarTexture()
-	fill:AddMaskTexture(mask)
-	for _, copper in ipairs({ false, true }) do
-		local color, sub = copper and LOST_MORE_COLOR or LOST_COLOR, copper and LAYER.lostMore or LAYER.lostStripes
+	bar:GetStatusBarTexture():AddMaskTexture(mask)
+	local made = {}
+	for _, more in ipairs(copper and { false, true } or { false }) do
 		-- (rayures du jeu passées en gris : sinon leur bleu pâle écrase la teinte)
-		local stripes = Stripes(bar, sub)
+		local stripes = Stripes(bar, more and LAYER.lostMore or LAYER.lostStripes)
 		if stripes.SetDesaturated then stripes:SetDesaturated(true) end
-		stripes:SetVertexColor(unpack(color))
-		local edge = bar:CreateTexture(nil, "ARTWORK", nil, sub)
-		edge:SetColorTexture(unpack(color))
-		edge:SetPoint("TOPLEFT", fill, "TOPLEFT")
-		edge:SetPoint("BOTTOMLEFT", fill, "BOTTOMLEFT")
+		stripes:SetVertexColor(unpack(more and LOST_MORE_COLOR or LOST_COLOR))
+		stripes:AddMaskTexture(mask)
+		if more then stripes:SetAlpha(0) made[#made + 1] = stripes end
+	end
+	return made
+end
+local function LostBar(b, owner, area, corner)
+	b.lostBars, b.lostHots, b.lostMores = b.lostBars or {}, b.lostHots or {}, b.lostMores or {}
+	-- les soins en route annoncés par le jeu, depuis le bord droit
+	local bar = CreateFrame("StatusBar", nil, owner)
+	bar:SetAllPoints(area)
+	for _, more in ipairs(LostLook(bar, LostMask(b, bar, area, corner), true)) do b.lostMores[#b.lostMores + 1] = more end
+	b.lostBars[#b.lostBars + 1] = bar
+	-- puis, à leur gauche, ce que mes soins sur la durée rendront encore (Hots.lua : le jeu ne les annonce pas) ;
+	-- toujours la plus à gauche, même vide : son trait marque où la perte commence
+	local fill = bar:GetStatusBarTexture()
+	local hot = CreateFrame("StatusBar", nil, owner)
+	hot:SetPoint("TOPRIGHT", fill, "TOPLEFT")
+	hot:SetPoint("BOTTOMRIGHT", fill, "BOTTOMLEFT")
+	hot:SetFrameLevel(bar:GetFrameLevel() + 1) -- (son trait toujours au-dessus du voile de la première)
+	local hotMask = LostMask(b, hot, area, corner)
+	LostLook(hot, hotMask, false)
+	b.lostHots[#b.lostHots + 1] = hot
+	local hotFill = hot:GetStatusBarTexture()
+	for _, more in ipairs({ false, true }) do
+		local edge = hot:CreateTexture(nil, "ARTWORK", nil, more and LAYER.lostMore or LAYER.lostStripes)
+		edge:SetColorTexture(unpack(more and LOST_MORE_COLOR or LOST_COLOR))
+		edge:SetPoint("TOPLEFT", hotFill, "TOPLEFT")
+		edge:SetPoint("BOTTOMLEFT", hotFill, "BOTTOMLEFT")
 		edge:SetWidth(2)
 		Unsnap(edge)
-		stripes:AddMaskTexture(mask)
-		edge:AddMaskTexture(mask)
-		if copper then
-			stripes:SetAlpha(0)
-			edge:SetAlpha(0)
-			b.lostMores[#b.lostMores + 1] = stripes
-			b.lostMores[#b.lostMores + 1] = edge
-		end
+		edge:AddMaskTexture(hotMask)
+		if more then edge:SetAlpha(0) b.lostMores[#b.lostMores + 1] = edge end
 	end
 	return bar
 end
@@ -351,6 +374,13 @@ local function UpdateHots(b, max)
 	b.hotNext:SetAlpha(alpha)
 	b.hot:SetMinMaxValues(0, max)
 	b.hot:SetValue(left, smoothing)
+	-- la part perdue de mes soins sur la durée (alerte de gaspillage), à gauche de celle des soins en route
+	if b.lost:IsShown() then
+		for _, bar in ipairs(b.lostHots) do
+			bar:SetMinMaxValues(0, max)
+			bar:SetValue(left, smoothing)
+		end
+	end
 	b.hotNext:SetMinMaxValues(0, max)
 	b.hotNext:SetValue(soon, smoothing)
 end
@@ -1086,6 +1116,11 @@ local function Style(b)
 	b.overhealMore:SetAlpha(0)
 	for _, bar in ipairs(b.lostBars) do
 		bar:SetShown(warn and lostCalculator ~= nil)
+		bar:SetValue(0)
+	end
+	for _, bar in ipairs(b.lostHots) do
+		bar:SetShown(warn and lostCalculator ~= nil)
+		bar:SetWidth(width - 2 * inset)
 		bar:SetValue(0)
 	end
 	for _, more in ipairs(b.lostMores) do more:SetAlpha(0) end

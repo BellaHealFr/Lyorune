@@ -11996,6 +11996,9 @@ step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain 
     -- Rénovation : 5 coups de 50 toutes les 3 s, rien de tombé au lancement
     cast("h1", 139)
     assert(b.hot:GetValue() == 250 and b.hotNext:GetValue() == 50, "reste " .. tostring(b.hot:GetValue()))
+    -- (lot 9 : la part perdue de mes soins sur la durée suit leur reste, si l'alerte de gaspillage est allumée)
+    assert(b.lostHots[1]:IsShown() and b.lostHots[1]:GetValue() == 250 and b.lostHots[2]:GetValue() == 250, "part perdue des soins sur la duree (vie, mana)")
+    assert(b.lostHots[2]._points.TOPRIGHT[2] == b.lostBars[2]:GetStatusBarTexture(), "part des soins sur la duree de la mana mal placee")
     local left, soon = Z.HotAmounts("player")
     assert(left == 250 and soon == 50, "montants")
     -- un minuteur par coup, juste après chacun (le faux client les lance aussitôt : délais notés)
@@ -12009,6 +12012,7 @@ step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain 
     assert(b.hot:GetValue() == 200 and b.hotNext:GetValue() == 50, "apres un coup " .. tostring(b.hot:GetValue()))
     NOW = NOW + 12 Z.RedrawHots("player")
     assert(b.hot:GetValue() == 0 and b.hotNext:GetValue() == 0, "apres le dernier coup")
+    assert(b.lostHots[1]:GetValue() == 0 and b.lostHots[2]:GetValue() == 0, "part perdue apres le dernier coup")
     -- relance : tout le soin, de nouveau
     cast("h2", 139) NOW = NOW + 4 cast("h3", 139)
     assert(b.hot:GetValue() == 250, "relance")
@@ -12038,6 +12042,7 @@ step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain 
     cast("h6", 139)
     Z.db.hotPrediction = false Z:Refresh()
     assert(not b.hot:IsShown() and Z.MyHots("player") == nil, "interrupteur : soin garde")
+    assert(b.lostHots[1]:GetValue() == 0 and b.lostHots[2]:GetValue() == 0, "interrupteur : part perdue des soins sur la duree gardee")
     cast("h7", 139)
     assert(Z.MyHots("player") == nil, "interrupteur : encore a l'ecoute")
     Z.db.absorbStyle = "BAND" Z:Refresh()
@@ -12296,7 +12301,12 @@ step("36 c, lot 8 c : part perdue sur la fin de la vie, depuis le bord droit, ro
     assert(tex._sublevel > b.hp:GetStatusBarTexture()._sublevel, "part perdue sous la vie")
     local more = b.lostMores[1]
     assert(more._sublevel > tex._sublevel and more._all == tex, "cuivre mal pose")
-    assert(more._masks and more._masks[1] == mask and b.lostMores[2]._masks[1] == mask, "rayures ou trait hors du masque")
+    assert(more._masks and more._masks[1] == mask, "rayures hors du masque")
+    -- mes soins sur la durée : à gauche de la part des soins en route, masqués aussi, avec le trait du début
+    local hot = b.lostHots[1]
+    assert(hot and hot:IsShown() and hot._points.TOPRIGHT[2] == tex and hot._points.TOPRIGHT[3] == "TOPLEFT", "part des soins sur la duree mal placee")
+    local edge = b.lostMores[2]
+    assert(edge:GetParent() == hot and edge._masks[1] == hot.mask and hot:GetStatusBarTexture()._masks[1] == hot.mask, "trait ou part des soins sur la duree hors du masque")
     -- voile sombre et rayures (l'ambre seul se fondait dans l'orange du druide), et un second morceau sur la mana,
     -- coupe au meme bout de la vie, jusqu'en bas de la mana
     assert(#b.lostBars == 2 and #b.lostMores == 4, "part perdue sur la mana absente (ou cuivre incomplet)")
