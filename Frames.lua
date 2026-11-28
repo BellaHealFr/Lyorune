@@ -49,7 +49,7 @@ local smoothing      -- SMOOTH ou nil selon l'option
 -- Le prochain coup de mes soins sur la durée, plus franc, se pose sur le début de leur segment.
 -- La part perdue se pose sur la fin de la vie (jamais sur un segment), sous le bouclier en bande et l'absorption.
 local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, hotNext = 2, pending = 1, overheal = 2, overhealMore = 3, absorb = 4,
-	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7, lost = 2, lostMore = 3 }
+	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7, lost = 2, lostStripes = 3, lostMore = 4 }
 -- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.70 }, { 0.86, 0.45, 0.20, 0.75 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
@@ -62,6 +62,10 @@ function Z.SetIncomingColor(cell, c)
 end
 local SHIELD_ATLAS = "RaidFrame-Shield-Overlay" -- rayures du bouclier des cadres du jeu
 local SHIELD_STRIPES = "Interface\\RaidFrame\\Shield-Overlay" -- les mêmes, en image (client sans l'atlas)
+-- Part perdue : rayures ambre (cuivre au-delà d'un quart) sur un voile sombre, visibles sur toutes les couleurs de
+-- barre (l'ambre seul se fond dans l'orange du druide)
+local LOST_VEIL = { 0, 0, 0, 0.45 }
+local LOST_COLOR, LOST_MORE_COLOR = { 1.00, 0.78, 0.25, 1 }, { 1.00, 0.45, 0.15, 1 }
 -- Remplissage au demi-pixel près : sans le calage sur les pixels de l'écran, une barre étroite (mon soin en route,
 -- son voile) avance d'un mouvement continu au lieu de petits sauts d'un pixel
 local function Unsnap(tex)
@@ -73,6 +77,42 @@ local function SetLayer(bar, sub)
 	local tex = bar:GetStatusBarTexture()
 	tex:SetDrawLayer("ARTWORK", sub)
 	Unsnap(tex)
+end
+-- Rayures du jeu en mosaïque, calées sur le remplissage d'une barre : le jeu les répète à sa taille (aucun calcul sur
+-- la largeur, qui suit une valeur secrète). L'atlas des cadres du jeu à son échelle, sinon l'image répétée.
+local function Stripes(bar, sub)
+	local tex = bar:CreateTexture(nil, "ARTWORK", nil, sub)
+	local wrap = TextureKitConstants and TextureKitConstants.AddressModeWrap
+	local atlas = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(SHIELD_ATLAS)
+	if not (atlas and SetTextureWithAddressModeOptions and wrap and pcall(SetTextureWithAddressModeOptions, tex,
+		SHIELD_ATLAS, TextureKitConstants.IgnoreAtlasSize, wrap, wrap)) then
+		tex:SetTexture(SHIELD_STRIPES, "REPEAT", "REPEAT")
+		if tex.SetHorizTile then tex:SetHorizTile(true) end
+		if tex.SetVertTile then tex:SetVertTile(true) end
+	end
+	tex:SetAllPoints(bar:GetStatusBarTexture())
+	Unsnap(tex)
+	return tex
+end
+-- Un morceau de la part perdue : une barre remplie depuis le bord droit, de la taille de « area » (vie, ou mana), dans
+-- un cadre rogné au bout de la vie ; voile sombre, rayures ambre, rayures cuivre allumées par un booléen du jeu.
+-- Tous les morceaux d'une case : b.lostBars et b.lostMores.
+local function LostBar(b, clip, area)
+	local bar = CreateFrame("StatusBar", nil, clip)
+	bar:SetAllPoints(area)
+	bar:SetReverseFill(true)
+	bar:SetStatusBarTexture(UI.WHITE)
+	SetLayer(bar, LAYER.lost)
+	bar:SetStatusBarColor(unpack(LOST_VEIL))
+	bar:SetMinMaxValues(0, 1)
+	bar:SetValue(0)
+	Stripes(bar, LAYER.lostStripes):SetVertexColor(unpack(LOST_COLOR))
+	local more = Stripes(bar, LAYER.lostMore)
+	more:SetVertexColor(unpack(LOST_MORE_COLOR))
+	more:SetAlpha(0)
+	b.lostBars, b.lostMores = b.lostBars or {}, b.lostMores or {}
+	b.lostBars[#b.lostBars + 1], b.lostMores[#b.lostMores + 1] = bar, more
+	return bar
 end
 
 -- Soins en route sur une barre verte : la teinte de contraste du thème, sinon le vert du soin se fond dans
@@ -231,18 +271,21 @@ local function UpdateIncoming(b, max)
 			-- (le cuivre de la part perdue aussi : lostCalculator n'existe jamais sans overCalculator)
 			if overMore ~= nil then
 				b.overhealMore:SetAlphaFromBoolean(overMore, 1, 0)
-				b.lostMore:SetAlphaFromBoolean(overMore, 1, 0)
+				for _, more in ipairs(b.lostMores) do more:SetAlphaFromBoolean(overMore, 1, 0) end
 			else
 				b.overhealMore:SetAlpha(0)
-				b.lostMore:SetAlpha(0)
+				for _, more in ipairs(b.lostMores) do more:SetAlpha(0) end
 			end
 		end
 		-- Part perdue : tous les soins en route, bornés à la vie max, depuis le bord droit (rognés à la vie)
 		if b.lost:IsShown() then
 			if lostCalculator.ResetPredictedValues then lostCalculator:ResetPredictedValues() end
 			UnitGetDetailedHealPrediction(b.unit, "player", lostCalculator)
-			b.lost:SetMinMaxValues(0, max)
-			b.lost:SetValue((lostCalculator:GetIncomingHeals()), smoothing)
+			local lost = (lostCalculator:GetIncomingHeals())
+			for _, bar in ipairs(b.lostBars) do
+				bar:SetMinMaxValues(0, max)
+				bar:SetValue(lost, smoothing)
+			end
 		end
 	end
 end
@@ -996,9 +1039,11 @@ local function Style(b)
 	b.overhealMore:SetShown(warn and overCalculator ~= nil)
 	b.overheal:SetAlpha(0)
 	b.overhealMore:SetAlpha(0)
-	b.lost:SetShown(warn and lostCalculator ~= nil)
-	b.lost:SetValue(0)
-	b.lostMore:SetAlpha(0)
+	for i, bar in ipairs(b.lostBars) do
+		bar:SetShown(warn and lostCalculator ~= nil)
+		bar:SetValue(0)
+		b.lostMores[i]:SetAlpha(0)
+	end
 	-- (voile et éclat pas en « Tous ensemble » : le segment y porte aussi les soins des autres, sur toutes les cases)
 	b.castFill:SetShown(db.showIncoming and db.castFill and db.incomingSplit ~= "ALL")
 	b.castFill:SetAlpha(0) -- (une case cachée pendant mon incantation ne garde pas le voile)
@@ -1246,19 +1291,7 @@ function Z.BuildVisuals(b)
 	-- au niveau de la vie : la part perdue, son enfant, tombe au niveau des autres segments (bouclier en bande et
 	-- absorption de soins y passent au-dessus grâce à leurs couches)
 	lostClip:SetFrameLevel(hp:GetFrameLevel())
-	local lost = CreateFrame("StatusBar", nil, lostClip)
-	lost:SetAllPoints(hp)
-	lost:SetReverseFill(true)
-	lost:SetStatusBarTexture(UI.WHITE)
-	SetLayer(lost, LAYER.lost)
-	lost:SetStatusBarColor(unpack(OVERHEAL_COLOR))
-	lost:SetMinMaxValues(0, 1)
-	lost:SetValue(0)
-	b.lost, b.lostClip = lost, lostClip
-	b.lostMore = lost:CreateTexture(nil, "ARTWORK", nil, LAYER.lostMore) -- cuivre au-delà d'un quart de la vie
-	b.lostMore:SetColorTexture(unpack(OVERHEAL_MORE_COLOR))
-	b.lostMore:SetAllPoints(lost:GetStatusBarTexture())
-	Unsnap(b.lostMore)
+	b.lost, b.lostClip = LostBar(b, lostClip, hp), lostClip
 	-- Voile de mon incantation : se remplit sur mon soin, au rythme du jeu (aucune boucle, SetTimerDuration).
 	-- Lancé sur toutes les cases : là où je ne soigne pas, mon soin a une largeur nulle et le voile ne se voit pas.
 	local fill = CreateFrame("StatusBar", nil, hp)
@@ -1312,18 +1345,7 @@ function Z.BuildVisuals(b)
 	b.absorb = absorb
 	-- Rayures du bouclier : une texture en mosaïque calée sur le remplissage, le jeu la répète à sa taille
 	-- (aucun calcul sur la largeur, qui suit une valeur secrète)
-	local stripes = absorb:CreateTexture(nil, "ARTWORK", nil, LAYER.stripes)
-	-- L'atlas du jeu en mosaïque, à son échelle (comme le bouclier des cadres du jeu) ; sinon l'image d'origine répétée
-	local wrap = TextureKitConstants and TextureKitConstants.AddressModeWrap
-	local atlas = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(SHIELD_ATLAS)
-	if not (atlas and SetTextureWithAddressModeOptions and wrap and pcall(SetTextureWithAddressModeOptions, stripes,
-		SHIELD_ATLAS, TextureKitConstants.IgnoreAtlasSize, wrap, wrap)) then
-		stripes:SetTexture(SHIELD_STRIPES, "REPEAT", "REPEAT")
-		if stripes.SetHorizTile then stripes:SetHorizTile(true) end
-		if stripes.SetVertTile then stripes:SetVertTile(true) end
-	end
-	stripes:SetAllPoints(absorb:GetStatusBarTexture())
-	Unsnap(stripes)
+	local stripes = Stripes(absorb, LAYER.stripes)
 	stripes:Hide()
 	b.stripes = stripes
 	-- Bouclier plus grand que la vie manquante : trait lumineux au bout de la vie (style « à la suite de la vie »)
@@ -1347,8 +1369,25 @@ function Z.BuildVisuals(b)
 	power:Hide()
 	b.power = power
 	b.powerShown = false
+	-- La part perdue continue sur la mana et l'espace au-dessus (toute la hauteur de la case) : rognée au même bout
+	-- de la vie, cachée avec la barre de mana
+	local lowArea = CreateFrame("Frame", nil, power)
+	lowArea:SetPoint("TOPLEFT", power, "TOPLEFT", 0, 1)
+	lowArea:SetPoint("BOTTOMRIGHT", power, "BOTTOMRIGHT")
+	local lostLow = CreateFrame("Frame", nil, power)
+	lostLow:SetPoint("BOTTOMLEFT", lowArea, "BOTTOMLEFT")
+	lostLow:SetPoint("TOPRIGHT", hp:GetStatusBarTexture(), "BOTTOMRIGHT") -- (le haut de la zone est le bas de la vie)
+	lostLow:SetClipsChildren(true)
+	-- au niveau de la mana : sa barre au-dessus du remplissage, le pourcentage seul au-dessus d'elle
+	lostLow:SetFrameLevel(power:GetFrameLevel())
+	LostBar(b, lostLow, lowArea)
+	b.lostLow = lostLow
+	-- le pourcentage de mana au-dessus de la part perdue
+	local powerTextHolder = CreateFrame("Frame", nil, power)
+	powerTextHolder:SetAllPoints()
+	powerTextHolder:SetFrameLevel(power:GetFrameLevel() + 2)
 	-- Pourcentage de mana, écrit au milieu de la barre (réglage)
-	b.powerText = power:CreateFontString(nil, "OVERLAY")
+	b.powerText = powerTextHolder:CreateFontString(nil, "OVERLAY")
 	b.powerText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
 	b.powerText:SetPoint("CENTER", power, "CENTER", 0, 0)
 	b.powerText:Hide()

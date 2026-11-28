@@ -129,7 +129,7 @@ local steps = {
 				local live = {}
 				if db.incomingSplit == "SPLIT" then live[#live + 1] = L["Votre soin vient d'abord, celui des autres soigneurs ensuite, plus pâle."] end
 				if db.castFill and db.incomingSplit ~= "ALL" then live[#live + 1] = L["Pendant votre incantation, un voile le remplit : plein, le soin arrive."] end
-				if db.overhealWarn then live[#live + 1] = L["Ambre puis cuivre : trop de soins arrivent, la part perdue se voit sur la fin de la vie."] end
+				if db.overhealWarn then live[#live + 1] = L["Ambre puis cuivre : trop de soins arrivent, la part perdue se voit en rayures au bout de la vie."] end
 				if db.incomingText then live[#live + 1] = L["Son chiffre « +2,1k » dit combien arrive."] end
 				if db.healLanding and db.incomingSplit ~= "ALL" then live[#live + 1] = L["Un bref éclat montre où votre soin vient de tomber."] end
 				if #live > 0 then text = text .. " " .. table.concat(live, " ") end

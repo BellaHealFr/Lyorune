@@ -12293,10 +12293,20 @@ step("36 c, lot 8 c : part perdue sur la fin de la vie, depuis le bord droit, ro
     assert(b.lost._all == b.hp, "barre pas de toute la largeur")
     local tex = b.lost:GetStatusBarTexture()
     assert(tex._sublevel > b.hp:GetStatusBarTexture()._sublevel, "part perdue sous la vie")
-    assert(b.lostMore._sublevel > tex._sublevel and b.lostMore._all == tex, "cuivre mal pose")
+    local more = b.lostMores[1]
+    assert(more._sublevel > tex._sublevel and more._all == tex, "cuivre mal pose")
+    -- lot 9 (essai en jeu) : voile sombre et rayures (l'ambre seul se fondait dans l'orange du druide), et un second
+    -- morceau sur la mana, rogne au meme bout de la vie, jusqu'en bas de la mana
+    assert(#b.lostBars == 2 and #b.lostMores == 2, "part perdue sur la mana absente")
+    local low = b.lostBars[2]
+    assert(low:GetParent() == b.lostLow and b.lostLow:GetParent() == b.power, "part perdue sur la mana mal placee")
+    local lowCorner = b.lostLow._points and b.lostLow._points.TOPRIGHT
+    assert(lowCorner and lowCorner[2] == b.hp:GetStatusBarTexture(), "morceau de la mana pas rogne au bout de la vie")
+    local textLevel = b.powerText:GetParent():GetFrameLevel()
+    assert(low:GetFrameLevel() > b.power:GetFrameLevel() and low:GetFrameLevel() < textLevel, "pourcentage de mana sous la part perdue")
     -- tous les soins en route (pas les miens seuls), meme en combat
     Z.cellUpdates.prediction(b)
-    assert(b.lost._value == 10, "part perdue : pas tous les soins en route")
+    assert(b.lost._value == 10 and low._value == 10, "part perdue : pas tous les soins en route")
     SECRET = true COMBAT = true
     Z.cellUpdates.prediction(b)
     SECRET = false COMBAT = false
