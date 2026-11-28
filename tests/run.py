@@ -12286,22 +12286,25 @@ step("36 c, lot 8 c : part perdue sur la fin de la vie, depuis le bord droit, ro
   local ok, err = pcall(function()
     b:SetAttribute("unit", "party1")
     Z.db.showIncoming, Z.db.overhealWarn, Z.db.incomingSplit = true, true, "MINE" Z:Refresh()
-    -- cadre rogne au bout de la vie, barre inversee de toute la largeur, posee sur la vie (jamais sous elle)
-    assert(b.lost:IsShown() and b.lost:GetParent() == b.lostClip, "part perdue absente")
-    local corner = b.lostClip._points and b.lostClip._points.BOTTOMRIGHT
-    assert(corner and corner[2] == b.hp:GetStatusBarTexture(), "cadre pas rogne au bout de la vie")
-    assert(b.lost._all == b.hp, "barre pas de toute la largeur")
+    -- masque au bout de la vie (pas un cadre rogne : invisible en jeu, essai du 28/11), barre inversee de toute la
+    -- largeur, posee sur la vie (jamais sous elle)
     local tex = b.lost:GetStatusBarTexture()
+    assert(b.lost:IsShown() and b.lost:GetParent() == b.hp, "part perdue absente")
+    local mask = tex._masks and tex._masks[1]
+    assert(mask and mask._points.TOPRIGHT[2] == b.hp:GetStatusBarTexture() and mask:GetParent() == b.lost, "masque pas au bout de la vie, ou pas sur la barre")
+    assert(b.lost._all == b.hp, "barre pas de toute la largeur")
     assert(tex._sublevel > b.hp:GetStatusBarTexture()._sublevel, "part perdue sous la vie")
     local more = b.lostMores[1]
     assert(more._sublevel > tex._sublevel and more._all == tex, "cuivre mal pose")
-    -- lot 9 (essai en jeu) : voile sombre et rayures (l'ambre seul se fondait dans l'orange du druide), et un second
-    -- morceau sur la mana, rogne au meme bout de la vie, jusqu'en bas de la mana
+    assert(more._masks and more._masks[1] == mask and b.lostMores[2]._masks[1] == mask, "rayures ou trait hors du masque")
+    -- voile sombre et rayures (l'ambre seul se fondait dans l'orange du druide), et un second morceau sur la mana,
+    -- coupe au meme bout de la vie, jusqu'en bas de la mana
     assert(#b.lostBars == 2 and #b.lostMores == 4, "part perdue sur la mana absente (ou cuivre incomplet)")
     local low = b.lostBars[2]
-    assert(low:GetParent() == b.lostLow and b.lostLow:GetParent() == b.power, "part perdue sur la mana mal placee")
-    local lowCorner = b.lostLow._points and b.lostLow._points.TOPRIGHT
-    assert(lowCorner and lowCorner[2] == b.hp:GetStatusBarTexture(), "morceau de la mana pas rogne au bout de la vie")
+    assert(low:GetParent() == b.power, "part perdue sur la mana mal placee")
+    local lowMask = low:GetStatusBarTexture()._masks[1]
+    assert(lowMask:GetParent() == low and lowMask._points.TOPRIGHT[2] == b.hp:GetStatusBarTexture()
+      and lowMask._points.TOPRIGHT[3] == "BOTTOMRIGHT", "morceau de la mana pas coupe au bout de la vie")
     local textLevel = b.powerText:GetParent():GetFrameLevel()
     assert(low:GetFrameLevel() > b.power:GetFrameLevel() and low:GetFrameLevel() < textLevel, "pourcentage de mana sous la part perdue")
     -- tous les soins en route (pas les miens seuls), meme en combat

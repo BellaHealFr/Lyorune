@@ -97,24 +97,34 @@ end
 -- /lyorune soins : l'état de la part perdue sur une case (affichée, visible, opacité, niveaux, tailles, valeur)
 function Z.LostReport(b)
 	local function N(v) return issecret(v) and "secret" or type(v) == "number" and ("%.1f"):format(v) or tostring(v) end
-	local parts = { ("réglages : alerte %s, soins en route %s, calculateur %s, couleur %s, vie %s, niveau vie %s"):format(
-		tostring(db.overhealWarn), tostring(db.showIncoming), tostring(lostCalculator ~= nil), tostring(db.color),
+	local parts = { ("réglages : alerte %s, soins en route %s, couleur %s, vie %s, niveau vie %s"):format(
+		tostring(db.overhealWarn), tostring(db.showIncoming), tostring(db.color),
 		b.hp:IsVisible() and "visible" or "cachée", N(b.hp:GetFrameLevel())) }
 	for i, bar in ipairs(b.lostBars or {}) do
-		local clip, fill = bar:GetParent(), bar:GetStatusBarTexture()
-		parts[#parts + 1] = ("morceau %d : montré %s, visible %s, opacité %s, niveau %s (cadre %s), cadre %s x %s, barre %s x %s, valeur %s, remplissage montré %s"):format(
+		local owner, fill, mask = bar:GetParent(), bar:GetStatusBarTexture(), bar.mask
+		parts[#parts + 1] = ("morceau %d : montré %s, visible %s, opacité %s, niveau %s (porteur %s), masque %s x %s, barre %s x %s, valeur %s, remplissage montré %s"):format(
 			i, tostring(bar:IsShown()), tostring(bar:IsVisible()), N(bar:GetEffectiveAlpha()), N(bar:GetFrameLevel()),
-			N(clip:GetFrameLevel()), N(clip:GetWidth()), N(clip:GetHeight()), N(bar:GetWidth()), N(bar:GetHeight()),
+			N(owner:GetFrameLevel()), N(mask:GetWidth()), N(mask:GetHeight()), N(bar:GetWidth()), N(bar:GetHeight()),
 			N(bar:GetValue()), tostring(fill and fill:IsShown()))
 	end
 	return parts
 end
 
--- Un morceau de la part perdue : une barre remplie depuis le bord droit, de la taille de « area » (vie, ou mana), dans
--- un cadre rogné au bout de la vie ; voile sombre, rayures ambre et trait ambre là où la perte commence, rayures et
--- trait cuivre allumés par un booléen du jeu. Tous les morceaux d'une case : b.lostBars, et leur cuivre b.lostMores.
-local function LostBar(b, clip, area)
-	local bar = CreateFrame("StatusBar", nil, clip)
+-- Un morceau de la part perdue : une barre remplie depuis le bord droit, de la taille de « area » (vie, ou mana),
+-- enfant de « owner », coupée au bout de la vie par un masque de la barre elle-même (un masque ne coupe que les
+-- textures de son cadre), du bas gauche de « area » au coin « corner » du remplissage de la vie ; voile sombre,
+-- rayures ambre et trait ambre là où la perte commence, rayures et trait cuivre allumés par un booléen du jeu. Tous
+-- les morceaux d'une case : b.lostBars, et leur cuivre b.lostMores.
+-- Un masque, pas un cadre qui rogne : un cadre rogné dont un bord suit une valeur secrète (le bout de la vie) cesse de
+-- s'afficher en contenu restreint (essai en jeu du 28/11/2026 : invisible, bien que montré, visible et opaque).
+local function LostBar(b, owner, area, corner)
+	local bar = CreateFrame("StatusBar", nil, owner)
+	local mask = bar:CreateMaskTexture()
+	mask:SetTexture(UI.WHITE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE", "NEAREST")
+	mask:SetPoint("BOTTOMLEFT", area, "BOTTOMLEFT")
+	mask:SetPoint("TOPRIGHT", b.hp:GetStatusBarTexture(), corner)
+	Unsnap(mask)
+	bar.mask = mask
 	bar:SetAllPoints(area)
 	bar:SetReverseFill(true)
 	bar:SetStatusBarTexture(UI.WHITE)
@@ -125,6 +135,7 @@ local function LostBar(b, clip, area)
 	b.lostBars, b.lostMores = b.lostBars or {}, b.lostMores or {}
 	b.lostBars[#b.lostBars + 1] = bar
 	local fill = bar:GetStatusBarTexture()
+	fill:AddMaskTexture(mask)
 	for _, copper in ipairs({ false, true }) do
 		local color, sub = copper and LOST_MORE_COLOR or LOST_COLOR, copper and LAYER.lostMore or LAYER.lostStripes
 		-- (rayures du jeu passées en gris : sinon leur bleu pâle écrase la teinte)
@@ -137,6 +148,8 @@ local function LostBar(b, clip, area)
 		edge:SetPoint("BOTTOMLEFT", fill, "BOTTOMLEFT")
 		edge:SetWidth(2)
 		Unsnap(edge)
+		stripes:AddMaskTexture(mask)
+		edge:AddMaskTexture(mask)
 		if copper then
 			stripes:SetAlpha(0)
 			edge:SetAlpha(0)
@@ -1313,17 +1326,11 @@ function Z.BuildVisuals(b)
 	b.overhealMore:SetAllPoints(incoming:GetStatusBarTexture())
 	Unsnap(b.overheal)
 	Unsnap(b.overhealMore)
-	-- Part perdue (même réglage) : les soins en route comptés depuis le bord droit de la barre vers la gauche, dans un
-	-- cadre rogné au bout de la vie. Seule reste visible la part qui recouvre la vie : exactement ce qui sera perdu,
+	-- Part perdue (même réglage) : les soins en route comptés depuis le bord droit de la barre vers la gauche, coupés
+	-- au bout de la vie par un masque. Seule reste visible la part qui recouvre la vie : exactement ce qui sera perdu,
 	-- même à pleine vie, sans aucun calcul (le jeu place les bords, les montants restent secrets).
-	local lostClip = CreateFrame("Frame", nil, hp)
-	lostClip:SetPoint("TOPLEFT")
-	lostClip:SetPoint("BOTTOMRIGHT", hp:GetStatusBarTexture(), "BOTTOMRIGHT")
-	lostClip:SetClipsChildren(true)
-	-- au niveau de la vie : la part perdue, son enfant, tombe au niveau des autres segments (bouclier en bande et
-	-- absorption de soins y passent au-dessus grâce à leurs couches)
-	lostClip:SetFrameLevel(hp:GetFrameLevel())
-	b.lost, b.lostClip = LostBar(b, lostClip, hp), lostClip
+	-- (masque de la barre de vie jusqu'au bout de sa vie ; la barre de vie rogne déjà à ses bords fixes)
+	b.lost = LostBar(b, hp, hp, "TOPRIGHT")
 	-- Voile de mon incantation : se remplit sur mon soin, au rythme du jeu (aucune boucle, SetTimerDuration).
 	-- Lancé sur toutes les cases : là où je ne soigne pas, mon soin a une largeur nulle et le voile ne se voit pas.
 	local fill = CreateFrame("StatusBar", nil, hp)
@@ -1401,19 +1408,13 @@ function Z.BuildVisuals(b)
 	power:Hide()
 	b.power = power
 	b.powerShown = false
-	-- La part perdue continue sur la mana et l'espace au-dessus (toute la hauteur de la case) : rognée au même bout
+	-- La part perdue continue sur la mana et l'espace au-dessus (toute la hauteur de la case) : coupée au même bout
 	-- de la vie, cachée avec la barre de mana
 	local lowArea = CreateFrame("Frame", nil, power)
 	lowArea:SetPoint("TOPLEFT", power, "TOPLEFT", 0, 1)
 	lowArea:SetPoint("BOTTOMRIGHT", power, "BOTTOMRIGHT")
-	local lostLow = CreateFrame("Frame", nil, power)
-	lostLow:SetPoint("BOTTOMLEFT", lowArea, "BOTTOMLEFT")
-	lostLow:SetPoint("TOPRIGHT", hp:GetStatusBarTexture(), "BOTTOMRIGHT") -- (le haut de la zone est le bas de la vie)
-	lostLow:SetClipsChildren(true)
-	-- au niveau de la mana : sa barre au-dessus du remplissage, le pourcentage seul au-dessus d'elle
-	lostLow:SetFrameLevel(power:GetFrameLevel())
-	LostBar(b, lostLow, lowArea)
-	b.lostLow = lostLow
+	-- (le haut de la zone est le bas de la vie : masque jusqu'au coin bas du bout de la vie)
+	LostBar(b, power, lowArea, "BOTTOMRIGHT")
 	-- le pourcentage de mana au-dessus de la part perdue
 	local powerTextHolder = CreateFrame("Frame", nil, power)
 	powerTextHolder:SetAllPoints()

@@ -54,6 +54,7 @@ function Obj:CreateAnimationGroup() return new("AnimationGroup", nil, self) end
 function Obj:CreateAnimation() return new("Animation", nil, self) end
 function Obj:CreateControlPoint() return new("ControlPoint", nil, self) end
 function Obj:CreateMaskTexture() return new("MaskTexture", nil, self) end
+function Obj:AddMaskTexture(mask) self._masks = self._masks or {} table.insert(self._masks, mask) end
 function Obj:GetStatusBarTexture() self._sbt = self._sbt or new("Texture", nil, self); return self._sbt end
 function Obj:SetSize(w, h) self._w, self._h = w, h end
 function Obj:SetWidth(w) self._w = w end
