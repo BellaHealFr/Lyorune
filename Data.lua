@@ -616,6 +616,14 @@ function Z:BuildData()
 			end
 		end
 	end
+	-- leurs noms, de toutes les classes : reconnus à ce qu'ils sont quand le jeu cache leur numéro (C50, Containers.lua)
+	Z.lockoutNames = {}
+	for _, list in pairs(Z.lockouts) do
+		for _, ids in ipairs(list) do
+			local name = Z.SpellName(ids[1])
+			if name then Z.lockoutNames[name] = true end
+		end
+	end
 	Z.drinkIds = {}
 	local drink = Z.SpellName(Z.drinkSpells[1])
 	if drink then

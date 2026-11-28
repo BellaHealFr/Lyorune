@@ -11415,6 +11415,52 @@ step("1.51.0 : affaiblissements Toujours montres (Ame affaiblie et Longanimite p
     Z.db.shownDebuffs[6788] = false groups = {} Z:Refresh()
     assert(not groups.listedRow.candidates.includeSpellIDs[6788] and groups.others.candidates.excludeSpellIDs[6788], "decochee montree")
     Z.db.shownDebuffs[6788] = nil
+    -- 6. C50 : numeros caches par le jeu (pas « jamais secrets ») : reconnues a ce qu'elles sont, sauf en Tous
+    -- (les autres montrent deja tout) ; un seul groupe ainsi (pretre : la rangee du sort bloque)
+    local secrets = rawget(_G, "C_Secrets")
+    local levels = Enum.SecrecyLevel
+    Enum.SecrecyLevel = { NeverSecret = 0, AlwaysSecret = 1, ContextuallySecret = 2 }
+    local never = {}
+    Z.neverSecret = {}
+    rawset(_G, "C_Secrets", setmetatable({ GetSpellAuraSecrecy = function(id) return never[id] and 0 or 2 end },
+      { __index = secrets }))
+    local function look(entry)
+      local c = entry and entry.candidates
+      return c and c.includeSpellIDs == nil and c.isFromPlayerOrPlayerPet == true and c.isBossOrRoleAura == false
+        and c.excludeDispelTypes.Magic and c.maxDuration >= 30 or false
+    end
+    local ok6, err6 = pcall(function()
+      for _, mode in ipairs({ "USEFUL", "DISPEL" }) do
+        groups = {} Z.db.debuffMode = mode Z:Refresh()
+        assert(look(groups.listedRow), mode .. " : pas reconnues a ce qu'elles sont")
+      end
+      groups = {} Z.db.debuffMode = "ALL" Z:Refresh()
+      assert(not groups.listedRow and groups.others and groups.others.max == 2, "Tous : doublon, ou place perdue")
+      -- Utiles sans le choix du jeu (seule la duree trie) : comme Tous
+      local policy = CustomAuraContainerAuraProcessingPolicy
+      CustomAuraContainerAuraProcessingPolicy = nil
+      groups = {} Z.db.debuffMode = "USEFUL" Z:Refresh()
+      CustomAuraContainerAuraProcessingPolicy = policy
+      assert(not groups.listedRow and groups.others and groups.others.max == 2, "Utiles sans politique : doublon")
+      -- un numero « jamais secret » se compare toujours
+      never[6788], never[25771] = true, true
+      Z.neverSecret = {}
+      groups = {} Z.db.debuffMode = "DISPEL" Z:Refresh()
+      assert(groups.listedRow and groups.listedRow.candidates.includeSpellIDs[6788], "jamais secret : par numero")
+      never = {} Z.neverSecret = {}
+      assert(Z.HiddenDebuff(31337) and not Z.HiddenDebuff(6788) and not Z.HiddenDebuff(25771), "options : caches")
+      -- pretre : Ame affaiblie au bout de ses soins, reconnue ainsi ; plus de second groupe dans la rangee
+      Z.db.showHots, Z.db.showLockouts = true, true
+      groups = {} Z.class = "PRIEST" Z:BuildData() Z:Refresh()
+      assert(look(groups.lockouts) and look(groups.lockbars) and not groups.listedRow, "pretre : sort bloque")
+      groups = {} Z.db.debuffMode = "ALL" Z:Refresh()
+      assert(look(groups.lockouts) and not groups.listedRow, "pretre, Tous : place de soin perdue")
+    end)
+    rawset(_G, "C_Secrets", secrets)
+    Enum.SecrecyLevel = levels
+    Z.neverSecret = {}
+    Z.class = "DRUID" Z:BuildData()
+    assert(ok6, err6)
   end, debug.traceback)
   CreateFrame = old.create
   AnchorUtil, AuraContainerSortMethod, AuraUtil, CustomAuraContainerAuraProcessingPolicy = old.anchor, old.sort, old.util, old.policy

@@ -726,10 +726,12 @@ end
 local SHOWN_MENU_H = 20 * 20 -- hauteur du menu avant qu'il défile
 local SHOWN_SUMMARY = 4      -- noms cochés écrits sous le bouton, les autres comptés
 
--- Une ligne du menu : icône, nom donné par le jeu, numéro en gris
+-- Une ligne du menu : icône, nom donné par le jeu, numéro en gris, et si le jeu le cache sur les cases (C50)
 local function ShownText(entry)
 	local icon = C_Spell.GetSpellTexture(entry.id)
-	return (icon and "|T" .. icon .. ":14|t " or "") .. entry.name .. "  |cff808080" .. L["n° %d"]:format(entry.id) .. "|r"
+	local hidden = Z.HiddenDebuff and Z.HiddenDebuff(entry.id) and ", " .. L["caché par le jeu sur les cases"] or ""
+	return (icon and "|T" .. icon .. ":14|t " or "") .. entry.name .. "  |cff808080" .. L["n° %d"]:format(entry.id)
+		.. hidden .. "|r"
 end
 
 -- Ce qui est coché, en clair sous le bouton (« Âme affaiblie, Longanimité ») ; list : le catalogue complet, s'il

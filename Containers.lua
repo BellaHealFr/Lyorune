@@ -438,6 +438,53 @@ end
 ----------------------------------------------------------------------------------------------------
 local function NilIfEmpty(set) if set and next(set) then return set end end
 
+-- C50 : le jeu ne compare jamais le numéro d'un affaiblissement posé sur un allié ou sur moi, même hors combat, sauf
+-- pour un sort qu'il classe « jamais secret » : sinon un groupe « par numéro » reste vide, et une liste à écarter
+-- est ignorée. Un client sans ce classement compare tout. Le classement d'un sort ne change pas pendant la session.
+Z.neverSecret = {} -- (vidé par les tests)
+function Z.NeverSecret(id)
+	local secrets, levels = C_Secrets, Enum and Enum.SecrecyLevel
+	if not (secrets and secrets.GetSpellAuraSecrecy and levels and levels.NeverSecret ~= nil) then return true end
+	local known = Z.neverSecret
+	if known[id] == nil then
+		local ok, level = pcall(secrets.GetSpellAuraSecrecy, id)
+		known[id] = ok and not issecret(level) and level == levels.NeverSecret
+	end
+	return known[id]
+end
+
+-- Un sort qui bloque un autre sort (Âme affaiblie, Longanimité), de toutes les classes (Z.lockoutNames, Data.lua)
+local function LockoutLike(id)
+	return Z.lockoutNames ~= nil and Z.lockoutNames[Z.SpellName(id) or ""] == true
+end
+
+-- Un affaiblissement que le jeu ne laisse pas montrer sur une case (numéro caché, ni reconnu à ce qu'il est) :
+-- signalé dans la liste « Toujours montrés » des options
+function Z.HiddenDebuff(id)
+	return not Z.NeverSecret(id) and not LockoutLike(id)
+end
+
+-- Les numéros que le jeu compare, et vrai s'il en reste un qui bloque un sort
+local function Comparable(set)
+	local exact, lockoutLike = {}, false
+	for id in pairs(set) do
+		if Z.NeverSecret(id) then
+			exact[id] = true
+		elseif LockoutLike(id) then
+			lockoutLike = true
+		end
+	end
+	return exact, lockoutLike
+end
+
+-- Âme affaiblie et Longanimité reconnues à ce qu'elles sont quand le jeu cache leur numéro : affaiblissement posé
+-- par un joueur, sans type de dissipation, court, pas une aura de boss ni de rôle. Un autre de ce genre (Récemment
+-- bandé) peut prendre leur place. Durée large : Âme affaiblie 15 s, Longanimité de 30 s à 2 min selon les versions.
+local LOCKOUT_LOOK = {
+	excludeDispelTypes = { Magic = true, Curse = true, Disease = true, Poison = true, Bleed = true, Enrage = true },
+	maxDuration = 120, isBossOrRoleAura = false, isFromPlayerOrPlayerPet = true,
+}
+
 -- « Utiles » : le jeu trie comme pour ses cadres de raid si ce client sait le faire (politique de traitement des
 -- auras) ; sinon seule la durée trie
 local USEFUL_SECONDS = 300
@@ -477,10 +524,15 @@ local function Plan(b)
 		Group("hots", "hots", "HELPFUL|PLAYER", { includeSpellIDs = hots }, Z.HotCount(), 1, "LyoruneAuraIcon", "mine")
 		Group("bars", "bars", "HELPFUL|PLAYER", { includeSpellIDs = hots }, Z.HotCount(), 1, "LyoruneAuraBar", "bar")
 	end
-	-- Âme affaiblie (posée par n'importe qui) : après mes soins, dans la même rangée, assombrie
-	if not Empty(lockouts) then
-		Group("hots", "lockouts", "HARMFUL", { includeSpellIDs = lockouts }, Z.LOCKOUT_COUNT, 2, "LyoruneAuraIcon", "lockout")
-		Group("bars", "lockbars", "HARMFUL", { includeSpellIDs = lockouts }, Z.LOCKOUT_COUNT, 2, "LyoruneAuraBar", "lockbar")
+	-- Âme affaiblie (posée par n'importe qui) : après mes soins, dans la même rangée, assombrie. Numéro caché par le
+	-- jeu (C50) : reconnue à ce qu'elle est, dans tous les modes (sa place est comptée dans la rangée ; en « Tous »,
+	-- les autres affaiblissements peuvent la montrer aussi, le jeu n'écartant pas son numéro). Un seul groupe ainsi :
+	-- celui-ci passe avant ma liste.
+	local lockExact, lockByLook = Comparable(lockouts)
+	local lockCandidates = lockByLook and LOCKOUT_LOOK or not Empty(lockExact) and { includeSpellIDs = lockExact }
+	if lockCandidates then
+		Group("hots", "lockouts", "HARMFUL", lockCandidates, Z.LOCKOUT_COUNT, 2, "LyoruneAuraIcon", "lockout")
+		Group("bars", "lockbars", "HARMFUL", lockCandidates, Z.LOCKOUT_COUNT, 2, "LyoruneAuraBar", "lockbar")
 	end
 	-- Boisson : montrée seulement sur les soigneurs (Visibility), à côté de leur mana basse
 	if db.drinkHealers and Z.drinkIds and not Empty(Z.drinkIds) then
@@ -501,9 +553,23 @@ local function Plan(b)
 	if db.showDebuffs then
 		local listed, dispel, others = Z.DebuffPlaces()
 		local rowExcluded = NilIfEmpty(rowIgnored)
+		-- ma liste par numéro ; Âme affaiblie ou Longanimité au numéro caché (C50) : reconnues à ce qu'elles sont,
+		-- et alors seules (un groupe ne prend qu'une façon de choisir ; les autres numéros de ma liste sont presque
+		-- toujours cachés aussi). Pas quand les autres les montrent déjà (« Tous », ou « Utiles » sans le choix du
+		-- jeu : seule la durée trie) : un doublon
+		local othersAll = others > 0 and (db.debuffMode == "ALL" or db.debuffMode == "USEFUL" and not Z.UsefulPolicy())
+		local made = false
 		if listed > 0 and not Empty(listedIds) then
-			Group("debuffs", "listedRow", "HARMFUL", { includeSpellIDs = listedIds }, listed, 1, "LyoruneAuraIcon", "debuff")
+			local exact, like = Comparable(listedIds)
+			local candidates = like and not othersAll and not lockByLook and LOCKOUT_LOOK
+				or not Empty(exact) and { includeSpellIDs = exact }
+			if candidates then
+				Group("debuffs", "listedRow", "HARMFUL", candidates, listed, 1, "LyoruneAuraIcon", "debuff")
+				made = true
+			end
 		end
+		-- groupe de tête absent : ses places reviennent aux autres (la rangée garde sa longueur)
+		if not made and others > 0 then others = others + listed end
 		Group("debuffs", "dispellable", Z.DISPEL_MINE, { excludeSpellIDs = rowExcluded }, dispel, 2,
 			"LyoruneAuraIcon", "debuff")
 		if others > 0 then
