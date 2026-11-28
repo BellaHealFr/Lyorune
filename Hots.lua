@@ -10,7 +10,8 @@
 --   Fin avant l'heure : hors combat, une aura partie du joueur (dissipée, consommée) est vue à son UNIT_AURA ; en
 --   combat, Prompte guérison suit sa règle de Data.lua. Les 3 dernières secondes, le segment s'éclaircit.
 --   Prière de guérison (« en attente ») : un seul porteur à la fois ; quand elle saute, son aura lisible arrivée sur
---   un autre joueur la déplace. Sinon, en combat, elle est oubliée dès que son porteur a pu la perdre.
+--   un autre joueur (sous ses numéros d'aura, Data.lua) la déplace. Sinon, en combat, elle est oubliée dès que son
+--   porteur a pu la perdre.
 --   Croissance sauvage : sur ma cible, et sur chaque autre joueur dont l'aura arrivée se lit (de moi, sûrement).
 -- Aucune boucle : trois événements sur moi seulement, une lecture de l'aura juste après le lancement, un
 -- minuteur par coup de soin et un pour les 3 dernières secondes, qui redessinent la barre de ce seul joueur
@@ -26,8 +27,11 @@ local TICK_LAG = 0.05  -- le segment descend juste après le coup, quand la vie 
 local ENDING = 3       -- les dernières secondes d'un soin, segment éclairci : à relancer
 local GONE_AFTER = 0.5 -- une aura absente moins d'une demi-seconde après le lancement peut encore arriver
 local SAME_CAST = 1    -- une aura arrivée moins d'une seconde avant ou après mon lancement : la même pose
+local CHANNEL_LINK = 1.5 -- une canalisation change de numéro d'incantation sur WoW Forever : rattachée par le temps
 
 local spells, builtFor -- spells[numéro de n'importe quel rang] = { entry = ligne de Z.hotSpells, name = nom }
+                       -- (aura = true : un numéro de l'aura posée, pas du sort lancé)
+local castOf = {}      -- castOf[numéro du premier rang] = numéro de mon dernier lancement annoncé de ce sort
 local arriving         -- ma classe a un sort « pending » ou « group » : ses auras arrivées sont lues (Arrivals)
 local active = {}      -- active[joueur][numéro du premier rang] = soin en cours (voir Remember)
 local sent = {}        -- mes soins sur la durée annoncés, du plus ancien au plus récent : { id, spell, target, guid, at }
@@ -47,9 +51,12 @@ local function Spells()
 			arriving = arriving or entry.kind == "pending" or entry.kind == "group"
 			spells[entry.id] = { entry = entry, name = name }
 			for id in pairs(Z.rankIds and Z.rankIds[name] or {}) do spells[id] = spells[id] or { entry = entry, name = name } end
-			for _, id in ipairs(entry.also or {}) do
-				if Z.SpellName(id) == name then spells[id] = spells[id] or { entry = entry, name = name } end
+			local function Add(list, aura)
+				for _, id in ipairs(list or {}) do
+					if Z.SpellName(id) == name then spells[id] = spells[id] or { entry = entry, name = name, aura = aura } end
+				end
 			end
+			Add(entry.also) Add(entry.auras, true)
 		end
 	end
 	return spells
@@ -58,6 +65,12 @@ end
 local function SpellOf(id)
 	if not id or issecret(id) then return nil end
 	return Spells()[id]
+end
+
+-- Cette aura vient-elle de ce sort ? (son numéro, ou un numéro d'aura du même sort : Prière de guérison)
+local function SameSpell(id, entry)
+	local spell = SpellOf(id)
+	return spell ~= nil and spell.entry == entry
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -201,7 +214,7 @@ local function ReadAura(hot)
 	local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
 	if not ok or type(list) ~= "table" or issecret(list) then return end
 	for _, aura in ipairs(list) do
-		if not issecret(aura) and not issecret(aura.spellId) and aura.spellId == hot.id then
+		if not issecret(aura) and SameSpell(aura.spellId, hot.entry) then
 			Apply(hot, aura)
 			local total, source
 			if C_TooltipInfo and C_TooltipInfo.GetUnitBuffByAuraInstanceID and not issecret(aura.auraInstanceID) then
@@ -396,6 +409,9 @@ end
 -- Mon aura arrivée sur ce joueur, lisible (de moi, sûrement) : Prière de guérison qui a sauté ici, Croissance
 -- sauvage qui l'a touché. La même pose que mon lancement est seulement relue ; sinon, un soin neuf est retenu.
 local function Landed(unit, id, spell, aura)
+	-- une aura au numéro distinct du sort : le rang lancé (son montant appris), sinon le premier rang (jamais la
+	-- description de l'aura, qui n'est pas celle du sort)
+	if spell.aura then id = castOf[spell.entry.id] or spell.entry.id end
 	local mine = active[Z.PlayerKey(unit)]
 	local hot = mine and mine[spell.entry.id]
 	if hot and hot.instance and hot.instance == Instance(aura) then return end -- (le joueur dans deux cases)
@@ -524,7 +540,7 @@ local function Find(id, spell, at)
 		local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
 		if not ok or type(list) ~= "table" or issecret(list) then return end
 		for _, a in ipairs(list) do
-			if type(a) == "table" and not issecret(a) and not issecret(a.spellId) and a.spellId == id then
+			if type(a) == "table" and not issecret(a) and SameSpell(a.spellId, spell.entry) then
 				local d, e = a.duration, a.expirationTime
 				if not issecret(d) and not issecret(e) and type(d) == "number" and type(e) == "number" and d > 0
 					and math.abs(e - d - at) < SAME_CAST then
@@ -561,6 +577,7 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			-- un autre sort annoncé (file d'attente du jeu pendant une incantation) n'efface pas le soin en cours
 			local spell = SpellOf(id)
 			if spell then
+				castOf[spell.entry.id] = id
 				if #sent >= 4 then table.remove(sent, 1) end
 				sent[#sent + 1] = { id = id, spell = spell, target = target, guid = guid, at = GetTime(),
 					unhelpable = OnUnhelpable(target) } -- (ma cible doit le rester jusqu'à la réussite)
@@ -570,19 +587,28 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			heard.done = heard.done + 1
 			local spell = SpellOf(id)
 			if not spell then return end
-			-- le plus récent du même sort, encore récent, au même numéro d'incantation quand les deux se lisent
+			-- le plus récent du même sort, encore récent, au même numéro d'incantation quand les deux se lisent ;
+			-- une canalisation (Pénitence) en change : annoncée il y a moins de 1,5 s, c'est elle
 			local now, s, at = GetTime()
+			local byTime = spell.entry.kind == "channel"
 			for i = #sent, 1, -1 do
 				local c = sent[i]
 				if now - c.at > SENT_WINDOW then
 					table.remove(sent, i)
-				elseif not s and c.spell.entry == spell.entry and not (guid and c.guid and not issecret(guid)
-					and not issecret(c.guid) and guid ~= c.guid) then
+				elseif not s and c.spell.entry == spell.entry and (byTime and now - c.at < CHANNEL_LINK
+					or not (guid and c.guid and not issecret(guid) and not issecret(c.guid) and guid ~= c.guid)) then
 					s, at = c, i
 				end
 			end
 			if not s then return end
 			table.remove(sent, at)
+			castOf[spell.entry.id] = s.id -- (une annonce ratée entre-temps ne garde pas son rang)
+			-- canalisation réussie : ses annonces plus anciennes ont échoué (un second « réussi » ne les reprend pas)
+			if byTime then
+				for i = #sent, 1, -1 do
+					if sent[i].spell.entry == spell.entry and sent[i].at <= s.at then table.remove(sent, i) end
+				end
+			end
 			-- la cible est retrouvée maintenant : la case cliquée est sûrement notée (Frames.lua)
 			local unit = Z.CastReceiver(s.target, s.spell.name, s.at) or s.unhelpable and OnUnhelpable(s.target)
 			if spell.entry.kind == "consume" then
@@ -615,7 +641,7 @@ function Z:RefreshHotPrediction()
 		castFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
 	else
 		castFrame:UnregisterAllEvents()
-		active, sent, channel, prayer, last = {}, {}, nil, nil, nil
+		active, sent, castOf, channel, prayer, last = {}, {}, {}, nil, nil, nil
 	end
 end
 

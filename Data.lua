@@ -57,7 +57,8 @@ Z.trackedSpells = {
 --             "channel" coups d'une canalisation, le premier tout de suite (ticks : nombre de coups ; also : numéros
 --                       de la canalisation, distincts de ceux du lancement sur WoW Forever)
 --             "pending" soin qui attend que son porteur soit touché, puis saute (moment inconnu) : dessiné à part,
---                       « en attente », sur son porteur ; suivi quand il saute si le jeu laisse lire l'aura
+--                       « en attente », sur son porteur ; suivi quand il saute si le jeu laisse lire l'aura (auras :
+--                       numéros de l'aura posée, distincts de ceux du sort sur WoW Forever)
 --             "group"   plusieurs cibles : celle que je vise, et les autres seulement quand leur aura se lit
 --             "consume" sort qui consomme un de mes soins sur la durée de sa cible (takes : premiers rangs possibles ;
 --                       pick = "shortest" : celui qui finit le plus tôt). Hors combat, Lyorune voit lui-même quelle
@@ -68,7 +69,8 @@ Z.hotSpells = {
 		{ id = 139, every = 3, duration = 15, kind = "hot" },               -- Rénovation
 		{ id = 402174, every = 1, duration = 2, ticks = 3, kind = "channel", -- Pénitence (talent de Forever)
 			also = { 402261, 402277, 1240732, 1240733, 1240734, 1240736, 1316992, 1316994 } },
-		{ id = 401859, duration = 30, kind = "pending" },                   -- Prière de guérison (talent de Forever)
+		{ id = 401859, duration = 30, kind = "pending",                     -- Prière de guérison (talent de Forever)
+			auras = { 401863, 401877, 41635 } },
 	},
 	DRUID = {
 		{ id = 774, every = 3, duration = 12, kind = "hot" },               -- Récupération

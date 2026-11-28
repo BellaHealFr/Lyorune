@@ -12284,6 +12284,97 @@ step("36 c, lot 8 b : Priere de guerison en attente (suivie quand elle saute), C
   assert(ok, err)
 end)
 
+step("36 c, lot 9 ter : Priere de guerison sous ses numeros d'aura, Penitence rattachee par le temps", function()
+  local b = Z.buttons[1]
+  local saved = { now = NOW, get = C_UnitAuras.GetUnitAuras, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts,
+    unit = b.unit, name = C_Spell.GetSpellName, on = Z.db.hotPrediction, pending = Z.db.hotPending, stats = Z.db.clickStats,
+    class = Z.class, combat = COMBAT, same = UnitIsUnit, byInstance = C_UnitAuras.GetAuraDataByAuraInstanceID }
+  local ok, err = pcall(function()
+    NOW = NOW + 5000 Z.db.clickStats = false COMBAT = false
+    local auras = {}
+    C_UnitAuras.GetUnitAuras = function(unit) return auras[unit] or {} end
+    C_Spell.GetSpellDescription = function() return "" end
+    local names = { [401859] = "Prière de guérison", [401863] = "Prière de guérison", [401877] = "Prière de guérison",
+      [41635] = "Prière de guérison", [402174] = "Pénitence", [402261] = "Pénitence" }
+    local getName = C_Spell.GetSpellName
+    C_Spell.GetSpellName = function(id) return names[id] or getName(id) end
+    Z.class = "PRIEST" Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    UnitIsUnit = function(a, c) return a == c end
+    C_UnitAuras.GetAuraDataByAuraInstanceID = nil
+    Z.char.hotAmounts = { [401859] = { total = 800, duration = 30, from = "texte" } }
+    b.unit = "party1"
+    Z.db.hotPrediction, Z.db.hotPending = true, true Z:Refresh()
+    Z.ForgetHots("player") Z.ForgetHots("party1")
+    local function on(unit, base)
+      for _, hot in ipairs(Z.MyHots(unit) or {}) do if hot.base == base then return hot end end
+    end
+    local function aura(id, instance) return { name = "Prière de guérison", spellId = id, auraInstanceID = instance, duration = 30, expirationTime = NOW + 30, sourceUnit = "player" } end
+    -- lancée sur moi, son aura porte un autre numéro : lue hors combat (vraie durée, numéro), la même pose
+    auras.player = { aura(401863, 90) }
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "p1", 401859)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "p1", 401859)
+    local posed = on("player", 401859)
+    assert(posed and posed.seen and posed.instance == 90 and posed.id == 401859 and posed.total == 800, "aura de Priere de guerison non lue")
+    Z.CheckHots("player", { addedAuras = { aura(401863, 90) } })
+    assert(#Z.MyHots("player") == 1 and on("player", 401859) == posed, "arrivee sous son numero d'aura comptee deux fois")
+    -- elle saute, sous un autre numéro d'aura : suivie, avec le montant du rang lancé
+    NOW = NOW + 2 auras.player = nil
+    Z.CheckHots("party1", { addedAuras = { aura(401877, 91) } })
+    local moved = on("party1", 401859)
+    assert(moved and moved.id == 401859 and moved.total == 800 and Z.MyHots("player") == nil, "saut sous un numero d'aura pas suivi")
+    -- hors combat, son aura toujours là sous ce numéro : gardée ; partie : oubliée
+    rawset(_G, "UnitIsVisible", function() return true end)
+    auras.party1 = { aura(401877, 91) }
+    Z.CheckHots("party1", { removedAuraInstanceIDs = { 5 } })
+    assert(on("party1", 401859), "oubliee alors que son aura est la")
+    auras.party1 = nil NOW = NOW + 1
+    Z.CheckHots("party1", { removedAuraInstanceIDs = { 91 } })
+    assert(Z.MyHots("party1") == nil, "gardee apres son depart")
+    rawset(_G, "UnitIsVisible", nil)
+    -- cible illisible : retrouvée sur le joueur où son aura (autre numéro) vient d'arriver
+    NOW = NOW + 40 auras.party1 = { aura(41635, 92) }
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Gnoll enragé", "p2", 401859)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "p2", 401859)
+    assert(on("party1", 401859) and on("party1", 401859).total == 800, "Priere introuvable sous son numero d'aura")
+    Z.ForgetHots("party1") auras.party1 = nil
+    -- Pénitence : la canalisation réussit sous un autre numéro d'incantation, juste après l'annonce : la même
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "n1", 402174)
+    NOW = NOW + 0.2
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "n2", 402261)
+    local pen = on("player", 402174)
+    assert(pen and pen.ticks == 3 and pen.start == NOW, "Penitence rejetee pour son numero d'incantation")
+    -- annoncée il y a plus de 1,5 s : une autre (rien de nouveau)
+    NOW = NOW + 5
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "n3", 402174)
+    NOW = NOW + 2
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "n4", 402261)
+    assert(on("player", 402174) == nil, "Penitence ancienne rattachee")
+    -- annonce ratée sur moi, relancée sur party1 : un second « réussi » pendant la canalisation n'invente rien sur moi
+    NOW = NOW + 5 Z.buttons[1].unit = "party1"
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "n5", 402174)
+    NOW = NOW + 0.4
+    FireEvent("UNIT_SPELLCAST_SENT", "player", MakeSecret(), "n6", 402174)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "n7", 402261)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "n8", 402261)
+    assert(on("player", 402174) == nil, "Penitence ratee rattachee au second coup")
+    -- Prière qui saute après un /reload (lancement inconnu) : le montant du premier rang, rien d'appris sur l'aura
+    Z:RefreshHotPrediction() Z.db.hotPrediction = false Z:RefreshHotPrediction() Z.db.hotPrediction = true Z:RefreshHotPrediction()
+    C_Spell.GetSpellDescription = function() return "Rend 5000 points de vie." end
+    Z.CheckHots("party1", { addedAuras = { aura(401877, 93) } })
+    assert(on("party1", 401859) and on("party1", 401859).total == 800 and not Z.char.hotAmounts[401877], "montant appris sur l'aura")
+    C_Spell.GetSpellName = getName
+  end)
+  NOW, C_UnitAuras.GetUnitAuras, C_Spell.GetSpellDescription, Z.char.hotAmounts = saved.now, saved.get, saved.desc, saved.amounts
+  b.unit, C_Spell.GetSpellName, Z.db.clickStats, Z.class = saved.unit, saved.name, saved.stats, saved.class
+  COMBAT, UnitIsUnit, C_UnitAuras.GetAuraDataByAuraInstanceID = saved.combat, saved.same, saved.byInstance
+  Z.ForgetHots("player") Z.ForgetHots("party1")
+  rawset(_G, "UnitIsVisible", nil)
+  Z.db.hotPrediction, Z.db.hotPending = saved.on, saved.pending
+  Z.buffGeneration = (Z.buffGeneration or 0) + 1
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("36 c, lot 8 c : part perdue sur la fin de la vie, depuis le bord droit, rognee a la vie", function()
   local b = CreateFrame("Button", "LyoruneHeaderUnitButton368", Z.header)
   Z.header:InitButton(b:GetName())
