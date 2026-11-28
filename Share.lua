@@ -283,7 +283,8 @@ function Z:UndoImport()
 		if Shared(key) and type(value) == type(Z.defaults[key]) then Z.db[key] = value end
 	end
 	-- les placements reviennent seulement au personnage qui a importé (un autre garde les siens)
-	local mine = copy.placementOwner == nil or copy.placementOwner == Z.CharKey()
+	local key, old = Z.CharKey() -- ancienne clé comprise (C49 : sauvegarde faite avant la 1.55.1)
+	local mine = copy.placementOwner == nil or copy.placementOwner == key or copy.placementOwner == old
 	for _, key in ipairs(BACKUP_TABLES) do
 		if type(copy[key]) == "table" and (key ~= "placement" or mine) then Z.db[key] = copy[key] end
 	end

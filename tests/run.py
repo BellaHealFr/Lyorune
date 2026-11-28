@@ -11030,6 +11030,58 @@ step("C34 lot 2 : anciens placements gardes au pixel pres, placements par person
   win:Hide()
 end)
 
+step("C49 : clé des placements avec le nom de famille de WoW Forever, passage depuis « Prénom- »", function()
+  local savedDB, savedChar, name, realm, unitName = LyoruneDB, LyoruneCharDB, UnitName, GetRealmName, GetUnitName
+  local ok, err = pcall(function()
+    -- ailleurs que sur Forever : « Nom-Royaume », comme avant
+    assert(Z.CharKey() == "Joueur-player-Mon Royaume", "clé ordinaire : " .. tostring(Z.CharKey()))
+    -- Forever : prénom et nom de famille à part, royaume vide ; l'ancienne clé « Bella- » est partagée
+    local surname = "Droode"
+    UnitName = function(u) if u == "player" then return "Bella", surname end return name(u) end
+    GetRealmName = function() return "" end
+    local shared = { TILE = { role = { 4, 4 } } }
+    local up = { lastVersion = Z.version, placement = { TILE = { role = { 1, 1 } } },
+      placements = { ["Bella-"] = shared, ["Autre Perso"] = { BAR = { name = { 1, 1 } } } } }
+    LyoruneDB = up
+    FireEvent("ADDON_LOADED", "Lyorune")
+    assert(Z.CharKey() == "Bella Droode" and select(2, Z.CharKey()) == "Bella-", "clé Forever : " .. tostring(Z.CharKey()))
+    assert(up.placement == up.placements["Bella Droode"] and up.placement.TILE.role[1] == 4, "passage depuis Bella-")
+    assert(up.placement ~= shared and up.placements["Bella-"] == shared, "copie, l'ancienne clé reste pour les autres")
+    local list = Z.PlacementCharacters()
+    assert(#list == 1 and list[1] == "Autre Perso", "mon ancienne clé hors de la liste")
+    -- un autre personnage au même prénom : sa propre clé, les placements partagés repris aussi
+    up.placement.TILE.role[1] = 7
+    FireEvent("PLAYER_LOGOUT")
+    surname = "Lumen"
+    FireEvent("ADDON_LOADED", "Lyorune")
+    assert(Z.CharKey() == "Bella Lumen" and up.placement.TILE.role[1] == 4, "deuxième Bella")
+    assert(up.placements["Bella Droode"].TILE.role[1] == 7, "la première garde les siens")
+    surname = "Droode" FireEvent("PLAYER_LOGOUT") FireEvent("ADDON_LOADED", "Lyorune")
+    assert(up.placement == up.placements["Bella Droode"] and up.placement.TILE.role[1] == 7, "reconnexion : les siens, pas Bella-")
+    surname = "Lumen" FireEvent("ADDON_LOADED", "Lyorune")
+    -- une sauvegarde d'import faite sous l'ancienne clé revient au personnage
+    Z.db.importBackup = { settings = {}, placement = { TILE = { role = { 9, 9 } } }, placementOwner = "Bella-" }
+    assert(Z:UndoImport() and Z.db.placement.TILE.role[1] == 9, "annulation sous l'ancienne clé")
+    -- nom joint par un espace, ou seulement dans GetUnitName ; nom secret : l'ancienne clé, comme avant
+    UnitName = function(u) if u == "player" then return "Bella Droode" end return name(u) end
+    LyoruneDB = { lastVersion = Z.version } FireEvent("ADDON_LOADED", "Lyorune")
+    assert(Z.CharKey() == "Bella Droode", "nom joint")
+    UnitName = function(u) if u == "player" then return "Bella" end return name(u) end
+    GetUnitName = function(u) if u == "player" then return "Bella Droode" end return unitName(u) end
+    LyoruneDB = { lastVersion = Z.version } FireEvent("ADDON_LOADED", "Lyorune")
+    assert(Z.CharKey() == "Bella Droode", "nom par GetUnitName")
+    GetUnitName = unitName
+    UnitName = function(u) if u == "player" then return "Bella", MakeSecret() end return name(u) end
+    LyoruneDB = { lastVersion = Z.version } FireEvent("ADDON_LOADED", "Lyorune")
+    assert(Z.CharKey() == "Bella-", "nom de famille secret : " .. tostring(Z.CharKey()))
+  end)
+  UnitName, GetRealmName, GetUnitName = name, realm, unitName
+  LyoruneDB, LyoruneCharDB = savedDB, savedChar
+  FireEvent("ADDON_LOADED", "Lyorune")
+  assert(ok, err)
+  assert(Z.CharKey() == "Joueur-player-Mon Royaume", "clé rétablie")
+end)
+
 step("1.50.0 : canal des soigneurs (eteint au depart, rejoint, nom de secours, quitte, /leave)", function()
   local db, char = Z.db, Z.char
   assert(db.channelFR == false and db.channelEN == false, "canaux eteints au depart")

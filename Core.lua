@@ -583,19 +583,47 @@ end
 
 Z.PROFILE_PLACES = "Profil : " -- placements d'un profil d'avant la 1.49.0 (Migrate), gardés à côté des personnages
 
--- Personnage connecté : « Nom-Royaume »
-function Z.CharKey()
-	return (UnitName("player") or "?") .. "-" .. (GetRealmName() or "?")
+-- Personnage connecté : « Nom-Royaume ». Sur WoW Forever (C49, 1.55.1), le jeu rend le prénom et le nom de famille à
+-- part (UnitName, second résultat ; pour soi-même, ce n'est jamais un royaume) ou joints par un espace, et le
+-- royaume est vide : la clé devient « Prénom Nom », sans royaume, sinon tous les personnages au même prénom la
+-- partageaient (« Bella- »). Rend aussi l'ancienne clé, « Prénom-Royaume », pour le passage. Calculée une fois à
+-- la connexion (Z.charKey) : la déconnexion et la liste des personnages gardent la même.
+local function Plain(value)
+	if issecretvalue(value) or type(value) ~= "string" or value == "" then return nil end
+	return value
+end
+local function ComputeCharKey()
+	local first, second = UnitName("player")
+	first, second = Plain(first), Plain(second)
+	local old = (first or "?") .. "-" .. (GetRealmName() or "?")
+	if not first then return old, old end
+	if second then return first .. " " .. second, old end
+	if first:find(" ", 1, true) then return first, old end
+	local full = GetUnitName and Plain(GetUnitName("player", true))
+	if full and full:find(" ", 1, true) and full:sub(1, #first) == first then return full, old end
+	return old, old
 end
 
--- Placements par personnage (1.49.0) : LyoruneDB.placements["Nom-Royaume"]. Un personnage qui n'en a pas encore
--- reçoit une copie des derniers placements utilisés (Z.db.placement, ceux du compte avant la 1.49.0). Gardés à la
--- déconnexion, même si une annulation ou une réinitialisation a remplacé la table.
+function Z.CharKey()
+	if Z.charKey then return Z.charKey, Z.oldCharKey end
+	return ComputeCharKey()
+end
+
+-- Placements par personnage (1.49.0) : LyoruneDB.placements["Nom-Royaume"] (« Prénom Nom » sur Forever). Un
+-- personnage qui n'en a pas encore reçoit une copie de ceux de son ancienne clé (C49 : « Prénom-Royaume »), sinon
+-- des derniers placements utilisés (Z.db.placement, ceux du compte avant la 1.49.0). L'ancienne clé reste : chaque
+-- personnage au même prénom la reprend à sa prochaine connexion. Gardés à la déconnexion, même si une annulation
+-- ou une réinitialisation a remplacé la table.
 local function LoadPlacements(db)
 	if type(db.placements) ~= "table" then db.placements = {} end
-	local key = Z.CharKey()
-	if type(db.placements[key]) ~= "table" then db.placements[key] = CopyTable(db.placement) end
-	db.placement = db.placements[key]
+	local key, old = ComputeCharKey()
+	Z.charKey = key
+	Z.oldCharKey = old
+	local places = db.placements
+	if type(places[key]) ~= "table" then
+		places[key] = CopyTable(type(places[old]) == "table" and places[old] or db.placement)
+	end
+	db.placement = places[key]
 end
 
 Z:On("PLAYER_LOGOUT", function()

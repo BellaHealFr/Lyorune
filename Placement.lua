@@ -428,11 +428,12 @@ end
 -- pour pouvoir copier ceux d'un autre personnage. Z.db.placement est celui du personnage connecté (Core.lua,
 -- LoadPlacements) ; il ne suit pas les profils (Z.notInProfile). Le code de partage reste celui de ce personnage.
 ----------------------------------------------------------------------------------------------------
--- Les autres personnages qui ont au moins un élément placé, dans l'ordre alphabétique
+-- Les autres personnages qui ont au moins un élément placé, dans l'ordre alphabétique (sans mon ancienne clé, C49 :
+-- ses placements sont déjà les miens)
 function Z.PlacementCharacters()
-	local list, all, me = {}, LyoruneDB and LyoruneDB.placements, Z.CharKey()
+	local list, all, me, old = {}, LyoruneDB and LyoruneDB.placements, Z.CharKey()
 	for name, places in pairs(type(all) == "table" and all or {}) do
-		if name ~= me and type(places) == "table" and next(places) then list[#list + 1] = name end
+		if name ~= me and name ~= old and type(places) == "table" and next(places) then list[#list + 1] = name end
 	end
 	table.sort(list)
 	return list
