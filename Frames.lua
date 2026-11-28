@@ -49,7 +49,7 @@ local smoothing      -- SMOOTH ou nil selon l'option
 -- Le prochain coup de mes soins sur la durée, plus franc, se pose sur le début de leur segment.
 -- La part perdue se pose sur la fin de la vie (jamais sur un segment), sous le bouclier en bande et l'absorption.
 local LAYER = { health = 0, incoming = 1, others = 1, hot = 1, hotNext = 2, pending = 1, overheal = 2, overhealMore = 3, absorb = 4,
-	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7, lost = 2, lostStripes = 3, lostMore = 4 }
+	stripes = 5, healAbsorb = 6, castFill = 7, landing = 7, lost = 1, lostStripes = 2, lostMore = 3 }
 -- Alerte de gaspillage : ambre, puis cuivre au-delà de 25 % de la vie. Jamais de rouge (il veut dire « en danger »).
 local OVERHEAL_COLOR, OVERHEAL_MORE_COLOR = { 1.00, 0.76, 0.22, 0.70 }, { 0.86, 0.45, 0.20, 0.75 }
 local OTHERS_ALPHA = 0.5 -- soins en route des autres : la teinte du mien, plus pâle
@@ -819,7 +819,7 @@ local function UpdateTarget(b)
 end
 
 -- Barres animées (réglage smooth) : posées d'un coup à leur valeur, quand la case change de joueur
-local SNAPPED = { "hp", "incoming", "incomingOthers", "hot", "hotNext", "pending", "absorb", "healAbsorb", "lost" }
+local SNAPPED = { "hp", "incoming", "incomingOthers", "hot", "hotNext", "pending", "absorb", "healAbsorb" }
 local function SnapBars(b)
 	-- joueur pas encore connu du jeu (UpdateAll n'a rien posé) : rien à sauter, on attend le prochain affichage
 	local known = b.unit and UnitExists(b.unit)
@@ -828,6 +828,12 @@ local function SnapBars(b)
 	for _, key in ipairs(SNAPPED) do
 		local bar = b[key]
 		if bar.SetToTargetValue then bar:SetToTargetValue() end
+	end
+	-- la part perdue : sur la vie et sur la mana, et celle de mes soins sur la durée
+	for _, list in ipairs({ b.lostBars, b.lostHots }) do
+		for _, bar in ipairs(list) do
+			if bar.SetToTargetValue then bar:SetToTargetValue() end
+		end
 	end
 end
 
@@ -1097,14 +1103,12 @@ local function Style(b)
 	SetLayer(b.hp, LAYER.health)
 	b.incoming:SetStatusBarTexture(texture)
 	SetLayer(b.incoming, LAYER.incoming)
-	b.incoming:SetStatusBarColor(unpack(theme.incoming)) -- teinte de contraste sur une barre verte : UpdateState, UpdateHealth
 	b.incoming:SetWidth(width - 2 * inset)
 	b.incoming:SetShown(db.showIncoming)
 	-- Soins des autres, à la suite du mien, plus pâles (réglage incomingSplit)
 	b.incomingOthers:SetStatusBarTexture(texture)
 	SetLayer(b.incomingOthers, LAYER.others)
-	local c = theme.incoming
-	b.incomingOthers:SetStatusBarColor(c[1], c[2], c[3], (c[4] or 1) * OTHERS_ALPHA)
+	Z.SetIncomingColor(b, theme.incoming) -- teinte de contraste sur une barre verte : UpdateState, UpdateHealth
 	b.incomingOthers:SetWidth(width - 2 * inset)
 	b.incomingOthers:SetShown(db.showIncoming and db.incomingSplit == "SPLIT")
 	b.incomingOthers:SetValue(0)
@@ -1330,6 +1334,7 @@ function Z.BuildVisuals(b)
 	hot:SetStatusBarTexture(UI.WHITE)
 	hot:Hide()
 	b.hot = hot
+	-- (bornes dès la création : sans elles, le jeu dessine la barre pleine, mode test compris)
 	local hotNext = CreateFrame("StatusBar", nil, hp)
 	hotNext:SetPoint("TOPLEFT", hot, "TOPLEFT")
 	hotNext:SetPoint("BOTTOMLEFT", hot, "BOTTOMLEFT")
@@ -1343,6 +1348,7 @@ function Z.BuildVisuals(b)
 	pending:SetStatusBarTexture(UI.WHITE)
 	pending:Hide()
 	b.pending = pending
+	for _, bar in ipairs({ hot, hotNext, pending }) do bar:SetMinMaxValues(0, 1) bar:SetValue(0) end
 	b.pendingEdges = {}
 	for _, side in ipairs({ "TOP", "BOTTOM" }) do
 		local edge = pending:CreateTexture(nil, "OVERLAY")
@@ -1453,7 +1459,7 @@ function Z.BuildVisuals(b)
 	-- le pourcentage de mana au-dessus de la part perdue
 	local powerTextHolder = CreateFrame("Frame", nil, power)
 	powerTextHolder:SetAllPoints()
-	powerTextHolder:SetFrameLevel(power:GetFrameLevel() + 2)
+	powerTextHolder:SetFrameLevel(b.lostHots[#b.lostHots]:GetFrameLevel() + 1) -- (au-dessus de son trait)
 	-- Pourcentage de mana, écrit au milieu de la barre (réglage)
 	b.powerText = powerTextHolder:CreateFontString(nil, "OVERLAY")
 	b.powerText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")

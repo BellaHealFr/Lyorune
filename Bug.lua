@@ -93,10 +93,9 @@ function Z:BugReport(answers)
 		local answer = answers and answers[i] or ""
 		lines[#lines + 1] = question .. " " .. (answer ~= "" and answer or "(sans réponse)")
 	end
-	local errors = Z.db.errors or {}
-	local first = Z.firstError or errors[1]
+	local first = Z.firstError or Z.LastError()
 	if first then
-		lines[#lines + 1] = ("Erreurs enregistrées : %d. Première de la session (x%d, %s) :"):format(#errors, first.count or 1, tostring(first.kind))
+		lines[#lines + 1] = ("Erreurs enregistrées : %d. Première de la session (x%d, %s) :"):format(Z.ErrorCount(), first.count or 1, tostring(first.kind))
 		lines[#lines + 1] = tostring(first.message)
 		local stack = ShortStack(first.stack)
 		if stack ~= "" then lines[#lines + 1] = stack end
@@ -186,7 +185,7 @@ function Z:ShowBug()
 	if not window:IsShown() then
 		for _, edit in ipairs(window.answers) do edit:SetText("") end
 	end
-	local hasError = (Z.firstError or (Z.db.errors or {})[1]) ~= nil
+	local hasError = (Z.firstError or Z.LastError()) ~= nil
 	window.hint:SetText(hasError and "" or L["Aucune erreur technique enregistrée : pensez à joindre une capture d'écran du défaut."])
 	window.Update()
 	UI.Reopen(window)
@@ -238,11 +237,14 @@ end
 -- /lyorune soins : ce que le client donne pour dessiner les soins sur la barre de vie (soins en route,
 -- soins sur la durée, incantation, vie max réduite). Ne change rien : il décrit, et le résultat va aussi
 -- au journal (lu hors du jeu par outils/erreurs.py). Après la commande, la prochaine incantation du joueur
--- est décrite une fois toute seule (pendant qu'elle est en route), puis l'écoute s'arrête.
+-- est décrite une fois toute seule (juste après son départ), puis l'écoute s'arrête.
 ----------------------------------------------------------------------------------------------------
 local function Value(value)
 	if Z.IsSecret(value) then return "secret" end
-	if type(value) == "number" then return ("%.4g"):format(value) end
+	if type(value) == "number" then -- (numéros de sort et temps en entier : pas d'écriture « 4.019e+05 »)
+		if value ~= value or math.abs(value) > 2 ^ 53 then return tostring(value) end -- (infini, pas un nombre)
+		return value == math.floor(value) and ("%d"):format(value) or ("%.3f"):format(value)
+	end
 	if type(value) == "table" then
 		local parts = {}
 		for i, v in ipairs(value) do parts[i] = Value(v) end
@@ -273,12 +275,10 @@ local function DescribeIncoming(Add, unit)
 	for _, overflow in ipairs({ false, 1.0, 1.25 }) do
 		local calc = CreateUnitHealPredictionCalculator()
 		local label = "soins en route sur " .. unit
-		if overflow then
-			if not calc.SetIncomingHealOverflowPercent then Add("SetIncomingHealOverflowPercent absente") return end
-			calc:SetIncomingHealOverflowPercent(overflow)
-			label = label .. (" (dépassement %d %%)"):format(overflow * 100)
-		end
+		if overflow and not calc.SetIncomingHealOverflowPercent then Add("SetIncomingHealOverflowPercent absente") break end
+		if overflow then label = label .. (" (dépassement %d %%)"):format(overflow * 100) end
 		Check(Add, label, function()
+			if overflow then calc:SetIncomingHealOverflowPercent(overflow) end
 			UnitGetDetailedHealPrediction(unit, "player", calc)
 			return calc:GetIncomingHeals()
 		end)
@@ -352,7 +352,7 @@ local function RunHeals(moment)
 	local ok, err = pcall(DescribeHeals, function(text) lines[#lines + 1] = Z.IsSecret(text) and "(ligne secrète)" or tostring(text) end, moment)
 	if not ok then lines[#lines + 1] = "diagnostic interrompu : " .. tostring(err) end
 	for _, text in ipairs(lines) do Z:Print(text) end
-	Z:Log("Diagnostic soins", table.concat(lines, " | "), "")
+	Z:Log("Diagnostic soins", table.concat(lines, " | "), "", true)
 end
 
 -- Écoute d'une seule incantation : créée à la demande, arrêtée dès la première (ou au bout d'une minute)
@@ -362,11 +362,14 @@ function Z:DiagnoseHeals()
 	watchCount = watchCount + 1
 	local count = watchCount
 	castWatch = castWatch or CreateFrame("Frame")
-	castWatch:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
+	-- avec incantation, canalisé (Pénitence) ou instantané (Rénovation, Récupération) : le premier des trois
+	for _, event in ipairs({ "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_SUCCEEDED" }) do
+		castWatch:RegisterUnitEvent(event, "player")
+	end
 	castWatch:SetScript("OnEvent", function(self)
 		self:UnregisterAllEvents()
-		C_Timer.After(0.3, function() RunHeals("pendant l'incantation") end) -- le soin doit être parti en route
+		C_Timer.After(0.3, function() RunHeals("juste après le départ") end) -- le soin doit être parti en route
 	end)
 	C_Timer.After(60, function() if count == watchCount then castWatch:UnregisterAllEvents() end end)
-	Z:Print(Z.L["Lancez un soin dans la minute : il sera décrit pendant son incantation."])
+	Z:Print(Z.L["Lancez un soin dans la minute : il sera décrit juste après son départ."])
 end

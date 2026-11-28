@@ -49,17 +49,29 @@ end
 ----------------------------------------------------------------------------------------------------
 local warned, logging
 
-function Z:Log(kind, message, stack)
+-- diagnostic : le résultat d'une commande de vérification (/lyorune soins, /lyorune auras), pas une erreur : ni
+-- alerte, ni « première erreur » de /lyorune bug, et seuls ses deux derniers passages restent au journal
+function Z:Log(kind, message, stack, diagnostic)
 	local db = Z.db
 	if not db or logging then return end
 	logging = true
 	db.errors = db.errors or {}
 	local now = date("%Y-%m-%d %H:%M:%S")
+	if diagnostic then -- (le plus récent d'abord : le passage d'avant reste, les plus anciens partent)
+		local kept, old = 0, {}
+		for i, entry in ipairs(db.errors) do
+			if entry.diagnostic and entry.kind == kind then
+				kept = kept + 1
+				if kept >= 2 then old[#old + 1] = i end
+			end
+		end
+		for i = #old, 1, -1 do table.remove(db.errors, old[i]) end
+	end
 	for _, entry in ipairs(db.errors) do
 		if entry.message == message then -- même erreur : on compte au lieu de remplir le journal
 			entry.count = entry.count + 1
 			entry.last = now
-			Z.firstError = Z.firstError or entry
+			if not entry.diagnostic then Z.firstError = Z.firstError or entry end
 			logging = false
 			return
 		end
@@ -71,6 +83,7 @@ function Z:Log(kind, message, stack)
 		first = now,
 		last = now,
 		count = 1,
+		diagnostic = diagnostic or nil,
 		lyorune = Z.version,
 		game = GameVersion(),
 		class = Z.class,
@@ -82,6 +95,7 @@ function Z:Log(kind, message, stack)
 		instance = Z:InstanceState(),
 	})
 	while #db.errors > MAX_ENTRIES do table.remove(db.errors) end
+	if diagnostic then logging = false return end
 	Z.firstError = Z.firstError or db.errors[1] -- la première de la session : les suivantes en découlent souvent
 	if not warned and db.errorNotice then
 		warned = true
@@ -225,7 +239,21 @@ function Z:Diagnose()
 		Z:Print(Z.L["compatibilité : fonctions manquantes : %s"]:format(table.concat(missing, ", ")))
 	end
 	if Z.header then Z:DiagnoseFrames() end
-	Z:Print(Z.L["%d erreur(s) dans le journal (/lyorune erreurs)."]:format(#(Z.db.errors or {})))
+	Z:Print(Z.L["%d erreur(s) dans le journal (/lyorune erreurs)."]:format(Z.ErrorCount()))
+end
+
+-- La plus récente vraie erreur du journal (les diagnostics n'en sont pas), et leur nombre
+function Z.LastError()
+	for _, entry in ipairs(Z.db.errors or {}) do
+		if not entry.diagnostic then return entry end
+	end
+end
+function Z.ErrorCount()
+	local count = 0
+	for _, entry in ipairs(Z.db.errors or {}) do
+		if not entry.diagnostic then count = count + 1 end
+	end
+	return count
 end
 
 -- Vide le journal, et oublie la première erreur de la session : /lyorune bug ne la signale plus

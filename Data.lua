@@ -55,7 +55,8 @@ Z.trackedSpells = {
 --   kind    : "hot"     soin régulier sur une cible
 --             "after"   part sur la durée d'un sort qui soigne aussi tout de suite (Rétablissement)
 --             "channel" coups d'une canalisation, le premier tout de suite (ticks : nombre de coups ; also : numéros
---                       de la canalisation, distincts de ceux du lancement sur WoW Forever)
+--                       de la canalisation, distincts de ceux du lancement sur WoW Forever ; harms : le sort peut
+--                       aussi viser un ennemi, il n'est alors jamais relancé sur moi)
 --             "pending" soin qui attend que son porteur soit touché, puis saute (moment inconnu) : dessiné à part,
 --                       « en attente », sur son porteur ; suivi quand il saute si le jeu laisse lire l'aura (auras :
 --                       numéros de l'aura posée, distincts de ceux du sort sur WoW Forever)
@@ -67,7 +68,7 @@ Z.trackedSpells = {
 Z.hotSpells = {
 	PRIEST = {
 		{ id = 139, every = 3, duration = 15, kind = "hot" },               -- Rénovation
-		{ id = 402174, every = 1, duration = 2, ticks = 3, kind = "channel", -- Pénitence (talent de Forever)
+		{ id = 402174, every = 1, duration = 2, ticks = 3, kind = "channel", harms = true, -- Pénitence (talent de Forever)
 			also = { 402261, 402277, 1240732, 1240733, 1240734, 1240736, 1316992, 1316994 } },
 		{ id = 401859, duration = 30, kind = "pending",                     -- Prière de guérison (talent de Forever)
 			auras = { 401863, 401877, 41635 } },

@@ -286,7 +286,7 @@ end
 function Z.CastReceiver(target, name, at)
 	local unit = UnitNamed(target) or (Z.LastBuffTry and Z.LastBuffTry(name)) or (at and Z.ClickedUnit and Z.ClickedUnit(at))
 	if unit then return unit end
-	if target == nil or (not issecret(target) and target == "") then return "player" end
+	if not issecret(target) and (target == nil or target == "") then return "player" end
 end
 
 local sent -- le dernier buff de ma liste annoncé : { name, unit, guid, at }

@@ -67,6 +67,12 @@ local function SpellOf(id)
 	return Spells()[id]
 end
 
+-- Mes auras sur ce joueur, quand la liste se lit (sinon nil)
+local function MyAuras(unit)
+	local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
+	if ok and type(list) == "table" and not issecret(list) then return list end
+end
+
 -- Cette aura vient-elle de ce sort ? (son numéro, ou un numéro d'aura du même sort : Prière de guérison)
 local function SameSpell(id, entry)
 	local spell = SpellOf(id)
@@ -211,8 +217,8 @@ end
 local function ReadAura(hot)
 	if hot.refreshed or InCombatLockdown() or Z.AurasHidden() then return end
 	local unit = hot.unit
-	local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
-	if not ok or type(list) ~= "table" or issecret(list) then return end
+	local list = MyAuras(unit)
+	if not list then return end
 	for _, aura in ipairs(list) do
 		if not issecret(aura) and SameSpell(aura.spellId, hot.entry) then
 			Apply(hot, aura)
@@ -275,22 +281,25 @@ local function Ending(hot, now)
 	return hot.entry.kind ~= "channel" and hot.duration and now >= hot.start + hot.duration - ENDING or false
 end
 
+-- La barre de ce soin redessinée plus tard, s'il n'a été ni relancé ni oublié entre-temps
+local function RedrawLater(hot, chain, delay)
+	C_Timer.After(delay, function()
+		if hot.chain == chain and Current(hot) then Z:Try("soins sur la durée", Changed, hot.key) end
+	end)
+end
+
 function Restart(hot)
 	hot.chain = (hot.chain or 0) + 1
 	local chain, now = hot.chain, GetTime()
 	if hot.ticks and hot.entry.every and hot.total then
 		Schedule(hot, Done(hot, now) + 1, chain)
 		if hot.duration and not Ending(hot, now) and hot.entry.kind ~= "channel" then
-			C_Timer.After(hot.start + hot.duration - ENDING - now, function()
-				if hot.chain == chain and Current(hot) then Z:Try("soins sur la durée", Changed, hot.key) end
-			end)
+			RedrawLater(hot, chain, hot.start + hot.duration - ENDING - now)
 		end
 	end
 	-- un soin en attente qui n'a pas sauté s'efface à sa fin (aucun coup ne redessine la barre)
 	if hot.entry.kind == "pending" and hot.duration then
-		C_Timer.After(math.max(0, hot.start + hot.duration - now) + TICK_LAG, function()
-			if hot.chain == chain and Current(hot) then Z:Try("soins sur la durée", Changed, hot.key) end
-		end)
+		RedrawLater(hot, chain, math.max(0, hot.start + hot.duration - now) + TICK_LAG)
 	end
 	Changed(hot.key)
 end
@@ -307,8 +316,10 @@ end
 -- Un de mes soins sur la durée vient de réussir sur ce joueur : { id, base, entry, unit, guid, start, duration,
 -- ticks, total } (total nil : montant encore inconnu, durée nil : inconnue). Un nouveau lancement du même sort
 -- remplace l'ancien (rafraîchi par le jeu). aura : mon aura déjà vue sur lui (Landed), avec sa vraie durée.
+local Purge -- (plus bas : oubli des soins finis, sur tous les joueurs)
 local function Remember(unit, id, spell, aura)
 	local entry = spell.entry
+	Purge(GetTime()) -- (un joueur sans case, parti du groupe : ses soins finis ne restent pas)
 	FromDescription(id, entry)
 	local known = Learned(id)
 	local duration = known and known.duration or entry.duration
@@ -341,18 +352,27 @@ end
 -- Mes soins sur la durée en cours sur ce joueur (liste, ou nil). Un soin dont la durée est passée est oublié ;
 -- un soin dont la durée reste inconnue (ni Data.lua, ni appris, ni lu sur l'aura) aussi : sans fin connue, il
 -- resterait sur la barre pour toujours.
-local function Alive(unit, now)
-	local key = Z.PlayerKey(unit)
+local function Over(hot, now)
+	if not hot.duration then return now > hot.start + READ_DELAY + 1 end
+	return now >= hot.start + hot.duration
+end
+
+-- Les soins finis de ce joueur (sa clé) oubliés : ceux qui restent (ou nil)
+local function AliveKey(key, now)
 	local mine = active[key]
 	if not mine then return nil end
 	for base, hot in pairs(mine) do
-		if not hot.duration then
-			if now > hot.start + READ_DELAY + 1 then mine[base] = nil end
-		elseif now >= hot.start + hot.duration then mine[base] = nil
-		end
+		if Over(hot, now) then mine[base] = nil end
 	end
 	if not next(mine) then active[key] = nil return nil end
 	return mine
+end
+local function Alive(unit, now)
+	return AliveKey(Z.PlayerKey(unit), now)
+end
+
+function Purge(now)
+	for key in pairs(active) do AliveKey(key, now) end
 end
 
 function Z.MyHots(unit)
@@ -431,7 +451,7 @@ local function Arrivals(unit, info)
 		if type(aura) == "table" and not issecret(aura) then
 			local spell = SpellOf(aura.spellId)
 			local kind = spell and spell.entry.kind
-			if (kind == "pending" or kind == "group") and Z.AuraFromMe(unit, aura) == true then
+			if (kind == "pending" and Z.db.hotPending or kind == "group") and Z.AuraFromMe(unit, aura) == true then
 				Landed(unit, aura.spellId, spell, aura)
 			end
 		end
@@ -473,8 +493,8 @@ function Z.CheckHots(unit, info)
 	if not MaybeRemoved(info) then return end
 	local visible = UnitIsVisible and UnitIsVisible(unit)
 	if issecret(visible) or not visible then return end
-	local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
-	if not ok or type(list) ~= "table" or issecret(list) then return end
+	local list = MyAuras(unit)
+	if not list then return end
 	local present = {}
 	for _, aura in ipairs(list) do
 		if type(aura) ~= "table" or issecret(aura) or issecret(aura.spellId) or issecret(aura.name) then return end
@@ -537,8 +557,8 @@ local function Find(id, spell, at)
 		local key = Z.PlayerKey(unit)
 		if checked[key] then return end
 		checked[key] = true
-		local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
-		if not ok or type(list) ~= "table" or issecret(list) then return end
+		local list = MyAuras(unit)
+		if not list then return end
 		for _, a in ipairs(list) do
 			if type(a) == "table" and not issecret(a) and SameSpell(a.spellId, spell.entry) then
 				local d, e = a.duration, a.expirationTime
@@ -580,7 +600,7 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 				castOf[spell.entry.id] = id
 				if #sent >= 4 then table.remove(sent, 1) end
 				sent[#sent + 1] = { id = id, spell = spell, target = target, guid = guid, at = GetTime(),
-					unhelpable = OnUnhelpable(target) } -- (ma cible doit le rester jusqu'à la réussite)
+					unhelpable = not spell.entry.harms and OnUnhelpable(target) or nil } -- (ma cible doit le rester jusqu'à la réussite)
 			end
 		else
 			local _, guid, id = ...
@@ -592,12 +612,15 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			local now, s, at = GetTime()
 			local byTime = spell.entry.kind == "channel"
 			for i = #sent, 1, -1 do
+				if now - sent[i].at > SENT_WINDOW then table.remove(sent, i) end
+			end
+			-- (après la purge : l'index trouvé ne bouge plus)
+			for i = #sent, 1, -1 do
 				local c = sent[i]
-				if now - c.at > SENT_WINDOW then
-					table.remove(sent, i)
-				elseif not s and c.spell.entry == spell.entry and (byTime and now - c.at < CHANNEL_LINK
+				if c.spell.entry == spell.entry and (byTime and now - c.at < CHANNEL_LINK
 					or not (guid and c.guid and not issecret(guid) and not issecret(c.guid) and guid ~= c.guid)) then
 					s, at = c, i
+					break
 				end
 			end
 			if not s then return end
@@ -615,6 +638,7 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 				if unit then Consume(unit, spell.entry) end
 				return
 			end
+			if spell.entry.kind == "pending" and not Z.db.hotPending then return end -- (réglage éteint : rien de suivi)
 			local cast = { name = s.spell.name, target = s.target, unit = unit }
 			last = cast
 			-- sans joueur sûr : celui où mon aura arrive (Find), un peu plus tard
@@ -633,6 +657,11 @@ end)
 
 -- Réglage hotPrediction (appelé par Z:Refresh) : éteint, Lyorune n'écoute plus rien et oublie mes soins
 function Z:RefreshHotPrediction()
+	-- Prière de guérison éteinte : celle en cours est oubliée
+	if not Z.db.hotPending and prayer then
+		if Current(prayer) then Drop(prayer.key, prayer.base) end
+		prayer = nil
+	end
 	if (Z.db.hotPrediction or false) == listening then return end
 	listening = Z.db.hotPrediction or false
 	if listening then

@@ -1703,5 +1703,5 @@ function Z.DiagnoseAuras()
 	local ok, err = pcall(Diagnose, function(text) lines[#lines + 1] = issecret(text) and "(ligne secrète)" or tostring(text) end)
 	if not ok then lines[#lines + 1] = "diagnostic interrompu : " .. tostring(err) end
 	for _, text in ipairs(lines) do Z:Print(text) end
-	Z:Log("Diagnostic auras", table.concat(lines, " | "), "")
+	Z:Log("Diagnostic auras", table.concat(lines, " | "), "", true)
 end

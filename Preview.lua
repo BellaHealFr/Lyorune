@@ -90,6 +90,14 @@ local function Fill(cell, index, sample)
 	-- Absorption de soins : bornes données, sinon le jeu dessine la barre pleine et teinte toute la case en rouge
 	cell.healAbsorb:SetMinMaxValues(0, 100)
 	cell.healAbsorb:SetValue(0)
+	-- Mes soins sur la durée, part perdue, gaspillage et voile : vides (rien ne reste de la mesure des performances)
+	for _, bar in ipairs({ cell.hot, cell.hotNext, cell.pending }) do
+		bar:SetMinMaxValues(0, 100) bar:SetValue(0)
+	end
+	for _, bar in ipairs(cell.lostBars or {}) do bar:SetValue(0) end
+	for _, bar in ipairs(cell.lostHots or {}) do bar:SetValue(0) end
+	for _, more in ipairs(cell.lostMores or {}) do more:SetAlpha(0) end
+	for _, t in ipairs({ cell.overheal, cell.overhealMore, cell.castFill }) do t:SetAlpha(0) end
 
 	-- Rôles : un tank et un soigneur par groupe de cinq
 	local slot = (index - 1) % 5

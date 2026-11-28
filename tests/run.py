@@ -11508,7 +11508,9 @@ step("36 lot 1 : /lyorune soins decrit les soins sans rien changer, et une incan
     FireEvent("UNIT_SPELLCAST_START", "player")
     assert(#later == 2, "description de l'incantation non prevue")
     later[2]()
-    assert(Z.db.errors[1].message:find("pendant l'incantation", 1, true), "incantation non decrite")
+    assert(Z.db.errors[1].message:find("juste après le départ", 1, true), "incantation non decrite")
+    -- un diagnostic n'est pas une erreur : ni premiere erreur de /lyorune bug, ni alerte
+    assert(Z.db.errors[1].diagnostic and Z.firstError ~= Z.db.errors[1] and Z.LastError() ~= Z.db.errors[1], "diagnostic pris pour une erreur")
     local n = #Z.db.errors
     FireEvent("UNIT_SPELLCAST_START", "player")
     assert(#later == 2, "ecoute non arretee apres la premiere incantation")
@@ -11517,6 +11519,25 @@ step("36 lot 1 : /lyorune soins decrit les soins sans rien changer, et une incan
     FireEvent("UNIT_SPELLCAST_START", "player")
     assert(#later == 4, "seconde ecoute arretee par la premiere attente")
     later[3]()
+    -- une canalisation (Penitence) ou un sort instantane sont decrits aussi
+    Z.Command("soins")
+    FireEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+    assert(#later == 6, "canalisation non decrite")
+    Z.Command("soins")
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "x", 774)
+    assert(#later == 8, "sort instantane non decrit")
+    -- seuls les deux derniers passages restent au journal
+    local kept = 0
+    for _, entry in ipairs(Z.db.errors) do if entry.kind == "Diagnostic soins" then kept = kept + 1 end end
+    assert(kept >= 1 and kept <= 2, "diagnostics accumules : " .. kept) -- (deux passages identiques : comptes)
+    -- trois diagnostics differents : seuls les deux derniers restent ; ils ne comptent pas parmi les erreurs
+    Z:Log("Diagnostic soins", "a", "", true) Z:Log("Diagnostic soins", "b", "", true) Z:Log("Diagnostic soins", "c", "", true)
+    local seen = {}
+    for _, entry in ipairs(Z.db.errors) do if entry.kind == "Diagnostic soins" then seen[#seen + 1] = entry.message end end
+    assert(#seen == 2 and seen[1] == "c" and seen[2] == "b", "deux derniers diagnostics : " .. table.concat(seen, ","))
+    local real = 0
+    for _, entry in ipairs(Z.db.errors) do if not entry.diagnostic then real = real + 1 end end
+    assert(Z.ErrorCount() == real and real < #Z.db.errors, "diagnostics comptes comme erreurs")
   end)
   C_Timer.After = old.after
   rawset(_G, "C_Secrets", old.secrets)
@@ -12369,6 +12390,84 @@ step("36 c, lot 9 ter : Priere de guerison sous ses numeros d'aura, Penitence ra
   COMBAT, UnitIsUnit, C_UnitAuras.GetAuraDataByAuraInstanceID = saved.combat, saved.same, saved.byInstance
   Z.ForgetHots("player") Z.ForgetHots("party1")
   rawset(_G, "UnitIsVisible", nil)
+  Z.db.hotPrediction, Z.db.hotPending = saved.on, saved.pending
+  Z.buffGeneration = (Z.buffGeneration or 0) + 1
+  Z:Refresh()
+  assert(ok, err)
+end)
+
+step("36 c, relecture : annonce perimee, Penitence sur un ennemi, Priere eteinte, soins finis oublies", function()
+  local b = Z.buttons[1]
+  local saved = { now = NOW, get = C_UnitAuras.GetUnitAuras, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts,
+    unit = b.unit, name = C_Spell.GetSpellName, on = Z.db.hotPrediction, pending = Z.db.hotPending, stats = Z.db.clickStats,
+    class = Z.class, combat = COMBAT, uname = UnitName, assist = rawget(_G, "UnitCanAssist") }
+  local ok, err = pcall(function()
+    NOW = NOW + 9000 Z.db.clickStats = false COMBAT = true
+    C_UnitAuras.GetUnitAuras = function() return {} end
+    C_Spell.GetSpellDescription = function() return "" end
+    local names = { [401859] = "Prière de guérison", [139] = "Rénovation", [402174] = "Pénitence", [402261] = "Pénitence" }
+    local getName = C_Spell.GetSpellName
+    C_Spell.GetSpellName = function(id) return names[id] or getName(id) end
+    Z.class = "PRIEST" Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    Z.char.hotAmounts = { [401859] = { total = 800, duration = 30, from = "texte" }, [139] = { total = 450, duration = 15, from = "texte" } }
+    b.unit = "party1"
+    Z.db.hotPrediction, Z.db.hotPending = true, true Z:Refresh()
+    Z.ForgetHots("player") Z.ForgetHots("party1")
+    local function has(unit, base)
+      for _, hot in ipairs(Z.MyHots(unit) or {}) do if hot.base == base then return hot end end
+    end
+    -- une annonce ratée il y a 15 s, puis Rénovation sur moi et Prière en file d'attente sur party1 : chacune la sienne
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "o1", 139)
+    NOW = NOW + 15
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "a1", 139)
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-party1", "a2", 401859)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "a1", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "a2", 401859)
+    assert(has("player", 139) and has("party1", 401859), "annonce perimee : la mauvaise annonce retiree")
+    Z.ForgetHots("player") Z.ForgetHots("party1")
+    -- Pénitence sur un ennemi en cible : jamais de soin inventé sur moi
+    local unitName = UnitName
+    rawset(_G, "UnitName", function(u) if u == "target" then return "Gnoll", nil end return unitName(u) end)
+    rawset(_G, "UnitCanAssist", function() return false end)
+    NOW = NOW + 20
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Gnoll", "p1", 402174)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "p2", 402261)
+    assert(has("player", 402174) == nil, "Penitence sur un ennemi prise pour un soin sur moi")
+    -- un soin pur sur la même cible ennemie : toujours sur moi
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Gnoll", "r1", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "r1", 139)
+    assert(has("player", 139), "soin pur sur un ennemi plus relance sur moi")
+    rawset(_G, "UnitName", unitName) rawset(_G, "UnitCanAssist", saved.assist)
+    Z.ForgetHots("player")
+    -- Prière de guérison éteinte : celle en cours oubliée, une nouvelle ni retenue ni suivie
+    NOW = NOW + 20
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-party1", "q1", 401859)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "q1", 401859)
+    assert(has("party1", 401859), "Priere non retenue")
+    Z.db.hotPending = false Z:Refresh()
+    assert(has("party1", 401859) == nil, "Priere en cours gardee apres extinction")
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-party1", "q2", 401859)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "q2", 401859)
+    local same = UnitIsUnit
+    UnitIsUnit = function(a, c) return a == c end -- (mon aura : AuraFromMe la reconnaît)
+    Z.CheckHots("party1", { addedAuras = { { name = "Prière de guérison", spellId = 401859, auraInstanceID = 70, duration = 30, expirationTime = NOW + 30, sourceUnit = "player" } } })
+    UnitIsUnit = same
+    assert(has("party1", 401859) == nil, "Priere suivie reglage eteint")
+    Z.db.hotPending = true Z:Refresh()
+    -- un soin fini sur un joueur sans case est oublié au lancement suivant
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-party1", "g1", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "g1", 139)
+    NOW = NOW + 20
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "g2", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "g2", 139)
+    local report = table.concat(Z.HotReport(), " | ")
+    assert(report:find("retenus en cours : 1", 1, true), "soin fini d'un joueur sans case garde : " .. report)
+    C_Spell.GetSpellName = getName
+  end)
+  NOW, C_UnitAuras.GetUnitAuras, C_Spell.GetSpellDescription, Z.char.hotAmounts = saved.now, saved.get, saved.desc, saved.amounts
+  b.unit, C_Spell.GetSpellName, Z.db.clickStats, Z.class, COMBAT = saved.unit, saved.name, saved.stats, saved.class, saved.combat
+  rawset(_G, "UnitName", saved.uname) rawset(_G, "UnitCanAssist", saved.assist)
+  Z.ForgetHots("player") Z.ForgetHots("party1")
   Z.db.hotPrediction, Z.db.hotPending = saved.on, saved.pending
   Z.buffGeneration = (Z.buffGeneration or 0) + 1
   Z:Refresh()
