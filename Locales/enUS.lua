@@ -1440,4 +1440,6 @@ Z.translations.enUS = {
 	["Votre Prière de guérison en attente sur le joueur qui la porte, suivie quand elle saute."] = "Your pending Prayer of Mending on the player carrying it, followed when it jumps.",
 	["Alerte de gaspillage : la part qui sera perdue se voit aussi sur la fin de la vie, même à pleine vie."] = "Overheal warning: the part that will be wasted also shows on the end of the health, even at full health.",
 	["Placements par personnage : sur WoW Forever, deux personnages au même prénom ont maintenant chacun les leurs (le nom de famille compte)."] = "Per-character placements: on WoW Forever, two characters with the same first name now each keep their own (the surname counts).",
+	["Âme affaiblie et Longanimité (« Toujours montrés », et au bout des soins du prêtre et du paladin) : de nouveau visibles sur les cases, le jeu cachant leur numéro."] = "Weakened Soul and Forbearance (\"Always shown\", and after the priest's and paladin's heals): visible again on frames, as the game hides their spell ID.",
+	["« À mettre en avant » et « À ignorer » : un affaiblissement que le jeu ne laisse pas reconnaître passe en gris, avec l'explication au survol, et ne laisse plus de place vide."] = "\"Highlight\" and \"Ignore\": a debuff the game does not let addons recognize is greyed out, explained on hover, and no longer leaves an empty slot.",
 }

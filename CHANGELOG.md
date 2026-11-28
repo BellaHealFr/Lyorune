@@ -6,6 +6,13 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.55.2] - 2026-11-28
+
+### Corrigé
+
+- Âme affaiblie et Longanimité (« Toujours montrés », et au bout des soins du prêtre et du paladin) : de nouveau visibles sur les cases, le jeu cachant leur numéro.
+- « À mettre en avant » et « À ignorer » : un affaiblissement que le jeu ne laisse pas reconnaître passe en gris, avec l'explication au survol, et ne laisse plus de place vide.
+
 ## [1.55.1] - 2026-11-28
 
 ### Corrigé
@@ -1031,6 +1038,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.55.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.55.1...v1.55.2
 [1.55.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.55.0...v1.55.1
 [1.55.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.53.0...v1.54.0

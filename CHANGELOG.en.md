@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.55.2] - 2026-11-28
+
+### Fixed
+
+- Weakened Soul and Forbearance ("Always shown", and after the priest's and paladin's heals): visible again on frames, as the game hides their spell ID.
+- "Highlight" and "Ignore": a debuff the game does not let addons recognize is greyed out, explained on hover, and no longer leaves an empty slot.
+
 ## [1.55.1] - 2026-11-28
 
 ### Fixed
@@ -1031,6 +1038,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.55.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.55.1...v1.55.2
 [1.55.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.55.0...v1.55.1
 [1.55.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.53.0...v1.54.0

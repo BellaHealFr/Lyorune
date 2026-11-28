@@ -8,6 +8,17 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.55.2", date = "2026-11-28",
+		added = {
+		},
+		improved = {
+		},
+		fixed = {
+			"Âme affaiblie et Longanimité (« Toujours montrés », et au bout des soins du prêtre et du paladin) : de nouveau visibles sur les cases, le jeu cachant leur numéro.",
+			"« À mettre en avant » et « À ignorer » : un affaiblissement que le jeu ne laisse pas reconnaître passe en gris, avec l'explication au survol, et ne laisse plus de place vide.",
+		},
+	},
+	{
 		version = "1.55.1", date = "2026-11-28",
 		added = {
 		},
