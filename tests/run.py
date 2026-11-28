@@ -11850,6 +11850,63 @@ step("36 c, lot 7 : mes soins sur la duree retenus (cible, montant appris par ra
   assert(ok, err)
 end)
 
+step("36 c, lot 9 : cible annoncee sans case (ennemi en cible) : le joueur ou mon aura vient d'arriver", function()
+  local saved = { now = NOW, get = C_UnitAuras.GetUnitAuras, amounts = Z.char.hotAmounts, unit = Z.buttons[1].unit,
+    stats = Z.db.clickStats, desc = C_Spell.GetSpellDescription, hidden = Z.AurasHidden, attack = rawget(_G, "UnitCanAttack") }
+  local ok, err = pcall(function()
+    NOW = NOW + 2000 Z.char.hotAmounts = nil Z.db.clickStats = false
+    C_Spell.GetSpellDescription = function() return "Rend 45 points de vie en 15 sec." end
+    local on = {}
+    C_UnitAuras.GetUnitAuras = function(unit) return on[unit] or {} end
+    local function Fresh(start) return { { name = "Rénovation", spellId = 139, auraInstanceID = 9, duration = 15, expirationTime = start + 15 } } end
+    local b = Z.buttons[1] b.unit = "party1"
+    local function Cast(c)
+      FireEvent("UNIT_SPELLCAST_SENT", "player", "Gnoll enragé", c, 139)
+      FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", c, 139)
+    end
+    -- l'aura arrive sur moi : retenue sur moi, avec sa vraie fin
+    on.player = Fresh(NOW)
+    Cast("e1")
+    local list = Z.MyHots("player")
+    assert(list and #list == 1 and list[1].duration == 15, "soin perdu quand un ennemi est en cible")
+    assert(table.concat(Z.HotReport(), " | "):find("cible annoncée Gnoll enragé, retenu sur player", 1, true), "rapport du dernier soin")
+    -- une aura ancienne (posée bien avant) ne prouve rien
+    NOW = NOW + 20 on.player = Fresh(NOW - 5)
+    Cast("e2")
+    assert(Z.MyHots("player") == nil, "aura ancienne prise pour ce lancement")
+    assert(table.concat(Z.HotReport(), " | "):find("retenu sur personne", 1, true), "rapport sans joueur")
+    -- deux joueurs avec une aura neuve : rien d'inventé ; un seul (sur une case) : lui
+    on.player, on.party1 = Fresh(NOW), Fresh(NOW)
+    Cast("e3")
+    assert(Z.MyHots("player") == nil and Z.MyHots("party1") == nil, "deux joueurs possibles")
+    on.player = nil
+    Cast("e4")
+    assert(Z.MyHots("party1") and Z.MyHots("party1")[1].duration == 15, "soin sur la case de l'aura")
+    -- auras cachées : rien lu
+    local hidden = Z.AurasHidden
+    Z.AurasHidden = function() return true end
+    NOW = NOW + 20 on.player = Fresh(NOW)
+    Cast("e5")
+    assert(Z.MyHots("player") == nil, "auras lues alors que le jeu les cache")
+    -- en combat (auras cachées), l'ennemi en cible nommé par le jeu : le soin est tombé sur moi
+    ENEMIES.target = true rawset(_G, "UnitCanAttack", function(_, unit) return ENEMIES[unit] or false end)
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-target", "e6", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "e6", 139)
+    ENEMIES.target = nil
+    assert(Z.MyHots("player") and #Z.MyHots("player") == 1, "soin perdu en combat avec un ennemi en cible")
+    -- la même cible, amie : rien d'inventé
+    NOW = NOW + 20
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-target", "e7", 139)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "e7", 139)
+    Z.AurasHidden = hidden
+    assert(Z.MyHots("player") == nil, "cible amie hors des cases prise pour moi")
+  end)
+  NOW, C_UnitAuras.GetUnitAuras, Z.char.hotAmounts = saved.now, saved.get, saved.amounts
+  Z.buttons[1].unit, Z.db.clickStats, C_Spell.GetSpellDescription = saved.unit, saved.stats, saved.desc
+  Z.AurasHidden, ENEMIES.target = saved.hidden, nil rawset(_G, "UnitCanAttack", saved.attack)
+  assert(ok, err)
+end)
+
 step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain coup, coups, relance, fin, interrupteur)", function()
   local b = Z.buttons[1]
   local saved = { now = NOW, auras = AURAS, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts, unit = b.unit,

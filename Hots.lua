@@ -34,6 +34,7 @@ local sent = {}        -- mes soins sur la durée annoncés, du plus ancien au p
 local channel          -- ma dernière canalisation retenue (Pénitence) : coupée, ses coups restants tombent
 local prayer           -- ma Prière de guérison retenue : un seul porteur à la fois (le jeu n'en garde qu'une)
 local listening = false -- réglage hotPrediction allumé (Z:RefreshHotPrediction)
+local last             -- mon dernier soin sur la durée réussi : { name, target, unit } (/lyorune soins)
 
 -- Numéros de mes soins sur la durée, tous rangs, vérifiés par leur nom (refaits quand mes sorts changent)
 local function Spells()
@@ -497,6 +498,48 @@ local function Consume(unit, entry)
 	if pick then Drop(Z.PlayerKey(unit), pick) end
 end
 
+-- Cible annoncée sans case ni clic : un ennemi encore en cible (le jeu lance alors mon soin sur moi), dit par son
+-- nom et par le jeu, même en combat. Rend "player" ou nil.
+local function OnEnemy(target)
+	if not UnitCanAttack or issecret(target) or type(target) ~= "string" or target == "" then return nil end
+	local name, enemy = UnitName("target"), UnitCanAttack("player", "target")
+	if issecret(name) or issecret(enemy) or not enemy then return nil end
+	local short = target:match("^[^-]+")
+	if name == target or name == short then return "player" end
+end
+
+-- Sinon (cible illisible, sans clic) : le joueur sur qui mon aura de ce sort vient d'arriver, quand les auras se
+-- lisent. Une seule lecture, juste après le lancement, des cases affichées et de moi ; un seul joueur trouvé, sinon
+-- rien. Rend le joueur trouvé (ou nil).
+local function Find(id, spell, at)
+	if Z.AurasHidden() or Z.AurasRestricted() then return nil end
+	local found, aura, count, checked = nil, nil, 0, {}
+	local function Look(unit)
+		local key = Z.PlayerKey(unit)
+		if checked[key] then return end
+		checked[key] = true
+		local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
+		if not ok or type(list) ~= "table" or issecret(list) then return end
+		for _, a in ipairs(list) do
+			if type(a) == "table" and not issecret(a) and not issecret(a.spellId) and a.spellId == id then
+				local d, e = a.duration, a.expirationTime
+				if not issecret(d) and not issecret(e) and type(d) == "number" and type(e) == "number" and d > 0
+					and math.abs(e - d - at) < SAME_CAST then
+					count, found, aura = count + 1, unit, a
+				end
+			end
+		end
+	end
+	Look("player")
+	for _, b in ipairs(Z.buttons or {}) do
+		if b.unit and not b.extra then Look(b.unit) end
+	end
+	if count ~= 1 then return nil end
+	Alive(found, GetTime()) -- (un soin fini n'est plus la même pose)
+	Landed(found, id, spell, aura) -- (une aura déjà retenue n'est que relue)
+	return found
+end
+
 local castFrame = CreateFrame("Frame")
 castFrame:SetScript("OnEvent", function(_, event, ...)
 	Z:Try("soins sur la durée", function(...)
@@ -536,8 +579,23 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			table.remove(sent, at)
 			-- la cible est retrouvée maintenant : la case cliquée est sûrement notée (Frames.lua)
 			local unit = Z.CastReceiver(s.target, s.spell.name, s.at)
-			if not unit then return end
-			if spell.entry.kind == "consume" then Consume(unit, spell.entry) else Remember(unit, s.id, s.spell) end
+			if spell.entry.kind == "consume" then
+				if unit then Consume(unit, spell.entry) end
+				return
+			end
+			unit = unit or OnEnemy(s.target)
+			local cast = { name = s.spell.name, target = s.target, unit = unit }
+			last = cast
+			-- sans joueur sûr : celui où mon aura arrive (Find), un peu plus tard
+			if not unit then
+				C_Timer.After(READ_DELAY, function()
+					Z:Try("soins sur la durée", function()
+						if listening then cast.unit = Find(s.id, s.spell, now) or false end
+					end)
+				end)
+				return
+			end
+			Remember(unit, s.id, s.spell)
 		end
 	end, ...)
 end)
@@ -552,7 +610,7 @@ function Z:RefreshHotPrediction()
 		castFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
 	else
 		castFrame:UnregisterAllEvents()
-		active, sent, channel, prayer = {}, {}, nil, nil
+		active, sent, channel, prayer, last = {}, {}, nil, nil, nil
 	end
 end
 
@@ -580,5 +638,12 @@ function Z.HotReport()
 		for _ in pairs(active[key]) do count = count + 1 end
 	end
 	lines[#lines + 1] = ("soins sur la durée retenus en cours : %d"):format(count)
+	if last then
+		local target = last.target
+		target = issecret(target) and "secrète" or (target == nil or target == "") and "aucune" or target
+		local unit = last.unit
+		unit = unit == false and "personne (aura introuvable)" or unit == nil and "en recherche" or unit
+		lines[#lines + 1] = ("dernier soin sur la durée : %s, cible annoncée %s, retenu sur %s"):format(last.name, target, unit)
+	end
 	return lines
 end
