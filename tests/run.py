@@ -11449,6 +11449,21 @@ step("1.51.0 : affaiblissements Toujours montres (Ame affaiblie et Longanimite p
       assert(groups.listedRow and groups.listedRow.candidates.includeSpellIDs[6788], "jamais secret : par numero")
       never = {} Z.neverSecret = {}
       assert(Z.HiddenDebuff(31337) and not Z.HiddenDebuff(6788) and not Z.HiddenDebuff(25771), "options : caches")
+      -- C52 : « A mettre en avant » et « A ignorer » d'un sort cache : ni place ni grande icone, signale dans les options
+      Z.db.debuffMode = "DISPEL"
+      local before = Z.DebuffPlaces()
+      Z.db.importantNames = { ["31337"] = true }
+      assert(Z.KnownAuraIds("31337") == false and Z.AuraIdsHidden("31337"), "cache : reconnu")
+      assert(Z.DebuffPlaces() == before, "cache : place reservee")
+      never[31337] = true Z.neverSecret = {}
+      assert(Z.KnownAuraIds("31337") == true and not Z.AuraIdsHidden("31337") and Z.DebuffPlaces() == before + 1,
+        "jamais secret : pas reconnu")
+      never = {} Z.neverSecret = {}
+      assert(Z.AuraIdsHidden("Nom inconnu") == false, "sans numero : dit cache")
+      -- Ame affaiblie dans ma liste : reconnue a son allure (place comptee), mais pas ecartable
+      Z.db.importantNames = { ["6788"] = true }
+      assert(Z.KnownAuraIds("6788") == true and Z.AuraIdsHidden("6788"), "Ame affaiblie : mise en avant ou ecartee")
+      Z.db.importantNames = {}
       -- pretre : Ame affaiblie au bout de ses soins, reconnue ainsi ; plus de second groupe dans la rangee
       Z.db.showHots, Z.db.showLockouts = true, true
       groups = {} Z.class = "PRIEST" Z:BuildData() Z:Refresh()

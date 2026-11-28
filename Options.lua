@@ -626,7 +626,7 @@ local function ListBox(key, title, hint, clean, fields, status)
 				chip:SetPoint("TOPLEFT", ((i - 1) % CHIPS) * (chipWidth + 6), -top - math.floor((i - 1) / CHIPS) * CHIP_H)
 				chip.name = name
 				chip.label:SetText(name)
-				-- État d'un nom (liste « À mettre en avant ») : gris tant qu'il n'est pas reconnu en combat
+				-- État d'un nom (listes « À mettre en avant » et « À ignorer ») : gris s'il ne marche pas en combat
 				local tip = status and status(name)
 				UI.Paint(chip.label, tip and tip.dim and "dim" or "btext")
 				local remove = L["Cliquez pour retirer de la liste."]
@@ -649,11 +649,23 @@ local function ListBox(key, title, hint, clean, fields, status)
 end
 
 -- État d'un nom de « À mettre en avant » : en combat le nom est secret, le jeu ne le trouve que par son numéro
+-- (C52 : le jeu cache le numéro de la plupart des affaiblissements sur les cases, il ne peut alors rien en faire)
 local function ImportantStatus(name)
-	if Z.KnownAuraIds and Z.KnownAuraIds(name) then
+	local known = Z.KnownAuraIds and Z.KnownAuraIds(name)
+	if known then
 		return { text = L["Reconnu par son numéro : le jeu le trouve aussi en combat."] }
 	end
+	if known == false then
+		return { dim = true, text = L["Caché par le jeu sur les cases : il ne laisse pas un addon reconnaître cet affaiblissement. Les affaiblissements de boss restent montrés en grand par le jeu lui-même."] }
+	end
 	return { dim = true, text = L["Pas encore reconnu : il sera appris la première fois qu'il est vu hors combat. Ou tapez son numéro, ou faites Maj-clic sur le sort."] }
+end
+
+-- État d'un nom de « À ignorer » : seul un affaiblissement que le jeu ne cache pas peut être écarté des cases
+local function IgnoredStatus(name)
+	if Z.AuraIdsHidden and Z.AuraIdsHidden(name) then
+		return { dim = true, text = L["Caché par le jeu sur les cases : il ne laisse pas un addon écarter cet affaiblissement, il reste montré."] }
+	end
 end
 
 
@@ -2913,7 +2925,7 @@ local function Chapters()
 				{ "check", "debuffCountdown", "Secondes restantes", "Sur les icônes d'affaiblissements, celle du contrôle subi et la grande icône des affaiblissements importants : les secondes restantes, écrites par le jeu, même en combat. Vous voyez s'il faut dissiper ou attendre la fin.", desc = "Dissiper tout de suite, ou attendre la fin ?" },
 				{ "seg", "debuffMode", "Affaiblissements affichés", "Tous : tout ce que porte le joueur. Utiles : ceux que le jeu montre sur ses propres cadres de raid, rien de plus de 5 minutes (Déserteur, Épuisement) ; un affaiblissement de boss plus long reste dans la grande icône. Ceux que je dissipe : seulement ce que vous pouvez retirer. Dans les trois cas, ceux de vos listes « À mettre en avant » et « Toujours montrés » passent en tête (en « Tous », ceux de « Toujours montrés » quand « Nombre d'affaiblissements » vaut 3 ou plus, sinon parmi les autres).", desc = "Tous, Utiles, ou seulement ceux que je dissipe.", dep = { "showDebuffs", true } },
 				ShownList("Toujours montrés", "Montrés dans les trois modes (en « Tous », parmi les autres si « Nombre d'affaiblissements » vaut moins de 3), même s'ils ne se dissipent pas, en combat aussi, sans son ni contour. Au départ : Âme affaiblie et Longanimité, pour savoir qu'un bouclier ou une bulle ne peut pas être relancé. Le bouton ouvre la liste : cochez ceux à montrer, elle propose aussi ceux déjà vus sur votre groupe. Tapez un nom ou un numéro pour filtrer la liste ; Entrée, ou Maj-clic sur un sort, pour en ajouter un."),
-				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher, sauf s'ils sont dans « À mettre en avant » ou cochés dans « Toujours montrés ». Un nom, un numéro, ou Maj-clic sur un sort."),
+				ListBox("ignoredNames", "À ignorer", "Affaiblissements à ne jamais afficher, sauf s'ils sont dans « À mettre en avant » ou cochés dans « Toujours montrés ». Un nom, un numéro, ou Maj-clic sur un sort. Un nom en gris ne peut pas être écarté : survolez-le.", nil, nil, IgnoredStatus),
 				{ "step", "dispelCount", "Affaiblissements à dissiper", desc = "Montrés avant les autres, le plus important d'abord.", dep = { "showDebuffs", true } },
 				{ "step", "debuffCount", "Nombre d'affaiblissements", fine = true, dep = { "showDebuffs", true } },
 			} },

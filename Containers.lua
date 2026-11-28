@@ -213,16 +213,34 @@ local function Interesting(name)
 	end
 end
 
--- Un nom de liste est-il reconnu par son numéro ? (sinon le jeu ne peut pas le trouver en combat, nom secret)
--- Rend nil sans numéro. Avec outsideLockouts : faux si tous ses numéros sont des sorts bloqués (Âme affaiblie),
--- montrés au bout de mes soins et jamais dans la rangée des affaiblissements.
+-- Un nom de liste d'affaiblissements est-il reconnu par son numéro ? (sinon le jeu ne peut pas le trouver en
+-- combat, nom secret). Rend nil sans numéro. Faux si le jeu cache tous ses numéros sur les cases (C52, Z.HiddenDebuff)
+-- ou, avec outsideLockouts, si tous sont des sorts bloqués (Âme affaiblie), montrés au bout de mes soins et jamais
+-- dans la rangée des affaiblissements.
 function Z.KnownAuraIds(name, outsideLockouts)
 	local set = {}
 	AddIds(set, name)
 	if Empty(set) then return nil end
 	if outsideLockouts and Z.ShowsLockouts() then
 		for id in pairs(Z.lockoutIds) do set[id] = nil end
-		if Empty(set) then return false end
+	end
+	if Z.HasAuraBoxes() then
+		for id in pairs(set) do
+			if Z.HiddenDebuff(id) then set[id] = nil end -- Âme affaiblie, Longanimité : reconnues à leur allure
+		end
+	end
+	return not Empty(set)
+end
+
+-- Le jeu cache-t-il ce nom sur les cases ? Vrai si on lui connaît des numéros et qu'aucun n'est « jamais secret » :
+-- il ne peut alors ni être mis en avant ni être écarté (C52). Signalé dans les options.
+function Z.AuraIdsHidden(name)
+	if not Z.HasAuraBoxes() then return false end
+	local set = {}
+	AddIds(set, name)
+	if Empty(set) then return false end
+	for id in pairs(set) do
+		if Z.NeverSecret(id) then return false end
 	end
 	return true
 end
@@ -602,8 +620,10 @@ local function Plan(b)
 	if db.dispelIcon then Slot("dispelType", Z.DISPEL_MINE, nil, "LyoruneAuraType", "dispelType") end
 	if db.bossDebuffs or db.importantGlow then
 		Slot("boss", "HARMFUL", { isBossAura = true }, "LyoruneAuraBig", "big")
-		if not Empty(important) then
-			Slot("listed", "HARMFUL", { includeSpellIDs = important }, "LyoruneAuraBig", "big")
+		-- seulement les numéros que le jeu compare (C52) : les autres laisseraient la place vide
+		local exact = Comparable(important)
+		if not Empty(exact) then
+			Slot("listed", "HARMFUL", { includeSpellIDs = exact }, "LyoruneAuraBig", "big")
 		end
 	end
 	-- place de l'icône du type : seulement si elle est montrée (un changement refait les conteneurs)
