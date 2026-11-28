@@ -336,6 +336,14 @@ local function DescribeHeals(Add, moment)
 		return GetUnitTotalModifiedMaxHealthPercent("player")
 	end)
 	for _, line in ipairs(Z.HotReport()) do Add(line) end -- montants appris de mes soins sur la durée (Hots.lua)
+	-- part perdue sur ma case (Frames.lua)
+	for _, cell in ipairs(Z.buttons or {}) do
+		local same = cell.unit and UnitIsUnit(cell.unit, "player")
+		if cell.unit and not Z.IsSecret(same) and same and cell:IsVisible() and Z.LostReport then
+			for _, line in ipairs(Z.LostReport(cell)) do Add("part perdue, " .. line) end
+			break
+		end
+	end
 end
 
 local function RunHeals(moment)

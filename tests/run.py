@@ -12307,6 +12307,9 @@ step("36 c, lot 8 c : part perdue sur la fin de la vie, depuis le bord droit, ro
     -- tous les soins en route (pas les miens seuls), meme en combat
     Z.cellUpdates.prediction(b)
     assert(b.lost._value == 10 and low._value == 10, "part perdue : pas tous les soins en route")
+    -- /lyorune soins : l'état de la part perdue de la case (lot 9, essai en jeu)
+    local report = table.concat(Z.LostReport(b), " | ")
+    assert(report:find("morceau 1 : montré true", 1, true) and report:find("morceau 2", 1, true), report)
     SECRET = true COMBAT = true
     Z.cellUpdates.prediction(b)
     SECRET = false COMBAT = false

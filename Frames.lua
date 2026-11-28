@@ -94,6 +94,22 @@ local function Stripes(bar, sub)
 	Unsnap(tex)
 	return tex
 end
+-- /lyorune soins : l'état de la part perdue sur une case (affichée, visible, opacité, niveaux, tailles, valeur)
+function Z.LostReport(b)
+	local function N(v) return issecret(v) and "secret" or type(v) == "number" and ("%.1f"):format(v) or tostring(v) end
+	local parts = { ("réglages : alerte %s, soins en route %s, calculateur %s, couleur %s, vie %s, niveau vie %s"):format(
+		tostring(db.overhealWarn), tostring(db.showIncoming), tostring(lostCalculator ~= nil), tostring(db.color),
+		b.hp:IsVisible() and "visible" or "cachée", N(b.hp:GetFrameLevel())) }
+	for i, bar in ipairs(b.lostBars or {}) do
+		local clip, fill = bar:GetParent(), bar:GetStatusBarTexture()
+		parts[#parts + 1] = ("morceau %d : montré %s, visible %s, opacité %s, niveau %s (cadre %s), cadre %s x %s, barre %s x %s, valeur %s, remplissage montré %s"):format(
+			i, tostring(bar:IsShown()), tostring(bar:IsVisible()), N(bar:GetEffectiveAlpha()), N(bar:GetFrameLevel()),
+			N(clip:GetFrameLevel()), N(clip:GetWidth()), N(clip:GetHeight()), N(bar:GetWidth()), N(bar:GetHeight()),
+			N(bar:GetValue()), tostring(fill and fill:IsShown()))
+	end
+	return parts
+end
+
 -- Un morceau de la part perdue : une barre remplie depuis le bord droit, de la taille de « area » (vie, ou mana), dans
 -- un cadre rogné au bout de la vie ; voile sombre, rayures ambre et trait ambre là où la perte commence, rayures et
 -- trait cuivre allumés par un booléen du jeu. Tous les morceaux d'une case : b.lostBars, et leur cuivre b.lostMores.
@@ -120,6 +136,7 @@ local function LostBar(b, clip, area)
 		edge:SetPoint("TOPLEFT", fill, "TOPLEFT")
 		edge:SetPoint("BOTTOMLEFT", fill, "BOTTOMLEFT")
 		edge:SetWidth(2)
+		Unsnap(edge)
 		if copper then
 			stripes:SetAlpha(0)
 			edge:SetAlpha(0)
