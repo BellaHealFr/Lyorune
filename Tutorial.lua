@@ -129,10 +129,18 @@ local steps = {
 				local live = {}
 				if db.incomingSplit == "SPLIT" then live[#live + 1] = L["Votre soin vient d'abord, celui des autres soigneurs ensuite, plus pâle."] end
 				if db.castFill and db.incomingSplit ~= "ALL" then live[#live + 1] = L["Pendant votre incantation, un voile le remplit : plein, le soin arrive."] end
-				if db.overhealWarn then live[#live + 1] = L["Ambre puis cuivre : trop de soins arrivent, une partie sera perdue."] end
+				if db.overhealWarn then live[#live + 1] = L["Ambre puis cuivre : trop de soins arrivent, la part perdue se voit sur la fin de la vie."] end
 				if db.incomingText then live[#live + 1] = L["Son chiffre « +2,1k » dit combien arrive."] end
 				if db.healLanding and db.incomingSplit ~= "ALL" then live[#live + 1] = L["Un bref éclat montre où votre soin vient de tomber."] end
 				if #live > 0 then text = text .. " " .. table.concat(live, " ") end
+			end
+			-- Soins vivants (36 c) : mes soins sur la durée sur la barre, seulement pour une classe qui en a (Data.lua)
+			local hots = Z.hotSpells and Z.class and Z.hotSpells[Z.class]
+			if db.hotPrediction and hots then
+				text = text .. (db.showIncoming and " " or "\n\n") .. L["Plus loin, la |cff%sdernière teinte|r : ce que vos soins sur la durée vont encore rendre, le prochain coup plus franc."]:format(Hex(theme.hot or theme.incoming))
+				local pending = false
+				for _, spell in ipairs(hots) do pending = pending or spell.kind == "pending" end
+				if db.hotPending and pending then text = text .. " " .. L["À peine remplie, votre Prière de guérison en attente."] end
 			end
 			if db.showAbsorb then
 				local shield = db.absorbStyle == "FOLLOW" and "La |cff%spart rayée|r qui prolonge la vie est un bouclier."

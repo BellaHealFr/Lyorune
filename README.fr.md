@@ -43,7 +43,7 @@ Simple à régler, léger en combat, agréable à regarder. Je l'ai fait pour to
 | | |
 |:-:|---|
 | <img src="docs/images/runes/s.png" alt="" width="40"> | **Soigner d'un clic** : chaque clic lance le sort et le rang de votre choix, sans cibler. |
-| <img src="docs/images/runes/u.png" alt="" width="40"> | **Tout voir d'un coup d'œil** : vie, soins en route, boucliers, mana, menace et portée, même en combat ; les barres glissent en douceur, votre soin se remplit pendant l'incantation et prévient s'il va être perdu. |
+| <img src="docs/images/runes/u.png" alt="" width="40"> | **Tout voir d'un coup d'œil** : vie, soins en route, boucliers, mana, menace et portée, même en combat ; les barres glissent en douceur, votre soin se remplit pendant l'incantation et prévient s'il va être perdu, vos soins sur la durée montrent ce qu'ils vont encore rendre. |
 | <img src="docs/images/runes/d.png" alt="" width="40"> | **Dissiper sans chercher** : la case se colore quand vous pouvez retirer un affaiblissement. |
 | <img src="docs/images/runes/r.png" alt="" width="40"> | **Relever sans changer de touche** : sur un joueur mort, votre clic de soin lance votre résurrection. |
 | <img src="docs/images/runes/g.png" alt="" width="40"> | **À votre goût** : cinq thèmes, quatre formes de case, chaque élément placé à votre idée. |

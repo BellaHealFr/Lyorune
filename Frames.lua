@@ -268,10 +268,10 @@ local function UpdateHots(b, max)
 end
 
 local function UpdatePrediction(b)
-	UpdateHots(b, UnitHealthMax(b.unit))
-	if not (db.showIncoming or db.showAbsorb or db.showHealAbsorb) then return end
 	local unit = b.unit
 	local max = UnitHealthMax(unit)
+	UpdateHots(b, max)
+	if not (db.showIncoming or db.showAbsorb or db.showHealAbsorb) then return end
 	if healCalculator.ResetPredictedValues then healCalculator:ResetPredictedValues() end -- rien de la case précédente
 	UnitGetDetailedHealPrediction(unit, "player", healCalculator)
 	if db.showIncoming then UpdateIncoming(b, max) end
@@ -1243,6 +1243,9 @@ function Z.BuildVisuals(b)
 	lostClip:SetPoint("TOPLEFT")
 	lostClip:SetPoint("BOTTOMRIGHT", hp:GetStatusBarTexture(), "BOTTOMRIGHT")
 	lostClip:SetClipsChildren(true)
+	-- au niveau de la vie : la part perdue, son enfant, tombe au niveau des autres segments (bouclier en bande et
+	-- absorption de soins y passent au-dessus grâce à leurs couches)
+	lostClip:SetFrameLevel(hp:GetFrameLevel())
 	local lost = CreateFrame("StatusBar", nil, lostClip)
 	lost:SetAllPoints(hp)
 	lost:SetReverseFill(true)

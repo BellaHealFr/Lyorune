@@ -30,7 +30,7 @@ local SAME_CAST = 1    -- une aura arrivée moins d'une seconde avant ou après 
 local spells, builtFor -- spells[numéro de n'importe quel rang] = { entry = ligne de Z.hotSpells, name = nom }
 local arriving         -- ma classe a un sort « pending » ou « group » : ses auras arrivées sont lues (Arrivals)
 local active = {}      -- active[joueur][numéro du premier rang] = soin en cours (voir Remember)
-local sent             -- le dernier de mes soins sur la durée annoncé : { id, spell, target, guid, at }
+local sent = {}        -- mes soins sur la durée annoncés, du plus ancien au plus récent : { id, spell, target, guid, at }
 local channel          -- ma dernière canalisation retenue (Pénitence) : coupée, ses coups restants tombent
 local prayer           -- ma Prière de guérison retenue : un seul porteur à la fois (le jeu n'en garde qu'une)
 local listening = false -- réglage hotPrediction allumé (Z:RefreshHotPrediction)
@@ -263,12 +263,13 @@ end
 function Restart(hot)
 	hot.chain = (hot.chain or 0) + 1
 	local chain, now = hot.chain, GetTime()
-	if hot.ticks and hot.entry.every and hot.total then Schedule(hot, Done(hot, now) + 1, chain) end
-	if hot.ticks and hot.entry.every and hot.total and hot.duration and not Ending(hot, now)
-		and hot.entry.kind ~= "channel" then
-		C_Timer.After(hot.start + hot.duration - ENDING - now, function()
-			if hot.chain == chain and Current(hot) then Z:Try("soins sur la durée", Changed, hot.key) end
-		end)
+	if hot.ticks and hot.entry.every and hot.total then
+		Schedule(hot, Done(hot, now) + 1, chain)
+		if hot.duration and not Ending(hot, now) and hot.entry.kind ~= "channel" then
+			C_Timer.After(hot.start + hot.duration - ENDING - now, function()
+				if hot.chain == chain and Current(hot) then Z:Try("soins sur la durée", Changed, hot.key) end
+			end)
+		end
 	end
 	-- un soin en attente qui n'a pas sauté s'efface à sa fin (aucun coup ne redessine la barre)
 	if hot.entry.kind == "pending" and hot.duration then
@@ -298,7 +299,8 @@ local function Remember(unit, id, spell, aura)
 	local duration = known and known.duration or entry.duration
 	local key = Z.PlayerKey(unit)
 	local hot = { id = id, base = entry.id, entry = entry, name = spell.name, unit = unit, key = key, start = GetTime(),
-		duration = duration, ticks = Ticks(entry, duration), total = known and known.total }
+		duration = duration, ticks = Ticks(entry, duration), total = known and known.total,
+		fought = InCombatLockdown() or nil } -- posé en combat : son aura n'a pas été lue (Consume)
 	active[key] = active[key] or {}
 	local before = active[key][entry.id]
 	-- mon lancement qui réussit juste après son aura arrivée (Landed) : la même pose, déjà retenue
@@ -359,6 +361,7 @@ end
 -- vrai si l'un d'eux est dans ses 3 dernières secondes (à relancer), et le soin qui attend que le joueur soit
 -- touché (Prière de guérison, dessiné à part).
 function Z.HotAmounts(unit)
+	if not next(active) then return 0, 0, false, 0 end
 	local now = GetTime()
 	local mine = Alive(unit, now)
 	if not mine then return 0, 0, false, 0 end
@@ -473,9 +476,18 @@ end
 -- Un sort qui consomme un de mes soins (Prompte guérison) a réussi sur ce joueur. Hors combat, Z.CheckHots voit
 -- quelle aura est partie ; en combat (ou auras cachées), la règle de Data.lua choisit parmi mes soins retenus.
 local function Consume(unit, entry)
-	if not AurasUnsure() then return end
 	local mine = Alive(unit, GetTime())
 	if not mine then return end
+	-- hors combat, Z.CheckHots s'en charge, sauf si mes soins ont été posés en combat sans être vus : la règle alors
+	if not AurasUnsure() then
+		local unseen = false
+		for _, base in ipairs(entry.takes or {}) do
+			local hot = mine[base]
+			if hot and hot.seen then return end
+			unseen = unseen or hot and hot.fought or false
+		end
+		if not unseen then return end
+	end
 	local pick, pickEnd
 	for _, base in ipairs(entry.takes or {}) do
 		local hot = mine[base]
@@ -499,14 +511,29 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			end
 		elseif event == "UNIT_SPELLCAST_SENT" then
 			local _, target, guid, id = ...
+			-- un autre sort annoncé (file d'attente du jeu pendant une incantation) n'efface pas le soin en cours
 			local spell = SpellOf(id)
-			sent = spell and { id = id, spell = spell, target = target, guid = guid, at = GetTime() } or nil
+			if spell then
+				if #sent >= 4 then table.remove(sent, 1) end
+				sent[#sent + 1] = { id = id, spell = spell, target = target, guid = guid, at = GetTime() }
+			end
 		else
 			local _, guid, id = ...
-			local s, spell = sent, SpellOf(id)
-			if not (s and spell) or spell.entry ~= s.spell.entry or GetTime() - s.at > SENT_WINDOW then return end
-			if guid and s.guid and not issecret(guid) and not issecret(s.guid) and guid ~= s.guid then return end
-			sent = nil
+			local spell = SpellOf(id)
+			if not spell then return end
+			-- le plus récent du même sort, encore récent, au même numéro d'incantation quand les deux se lisent
+			local now, s, at = GetTime()
+			for i = #sent, 1, -1 do
+				local c = sent[i]
+				if now - c.at > SENT_WINDOW then
+					table.remove(sent, i)
+				elseif not s and c.spell.entry == spell.entry and not (guid and c.guid and not issecret(guid)
+					and not issecret(c.guid) and guid ~= c.guid) then
+					s, at = c, i
+				end
+			end
+			if not s then return end
+			table.remove(sent, at)
 			-- la cible est retrouvée maintenant : la case cliquée est sûrement notée (Frames.lua)
 			local unit = Z.CastReceiver(s.target, s.spell.name, s.at)
 			if not unit then return end
@@ -525,7 +552,7 @@ function Z:RefreshHotPrediction()
 		castFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
 	else
 		castFrame:UnregisterAllEvents()
-		active, sent, channel, prayer = {}, nil, nil, nil
+		active, sent, channel, prayer = {}, {}, nil, nil
 	end
 end
 

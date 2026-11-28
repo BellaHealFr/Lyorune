@@ -64,7 +64,10 @@ tout régler pas à pas, voyez le [guide du joueur](TUTORIEL.md).
 ### Vie et protections
 
 - Vie.
-- Soins en route.
+- Soins en route, qui glissent en douceur : votre soin d'abord, celui des autres soigneurs ensuite, plus pâle.
+- Votre soin se remplit pendant l'incantation, et un bref éclat montre où il vient de tomber.
+- Alerte de gaspillage (ambre, puis cuivre) : la part qui sera perdue se voit sur la fin de la vie, même à pleine vie.
+- Vos soins sur la durée sur la barre : ce qu'ils vont encore rendre, le prochain coup plus franc, même en combat ; votre Prière de guérison en attente.
 - Boucliers (en bande ou à la suite de la vie, avec au choix ce qui reste à absorber, même en combat).
 - Absorption de soins.
 - Vie basse (liseré rouge fixe, en combat).

@@ -600,6 +600,17 @@ step("tutoriel", function()
   SlashCmdList.LYORUNE("verrou") SlashCmdList.LYORUNE("verrou") SlashCmdList.LYORUNE("reset") SlashCmdList.LYORUNE("tuto") SlashCmdList.LYORUNE("test") SlashCmdList.LYORUNE("test")
   LyoruneTutorial.close:Run("OnClick")
   Lyorune_OnAddonCompartmentClick() Lyorune_OnAddonCompartmentClick()
+  -- soins vivants (36 c) : la carte « Une case par joueur » parle des soins sur la durée seulement a une classe qui en a
+  local class, hp, pend = Z.class, Z.db.hotPrediction, Z.db.hotPending
+  Z.db.hotPrediction, Z.db.hotPending = true, true
+  for _, c in ipairs({ { "PRIEST", true, true }, { "DRUID", true, false }, { "WARRIOR", false, false } }) do
+    Z.class = c[1] Z:StartTutorial() card.next:Run("OnClick")
+    local text = card.body:GetText()
+    assert((text:find("soins sur la dur", 1, true) ~= nil) == c[2], "soins sur la duree " .. c[1])
+    assert((text:find("guérison en attente", 1, true) ~= nil) == c[3], "priere en attente " .. c[1])
+    card.close:Run("OnClick")
+  end
+  Z.class, Z.db.hotPrediction, Z.db.hotPending = class, hp, pend
 end)
 
 step("themes", function()
@@ -11998,6 +12009,17 @@ step("36 c, lot 8 bis : fin sur dissipation et Prompte guerison, 3 dernieres sec
     COMBAT = false
     cast("s5", 774) cast("s6", 18562)
     assert(Z.MyHots("player"), "hors combat, l'aura decide (pas la regle)")
+    Z.ForgetHots("player")
+    -- posé en combat (aura jamais vue), consommé juste après le combat : la règle s'applique quand même
+    COMBAT = true cast("s7", 774) COMBAT = false
+    cast("s8", 18562)
+    assert(Z.MyHots("player") == nil, "pose en combat, consomme apres : reste affiche")
+    -- un autre sort annoncé avant la réussite (file d'attente) ne fait pas perdre mon soin
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "q1", 774)
+    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "q2", 8936)
+    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "q1", 774)
+    assert(Z.MyHots("player"), "soin perdu par un sort annonce ensuite")
+    Z.ForgetHots("player")
     assert(not table.concat(Z.HotReport(), " | "):find("Prompte"), "Prompte guerison listee comme soin sur la duree")
     C_Spell.GetSpellName = getName
   end)

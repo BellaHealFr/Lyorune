@@ -63,7 +63,10 @@ everything up step by step, see the [player guide](GUIDE.en.md).
 ### Health and protection
 
 - Health.
-- Incoming heals.
+- Incoming heals that glide smoothly: your heal first, other healers' heals next, paler.
+- Your heal fills up while you cast, and a short flash shows where it just landed.
+- Overheal warning (amber, then copper): the part that will be wasted shows on the end of the health, even at full health.
+- Your heals over time on the bar: what they will still restore, the next tick brighter, even in combat; your pending Prayer of Mending.
 - Shields (as a band or after the health, with what is left to absorb if you wish, even in combat).
 - Heal absorbs.
 - Low health (steady red edge, in combat).
