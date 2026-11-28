@@ -106,6 +106,16 @@
     ['Garnoth', 'WARRIOR', 'DAMAGER'], ['Ilyana', 'SHAMAN', 'DAMAGER'], ['Brisk', 'ROGUE', 'DAMAGER'], ['Kaelis', 'HUNTER', 'DAMAGER'], ['Odrel', 'PRIEST', 'DAMAGER']
   ];
   var TYPES = ['magic', 'curse', 'disease', 'poison'];
+  // Les soins vivants, réglés comme dans l'addon (Frames.lua, Hots.lua) : mon soin à incantation, puis mon soin sur
+  // la durée (4 coups, toutes les 3 secondes), part perdue en ambre puis en cuivre au-delà d'un quart de la vie
+  var SOIN = { montant: 28, incantation: 1500 }; // (1,5 s : la durée du voile dans style.css)
+  var SUR_LA_DUREE = { coup: 6, coups: 4, intervalle: 3000, fin: 3000 };
+  var AUTRES = { montant: 18, delai: 1400 };
+  // Une couleur de classe verte reçoit la teinte de contraste du thème (même règle que l'addon)
+  function estVert(hex) {
+    var r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+    return g - Math.max(r, b) >= 0.15;
+  }
   var ORDRE_ROLE = { TANK: 0, HEALER: 1, DAMAGER: 2 };
 
   function Groupe(racine, options) {
@@ -121,8 +131,11 @@
   }
 
   Groupe.prototype.nouveauCombat = function () {
+    // les minuteurs du combat d'avant s'arrêtent (soins sur la durée) ou ne touchent plus rien (voir enCombat)
+    (this.joueurs || []).forEach(function (j) { if (j.hot) clearTimeout(j.hot.minuteur); });
+    this.incantation = null;
     this.joueurs = JOUEURS.map(function (j, i) {
-      return { nom: j[0], classe: j[1], role: j[2], groupe: Math.floor(i / 5) + 1, vie: 100, entrant: 0, bouclier: 0,
+      return { nom: j[0], classe: j[1], role: j[2], groupe: Math.floor(i / 5) + 1, vie: 100, mien: 0, autres: 0, hot: null, bouclier: 0,
                mana: j[2] === 'HEALER' ? 100 : 0, dissip: null, mort: false, loin: false, max: j[2] === 'TANK' ? 9200 : 4600 };
     });
     this.compte = { s: 0, d: 0, r: 0 };
@@ -130,6 +143,7 @@
   };
 
   Groupe.prototype.actifs = function () { return this.joueurs.slice(0, this.reglages.joueurs); };
+  Groupe.prototype.enCombat = function (j) { return this.joueurs.indexOf(j) >= 0; }; // pas un joueur d'un combat fini
 
   Groupe.prototype.appliquerTheme = function () {
     var r = this.reglages, th = CONFIG.themes[r.contraste ? 'CONTRAST' : r.theme] || CONFIG.themes.PURE, s = this.racine.style;
@@ -137,6 +151,10 @@
     s.setProperty('--bord', rgba(th.border, 1));
     s.setProperty('--bord-taille', th.borderSize + 'px');
     s.setProperty('--couleur-entrant', rgba(th.incoming));
+    s.setProperty('--couleur-vert', rgba(th.incomingOnGreen || th.incoming));
+    var hot = th.hot || th.incoming;
+    s.setProperty('--couleur-hot', rgba(hot));
+    s.setProperty('--couleur-hot-franc', rgba(hot, Math.min(1, (hot[3] !== undefined ? hot[3] : 1) * 1.9)));
     s.setProperty('--couleur-bouclier', rgba(th.absorb));
     s.setProperty('--relief-haut', String(th.shade[1] || 0));
     s.setProperty('--relief-bas', String(th.shade[0] || 0));
@@ -172,13 +190,17 @@
     if (this.interactif) el.type = 'button';
     el.className = 'case';
     el.style.setProperty('--classe', CLASSES[j.classe]);
-    el.innerHTML = '<span class="vie"></span><span class="entrant"></span><span class="bouclier"></span>' +
-      '<span class="mana"><i></i></span><span class="nom"></span><span class="chiffre"></span>' +
+    if (estVert(CLASSES[j.classe])) el.classList.add('vert');
+    // (la part perdue après la mana, qu'elle recouvre, et sous le bouclier en bande, comme dans l'addon)
+    el.innerHTML = '<span class="vie"></span><span class="mien"><i class="voile"></i></span>' +
+      '<span class="autres"></span><span class="sur-la-duree"></span><span class="prochain"></span>' +
+      '<span class="eclat"></span><span class="hot"></span><span class="mana"><i></i></span>' +
+      '<span class="part-perdue"></span><span class="bouclier"></span><span class="nom"></span><span class="chiffre"></span>' +
       '<span class="role"><svg viewBox="0 0 20 20" aria-hidden="true">' + ROLES[j.role] + '</svg></span>';
     el.querySelector('.nom').textContent = j.nom;
     if (this.interactif) {
-      el.addEventListener('click', function () { self.agir(j); });
-      el.addEventListener('contextmenu', function (e) { e.preventDefault(); self.agir(j); });
+      el.addEventListener('click', function (e) { self.agir(j, e.shiftKey); });
+      el.addEventListener('contextmenu', function (e) { e.preventDefault(); self.agir(j, true); });
     }
     j.el = el;
     this.majCase(j);
@@ -189,8 +211,25 @@
     var el = j.el;
     if (!el) return;
     var s = el.style;
-    s.setProperty('--vie', (j.mort ? 0 : j.vie) + '%');
-    s.setProperty('--entrant', Math.min(j.entrant, 100 - j.vie) + '%');
+    // Sur la barre, dans l'ordre : la vie, mon soin, celui des autres, mes soins sur la durée (bornés à la vie max)
+    var vie = j.mort ? 0 : j.vie, place = 100 - vie;
+    var mien = Math.min(j.mien, place), autres = Math.min(j.autres, place - mien);
+    var reste = j.hot ? j.hot.coups * SUR_LA_DUREE.coup : 0, hot = Math.min(reste, place - mien - autres);
+    s.setProperty('--vie', vie + '%');
+    s.setProperty('--mien', mien + '%');
+    s.setProperty('--autres', autres + '%');
+    s.setProperty('--hot', hot + '%');
+    s.setProperty('--prochain', Math.min(SUR_LA_DUREE.coup, hot) + '%');
+    // Alerte de gaspillage : mon soin ambre si les soins en route dépassent la vie qui manque, cuivre au-delà d'un
+    // quart ; la part qui sera perdue (soins sur la durée compris) se voit sur la fin de la vie, même à pleine vie
+    var trop = j.mien + j.autres - place, perdu = j.mort ? 0 : Math.min(vie, Math.max(0, j.mien + j.autres + reste - place));
+    el.classList.toggle('gaspi', j.mien > 0 && trop > 0);
+    el.classList.toggle('gaspi-plus', j.mien > 0 && trop > 25);
+    s.setProperty('--perdu', perdu + '%');
+    el.classList.toggle('perte-plus', perdu > 25);
+    el.classList.toggle('a-hot', !!j.hot && !j.mort);
+    el.classList.toggle('hot-fin', !!j.hot && j.hot.finit);
+    el.classList.toggle('incante', !!j.incante);
     s.setProperty('--bouclier', Math.min(j.bouclier, 100) + '%');
     s.setProperty('--mana-h', j.role === 'HEALER' ? 'calc(4px * var(--echelle, 1))' : '0px');
     s.setProperty('--mana', j.mana + '%');
@@ -220,36 +259,75 @@
     if (p && this.interactif) p.textContent = format(T.compteur, this.compte);
   };
 
-  // Un clic : relever un mort, sinon dissiper, sinon soigner (dans le jeu, chaque clic a son propre sort)
-  Groupe.prototype.agir = function (j) {
+  // Un clic : relever un mort, sinon dissiper, sinon soigner ; clic droit ou Maj + clic : mon soin sur la durée
+  // (dans le jeu, chaque clic a son propre sort)
+  Groupe.prototype.agir = function (j, surLaDuree) {
     var self = this;
-    j.el.classList.add('coup-de-soin');
-    setTimeout(function () { if (j.el) j.el.classList.remove('coup-de-soin'); }, 220);
     if (j.mort) {
       if (j.releve) return;
       j.releve = true;
       setTimeout(function () {
+        if (!self.enCombat(j)) return;
         j.mort = false; j.releve = false; j.vie = 35; j.dissip = null; self.compte.r++;
         self.majCase(j); self.compter(); self.annoncer(format(T.fait_releve, { nom: j.nom }));
       }, 1500);
       evenement('demo-releve');
-    } else if (j.dissip) {
+    } else if (j.dissip && !surLaDuree) {
       var type = T.types[j.dissip];
       j.dissip = null; this.compte.d++;
       this.annoncer(format(T.fait_dissip, { type: type, nom: j.nom }));
       evenement('demo-dissip');
+    } else if (surLaDuree) {
+      this.poserSurLaDuree(j);
+      this.compte.s++;
+      this.annoncer(format(T.fait_hot, { nom: j.nom }));
+      evenement('demo-soin');
     } else {
-      j.entrant = Math.min(j.entrant + 28, 100);
-      setTimeout(function () {
-        if (j.mort) { j.entrant = 0; return; }
-        j.vie = Math.min(100, j.vie + 28); j.entrant = Math.max(0, j.entrant - 28);
-        self.majCase(j);
-      }, 1100);
+      if (this.incantation) return; // une incantation à la fois, comme dans le jeu
+      this.incanter(j);
       this.compte.s++;
       this.annoncer(format(T.fait_soin, { nom: j.nom }));
       evenement('demo-soin');
     }
     this.majCase(j); this.compter();
+  };
+
+  // Mon soin à incantation : posé tout de suite au bout de la vie, un voile le remplit au rythme de l'incantation,
+  // puis la vie avance d'autant pendant que mon soin se vide, et un bref éclat montre où il est tombé
+  Groupe.prototype.incanter = function (j) {
+    var self = this;
+    this.incantation = j; j.incante = true; j.mien = SOIN.montant;
+    setTimeout(function () {
+      if (!self.enCombat(j)) return;
+      self.incantation = null; j.incante = false; j.mien = 0;
+      var avant = j.vie;
+      if (!j.mort) j.vie = Math.min(100, j.vie + SOIN.montant);
+      if (j.vie > avant && j.el) { // éclat sur ce que le soin a vraiment rendu
+        var e = j.el;
+        e.style.setProperty('--eclat', (j.vie - avant) + '%');
+        e.classList.remove('arrivee'); void e.offsetWidth; e.classList.add('arrivee');
+        setTimeout(function () { e.classList.remove('arrivee'); }, 450);
+      }
+      self.majCase(j);
+    }, SOIN.incantation);
+  };
+
+  // Mon soin sur la durée : ce qu'il va encore rendre sur la barre, le prochain coup plus franc, la descente à
+  // chaque coup ; relancé, il repart du début ; éclairci les 3 dernières secondes ; il tombe avec le joueur
+  Groupe.prototype.poserSurLaDuree = function (j) {
+    var self = this, hot = { coups: SUR_LA_DUREE.coups, finit: false };
+    if (j.hot) clearTimeout(j.hot.minuteur);
+    j.hot = hot;
+    function coup() {
+      if (j.hot !== hot) return;
+      if (j.mort) { j.hot = null; self.majCase(j); return; }
+      j.vie = Math.min(100, j.vie + SUR_LA_DUREE.coup);
+      hot.coups--;
+      hot.finit = hot.coups * SUR_LA_DUREE.intervalle <= SUR_LA_DUREE.fin;
+      if (hot.coups <= 0) j.hot = null; else hot.minuteur = setTimeout(coup, SUR_LA_DUREE.intervalle);
+      self.majCase(j);
+    }
+    hot.minuteur = setTimeout(coup, SUR_LA_DUREE.intervalle);
   };
 
   // Le combat : dégâts sur le tank et au hasard, affaiblissements, boucliers, soins des autres soigneurs
@@ -262,7 +340,7 @@
     function frapper(j, degats) {
       if (j.bouclier > 0) { var absorbe = Math.min(j.bouclier, degats); j.bouclier -= absorbe; degats -= absorbe; }
       j.vie -= degats;
-      if (j.vie <= 0) { j.vie = 0; j.mort = true; j.dissip = null; j.entrant = 0; j.bouclier = 0; }
+      if (j.vie <= 0) { j.vie = 0; j.mort = true; j.dissip = null; j.mien = 0; j.autres = 0; j.hot = null; j.bouclier = 0; }
     }
     tanks.forEach(function (j) { frapper(j, hasard(2, 6)); });
     for (var n = 0; n < Math.max(1, Math.round(vivants.length / 8)); n++) frapper(vivants[Math.floor(Math.random() * vivants.length)], hasard(2, 10));
@@ -278,16 +356,22 @@
       if (j.role === 'HEALER') j.mana = Math.max(20, Math.min(100, j.mana + hasard(-2, 1.5)));
     });
     // les autres soigneurs : un soin en route sur le plus blessé, qui arrive un peu plus tard
-    if (Math.random() < 0.35) {
-      var blesse = vivants.filter(function (j) { return !j.mort; }).sort(function (a, b) { return a.vie - b.vie; })[0];
-      if (blesse && blesse.vie < 85 && !blesse.aide) {
-        blesse.aide = true; blesse.entrant += 18;
+    var blesse = vivants.reduce(function (p, j) { return !j.mort && (!p || j.vie < p.vie) ? j : p; }, null);
+    if (blesse && Math.random() < 0.35) {
+      if (blesse.vie < 85 && !blesse.aide) {
+        blesse.aide = true; blesse.autres += AUTRES.montant;
         setTimeout(function () {
-          blesse.aide = false; blesse.entrant = Math.max(0, blesse.entrant - 18);
-          if (!blesse.mort) blesse.vie = Math.min(100, blesse.vie + 18);
+          blesse.aide = false; blesse.autres = Math.max(0, blesse.autres - AUTRES.montant);
+          if (!blesse.mort) blesse.vie = Math.min(100, blesse.vie + AUTRES.montant);
           self.majCase(blesse);
-        }, 1400);
+        }, AUTRES.delai);
       }
+    }
+    // le petit groupe de l'accueil, sans clic : mes soins partent tout seuls, pour montrer les soins vivants
+    if (!this.interactif) {
+      if (blesse && !this.incantation && blesse.vie < 75 && Math.random() < 0.3) this.incanter(blesse);
+      var tank = tanks[0];
+      if (tank && !tank.mort && !tank.hot && Math.random() < 0.15) this.poserSurLaDuree(tank);
     }
     if (Math.random() < 0.04) {
       var dps = vivants.filter(function (j) { return j.role === 'DAMAGER'; });

@@ -134,15 +134,46 @@ input[type=radio], input[type=checkbox] { accent-color: var(--or); }
   transition: opacity .3s;
 }
 .case:focus-visible { outline: 2px solid #fff; outline-offset: 1px; z-index: 1; }
-.case .vie, .case .entrant, .case .bouclier { position: absolute; left: 0; top: 0; bottom: var(--mana-h, 4px); }
-.case .vie { background: var(--classe); width: var(--vie); transition: width .25s ease-out; }
+.case .vie, .case .mien, .case .autres, .case .sur-la-duree, .case .prochain, .case .eclat, .case .bouclier, .case .part-perdue { position: absolute; left: 0; top: 0; bottom: var(--mana-h, 4px); }
+/* Soins vivants : chaque segment glisse comme la vie, sans trou quand un soin tombe */
+.case .vie, .case .mien, .case .autres, .case .sur-la-duree, .case .prochain, .case .bouclier, .case .part-perdue { transition: left .3s ease-out, width .3s ease-out; }
+.case .vie { background: var(--classe); width: var(--vie); }
 .case .vie::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,var(--relief-haut,0)), rgba(0,0,0,0) 45%, rgba(0,0,0,var(--relief-bas,0))); }
 .texture-CLASSIC .case .vie::before, .texture-BAR .case .vie::before {
   content: ""; position: absolute; inset: 0;
   background: repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 5px);
 }
 .texture-BAR .case .vie { background: linear-gradient(180deg, color-mix(in srgb, var(--classe) 70%, #fff) 0%, var(--classe) 40%, color-mix(in srgb, var(--classe) 70%, #000) 100%); }
-.case .entrant { left: var(--vie); width: var(--entrant, 0%); background: var(--couleur-entrant); }
+/* Mon soin au bout de la vie, puis celui des autres soigneurs, plus pâle ; teinte de contraste sur une barre verte */
+.case .mien { left: var(--vie); width: var(--mien, 0%); background: var(--couleur-entrant); overflow: hidden; isolation: isolate; }
+.case.vert .mien, .case.vert .autres { background: var(--couleur-vert); }
+.case .autres { left: calc(var(--vie) + var(--mien, 0%)); width: var(--autres, 0%); background: var(--couleur-entrant); opacity: .5; }
+/* Alerte de gaspillage : ambre si les soins en route dépassent la vie qui manque, cuivre au-delà d'un quart */
+.case .mien::after { content: ""; position: absolute; inset: 0; background: rgba(255, 194, 56, .7); opacity: 0; }
+.case.gaspi .mien::after { opacity: 1; }
+.case.gaspi-plus .mien::after { background: rgba(219, 115, 51, .75); }
+/* Voile de mon incantation : il remplit mon soin au rythme de l'incantation */
+.case .voile { position: absolute; inset: 0; background: rgba(255, 255, 255, .3); z-index: 1; transform: scaleX(0); transform-origin: left; }
+.case.incante .voile { animation: remplir 1.5s linear forwards; } /* SOIN.incantation de site.js */
+@keyframes remplir { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* Bref éclat sur la part de vie que mon soin vient de rendre */
+.case .eclat { left: calc(var(--vie) - var(--eclat, 0%)); width: var(--eclat, 0%); background: rgba(255, 255, 255, .8); opacity: 0; pointer-events: none; }
+.case.arrivee .eclat { animation: eclat .4s ease-out; }
+@keyframes eclat { 0%, 30% { opacity: .85; } 100% { opacity: 0; } }
+/* Mes soins sur la durée : ce qu'ils vont encore rendre, le prochain coup plus franc, éclaircis à la fin */
+.case .sur-la-duree { left: calc(var(--vie) + var(--mien, 0%) + var(--autres, 0%)); width: var(--hot, 0%); background: var(--couleur-hot); }
+.case .prochain { left: calc(var(--vie) + var(--mien, 0%) + var(--autres, 0%)); width: var(--prochain, 0%); background: var(--couleur-hot-franc); }
+.case.hot-fin .sur-la-duree, .case.hot-fin .prochain { filter: brightness(1.6); }
+/* Part perdue : rayures ambre (cuivre au-delà d'un quart) sur un voile sombre, sur la fin de la vie, mana comprise */
+.case .part-perdue {
+  left: calc(var(--vie) - var(--perdu, 0%)); width: var(--perdu, 0%); bottom: 0;
+  background: repeating-linear-gradient(135deg, rgba(255, 199, 64, .9) 0 2px, transparent 2px 6px), rgba(0, 0, 0, .55);
+  box-shadow: inset 1px 0 0 rgb(255, 199, 64);
+}
+.case.perte-plus .part-perdue {
+  background: repeating-linear-gradient(135deg, rgba(255, 115, 38, .95) 0 2px, transparent 2px 6px), rgba(0, 0, 0, .55);
+  box-shadow: inset 1px 0 0 rgb(255, 115, 38);
+}
 .case .bouclier { top: auto; bottom: var(--mana-h, 4px); height: 3px; left: 0; width: var(--bouclier, 0%); background: var(--couleur-bouclier); }
 .case .mana { position: absolute; left: 0; right: 0; bottom: 0; height: var(--mana-h, 4px); background: #0b1230; }
 .case .mana i { display: block; height: 100%; width: var(--mana, 100%); background: #2b5fd9; }
@@ -154,7 +185,7 @@ input[type=radio], input[type=checkbox] { accent-color: var(--or); }
 .contour .case .nom, .contour .case .chiffre { -webkit-text-stroke: .6px #000; }
 .case .nom { top: 18%; }
 .case .chiffre { top: 52%; font-weight: 400; color: #ffd0d0; }
-.case.morte .vie, .case.morte .entrant { width: 0; }
+.case.morte .vie { width: 0; }
 .case.morte .chiffre { color: #c8c8c8; }
 .case.loin { opacity: calc(var(--alpha, 1) * .35); }
 .case[data-dissip] { box-shadow: inset 0 0 0 calc(2px * var(--echelle, 1)) var(--dissip); }
@@ -162,10 +193,10 @@ input[type=radio], input[type=checkbox] { accent-color: var(--or); }
   content: ""; position: absolute; right: 3px; top: 3px; width: calc(9px * var(--echelle, 1)); height: calc(9px * var(--echelle, 1));
   background: var(--dissip); border: 1px solid #000; transform: rotate(45deg);
 }
-.case .hot { position: absolute; left: 3px; top: 3px; width: calc(7px * var(--echelle, 1)); height: calc(7px * var(--echelle, 1)); background: #7dec8a; border: 1px solid #000; }
+.case .hot { position: absolute; left: 3px; top: 3px; width: calc(7px * var(--echelle, 1)); height: calc(7px * var(--echelle, 1)); background: #7dec8a; border: 1px solid #000; display: none; }
+.case.a-hot .hot { display: block; }
 .case .role { position: absolute; right: 3px; bottom: calc(var(--mana-h, 4px) + 2px); width: calc(9px * var(--echelle, 1)); height: calc(9px * var(--echelle, 1)); }
 .case .role svg { width: 100%; height: 100%; fill: #e8ebf3; stroke: #000; stroke-width: 1.5; }
-.case.coup-de-soin .vie { filter: brightness(1.35); }
 .haut-contraste .case { --fond: #000 !important; --bord: #fff !important; }
 .haut-contraste .case .nom, .haut-contraste .case .chiffre { font-size: calc(13px * var(--echelle, 1)); -webkit-text-stroke: .7px #000; }
 
@@ -174,7 +205,10 @@ input[type=radio], input[type=checkbox] { accent-color: var(--or); }
 .grande-case-zone { position: sticky; top: 110px; align-self: start; width: min(460px, 100%); aspect-ratio: 46 / 24; margin: 0 auto; }
 .grande-case { position: absolute; inset: 8% 6%; background: #121217; border: 3px solid #3399ff; box-shadow: 0 0 30px rgba(51, 153, 255, .25); overflow: hidden; }
 .gc-vie { position: absolute; left: 0; top: 0; bottom: 9%; width: 58%; background: #c69b6d; }
-.gc-entrant { position: absolute; left: 58%; top: 0; bottom: 9%; width: 16%; background: rgba(115, 255, 153, .55); }
+.gc-entrant { position: absolute; left: 58%; top: 0; bottom: 9%; width: 12%; background: rgba(115, 255, 153, .55); }
+.gc-autres { position: absolute; left: 70%; top: 0; bottom: 9%; width: 7%; background: rgba(115, 255, 153, .28); }
+.gc-sur-la-duree { position: absolute; left: 77%; top: 0; bottom: 9%; width: 12%; background: rgba(89, 217, 217, .36); }
+.gc-sur-la-duree i { position: absolute; left: 0; top: 0; bottom: 0; width: 33%; background: rgba(89, 217, 217, .68); }
 .gc-bouclier { position: absolute; left: 0; bottom: 9%; height: 6%; width: 40%; background: #8cd9ff; }
 .gc-menace { position: absolute; left: 0; right: 0; top: 0; height: 5%; background: #ff9b1a; }
 .gc-hots { position: absolute; left: 3%; top: 9%; display: flex; gap: 3px; }
@@ -345,4 +379,5 @@ footer .visites small { display: block; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
+  .case.incante .voile { transform: scaleX(1); } /* sans animation : mon soin voilé pendant l'incantation */
 }

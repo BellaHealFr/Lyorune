@@ -104,13 +104,15 @@ def themes():
     code = lire('Themes.lua')
     resultat = {}
     for m in re.finditer(r'id = "(\w+)", name = "[^"]*".*?absorb = \{([^}]*)\}', code, flags=re.S):
-        corps = m.group(0)
+        fin = re.compile(r'\n\t?\}').search(code, m.end())  # tout le thème (teintes rangées après le bouclier)
+        corps = code[m.start():fin.start() if fin else m.end()]
         def valeurs(nom):
-            v = re.search(nom + r' = \{([^}]*)\}', corps)
+            v = re.search(r'\b' + nom + r' = \{([^}]*)\}', corps)
             return [float(x) for x in v.group(1).split(',')] if v else None
         resultat[m.group(1)] = {
             'bg': valeurs('bg'), 'border': valeurs('border'), 'shade': valeurs('shade'),
             'incoming': valeurs('incoming'), 'absorb': valeurs('absorb'),
+            'incomingOnGreen': valeurs('incomingOnGreen'), 'hot': valeurs('hot'),
             'borderSize': int(re.search(r'borderSize = (\d+)', corps).group(1)),
             'outline': 'OUTLINE' in re.search(r'flags = "([^"]*)"', corps).group(1),
             'texture': 'WHITE' if 'texture = WHITE' in corps else ('CLASSIC' if 'RaidFrame' in corps else 'BAR'),
@@ -264,7 +266,7 @@ def bloc_coup(t, c):
   <div class="coup-grille">
     <div class="grande-case-zone">
       <div class="grande-case" aria-hidden="true">
-        <div class="gc-vie"></div><div class="gc-entrant"></div><div class="gc-bouclier"></div>
+        <div class="gc-vie"></div><div class="gc-entrant"></div><div class="gc-autres"></div><div class="gc-sur-la-duree"><i></i></div><div class="gc-bouclier"></div>
         <div class="gc-menace"></div>
         <div class="gc-hots"><i class="h1"></i><i class="h2"></i><i class="h3 gris"></i></div>
         <div class="gc-role"><svg viewBox="0 0 20 20"><path d="M10 1 3 4v5c0 4.4 3 8.2 7 10 4-1.8 7-5.6 7-10V4z"/></svg></div>
