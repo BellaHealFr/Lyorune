@@ -72,7 +72,7 @@ d'un autre addon ; le guide des joueurs et la traduction anglaise suivent chaque
 | 33 quater | 1.49.0 | **Prioritaire** (après la 33 ter) : meilleur placement et taille des icônes par défaut, adaptés à la forme, sans toucher aux déplacements du joueur ; placements propres à chaque personnage | Publiée (v1.49.0) |
 | 34 | 1.50.0 | Canal des soigneurs : canaux du jeu « LyoruneFR » et « LyoruneEN », rejoints sur une case de la page « Les amis de Lyorune », éteints au départ | Publiée (v1.50.0) |
 | 35 | à fixer | Échange de builds de talents entre soigneurs, avec vote pour les meilleurs | À faire (recherche d'abord) |
-| 36 | 1.53.0 à 1.56.0 | Soins vivants : barres fluides, mon soin en direct pendant l'incantation, soins sur la durée sur la barre | En cours (plan validé) |
+| 36 | 1.53.0 à 1.56.0 | Soins vivants : barres fluides, mon soin en direct pendant l'incantation, soins sur la durée sur la barre | 36 a à 36 c publiées (v1.53.0 à v1.55.0), 36 d à faire |
 | 37 | à fixer | Relevés vivants : rez en cours, rez reçu avec le temps qu'il reste pour accepter, coche à l'arrivée ; invocation proposée, acceptée ou refusée avec son temps ; images du jeu | À faire (après la mise en ligne des 1.53.0 et 1.54.0) |
 
 États possibles : **À faire**, **En cours**, **Prête, à publier**, **Publiée (vX.Y.Z)**, **Abandonnée** (avec la raison).
@@ -1280,14 +1280,14 @@ validé le 27 novembre 2026, une version par sous-étape, sur la branche `soins-
 l'essai en jeu. Aucune boucle permanente ajoutée, chaque nouveauté a son interrupteur.
 - [x] Vérification en jeu : commande `/lyorune soins` qui dit ce que le client permet (seuil de dépassement des
   soins, durées fabriquées, nombres d'une aura hors combat, durée de l'incantation, vie max réduite).
-- [ ] 36 a (1.53.0), barres fluides et lisibles : soins en route, bouclier et absorption de soins animés comme la vie
+- [x] 36 a (1.53.0, publiée le 28 novembre 2026), barres fluides et lisibles : soins en route, bouclier et absorption de soins animés comme la vie
   (plus de trou quand le soin tombe) ; contraste automatique des soins en route sur une barre verte ; bouclier « à la
   suite de la vie » aux rayures du jeu ; empilement des segments prêt pour la suite.
-- [ ] 36 b (1.54.0), mon soin en direct : mon soin et celui des autres en deux segments (« les miens / tous ») ; mon
+- [x] 36 b (1.54.0, publiée le 28 novembre 2026), mon soin en direct : mon soin et celui des autres en deux segments (« les miens / tous ») ; mon
   segment se remplit au rythme de mon incantation ; alerte de gaspillage sur 2 niveaux qui teinte mon soin (ambre,
   cuivre) pour annuler à temps ; couleur que la case aura après le soin ; chiffre du soin en route ; éclat bref quand
   le soin tombe.
-- [ ] 36 c (1.55.0), soins sur la durée sur la barre : segment qui se vide tout seul, durée réelle de l'aura quand le
+- [x] 36 c (1.55.0, publiée le 28 novembre 2026), soins sur la durée sur la barre : segment qui se vide tout seul, durée réelle de l'aura quand le
   jeu la donne (fin sur dissipation, consommation, mort), sinon durée tirée du lancement ; montant appris par rang
   hors combat ; liste et intervalle dans `Data.lua` ; teinte à part, prochain coup plus franc ; relance qui glisse ;
   fin signalée dans les 3 dernières secondes ; Prière de guérison « en attente », suivie quand elle saute (réglage) ;
