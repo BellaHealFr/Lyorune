@@ -499,14 +499,19 @@ local function Consume(unit, entry)
 	if pick then Drop(Z.PlayerKey(unit), pick) end
 end
 
--- Cible annoncée sans case ni clic : un ennemi encore en cible (le jeu lance alors mon soin sur moi), dit par son
--- nom et par le jeu, même en combat. Rend "player" ou nil.
-local function OnEnemy(target)
-	if not UnitCanAttack or issecret(target) or type(target) ~= "string" or target == "" then return nil end
-	local name, enemy = UnitName("target"), UnitCanAttack("player", "target")
-	if issecret(name) or issecret(enemy) or not enemy then return nil end
-	local short = target:match("^[^-]+")
-	if name == target or name == short then return "player" end
+-- Cible annoncée sans case ni clic : ma cible, quand le jeu dit qu'elle ne peut pas être aidée (un ennemi, un PNJ
+-- qu'on ne soigne pas) ; le jeu lance alors mon soin sur moi. Lisible même en combat. Le nom annoncé doit être le
+-- sien, royaume compris quand l'annonce en porte un. Vu à l'annonce et à la réussite. Rend "player" ou nil.
+local function OnUnhelpable(target)
+	if not UnitCanAssist or issecret(target) or type(target) ~= "string" or target == "" then return nil end
+	local helpable = UnitCanAssist("player", "target")
+	if issecret(helpable) or helpable then return nil end
+	local name, realm = UnitName("target")
+	if issecret(name) or issecret(realm) or type(name) ~= "string" then return nil end
+	if not target:find("-", 1, true) then return target == name and "player" or nil end
+	if type(realm) ~= "string" or realm == "" then realm = GetRealmName and GetRealmName() end
+	if issecret(realm) or type(realm) ~= "string" then return nil end
+	return target == name .. "-" .. realm:gsub("%s", "") and "player" or nil
 end
 
 -- Sinon (cible illisible, sans clic) : le joueur sur qui mon aura de ce sort vient d'arriver, quand les auras se
@@ -560,7 +565,8 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			local spell = SpellOf(id)
 			if spell then
 				if #sent >= 4 then table.remove(sent, 1) end
-				sent[#sent + 1] = { id = id, spell = spell, target = target, guid = guid, at = GetTime() }
+				sent[#sent + 1] = { id = id, spell = spell, target = target, guid = guid, at = GetTime(),
+					unhelpable = OnUnhelpable(target) } -- (ma cible doit le rester jusqu'à la réussite)
 			end
 		else
 			local _, guid, id = ...
@@ -581,12 +587,11 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			if not s then return end
 			table.remove(sent, at)
 			-- la cible est retrouvée maintenant : la case cliquée est sûrement notée (Frames.lua)
-			local unit = Z.CastReceiver(s.target, s.spell.name, s.at)
+			local unit = Z.CastReceiver(s.target, s.spell.name, s.at) or s.unhelpable and OnUnhelpable(s.target)
 			if spell.entry.kind == "consume" then
 				if unit then Consume(unit, spell.entry) end
 				return
 			end
-			unit = unit or OnEnemy(s.target)
 			local cast = { name = s.spell.name, target = s.target, unit = unit }
 			last = cast
 			-- sans joueur sûr : celui où mon aura arrive (Find), un peu plus tard

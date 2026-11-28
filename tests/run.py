@@ -11854,7 +11854,7 @@ end)
 
 step("36 c, lot 9 : cible annoncee sans case (ennemi en cible) : le joueur ou mon aura vient d'arriver", function()
   local saved = { now = NOW, get = C_UnitAuras.GetUnitAuras, amounts = Z.char.hotAmounts, unit = Z.buttons[1].unit,
-    stats = Z.db.clickStats, desc = C_Spell.GetSpellDescription, hidden = Z.AurasHidden, attack = rawget(_G, "UnitCanAttack") }
+    stats = Z.db.clickStats, desc = C_Spell.GetSpellDescription, hidden = Z.AurasHidden, name = UnitName, assist = rawget(_G, "UnitCanAssist") }
   local ok, err = pcall(function()
     NOW = NOW + 2000 Z.char.hotAmounts = nil Z.db.clickStats = false
     C_Spell.GetSpellDescription = function() return "Rend 45 points de vie en 15 sec." end
@@ -11891,22 +11891,49 @@ step("36 c, lot 9 : cible annoncee sans case (ennemi en cible) : le joueur ou mo
     NOW = NOW + 20 on.player = Fresh(NOW)
     Cast("e5")
     assert(Z.MyHots("player") == nil, "auras lues alors que le jeu les cache")
-    -- en combat (auras cachées), l'ennemi en cible nommé par le jeu : le soin est tombé sur moi
-    ENEMIES.target = true rawset(_G, "UnitCanAttack", function(_, unit) return ENEMIES[unit] or false end)
-    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-target", "e6", 139)
-    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "e6", 139)
-    ENEMIES.target = nil
-    assert(Z.MyHots("player") and #Z.MyHots("player") == 1, "soin perdu en combat avec un ennemi en cible")
-    -- la même cible, amie : rien d'inventé
-    NOW = NOW + 20
-    FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-target", "e7", 139)
-    FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "e7", 139)
+    -- en combat (auras cachées), ma cible qui ne peut pas être aidée (ennemi, PNJ) et nommée par le jeu : sur moi
+    local tname, trealm, helpable = "Gnoll", nil, false
+    local unitName = UnitName
+    rawset(_G, "UnitName", function(u) if u == "target" then return tname, trealm end return unitName(u) end)
+    rawset(_G, "UnitCanAssist", function() return helpable end)
+    local function Try(c, announced, between)
+      NOW = NOW + 20
+      FireEvent("UNIT_SPELLCAST_SENT", "player", announced, c, 139)
+      if between then between() end
+      FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", c, 139)
+      local list = Z.MyHots("player")
+      return list ~= nil and #list == 1
+    end
+    assert(Try("u1", "Gnoll"), "soin perdu en combat avec une cible qu'on ne soigne pas")
+    -- un autre nom annoncé (macro sur un autre joueur) : rien
+    assert(not Try("u2", "Jaina"), "macro sur un autre joueur prise pour moi")
+    -- royaume : le même chez moi oui, un autre royaume non
+    tname = "Bob" trealm = nil
+    assert(Try("u3", "Bob-MonRoyaume"), "royaume du joueur non reconnu")
+    trealm = "Autre Royaume"
+    assert(not Try("u4", "Bob-MonRoyaume"), "meme nom d'un autre royaume pris pour moi")
+    assert(Try("u5", "Bob-AutreRoyaume"), "royaume de la cible non reconnu")
+    -- nom ou réponse secrets : rien
+    tname, trealm = MakeSecret(), nil
+    assert(not Try("u6", "Gnoll"), "nom secret")
+    tname, helpable = "Gnoll", MakeSecret()
+    assert(not Try("u7", "Gnoll"), "reponse secrete prise pour moi")
+    -- cible amie à l'annonce, ennemie du même nom à la réussite (ou l'inverse) : rien
+    helpable = true
+    assert(not Try("u8", "Gnoll", function() helpable = false end), "cible changee pendant l'incantation")
+    assert(not Try("u9", "Gnoll", function() helpable = true end), "cible changee pendant l'incantation (inverse)")
+    -- cible qu'on peut aider, hors des cases : rien d'inventé
+    helpable = true
+    assert(not Try("u10", "Gnoll"), "cible amie hors des cases prise pour moi")
+    -- sans UnitCanAssist (client changé) : rien
+    rawset(_G, "UnitCanAssist", nil) helpable = false
+    assert(not Try("u11", "Gnoll"), "sans UnitCanAssist")
+    rawset(_G, "UnitName", unitName)
     Z.AurasHidden = hidden
-    assert(Z.MyHots("player") == nil, "cible amie hors des cases prise pour moi")
   end)
   NOW, C_UnitAuras.GetUnitAuras, Z.char.hotAmounts = saved.now, saved.get, saved.amounts
   Z.buttons[1].unit, Z.db.clickStats, C_Spell.GetSpellDescription = saved.unit, saved.stats, saved.desc
-  Z.AurasHidden, ENEMIES.target = saved.hidden, nil rawset(_G, "UnitCanAttack", saved.attack)
+  Z.AurasHidden = saved.hidden rawset(_G, "UnitName", saved.name) rawset(_G, "UnitCanAssist", saved.assist)
   assert(ok, err)
 end)
 
