@@ -1433,4 +1433,7 @@ Z.translations.enUS = {
 	["Alerte de gaspillage : votre soin en route devient ambre quand les soins en route dépassent la vie qui manque, cuivre au-delà d'un quart de la vie."] = "Overheal warning: your incoming heal turns amber when incoming heals exceed the missing health, copper beyond a quarter of the health.",
 	["Votre soin en route se remplit pendant votre incantation, et un bref éclat montre où il vient de tomber."] = "Your incoming heal fills up while you cast, and a short flash shows where it just landed.",
 	["Chiffre des soins en route (« +2,1k »), éteint au départ, même en combat."] = "Incoming heal amount (+2.1k), off at first, even in combat.",
+	["Vos soins sur la durée sur la barre : ce qu'ils vont encore rendre, le prochain coup plus franc, la descente à chaque coup, même en combat (Rénovation, Récupération, Rétablissement, Remous, Pénitence, Croissance sauvage)."] = "Your heals over time on the bar: what they will still restore, the next tick brighter, going down at each tick, even in combat (Renew, Rejuvenation, Regrowth, Riptide, Penance, Wild Growth).",
+	["Votre Prière de guérison en attente sur le joueur qui la porte, suivie quand elle saute."] = "Your pending Prayer of Mending on the player carrying it, followed when it jumps.",
+	["Alerte de gaspillage : la part qui sera perdue se voit aussi sur la fin de la vie, même à pleine vie."] = "Overheal warning: the part that will be wasted also shows on the end of the health, even at full health.",
 }

@@ -6,6 +6,17 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.55.0] - 2026-11-28
+
+### Ajouté
+
+- Vos soins sur la durée sur la barre : ce qu'ils vont encore rendre, le prochain coup plus franc, la descente à chaque coup, même en combat (Rénovation, Récupération, Rétablissement, Remous, Pénitence, Croissance sauvage).
+- Votre Prière de guérison en attente sur le joueur qui la porte, suivie quand elle saute.
+
+### Amélioré
+
+- Alerte de gaspillage : la part qui sera perdue se voit aussi sur la fin de la vie, même à pleine vie.
+
 ## [1.54.0] - 2026-11-28
 
 ### Ajouté
@@ -1014,6 +1025,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.55.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.1...v1.53.0
 [1.51.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.0...v1.51.1

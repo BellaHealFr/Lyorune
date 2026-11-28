@@ -8,6 +8,18 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.55.0", date = "2026-11-28",
+		added = {
+			"Vos soins sur la durée sur la barre : ce qu'ils vont encore rendre, le prochain coup plus franc, la descente à chaque coup, même en combat (Rénovation, Récupération, Rétablissement, Remous, Pénitence, Croissance sauvage).",
+			"Votre Prière de guérison en attente sur le joueur qui la porte, suivie quand elle saute.",
+		},
+		improved = {
+			"Alerte de gaspillage : la part qui sera perdue se voit aussi sur la fin de la vie, même à pleine vie.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.54.0", date = "2026-11-28",
 		added = {
 			"Soins en route de qui : votre soin au bout de la vie, puis celui des autres soigneurs, plus pâle (Séparés, Les miens, Tous ensemble), même en combat.",
@@ -1249,6 +1261,7 @@ Z.changes = {
 -- Par version, puis par rubrique : le réglage de chaque ligne, dans l'ordre des lignes (false : pas de réglage).
 -- Une clé qui n'a plus de ligne dans les options est simplement ignorée. Tenu à la main, vérifié par les tests.
 Z.changeShows = {
+	["1.55.0"] = { added = { "hotPrediction", "hotPending" }, improved = { "overhealWarn" } },
 	["1.54.0"] = { added = { "incomingSplit", "overhealWarn", "castFill", "incomingText" } },
 	["1.50.0"] = { added = { "channelFR" } },
 	["1.48.1"] = { improved = { false }, fixed = { "lowHealth" } },
