@@ -58,6 +58,9 @@ Z.trackedSpells = {
 --                       de la canalisation, distincts de ceux du lancement sur WoW Forever)
 --             "pending" soin qui attend que son porteur soit touché, puis saute (moment inconnu)
 --             "group"   plusieurs cibles : seule celle que je vise est sûre
+--             "consume" sort qui consomme un de mes soins sur la durée de sa cible (takes : premiers rangs possibles ;
+--                       pick = "shortest" : celui qui finit le plus tôt). Hors combat, Lyorune voit lui-même quelle
+--                       aura est partie ; la règle ne sert qu'en combat, quand les auras ne se lisent pas.
 -- Montant appris par rang, hors combat (Hots.lua). Une classe absente de cette table n'a rien sur la barre.
 Z.hotSpells = {
 	PRIEST = {
@@ -70,6 +73,7 @@ Z.hotSpells = {
 		{ id = 774, every = 3, duration = 12, kind = "hot" },               -- Récupération
 		{ id = 8936, every = 3, duration = 21, kind = "after" },            -- Rétablissement
 		{ id = 408120, kind = "group" },                                    -- Croissance sauvage (talent de Forever)
+		{ id = 18562, kind = "consume", takes = { 774, 8936 }, pick = "shortest" }, -- Prompte guérison (règle à revoir en jeu)
 	},
 	SHAMAN = {
 		{ id = 408521, every = 3, kind = "hot" },                           -- Remous (talent de Forever) : durée lue sur l'aura

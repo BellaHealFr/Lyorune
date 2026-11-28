@@ -230,10 +230,15 @@ local function UpdateIncoming(b, max)
 	end
 end
 
--- Mes soins sur la durée (Hots.lua) : montants connus de Lyorune, lisibles ; seule la vie max est secrète
+-- Mes soins sur la durée (Hots.lua) : montants connus de Lyorune, lisibles ; seule la vie max est secrète.
+-- Éclairci quand l'un d'eux vit ses 3 dernières secondes (à relancer).
+local HOT_ENDING_ALPHA = 0.45
 local function UpdateHots(b, max)
 	if not b.hot:IsShown() then return end
-	local left, soon = Z.HotAmounts(b.unit)
+	local left, soon, ending = Z.HotAmounts(b.unit)
+	local alpha = ending and HOT_ENDING_ALPHA or 1
+	b.hot:SetAlpha(alpha)
+	b.hotNext:SetAlpha(alpha)
 	b.hot:SetMinMaxValues(0, max)
 	b.hot:SetValue(left, smoothing)
 	b.hotNext:SetMinMaxValues(0, max)
@@ -722,7 +727,10 @@ local unitEvents = {
 	UNIT_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
 	UNIT_HEAL_ABSORB_AMOUNT_CHANGED = UpdatePrediction,
 	UNIT_PHASE = UpdateCenter,
-	UNIT_AURA = function(b, _, info) Z.QueueAuras(b) Z.NoteAuraChanges(b, info) end, -- la mise à jour d'abord
+	UNIT_AURA = function(b, _, info) -- la mise à jour d'abord
+		Z.QueueAuras(b) Z.NoteAuraChanges(b, info)
+		Z.CheckHots(b.unit, info) -- (rien à faire sans soin retenu : réglage éteint compris)
+	end,
 	UNIT_CONNECTION = UpdateAll,
 	UNIT_NAME_UPDATE = UpdateName,
 	UNIT_FLAGS = UpdateState,

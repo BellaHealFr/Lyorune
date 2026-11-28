@@ -11908,6 +11908,102 @@ step("36 c, lot 8 : mes soins sur la duree sur la barre de vie (reste, prochain 
   assert(ok, err)
 end)
 
+step("36 c, lot 8 bis : fin sur dissipation et Prompte guerison, 3 dernieres secondes eclaircies", function()
+  local b = Z.buttons[1]
+  local saved = { now = NOW, auras = AURAS, desc = C_Spell.GetSpellDescription, amounts = Z.char.hotAmounts, unit = b.unit,
+    shown = b._shown, name = C_Spell.GetSpellName, on = Z.db.hotPrediction, stats = Z.db.clickStats, visible = UnitIsVisible,
+    class = Z.class, combat = COMBAT }
+  local ok, err = pcall(function()
+    NOW = NOW + 3000 AURAS = {} Z.db.clickStats = false COMBAT = false
+    C_Spell.GetSpellDescription = function() return "" end
+    Z.char.hotAmounts = { [139] = { total = 250, duration = 15, from = "aura" } }
+    b.unit = "player" b:Show()
+    Z.db.hotPrediction = true Z:Refresh()
+    Z.ForgetHots("player")
+    local function cast(guid, id)
+      FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", guid, id)
+      FireEvent("UNIT_SPELLCAST_SUCCEEDED", "player", guid, id)
+    end
+    -- 3 dernières secondes : un minuteur à la fin moins 3 s, le segment s'éclaircit
+    local after, delays = C_Timer.After, {}
+    C_Timer.After = function(d, f) delays[#delays + 1] = d end
+    cast("e1", 139)
+    C_Timer.After = after
+    local found
+    for _, d in ipairs(delays) do if math.abs(d - 12) < 1e-6 then found = true end end
+    assert(found, "minuteur des 3 dernieres secondes absent")
+    cast("e2", 139)
+    assert(b.hot:GetAlpha() == 1 and b.hotNext:GetAlpha() == 1, "eclairci trop tot")
+    NOW = NOW + 12.5 Z.RedrawHots("player")
+    assert(b.hot:GetAlpha() < 1 and b.hotNext:GetAlpha() == b.hot:GetAlpha(), "pas eclairci a la fin")
+    NOW = NOW + 3 Z.RedrawHots("player")
+    assert(b.hot:GetValue() == 0, "segment garde apres la fin")
+    -- dissipé hors combat : oublié quand le jeu dit qu'une aura est partie et qu'elle manque
+    UnitIsVisible = function() return true end
+    local aura = { name = "Rénovation", spellId = 139, auraInstanceID = 5, duration = 15, expirationTime = NOW + 15, points = { 50 } }
+    AURAS["HELPFUL|PLAYER"] = { aura }
+    cast("e3", 139)
+    AURAS["HELPFUL|PLAYER"] = {}
+    FireEvent("UNIT_AURA", "player", { removedAuraInstanceIDs = { 5 } })
+    assert(Z.MyHots("player"), "oublie dans la demi-seconde du lancement")
+    NOW = NOW + 1
+    FireEvent("UNIT_AURA", "player", { addedAuras = {} })
+    assert(Z.MyHots("player"), "oublie sans aura partie")
+    COMBAT = true FireEvent("UNIT_AURA", "player", { removedAuraInstanceIDs = { 5 } }) COMBAT = false
+    assert(Z.MyHots("player"), "oublie en combat (auras illisibles)")
+    AURAS["HELPFUL|PLAYER"] = { { name = MakeSecret(), spellId = MakeSecret() } }
+    FireEvent("UNIT_AURA", "player", { removedAuraInstanceIDs = { 5 } })
+    assert(Z.MyHots("player"), "oublie sur une aura illisible")
+    AURAS["HELPFUL|PLAYER"] = { { name = "Rénovation", spellId = 99999 } }
+    FireEvent("UNIT_AURA", "player", { removedAuraInstanceIDs = { 5 } })
+    assert(Z.MyHots("player"), "oublie : aura reconnue par son nom")
+    UnitIsVisible = function() return false end
+    AURAS["HELPFUL|PLAYER"] = {}
+    FireEvent("UNIT_AURA", "player", { removedAuraInstanceIDs = { 5 } })
+    assert(Z.MyHots("player"), "oublie hors de vue")
+    UnitIsVisible = function() return true end
+    local restricted = Z.AurasRestricted
+    Z.AurasRestricted = function() return true end
+    FireEvent("UNIT_AURA", "player", { removedAuraInstanceIDs = { 5 } })
+    Z.AurasRestricted = restricted
+    assert(Z.MyHots("player"), "oublie sous restriction (liste vide qui ne prouve rien)")
+    FireEvent("UNIT_AURA", "player", { removedAuraInstanceIDs = MakeSecret(), isFullUpdate = MakeSecret() })
+    assert(Z.MyHots("player") == nil and b.hot:GetValue() == 0, "soin dissipe encore sur la barre")
+    -- un soin dont l'aura n'a jamais été vue (posé en combat) n'est pas oublié sur une absence
+    COMBAT = true cast("e4", 139) COMBAT = false NOW = NOW + 1
+    FireEvent("UNIT_AURA", "player", MakeSecret())
+    assert(Z.MyHots("player"), "oublie sans avoir vu son aura")
+    Z.ForgetHots("player")
+    -- Prompte guérison (druide) : en combat, la règle de Data.lua (celui qui finit le plus tôt) ; hors combat, l'aura
+    local druid = { [774] = "Récupération", [8936] = "Rétablissement", [18562] = "Prompte guérison" }
+    local getName = C_Spell.GetSpellName
+    C_Spell.GetSpellName = function(id) return druid[id] or getName(id) end
+    Z.class = "DRUID" Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    Z.char.hotAmounts = { [774] = { total = 180, duration = 12, from = "aura" }, [8936] = { total = 98, duration = 21, from = "aura" } }
+    COMBAT = true
+    cast("s1", 8936) NOW = NOW + 1 cast("s2", 774)
+    assert(#Z.MyHots("player") == 2, "deux soins du druide")
+    cast("s3", 18562)
+    local list = Z.MyHots("player")
+    assert(#list == 1 and list[1].base == 8936, "Prompte guerison : le plus court consomme")
+    cast("s4", 18562)
+    assert(Z.MyHots("player") == nil, "Prompte guerison : dernier soin garde")
+    COMBAT = false
+    cast("s5", 774) cast("s6", 18562)
+    assert(Z.MyHots("player"), "hors combat, l'aura decide (pas la regle)")
+    assert(not table.concat(Z.HotReport(), " | "):find("Prompte"), "Prompte guerison listee comme soin sur la duree")
+    C_Spell.GetSpellName = getName
+  end)
+  NOW, AURAS, C_Spell.GetSpellDescription, Z.char.hotAmounts = saved.now, saved.auras, saved.desc, saved.amounts
+  b.unit, b._shown, C_Spell.GetSpellName, Z.db.clickStats = saved.unit, saved.shown, saved.name, saved.stats
+  UnitIsVisible, Z.class, COMBAT = saved.visible, saved.class, saved.combat
+  Z.ForgetHots("player")
+  Z.db.hotPrediction = saved.on
+  Z.buffGeneration = (Z.buffGeneration or 0) + 1
+  Z:Refresh()
+  assert(ok, err)
+end)
+
 step("aucune variable globale imprevue", function()
 
   local allowed = { NS = true, FAILED = true, TICK = true, LAST_ERROR = true, BEFORE = true, Lyorune = true, LyoruneDB = true,

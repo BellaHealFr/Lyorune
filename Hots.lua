@@ -7,8 +7,11 @@
 --   lancement hors combat (équipement changé : rien à effacer). Trois sources, de la plus sûre à la moins sûre :
 --   la bulle d'aide du buff posé (soins en plus compris), les nombres de l'aura, la description du sort.
 --   Jusqu'à quand : la vraie durée de l'aura quand elle se lit, sinon celle apprise, sinon celle de Data.lua.
--- Aucune boucle : trois événements sur moi seulement, une lecture de l'aura juste après le lancement, et un
--- minuteur par coup de soin, qui redessine la barre de ce seul joueur (Z.RedrawHots, Frames.lua).
+--   Fin avant l'heure : hors combat, une aura partie du joueur (dissipée, consommée) est vue à son UNIT_AURA ; en
+--   combat, Prompte guérison suit sa règle de Data.lua. Les 3 dernières secondes, le segment s'éclaircit.
+-- Aucune boucle : trois événements sur moi seulement, une lecture de l'aura juste après le lancement, un
+-- minuteur par coup de soin et un pour les 3 dernières secondes, qui redessinent la barre de ce seul joueur
+-- (Z.RedrawHots, Frames.lua).
 -- Un soin oublié vaut mieux qu'un soin inventé : sans cible sûre ni montant connu, rien n'est retenu.
 
 local _, Z = ...
@@ -17,6 +20,8 @@ local issecret = Z.IsSecret
 local SENT_WINDOW = 10 -- un sort annoncé (UNIT_SPELLCAST_SENT) qui réussit plus tard ne compte plus (incantation)
 local READ_DELAY = 0.3 -- l'aura est posée un peu après la réussite du sort
 local TICK_LAG = 0.05  -- le segment descend juste après le coup, quand la vie l'a reçu
+local ENDING = 3       -- les dernières secondes d'un soin, segment éclairci : à relancer
+local GONE_AFTER = 0.5 -- une aura absente moins d'une demi-seconde après le lancement peut encore arriver
 
 local spells, builtFor -- spells[numéro de n'importe quel rang] = { entry = ligne de Z.hotSpells, name = nom }
 local active = {}      -- active[joueur][numéro du premier rang] = soin en cours (voir Remember)
@@ -145,6 +150,7 @@ local function ReadAura(hot)
 	if not ok or type(list) ~= "table" or issecret(list) then return end
 	for _, aura in ipairs(list) do
 		if not issecret(aura) and not issecret(aura.spellId) and aura.spellId == hot.id then
+			hot.seen = true -- (Z.CheckHots : son départ pourra l'oublier)
 			local duration, expires = aura.duration, aura.expirationTime
 			if not issecret(duration) and type(duration) == "number" and duration > 0 then
 				hot.duration = duration
@@ -205,9 +211,21 @@ local function Schedule(hot, k, chain)
 	end)
 end
 
+-- Les 3 dernières secondes (une canalisation ne se relance pas : jamais)
+local function Ending(hot, now)
+	return hot.entry.kind ~= "channel" and hot.duration and now >= hot.start + hot.duration - ENDING or false
+end
+
 function Restart(hot)
 	hot.chain = (hot.chain or 0) + 1
-	if hot.ticks and hot.entry.every and hot.total then Schedule(hot, Done(hot, GetTime()) + 1, hot.chain) end
+	local chain, now = hot.chain, GetTime()
+	if hot.ticks and hot.entry.every and hot.total then Schedule(hot, Done(hot, now) + 1, chain) end
+	if hot.ticks and hot.entry.every and hot.total and hot.duration and not Ending(hot, now)
+		and hot.entry.kind ~= "channel" then
+		C_Timer.After(hot.start + hot.duration - ENDING - now, function()
+			if hot.chain == chain and Current(hot) then Z:Try("soins sur la durée", Changed, hot.key) end
+		end)
+	end
 	Changed(hot.key)
 end
 
@@ -220,11 +238,12 @@ local function Remember(unit, id, spell)
 	local known = Learned(id)
 	local duration = known and known.duration or entry.duration
 	local key = Z.PlayerKey(unit)
-	local hot = { id = id, base = entry.id, entry = entry, unit = unit, key = key, start = GetTime(), duration = duration,
-		ticks = Ticks(entry, duration), total = known and known.total }
+	local hot = { id = id, base = entry.id, entry = entry, name = spell.name, unit = unit, key = key, start = GetTime(),
+		duration = duration, ticks = Ticks(entry, duration), total = known and known.total }
 	active[key] = active[key] or {}
 	local before = active[key][entry.id]
 	hot.refreshed = before and before.duration and hot.start < before.start + before.duration or nil
+	hot.seen = hot.refreshed and before.seen or nil
 	active[key][entry.id] = hot
 	if entry.kind == "channel" then channel = hot end
 	Restart(hot) -- (une relance remplace l'ancien : son minuteur s'arrête, le segment glisse à sa nouvelle taille)
@@ -266,22 +285,88 @@ function Z.ForgetHots(unit)
 end
 
 -- Ce que mes soins sur la durée vont encore rendre à ce joueur, et ce qu'en rendent les prochains coups (un par
--- soin). Montants appris, jamais secrets ; un soin au montant encore inconnu ne compte pas. Rend reste, prochains.
+-- soin). Montants appris, jamais secrets ; un soin au montant encore inconnu ne compte pas. Rend reste, prochains,
+-- et vrai si l'un d'eux est dans ses 3 dernières secondes (à relancer).
 function Z.HotAmounts(unit)
 	local now = GetTime()
 	local mine = Alive(unit, now)
-	if not mine then return 0, 0 end
-	local left, soon = 0, 0
+	if not mine then return 0, 0, false end
+	local left, soon, ending = 0, 0, false
 	for _, hot in pairs(mine) do
 		if hot.total and hot.ticks and hot.ticks > 0 and hot.entry.every then
 			local remaining = hot.ticks - Done(hot, now)
 			if remaining > 0 then
 				local each = hot.total / hot.ticks
 				left, soon = left + each * remaining, soon + each
+				ending = ending or Ending(hot, now)
 			end
 		end
 	end
-	return left, soon
+	return left, soon, ending
+end
+
+-- Un de mes soins sur ce joueur est parti avant l'heure : oublié, sa barre redessinée
+local function Drop(key, base)
+	local mine = active[key]
+	if not (mine and mine[base]) then return end
+	mine[base] = nil
+	if not next(mine) then active[key] = nil end
+	Changed(key)
+end
+
+-- Hors combat, à chaque UNIT_AURA de la case (Frames.lua) : un de mes soins dont l'aura n'est plus sur le joueur
+-- (dissipé, consommé par Prompte guérison, même lancée par un autre druide) est oublié. Seulement quand le jeu dit
+-- qu'une aura est partie, quand le joueur est en vue et que toutes ses auras se lisent : une aura illisible ne
+-- prouve aucune absence (combat, auras cachées, restriction d'une rencontre ou d'un match : liste vide possible).
+-- L'aura est reconnue par son numéro ou par son nom ; seul un soin dont l'aura a déjà été vue sur le joueur peut
+-- être oublié (un talent dont l'aura porte un autre numéro et un autre nom ne fait donc rien oublier).
+local function AurasUnsure()
+	return InCombatLockdown() or Z.AurasHidden() or Z.AurasRestricted()
+end
+
+function Z.CheckHots(unit, info)
+	if not next(active) then return end
+	local key = Z.PlayerKey(unit)
+	local mine = active[key]
+	if not mine or AurasUnsure() then return end
+	if type(info) == "table" and not issecret(info) then
+		local full, removed = info.isFullUpdate, info.removedAuraInstanceIDs
+		if not issecret(full) and not issecret(removed) and not full
+			and (removed == nil or (type(removed) == "table" and #removed == 0)) then return end
+	end
+	local visible = UnitIsVisible and UnitIsVisible(unit)
+	if issecret(visible) or not visible then return end
+	local ok, list = pcall(C_UnitAuras.GetUnitAuras, unit, "HELPFUL|PLAYER", 40)
+	if not ok or type(list) ~= "table" or issecret(list) then return end
+	local present = {}
+	for _, aura in ipairs(list) do
+		if type(aura) ~= "table" or issecret(aura) or issecret(aura.spellId) or issecret(aura.name) then return end
+		if aura.spellId then present[aura.spellId] = true end
+		if aura.name then present[aura.name] = true end
+	end
+	local now = GetTime()
+	for base, hot in pairs(mine) do
+		if present[hot.id] or present[hot.name] then
+			hot.seen = true
+		elseif hot.seen and hot.entry.kind ~= "channel" and now - hot.start > GONE_AFTER then
+			Drop(key, base)
+		end
+	end
+end
+
+-- Un sort qui consomme un de mes soins (Prompte guérison) a réussi sur ce joueur. Hors combat, Z.CheckHots voit
+-- quelle aura est partie ; en combat (ou auras cachées), la règle de Data.lua choisit parmi mes soins retenus.
+local function Consume(unit, entry)
+	if not AurasUnsure() then return end
+	local mine = Alive(unit, GetTime())
+	if not mine then return end
+	local pick, pickEnd
+	for _, base in ipairs(entry.takes or {}) do
+		local hot = mine[base]
+		local ends = hot and hot.duration and hot.start + hot.duration
+		if ends and (not pick or (entry.pick == "shortest" and ends < pickEnd)) then pick, pickEnd = base, ends end
+	end
+	if pick then Drop(Z.PlayerKey(unit), pick) end
 end
 
 local castFrame = CreateFrame("Frame")
@@ -308,7 +393,8 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			sent = nil
 			-- la cible est retrouvée maintenant : la case cliquée est sûrement notée (Frames.lua)
 			local unit = Z.CastReceiver(s.target, s.spell.name, s.at)
-			if unit then Remember(unit, s.id, s.spell) end
+			if not unit then return end
+			if spell.entry.kind == "consume" then Consume(unit, spell.entry) else Remember(unit, s.id, s.spell) end
 		end
 	end, ...)
 end)
@@ -340,7 +426,7 @@ function Z.HotReport()
 		end
 	end
 	for _, entry in ipairs(Z.hotSpells[Z.class] or {}) do
-		local name = Z.SpellName(entry.id)
+		local name = entry.kind ~= "consume" and Z.SpellName(entry.id)
 		if name then
 			local ranks = byEntry[entry] or {}
 			table.sort(ranks)
