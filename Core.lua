@@ -3,6 +3,21 @@
 -- Core.lua : réglages, événements, commandes. Tout le reste s'appuie sur ce fichier.
 
 local ADDON, Z = ...
+
+-- Autres addons de cadres de soin, reconnus s'ils sont chargés (cohabitation, mesure des performances) : leurs noms
+-- sont codés (ROT13), jamais écrits en clair, et jamais montrés au joueur (Z.HealFrameAddon)
+local function Rot13(text)
+	return (text:gsub("%a", function(c)
+		local base = c:match("%l") and 97 or 65
+		return string.char((c:byte() - base + 13) % 26 + base)
+	end))
+end
+Z.healFrameAddons = {}
+for _, coded in ipairs({ "IhuQb", "UrnyObg", "Tevq2", "Pryy" }) do Z.healFrameAddons[#Z.healFrameAddons + 1] = Rot13(coded) end
+function Z.HealFrameAddon(name)
+	for _, other in ipairs(Z.healFrameAddons) do if other == name then return true end end
+	return false
+end
 _G.Lyorune = Z
 
 Z.version = (C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "1.51.1"
@@ -639,14 +654,19 @@ Z:On("PLAYER_LOGIN", function()
 	if Z.db.newsSeen == nil then Z.db.newsSeen = Z.db.lastVersion or Z.version end -- avant la 1.47.0 : la dernière version lancée
 	Z.db.lastVersion = Z.version
 
-	-- Cohabitation : Lyorune ne modifie ni ne masque les cadres des autres addons. On prévient une seule fois.
-	local others = {}
-	for _, name in ipairs({ "ElvUI", "VuhDo", "HealBot", "Grid2", "Cell" }) do
-		if C_AddOns.IsAddOnLoaded(name) then others[#others + 1] = name end
+	-- Cohabitation : Lyorune ne modifie ni ne masque les cadres des autres addons. On prévient une seule fois,
+	-- sans jamais nommer un autre addon de soin (Z.HealFrameAddon)
+	local healing, elv = false, C_AddOns.IsAddOnLoaded("ElvUI")
+	for _, name in ipairs(Z.healFrameAddons) do
+		if C_AddOns.IsAddOnLoaded(name) then healing = true break end
 	end
-	if #others > 0 and not Z.db.coexistHint then
+	if (healing or elv) and not Z.db.coexistHint then
 		Z.db.coexistHint = true
-		Z:Print(table.concat(others, ", ") .. Z.L[" affiche aussi des cadres de groupe. Les deux fonctionnent ensemble ; pour éviter les doublons, désactivez les cadres de groupe et de raid dans ses options."])
+		if healing and elv then
+			Z:Print(Z.L["ElvUI et un autre addon de cadres de soin affichent aussi des cadres de groupe. Tous fonctionnent ensemble ; pour éviter les doublons, désactivez les cadres de groupe et de raid dans leurs options."])
+		else
+			Z:Print((healing and Z.L["Un autre addon de cadres de soin"] or "ElvUI") .. Z.L[" affiche aussi des cadres de groupe. Les deux fonctionnent ensemble ; pour éviter les doublons, désactivez les cadres de groupe et de raid dans ses options."])
+		end
 	end
 end)
 

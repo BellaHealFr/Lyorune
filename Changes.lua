@@ -452,7 +452,7 @@ Z.changes = {
 	{
 		version = "1.33.4", date = "2026-11-22",
 		added = {
-			"Prêtre : Forme d'ombre rejoint vos buffs sur vous (prêtre Ombre), comme dans HealBot.",
+			"Prêtre : Forme d'ombre rejoint vos buffs sur vous (prêtre Ombre).",
 			"Paladin : votre aura (Dévotion, Concentration, Châtiment, Sainteté, résistances) rejoint vos buffs sur vous, la dernière que vous avez lancée. Druide : Augure de clarté aussi, s'il se lance sur ce client (un sort passif n'est jamais proposé).",
 		},
 		improved = {

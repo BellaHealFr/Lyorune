@@ -32,7 +32,7 @@ Pour la personne qui corrige ou fait évoluer Lyorune. Aucune connaissance préa
    raid...), avec « auras secrètes » quand le jeu cache les auras aux addons.
    Sur son propre ordinateur, `python outils/erreurs.py` (`--pile` pour la pile complète) rassemble en une fois :
    le journal du jeu `Logs\General.log`, où le jeu écrit TOUTES les erreurs Lua même quand un autre addon a pris
-   le gestionnaire d'erreurs (BugGrabber, fourni avec Decursive), et le journal de Lyorune. Lire `General.log`
+   le gestionnaire d'erreurs, et le journal de Lyorune. Lire `General.log`
    avant de relancer le jeu : il est réécrit au lancement.
 3. Les entrées « Action interdite en combat » désignent un appel protégé fait pendant un combat :
    il doit passer par `Z:Safe(clé, fonction)`, qui le remet à la fin du combat.
@@ -54,6 +54,10 @@ Une valeur secrète peut être donnée à une fonction d'affichage (`SetValue`, 
 mais ni comparée ni utilisée dans un calcul. Avant tout `if` ou calcul sur une valeur venue du jeu,
 tester `Z.IsSecret(valeur)`. Pour colorer selon une valeur secrète, utiliser une courbe
 (`C_CurveUtil.CreateColorCurve`), comme `healthCurve` dans `Frames.lua`.
+- Le jeu refuse une valeur secrète en second argument de `SetValue` (l'animation) : seulement en premier.
+- Pour montrer ou cacher selon un booléen secret (soin qui dépasse la vie, par exemple) : `SetAlphaFromBoolean`.
+- Un cadre rogné (`SetClipsChildren`) dont un bord suit une valeur secrète ne s'affiche plus du tout : couper avec
+  un masque porté par la barre elle-même (`LostMask` dans `Frames.lua`, vu en jeu le 28 novembre 2026).
 
 ## Ajouter une classe
 
@@ -106,7 +110,7 @@ Outils :
 | `python outils/publier.py 1.4.0 --nouveau "..." --ameliore "..." --corrige "..."` | Tests, numéro de version, `Changes.lua`, `CHANGELOG.md`, archive dans `dist/` (détails dans `docs/PUBLICATION.md`) |
 | `python outils/etiquettes.py` | Crée sur GitHub les étiquettes de `.github/labels.yml` |
 | `python outils/telechargements.py` | Téléchargements par version sur GitHub |
-| `python outils/verifier_api.py` | Compare les fonctions du jeu utilisées par Lyorune à celles de VuhDo, ElvUI et Decursive installés |
+| `python outils/verifier_api.py` | Compare les fonctions du jeu utilisées par Lyorune à celles des addons de référence installés |
 | `python outils/site.py github` (ou `cloudflare`) | Fabrique le site de présentation (voir `docs/DEPLOIEMENT.md`) ; `python tests/site.py` le vérifie |
 | `python outils/images_partage.py` | Redessine les images de partage du site (1200 sur 630, une par langue) |
 | `outils\tester.bat`, `outils\installer.bat` | Tests, copie dans le dossier AddOns |

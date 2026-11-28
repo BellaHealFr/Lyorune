@@ -95,8 +95,9 @@ end
 -- en 21 sec », « 45 points de vie toutes les 3 sec pendant 15 sec », « Heals 45 damage every 3 seconds ».
 -- Chaque nombre suivi de « s » (sec, secondes, seconds) est une durée, et le nombre juste avant lui un soin :
 -- celui de l'intervalle est un soin par coup. every, duration : connus de Data.lua ou de l'aura (nil possible).
+-- ticks : nombre de coups connu (une canalisation frappe aussi dès son début : Pénitence, 3 coups en 2 sec).
 -- Rend total, durée (ou nil, nil).
-function Z.HotFromText(text, every, duration)
+function Z.HotFromText(text, every, duration, ticks)
 	if type(text) ~= "string" or issecret(text) or text == "" then return nil end
 	local found, amount, longest = {}, nil, nil
 	for number, after in Joined(text):gmatch("(%d+)(%s*%a?)") do
@@ -115,7 +116,8 @@ function Z.HotFromText(text, every, duration)
 		elseif not total or pair.seconds == length then total, totalFor = pair.amount, pair.seconds end
 	end
 	if total and total > 0 then return total, length or totalFor end
-	if tick and tick > 0 and length then return tick * math.floor(length / every + 0.5), length end
+	-- (ticks : nombre de coups connu, une canalisation frappe aussi dès son début)
+	if tick and tick > 0 and length then return tick * (ticks or math.floor(length / every + 0.5)), length end
 	return nil
 end
 
@@ -140,7 +142,7 @@ end
 -- Soin et durée lus dans un texte du jeu, selon la forme du sort
 local function FromText(entry, text, duration)
 	if entry.kind == "pending" then return Z.PendingFromText(text) end
-	return Z.HotFromText(text, entry.every, duration)
+	return Z.HotFromText(text, entry.every, duration, entry.kind == "channel" and entry.ticks or nil)
 end
 
 local function Learned(id)
@@ -151,11 +153,12 @@ end
 
 -- Retenu pour ce rang (source : "bulle", "aura" ou "texte"). La description ne sert qu'en l'absence de tout
 -- montant appris (FromDescription) ; la bulle et l'aura se réapprennent à chaque lancement hors combat.
-local function Learn(id, total, duration, source)
+local function Learn(id, total, duration, source, ticks)
 	if not (Z.char and total and total > 0) then return end
 	Z.char.hotAmounts = Z.char.hotAmounts or {}
 	local known = Learned(id)
-	Z.char.hotAmounts[id] = { total = math.floor(total + 0.5), duration = duration or (known and known.duration), from = source }
+	Z.char.hotAmounts[id] = { total = math.floor(total + 0.5), duration = duration or (known and known.duration), from = source,
+		ticks = ticks } -- (une canalisation : les coups comptés, pour réapprendre si Data.lua change)
 end
 
 -- Nombre de soins d'un sort qui dure duration secondes
@@ -181,14 +184,16 @@ end
 
 -- La description du sort, en secours (chargée à la demande par le jeu : vide la première fois, parfois)
 local function FromDescription(id, entry)
-	if Learned(id) then return end
+	-- (une canalisation n'a pas d'aura à relire : son montant se réapprend si ses coups ont changé dans Data.lua)
+	local known = Learned(id)
+	if known and not (entry.kind == "channel" and known.from == "texte" and known.ticks ~= entry.ticks) then return end
 	local ok, text = pcall(C_Spell.GetSpellDescription, id)
 	if not ok or type(text) ~= "string" or issecret(text) or text == "" then
 		if C_Spell.RequestLoadSpellData then pcall(C_Spell.RequestLoadSpellData, id) end
 		return
 	end
 	local total, seconds = FromText(entry, text, entry.duration)
-	Learn(id, total, seconds or entry.duration, "texte")
+	Learn(id, total, seconds or entry.duration, "texte", entry.kind == "channel" and entry.ticks or nil)
 end
 
 local Restart -- (plus bas : redessin et minuteur des coups)
@@ -336,6 +341,7 @@ local function Remember(unit, id, spell, aura)
 		and hot.start - prayer.start < SAME_CAST then return end
 	hot.refreshed = before and before.duration and hot.start < before.start + before.duration or nil
 	hot.seen = hot.refreshed and before.seen or nil
+	hot.instance = hot.refreshed and before.instance or nil -- (rafraîchie, son aura garde son numéro : Still en combat)
 	if aura then Apply(hot, aura) end
 	active[key][entry.id] = hot
 	if entry.kind == "channel" then channel = hot end
@@ -516,7 +522,27 @@ end
 local function Consume(unit, entry)
 	local mine = Alive(unit, GetTime())
 	if not mine then return end
-	-- hors combat, Z.CheckHots s'en charge, sauf si mes soins ont été posés en combat sans être vus : la règle alors
+	-- hors combat, les auras se lisent : un soin visé encore là est vu (Z.CheckHots l'oubliera à son départ), un soin
+	-- posé en combat et jamais vu dont l'aura est déjà partie est oublié ; la règle ne sert que si rien ne se lit
+	local list = not AurasUnsure() and MyAuras(unit)
+	if list then
+		local present, readable = {}, true
+		for _, aura in ipairs(list) do
+			if type(aura) ~= "table" or issecret(aura) or issecret(aura.spellId) or issecret(aura.name) then readable = false break end
+			local spell = SpellOf(aura.spellId)
+			if spell then present[spell.entry.id] = true end
+			if aura.name then present[aura.name] = true end
+		end
+		if readable then
+			for _, base in ipairs(entry.takes or {}) do
+				local hot = mine[base]
+				if hot and (present[base] or present[hot.name]) then hot.seen = true
+				elseif hot and hot.fought and not hot.seen then Drop(Z.PlayerKey(unit), base)
+				end
+			end
+			return
+		end
+	end
 	if not AurasUnsure() then
 		local unseen = false
 		for _, base in ipairs(entry.takes or {}) do

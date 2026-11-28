@@ -95,11 +95,12 @@ function Z:Log(kind, message, stack, diagnostic)
 		instance = Z:InstanceState(),
 	})
 	while #db.errors > MAX_ENTRIES do table.remove(db.errors) end
-	if diagnostic then logging = false return end
-	Z.firstError = Z.firstError or db.errors[1] -- la première de la session : les suivantes en découlent souvent
-	if not warned and db.errorNotice then
-		warned = true
-		Z:Print(Z.L["Lyorune a rencontré un problème. Tapez |cff33dd88/lyorune bug|r pour le signaler."])
+	if not diagnostic then
+		Z.firstError = Z.firstError or db.errors[1] -- la première de la session : les suivantes en découlent souvent
+		if not warned and db.errorNotice then
+			warned = true
+			Z:Print(Z.L["Lyorune a rencontré un problème. Tapez |cff33dd88/lyorune bug|r pour le signaler."])
+		end
 	end
 	logging = false
 end
@@ -170,7 +171,9 @@ function Z:LogText()
 		for _, line in ipairs(Z:FrameState()) do lines[#lines + 1] = Z.IsSecret(line) and HIDDEN_LINE or "  " .. line end
 	end
 	local errors = Z.db.errors or {}
-	lines[#lines + 1] = "Erreurs enregistrées : " .. #errors
+	local count = Z.ErrorCount()
+	lines[#lines + 1] = "Erreurs enregistrées : " .. count
+		.. (#errors > count and (", diagnostics : " .. (#errors - count)) or "")
 	for i, e in ipairs(errors) do
 		lines[#lines + 1] = ""
 		lines[#lines + 1] = ("--- %d. %s (x%d) ---"):format(i, e.kind, e.count)
@@ -242,18 +245,16 @@ function Z:Diagnose()
 	Z:Print(Z.L["%d erreur(s) dans le journal (/lyorune erreurs)."]:format(Z.ErrorCount()))
 end
 
--- La plus récente vraie erreur du journal (les diagnostics n'en sont pas), et leur nombre
-function Z.LastError()
-	for _, entry in ipairs(Z.db.errors or {}) do
-		if not entry.diagnostic then return entry end
-	end
-end
+-- Les vraies erreurs du journal (les diagnostics n'en sont pas) : leur nombre, et la plus récente
 function Z.ErrorCount()
-	local count = 0
+	local count, latest = 0, nil
 	for _, entry in ipairs(Z.db.errors or {}) do
-		if not entry.diagnostic then count = count + 1 end
+		if not entry.diagnostic then count = count + 1 latest = latest or entry end
 	end
-	return count
+	return count, latest
+end
+function Z.LastError()
+	return select(2, Z.ErrorCount())
 end
 
 -- Vide le journal, et oublie la première erreur de la session : /lyorune bug ne la signale plus

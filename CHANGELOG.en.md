@@ -359,7 +359,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 ### Added
 
-- Priest: Shadowform joins your buffs on you (Shadow priest), as in HealBot.
+- Priest: Shadowform joins your buffs on you (Shadow priest).
 - Paladin: your aura (Devotion, Concentration, Retribution, Sanctity, resistances) joins your buffs on you, the last one you cast. Druid: Omen of Clarity too, if it can be cast on this client (a passive spell is never offered).
 
 ### Improved

@@ -365,6 +365,10 @@ local HOT_ENDING_ALPHA = 0.45
 local function UpdateHots(b, max)
 	if not b.hot:IsShown() then return end
 	local left, soon, ending, waiting = Z.HotAmounts(b.unit)
+	-- aucun de mes soins sur ce joueur, barres déjà vides : rien à reposer (presque toutes les cases, à chaque vie)
+	local empty = left == 0 and waiting == 0
+	if empty and b.hotsEmpty then return end
+	b.hotsEmpty = empty
 	if b.pending:IsShown() then
 		b.pending:SetMinMaxValues(0, max)
 		b.pending:SetValue(waiting, smoothing)
@@ -858,6 +862,7 @@ end
 local function ShownAgain(b)
 	UpdateAll(b)
 	if b.snapPending then SnapBars(b) end
+	if Z.CastFill then Z.CastFill(b) end -- (montrée pendant mon incantation : son voile aussi)
 end
 
 -- Les mises à jour d'une case, pour la mesure des performances (Perf.lua) : le vrai code, chronométré
@@ -1140,6 +1145,7 @@ local function Style(b)
 	local afterIncoming = b.incomingOthers:IsShown() and b.incomingOthers:GetStatusBarTexture()
 		or db.showIncoming and b.incoming:GetStatusBarTexture() or b.hp:GetStatusBarTexture()
 	local hotColor = theme.hot or theme.incoming
+	b.hotsEmpty = nil -- (barres reposées au prochain dessin)
 	for _, bar in ipairs({ b.hot, b.hotNext }) do
 		bar:SetStatusBarTexture(texture)
 		bar:SetWidth(width - 2 * inset)
@@ -2535,7 +2541,10 @@ function Z:Refresh()
 	Z:Safe("layout", ApplyLayout)
 	for _, b in ipairs(buttons) do
 		Style(b)
-		if b:IsVisible() then UpdateAll(b) end
+		if b:IsVisible() then
+			UpdateAll(b)
+			if Z.CastFill then Z.CastFill(b) end -- (Style efface le voile : mon incantation en cours le garde)
+		end
 	end
 	if ClickModeChanged() then Z:Safe("sens des clics", ApplyClickMode) end
 	if Z.RefreshPreview then Z:RefreshPreview() end
@@ -2639,7 +2648,8 @@ function Z:CreateFrames()
 			if unit and unit ~= "target" then return end -- UNIT_TARGET : seul le changement de cible de ma cible compte
 			for _, b in ipairs(extraButtons) do
 				for _, wanted in ipairs(units) do
-					if b.unit == wanted and b:IsVisible() then UpdateAll(b) end
+					-- (la case garde son unité, le joueur change : ses barres sautent au lieu de glisser)
+					if b.unit == wanted and b:IsVisible() then UpdateAll(b) SnapBars(b) end
 				end
 			end
 		end
@@ -2696,13 +2706,14 @@ function Z:CreateFrames()
 	local castDuration
 	local function CastFill(b)
 		if not b.castFill:IsShown() then return end
-		if castDuration and b.castFill.SetTimerDuration then
+		if castDuration and b.castFill.SetTimerDuration and Enum.StatusBarTimerDirection and Enum.StatusBarInterpolation then
 			b.castFill:SetTimerDuration(castDuration, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
 			b.castFill:SetAlpha(1)
 		else
 			b.castFill:SetAlpha(0)
 		end
 	end
+	Z.CastFill = CastFill
 	local castFillAll = ForVisible(CastFill)
 	local function castFillStart()
 		if not (db.showIncoming and db.castFill and UnitCastingDuration and Enum.StatusBarTimerDirection

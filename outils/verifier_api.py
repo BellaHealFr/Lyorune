@@ -3,16 +3,17 @@
 #
 #   python outils/verifier_api.py
 #
-# Principe : VuhDo, ElvUI et Decursive sont mis à jour très vite après chaque version du jeu. Si une fonction
+# Principe : les addons de référence (ElvUI et deux autres, noms codés plus bas) sont mis à jour très vite après chaque version du jeu. Si une fonction
 # du jeu utilisée par Lyorune n'apparaît plus dans AUCUN de ces addons, elle a probablement été retirée ou
 # renommée. Le script compare aussi le numéro d'interface de Lyorune à celui de ces addons.
 # A lancer après chaque mise à jour du jeu ou de ces addons. En jeu, /lyorune diag fait le contrôle définitif.
-import io, os, re, sys
+import codecs, io, os, re, sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 GAME = r'D:\Program Files\World of Warcraft\_forever_'
 ADDONS = os.path.join(GAME, 'Interface', 'AddOns')
-REFERENCES = ['VuhDo', 'ElvUI', 'ElvUI_Libraries', 'Decursive']
+# (noms codés en ROT13 : aucun autre addon de soin écrit en clair dans le dépôt)
+REFERENCES = [codecs.decode('IhuQb', 'rot13'), 'ElvUI', 'ElvUI_Libraries', codecs.decode('Qrphefvir', 'rot13')]
 
 
 def read(path):

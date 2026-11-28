@@ -612,6 +612,13 @@ step("tutoriel", function()
     assert((text:find("guérison en attente", 1, true) ~= nil) == c[3], "priere en attente " .. c[1])
     card.close:Run("OnClick")
   end
+  -- un pretre sans le talent : pas de Priere de guerison en attente
+  local known = Z.Knows
+  Z.Knows = function(id) return id ~= 401859 end
+  Z.class = "PRIEST" Z:StartTutorial() card.next:Run("OnClick")
+  assert(not card.body:GetText():find("guérison en attente", 1, true), "priere decrite sans le talent")
+  card.close:Run("OnClick")
+  Z.Knows = known
   Z.class, Z.db.hotPrediction, Z.db.hotPending = class, hp, pend
 end)
 
@@ -1772,8 +1779,11 @@ step("etape 8 : profils automatiques, cible et focalisation", function()
   FireEvent("PLAYER_TARGET_CHANGED") RunUpdates()
   assert(target.hp._barColor[2] > 0.5, "personnage amical en vert")
   UnitIsPlayer = isPlayer
+  target.hp._snapped = nil
   FireEvent("PLAYER_TARGET_CHANGED") RunUpdates()
   assert(target.debuffs and target.debuffs[1]:IsShown(), "un allie garde ses icones")
+  -- nouvelle cible : ses barres sautent a sa valeur, sans glisser depuis l'ancienne
+  assert(target.hp._snapped, "barres de la case cible qui glissent depuis l'ancienne cible")
   AURAS = {}
   -- la case de ma cible n'a pas de bordure blanche ; cible de la cible revue avec la portee
   Z.db.showTargetTarget = true
@@ -11470,26 +11480,6 @@ step("C43 et C44 : role du druide d'apres ses talents (forme ignoree, synchronis
   assert(ok, err)
 end)
 
-step("C48 : Remous suivi sous son numero de Forever, tous ses rangs, ancien numero garde s'il existe", function()
-  local function has(list, id) for _, v in ipairs(list or {}) do if v == id then return true end end end
-  assert(Z.trackedSpells.SHAMAN[1] == 408521, "Remous non suivi sous 408521")
-  local ranks = Z.spellRanks[408521]
-  assert(has(ranks, 1239242) and has(ranks, 1239243) and has(ranks, 22419), "rangs de Remous incomplets")
-  assert(Z.clickDefaults.SHAMAN["shift-2"][1] == 408521, "clic de Remous sur l'ancien numero")
-  -- noms lus dans le jeu : un numero au nom different est ignore, l'ancien numero absent ne casse rien
-  local old = { class = Z.class, name = C_Spell.GetSpellName }
-  local ok, err = pcall(function()
-    local names = { [408521] = "Remous", [1239242] = "Remous", [1239243] = "Remous" }
-    C_Spell.GetSpellName = function(id) return names[id] or old.name(id) end
-    Z.class = "SHAMAN" Z:BuildData()
-    local set = Z.rankIds["Remous"]
-    assert(Z.trackedNames["Remous"], "Remous absent des sorts suivis")
-    assert(set and set[408521] and set[1239242] and set[1239243] and not set[22419], "rangs de Remous mal lus")
-    names[22419] = "Remous" Z:BuildData()
-    assert(Z.rankIds["Remous"][22419], "ancien numero de Remous non garde quand il existe")
-  end)
-  C_Spell.GetSpellName, Z.class = old.name, old.class
-  Z:BuildData()
 step("36 lot 1 : /lyorune soins decrit les soins sans rien changer, et une incantation une seule fois", function()
   local Z = NS
   local old = { after = C_Timer.After, secrets = C_Secrets }
@@ -11538,6 +11528,9 @@ step("36 lot 1 : /lyorune soins decrit les soins sans rien changer, et une incan
     local real = 0
     for _, entry in ipairs(Z.db.errors) do if not entry.diagnostic then real = real + 1 end end
     assert(Z.ErrorCount() == real and real < #Z.db.errors, "diagnostics comptes comme erreurs")
+    assert(Z:LogText():find("Erreurs enregistrées : " .. real .. ", diagnostics : ", 1, true), "fenetre des erreurs : diagnostics comptes")
+    Z:Log("Essai", "vraie erreur", "") Z:Log("Diagnostic soins", "d", "", true)
+    assert(select(2, Z.ErrorCount()).message == "vraie erreur" and Z.LastError().message == "vraie erreur", "derniere vraie erreur")
   end)
   C_Timer.After = old.after
   rawset(_G, "C_Secrets", old.secrets)
@@ -11627,6 +11620,11 @@ step("36 b, lot 4 : mon soin et celui des autres, alerte de gaspillage, voile de
     FireEvent("UNIT_SPELLCAST_FAILED", "player")
     rawset(_G, "UnitCastingInfo", old.info)
     assert(b.castFill:GetAlpha() == 1, "voile efface par un sort refuse pendant l'incantation")
+    -- un reglage change pendant l'incantation (Style efface le voile) : le voile reprend
+    Z:Refresh()
+    assert(b.castFill:GetAlpha() == 1, "voile perdu par un rafraichissement pendant l'incantation")
+    b.castFill:SetAlpha(0) b:Hide() b:Show()
+    assert(b.castFill:GetAlpha() == 1, "case montree pendant l'incantation sans voile")
     FireEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
     assert(b.castFill:GetAlpha() == 0, "voile reste apres l'interruption")
     Z.db.castFill = false Z:Refresh()
@@ -12165,6 +12163,29 @@ step("36 c, lot 8 bis : fin sur dissipation et Prompte guerison, 3 dernieres sec
     COMBAT = true cast("s7", 774) COMBAT = false
     cast("s8", 18562)
     assert(Z.MyHots("player") == nil, "pose en combat, consomme apres : reste affiche")
+    -- les deux posés en combat, consommé hors combat : les auras décident, pas la règle (Rétablissement plus ancien
+    -- finit le plus tôt, mais c'est Récupération qui est partie)
+    COMBAT = true cast("t1", 8936) NOW = NOW + 10 cast("t2", 774) COMBAT = false
+    AURAS["HELPFUL|PLAYER"] = { { name = "Rétablissement", spellId = 8936, auraInstanceID = 31, duration = 21, expirationTime = NOW + 11 } }
+    cast("t3", 18562)
+    AURAS["HELPFUL|PLAYER"] = {}
+    local left = Z.MyHots("player")
+    assert(left and #left == 1 and left[1].base == 8936 and left[1].seen, "hors combat, la regle a pris le mauvais soin")
+    Z.ForgetHots("player")
+    -- Pénitence : trois coups (le premier tout de suite), pas deux
+    assert(Z.HotFromText("Rend 148 points de vie immédiatement puis toutes les 1 sec pendant 2 sec.", 1, 2, 3) == 444, "coups de Penitence")
+    -- apprise par sa description (pas d'aura), et réapprise si elle avait été comptée sur 2 coups
+    Z.class = "PRIEST" Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    druid[402174] = "Pénitence"
+    C_Spell.GetSpellDescription = function(id) return id == 402174 and "Rend 148 points de vie immédiatement puis toutes les 1 sec pendant 2 sec." or "" end
+    Z.char.hotAmounts = { [402174] = { total = 296, duration = 2, from = "texte" } }
+    cast("pn1", 402174)
+    assert(Z.char.hotAmounts[402174].total == 444 and Z.char.hotAmounts[402174].ticks == 3, "Penitence pas reapprise sur 3 coups")
+    cast("pn2", 402174)
+    assert(Z.char.hotAmounts[402174].total == 444, "Penitence reapprise a chaque lancement")
+    Z.ForgetHots("player") C_Spell.GetSpellDescription = function() return "" end
+    Z.class = "DRUID" Z.buffGeneration = (Z.buffGeneration or 0) + 1
+    assert(Z.HotFromText("Rend 45 points de vie toutes les 3 sec pendant 15 sec.", 3, 15) == 225, "soin regulier change")
     -- un autre sort annoncé avant la réussite (file d'attente) ne fait pas perdre mon soin
     FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "q1", 774)
     FireEvent("UNIT_SPELLCAST_SENT", "player", "Joueur-player", "q2", 8936)
@@ -12608,6 +12629,33 @@ for f in files + ['Locales/' + name for name in os.listdir(os.path.join(addon, '
     if f != 'Alerts.lua' and re.search(r'\bSendChatMessage\b', text):
         found.append('SendChatMessage dans %s' % f)
 print(('  OK    securite : aucune fonction interdite') if not found else ('  ERREUR securite : ' + ', '.join(found)))
+
+# 28 novembre 2026, demande de l'auteur : aucun autre addon de soin cité en clair, nulle part dans le dépôt (pas de
+# publicité pour la concurrence). Les noms sont codés en ROT13 ici comme dans le code (Core.lua, Z.healFrameAddons).
+import codecs, io
+RIVAUX = [codecs.decode(n, 'rot13') for n in ('IhuQb', 'UrnyObg', 'Tevq2', 'UrnyXvg', 'Cyrkhf')]
+cites = []
+import subprocess
+try: # seulement les fichiers publiés (suivis par git) ; les fichiers locaux de travail ne comptent pas
+    sortie = subprocess.run(['git', '-C', addon, 'ls-files'], capture_output=True, text=True, encoding='utf-8')
+    suivis = sortie.stdout.splitlines() if sortie.returncode == 0 else None
+except OSError:
+    suivis = None
+for relatif in suivis or []:
+    if not relatif.endswith(('.lua', '.md', '.toc', '.txt', '.json', '.py', '.yml', '.html', '.xml', '.bat')):
+        continue
+    chemin = os.path.join(addon, relatif)
+    if not os.path.isfile(chemin):
+        continue
+    texte = io.open(chemin, encoding='utf-8', errors='replace').read()
+    for rival in RIVAUX:
+        if re.search(re.escape(rival), texte, re.I):
+            cites.append('%s dans %s' % (rival[:2] + '...', relatif))
+if suivis is None:
+    print('  NON VERIFIE : addons de soin cites (pas de depot git)')
+else:
+    print(('  OK    aucun autre addon de soin cite en clair') if not cites else ('  ERREUR addons de soin cites : ' + ', '.join(cites)))
+found += cites
 
 # Revue du code (étape 19) : ce qu'un œil rate facilement, vérifié sur tout l'addon à chaque essai.
 #   - une fonction de Z appelée alors qu'elle n'existe nulle part (erreur au premier appel, parfois en combat)

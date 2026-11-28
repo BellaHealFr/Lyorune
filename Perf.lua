@@ -14,8 +14,9 @@ local SIZES = { 5, 25, 40 }
 local ROUNDS = 10 -- chaque mise à jour est répétée pour une mesure stable
 -- Combat de raid chargé : nombre de changements par joueur et par seconde (hypothèse plutôt haute)
 local RATES = { health = 4, prediction = 3, auras = 3, power = 2 }
--- Autres addons de cadres de soin, comparés s'ils sont chargés (ElvUI : toute l'interface, pas seulement les cadres)
-local OTHERS = { "VuhDo", "HealBot", "Grid2", "Cell", "ElvUI" }
+-- Autres addons de cadres, comparés s'ils sont chargés (Z.healFrameAddons, Core.lua ; ElvUI : toute l'interface)
+local OTHERS = { unpack(Z.healFrameAddons) }
+OTHERS[#OTHERS + 1] = "ElvUI"
 local ADVICE_AT = 20 -- au-delà de 20 ms par seconde à 40 joueurs (2 %), le mode performance est conseillé
 local KEEP = 10      -- mesures gardées dans LyoruneDB.perfDiag, relisibles hors du jeu
 
@@ -238,10 +239,15 @@ local function Show(result)
 		Fill(row, L["%d joueurs"]:format(group.count), Milli(group.full), Milli(group.perSecond),
 			Percent(group.perSecond / 10) .. " %")
 	end
+	local healing = 0
 	for i, row in ipairs(window.addons) do
 		local addon = result.addons[i]
 		if addon then
 			local name = addon.name == "ElvUI" and L["ElvUI (toute l'interface)"] or addon.name
+			if Z.HealFrameAddon(addon.name) then -- (jamais nommé : numéroté pour les distinguer)
+				healing = healing + 1
+				name = L["Autre addon de cadres de soin"] .. " " .. healing
+			end
 			if addon.name == ADDON then name = "|cff33dd88" .. name .. "|r" end
 			Fill(row, name, Kilo(addon.memory), Milli(addon.average, 3), Milli(addon.peak, 1))
 		else

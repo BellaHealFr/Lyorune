@@ -93,9 +93,10 @@ function Z:BugReport(answers)
 		local answer = answers and answers[i] or ""
 		lines[#lines + 1] = question .. " " .. (answer ~= "" and answer or "(sans réponse)")
 	end
-	local first = Z.firstError or Z.LastError()
+	local count, latest = Z.ErrorCount()
+	local first = Z.firstError or latest
 	if first then
-		lines[#lines + 1] = ("Erreurs enregistrées : %d. Première de la session (x%d, %s) :"):format(Z.ErrorCount(), first.count or 1, tostring(first.kind))
+		lines[#lines + 1] = ("Erreurs enregistrées : %d. Première de la session (x%d, %s) :"):format(count, first.count or 1, tostring(first.kind))
 		lines[#lines + 1] = tostring(first.message)
 		local stack = ShortStack(first.stack)
 		if stack ~= "" then lines[#lines + 1] = stack end

@@ -1278,19 +1278,21 @@ Demande de l'auteur (27 novembre 2026) : les soins en route se voient sur le mom
 soins sur la durée sur la barre, une animation des soins bien plus propre et plus de confort pour les joueurs. Plan
 validé le 27 novembre 2026, une version par sous-étape, sur la branche `soins-vivants`, fusionnée dans `main` après
 l'essai en jeu. Aucune boucle permanente ajoutée, chaque nouveauté a son interrupteur.
-- [ ] Vérification en jeu : commande `/lyorune soins` qui dit ce que le client permet (seuil de dépassement des
+- [x] Vérification en jeu : commande `/lyorune soins` qui dit ce que le client permet (seuil de dépassement des
   soins, durées fabriquées, nombres d'une aura hors combat, durée de l'incantation, vie max réduite).
 - [ ] 36 a (1.53.0), barres fluides et lisibles : soins en route, bouclier et absorption de soins animés comme la vie
   (plus de trou quand le soin tombe) ; contraste automatique des soins en route sur une barre verte ; bouclier « à la
-  suite de la vie » aux rayures du jeu ; relief léger réglable ; empilement des segments prêt pour la suite.
+  suite de la vie » aux rayures du jeu ; empilement des segments prêt pour la suite.
 - [ ] 36 b (1.54.0), mon soin en direct : mon soin et celui des autres en deux segments (« les miens / tous ») ; mon
   segment se remplit au rythme de mon incantation ; alerte de gaspillage sur 2 niveaux qui teinte mon soin (ambre,
   cuivre) pour annuler à temps ; couleur que la case aura après le soin ; chiffre du soin en route ; éclat bref quand
   le soin tombe.
 - [ ] 36 c (1.55.0), soins sur la durée sur la barre : segment qui se vide tout seul, durée réelle de l'aura quand le
   jeu la donne (fin sur dissipation, consommation, mort), sinon durée tirée du lancement ; montant appris par rang
-  hors combat ; liste et intervalle dans `Data.lua` ; couleur de la barre fine du sort ; relance qui glisse ; fin
-  signalée dans les 3 dernières secondes. Ordre sur la barre : vie, mon soin, les autres, soins sur la durée, bouclier.
+  hors combat ; liste et intervalle dans `Data.lua` ; teinte à part, prochain coup plus franc ; relance qui glisse ;
+  fin signalée dans les 3 dernières secondes ; Prière de guérison « en attente », suivie quand elle saute (réglage) ;
+  part perdue en rayures au bout de la vie et de la mana, soins sur la durée compris. Ordre sur la barre : vie, mon
+  soin, les autres, soins sur la durée, bouclier.
 - [ ] 36 d (1.56.0, selon la vérification) : vie max réduite au bout de la barre ; soins sur la durée des autres
   joueurs de Lyorune par la synchronisation.
 
