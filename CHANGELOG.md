@@ -6,6 +6,12 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.53.0] - 2026-11-28
+
+### Amélioré
+
+- Soins en route, bouclier et absorption de soins glissent en douceur, comme la vie ; bouclier rayé à la suite de la vie ; sur une barre verte, les soins en route pâlissent pour rester visibles.
+
 ## [1.51.1] - 2026-11-27
 
 ### Corrigé
@@ -999,6 +1005,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.53.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.1...v1.53.0
 [1.51.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.2...v1.51.0
 [1.50.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.1...v1.50.2

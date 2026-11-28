@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.53.0] - 2026-11-28
+
+### Improved
+
+- Incoming heals, shields and heal absorbs glide smoothly, like the health; striped shield after the health; on a green bar, incoming heals turn paler to stay visible.
+
 ## [1.51.1] - 2026-11-27
 
 ### Fixed
@@ -999,6 +1005,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); number
 
 - First version for WoW Forever: frames, click-healing, incoming heals, dispels, tutorial.
 
+[1.53.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.1...v1.53.0
 [1.51.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.2...v1.51.0
 [1.50.2]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.1...v1.50.2

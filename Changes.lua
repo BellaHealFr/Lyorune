@@ -8,6 +8,16 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.53.0", date = "2026-11-28",
+		added = {
+		},
+		improved = {
+			"Soins en route, bouclier et absorption de soins glissent en douceur, comme la vie ; bouclier rayé à la suite de la vie ; sur une barre verte, les soins en route pâlissent pour rester visibles.",
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.51.1", date = "2026-11-27",
 		added = {
 		},
