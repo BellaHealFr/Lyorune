@@ -49,6 +49,8 @@ step("demarrage", function()
   FireEvent("ADDON_LOADED", "Lyorune")
   FireEvent("PLAYER_LOGIN")
   assert(Z.header and #Z.headers == 13, "en-tetes")
+  -- mes soins sur la durée écoutés dès la connexion (sans Z:Refresh : rien ne s'affichait après un /reload)
+  assert(table.concat(Z.HotReport(), " | "):find("écoute oui", 1, true), "soins sur la duree pas ecoutes a la connexion")
 end)
 
 step("clics par defaut et resurrection automatique", function()
@@ -11870,6 +11872,7 @@ step("36 c, lot 9 : cible annoncee sans case (ennemi en cible) : le joueur ou mo
     local list = Z.MyHots("player")
     assert(list and #list == 1 and list[1].duration == 15, "soin perdu quand un ennemi est en cible")
     assert(table.concat(Z.HotReport(), " | "):find("cible annoncée Gnoll enragé, retenu sur player", 1, true), "rapport du dernier soin")
+    assert(table.concat(Z.HotReport(), " | "):find("écoute oui, %d+ annoncés, %d+ réussis, dernier annoncé 139 %(soin sur la durée : oui%), cible Gnoll enragé"), "rapport des sorts entendus")
     -- une aura ancienne (posée bien avant) ne prouve rien
     NOW = NOW + 20 on.player = Fresh(NOW - 5)
     Cast("e2")

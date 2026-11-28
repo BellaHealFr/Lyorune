@@ -35,6 +35,7 @@ local channel          -- ma dernière canalisation retenue (Pénitence) : coup�
 local prayer           -- ma Prière de guérison retenue : un seul porteur à la fois (le jeu n'en garde qu'une)
 local listening = false -- réglage hotPrediction allumé (Z:RefreshHotPrediction)
 local last             -- mon dernier soin sur la durée réussi : { name, target, unit } (/lyorune soins)
+local heard = { sent = 0, done = 0 } -- mes sorts entendus depuis le chargement, et le dernier annoncé (/lyorune soins)
 
 -- Numéros de mes soins sur la durée, tous rangs, vérifiés par leur nom (refaits quand mes sorts changent)
 local function Spells()
@@ -554,6 +555,7 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			end
 		elseif event == "UNIT_SPELLCAST_SENT" then
 			local _, target, guid, id = ...
+			heard.sent, heard.id, heard.target = heard.sent + 1, id, target
 			-- un autre sort annoncé (file d'attente du jeu pendant une incantation) n'efface pas le soin en cours
 			local spell = SpellOf(id)
 			if spell then
@@ -562,6 +564,7 @@ castFrame:SetScript("OnEvent", function(_, event, ...)
 			end
 		else
 			local _, guid, id = ...
+			heard.done = heard.done + 1
 			local spell = SpellOf(id)
 			if not spell then return end
 			-- le plus récent du même sort, encore récent, au même numéro d'incantation quand les deux se lisent
@@ -614,6 +617,9 @@ function Z:RefreshHotPrediction()
 	end
 end
 
+-- À la connexion et à chaque /reload, sans attendre un changement de réglage (Z:Refresh n'y passe pas toujours)
+Z:On("PLAYER_LOGIN", function() Z:RefreshHotPrediction() end)
+
 -- /lyorune soins : ce que Lyorune a appris et retient
 function Z.HotReport()
 	local lines, byEntry = {}, {}
@@ -638,9 +644,14 @@ function Z.HotReport()
 		for _ in pairs(active[key]) do count = count + 1 end
 	end
 	lines[#lines + 1] = ("soins sur la durée retenus en cours : %d"):format(count)
+	local function Named(target)
+		return issecret(target) and "secrète" or (target == nil or target == "") and "aucune" or tostring(target)
+	end
+	lines[#lines + 1] = ("mes sorts entendus : écoute %s, %d annoncés, %d réussis, dernier annoncé %s (soin sur la durée : %s), cible %s")
+		:format(listening and "oui" or "non", heard.sent, heard.done, issecret(heard.id) and "secret" or heard.id and tostring(heard.id) or "aucun",
+			SpellOf(heard.id) and "oui" or "non", Named(heard.target))
 	if last then
-		local target = last.target
-		target = issecret(target) and "secrète" or (target == nil or target == "") and "aucune" or target
+		local target = Named(last.target)
 		local unit = last.unit
 		unit = unit == false and "personne (aura introuvable)" or unit == nil and "en recherche" or unit
 		lines[#lines + 1] = ("dernier soin sur la durée : %s, cible annoncée %s, retenu sur %s"):format(last.name, target, unit)
