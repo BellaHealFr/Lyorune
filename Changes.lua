@@ -8,6 +8,19 @@ local _, Z = ...
 
 Z.changes = {
 	{
+		version = "1.54.0", date = "2026-11-28",
+		added = {
+			"Soins en route de qui : votre soin au bout de la vie, puis celui des autres soigneurs, plus pâle (Séparés, Les miens, Tous ensemble), même en combat.",
+			"Alerte de gaspillage : votre soin en route devient ambre quand les soins en route dépassent la vie qui manque, cuivre au-delà d'un quart de la vie.",
+			"Votre soin en route se remplit pendant votre incantation, et un bref éclat montre où il vient de tomber.",
+			"Chiffre des soins en route (« +2,1k »), éteint au départ, même en combat.",
+		},
+		improved = {
+		},
+		fixed = {
+		},
+	},
+	{
 		version = "1.53.0", date = "2026-11-28",
 		added = {
 		},
@@ -1236,6 +1249,7 @@ Z.changes = {
 -- Par version, puis par rubrique : le réglage de chaque ligne, dans l'ordre des lignes (false : pas de réglage).
 -- Une clé qui n'a plus de ligne dans les options est simplement ignorée. Tenu à la main, vérifié par les tests.
 Z.changeShows = {
+	["1.54.0"] = { added = { "incomingSplit", "overhealWarn", "castFill", "incomingText" } },
 	["1.50.0"] = { added = { "channelFR" } },
 	["1.48.1"] = { improved = { false }, fixed = { "lowHealth" } },
 	["1.48.0"] = { added = { "uniqueLive" }, improved = { "lowHealth" }, fixed = { "pets" } },

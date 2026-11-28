@@ -6,6 +6,15 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 <!-- Fichier généré par outils/publier.py à partir de Changes.lua. Ne pas le modifier à la main. -->
 
+## [1.54.0] - 2026-11-28
+
+### Ajouté
+
+- Soins en route de qui : votre soin au bout de la vie, puis celui des autres soigneurs, plus pâle (Séparés, Les miens, Tous ensemble), même en combat.
+- Alerte de gaspillage : votre soin en route devient ambre quand les soins en route dépassent la vie qui manque, cuivre au-delà d'un quart de la vie.
+- Votre soin en route se remplit pendant votre incantation, et un bref éclat montre où il vient de tomber.
+- Chiffre des soins en route (« +2,1k »), éteint au départ, même en combat.
+
 ## [1.53.0] - 2026-11-28
 
 ### Amélioré
@@ -1005,6 +1014,7 @@ Présentation inspirée de [Keep a Changelog](https://keepachangelog.com/fr/1.1.
 
 - Première version pour WoW Forever : cadres, clic-soin, soins en route, dissipation, tutoriel.
 
+[1.54.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.1...v1.53.0
 [1.51.1]: https://github.com/BellaHealFr/Lyorune/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/BellaHealFr/Lyorune/compare/v1.50.2...v1.51.0
